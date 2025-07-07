@@ -18,17 +18,20 @@ import { useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
     ExploreTable,
+    FeatureFlag,
     GraphControls,
     GraphProgress,
     GraphViewErrorAlert,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
+    isNode,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
+    useFeatureFlag,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
@@ -46,6 +49,7 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ContextMenuZoneManagementEnabled from './ContextMenu/ContextMenuZoneManagementEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
@@ -53,22 +57,39 @@ import { transformIconDictionary } from './svgIcons';
 const GraphView: FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
+
     const theme = useTheme();
 
-    const graphQuery = useSigmaExploreGraph();
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
-    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+
+    const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
+
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+
+    if (!tableViewFeatureFlag?.enabled) {
+        isExploreTableSelected = false;
+    }
+
+    const includeProperties = !!isExploreTableSelected;
+
+    const graphQuery = useSigmaExploreGraph(includeProperties);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
+
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
+
     const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
@@ -92,7 +113,7 @@ const GraphView: FC = () => {
         const graph = new MultiDirectedGraph();
 
         const hideNodes = displayTable;
-        initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
+        if (!hideNodes) initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
@@ -134,8 +155,8 @@ const GraphView: FC = () => {
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
         selectItem(event.node);
+        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
     };
 
     const handleCloseContextMenu = () => {
@@ -195,16 +216,34 @@ const GraphView: FC = () => {
                 />
             </div>
             <GraphItemInformationPanel />
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <FeatureFlag
+                flagKey='tier_management_engine'
+                enabled={
+                    <ContextMenuZoneManagementEnabled
+                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        onClose={handleCloseContextMenu}
+                    />
+                }
+                disabled={
+                    <ContextMenu
+                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        handleClose={handleCloseContextMenu}
+                    />
+                }
+            />
+
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            <ExploreTable
-                open={displayTable}
-                onClose={() => {
-                    setAutoDisplayTable(false);
-                    dispatch(setIsExploreTableSelected(false));
-                }}
-            />
+            {tableViewFeatureFlag?.enabled && (
+                <ExploreTable
+                    data={graphQuery.data}
+                    open={displayTable}
+                    onClose={() => {
+                        setAutoDisplayTable(false);
+                        dispatch(setIsExploreTableSelected(false));
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
 // PanicHandler is a middleware func that sets up a defer-recovery trap to capture any unhandled panics that bubble
@@ -136,7 +136,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			timeout, err := RequestWaitDuration(request)
 			if err != nil {
 				slog.ErrorContext(request.Context(), fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
-			} else if err == nil && timeout > 0 {
+			} else if timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
 

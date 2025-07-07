@@ -26,6 +26,7 @@ get:
   operationId: ExportAttackPathFindings
   summary: Export attack path findings
   description: Export the finding table for a given attack path
+  deprecated: true
   tags:
     - Attack Paths
     - Enterprise

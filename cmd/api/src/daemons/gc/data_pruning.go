@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 // Daemon holds data relevant to the data daemon

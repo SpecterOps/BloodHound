@@ -17,12 +17,10 @@
 package js
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
-	"os/exec"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
@@ -46,53 +44,49 @@ type esLintMessage struct {
 
 // Run eslint for all passed jsPaths and returns a slice of CodeClimate-like entries
 func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
-	var (
-		exitError error
-		result    = make([]codeclimate.Entry, 0, len(jsPaths))
-	)
+	result := make([]codeclimate.Entry, 0, len(jsPaths))
 
 	slog.Info("Running eslint")
 
 	for _, path := range jsPaths {
-		entries, err := runEslint(path, env)
-		if errors.Is(err, cmdrunner.ErrNonZeroExit) {
-			exitError = err
-		} else if err != nil {
+		if entries, err := runEslint(path, env); err != nil {
 			return result, fmt.Errorf("running eslint at %v: %w", path, err)
+		} else {
+			result = append(result, entries...)
 		}
-		result = append(result, entries...)
 	}
 
 	slog.Info("Completed eslint")
 
-	return result, exitError
+	return result, nil
 }
 
 // runEslint runs the actual yarn command and processes the raw output to a slice of CodeClimate-like entries
-//
-// This function will return both the results and an error, if the error is cmdrunner.ErrNonZeroExit
 func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, error) {
 	var (
-		result    []codeclimate.Entry
-		rawResult []esLintEntry
-		outb      bytes.Buffer
+		lintEntries   []codeclimate.Entry
+		esLintEntries []esLintEntry
 
-		command        = "yarn"
-		args           = []string{"run", "lint", "--format", "json"}
-		redirectStdout = func(c *exec.Cmd) { c.Stdout = &outb }
+		command     = "yarn"
+		args        = []string{"run", "lint", "--format", "json"}
+		result, err = cmdrunner.Run(command, args, path, env)
 	)
 
-	cmdErr := cmdrunner.Run(command, args, path, env, redirectStdout)
-	// If the command has a non-zero exit, we're going to return it up the stack, but we want to attempt to process the output anyway
-	if cmdErr != nil && !errors.Is(cmdErr, cmdrunner.ErrNonZeroExit) {
-		return result, fmt.Errorf("unexpected run error: %w", cmdErr)
+	if err != nil {
+		var errResult *cmdrunner.ExecutionResult
+
+		if !errors.As(err, &errResult) {
+			return lintEntries, fmt.Errorf("yarn run lint: %w", err)
+		}
+
+		result = errResult
 	}
 
-	if err := json.NewDecoder(&outb).Decode(&rawResult); err != nil {
-		return result, fmt.Errorf("decoding output: %w", err)
+	if err := json.NewDecoder(result.StandardOutput).Decode(&esLintEntries); err != nil {
+		return lintEntries, fmt.Errorf("yarn run lint: decoding output: %w", err)
 	}
 
-	for _, entry := range rawResult {
+	for _, entry := range esLintEntries {
 		for _, msg := range entry.Messages {
 			var severity string
 
@@ -103,6 +97,8 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 				severity = "warning"
 			case 2:
 				severity = "error"
+			default:
+				return nil, fmt.Errorf("yarn run lint: unknown severity %d", msg.Severity)
 			}
 
 			ccEntry := codeclimate.Entry{
@@ -116,9 +112,9 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 				},
 			}
 
-			result = append(result, ccEntry)
+			lintEntries = append(lintEntries, ccEntry)
 		}
 	}
 
-	return result, cmdErr
+	return lintEntries, nil
 }

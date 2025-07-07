@@ -28,16 +28,16 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/model"
-	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	ingestModel "github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/headers"
 
-	"github.com/specterops/bloodhound/src/services/job"
-	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/services/job"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
