@@ -582,14 +582,8 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 		} else if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 			return err
 		} else {
-			// First append the starting path to our result pathset
-			pathSet.AddPath(graph.Path{
-				Nodes: []*graph.Node{startNode, endNode},
-				Edges: []*graph.Relationship{edge},
-			})
-
-			return ops.Traversal(tx, ops.TraversalPlan{
-				Root:      startNode,
+			err = ops.Traversal(tx, ops.TraversalPlan{
+				Root:      endNode,
 				Direction: graph.DirectionInbound,
 				BranchQuery: func() graph.Criteria {
 					return query.And(
@@ -620,6 +614,16 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 					return true
 				},
 			}, nil)
+
+			// If an inheritance path was found, append the starting path to our result
+			if pathSet.AllNodes().Len() > 0 {
+				pathSet.AddPath(graph.Path{
+					Nodes: []*graph.Node{startNode, endNode},
+					Edges: []*graph.Relationship{edge},
+				})
+			}
+
+			return err
 		}
 	})
 }

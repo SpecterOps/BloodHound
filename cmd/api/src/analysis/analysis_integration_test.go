@@ -224,7 +224,7 @@ func TestFetchACLInheritancePath(t *testing.T) {
 
 		// Positive case 2
 		startId = harness.ACLInheritanceHarness.Group2.ID
-		endId = harness.ACLInheritanceHarness.Computer4.ID
+		endId = harness.ACLInheritanceHarness.Computer2.ID
 
 		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.ReadLAPSPassword)
 		test.RequireNilErr(t, err)
@@ -237,12 +237,12 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.OU4))
 		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.OU6))
 		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.Group2))
-		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.Computer4))
+		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.Computer2))
 		assert.Len(t, nodesInPath, 4)
 
 		// Negative cases should all return empty result sets
-		startId = harness.ACLInheritanceHarness.User1.ID
-		endId = harness.ACLInheritanceHarness.Computer2.ID
+		startId = harness.ACLInheritanceHarness.User2.ID
+		endId = harness.ACLInheritanceHarness.Computer1.ID
 
 		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
 		test.RequireNilErr(t, err)
@@ -253,8 +253,8 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		assert.Len(t, pathSet.AllNodes(), 0)
 
 		// Negative case 2
-		startId = harness.ACLInheritanceHarness.User1.ID
-		endId = harness.ACLInheritanceHarness.Computer3.ID
+		startId = harness.ACLInheritanceHarness.User3.ID
+		endId = harness.ACLInheritanceHarness.Computer1.ID
 
 		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
 		test.RequireNilErr(t, err)
@@ -269,6 +269,18 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		endId = harness.ACLInheritanceHarness.OU2.ID
 
 		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericWrite)
+		test.RequireNilErr(t, err)
+
+		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
+		test.RequireNilErr(t, err)
+
+		assert.Len(t, pathSet.AllNodes(), 0)
+
+		// Negative case 4
+		startId = harness.ACLInheritanceHarness.Group3.ID
+		endId = harness.ACLInheritanceHarness.Computer3.ID
+
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.ReadLAPSPassword)
 		test.RequireNilErr(t, err)
 
 		pathSet, err = adAnalysis.FetchACLInheritancePath(testContext.Context(), db, edge)
