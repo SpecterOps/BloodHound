@@ -26,8 +26,12 @@ export const ManageColumnsComboBox = ({
 
     useOnClickOutside(ref, () => setIsOpen(false));
 
+    const initialColumns = useMemo(
+        () => allColumns.filter((item) => selectedColumnsProp[item.id]),
+        [allColumns, selectedColumnsProp]
+    );
     const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
-    const [selectedColumns, setSelectedColumns] = useState<ManageColumnsComboBoxOption[]>([]);
+    const [selectedColumns, setSelectedColumns] = useState<ManageColumnsComboBoxOption[]>(initialColumns);
     const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
 
     const unselectedColumns = useMemo(() => {

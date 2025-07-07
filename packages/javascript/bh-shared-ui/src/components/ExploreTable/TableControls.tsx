@@ -33,7 +33,6 @@ type TableControlsProps<TData, TValue> = {
     tableName?: string;
     className?: string;
     onDownloadClick?: () => void;
-    onManageColumnsClick?: () => void;
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
