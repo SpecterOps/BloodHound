@@ -42,8 +42,6 @@ const useStyles = makeStyles((theme) => ({
 
 export interface GraphButtonProps extends ButtonProps {
     displayText: string | ReactNode;
-    onClick: (e?: any) => void;
-    disabled?: boolean;
 }
 
 const GraphButton: FC<GraphButtonProps> = (props) => {
