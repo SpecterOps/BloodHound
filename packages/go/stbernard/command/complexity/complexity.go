@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/genericgraph"
@@ -70,14 +71,13 @@ func (s *command) Parse(cmdIndex int) error {
 // Run complexity command
 func (s *command) Run() error {
 	var (
-		roots = make([]*ssa.Function, 0, 512)
-
 		cfg = &packages.Config{
 			Mode:       packages.LoadAllSyntax,
 			BuildFlags: []string{"-tags=" + s.tags},
 		}
-		outGraph = genericgraph.GenericObject{}
-		nodeMap  = make(map[string]genericgraph.Node)
+		outGraph     = genericgraph.GenericObject{}
+		nodeMap      = make(map[string]genericgraph.Node)
+		fnStringToID = make(map[string]string)
 	)
 
 	initial, err := packages.Load(cfg, s.additionalArgs...)
@@ -91,17 +91,8 @@ func (s *command) Run() error {
 
 	// Create and build SSA-form program representation.
 	mode := ssa.InstantiateGenerics // instantiate generics by default for soundness
-	prog, pkgs := ssautil.AllPackages(initial, mode)
+	prog, _ := ssautil.AllPackages(initial, mode)
 	prog.Build()
-
-	mains, err := mainPackages(pkgs)
-	if err != nil {
-		return err
-	}
-
-	for _, main := range mains {
-		roots = append(roots, main.Func("init"), main.Func("main"))
-	}
 
 	// results := rta.Analyze(roots, true)
 	callgraph := vta.CallGraph(ssautil.AllFunctions(prog), nil)
@@ -109,7 +100,7 @@ func (s *command) Run() error {
 	for fn, node := range callgraph.Nodes {
 		var (
 			pkg      string
-			id       = strings.ToUpper(fn.String())
+			id       = strconv.Itoa(node.ID)
 			position = fn.Prog.Fset.PositionFor(fn.Pos(), false).String()
 		)
 
@@ -117,11 +108,13 @@ func (s *command) Run() error {
 			pkg = fn.Package().Pkg.String()
 		}
 
-		if !strings.Contains(pkg, "specterops") {
+		if !strings.Contains(pkg, "specterops/bloodhound-enterprise") {
 			continue
 		}
 
 		if _, ok := nodeMap[id]; !ok {
+			fnStringToID[fn.String()] = id
+
 			n := genericgraph.Node{
 				ID:    id,
 				Kinds: []string{"Function", "Golang"},
@@ -141,14 +134,14 @@ func (s *command) Run() error {
 		for _, edge := range node.Out {
 			var (
 				calleePkg string
-				calleeID  = strings.ToUpper(edge.Callee.Func.String())
+				calleeID  = strconv.Itoa(edge.Callee.ID)
 			)
 
 			if edge.Callee.Func.Package() != nil {
 				calleePkg = edge.Callee.Func.Package().Pkg.String()
 			}
 
-			if !strings.Contains(calleePkg, "specterops") {
+			if !strings.Contains(calleePkg, "specterops/bloodhound-enterprise") {
 				continue
 			}
 
@@ -174,20 +167,4 @@ func (s *command) Run() error {
 	}
 
 	return nil
-}
-
-func mainPackages(pkgs []*ssa.Package) ([]*ssa.Package, error) {
-	var mains []*ssa.Package
-
-	for _, p := range pkgs {
-		if p != nil && p.Pkg.Name() == "main" && p.Func("main") != nil {
-			mains = append(mains, p)
-		}
-	}
-
-	if len(mains) == 0 {
-		return nil, fmt.Errorf("no main packages")
-	}
-
-	return mains, nil
 }
