@@ -1,0 +1,5 @@
+ALTER TABLE kind ADD COLUMN IF NOT EXISTS "isSource" BOOLEAN DEFAULT FALSE;
+
+UPDATE kind
+SET "isSource" = TRUE
+WHERE name IN ('Base', 'AZBase');

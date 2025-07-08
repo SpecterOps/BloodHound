@@ -193,7 +193,7 @@ func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) ingest
 }
 
 var ingestHandlers = map[ingest.DataType]ingestHandler{
-	ingest.DataTypeGeneric: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeOpenGraph: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		// decode nodes, if present
 		decoder, err := CreateIngestDecoder(reader, "nodes", 2)
 		if errors.Is(err, ingest.ErrDataTagNotFound) {

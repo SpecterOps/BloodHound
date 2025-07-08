@@ -44,13 +44,13 @@ func Test_ValidateMetaTag(t *testing.T) {
 			name:         "succesful generic payload",
 			rawString:    `{"graph": {"nodes":[]}}`,
 			err:          nil,
-			expectedType: ingest.DataTypeGeneric,
+			expectedType: ingest.DataTypeOpenGraph,
 		},
 		{
 			name:         "enforce mutual exclusivity",
 			rawString:    `{"data": [], "graph": {}}`,
 			err:          ingest.ErrMixedIngestFormat,
-			expectedType: ingest.DataTypeGeneric,
+			expectedType: ingest.DataTypeOpenGraph,
 		},
 		{
 			name:         "valid",
@@ -171,10 +171,14 @@ type edgePiece struct {
 	Kind    string `json:"kind,omitempty"`
 }
 
+type testMeta struct {
+	SourceKind string `json:"source_kind,omitempty"`
+}
+
 type testPayload struct {
-	// Graph testGraph `json:"graph"`
 	Nodes []testNode `json:"nodes,omitempty"`
 	Edges []testEdge `json:"edges,omitempty"`
+	Meta  testMeta   `json:"metadata,omitempty"`
 }
 
 func prepareReader(assertion genericIngestAssertion) (io.Reader, error) {
@@ -199,6 +203,7 @@ func Test_ValidateGraph(t *testing.T) {
 
 	positiveCases = append(positiveCases, positiveGenericIngestCases()...)
 
+	negativeCases = append(negativeCases, metadataSchemaFailureCases()...)
 	negativeCases = append(negativeCases, complexNestedPropertyCases()...)
 	negativeCases = append(negativeCases, decodingFailureCases()...)
 	negativeCases = append(negativeCases, criticalFailureCases()...)
@@ -268,6 +273,25 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 							"true":  false,
 						},
 					},
+				},
+			},
+		},
+		{
+			name: "payload contains one node and optional metadata",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"a"},
+						Properties: map[string]any{
+							"hello": "world",
+							"one":   2,
+							"true":  false,
+						},
+					},
+				},
+				Meta: testMeta{
+					SourceKind: "HelloBase",
 				},
 			},
 		},
@@ -539,6 +563,18 @@ func criticalFailureCases() []genericIngestAssertion {
 			criticalErrMsgs: []string{"error decoding edges array: invalid character '}' after array element"},
 			validationErrContains: [][]string{
 				{"edges[0] schema validation", "at '': missing properties 'start', 'end', 'kind'"},
+			},
+		},
+	}
+}
+
+func metadataSchemaFailureCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
+		{
+			name:       "metadata.sourceKind is incorrect type",
+			rawPayload: `{"metadata":{"source_kind": 1}, "nodes":[]}`,
+			validationErrContains: [][]string{
+				{"metadata[0] schema validation", "at '/source_kind': got number, want null or string"},
 			},
 		},
 	}

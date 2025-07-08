@@ -77,6 +77,7 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 		decoder:    decoder,
 		nodeSchema: schema.NodeSchema,
 		edgeSchema: schema.EdgeSchema,
+		metaSchema: schema.MetaSchema,
 		maxErrors:  15,
 	}
 
@@ -107,6 +108,11 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 			case "edges":
 				v.edgesFound = true
 				v.validateArray("edges", v.edgeSchema)
+				if len(v.criticalErrors) > 0 {
+					return v.report()
+				}
+			case "metadata":
+				v.validateMetadata(v.metaSchema)
 				if len(v.criticalErrors) > 0 {
 					return v.report()
 				}
@@ -225,12 +231,12 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 				if dataFound || metaFound {
 					return ingest.Metadata{}, ingest.ErrMixedIngestFormat
 				}
-				// generic ingest path
-				meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
+				// opengraph ingest path
+				meta = ingest.Metadata{Type: ingest.DataTypeOpenGraph}
 				if shouldValidateGraph {
 					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
-							slog.With("validation", report).Warn("generic ingest failed")
+							slog.With("validation", report).Warn("opengraph ingest failed")
 						}
 						return meta, err
 					}
@@ -410,6 +416,7 @@ type validator struct {
 	decoder          *json.Decoder
 	nodeSchema       *jsonschema.Schema
 	edgeSchema       *jsonschema.Schema
+	metaSchema       *jsonschema.Schema
 	maxErrors        int
 	nodesFound       bool
 	edgesFound       bool
@@ -465,6 +472,22 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 
 	if err := expectClosingArray(v.decoder, arrayName); err != nil {
 		v.reportCritical(0, err.Error())
+	}
+}
+
+// TODO: ensure that i don't need to manually open/close object
+func (v *validator) validateMetadata(metadataSchema *jsonschema.Schema) {
+	var item map[string]any
+
+	if err := v.decoder.Decode(&item); err != nil {
+		switch err.(type) {
+		case *json.UnmarshalTypeError:
+			v.reportValidation(0, fmt.Sprintf("%s[%d] type mismatch: %s", "metadata", 0, err))
+		default:
+			v.reportCritical(0, fmt.Sprintf("%s[%d] syntax error: %s", "metadata", 0, err))
+		}
+	} else if err := metadataSchema.Validate(item); err != nil {
+		v.reportValidation(0, formatSchemaValidationError("metadata", 0, err))
 	}
 }
 
