@@ -28,9 +28,10 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
             </Typography>
 
             <Typography variant='body2'>
-                The Public-Information property set includes the altSecurityIdentities attribute, which allow you to
-                specify <i>explicit certificate mappings</i> for a principal. An explicit certificate mapping is a
-                reference to a certificate, which can be used to authenticate as the principal.
+                The altSecurityIdentities attribute allows you to specify <i>explicit certificate mappings</i> for a
+                principal. An explicit certificate mapping directly links a specific certificate to the principal, as an
+                alternative to the normal certificate-to-account mapping rules and allowing authentication as that
+                principal.
             </Typography>
 
             <Typography variant='body2'>
