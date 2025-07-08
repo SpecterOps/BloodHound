@@ -3,11 +3,12 @@ import { FC } from 'react';
 import { useExploreParams } from '../../hooks';
 
 type Props = {
+    exploreParams: ReturnType<typeof useExploreParams>;
     objectId: string;
 };
 
-export const NodeMenuItems: FC<Props> = ({ objectId }) => {
-    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
+export const NodeMenuItems: FC<Props> = ({ exploreParams, objectId }) => {
+    const { primarySearch, secondarySearch, setExploreParams } = exploreParams;
 
     return (
         <>

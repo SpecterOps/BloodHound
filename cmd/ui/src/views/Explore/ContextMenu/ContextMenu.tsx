@@ -48,7 +48,8 @@ const ContextMenu: FC<{
     pathfindingFilters: PathfindingFilters;
 }> = ({ contextMenu, handleClose, pathfindingFilters }) => {
     const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
-    const { exploreSearchTab } = useExploreParams();
+    const exploreParams = useExploreParams();
+    const { exploreSearchTab } = exploreParams;
 
     const { checkPermission } = usePermissions();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
@@ -59,25 +60,38 @@ const ContextMenu: FC<{
         return null;
     }
 
-    const isEdgeSelected =
-        selectedItemType === 'edge' && exploreSearchTab === 'pathfinding' && selectedItemQuery.data.id?.includes('_');
-    const isNodeSelected = selectedItemType === 'node';
-    const isAssetGroupShown = !tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE);
+    const menuItems = [];
+
+    // Add pathfinding edge filtering if edge selected on pathfinding tab
+    if (selectedItemType === 'edge' && exploreSearchTab === 'pathfinding' && selectedItemQuery.data.id?.includes('_')) {
+        menuItems.push(
+            <EdgeMenuItems key='edge-items' id={selectedItemQuery.data.id} pathfindingFilters={pathfindingFilters} />
+        );
+    }
+
+    // Add node options and asset group options
+    if (selectedItemType === 'node') {
+        menuItems.push(
+            <NodeMenuItems
+                key='node-items'
+                exploreParams={exploreParams}
+                objectId={(selectedItemQuery.data as NodeResponse).objectId}
+            />
+        );
+
+        if (!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE)) {
+            menuItems.push(
+                <AssetGroupMenuItem key='node-tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />
+            );
+            menuItems.push(<AssetGroupMenuItem key='node-owned' assetGroupId={ownedId} assetGroupName='Owned' />);
+        }
+    }
+
+    menuItems.push(<CopyMenuItem key='copy-items' />);
 
     return (
         <Menu open anchorPosition={getPosition(contextMenu)} anchorReference='anchorPosition' onClick={handleClose}>
-            {isEdgeSelected && <EdgeMenuItems id={selectedItemQuery.data.id} pathfindingFilters={pathfindingFilters} />}
-
-            {isNodeSelected && <NodeMenuItems objectId={(selectedItemQuery.data as NodeResponse).objectId} />}
-
-            {isNodeSelected && isAssetGroupShown && (
-                <>
-                    <AssetGroupMenuItem assetGroupId={tierZeroId} assetGroupName='High Value' />
-                    <AssetGroupMenuItem assetGroupId={ownedId} assetGroupName='Owned' />
-                </>
-            )}
-
-            <CopyMenuItem />
+            {menuItems}
         </Menu>
     );
 };
