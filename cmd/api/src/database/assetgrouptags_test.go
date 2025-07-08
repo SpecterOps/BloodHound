@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 	"time"
