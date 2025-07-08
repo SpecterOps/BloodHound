@@ -83,12 +83,15 @@ const InnerCommonSearches = ({
         if (selected === query) {
             //deselect
             setSelected('');
+            // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
+            onSetCypherQuery('');
+            onPerformCypherSearch('');
         } else {
             setSelected(query);
+            // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
+            onSetCypherQuery(query);
+            onPerformCypherSearch(query);
         }
-        // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
-        onSetCypherQuery(query);
-        onPerformCypherSearch(query);
     };
 
     const handleDeleteQuery = (id: number) =>

@@ -39,6 +39,9 @@ const useStyles = makeStyles((theme) => ({
     },
     selected: {
         backgroundColor: theme.palette.neutral.quaternary,
+        '&:hover': {
+            backgroundColor: theme.palette.neutral.quaternary,
+        },
     },
 }));
 

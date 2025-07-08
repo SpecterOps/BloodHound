@@ -37,7 +37,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery }) =>
                 <PopoverTrigger
                     className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4'
                     onClick={(event) => event.stopPropagation()}>
-                    <VerticalEllipsis size={20} />
+                    <VerticalEllipsis size={24} />
                 </PopoverTrigger>
                 <PopoverContent className='p-0'>
                     <div className={listItemStyles}>Run</div>
