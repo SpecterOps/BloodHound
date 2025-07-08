@@ -253,6 +253,7 @@ export const TagForm: FC = () => {
                                 <div>
                                     <Label htmlFor='name'>Name</Label>
                                     <Input
+                                        data-testid='zone-management_save_tag-form_name-input'
                                         id='name'
                                         type='text'
                                         disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
@@ -278,6 +279,7 @@ export const TagForm: FC = () => {
                                     <Label htmlFor='description'>Description</Label>
                                     <textarea
                                         id='description'
+                                        data-testid='zone-management_save_tag-form_description-input'
                                         {...register('description', { value: tagQuery.data?.description })}
                                         placeholder='Description Input'
                                         rows={3}
@@ -294,7 +296,7 @@ export const TagForm: FC = () => {
                                                 id='analysis'
                                                 checked={toggleEnabled}
                                                 {...register('analysis_enabled')}
-                                                data-testid='analysis_enabled'
+                                                data-testid='zone-management_save_tag-form_analysis-enabled-switch'
                                                 onCheckedChange={(checked: boolean) => {
                                                     setToggleEnabled(checked);
                                                     setValue('analysis_enabled', checked);
@@ -307,7 +309,12 @@ export const TagForm: FC = () => {
 
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
-                                    <Input id='position' type='number' {...register('position', { value: position })} />
+                                    <Input
+                                        data-testid='zone-management_save_tag-form_position-input'
+                                        id='position'
+                                        type='number'
+                                        {...register('position', { value: position })}
+                                    />
                                 </div>
                             </div>
                         </CardContent>
@@ -316,6 +323,7 @@ export const TagForm: FC = () => {
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
+                                data-testid='zone-management_save_tag-form_delete-button'
                                 variant={'text'}
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
@@ -327,13 +335,17 @@ export const TagForm: FC = () => {
                             </Button>
                         )}
                         <Button
+                            data-testid='zone-management_save_tag-form_cancel-button'
                             variant={'secondary'}
                             onClick={() => {
                                 navigate(-1);
                             }}>
                             Cancel
                         </Button>
-                        <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                        <Button
+                            data-testid='zone-management_save_tag-form_save-button'
+                            variant={'primary'}
+                            onClick={handleSubmit(onSubmit)}>
                             {tagId === '' ? 'Define Selector' : 'Save Edits'}
                         </Button>
                     </div>
