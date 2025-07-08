@@ -1,29 +1,22 @@
-import { ListItemIcon, Menu, MenuItem } from '@mui/material';
-import { FC, MouseEvent, useState } from 'react';
+import { FC, MouseEvent } from 'react';
 
+import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { VerticalEllipsis } from '../AppIcon/Icons';
-
 interface ListItemActionMenuProps {
-    canEdit: boolean;
     id?: number;
     deleteQuery: (id: number) => void;
 }
 
-const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ canEdit, id, deleteQuery }) => {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-        event.stopPropagation();
-        setAnchorEl(event.currentTarget);
-    };
+const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery }) => {
     const handleClose = (event: MouseEvent) => {
         // event.stopPropagation();
-        setAnchorEl(null);
+        console.log('handle close');
     };
 
-    const handleRun = (event: MouseEvent) => {
-        handleClose(event);
-    };
+    // const handleRun = (event: MouseEvent) => {
+    //     console.log(event);
+    //     // handleClose(event);
+    // };
 
     const handleDelete = (event: MouseEvent) => {
         // handleClose(event);
@@ -32,17 +25,30 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ canEdit, id, deleteQu
         handleClose(event);
     };
 
+    const handleEdit = (event: MouseEvent) => {
+        event.stopPropagation();
+    };
+
+    const listItemStyles = 'w-full px-2 py-3 cursor-pointer hover:bg-neutral-light-4';
+
     return (
         <>
-            <ListItemIcon onClick={handleClick} className='min-w-8'>
-                <VerticalEllipsis />
-            </ListItemIcon>
-
-            <Menu id='basic-menu' anchorEl={anchorEl} open={open} onClose={handleClose}>
-                <MenuItem onClick={handleRun}>Run</MenuItem>
-                {canEdit && <MenuItem onClick={handleClose}>Edit/Share</MenuItem>}
-                {canEdit && <MenuItem onClick={handleDelete}>Delete</MenuItem>}
-            </Menu>
+            <Popover>
+                <PopoverTrigger
+                    className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4'
+                    onClick={(event) => event.stopPropagation()}>
+                    <VerticalEllipsis size={20} />
+                </PopoverTrigger>
+                <PopoverContent className='p-0'>
+                    <div className={listItemStyles}>Run</div>
+                    <div className={listItemStyles} onClick={handleEdit}>
+                        Edit/Share
+                    </div>
+                    <div className={listItemStyles} onClick={handleDelete}>
+                        Delete
+                    </div>
+                </PopoverContent>
+            </Popover>
         </>
     );
 };

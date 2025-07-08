@@ -87,7 +87,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                             const { id, description, cypher, canEdit = false } = lineItem;
                                             return (
                                                 <div
-                                                    className={`py-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-5 justify-between pl-4 ${
+                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 justify-between pl-4 ${
                                                         selectedQuery?.description === description
                                                             ? styles.selected
                                                             : ''
@@ -99,19 +99,20 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             <p className='mb-0 leading-none'>{description}</p>
                                                         )}
 
-                                                        {category && (
-                                                            <span className='text-xs italic pr-1'>{category},</span>
+                                                        {category && <span className='text-xs italic'>{category}</span>}
+                                                        {category && subheader && (
+                                                            <span className='text-xs italic pr-1'>,</span>
                                                         )}
                                                         {subheader && (
                                                             <span className='text-xs italic'>{subheader}</span>
                                                         )}
                                                     </div>
-
-                                                    <ListItemActionMenu
-                                                        canEdit={canEdit}
-                                                        id={id}
-                                                        deleteQuery={() => handleDelete(id as number)}
-                                                    />
+                                                    {canEdit && (
+                                                        <ListItemActionMenu
+                                                            id={id}
+                                                            deleteQuery={() => handleDelete(id as number)}
+                                                        />
+                                                    )}
                                                 </div>
                                             );
                                         })}
