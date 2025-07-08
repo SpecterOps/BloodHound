@@ -18,7 +18,7 @@ import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doo
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { GraphNode } from 'js-client-library';
-import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { ChangeEvent, MouseEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { WrappedExploreTableItem } from '../../types';
 import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
@@ -40,11 +40,17 @@ const columnhelper = createColumnHelper();
 interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
+    onRowClick?: (id: string) => void;
     data?: Record<string, WrappedExploreTableItem>;
+    selectedNode: string;
     selectedColumns?: Record<string, boolean>;
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    onDownloadClick: () => void;
+    onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }
+
+export type NodeClickInfo = { id: string; x: number; y: number };
 
 const MemoDataTable = memo(DataTable);
 
@@ -73,14 +79,23 @@ const makeColumnDef = (key: string) =>
 
 const ExploreTable = ({
     data,
+    selectedNode,
     open,
     onClose,
+    onRowClick,
+    onDownloadClick,
+    onKebabMenuClick,
     onManageColumnsChange,
     allColumnKeys,
     selectedColumns,
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
+
+    const handleKebabMenuClick = (e: MouseEvent, id: string) => {
+        console.log(e);
+        onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
+    };
 
     const mungedData = useMemo(
         () =>
@@ -120,8 +135,10 @@ const ExploreTable = ({
             {
                 accessorKey: '',
                 id: 'action-menu',
-                cell: () => (
-                    <Button className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
+                cell: ({ row }) => (
+                    <Button
+                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
                         <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
                     </Button>
                 ),
@@ -188,14 +205,14 @@ const ExploreTable = ({
 
     return (
         <div
-            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
+            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${selectedNode ? 'w-[calc(100%-450px)]' : ''} ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
                     className='h-[72px]'
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns || requiredColumns}
                     pinnedColumns={requiredColumns}
-                    onDownloadClick={() => console.log('download icon clicked')}
+                    onDownloadClick={onDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
