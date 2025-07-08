@@ -235,7 +235,7 @@ func TestFetchACLInheritancePath(t *testing.T) {
 		nodesInPath = pathSet.AllNodes()
 
 		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.OU4))
-		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.OU6))
+		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.Container1))
 		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.Group2))
 		assert.True(t, nodesInPath.Contains(harness.ACLInheritanceHarness.Computer2))
 		assert.Len(t, nodesInPath, 4)
