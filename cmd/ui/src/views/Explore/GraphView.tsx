@@ -21,6 +21,7 @@ import {
     FeatureFlag,
     GraphControls,
     GraphProgress,
+    GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     WebGLDisabledAlert,
     baseGraphLayouts,
@@ -36,6 +37,7 @@ import {
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
+
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes, StyledGraphNode } from 'js-client-library';
@@ -131,7 +133,7 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError) throw new Error();
+    if (isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabled()) {
         return <WebGLDisabledAlert />;
