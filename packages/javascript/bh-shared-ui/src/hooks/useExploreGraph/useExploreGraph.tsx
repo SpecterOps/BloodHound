@@ -54,8 +54,8 @@ const DEFAULT_USE_EXPLORE_GRAPH_PARAMS = { includeProperties: false, enabled: tr
 
 // Hook for maintaining the top level graph query powering the explore page
 export const useExploreGraph = ({
-    includeProperties,
-    enabled,
+    includeProperties = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.includeProperties,
+    enabled = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.enabled,
 }: UseExploreGraphParams = DEFAULT_USE_EXPLORE_GRAPH_PARAMS) => {
     const params = useExploreParams();
 

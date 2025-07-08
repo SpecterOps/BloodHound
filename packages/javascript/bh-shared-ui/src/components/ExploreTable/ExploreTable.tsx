@@ -188,7 +188,6 @@ const ExploreTable = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    console.log({ sortBy, sortOrder });
     const nonRequiredColumnDefinitions = useMemo(
         () => allColumnKeys?.filter((key) => !requiredColumns[key]).map(makeColumnDef) || [],
         [allColumnKeys, makeColumnDef]
