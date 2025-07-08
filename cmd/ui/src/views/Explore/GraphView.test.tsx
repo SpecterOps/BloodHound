@@ -20,10 +20,20 @@ import { render, screen, waitFor } from 'src/test-utils';
 import GraphView from './GraphView';
 
 const server = setupServer(
-    rest.get('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.status(500));
+    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
+        return res(ctx.status(200));
     })
 );
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('GraphView', () => {
     it('renders a graph view', () => {
@@ -33,8 +43,11 @@ describe('GraphView', () => {
     });
 
     it('displays an error message', async () => {
-        beforeEach(() => server.listen());
-        afterAll(() => server.close());
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(ctx.status(500));
+            })
+        );
         console.error = vi.fn();
         render(<GraphView />);
         const errorAlert = await waitFor(() =>
