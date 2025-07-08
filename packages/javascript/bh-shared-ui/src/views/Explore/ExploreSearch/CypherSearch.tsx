@@ -38,8 +38,6 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
     const queryList = usePrebuiltQueries();
-    console.log('queryList');
-    console.log(queryList);
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
@@ -98,7 +96,6 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                 return result;
             }
         }
-        return false;
     };
 
     const handleClickSave = () => {
@@ -108,11 +105,23 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             console.log('cypherQuery is empty - return');
             return;
         }
-        if (queryMatch(cypherQuery)) {
+        const matchedQuery: any = queryMatch(cypherQuery);
+
+        //TO DO
+        // Move selected useState and logic up to this component
+        // Check if selected
+        // May not need below matchedQuery logic
+
+        if (matchedQuery) {
             console.log('match');
-            console.log(queryMatch(cypherQuery));
+            console.log(matchedQuery);
+            console.log('cypherQuery already exists');
+            if (matchedQuery.id) {
+                console.log('custom query without changes');
+            }
         } else {
             console.log('no match');
+            console.log(matchedQuery);
         }
 
         // -- get selected query
