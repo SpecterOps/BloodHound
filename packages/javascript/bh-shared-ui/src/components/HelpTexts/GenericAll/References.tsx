@@ -20,13 +20,6 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
-                https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
-            </Link>
-            <br />
             <Link target='_blank' rel='noopener' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
                 https://www.youtube.com/watch?v=z8thoG7gPd0
             </Link>

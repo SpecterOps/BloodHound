@@ -3785,7 +3785,7 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
-	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group7", domainSid)
+	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domainSid)
 	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid)
 	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
