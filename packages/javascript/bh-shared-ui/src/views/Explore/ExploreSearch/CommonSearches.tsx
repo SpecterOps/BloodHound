@@ -135,7 +135,6 @@ const InnerCommonSearches = ({
     };
 
     const handleExport = () => {
-        console.log('handleExport - commonSearches');
         if (!(selectedQuery && selectedQuery?.id)) return;
         getExportQuery(selectedQuery.id).then((res: any) => {
             const filename =

@@ -85,13 +85,36 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         );
     };
 
+    // test query against current cypherQuery in editor
+    const queryMatch = (queryToMatch: any) => {
+        for (const item of queryList) {
+            let result = null;
+            result = item.queries.find((query) => {
+                if (query.cypher === queryToMatch) {
+                    return query;
+                }
+            });
+            if (result) {
+                return result;
+            }
+        }
+        return false;
+    };
+
     const handleClickSave = () => {
         console.log('handleClickSave');
-        console.log(cypherQuery);
+        // console.log(cypherQuery);
         if (!cypherQuery) {
             console.log('cypherQuery is empty - return');
             return;
         }
+        if (queryMatch(cypherQuery)) {
+            console.log('match');
+            console.log(queryMatch(cypherQuery));
+        } else {
+            console.log('no match');
+        }
+
         // -- get selected query
         // -- -- get canEdit / id
     };
