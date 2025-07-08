@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
+import { Menu } from '@mui/material';
 
 import {
+    EdgeMenuItems,
+    NodeMenuItems,
     Permission,
-    isEdgeType,
     useExploreParams,
     useExploreSelectedItem,
     useFeatureFlag,
@@ -33,96 +34,13 @@ import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
-type EdgeMenuItemsProps = {
-    id: string;
-    pathfindingFilters: PathfindingFilters;
-};
-
-type NodeMenuItemsProps = {
-    objectId: string;
-    pathfindingFilters: PathfindingFilters;
-};
-
 const NAV_MENU_WIDTH = 56;
-
-const RX_EDGE_TYPE = /^[^_]+_([^_]+)_[^_]+$/;
 
 /** Return position to show context menu, with nav menu offset */
 const getPosition = (coordinates: Coordinates) => ({
     left: coordinates.x + NAV_MENU_WIDTH,
     top: coordinates.y,
 });
-
-const EdgeMenuItems: FC<EdgeMenuItemsProps> = ({ id, pathfindingFilters }) => {
-    const { handleRemoveEdgeType } = pathfindingFilters;
-
-    const edgeType = id.match(RX_EDGE_TYPE)?.[1];
-
-    const filterEdge = () => {
-        if (edgeType) {
-            handleRemoveEdgeType(edgeType);
-        }
-    };
-
-    if (!edgeType) {
-        return null;
-    }
-
-    // Prevent filtering for edge types not found in AllEdgeTypes array
-    return isEdgeType(edgeType) ? (
-        <MenuItem key='filter-edge' onClick={filterEdge}>
-            Filter out Edge
-        </MenuItem>
-    ) : (
-        <MenuItem key='non-filterable' disabled>
-            Non-filterable Edge
-        </MenuItem>
-    );
-};
-
-const NodeMenuItems: FC<Omit<NodeMenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
-    const { checkPermission } = usePermissions();
-    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
-
-    const tierZeroId = useAppSelector(selectTierZeroAssetGroupId);
-    const ownedId = useAppSelector(selectOwnedAssetGroupId);
-
-    return (
-        <>
-            <MenuItem
-                key='starting-node'
-                onClick={() =>
-                    setExploreParams({
-                        exploreSearchTab: 'pathfinding',
-                        searchType: secondarySearch ? 'pathfinding' : 'node',
-                        primarySearch: objectId,
-                    })
-                }>
-                Set as starting node
-            </MenuItem>
-
-            <MenuItem
-                key='ending-node'
-                onClick={() =>
-                    setExploreParams({
-                        exploreSearchTab: 'pathfinding',
-                        searchType: primarySearch ? 'pathfinding' : 'node',
-                        secondarySearch: objectId,
-                    })
-                }>
-                Set as ending node
-            </MenuItem>
-
-            {!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE) && (
-                <>
-                    <AssetGroupMenuItem key='tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />
-                    <AssetGroupMenuItem key='owned' assetGroupId={ownedId} assetGroupName='Owned' />
-                </>
-            )}
-        </>
-    );
-};
 
 const ContextMenu: FC<{
     contextMenu: Coordinates | null;
@@ -132,6 +50,11 @@ const ContextMenu: FC<{
     const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
     const { exploreSearchTab } = useExploreParams();
 
+    const { checkPermission } = usePermissions();
+    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
+    const tierZeroId = useAppSelector(selectTierZeroAssetGroupId);
+    const ownedId = useAppSelector(selectOwnedAssetGroupId);
+
     if (!contextMenu || !selectedItemQuery.data) {
         return null;
     }
@@ -139,11 +62,21 @@ const ContextMenu: FC<{
     const isEdgeSelected =
         selectedItemType === 'edge' && exploreSearchTab === 'pathfinding' && selectedItemQuery.data.id?.includes('_');
     const isNodeSelected = selectedItemType === 'node';
+    const isAssetGroupShown = !tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE);
 
     return (
         <Menu open anchorPosition={getPosition(contextMenu)} anchorReference='anchorPosition' onClick={handleClose}>
             {isEdgeSelected && <EdgeMenuItems id={selectedItemQuery.data.id} pathfindingFilters={pathfindingFilters} />}
+
             {isNodeSelected && <NodeMenuItems objectId={(selectedItemQuery.data as NodeResponse).objectId} />}
+
+            {isNodeSelected && isAssetGroupShown && (
+                <>
+                    <AssetGroupMenuItem assetGroupId={tierZeroId} assetGroupName='High Value' />
+                    <AssetGroupMenuItem assetGroupId={ownedId} assetGroupName='Owned' />
+                </>
+            )}
+
             <CopyMenuItem />
         </Menu>
     );
