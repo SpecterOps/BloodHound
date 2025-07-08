@@ -2891,26 +2891,32 @@
                     }
                   }
                 },
-                "example": [
-                  {
-                    "id": 1,
-                    "kindName": "KindA",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "house",
-                      "color": "#FFFFFF"
+                "example": {
+                  "data": [
+                    {
+                      "id": 1,
+                      "kindName": "KindA",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "house",
+                          "color": "#FFFFFF"
+                        }
+                      }
+                    },
+                    {
+                      "id": 2,
+                      "kindName": "KindB",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "coffee",
+                          "color": "#000000"
+                        }
+                      }
                     }
-                  },
-                  {
-                    "id": 2,
-                    "kindName": "KindB",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "coffee",
-                      "color": "#000000"
-                    }
-                  }
-                ]
+                  ]
+                }
               }
             }
           },
@@ -3055,9 +3061,11 @@
                   "id": 1,
                   "kindName": "KindA",
                   "config": {
-                    "type": "font-awesome",
-                    "name": "house",
-                    "color": "#FFFFFF"
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
                   }
                 }
               }
@@ -4557,8 +4565,9 @@
       ],
       "get": {
         "operationId": "ListAssetGroupMembers",
+        "deprecated": true,
         "summary": "List all asset isolation group members",
-        "description": "List all members of an asset isolation group.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/asset-group-tags/{asset_group_tag_id}/members` or `GET /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members` instead.\n",
         "tags": [
           "Asset Isolation",
           "Community",
@@ -5574,6 +5583,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
             "name": "auto_certify",
             "in": "query",
             "required": false,
@@ -6097,6 +6112,20 @@
           "Community"
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `created_at`.",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
           {
             "name": "created_at",
             "in": "query",
@@ -12126,6 +12155,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -12186,6 +12218,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -14457,6 +14492,7 @@
         "operationId": "ExportAttackPathFindings",
         "summary": "Export attack path findings",
         "description": "Export the finding table for a given attack path",
+        "deprecated": true,
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -14557,6 +14593,9 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
@@ -14814,6 +14853,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -14894,6 +14936,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15325,6 +15370,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15571,6 +15619,9 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
@@ -15636,6 +15687,9 @@
           "schema": {
             "$ref": "#/components/schemas/enum.posture-history-type"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15946,6 +16000,14 @@
         "description": "Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available\nfor sorting are dependent on the entity object kind.\n",
         "schema": {
           "$ref": "#/components/schemas/api.params.query.sort-by"
+        }
+      },
+      "query.asset-group-tag-id": {
+        "name": "asset_group_tag_id",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "in": "query",
+        "schema": {
+          "type": "integer"
         }
       },
       "query.clients.hydrate-domains": {

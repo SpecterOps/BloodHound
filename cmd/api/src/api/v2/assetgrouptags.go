@@ -820,6 +820,10 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 	}
 }
 
+type AssetGroupHistoryResp struct {
+	Records []model.AssetGroupHistory `json:"records"`
+}
+
 func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, request *http.Request) {
 	var (
 		rCtx        = request.Context()
@@ -836,7 +840,7 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 100); err != nil {
 		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if sort, err := api.ParseSortParameters(model.AssetGroupHistory{}, queryParams); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupHistory{}, name); err != nil {
@@ -862,7 +866,7 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 		} else if historyRecs, count, err := s.DB.GetAssetGroupHistoryRecords(rCtx, sqlFilter, sort, skip, limit); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteResponseWrapperWithPagination(rCtx, historyRecs, limit, skip, count, http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(rCtx, AssetGroupHistoryResp{Records: historyRecs}, limit, skip, count, http.StatusOK, response)
 		}
 	}
 }
