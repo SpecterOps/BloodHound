@@ -9686,6 +9686,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
           },
@@ -10335,6 +10338,54 @@
         }
       ],
       "get": {
+        "operationId": "GetEnterpriseCaEntity",
+        "summary": "Get Enterprise CA entity info",
+        "description": "Get info and counts for this Enterprise CA node.",
+        "tags": [
+          "Enterprise CAs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/enterprisecas/{object_id}/controllers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
         "operationId": "GetEnterpriseCaEntityControllers",
         "summary": "Get Enterprise CA entity controllers",
         "description": "Get a list, graph, or count of the principals that can control this Enterprise CA.",
@@ -10369,54 +10420,6 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/enterprisecas/{object_id}/controllers": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "$ref": "#/components/parameters/path.object-id"
-        }
-      ],
-      "get": {
-        "operationId": "GetEnterpriseCaEntity",
-        "summary": "Get Enterprise CA entity info",
-        "description": "Get info and counts for this Enterprise CA node.",
-        "tags": [
-          "Enterprise CAs",
-          "Community",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/query.hydrate-counts"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/entity-info-query-results"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
