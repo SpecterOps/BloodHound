@@ -69,3 +69,5 @@ export * from './useCustomNodeKinds';
 export * from './useExploreTableAutoDisplay';
 
 export * from './useGraphHasData';
+
+export * from './usePrebuiltQueries';

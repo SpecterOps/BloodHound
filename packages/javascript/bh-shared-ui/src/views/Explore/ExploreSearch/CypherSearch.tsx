@@ -22,11 +22,12 @@ import { useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
-import { useCreateSavedQuery } from '../../../hooks';
+import { useCreateSavedQuery, usePrebuiltQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
+
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
@@ -36,6 +37,9 @@ type CypherSearchState = {
 const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
+    const queryList = usePrebuiltQueries();
+    console.log('queryList');
+    console.log(queryList);
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
@@ -83,6 +87,11 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
     const handleClickSave = () => {
         console.log('handleClickSave');
+        console.log(cypherQuery);
+        if (!cypherQuery) {
+            console.log('cypherQuery is empty - return');
+            return;
+        }
         // -- get selected query
         // -- -- get canEdit / id
     };

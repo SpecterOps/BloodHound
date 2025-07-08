@@ -24,7 +24,13 @@ import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearches
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
-import { getExportQuery, useCypherSearch, useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
+import {
+    getExportQuery,
+    useCypherSearch,
+    useDeleteSavedQuery,
+    usePrebuiltQueries,
+    useSavedQueries,
+} from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
@@ -53,22 +59,8 @@ const InnerCommonSearches = ({
     const [selected, setSelected] = useState('');
     const { cypherQuery } = useCypherSearch();
 
-    const savedLineItems: QueryLineItem[] =
-        userQueries.data?.map((query) => ({
-            description: query.name,
-            cypher: query.query,
-            canEdit: true,
-            id: query.id,
-        })) || [];
-
-    const savedQueries = {
-        category: 'Saved Queries',
-        subheader: '',
-        queries: savedLineItems,
-    };
-
     //master list of pre-made queries
-    const queryList = [...prebuiltSearchList, savedQueries];
+    const queryList = usePrebuiltQueries();
     const allCategories = queryList.map((item) => item.subheader);
     const uniqueCategoriesSet = new Set(allCategories);
     const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
@@ -76,7 +68,7 @@ const InnerCommonSearches = ({
     const [filteredList, setFilteredList] = useState<QueryListSection[]>([]);
 
     useEffect(() => {
-        setFilteredList([...prebuiltSearchList, savedQueries]);
+        setFilteredList(queryList);
     }, [userQueries.data]);
 
     const handleClick = (query: string) => {
