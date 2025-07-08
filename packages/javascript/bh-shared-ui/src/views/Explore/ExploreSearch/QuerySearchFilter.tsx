@@ -6,6 +6,7 @@ import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
+import { AppIcon } from '../../../components';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
     exportHandler: () => void;
@@ -61,7 +62,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         <>
             <div className='mb-2'>
                 <div className='mb-4 flex w-full'>
-                    <div className='flex-grow'>
+                    <div className='flex-grow relative'>
                         <Input
                             type='text'
                             id='query-search'
@@ -70,6 +71,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             className='w-full bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0'
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
+                        <AppIcon.MagnifyingGlass size={16} className='absolute right-2 top-[50%] -mt-[8px]' />
                     </div>
 
                     <div className='flex items-center ml-4'>
