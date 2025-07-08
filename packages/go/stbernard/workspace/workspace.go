@@ -117,7 +117,7 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
 	}
 
-	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.RunInteractive(command, args, cwd, env); err != nil {
 		return fmt.Errorf("running schemagen: %w", err)
 	} else {
 		return nil
