@@ -20,13 +20,6 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
-                https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
-            </Link>
-            <br />
             <Link target='_blank' rel='noopener' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
                 https://www.youtube.com/watch?v=z8thoG7gPd0
             </Link>
@@ -167,6 +160,13 @@ const References: FC = () => {
                 rel='noopener'
                 href='https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53'>
                 https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9'>
+                https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9
             </Link>
             <br />
             <Link
