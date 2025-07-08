@@ -18,12 +18,15 @@ package analyzegraph
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/shared"
 )
@@ -89,27 +92,35 @@ func (s *command) Parse(cmdIndex int) error {
 	return nil
 }
 
+// This is because fs.FS Open does not like abosulte paths prefixed with root
+func removeRoot(path string) string {
+	trimmed, _ := strings.CutPrefix(path, "/")
+
+	return trimmed
+}
+
 // Run generate command
 func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if graph, err := unmarshalGraph(s.infile); err != nil {
-		return fmt.Errorf("error unmarshalling graph: %w", err)
+	if graphDB, err := shared.InitializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
+		return fmt.Errorf("error initializing graph database: %w", err)
+	} else if db, err := shared.InitializeDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
+		return fmt.Errorf("error initializing database: %w", err)
+	} else if graph, err := generic.LoadGraphFromFile(os.DirFS("/"), removeRoot(s.infile)); err != nil {
+		return fmt.Errorf("error loading graph from file: %w", err)
+	} else if err := generic.WriteGraphToDatabase(graphDB, &graph); err != nil {
+		return fmt.Errorf("error writing graph to database: %w", err)
+	} else if err := datapipe.RunAnalysisOperations(ctx, db, graphDB, config.Configuration{}); err != nil {
+		return fmt.Errorf("error running analysis: %w", err)
+	} else if nodes, edges, err := shared.GetNodesAndEdges(ctx, graphDB); err != nil {
+		return fmt.Errorf("error getting nodes and edges: %w", err)
+	} else if graph, err := shared.TransformGraph(nodes, edges); err != nil {
+		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
+	} else if err := shared.WriteGraphToFile(&graph, s.outfile); err != nil {
+		return fmt.Errorf("error writing graph to file: %w", err)
 	}
-	// TODO: continue logic, use WriteGraphToDatabase
 
 	return nil
-}
-
-func unmarshalGraph(filePath string) (shared.Graph, error) {
-	var graphFile shared.GenericGraphFile
-
-	if bytes, err := os.ReadFile(filePath); err != nil {
-		return graphFile.Graph, err
-	} else if err := json.Unmarshal(bytes, graphFile); err != nil {
-		return graphFile.Graph, err
-	}
-
-	return graphFile.Graph, nil
 }

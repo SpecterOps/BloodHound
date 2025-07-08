@@ -17,7 +17,6 @@ package graph
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -27,21 +26,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/shared"
-	"github.com/specterops/dawgs"
-	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/size"
 )
 
 const (
@@ -110,23 +100,21 @@ func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if database, err := s.initializeDatabase(ctx); err != nil {
+	if database, err := shared.InitializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from directory %w", err)
 	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
 		return fmt.Errorf("error ingesting data %w", err)
-	} else if nodes, edges, err := getNodesAndEdges(ctx, database); err != nil {
+	} else if nodes, edges, err := shared.GetNodesAndEdges(ctx, database); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
-	} else if graph, err := transformGraph(nodes, edges); err != nil {
+	} else if graph, err := shared.TransformGraph(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to graph %w", err)
-	} else if jsonBytes, err := json.MarshalIndent(generateIngestFile(graph), "", "  "); err != nil {
-		return fmt.Errorf("error occurred while marshalling ingest file into bytes %w", err)
-	} else if err := os.MkdirAll(filepath.Dir(s.outfile), 0755); err != nil {
-		return fmt.Errorf("creating output directory: %w", err)
-	} else {
-		return os.WriteFile(s.outfile, jsonBytes, 0644)
+	} else if err := shared.WriteGraphToFile(&graph, s.outfile); err != nil {
+		return fmt.Errorf("error writing graph to file %w", err)
 	}
+
+	return nil
 }
 
 func ingestData(ctx context.Context, filepaths []string, database graph.Database) error {
@@ -173,152 +161,6 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 	return nil
 }
 
-func generateIngestFile(graph shared.Graph) shared.GenericGraphFile {
-	return shared.GenericGraphFile{
-		Graph: graph,
-	}
-}
-
-func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (shared.Graph, error) {
-	var (
-		isAZBase bool
-		isBase   bool
-
-		graphNodes    = make([]shared.Node, 0, len(nodes))
-		graphEdges    = make([]shared.Edge, 0, len(edges))
-		nodeObjectIDs = make(map[graph.ID]string, len(nodes))
-	)
-
-	for _, node := range nodes {
-		isAZBase = false
-		isBase = false
-
-		var kinds = make([]string, 0, len(node.Kinds))
-
-		for _, kind := range node.Kinds {
-			if kind == ad.Entity {
-				isBase = true
-			} else if kind == azure.Entity {
-				isAZBase = true
-			} else {
-				kinds = append(kinds, kind.String())
-			}
-		}
-
-		if isBase {
-			kinds = append(kinds, ad.Entity.String())
-		} else if isAZBase {
-			kinds = append(kinds, azure.Entity.String())
-		}
-
-		objectID, err := node.Properties.Get(common.ObjectID.String()).String()
-		if err != nil {
-			return shared.Graph{}, err
-		}
-
-		nodeObjectIDs[node.ID] = objectID
-
-		graphNodes = append(graphNodes, shared.Node{
-			ID:         objectID,
-			Kinds:      kinds,
-			Properties: removeNullMapValues(node.Properties.Map),
-		})
-	}
-
-	for _, edge := range edges {
-		graphEdges = append(graphEdges, shared.Edge{
-			Start: shared.Terminal{
-				MatchBy: "id",
-				Value:   nodeObjectIDs[edge.StartID],
-			},
-			End: shared.Terminal{
-				MatchBy: "id",
-				Value:   nodeObjectIDs[edge.EndID],
-			},
-			Kind:       edge.Kind.String(),
-			Properties: removeNullMapValues(edge.Properties.Map),
-		})
-	}
-
-	return shared.Graph{
-		Nodes: graphNodes,
-		Edges: graphEdges,
-	}, nil
-}
-
-func removeNullMapValues[K comparable](m map[K]any) map[K]any {
-	newMap := make(map[K]any, len(m))
-	for k, v := range m {
-		if v == nil {
-			continue
-		}
-
-		newMap[k] = convert(v)
-	}
-	return newMap
-}
-
-func convert(val any) any {
-	switch v := val.(type) {
-	case []any:
-		return removeNullSliceValues(v)
-	case map[any]any:
-		return removeNullMapValues(v)
-	default:
-		return val
-	}
-}
-
-func removeNullSliceValues(l []any) []any {
-	newSlice := make([]any, 0, len(l))
-
-	for _, val := range l {
-		if val == nil {
-			continue
-		}
-
-		newSlice = append(newSlice, convert(val))
-	}
-
-	return newSlice
-}
-
-func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
-	var (
-		nodes []*graph.Node
-		edges []*graph.Relationship
-	)
-
-	if err := database.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		err := tx.Nodes().Filter(
-			query.Not(query.Kind(query.Node(), common.MigrationData)),
-		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-			for node := range cursor.Chan() {
-				nodes = append(nodes, node)
-			}
-			return cursor.Error()
-		})
-		if err != nil {
-			return fmt.Errorf("error fetching nodes %w", err)
-		}
-		err = tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
-			for edge := range cursor.Chan() {
-				edges = append(edges, edge)
-			}
-			return cursor.Error()
-		})
-		if err != nil {
-			return fmt.Errorf("error fetching relationships %w", err)
-		}
-
-		return nil
-	}); err != nil {
-		return nodes, edges, fmt.Errorf("error occurred reading the database %w", err)
-	} else {
-		return nodes, edges, nil
-	}
-}
-
 func (s *command) getIngestFilePaths() ([]string, error) {
 	var paths = make([]string, 0, 16)
 
@@ -337,26 +179,4 @@ func (s *command) getIngestFilePaths() ([]string, error) {
 	}
 
 	return paths, nil
-}
-
-func (s *command) initializeDatabase(ctx context.Context) (graph.Database, error) {
-	var (
-		connection = s.env[environment.PostgresConnectionVarName]
-	)
-
-	if pool, err := pg.NewPool(connection); err != nil {
-		return nil, fmt.Errorf("error creating postgres connection %w", err)
-	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: size.Gibibyte,
-		ConnectionString:      connection,
-		Pool:                  pool,
-	}); err != nil {
-		return nil, fmt.Errorf("error connecting to database %w", err)
-	} else if err = migrations.NewGraphMigrator(database).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
-		return nil, fmt.Errorf("error migrating graph %w", err)
-	} else if err = database.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
-		return nil, fmt.Errorf("error setting default graph %w", err)
-	} else {
-		return database, nil
-	}
 }
