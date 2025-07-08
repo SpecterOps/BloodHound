@@ -15,23 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    Box,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    ListSubheader,
-    Typography,
-} from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
 import { FC, useState } from 'react';
@@ -91,64 +75,52 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     return (
         <>
             {listSections && (
-                <List dense disablePadding>
+                <div>
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
-                        <Box key={category}>
-                            <ListSubheader className={styles.subheader}>{category}</ListSubheader>
+                        <div key={category} className='relative'>
+                            <div className={`${styles.subheader} sticky top-0 z-[1] py-2`}>{category}</div>
                             {queryData.map((queryItem, i) => {
                                 const { subheader, queries } = queryItem;
                                 return (
-                                    <li key={i}>
+                                    <li key={i} className='list-none'>
                                         {queries?.map((lineItem, idx) => {
                                             const { id, description, cypher, canEdit = false } = lineItem;
                                             return (
-                                                <ListItem
-                                                    component='div'
-                                                    disablePadding
+                                                <div
+                                                    className={`py-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-5 justify-between pl-4 ${
+                                                        selectedQuery?.description === description
+                                                            ? styles.selected
+                                                            : ''
+                                                    }`}
                                                     key={`${id}-${idx}`}
-                                                    sx={{ borderRadius: '8px', py: '4px' }}
-                                                    secondaryAction={
-                                                        canEdit && (
-                                                            <Button
-                                                                aria-label='Delete Query'
-                                                                size='small'
-                                                                variant='secondary'
-                                                                onClick={() => {
-                                                                    handleDelete(id as number);
-                                                                }}>
-                                                                <FontAwesomeIcon icon={faTrash} />
-                                                            </Button>
-                                                        )
-                                                    }>
-                                                    <ListItemButton
-                                                        onClick={() => clickHandler(cypher)}
-                                                        className={
-                                                            selectedQuery?.description === description
-                                                                ? styles.selected
-                                                                : ''
-                                                        }>
-                                                        <ListItemActionMenu
-                                                            canEdit={canEdit}
-                                                            id={id}
-                                                            deleteQuery={() => handleDelete(id as number)}
-                                                        />
-                                                        <ListItemText primary={description} />
-                                                        {subheader && (
-                                                            <Chip
-                                                                label={subheader}
-                                                                size='small'
-                                                                className='ml-3'></Chip>
+                                                    onClick={() => clickHandler(cypher)}>
+                                                    <div>
+                                                        {description && (
+                                                            <p className='mb-0 leading-none'>{description}</p>
                                                         )}
-                                                    </ListItemButton>
-                                                </ListItem>
+
+                                                        {category && (
+                                                            <span className='text-xs italic pr-1'>{category},</span>
+                                                        )}
+                                                        {subheader && (
+                                                            <span className='text-xs italic'>{subheader}</span>
+                                                        )}
+                                                    </div>
+
+                                                    <ListItemActionMenu
+                                                        canEdit={canEdit}
+                                                        id={id}
+                                                        deleteQuery={() => handleDelete(id as number)}
+                                                    />
+                                                </div>
                                             );
                                         })}
                                     </li>
                                 );
                             })}
-                        </Box>
+                        </div>
                     ))}
-                </List>
+                </div>
             )}
             {!listSections.length && (
                 <Box className='min-h-40 flex flex-col items-center justify-center'>
