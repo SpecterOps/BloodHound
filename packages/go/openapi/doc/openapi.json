@@ -6171,7 +6171,7 @@
                 },
                 "required": [
                   "query",
-                  "type"
+                  "tag_type"
                 ]
               }
             }

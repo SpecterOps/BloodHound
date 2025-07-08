@@ -20,7 +20,7 @@ post:
               type: integer
           required:
             - query
-            - type
+            - tag_type
 
   responses:
     200:

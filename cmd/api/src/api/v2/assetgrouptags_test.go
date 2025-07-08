@@ -2300,7 +2300,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		handler.ServeHTTP(response, req)
 
 		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, api.ErrorResponseAssetGroupTagInvalid, "valid tag type is required")
+		require.Contains(t, response.Body.String(), "valid tag type is required")
 	})
 	t.Run("empty query error", func(t *testing.T) {
 
@@ -2313,7 +2313,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		handler.ServeHTTP(response, req)
 
 		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, api.FmtErrorResponseDetailsMissingRequiredQueryParameter, "missing required query parameter")
+		require.Contains(t, response.Body.String(), "missing required query parameter")
 	})
 	t.Run("get tags db error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{}, errors.New("db error"))
