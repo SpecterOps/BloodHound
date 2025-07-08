@@ -14,19 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
-import { FC } from 'react';
-import { AdcsEsc14ScenarioALinux } from '../AdcsEsc14ScenarioA';
-
-const LinuxAbuse: FC = () => {
-    return (
-        <>
-            <Typography variant='body2'>
-                The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
-            </Typography>
-            <AdcsEsc14ScenarioALinux />
-        </>
-    );
-};
-
-export default LinuxAbuse;
+export { AdcsEsc14ScenarioALinux, AdcsEsc14ScenarioAWindows } from './AdcsEsc14ScenarioA';
