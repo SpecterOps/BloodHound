@@ -776,16 +776,14 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 	} else {
 		var (
 			kinds []graph.Kind
-			count int
 		)
 
 		for _, s := range selectors {
-			if match := strings.Contains(strings.ToLower(s.Name), strings.ToLower(reqBody.Query)); match && len(matchedSelectors) < assetGroupTagsSearchLimit {
+			if strings.Contains(strings.ToLower(s.Name), strings.ToLower(reqBody.Query)) {
 				matchedSelectors = append(matchedSelectors, s)
-			}
-			count++
-			if count >= assetGroupTagsSearchLimit {
-				break
+				if len(matchedSelectors) >= assetGroupTagsSearchLimit {
+					break
+				}
 			}
 		}
 
@@ -795,24 +793,22 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 			// group owned with labels
 			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) {
+				kinds = append(kinds, t.ToKind())
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
 					matchedTags = append(matchedTags, t)
-					kinds = append(kinds, t.ToKind())
 
-					count++
-					if count >= assetGroupTagsSearchLimit {
+					if len(matchedTags) >= assetGroupTagsSearchLimit {
 						break
 					}
 				}
 			}
 
 			if reqBody.TagType == model.AssetGroupTagTypeTier && t.Type == model.AssetGroupTagTypeTier {
+				kinds = append(kinds, t.ToKind())
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
 					matchedTags = append(matchedTags, t)
-					kinds = append(kinds, t.ToKind())
 
-					count++
-					if count >= assetGroupTagsSearchLimit {
+					if len(matchedTags) >= assetGroupTagsSearchLimit {
 						break
 					}
 				}
@@ -821,8 +817,8 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 		filter := query.And(
 			query.Or(
-				query.StringContains(query.NodeProperty(common.Name.String()), strings.ToLower(reqBody.Query)),
-				query.StringContains(query.NodeProperty(common.ObjectID.String()), strings.ToLower(reqBody.Query)),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), reqBody.Query),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), reqBody.Query),
 			),
 			query.KindIn(query.Node(), kinds...),
 		)
