@@ -76,10 +76,10 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 		mu   sync.Mutex
 
 		command             = "go"
-		majorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.majorVersion=%d'", version.Major())
-		minorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.minorVersion=%d'", version.Minor())
-		patchString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.patchVersion=%d'", version.Patch())
-		prereleaseString    = fmt.Sprintf("-X 'github.com/specterops/bloodhound/src/version.prereleaseVersion=%s'", version.Prerelease())
+		majorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.majorVersion=%d'", version.Major())
+		minorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.minorVersion=%d'", version.Minor())
+		patchString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.patchVersion=%d'", version.Patch())
+		prereleaseString    = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.prereleaseVersion=%s'", version.Prerelease())
 		ldflagArgComponents = []string{majorString, minorString, patchString}
 	)
 
@@ -98,7 +98,7 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 				go func(p GoPackage) {
 					defer wg.Done()
 
-					if err := cmdrunner.Run(command, args, p.Dir, env); err != nil {
+					if _, err := cmdrunner.Run(command, args, p.Dir, env); err != nil {
 						mu.Lock()
 						errs = append(errs, fmt.Errorf("go build for package %s: %w", p.Import, err))
 						mu.Unlock()

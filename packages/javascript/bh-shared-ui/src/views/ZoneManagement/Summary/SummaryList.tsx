@@ -41,7 +41,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
     return (
         <div className='flex flex-col w-full h-full space-y-4'>
             <div className='flex flex-col flex-1 space-y-4'>
-                <ul className='overflow-y-auto h-[445px]'>
+                <ul className='overflow-y-auto h-[445px]' data-testid='zone-management_summary_tag-list'>
                     {listQuery.isLoading ? (
                         itemSkeletons.map((skeleton, index) => {
                             return skeleton(title, index, 'h-32');
@@ -62,7 +62,6 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                 return (
                                     <React.Fragment key={listItem.id}>
                                         <li
-                                            key={listItem.id}
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}

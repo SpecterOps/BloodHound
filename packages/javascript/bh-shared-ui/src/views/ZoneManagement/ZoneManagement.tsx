@@ -17,7 +17,8 @@
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { AppNavigate } from '../../components/Navigation';
 import {
     DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
@@ -86,6 +87,7 @@ const ZoneManagement: FC = () => {
                 <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
                 <p className='mt-6'>
                     Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    <br />
                     {SupportLink && <SupportLink />}
                 </p>
 
@@ -101,8 +103,12 @@ const ZoneManagement: FC = () => {
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value='tier'>Tiers</TabsTrigger>
-                            <TabsTrigger value='label'>Labels</TabsTrigger>
+                            <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>
+                                Tiers
+                            </TabsTrigger>
+                            <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
+                                Labels
+                            </TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <Suspense
@@ -115,7 +121,7 @@ const ZoneManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<Navigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
+                            <Route path='*' element={<AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
                         </Routes>
                     </Suspense>
                 </div>

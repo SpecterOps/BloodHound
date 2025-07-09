@@ -122,7 +122,7 @@ class BHEAPIClient {
     cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
-            { query, include_properties: includeProperties },
+            { query, include_properties: includeProperties || false },
             options
         );
     };
@@ -162,7 +162,7 @@ class BHEAPIClient {
     /* audit */
     getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);
 
-    /* asset groups */
+    /* asset group tags (AGT) */
 
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
@@ -272,7 +272,7 @@ class BHEAPIClient {
         );
     };
 
-    /* */
+    /* asset group isolation (AGI) */
 
     createAssetGroup = (assetGroup: CreateAssetGroupRequest, options?: RequestOptions) =>
         this.baseClient.post('/api/v2/asset-groups', assetGroup, options);
@@ -317,16 +317,110 @@ class BHEAPIClient {
     listAssetGroups = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 
-    /* analysis */
+    /* attack paths */
 
-    getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: RequestOptions) =>
-        this.baseClient.get(
-            `/api/v2/meta-trees/${domainId}`,
+    /**
+     * getAttackPathsGraph returns the graph data that is rendered in the attack paths page for a given environment
+     */
+    getAttackPathsGraph = (environmentId: string, nodeId: string | null = null, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
+            `/api/v2/meta-trees/${environmentId}`,
             Object.assign({ params: nodeId && { node_id: nodeId } }, options)
         );
 
-    getLatestTierZeroComboNode = (domainId: string, options?: RequestOptions) =>
-        this.baseClient.get(`/api/v2/meta-nodes/${domainId}`, options);
+    /**
+     * getLatestMetaNode returns Meta node data from the most recent analysis for a given environment
+     */
+    getLatestMetaNode = (environmentId: string, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
+
+    /**
+     * getFindingDetails returns data associated with a finding for a given environment
+     */
+    getFindingDetails = <T = any>(
+        environmentId: string,
+        finding: string,
+        skip: number,
+        limit: number,
+        filterAccepted?: boolean,
+        sortBy?: string | string[],
+        assetGroupTagId?: number,
+        options?: RequestOptions
+    ) => {
+        const params = new URLSearchParams();
+        params.append('finding', finding);
+
+        params.append('skip', skip.toString());
+        params.append('limit', limit.toString());
+        if (sortBy) {
+            if (typeof sortBy === 'string') {
+                params.append('sort_by', sortBy);
+            } else {
+                sortBy.forEach((sort) => params.append('sort_by', sort));
+            }
+        }
+
+        if (typeof assetGroupTagId === 'number') params.append('asset_group_tag_id', assetGroupTagId.toString());
+
+        if (typeof filterAccepted === 'boolean') params.append('Accepted', `eq:${filterAccepted}`);
+
+        return this.baseClient.get<T>(
+            `/api/v2/domains/${environmentId}/details`,
+            Object.assign(
+                {
+                    params: params,
+                    headers: options?.headers,
+                },
+                options
+            )
+        );
+    };
+
+    /**
+     * getFindingSparklineData returns the data that is used to plot finding exposure over time and count over time chart on the attack paths page for a given environment
+     */
+    getFindingSparklineData = <T = any>(environmentId: string, options?: RequestOptions) =>
+        this.baseClient.get<T>(`/api/v2/domains/${environmentId}/sparkline`, options);
+
+    changeFindingAcceptance = (
+        attackPathId: string,
+        findingType: string,
+        accepted: boolean,
+        acceptUntil?: Date,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.put(
+            `/api/v2/attack-paths/${attackPathId}/acceptance`,
+            {
+                risk_type: findingType,
+                accepted: accepted,
+                accept_until: acceptUntil && acceptUntil.toISOString(),
+            },
+            options
+        );
+
+    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+
+    /**
+     * getAvailableFindingTypes returns a list of findings that were discovered through the most recent analysis for a given environment
+     */
+    getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
+        this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
+
+    exportRiskFindings = (environmentId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/domains/${environmentId}/attack-path-findings`,
+            Object.assign(
+                {
+                    params: {
+                        finding: findingType,
+                        accepted: accepted,
+                    },
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
 
     getAssetGroupComboNode = (assetGroupId: string, domainsid?: string, options?: RequestOptions) => {
         return this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
@@ -414,13 +508,15 @@ class BHEAPIClient {
         );
     };
 
-    getPostureStats = (from: Date, to: Date, domainSID?: string, sortBy?: string, options?: RequestOptions) => {
+    /* posture */
+
+    getPostureStats = (from: Date, to: Date, environmentId?: string, sortBy?: string, options?: RequestOptions) => {
         const params: PostureRequest = {
             from: from.toISOString(),
             to: to.toISOString(),
         };
 
-        if (domainSID) params.domain_sid = `eq:${domainSID}`;
+        if (environmentId) params.domain_sid = `eq:${environmentId}`;
         if (sortBy) params.sort_by = sortBy;
 
         return this.baseClient.get<PostureResponse>(
@@ -434,30 +530,19 @@ class BHEAPIClient {
         );
     };
 
-    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: RequestOptions) => {
-        return this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
-            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
-            paramsSerializer: { indexes: null },
+    getPostureFindingTrends = (options?: RequestOptions) =>
+        this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
             ...options,
-        });
-    };
-
-    getPostureHistory = (
-        environments: string[],
-        dataType: string,
-        start?: Date,
-        end?: Date,
-        options?: RequestOptions
-    ) => {
-        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
-            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
             paramsSerializer: { indexes: null },
-            ...options,
         });
-    };
 
-    /* ingest */
-    ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+    getPostureHistory = (dataType: string, options?: RequestOptions) =>
+        this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
+            ...options,
+            paramsSerializer: { indexes: null },
+        });
+
+    /* explore search */
 
     getPathfindingResult = (startNode: string, endNode: string, options?: RequestOptions) =>
         this.baseClient.get(
@@ -487,7 +572,12 @@ class BHEAPIClient {
             )
         );
 
+    /* ingest */
+
+    ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+
     /* clients */
+
     getClients = (
         skip: number = 0,
         limit: number = 10,
@@ -632,7 +722,7 @@ class BHEAPIClient {
 
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
-        this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/customnode', options);
+        this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/custom-nodes', options);
 
     /* jobs */
     getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: RequestOptions) =>
@@ -656,112 +746,6 @@ class BHEAPIClient {
 
     getJobLogFile = (jobId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/jobs/${jobId}/log`, options);
-
-    getRiskDetails = <T = any>(
-        domainId: string,
-        finding: string,
-        skip: number,
-        limit: number,
-        filterAccepted?: boolean,
-        sortBy?: string | string[],
-        options?: RequestOptions
-    ) => {
-        const params = new URLSearchParams();
-        params.append('finding', finding);
-
-        params.append('skip', skip.toString());
-        params.append('limit', limit.toString());
-        if (sortBy) {
-            if (typeof sortBy === 'string') {
-                params.append('sort_by', sortBy);
-            } else {
-                sortBy.forEach((sort) => params.append('sort_by', sort));
-            }
-        }
-
-        if (typeof filterAccepted === 'boolean') params.append('Accepted', `eq:${filterAccepted}`);
-
-        return this.baseClient.get<T>(
-            `/api/v2/domains/${domainId}/details`,
-            Object.assign(
-                {
-                    params: params,
-                    headers: options?.headers,
-                },
-                options
-            )
-        );
-    };
-
-    getRiskSparklineValues = <T = any>(
-        domainId: string,
-        finding: string,
-        from?: Date,
-        to?: Date,
-        sortBy?: string,
-        options?: RequestOptions
-    ) =>
-        this.baseClient.get<T>(
-            `/api/v2/domains/${domainId}/sparkline`,
-            Object.assign(
-                {
-                    params: {
-                        finding,
-                        from: from?.toISOString(),
-                        to: to?.toISOString(),
-                        sort_by: sortBy,
-                    },
-                },
-                options
-            )
-        );
-
-    changeRiskAcceptance = (
-        attackPathId: string,
-        riskType: string,
-        accepted: boolean,
-        acceptUntil?: Date,
-        options?: RequestOptions
-    ) =>
-        this.baseClient.put(
-            `/api/v2/attack-paths/${attackPathId}/acceptance`,
-            {
-                risk_type: riskType,
-                accepted: accepted,
-                accept_until: acceptUntil && acceptUntil.toISOString(),
-            },
-            options
-        );
-
-    genRisks = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
-
-    getAvailableRiskTypes = (domainId: string, sortBy?: string, options?: RequestOptions) =>
-        this.baseClient.get(
-            `/api/v2/domains/${domainId}/available-types`,
-            Object.assign(
-                {
-                    params: {
-                        sort_by: sortBy,
-                    },
-                },
-                options
-            )
-        );
-
-    exportRiskFindings = (domainId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
-        this.baseClient.get(
-            `/api/v2/domains/${domainId}/attack-path-findings`,
-            Object.assign(
-                {
-                    params: {
-                        finding: findingType,
-                        accepted: accepted,
-                    },
-                    responseType: 'blob',
-                },
-                options
-            )
-        );
 
     /* auth */
     login = (credentials: LoginRequest, options?: RequestOptions) =>

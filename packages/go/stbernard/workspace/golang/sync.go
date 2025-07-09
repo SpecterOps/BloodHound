@@ -19,6 +19,8 @@ package golang
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
@@ -44,40 +46,9 @@ func TidyModules(modPaths []string, env environment.Environment) error {
 				args    = []string{"mod", "tidy"}
 			)
 
-			if err := cmdrunner.Run(command, args, modPath, env); err != nil {
+			if _, err := cmdrunner.Run(command, args, modPath, env); err != nil {
 				mu.Lock()
 				errs = append(errs, fmt.Errorf("go mod tidy in %s: %w", modPath, err))
-				mu.Unlock()
-			}
-		}(modPath)
-	}
-
-	wg.Wait()
-
-	return errors.Join(errs...)
-}
-
-// DownloadModules runs go mod download for all module paths passed
-func DownloadModules(modPaths []string, env environment.Environment) error {
-	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
-	)
-
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(modPath string) {
-			defer wg.Done()
-
-			var (
-				command = "go"
-				args    = []string{"mod", "download"}
-			)
-
-			if err := cmdrunner.Run(command, args, modPath, env); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("go mod download in %s: %w", modPath, err))
 				mu.Unlock()
 			}
 		}(modPath)
@@ -96,7 +67,12 @@ func SyncWorkspace(cwd string, env environment.Environment) error {
 		args    = []string{"work", "sync"}
 	)
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	// Skip this if go.work doesn't exist
+	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("go work sync: %w", err)
 	} else {
 		return nil

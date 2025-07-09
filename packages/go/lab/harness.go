@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/specterops/bloodhound/lab/internal"
+	"github.com/specterops/bloodhound/packages/go/lab/internal"
 )
 
 func NewHarness() *Harness {

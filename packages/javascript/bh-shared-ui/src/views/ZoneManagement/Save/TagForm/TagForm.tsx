@@ -23,6 +23,7 @@ import {
     Input,
     Label,
     Skeleton,
+    Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -32,25 +33,29 @@ import {
     AssetGroupTagTypeTier,
     AssetGroupTagTypes,
     UpdateAssetGroupTagRequest,
+    parseTieringConfiguration,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
+import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { useAssetGroupTags } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
+
+import { useGetConfiguration } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
     description: string;
     position: number | null;
     type: AssetGroupTagTypes;
+    analysis_enabled: boolean;
 };
 
 const MAX_NAME_LENGTH = 250;
@@ -82,6 +87,7 @@ const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs):
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
     if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+    if (data.analysis_enabled !== workingCopy.analysis_enabled) diffed.analysis_enabled = workingCopy.analysis_enabled;
 
     return diffed;
 };
@@ -91,21 +97,29 @@ export const TagForm: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();
     const location = useLocation();
+    const isEditPage = location.pathname.includes('save/tier');
+
+    const tagsQuery = useAssetGroupTags();
+    const tagQuery = useAssetGroupTagInfo(tagId);
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
+    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled);
 
-    const { TierList } = useContext(ZoneManagementContext);
+    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
+
+    const { data } = useGetConfiguration();
+    const tieringConfig = parseTieringConfiguration(data);
+    const showAnalysisToggle =
+        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
 
     const {
         register,
         handleSubmit,
         formState: { errors },
+        setValue,
     } = useForm<TagFormInputs>();
-
-    const tagsQuery = useAssetGroupTags();
-    const tagQuery = useAssetGroupTagInfo(tagId);
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -216,6 +230,7 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
+            setToggleEnabled(tagQuery.data.analysis_enabled);
         }
     }, [tagQuery.data]);
 
@@ -225,8 +240,8 @@ export const TagForm: FC = () => {
     return (
         <>
             <form className='flex gap-x-6 mt-6'>
-                <div className='flex flex-col justify-between'>
-                    <Card className='min-w-96 w-[672px] p-3'>
+                <div className='flex flex-col justify-between min-w-96 w-[672px]'>
+                    <Card className='p-3 mb-4'>
                         <CardHeader>
                             <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
                         </CardHeader>
@@ -238,6 +253,7 @@ export const TagForm: FC = () => {
                                 <div>
                                     <Label htmlFor='name'>Name</Label>
                                     <Input
+                                        data-testid='zone-management_save_tag-form_name-input'
                                         id='name'
                                         type='text'
                                         disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
@@ -263,6 +279,7 @@ export const TagForm: FC = () => {
                                     <Label htmlFor='description'>Description</Label>
                                     <textarea
                                         id='description'
+                                        data-testid='zone-management_save_tag-form_description-input'
                                         {...register('description', { value: tagQuery.data?.description })}
                                         placeholder='Description Input'
                                         rows={3}
@@ -271,16 +288,42 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
+                                {isEditPage && showAnalysisToggle ? (
+                                    <div>
+                                        <Label htmlFor='analysis'>Enable Analysis</Label>
+                                        <div className='flex gap-3'>
+                                            <Switch
+                                                id='analysis'
+                                                checked={toggleEnabled}
+                                                {...register('analysis_enabled')}
+                                                data-testid='zone-management_save_tag-form_analysis-enabled-switch'
+                                                onCheckedChange={(checked: boolean) => {
+                                                    setToggleEnabled(checked);
+                                                    setValue('analysis_enabled', checked);
+                                                }}
+                                            />
+                                            <p className='text-xs'>Include this tier when running analysis</p>
+                                        </div>
+                                    </div>
+                                ) : null}
+
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
-                                    <Input id='position' type='number' {...register('position', { value: position })} />
+                                    <Input
+                                        data-testid='zone-management_save_tag-form_position-input'
+                                        id='position'
+                                        type='number'
+                                        {...register('position', { value: position })}
+                                    />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
-                    <div className='flex justify-end gap-6 mt-6 w-[672px]'>
+                    {isEditPage && SalesMessage && <SalesMessage />}
+                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
+                                data-testid='zone-management_save_tag-form_delete-button'
                                 variant={'text'}
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
@@ -292,13 +335,17 @@ export const TagForm: FC = () => {
                             </Button>
                         )}
                         <Button
+                            data-testid='zone-management_save_tag-form_cancel-button'
                             variant={'secondary'}
                             onClick={() => {
                                 navigate(-1);
                             }}>
                             Cancel
                         </Button>
-                        <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                        <Button
+                            data-testid='zone-management_save_tag-form_save-button'
+                            variant={'primary'}
+                            onClick={handleSubmit(onSubmit)}>
                             {tagId === '' ? 'Define Selector' : 'Save Edits'}
                         </Button>
                     </div>
