@@ -475,7 +475,6 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 	}
 }
 
-// TODO: ensure that i don't need to manually open/close object
 func (v *validator) validateMetadata(metadataSchema *jsonschema.Schema) {
 	var item map[string]any
 

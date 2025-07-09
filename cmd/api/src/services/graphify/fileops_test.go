@@ -43,7 +43,7 @@ func TestSeekToKey(t *testing.T) {
 			j := json.NewDecoder(r)
 
 			err := graphify.SeekToKey(j, key, 1)
-			assert.ErrorIs(t, err, assertion.err)
+			assert.ErrorIs(t, err, assertion.err, assertion.rawString)
 		}
 	})
 
@@ -52,6 +52,14 @@ func TestSeekToKey(t *testing.T) {
 		j := json.NewDecoder(r)
 
 		err := graphify.SeekToKey(j, "nodes", 2)
+		require.Nil(t, err)
+	})
+
+	t.Run("seek to metadata tag at depth 2", func(t *testing.T) {
+		r := strings.NewReader(`{"graph":{"metadata":{}}}`)
+		j := json.NewDecoder(r)
+
+		err := graphify.SeekToKey(j, "metadata", 2)
 		require.Nil(t, err)
 	})
 }

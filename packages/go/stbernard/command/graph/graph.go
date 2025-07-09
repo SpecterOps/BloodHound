@@ -167,7 +167,7 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
 
-			readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
+			readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson}
 
 			file, err := os.Open(filepath)
 			if err != nil {

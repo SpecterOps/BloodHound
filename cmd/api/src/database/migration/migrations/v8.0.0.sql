@@ -1,5 +1,13 @@
-ALTER TABLE kind ADD COLUMN IF NOT EXISTS "isSource" BOOLEAN DEFAULT FALSE;
+create table if not exists source_kinds
+(
+  id   smallserial,
+  name varchar(256) not null,
+  primary key (id),
+  unique (name)
+);
 
-UPDATE kind
-SET "isSource" = TRUE
-WHERE name IN ('Base', 'AZBase');
+INSERT INTO source_kinds (name)
+VALUES 
+  ('Base'),
+  ('AZBase')
+ON CONFLICT (name) DO NOTHING;
