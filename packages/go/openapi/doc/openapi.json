@@ -5631,6 +5631,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
             "name": "auto_certify",
             "in": "query",
             "required": false,

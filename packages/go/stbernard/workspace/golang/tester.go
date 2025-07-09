@@ -17,12 +17,10 @@
 package golang
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 
@@ -85,7 +83,7 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 		manifest[modName] = coverFile
 		testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
 
-		if err := cmdrunner.Run(command, testArgs, modPath, env); err != nil {
+		if _, err := cmdrunner.RunInteractive(command, testArgs, modPath, env); err != nil {
 			return fmt.Errorf("go test at %v: %w", modPath, err)
 		}
 	}
@@ -105,23 +103,20 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 	}
 }
 
+var (
+	combinedCoverageRegex = regexp.MustCompile(`total:\s+\(.*?\)\s+(\d+(?:.\d+)?%)`)
+)
+
 // GetCombinedCoverage takes a coverage file and returns a string representation of percentage of statements covered
 func GetCombinedCoverage(coverFile string, env environment.Environment) (string, error) {
 	var (
-		output bytes.Buffer
-
-		args       = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
-		channelOut = func(c *exec.Cmd) {
-			c.Stdout = &output
-		}
+		args = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
 	)
 
-	if err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env, channelOut); err != nil {
+	if result, err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env); err != nil {
 		return "", fmt.Errorf("combined coverage: %w", err)
-	} else if re, err := regexp.Compile(`total:\s+\(.*?\)\s+(\d+(?:.\d+)?%)`); err != nil {
-		return "", fmt.Errorf("regex failed to compile: %w", err)
 	} else {
-		matches := re.FindStringSubmatch(output.String())
+		matches := combinedCoverageRegex.FindStringSubmatch(result.StandardOutput.String())
 
 		// This regex has only one capture group, so we expect the percentage to be in the capture group portion of the matches
 		// There should be two matches since the first match result is the full string that was matched, and the second is the result of our capture group

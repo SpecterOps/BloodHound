@@ -103,8 +103,12 @@ const ZoneManagement: FC = () => {
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value='tier'>Tiers</TabsTrigger>
-                            <TabsTrigger value='label'>Labels</TabsTrigger>
+                            <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>
+                                Tiers
+                            </TabsTrigger>
+                            <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
+                                Labels
+                            </TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <Suspense

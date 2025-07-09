@@ -51,25 +51,18 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		return WorkspacePaths{}, fmt.Errorf("getting current working directory: %w", err)
 	}
 
-	var found bool
-
-	for !found {
-		found, err = projectDirExists(cwd)
-		if err != nil {
+	for {
+		if found, err := projectDirExists(cwd); err != nil {
 			return WorkspacePaths{}, fmt.Errorf("finding project root: %w", err)
-		}
-
-		if found {
+		} else if found {
 			break
 		}
 
-		prevCwd := cwd
-
 		// Go up a directory before retrying
-		cwd = filepath.Dir(cwd)
-
-		if cwd == prevCwd {
+		if parentDir := filepath.Dir(cwd); cwd == parentDir {
 			return WorkspacePaths{}, ErrNoWorkspaceFound
+		} else {
+			cwd = parentDir
 		}
 	}
 
@@ -121,10 +114,10 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 	} else if errors.Is(err, os.ErrNotExist) {
 		args = append(args, "github.com/specterops/bloodhound/packages/go/schemagen")
 	} else {
-		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/graphgen")
+		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
 	}
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.RunInteractive(command, args, cwd, env); err != nil {
 		return fmt.Errorf("running schemagen: %w", err)
 	} else {
 		return nil
@@ -132,10 +125,10 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 }
 
 func projectDirExists(cwd string) (bool, error) {
-	if _, err := os.Stat(filepath.Join(cwd, ".stbernard")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(cwd, "go.mod")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
-		return false, fmt.Errorf("stat .stbernard file: %w", err)
+		return false, fmt.Errorf("stat go.mod file: %w", err)
 	} else {
 		return true, nil
 	}

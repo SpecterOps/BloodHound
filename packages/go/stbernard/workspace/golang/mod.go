@@ -18,76 +18,68 @@ package golang
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"os"
-	"os/exec"
+	"io/fs"
 	"path/filepath"
+	"strings"
 
-	"golang.org/x/mod/modfile"
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-// ParseModulesAbsPaths parses the modules listed in the go.work file from the given
-// directory and returns a list of absolute paths to those modules
+// ParseModulesAbsPaths walks the filesystem looking for additional go.mod files as children of the workspace root
 func ParseModulesAbsPaths(cwd string) ([]string, error) {
-	var (
-		workfilePath = filepath.Join(cwd, "go.work")
-		absPath, err = filepath.Abs(cwd)
-	)
+	var modules = make([]string, 0, 4)
 
-	if err != nil {
-		return nil, fmt.Errorf("absolute path for workspace: %w", err)
-	}
-
-	if _, err := os.Stat(workfilePath); errors.Is(err, os.ErrNotExist) {
-		return []string{absPath}, nil
-	} else if err != nil {
-		return nil, fmt.Errorf("checking if go.work exists: %w", err)
-	}
-
-	// go.work files aren't particularly heavy, so we'll just read into memory
-	if data, err := os.ReadFile(workfilePath); err != nil {
-		return nil, fmt.Errorf("reading go.work file: %w", err)
-	} else if workfile, err := modfile.ParseWork(workfilePath, data, nil); err != nil {
-		return nil, fmt.Errorf("parsing go.work file: %w", err)
-	} else {
-		var (
-			modulePaths = make([]string, 0, len(workfile.Use))
-			workDir     = filepath.Dir(workfilePath)
-		)
-
-		for _, use := range workfile.Use {
-			modulePaths = append(modulePaths, filepath.Join(workDir, use.Path))
+	err := filepath.WalkDir(cwd, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("walking directories for go modules: %w", err)
 		}
 
-		return modulePaths, nil
+		// Skip hidden files and directories
+		if entry.IsDir() && strings.HasPrefix(entry.Name(), ".") {
+			return filepath.SkipDir
+		}
+
+		if entry.Name() == "go.mod" {
+			absPath, err := filepath.Abs(filepath.Dir(path))
+			if err != nil {
+				return fmt.Errorf("absolute path for discovered module: %w", err)
+			}
+			modules = append(modules, absPath)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return modules, fmt.Errorf("parsing modules absolute paths: %w", err)
 	}
+
+	return modules, nil
 }
 
 func moduleListPackages(modPath string) ([]GoPackage, error) {
-	var (
-		packages = make([]GoPackage, 0)
-	)
-
-	cmd := exec.Command("go", "list", "-json", "./...")
-	cmd.Dir = modPath
-	if out, err := cmd.StdoutPipe(); err != nil {
-		return packages, fmt.Errorf("creating stdout pipe for module %s: %w", modPath, err)
-	} else if err := cmd.Start(); err != nil {
-		return packages, fmt.Errorf("listing packages for module %s: %w", modPath, err)
+	if result, err := cmdrunner.Run("go", []string{"list", "-json", "./..."}, modPath, environment.NewEnvironment()); err != nil {
+		return nil, fmt.Errorf("running go mod list: %w", err)
 	} else {
-		decoder := json.NewDecoder(out)
+		var (
+			decoder     = json.NewDecoder(result.StandardOutput)
+			packages    []GoPackage
+			nextPackage GoPackage
+		)
+
 		for {
-			var p GoPackage
-			if err := decoder.Decode(&p); err == io.EOF {
+			if err := decoder.Decode(&nextPackage); err == io.EOF {
 				break
 			} else if err != nil {
-				return packages, fmt.Errorf("decoding package in module %s: %w", modPath, err)
+				return nil, fmt.Errorf("decoding package in module %s: %w", modPath, err)
 			}
-			packages = append(packages, p)
+
+			packages = append(packages, nextPackage)
 		}
 
-		return packages, cmd.Wait()
+		return packages, nil
 	}
 }

@@ -40,8 +40,8 @@ show *FLAGS:
   @just stbernard show {{FLAGS}}
 
 # Run all analyzers (requires jq to be installed locally)
-analyze:
-  just stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
+analyze *FLAGS:
+  @just stbernard analysis {{FLAGS}}
 
 # Run tests
 test *FLAGS:
@@ -63,7 +63,7 @@ _prep-steps:
   @just modsync
   @just generate
   @just show > tmp/repo-status.txt
-  @just analyze > tmp/analysis-report.txt
+  @just analyze
 
 # check license is applied to source files
 check-license *ARGS:
@@ -180,14 +180,6 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
 init wipe="":
   #!/usr/bin/env bash
   echo "Init BloodHound CE"
-
-  if [[ ! -L "../dawgs" && ! -d "../dawgs" ]]; then
-    echo "Cloning dawgs repo"
-    git clone git@github.com:specterops/dawgs ../dawgs
-  elif [[ -L "../dawgs" && ! -e "../dawgs" ]]; then
-    echo "Cloning dawgs repo to symlink target"
-    git clone git@github.com:specterops/dawgs ../$(readlink ../dawgs)
-  fi
 
   echo "Make local copies of configuration files"
     if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then

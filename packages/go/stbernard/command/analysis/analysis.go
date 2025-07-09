@@ -29,12 +29,14 @@ import (
 )
 
 const (
-	Name  = "analysis"
-	Usage = "Run static analyzers"
+	Name     = "analysis"
+	Usage    = "Run static analyzers"
+	UsageFmt = "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n"
 )
 
 type command struct {
-	env environment.Environment
+	env               environment.Environment
+	outputAllSeverity bool
 }
 
 // Create new instance of command to capture given environment
@@ -56,16 +58,17 @@ func (s *command) Name() string {
 
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
-	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+	flagSet := flag.NewFlagSet(Name, flag.ExitOnError)
 
-	cmd.Usage = func() {
-		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
-		cmd.PrintDefaults()
+	flagSet.BoolVar(&s.outputAllSeverity, "all", false, "output all severity")
+
+	flagSet.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), UsageFmt, Usage, filepath.Base(os.Args[0]), Name)
+		flagSet.PrintDefaults()
 	}
 
-	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
-		cmd.Usage()
+	if err := flagSet.Parse(os.Args[cmdIndex+1:]); err != nil {
+		flagSet.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	}
 
@@ -76,13 +79,11 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if result, err := analyzers.Run(paths.Root, paths.GoModules, paths.YarnWorkspaces, s.env); errors.Is(err, analyzers.ErrSeverityExit) {
-		fmt.Println(result)
+	} else if err := analyzers.Run(paths, s.env, s.outputAllSeverity); errors.Is(err, analyzers.ErrSeverityExit) {
 		return err
 	} else if err != nil {
 		return fmt.Errorf("analyzers incomplete: %w", err)
 	} else {
-		fmt.Println(result)
 		return nil
 	}
 }
