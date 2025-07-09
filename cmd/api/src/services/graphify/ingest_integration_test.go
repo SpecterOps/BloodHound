@@ -357,7 +357,6 @@ func Test_ReadFileForIngest(t *testing.T) {
 		readOptions   = graphify.ReadOptions{
 			IngestSchema: ingestSchema,
 			FileType:     model.FileTypeZip,
-			ADCSEnabled:  false,
 		}
 	)
 
