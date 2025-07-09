@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-//go:build (integration || slow_integration)
+//go:build integration
 
 package graphify_test
 

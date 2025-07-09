@@ -1,4 +1,4 @@
-//go:build slow_integration
+//go:build integration
 
 package graphify_test
 
