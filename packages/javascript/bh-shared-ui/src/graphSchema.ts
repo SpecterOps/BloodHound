@@ -486,6 +486,8 @@ export enum ActiveDirectoryKindProperties {
     Transitive = 'transitive',
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
+    RPCEncryptionEnforced = 'rpcencryptionenforced',
+    RPCEncryptionCollected = 'rpcencryptioncollected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -755,6 +757,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Scope';
         case ActiveDirectoryKindProperties.NetBIOS:
             return 'NetBIOS';
+        case ActiveDirectoryKindProperties.RPCEncryptionEnforced:
+            return 'RPC Encryption Enforced';
+        case ActiveDirectoryKindProperties.RPCEncryptionCollected:
+            return 'RPC Encryption Collected';
         default:
             return undefined;
     }

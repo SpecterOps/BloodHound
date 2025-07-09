@@ -984,6 +984,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+RPCEncryptionEnforced: types.#StringEnum & {
+	symbol: 		"RPCEncryptionEnforced"
+	schema: 		"ad"
+	name:           "RPC Encryption Enforced"
+	representation: "rpcencryptionenforced"
+}
+
+RPCEncryptionCollected: types.#StringEnum & {
+	symbol: 		"RPCEncryptionCollected"
+	schema: 		"ad"
+	name:           "RPC Encryption Collected"
+	representation: "rpcencryptioncollected"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1118,6 +1132,8 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	RPCEncryptionEnforced,
+	RPCEncryptionCollected,
 ]
 
 // Kinds
