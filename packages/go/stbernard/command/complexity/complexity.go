@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/genericgraph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/go/callgraph/vta"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
@@ -80,6 +83,20 @@ func (s *command) Run() error {
 		fnStringToID = make(map[string]string)
 	)
 
+	paths, err := workspace.FindPaths(s.env)
+	if err != nil {
+		return fmt.Errorf("finding workspace root: %w", err)
+	}
+
+	modFile, err := os.ReadFile(filepath.Join(paths.GoModules[0], "go.mod"))
+	if err != nil {
+		return fmt.Errorf("reading first go.mod file for workspace: %w", err)
+	}
+
+	currentModule := modfile.ModulePath(modFile)
+
+	slog.Info("current module", slog.String("module", currentModule))
+
 	initial, err := packages.Load(cfg, s.additionalArgs...)
 	if err != nil {
 		return err
@@ -108,7 +125,7 @@ func (s *command) Run() error {
 			pkg = fn.Package().Pkg.String()
 		}
 
-		if !strings.Contains(pkg, "specterops/bloodhound-enterprise") {
+		if !strings.Contains(pkg, currentModule) {
 			continue
 		}
 
@@ -141,7 +158,7 @@ func (s *command) Run() error {
 				calleePkg = edge.Callee.Func.Package().Pkg.String()
 			}
 
-			if !strings.Contains(calleePkg, "specterops/bloodhound-enterprise") {
+			if !strings.Contains(calleePkg, currentModule) {
 				continue
 			}
 

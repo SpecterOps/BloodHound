@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
@@ -32,6 +33,9 @@ import (
 func ParseModulesAbsPaths(cwd string) ([]string, error) {
 	var modules = make([]string, 0, 4)
 
+	slog.Info("found go module", slog.String("path", cwd))
+	modules = append(modules, cwd)
+
 	err := filepath.WalkDir(cwd, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walking directories for go modules: %w", err)
@@ -42,7 +46,8 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 			return filepath.SkipDir
 		}
 
-		if entry.Name() == "go.mod" {
+		if path != filepath.Join(cwd, "go.mod") && entry.Name() == "go.mod" {
+			slog.Info("found go module", slog.String("path", path))
 			absPath, err := filepath.Abs(filepath.Dir(path))
 			if err != nil {
 				return fmt.Errorf("absolute path for discovered module: %w", err)
