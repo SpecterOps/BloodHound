@@ -16,14 +16,12 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
-import { SortableHeader } from '../../../components';
 import {
     InfiniteQueryFixedList,
     InfiniteQueryFixedListProps,
 } from '../../../components/InfiniteQueryFixedList/InfiniteQueryFixedList';
-import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
@@ -49,28 +47,16 @@ type SelectorsListProps = {
     onSelect: (id: number) => void;
 };
 
-const SelectorsListWrapper = ({
-    sortOrder,
-    onSort,
-    children,
-}: {
-    sortOrder: SortOrder;
-    onSort: (sortOrder: SortOrder) => void;
-    children: React.ReactNode;
-}) => {
+const SelectorsListWrapper = ({ children }: { children: React.ReactNode }) => {
     return (
         <div data-testid={`zone-management_details_selectors-list`}>
-            <SortableHeader
-                title='Selectors'
-                onSort={() => {
-                    sortOrder === 'desc' ? onSort('asc') : onSort('desc');
-                }}
-                sortOrder={sortOrder}
-                classes={{
-                    container: 'border-b-2 border-neutral-light-5 dark:border-neutral-dark-5',
-                    button: 'pl-6 font-bold text-xl',
-                }}
-            />
+            <div
+                data-testid={`zone-management_details_selectors-list_static-order`}
+                className='p-0 relative w-full border-b-2 border-neutral-light-5 dark:border-neutral-dark-5'>
+                <div className='inline-flex items-center justify-center h-10 transition-colors text-neutral-dark-5 dark:text-neutral-light-5 pl-6 font-bold text-xl'>
+                    Selectors
+                </div>
+            </div>
 
             <div
                 className={cn(`overflow-y-auto border-x-2 border-neutral-light-5 dark:border-neutral-dark-5`, {
@@ -93,11 +79,9 @@ const SelectorsListWrapper = ({
  * @returns The component that displays a list of entities for the zone management page
  */
 export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onSelect }) => {
-    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
     if (listQuery.isLoading) {
         return (
-            <SelectorsListWrapper sortOrder={sortOrder} onSort={setSortOrder}>
+            <SelectorsListWrapper>
                 <ul>
                     {itemSkeletons.map((skeleton, index) => {
                         return skeleton('Selectors', index);
@@ -109,7 +93,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
 
     if (listQuery.isError) {
         return (
-            <SelectorsListWrapper sortOrder={sortOrder} onSort={setSortOrder}>
+            <SelectorsListWrapper>
                 <ul>
                     <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                         <span className='text-base'>There was an error fetching this data</span>
@@ -120,7 +104,6 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
     }
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
-        console.log(item, index, style);
         const isDisabled = isSelector(item) && item.disabled_at;
 
         return (
@@ -156,7 +139,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
     };
 
     return (
-        <SelectorsListWrapper sortOrder={sortOrder} onSort={setSortOrder}>
+        <SelectorsListWrapper>
             <InfiniteQueryFixedList<AssetGroupTagSelector> itemSize={40} queryResult={listQuery} renderRow={Row} />
         </SelectorsListWrapper>
     );

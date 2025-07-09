@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { ForwardedRef, useCallback, useMemo, useRef } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import InfiniteLoader from 'react-window-infinite-loader';
 import { useMeasure } from '../../hooks/useMeasure';
 
 type PageParam = {
@@ -18,34 +17,39 @@ export type InfiniteQueryFixedListProps<T> = {
     itemSize: number;
     queryResult: UseInfiniteQueryResult<PageWithItems<T>>;
     renderRow: (item: T, index: number, style: React.CSSProperties, isScrolling?: boolean) => React.ReactNode;
+    overscanCount?: number;
+    thresholdCount?: number;
+    listRef?: ForwardedRef<FixedSizeList<T[]>>;
 };
 
-export const InfiniteQueryFixedList = <T,>({ itemSize, queryResult, renderRow }: InfiniteQueryFixedListProps<T>) => {
+export const InfiniteQueryFixedList = <T,>({
+    itemSize,
+    queryResult,
+    renderRow,
+    overscanCount = 5,
+    thresholdCount = 5,
+    listRef,
+}: InfiniteQueryFixedListProps<T>) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [width, height] = useMeasure(containerRef);
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = queryResult;
 
-    const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
+    const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
 
-    const itemCount = hasNextPage ? items.length + 1 : items.length;
+    const isItemLoaded = useCallback((index: number) => index < items.length, [items.length]);
 
-    const isItemLoaded = useCallback(
-        (index: number) => !hasNextPage || index < items.length,
-        [hasNextPage, items.length]
-    );
-
-    const loadMoreItems = async () => {
+    const loadMoreItems = useCallback(async () => {
         if (!isFetchingNextPage) await fetchNextPage();
-    };
+    }, [isFetchingNextPage, fetchNextPage]);
 
     const Row = useCallback(
-        ({ index, style, data, isScrolling }: ListChildComponentProps<T[]>) => {
+        ({ index, style, data: itemData, isScrolling }: ListChildComponentProps<T[]>) => {
             if (!isItemLoaded(index)) {
                 return <div style={style}>Loading...</div>;
             }
-            return renderRow(data[index], index, style, isScrolling);
+            return renderRow(itemData[index], index, style, isScrolling);
         },
         [isItemLoaded, renderRow]
     );
@@ -53,20 +57,22 @@ export const InfiniteQueryFixedList = <T,>({ itemSize, queryResult, renderRow }:
     return (
         <div ref={containerRef} className='h-full w-full'>
             {height > 0 && width > 0 && (
-                <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={itemCount} loadMoreItems={loadMoreItems}>
-                    {({ onItemsRendered, ref }) => (
-                        <FixedSizeList<T[]>
-                            height={height}
-                            itemSize={itemSize}
-                            itemCount={itemCount}
-                            width={width}
-                            onItemsRendered={onItemsRendered}
-                            itemData={items}
-                            ref={ref}>
-                            {Row}
-                        </FixedSizeList>
-                    )}
-                </InfiniteLoader>
+                <FixedSizeList<T[]>
+                    ref={listRef}
+                    height={height}
+                    itemSize={itemSize}
+                    itemCount={hasNextPage ? items.length + 1 : items.length}
+                    overscanCount={overscanCount}
+                    width={width}
+                    onItemsRendered={({ visibleStopIndex }) => {
+                        console.log(hasNextPage, visibleStopIndex);
+                        if (hasNextPage && !isFetchingNextPage && visibleStopIndex >= items.length - thresholdCount) {
+                            loadMoreItems();
+                        }
+                    }}
+                    itemData={items}>
+                    {Row}
+                </FixedSizeList>
             )}
         </div>
     );

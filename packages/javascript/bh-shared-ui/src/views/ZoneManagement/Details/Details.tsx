@@ -15,10 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
-import { FC, useContext } from 'react';
-import { UseInfiniteQueryResult, UseQueryResult, useInfiniteQuery, useQuery } from 'react-query';
+import { AssetGroupTagMemberListItem, AssetGroupTagSelector } from 'js-client-library';
+import { FC, useContext, useState } from 'react';
+import { UseQueryResult, useInfiniteQuery, useQuery } from 'react-query';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { SortOrder } from '../../../types';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
@@ -43,28 +44,6 @@ export const getSavePath = (
     return savePath;
 };
 
-const getItemCount = (
-    tagId: string | undefined,
-    tagsQuery: UseQueryResult<AssetGroupTag[]>,
-    selectorId: string | undefined,
-    selectorsQuery: UseInfiniteQueryResult<{ items: AssetGroupTagSelector[] }>
-) => {
-    if (selectorId !== undefined) {
-        const allSelectors = selectorsQuery.data?.pages.flatMap((page) => page.items) || [];
-        const selectedSelector = allSelectors.find((selector) => {
-            return selectorId === selector.id.toString();
-        });
-        return selectedSelector?.counts?.members ?? 0;
-    } else if (tagId !== undefined) {
-        const selectedTag = tagsQuery.data?.find((tag) => {
-            return tagId === tag.id.toString();
-        });
-        return selectedTag?.counts?.members ?? 0;
-    } else {
-        return 0;
-    }
-};
-
 export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
     return (
         !!memberId ||
@@ -77,6 +56,7 @@ const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+    const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);
@@ -88,9 +68,15 @@ const Details: FC = () => {
     const tagsQuery = useQuery({
         queryKey: ['zone-management', 'tags'],
         queryFn: async () => {
-            return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
-                return res.data.data['tags'];
-            });
+            return apiClient
+                .getAssetGroupTags({
+                    params: {
+                        counts: true,
+                    },
+                })
+                .then((res) => {
+                    return res.data.data['tags'];
+                });
         },
     });
 
@@ -103,16 +89,56 @@ const Details: FC = () => {
             if (!tagId)
                 return {
                     items: [],
+                    nextPageParam: undefined,
                 };
-            return apiClient.getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit, true).then((res) => {
-                const items = res.data.data['selectors'];
-                const hasMore = items.length === pageParam.limit;
+            return apiClient
+                .getAssetGroupTagSelectors(tagId, {
+                    params: {
+                        skip: pageParam.skip,
+                        limit: pageParam.limit,
+                        counts: true,
+                    },
+                })
+                .then((res) => {
+                    const items = res.data.data['selectors'];
+                    const hasMore = pageParam.skip + pageParam.limit < res.data.count;
 
-                return {
-                    items,
-                    nextPageParam: hasMore ? { skip: pageParam.skip + 25, limit: 25 } : undefined,
-                };
-            });
+                    return {
+                        items,
+                        nextPageParam: hasMore ? { skip: pageParam.skip + 25, limit: 25 } : undefined,
+                    };
+                });
+        },
+        getNextPageParam: (lastPage) => {
+            return lastPage.nextPageParam;
+        },
+    });
+
+    const membersQuery = useInfiniteQuery<{
+        items: AssetGroupTagMemberListItem[];
+        nextPageParam?: { skip: number; limit: number };
+    }>({
+        queryKey: ['zone-management', 'tagId', tagId, 'selectorId', selectorId, membersListSortOrder],
+        queryFn: async ({ pageParam = { skip: 0, limit: 25 } }) => {
+            const tag = tagId || 1;
+
+            const sort_by = membersListSortOrder === 'asc' ? 'name' : '-name';
+
+            if (selectorId) {
+                return apiClient
+                    .getAssetGroupTagSelectorMembers(tag, selectorId, pageParam.skip, pageParam.limit, sort_by)
+                    .then((res) => {
+                        const items = res.data.data['members'];
+                        const hasMore = pageParam.skip + pageParam.limit < res.data.count;
+                        return { items, nextPageParam: hasMore ? { skip: pageParam.skip + 25, limit: 25 } : undefined };
+                    });
+            } else {
+                return apiClient.getAssetGroupTagMembers(tag, pageParam.skip, pageParam.limit, sort_by).then((res) => {
+                    const items = res.data.data['members'];
+                    const hasMore = pageParam.skip + pageParam.limit < res.data.count;
+                    return { items, nextPageParam: hasMore ? { skip: pageParam.skip + 25, limit: 25 } : undefined };
+                });
+            }
         },
         getNextPageParam: (lastPage) => {
             return lastPage.nextPageParam;
@@ -151,7 +177,8 @@ const Details: FC = () => {
                         }}
                     />
                     <MembersList
-                        itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
+                        listQuery={membersQuery}
+                        selected={memberId}
                         onClick={(id) => {
                             if (selectorId) {
                                 navigate(
@@ -161,7 +188,8 @@ const Details: FC = () => {
                                 navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
                             }
                         }}
-                        selected={memberId}
+                        sortOrder={membersListSortOrder}
+                        onChangeSortOrder={setMembersListSortOrder}
                     />
                 </div>
                 <div className='basis-1/3'>
