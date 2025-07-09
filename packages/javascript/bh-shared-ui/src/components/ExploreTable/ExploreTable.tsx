@@ -14,30 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doodleui';
-import { faCancel, faCaretDown, faCaretUp, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { GraphNode } from 'js-client-library';
-import { ChangeEvent, MouseEvent, memo, useCallback, useMemo, useState } from 'react';
+import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { WrappedExploreTableItem } from '../../types';
-import { EntityField, cn, format, formatPotentiallyUnknownLabel } from '../../utils';
-import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import TableControls from './TableControls';
+import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
 
-const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
+export const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
     (acc, curr) => ({ ...acc, [curr]: true }),
     {}
 ) as Record<string, boolean>;
 
-type MungedTableRowWithId = WrappedExploreTableItem['data'] & { id: string };
+export type MungedTableRowWithId = WrappedExploreTableItem['data'] & { id: string };
 
-const columnHelper = createColumnHelper<MungedTableRowWithId>();
-
-interface ExploreTableProps {
+export type ExploreTableProps = {
     open?: boolean;
     onClose?: () => void;
     data?: Record<string, WrappedExploreTableItem>;
@@ -47,34 +41,13 @@ interface ExploreTableProps {
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
     onDownloadClick: () => void;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
-}
+};
 
+export type DataTableProps = React.ComponentProps<typeof DataTable>;
 export type NodeClickInfo = { id: string; x: number; y: number };
 
 const MemoDataTable = memo(DataTable);
 
-const HeaderCell = ({
-    headerKey,
-    sortBy,
-    sortOrder,
-    onClick,
-}: {
-    headerKey: string;
-    sortBy?: string;
-    sortOrder?: string;
-    onClick: () => void;
-}) => {
-    return (
-        <div className='flex items-center p-1 m-0 cursor-pointer h-full hover:bg-neutral-100' onClick={onClick}>
-            <div>{formatPotentiallyUnknownLabel(headerKey)}</div>
-            <div className={cn('pl-2', sortBy !== headerKey ? 'opacity-0' : '')}>
-                {!sortOrder && <FontAwesomeIcon icon={faCaretDown} />}
-                {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} />}
-                {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} />}
-            </div>
-        </div>
-    );
-};
 const ExploreTable = ({
     data,
     selectedNode,
@@ -89,159 +62,18 @@ const ExploreTable = ({
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
-    const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
-
-    const handleSort = useCallback(
-        (sortByColumn: keyof MungedTableRowWithId) => {
-            if (sortByColumn) {
-                if (sortBy === sortByColumn) {
-                    switch (sortOrder) {
-                        case 'desc':
-                            setSortOrder('asc');
-                            break;
-                        case 'asc':
-                            setSortOrder('desc');
-                            break;
-                        default:
-                        case null:
-                            setSortOrder('desc');
-                            break;
-                    }
-                } else {
-                    setSortBy(sortByColumn);
-                    setSortOrder('desc');
-                }
-            }
-        },
-        [sortBy, sortOrder]
-    );
-
-    const makeColumnDef = useCallback(
-        (key: keyof MungedTableRowWithId) =>
-            columnHelper.accessor(key, {
-                header: () => (
-                    <HeaderCell sortBy={sortBy} sortOrder={sortOrder} onClick={() => handleSort(key)} headerKey={key} />
-                ),
-                cell: (info) => {
-                    const value = info.getValue() as EntityField['value'];
-
-                    if (typeof value === 'boolean') {
-                        return value ? (
-                            <div className='h-full w-full flex justify-center items-center text-center'>
-                                <FontAwesomeIcon icon={faCheck} color='green' className='scale-125' />{' '}
-                            </div>
-                        ) : (
-                            <div className='h-full w-full flex justify-center items-center text-center'>
-                                <FontAwesomeIcon icon={faCancel} color='lightgray' className='scale-125' />{' '}
-                            </div>
-                        );
-                    }
-
-                    return format({ keyprop: key, value, label: key }) || '--';
-                },
-                id: key,
-            }),
-        [handleSort, sortOrder]
-    );
-
-    const handleKebabMenuClick = (e: MouseEvent, id: string) => {
-        onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
-    };
-
-    const rows = useMemo(
-        () =>
-            ((data && Object.entries(data).map(([key, value]) => ({ ...value.data, id: key }))) ||
-                []) as MungedTableRowWithId[],
-        [data]
-    );
-
-    const filteredRows = useMemo(
-        () =>
-            rows?.filter((item) => {
-                const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
-                const filterTargets = filterKeys.map((filterKey) => {
-                    const stringyValue = String(item?.[filterKey]);
-
-                    return stringyValue?.toLowerCase();
-                });
-
-                return filterTargets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
-            }),
-        [searchInput, rows]
-    );
-
-    const sortedFilteredRows = useMemo(() => {
-        const dataToSort = filteredRows.slice();
-        if (sortBy) {
-            if (sortOrder === 'asc') {
-                dataToSort.sort((a, b) => {
-                    return a[sortBy] < b[sortBy] ? 1 : -1;
-                });
-            } else {
-                dataToSort.sort((a, b) => {
-                    return a[sortBy] < b[sortBy] ? -1 : 1;
-                });
-            }
-        }
-
-        return dataToSort;
-    }, [filteredRows, sortBy, sortOrder]);
-
-    const nonRequiredColumnDefinitions = useMemo(
-        () => allColumnKeys?.filter((key) => !requiredColumns[key]).map(makeColumnDef) || [],
-        [allColumnKeys, makeColumnDef]
-    );
-
-    const selectedColumnDefinitions = useMemo(
-        () => nonRequiredColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
-        [nonRequiredColumnDefinitions, selectedColumns]
-    );
-
-    const requiredColumnDefinitions = useMemo(
-        () => [
-            {
-                accessorKey: '',
-                id: 'action-menu',
-                cell: ({ row }) => (
-                    <Button
-                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
-                        <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
-                    </Button>
-                ),
-            },
-            {
-                accessorKey: 'nodetype',
-                id: 'nodetype',
-                header: () => <span className='dark:text-neutral-light-1'>Type</span>,
-                cell: (info) => {
-                    return (
-                        <div className='flex justify-center items-center relative'>
-                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
-                        </div>
-                    );
-                },
-            },
-            ...['objectid', 'displayname'].map(makeColumnDef),
-        ],
-        [makeColumnDef, handleKebabMenuClick]
-    );
-
-    const tableColumns = useMemo(
-        () => [...requiredColumnDefinitions, ...selectedColumnDefinitions],
-        [requiredColumnDefinitions, selectedColumnDefinitions]
-    ) as DataTableProps['columns'];
-
-    const columnOptionsForDropdown = useMemo(
-        () => [...requiredColumnDefinitions, ...nonRequiredColumnDefinitions],
-        [requiredColumnDefinitions, nonRequiredColumnDefinitions]
-    );
-
     const handleSearchInputChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
         []
     );
+
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        allColumnKeys,
+        selectedColumns,
+        data,
+    });
 
     const searchInputProps = useMemo(
         () => ({
@@ -251,7 +83,6 @@ const ExploreTable = ({
         }),
         [handleSearchInputChange, searchInput]
     );
-    type DataTableProps = React.ComponentProps<typeof DataTable>;
 
     const tableHeaderProps: DataTableProps['TableHeaderProps'] = useMemo(
         () => ({

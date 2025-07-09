@@ -68,6 +68,7 @@ export const useExploreGraph = ({
             ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
             : query.getQueryConfig(params);
 
+    const shouldFetch = Boolean(enabled && queryConfig?.queryFn);
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {
@@ -76,6 +77,6 @@ export const useExploreGraph = ({
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
-        enabled,
+        enabled: shouldFetch,
     });
 };

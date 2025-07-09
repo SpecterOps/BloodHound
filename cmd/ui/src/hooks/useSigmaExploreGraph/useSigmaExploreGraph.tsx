@@ -38,6 +38,7 @@ export const useSigmaExploreGraph = (includeProperties: boolean) => {
     return {
         ...graphQuery,
         data: {
+            rawNodes: graphQuery?.data?.data?.nodes,
             nodes: normalizedGraphData,
             node_keys: (graphQuery?.data?.data as GraphData)?.node_keys,
         },

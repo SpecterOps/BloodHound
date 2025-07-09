@@ -74,4 +74,4 @@ export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
 
-export type WrappedExploreTableItem = { data?: GraphNode };
+export type WrappedExploreTableItem = { data?: GraphNode; label: { text: string } };
