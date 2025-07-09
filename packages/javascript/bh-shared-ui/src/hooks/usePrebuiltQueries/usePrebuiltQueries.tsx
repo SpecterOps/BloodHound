@@ -27,3 +27,18 @@ export const usePrebuiltQueries = () => {
 
     return queryList;
 };
+
+export const useGetSelectedQuery = (cypherQuery: string) => {
+    const queryList = usePrebuiltQueries();
+    for (const item of queryList) {
+        let result = null;
+        result = item.queries.find((query) => {
+            if (query.cypher === cypherQuery) {
+                return query;
+            }
+        });
+        if (result) {
+            return result;
+        }
+    }
+};

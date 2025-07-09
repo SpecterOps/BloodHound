@@ -39,15 +39,19 @@ import QuerySearchFilter from './QuerySearchFilter';
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
+    onSetSelected: (query: string) => void;
     onToggleCommonQueries: () => void;
+    selected: string;
     showCommonQueries: boolean;
 };
 
 const InnerCommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
+    onSetSelected,
     onToggleCommonQueries,
     prebuiltSearchList,
+    selected,
     showCommonQueries,
 }: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
     const userQueries = useSavedQueries();
@@ -56,7 +60,6 @@ const InnerCommonSearches = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
-    const [selected, setSelected] = useState('');
     const { cypherQuery } = useCypherSearch();
 
     //master list of pre-made queries
@@ -74,12 +77,12 @@ const InnerCommonSearches = ({
     const handleClick = (query: string) => {
         if (selected === query) {
             //deselect
-            setSelected('');
+            onSetSelected('');
             // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
             onSetCypherQuery('');
             onPerformCypherSearch('');
         } else {
-            setSelected(query);
+            onSetSelected(query);
             // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
             onSetCypherQuery(query);
             onPerformCypherSearch(query);

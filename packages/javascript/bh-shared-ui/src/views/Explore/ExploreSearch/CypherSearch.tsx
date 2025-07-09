@@ -22,10 +22,11 @@ import { useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
-import { useCreateSavedQuery, usePrebuiltQueries } from '../../../hooks';
+import { useCreateSavedQuery, useGetSelectedQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
+import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryDialog from './SaveQueryDialog';
 
 type CypherSearchState = {
@@ -37,8 +38,8 @@ type CypherSearchState = {
 const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
-    const queryList = usePrebuiltQueries();
-
+    // const selectedQuery = useGetSelectedQuery();
+    const [selected, setSelected] = useState('');
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
 
@@ -46,6 +47,10 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const [showCommonQueries, setShowCommonQueries] = useState(false);
 
     const [autoRunQuery, setAutoRunQuery] = useState(true);
+    const [messageState, setMessageState] = useState({
+        showMessage: false,
+        message: '',
+    });
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -67,6 +72,15 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         }
     };
 
+    const handleSetSelected = (query: string) => {
+        setSelected(query);
+    };
+
+    const selectedQuery: any = useGetSelectedQuery(selected);
+
+    //consider refactor for performance - this gets called multiple times per re-render - maybe abstract this out as a util function and only call when necessary
+    // const matchedQuery: any = useGetSelectedQuery(cypherQuery);
+
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);
     };
@@ -83,49 +97,57 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         );
     };
 
-    // test query against current cypherQuery in editor
-    const queryMatch = (queryToMatch: any) => {
-        for (const item of queryList) {
-            let result = null;
-            result = item.queries.find((query) => {
-                if (query.cypher === queryToMatch) {
-                    return query;
-                }
-            });
-            if (result) {
-                return result;
+    const handleClickSave = () => {
+        console.log('handleClickSave');
+
+        //FROM TICKET
+
+        //IF QUERY SELECTED
+        //  //  IF canEdit
+        //  //  //  SAVE EXISTING WORKFLOW
+        //  //  ELSE
+        //  //  //  Display message:
+        //  //  //“You do not have permission to update this     query, save as a new query instead”
+
+        //IF NO QUERY SELECTED
+        //  //  SAVE NEW WORKFLOW
+
+        if (!cypherQuery) {
+            console.log('cypherQuery is empty - return');
+            setMessageState({ showMessage: true, message: 'Add a Cypher Query' });
+            return;
+        }
+
+        if (selectedQuery) {
+            console.log('QUERY EXISTS');
+            if (selectedQuery.canEdit) {
+                //save existing
+                console.log('CAN EDIT - SAVE EXISTING WORKFLOW');
+            } else {
+                console.log('CANNOT EDIT - SHOW MESSAGE');
+                // setShowMessage(true);
+                setMessageState({
+                    showMessage: true,
+                    message: 'You do not have permission to update this query, save as a new query instead',
+                });
             }
+        } else {
+            //save new
+            console.log('QUERY DOES NOT EXISTS - SAVE NEW WORKFLOW');
         }
     };
 
-    const handleClickSave = () => {
-        console.log('handleClickSave');
-        // console.log(cypherQuery);
-        if (!cypherQuery) {
-            console.log('cypherQuery is empty - return');
-            return;
-        }
-        const matchedQuery: any = queryMatch(cypherQuery);
-
-        //TO DO
-        // Move selected useState and logic up to this component
-        // Check if selected
-        // May not need below matchedQuery logic
-
-        if (matchedQuery) {
-            console.log('match');
-            console.log(matchedQuery);
-            console.log('cypherQuery already exists');
-            if (matchedQuery.id) {
-                console.log('custom query without changes');
-            }
-        } else {
-            console.log('no match');
-            console.log(matchedQuery);
-        }
-
-        // -- get selected query
-        // -- -- get canEdit / id
+    const handleClearMessage = () => {
+        setMessageState((prevState) => ({
+            ...prevState,
+            showMessage: false,
+        }));
+        setTimeout(() => {
+            setMessageState((prevState) => ({
+                ...prevState,
+                message: '',
+            }));
+        }, 400);
     };
 
     const handleCloseSaveQueryDialog = () => {
@@ -147,15 +169,22 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                     <CommonSearches
                         onSetCypherQuery={setCypherQuery}
                         onPerformCypherSearch={handleSavedSearch}
+                        onSetSelected={handleSetSelected}
                         onToggleCommonQueries={handleToggleCommonQueries}
                         showCommonQueries={showCommonQueries}
+                        selected={selected}
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
-                    <div className='flex justify-end mb-2'>
+                    <div className='flex items-center justify-between mb-2'>
+                        <CypherSearchMessage
+                            messageState={messageState}
+                            // showMessage={showMessage}
+                            clearMessage={handleClearMessage}
+                        />
                         <FormControlLabel
-                            className='mr-0'
+                            className='mr-0 whitespace-nowrap'
                             control={
                                 <Checkbox
                                     checked={autoRunQuery}
