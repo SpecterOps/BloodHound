@@ -34,6 +34,10 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+// szOID_NTDS_CA_SECURITY_EXT is the OID for the NTDS CA Security Extension
+// that when disabled in Enterprise CA settings allows ESC16 exploitation
+const szOID_NTDS_CA_SECURITY_EXT = "1.3.6.1.4.1.311.25.2"
+
 func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
 	if isUserSpecifiesSanEnabledCollected, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
@@ -49,7 +53,7 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- analys
 		return nil
 	} else if disabledExtensions, err := enterpriseCA.Properties.Get(ad.DisabledExtensions.String()).StringSlice(); err != nil {
 		return err
-	} else if !slices.Contains(disabledExtensions, "1.3.6.1.4.1.311.25.2") { // szOID_NTDS_CA_SECURITY_EXT
+	} else if !slices.Contains(disabledExtensions, szOID_NTDS_CA_SECURITY_EXT) {
 		return nil
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -246,7 +250,7 @@ func ADCSESC16Path1Pattern(domainId graph.ID) traversal.PatternContinuation {
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
 				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
-				query.InInverted(query.EndProperty(ad.DisabledExtensions.String()), "1.3.6.1.4.1.311.25.2"),
+				query.InInverted(query.EndProperty(ad.DisabledExtensions.String()), szOID_NTDS_CA_SECURITY_EXT),
 			)).
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
