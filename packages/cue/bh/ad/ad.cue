@@ -998,6 +998,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+DisabledExtensions: types.#StringEnum & {
+	symbol: 		"DisabledExtensions"
+	schema: 		"ad"
+	name:           "Disabled Extensions"
+	representation: "disabledextensions"
+}
+
+DisabledExtensionsCollected: types.#StringEnum & {
+	symbol: 		"DisabledExtensionsCollected"
+	schema: 		"ad"
+	name:           "Disabled Extensions Collected"
+	representation: "disabledextensionscollected"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1134,6 +1148,8 @@ Properties: [
 	GroupScope,
 	NetBIOS,
 	AdminSDHolderProtected,
+	DisabledExtensions,
+	DisabledExtensionsCollected,
 ]
 
 // Kinds

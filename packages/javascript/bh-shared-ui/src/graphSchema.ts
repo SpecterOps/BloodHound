@@ -488,6 +488,8 @@ export enum ActiveDirectoryKindProperties {
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
+    DisabledExtensions = 'disabledextensions',
+    DisabledExtensionsCollected = 'disabledextensionscollected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -761,6 +763,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'NetBIOS';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
+        case ActiveDirectoryKindProperties.DisabledExtensions:
+            return 'Disabled Extensions';
+        case ActiveDirectoryKindProperties.DisabledExtensionsCollected:
+            return 'Disabled Extensions Collected';
         default:
             return undefined;
     }
