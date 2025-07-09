@@ -33,7 +33,7 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { hasMultiTierAnalysisEnabled, useGetConfiguration } from '../../../hooks';
+import { useMultiTierAnalysis, useGetConfiguration } from '../../../hooks';
 import { ItemSkeleton } from '../utils';
 
 type SummaryCardProps = {
@@ -42,13 +42,13 @@ type SummaryCardProps = {
     selectorCount: number | undefined;
     memberCount: number | undefined;
     id: number;
-    analysisEnabled: boolean | undefined;
+    analysisEnabled: boolean | null;
 };
 
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
     const { isLoading, isError } = useGetConfiguration();
-    const displayTooltip = hasMultiTierAnalysisEnabled() && !analysisEnabled;
+    const displayTooltip = useMultiTierAnalysis() && !analysisEnabled;
 
     if (isLoading) {
         return ItemSkeleton(title, id, 'h-24');

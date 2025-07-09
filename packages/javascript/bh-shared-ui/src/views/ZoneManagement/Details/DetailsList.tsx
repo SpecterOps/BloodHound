@@ -32,7 +32,7 @@ import {
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { AppIcon, SortableHeader } from '../../../components';
-import { hasMultiTierAnalysisEnabled } from '../../../hooks';
+import { useMultiTierAnalysis } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
@@ -67,7 +67,7 @@ type DetailsListProps = {
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-    const multiTierAnalysisEnabled = hasMultiTierAnalysisEnabled();
+    const multiTierAnalysisEnabled = useMultiTierAnalysis();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>

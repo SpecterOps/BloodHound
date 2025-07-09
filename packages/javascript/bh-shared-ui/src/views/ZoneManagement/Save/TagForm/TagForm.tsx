@@ -46,8 +46,7 @@ import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-
-import { hasMultiTierAnalysisEnabled } from '../../../../hooks';
+import { useMultiTierAnalysis } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
@@ -108,7 +107,7 @@ export const TagForm: FC = () => {
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
 
-    const multiTierAnalysisEnabled = hasMultiTierAnalysisEnabled();
+    const multiTierAnalysisEnabled = useMultiTierAnalysis();
     const showAnalysisToggle =
         multiTierAnalysisEnabled && tierId !== TIER_ZERO_ID && tierId !== '';
 
