@@ -122,18 +122,11 @@ describe('SummaryCard', () => {
             }),
         );
 
-        const debug = render(<SummaryCard {...props} />).debug;
-
         const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
         expect(listItem).toBeInTheDocument();
 
-        // await longWait(() => {
-
-        // });
         const icon = within(listItem).queryByTestId('analysis_disabled_icon');
         expect(icon).not.toBeInTheDocument();
-        // expect(icon).toBeInTheDocument();
-        debug(undefined, Infinity);
     });
 
     it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
@@ -173,10 +166,7 @@ describe('SummaryCard', () => {
         const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
         expect(listItem).toBeInTheDocument();
 
-        // await longWait(() => {
         const icon = within(listItem).queryByTestId('analysis_disabled_icon');
         expect(icon).not.toBeInTheDocument();
-        // expect(icon).toBeInTheDocument();
-        // })
     });
 });
