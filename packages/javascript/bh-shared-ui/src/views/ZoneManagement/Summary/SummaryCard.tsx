@@ -41,10 +41,10 @@ type SummaryCardProps = {
     selectorCount: number | undefined;
     memberCount: number | undefined;
     id: number;
-    analysis: boolean | undefined;
+    analysisEnabled: boolean | undefined;
 };
 
-const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysis }) => {
+const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
@@ -56,12 +56,15 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, "_")}-list_item-${id}`}
         >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {multiTierAnalysisEnabled && !analysis && (
+                {multiTierAnalysisEnabled && !analysisEnabled && (
                     <TooltipProvider>
                         <TooltipRoot>
                             <TooltipTrigger>
                                 <div>
-                                    <AppIcon.DataAlert size={24} className='mr-2 mb-0.5 text-[#ED8537]' />
+                                    <AppIcon.DataAlert
+                                        size={24}
+                                        data-testid='analysis_disabled_icon'
+                                        className='mr-2 mb-0.5 text-[#ED8537]' />
                                 </div>
                             </TooltipTrigger>
                             <TooltipPortal>

@@ -150,7 +150,6 @@ describe('List', async () => {
     });
 
     it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
-
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configResponse));
@@ -172,7 +171,6 @@ describe('List', async () => {
                 return res(ctx.json(configResponse));
             }),
         );
-
 
         render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
 
