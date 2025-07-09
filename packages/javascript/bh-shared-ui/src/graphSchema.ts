@@ -513,6 +513,8 @@ export enum ActiveDirectoryKindProperties {
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
+    DisabledExtensions = 'disabledextensions',
+    DisabledExtensionsCollected = 'disabledextensionscollected',
     ServicePrincipalNames = 'serviceprincipalnames',
     ServerReference = 'serverreference',
     SiteObject = 'siteobject',
@@ -800,6 +802,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'NetBIOS';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
+        case ActiveDirectoryKindProperties.DisabledExtensions:
+            return 'Disabled Extensions';
+        case ActiveDirectoryKindProperties.DisabledExtensionsCollected:
+            return 'Disabled Extensions Collected';
         case ActiveDirectoryKindProperties.ServicePrincipalNames:
             return 'Service Principal Names';
         case ActiveDirectoryKindProperties.ServerReference:
