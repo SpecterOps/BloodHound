@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table

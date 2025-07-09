@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -717,12 +717,9 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 			groupID := computer.ObjectIdentifier + "-" + group.RID
 			if len(group.Members) > 0 {
 				parsedData.Nodes = append(parsedData.Nodes, IngestibleNode{
-					ObjectID: groupID,
-					// TODO: look up computer name?
-					PropertyMap: map[string]any{
-						"name": groupID,
-					},
-					Labels: []graph.Kind{ad.LocalGroup},
+					ObjectID:    groupID,
+					PropertyMap: map[string]any{},
+					Labels:      []graph.Kind{ad.LocalGroup},
 				})
 
 				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(

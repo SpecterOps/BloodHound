@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/specterops/bloodhound/src/test/must"
+	"github.com/specterops/bloodhound/cmd/api/src/test/must"
 )
 
 type Input struct {

@@ -21,14 +21,14 @@ import (
 	"path/filepath"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/specterops/bloodhound/schemagen/model"
+	"github.com/specterops/bloodhound/packages/go/schemagen/model"
 )
 
 const (
 	GraphPackageName       = "github.com/specterops/dawgs/graph"
-	SchemaPackageName      = "github.com/specterops/bloodhound/graphschema"
-	ADSchemaPackageName    = "github.com/specterops/bloodhound/graphschema/ad"
-	AzureSchemaPackageName = "github.com/specterops/bloodhound/graphschema/azure"
+	SchemaPackageName      = "github.com/specterops/bloodhound/packages/go/graphschema"
+	ADSchemaPackageName    = "github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	AzureSchemaPackageName = "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	SchemaSourceName       = "github.com/specterops/bloodhound/-/tree/main/packages/cue/schemas"
 )
 

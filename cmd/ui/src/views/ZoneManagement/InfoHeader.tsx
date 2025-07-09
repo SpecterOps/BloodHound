@@ -28,7 +28,9 @@ const InfoHeader: FC = () => {
             <div className='flex justify-start gap-4 items-center basis-2/3'>
                 <div className='flex items-center align-middle'>
                     <Button variant='primary' disabled={!tagId} asChild>
-                        <AppLink to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                        <AppLink
+                            data-testid='zone-management_create-selector-link'
+                            to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
                             Create Selector
                         </AppLink>
                     </Button>

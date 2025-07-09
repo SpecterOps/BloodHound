@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api/v2/integration"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
 

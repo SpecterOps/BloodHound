@@ -82,6 +82,7 @@ export const Cypher: FC<{
                         </Button>
                         {!preview && (
                             <Button
+                                data-testid='zone-management_save_selector-form_update-results-button'
                                 variant={'text'}
                                 className={cn(
                                     'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
@@ -104,7 +105,7 @@ export const Cypher: FC<{
                     </p>
                 )}
             </CardHeader>
-            <CardContent className='px-6'>
+            <CardContent className='px-6' data-testid='zone-management_cypher-container'>
                 <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                     <CypherEditor
                         className={cn(
