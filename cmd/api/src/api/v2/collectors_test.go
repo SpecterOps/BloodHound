@@ -25,10 +25,10 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/config"
-	fsmocks "github.com/specterops/bloodhound/src/services/fs/mocks"
-	"github.com/specterops/bloodhound/src/utils/test"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	fsmocks "github.com/specterops/bloodhound/cmd/api/src/services/fs/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

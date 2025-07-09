@@ -127,10 +127,16 @@ const SeedSelection: FC<{
                                     setDeleteDialogOpen(true);
                                 }}
                             />
-                            <Button variant={'secondary'} onClick={() => navigate(-1)}>
+                            <Button
+                                data-testid='zone-management_save_selector-form_cancel-button'
+                                variant={'secondary'}
+                                onClick={() => navigate(-1)}>
                                 Cancel
                             </Button>
-                            <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                            <Button
+                                data-testid='zone-management_save_selector-form_save-button'
+                                variant={'primary'}
+                                onClick={handleSubmit(onSubmit)}>
                                 Save
                             </Button>
                         </div>

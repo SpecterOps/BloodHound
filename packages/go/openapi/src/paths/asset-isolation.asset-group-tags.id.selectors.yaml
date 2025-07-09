@@ -33,6 +33,8 @@ get:
     - Enterprise
     - Community
   parameters:
+  - $ref: './../parameters/query.skip.yaml'
+  - $ref: './../parameters/query.limit.yaml'
   - name: auto_certify
     in: query
     required: false

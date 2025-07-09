@@ -84,6 +84,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             <div className='flex flex-col h-full'>
                 <div className='flex gap-2 shrink-0'>
                     <Button
+                        data-testid='explore_search-container_toggle-prebuilt-queries-button'
                         className='min-w-9 h-9 p-0'
                         variant={'secondary'}
                         onClick={() => {
@@ -95,6 +96,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
                     <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                         <CypherEditor
+                            data-testid='explore_search-container_cypher-editor'
                             ref={cypherEditorRef}
                             className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
                             value={cypherQuery}

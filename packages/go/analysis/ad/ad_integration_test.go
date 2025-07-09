@@ -23,17 +23,17 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/analysis/ad/internal/nodeprops"
-	"github.com/specterops/bloodhound/analysis/ad/wellknown"
-	"github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/internal/nodeprops"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 
-	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 
 	"github.com/stretchr/testify/require"
 )
