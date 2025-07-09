@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/model" 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func (s Client) RequestAnalysis() error {
