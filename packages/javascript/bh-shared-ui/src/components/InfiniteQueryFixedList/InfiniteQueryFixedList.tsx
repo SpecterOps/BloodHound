@@ -81,7 +81,6 @@ export const InfiniteQueryFixedList = <T,>({
                     overscanCount={overscanCount}
                     width={width}
                     onItemsRendered={({ visibleStopIndex }) => {
-                        console.log(hasNextPage, visibleStopIndex);
                         if (hasNextPage && !isFetchingNextPage && visibleStopIndex >= items.length - thresholdCount) {
                             loadMoreItems();
                         }
