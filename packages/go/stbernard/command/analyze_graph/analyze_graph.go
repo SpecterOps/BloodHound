@@ -120,6 +120,8 @@ func (s *command) Run() error {
 		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
 	} else if err := shared.WriteGraphToFile(&graph, s.outfile); err != nil {
 		return fmt.Errorf("error writing graph to file: %w", err)
+	} else if err := db.Wipe(ctx); err != nil {
+		return fmt.Errorf("error wiping db: %w", err)
 	}
 
 	return nil

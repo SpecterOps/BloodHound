@@ -100,18 +100,22 @@ func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if database, err := shared.InitializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
+	if graphDB, err := shared.InitializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
+		return fmt.Errorf("error connecting to graphDB: %w", err)
+	} else if db, err := shared.InitializeDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from directory %w", err)
-	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
+	} else if err = ingestData(ctx, ingestFilePaths, graphDB); err != nil {
 		return fmt.Errorf("error ingesting data %w", err)
-	} else if nodes, edges, err := shared.GetNodesAndEdges(ctx, database); err != nil {
+	} else if nodes, edges, err := shared.GetNodesAndEdges(ctx, graphDB); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
 	} else if graph, err := shared.TransformGraph(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to graph %w", err)
 	} else if err := shared.WriteGraphToFile(&graph, s.outfile); err != nil {
 		return fmt.Errorf("error writing graph to file %w", err)
+	} else if err := db.Wipe(ctx); err != nil {
+		return fmt.Errorf("error wiping db: %w", err)
 	}
 
 	return nil
