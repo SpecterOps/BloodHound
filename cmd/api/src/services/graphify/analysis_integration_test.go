@@ -14,19 +14,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVersion6Analysis(t *testing.T) {
+func TestVersion5Analysis(t *testing.T) {
 	t.Parallel()
 	var (
 		ctx = context.Background()
 
-		ingestFilePath = path.Join("fixtures", "TestVersion6IngestJSON")
+		ingestFilePath = path.Join("fixtures", "Version5JSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
-	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "v6expected.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "ingested.json")
 	require.NoError(t, err)
 
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
@@ -35,7 +35,88 @@ func TestVersion6Analysis(t *testing.T) {
 	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
-	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "TestVersion6IngestJSON")), "analyzed.json")
+	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version5JSON", "analysis")), "analyzed.json")
+	require.NoError(t, err)
+
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}
+
+func TestVersion6ADCSAnalysis(t *testing.T) {
+	t.Parallel()
+	var (
+		ctx = context.Background()
+
+		ingestFilePath = path.Join("fixtures", "Version6ADCSJSON", "ingest")
+
+		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "ingested.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
+	require.NoError(t, err)
+
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	require.NoError(t, err)
+
+	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6ADCSJSON", "analysis")), "analyzed.json")
+	require.NoError(t, err)
+
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}
+
+func TestVersion6AllAnalysis(t *testing.T) {
+	t.Parallel()
+	var (
+		ctx = context.Background()
+
+		ingestFilePath = path.Join("fixtures", "Version6AllJSON", "ingest")
+
+		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "ingested.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
+	require.NoError(t, err)
+
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	require.NoError(t, err)
+
+	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6AllJSON", "analysis")), "analyzed.json")
+	require.NoError(t, err)
+
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}
+
+func TestVersion6Analysis(t *testing.T) {
+	t.Parallel()
+	var (
+		ctx = context.Background()
+
+		ingestFilePath = path.Join("fixtures", "Version6JSON", "ingest")
+
+		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "ingested.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
+	require.NoError(t, err)
+
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	require.NoError(t, err)
+
+	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6JSON", "analysis")), "analyzed.json")
 	require.NoError(t, err)
 
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
