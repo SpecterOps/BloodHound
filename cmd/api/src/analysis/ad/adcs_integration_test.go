@@ -27,6 +27,7 @@ import (
 	ad2 "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/lab/arrows"
 
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -3780,11 +3781,11 @@ func TestADCSESC16(t *testing.T) {
 	)
 
 	// Create graph
-	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
 	require.NoError(t, err)
 
-	testEdges := []lab.Edge{}
-	otherEdges := []lab.Edge{}
+	testEdges := []arrows.Edge{}
+	otherEdges := []arrows.Edge{}
 	for _, edge := range fixture.Relationships {
 		if edge.Type == ad.ADCSESC16.String() {
 			testEdges = append(testEdges, edge)
@@ -3794,7 +3795,7 @@ func TestADCSESC16(t *testing.T) {
 	}
 	fixture.Relationships = otherEdges
 
-	err = lab.WriteGraphFixture(graphDB, &fixture)
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
 	require.NoError(t, err)
 
 	// Run post-processing
@@ -3834,23 +3835,30 @@ func TestADCSESC16(t *testing.T) {
 		}
 
 		for _, testEdge := range testEdges {
-			if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
-				t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
-			} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
-				t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
-			} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+			// Find source and destination nodes
+			fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID)
+			require.True(t, found, "source node with ID %s not found", testEdge.FromID)
+
+			toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID)
+			require.True(t, found, "destination node with ID %s not found", testEdge.ToID)
+
+			// Fetch node IDs from graph
+			fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
-			})); err != nil || len(fromGraphNodeId) != 1 {
-				t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
-			} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+			}))
+			require.NoError(t, err, "error fetching node with name %s", fromNode.Caption)
+			require.Len(t, fromGraphNodeId, 1, "expected exactly one node with name %s, found %d", fromNode.Caption, len(fromGraphNodeId))
+
+			toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
-			})); err != nil || len(toGraphNodeId) != 1 {
-				t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
-			} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.ADCSESC16); err != nil {
-				t.Fatalf("error fetching ADCSESC16 edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
-			} else {
-				require.NotNil(t, edge)
-			}
+			}))
+			require.NoError(t, err, "error fetching node with name %s", toNode.Caption)
+			require.Len(t, toGraphNodeId, 1, "expected exactly one node with name %s, found %d", toNode.Caption, len(toGraphNodeId))
+
+			// Verify edge exists
+			edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.ADCSESC16)
+			require.NoError(t, err, "error fetching ADCSESC16 edge from %s to %s", fromNode.Caption, toNode.Caption)
+			require.NotNil(t, edge, "ADCSESC16 edge from %s to %s should exist", fromNode.Caption, toNode.Caption)
 		}
 
 		return nil
