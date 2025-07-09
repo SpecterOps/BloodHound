@@ -27,10 +27,13 @@ vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({
 }));
 
 // Mock route and navigation
-vi.mock('../../../routes', () => ({
-    ROUTE_ZONE_MANAGEMENT_DETAILS: 'details',
-}));
-// why is this details and not summary?
+vi.mock('../../../routes', async () => {
+    const actual = await vi.importActual('../../../routes');
+    return {
+        ...actual,
+        ROUTE_ZONE_MANAGEMENT_DETAILS: 'details',
+    }
+});
 
 const mockNavigate = vi.fn();
 vi.mock('../../../../utils', async () => {
@@ -59,7 +62,7 @@ describe('SummaryCard', () => {
         selectorCount: 7,
         memberCount: 13,
         id: 99,
-        analysis: true,
+        analysisEnabled: true,
     };
 
     const user = userEvent.setup();
@@ -71,25 +74,25 @@ describe('SummaryCard', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders the summary card with title, selector count, and member count', () => {
+    it('renders the summary card with title, selector count, and member count', async () => {
         render(<SummaryCard {...props} />);
 
-        expect(screen.getByText('Test Tier')).toBeInTheDocument();
+        expect(await screen.findByText('Test Tier')).toBeInTheDocument();
         expect(screen.getByText('Selectors')).toBeInTheDocument();
         expect(screen.getByText('7')).toBeInTheDocument();
         expect(screen.getByText('Members')).toBeInTheDocument();
         expect(screen.getByText('13')).toBeInTheDocument();
     });
 
-    it('renders icons', () => {
+    it('renders icons', async () => {
         render(<SummaryCard {...props} />);
-        expect(screen.getAllByTestId('large-right-arrow')).toHaveLength(2);
+        expect(await screen.findAllByTestId('large-right-arrow')).toHaveLength(2);
     });
 
     it('navigates to the details page when "View Details" is clicked', async () => {
         render(<SummaryCard {...props} />);
 
-        await user.click(screen.getByText('View Details'));
+        await user.click(await screen.findByText('View Details'));
 
         await longWait(() => {
             expect(mockNavigate).toHaveBeenCalledWith('/zone-management/details/tier/99');
@@ -98,12 +101,12 @@ describe('SummaryCard', () => {
 
     it('does not navigate when clicking other parts of the card', async () => {
         render(<SummaryCard {...props} />);
-        await user.click(screen.getByText('Test Tier'));
+        await user.click(await screen.findByText('Test Tier'));
 
         expect(mockNavigate).not.toHaveBeenCalled();
     });
 
-    it('does not render tier icon tooltip when multi tier analysis is disabled', async () => {
+    it('does not render icon when multi tier analysis is disabled', async () => {
         const configRes = {
             data: [
                 {
@@ -116,16 +119,21 @@ describe('SummaryCard', () => {
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configRes));
-            })
+            }),
         );
 
-        render(<SummaryCard {...props} />);
+        const debug = render(<SummaryCard {...props} />).debug;
 
-        expect(await screen.findByTestId('zone-management_summary_test_tier-list_item-99')).toBeInTheDocument();
+        const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
+        expect(listItem).toBeInTheDocument();
 
-        longWait(() => {
-            expect(screen.queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
-        })
+        // await longWait(() => {
+
+        // });
+        const icon = within(listItem).queryByTestId('analysis_disabled_icon');
+        expect(icon).not.toBeInTheDocument();
+        // expect(icon).toBeInTheDocument();
+        debug(undefined, Infinity);
     });
 
     it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
@@ -134,8 +142,8 @@ describe('SummaryCard', () => {
             type: AssetGroupTagTypeTier,
             selectorCount: 7,
             memberCount: 13,
-            id: 99,
-            analysis: false,
+            id: 3,
+            analysisEnabled: false,
         };
 
         server.use(
@@ -146,11 +154,11 @@ describe('SummaryCard', () => {
 
         render(<SummaryCard {...props} />);
 
-        expect(await screen.findByTestId('zone-management_summary_test_tier-list_item-99')).toBeInTheDocument();
+        const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-3');
+        expect(listItem).toBeInTheDocument();
 
-        longWait(() => {
-            expect(screen.getByTestId('analysis_disabled_icon')).toBeInTheDocument();
-        })
+        const icon = within(listItem).getByTestId('analysis_disabled_icon');
+        expect(icon).toBeInTheDocument();
     });
 
     it('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
@@ -162,8 +170,13 @@ describe('SummaryCard', () => {
 
         render(<SummaryCard {...props} />);
 
-        const listItem1 = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
-        expect(listItem1).toBeInTheDocument();
-        expect(within(listItem1).queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+        const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
+        expect(listItem).toBeInTheDocument();
+
+        // await longWait(() => {
+        const icon = within(listItem).queryByTestId('analysis_disabled_icon');
+        expect(icon).not.toBeInTheDocument();
+        // expect(icon).toBeInTheDocument();
+        // })
     });
 });

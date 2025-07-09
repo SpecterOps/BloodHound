@@ -34,6 +34,7 @@ import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
 import { useGetConfiguration } from '../../../hooks';
+import { ItemSkeleton } from '../utils';
 
 type SummaryCardProps = {
     title: string;
@@ -46,9 +47,20 @@ type SummaryCardProps = {
 
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
-    const { data } = useGetConfiguration();
+
+    const { data, isLoading, isError } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
     const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
+
+    if (isLoading) {
+        return ItemSkeleton(title, id, 'h-24');
+    }
+
+    if (isError) {
+        <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
+            <span className='text-base'>There was an error fetching this data</span>
+        </li>
+    }
 
     return (
         <Card
