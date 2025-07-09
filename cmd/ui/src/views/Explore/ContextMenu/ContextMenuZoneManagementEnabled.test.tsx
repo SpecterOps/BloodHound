@@ -177,7 +177,7 @@ describe('ContextMenu', () => {
         expect(tip).toBeInTheDocument();
 
         const NameOption = screen.getByLabelText(/name/i);
-        expect(NameOption).toBeInTheDocument();
+        expect(NameOption).toBeInTheDocument(); 
 
         const objectIdOption = screen.getByLabelText(/object id/i);
         expect(objectIdOption).toBeInTheDocument();
