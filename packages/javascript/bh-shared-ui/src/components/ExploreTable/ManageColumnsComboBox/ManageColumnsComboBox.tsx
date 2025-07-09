@@ -2,7 +2,7 @@ import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
 import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
@@ -30,6 +30,10 @@ export const ManageColumnsComboBox = ({
         () => allColumns.filter((item) => selectedColumnsProp[item.id]),
         [allColumns, selectedColumnsProp]
     );
+    useEffect(() => {
+        setSelectedColumns(initialColumns);
+    }, [initialColumns]);
+
     const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
     const [selectedColumns, setSelectedColumns] = useState<ManageColumnsComboBoxOption[]>(initialColumns);
     const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
