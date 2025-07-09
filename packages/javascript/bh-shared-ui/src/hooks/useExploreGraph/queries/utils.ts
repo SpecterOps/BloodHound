@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
+import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { extractEdgeTypes, getInitialPathFilters } from '../utils';

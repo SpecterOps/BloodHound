@@ -28,11 +28,7 @@ import TableControls from './TableControls';
 
 const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
 
-const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
-    (acc, curr) => ({ ...acc, [curr]: true }),
-    {}
-) as Record<string, boolean>;
-
+const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
 type MungedTableRowWithId = WrappedExploreTableItem['data'] & { id: string };
 
 const columnhelper = createColumnHelper();
@@ -82,20 +78,22 @@ const ExploreTable = ({
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
-    const mungedData = useMemo(
+    const mungedData: Partial<MungedTableRowWithId>[] = useMemo(
         () =>
-            // TODO: remove id and just use objectid for onRowClick/getRowId?
-            ((data && Object.entries(data).map(([key, value]) => ({ ...value.data, id: key }))) ||
-                []) as MungedTableRowWithId[],
+            (data &&
+                Object.entries(data).map(([key, value]) => {
+                    return Object.assign({}, value?.data || {}, { id: key });
+                })) ||
+            [],
         [data]
     );
 
     const filteredData = useMemo(
         () =>
-            mungedData?.filter((item) => {
+            mungedData?.filter((potentialRow) => {
                 const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
                 const filterTargets = filterKeys.map((filterKey) => {
-                    const stringyValue = String(item?.[filterKey]);
+                    const stringyValue = String(potentialRow?.[filterKey]);
 
                     return stringyValue?.toLowerCase();
                 });

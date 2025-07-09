@@ -40,8 +40,7 @@ import {
 
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes, StyledGraphNode } from 'js-client-library';
-import isEmpty from 'lodash/isEmpty';
+import { type GraphNodes } from 'js-client-library';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
@@ -102,8 +101,7 @@ const GraphView: FC = () => {
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
-        // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
@@ -237,7 +235,7 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes as Record<string, StyledGraphNode>}
+                    data={graphQuery.data?.nodes}
                     allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
                     selectedColumns={selectedColumns}
