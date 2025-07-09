@@ -20,7 +20,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
+	"log"
 	"log/slog"
 
 	"os"
@@ -53,16 +55,29 @@ const (
 	Usage = "Ingest valid collection files and transform graph data into a generic graph file"
 )
 
+func main() {
+	env := environment.NewEnvironment()
+	command := Create(env, BHCEGraphService{})
+
+	if err := command.Parse(); err != nil {
+		log.Fatal("Failed to parse CLI args: %w", err)
+	} else if err := command.Run(); err != nil {
+		log.Fatal("Failed to run command: %w", err)
+	}
+}
+
 type command struct {
 	env     environment.Environment
 	outpath string
 	path    string
+	service GraphService
 }
 
 // Create new instance of command to capture given environment
-func Create(env environment.Environment) *command {
+func Create(env environment.Environment, service GraphService) *command {
 	return &command{
-		env: env,
+		env:     env,
+		service: service,
 	}
 }
 
@@ -77,7 +92,7 @@ func (s *command) Name() string {
 }
 
 // Parse command flags
-func (s *command) Parse(cmdIndex int) error {
+func (s *command) Parse() error {
 	var err error
 	cmd := flag.NewFlagSet(Name, flag.ContinueOnError)
 
@@ -90,7 +105,7 @@ func (s *command) Parse(cmdIndex int) error {
 		cmd.PrintDefaults()
 	}
 
-	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
+	if err := cmd.Parse(os.Args[1:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	}
@@ -109,6 +124,29 @@ func (s *command) Parse(cmdIndex int) error {
 	return nil
 }
 
+type GraphService interface {
+	Ingest(context.Context, *graphify.TimestampedBatch, io.ReadSeeker) error
+	RunAnalysis(context.Context, Database, graph.Database) error
+}
+
+type BHCEGraphService struct{}
+
+func (s *BHCEGraphService) Ingest(ctx context.Context, batch *graphify.TimestampedBatch, reader io.ReadSeeker) error {
+	schema, err := upload.LoadIngestSchema()
+	if err != nil {
+		return fmt.Errorf("error loading ingest schema %w", err)
+	}
+
+	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
+
+	// ingest file into database
+	return graphify.ReadFileForIngest(batch, reader, readOpts)
+}
+
+func (s *BHCEGraphService) RunAnalysis(ctx context.Context, db Database, graphDB graph.Database) error {
+
+}
+
 // Run generate command
 func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -120,7 +158,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from directory %w", err)
-	} else if err = ingestData(ctx, ingestFilePaths, graphDB); err != nil {
+	} else if err = ingestData(ctx, s.service, ingestFilePaths, graphDB); err != nil {
 		return fmt.Errorf("error ingesting data %w", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, graphDB); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
@@ -337,19 +375,12 @@ func initializeDatabase(ctx context.Context, connection string) (database.Databa
 	return db, nil
 }
 
-func ingestData(ctx context.Context, filepaths []string, database graph.Database) error {
+func ingestData(ctx context.Context, service GraphService, filepaths []string, database graph.Database) error {
 	var errs []error
-
-	schema, err := upload.LoadIngestSchema()
-	if err != nil {
-		return fmt.Errorf("error loading ingest schema %w", err)
-	}
 
 	for _, filepath := range filepaths {
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
-
-			readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
 
 			file, err := os.Open(filepath)
 			if err != nil {
@@ -358,7 +389,7 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 			defer file.Close()
 
 			// ingest file into database
-			err = graphify.ReadFileForIngest(timestampedBatch, file, readOpts)
+			err = service.Ingest(ctx, timestampedBatch, file)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("error ingesting file %s: %w", filepath, err))
 			}
