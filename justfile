@@ -15,12 +15,8 @@ set positional-arguments
 
 # generate generic ingestible file with default CLI arguments
 [no-cd]
-graphify-ingest path="" outfile="":
-  @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outfile={{outfile}}
-
-[no-cd]
-analyze-graph path="" outfile="":
-  @go run github.com/specterops/bloodhound/packages/go/stbernard analyze-graph --infile={{path}} --outfile={{outfile}}
+graphify-ingest path="" outpath="":
+  @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outpath={{outpath}}
 
 # run st bernard directly
 stbernard *ARGS:

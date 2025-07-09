@@ -26,7 +26,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
-	analyzegraph "github.com/specterops/bloodhound/packages/go/stbernard/command/analyze_graph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/deps"
@@ -98,7 +97,6 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 			goimports.Create(env),
 			license.Create(env),
 			graph.Create(env),
-			analyzegraph.Create(env),
 		}
 	)
 
