@@ -28,12 +28,11 @@ import {
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeTier,
-    parseTieringConfiguration,
 } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { AppIcon, SortableHeader } from '../../../components';
-import { useGetConfiguration } from '../../../hooks';
+import { hasMultiTierAnalysisEnabled } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
@@ -68,9 +67,7 @@ type DetailsListProps = {
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-    const { data } = useGetConfiguration();
-    const tieringConfig = parseTieringConfiguration(data);
-    const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
+    const multiTierAnalysisEnabled = hasMultiTierAnalysisEnabled();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>

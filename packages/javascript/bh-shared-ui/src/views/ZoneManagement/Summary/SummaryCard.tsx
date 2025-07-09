@@ -26,14 +26,14 @@ import {
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagTypeTier, AssetGroupTagTypes, parseTieringConfiguration } from 'js-client-library';
+import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
 import { AppIcon } from '../../../components';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { useGetConfiguration } from '../../../hooks';
+import { hasMultiTierAnalysisEnabled, useGetConfiguration } from '../../../hooks';
 import { ItemSkeleton } from '../utils';
 
 type SummaryCardProps = {
@@ -47,10 +47,8 @@ type SummaryCardProps = {
 
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
-
-    const { data, isLoading, isError } = useGetConfiguration();
-    const tieringConfig = parseTieringConfiguration(data);
-    const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
+    const { isLoading, isError } = useGetConfiguration();
+    const displayTooltip = hasMultiTierAnalysisEnabled() && !analysisEnabled;
 
     if (isLoading) {
         return ItemSkeleton(title, id, 'h-24');
@@ -68,7 +66,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, "_")}-list_item-${id}`}
         >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {multiTierAnalysisEnabled && !analysisEnabled && (
+                {displayTooltip && (
                     <TooltipProvider>
                         <TooltipRoot>
                             <TooltipTrigger>

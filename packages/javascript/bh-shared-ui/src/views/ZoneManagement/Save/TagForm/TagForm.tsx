@@ -33,7 +33,6 @@ import {
     AssetGroupTagTypeTier,
     AssetGroupTagTypes,
     UpdateAssetGroupTagRequest,
-    parseTieringConfiguration,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
@@ -48,7 +47,7 @@ import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
-import { useGetConfiguration } from '../../../../hooks';
+import { hasMultiTierAnalysisEnabled } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
@@ -109,10 +108,9 @@ export const TagForm: FC = () => {
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
 
-    const { data } = useGetConfiguration();
-    const tieringConfig = parseTieringConfiguration(data);
+    const multiTierAnalysisEnabled = hasMultiTierAnalysisEnabled();
     const showAnalysisToggle =
-        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
+        multiTierAnalysisEnabled && tierId !== TIER_ZERO_ID && tierId !== '';
 
     const {
         register,
@@ -292,7 +290,7 @@ export const TagForm: FC = () => {
                                         <div className='flex gap-3'>
                                             <Switch
                                                 id='analysis'
-                                                checked={toggleEnabled}
+                                                checked={toggleEnabled || undefined}
                                                 {...register('analysis_enabled')}
                                                 data-testid='analysis_enabled'
                                                 onCheckedChange={(checked: boolean) => {
