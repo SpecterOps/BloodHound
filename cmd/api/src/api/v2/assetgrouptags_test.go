@@ -2281,7 +2281,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query":`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2293,7 +2293,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "test", "tag_type": 5}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2306,21 +2306,21 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "", "tag_type": 2}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
 		handler.ServeHTTP(response, req)
 
 		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), "missing required query parameter")
+		require.Contains(t, response.Body.String(), "search query must be at least 3 characters long")
 	})
 	t.Run("get tags db error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{}, errors.New("db error"))
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2334,7 +2334,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2348,7 +2348,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search?sort_by='notSortable'", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint+"?sort_by='notSortable'", strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2362,7 +2362,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search?skip='notSkippable'", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint+"?skip='notSkippable'", strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2393,7 +2393,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2448,7 +2448,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "test", "tag_type": 2}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2503,7 +2503,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "owned", "tag_type": 2}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()
@@ -2558,7 +2558,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		reqBody := `{"query": "123", "tag_type": 1}`
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
 		response := httptest.NewRecorder()

@@ -1,7 +1,7 @@
 post:
   operationId: AssetGroupTagSearch
   summary: Search Asset Group Tags
-  description: Supports searching by name on asset group tags and asset group tag selectors, and by name or object ID on members.
+  description: Supports searching by name on asset group tags and selectors, and by name or object ID on members.
   tags:
     - Asset Isolation
     - Enterprise
@@ -44,21 +44,7 @@ post:
                   members: 
                     type: array
                     items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        object_id:
-                          type: string
-                        primary_kind:
-                          type: string
-                        name:
-                            type: string
-                        properties:
-                            type: object
-                            additionalProperties: true
-                        source:
-                          type: integer
+                      $ref: './../schemas/model.asset-group-tags-member.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

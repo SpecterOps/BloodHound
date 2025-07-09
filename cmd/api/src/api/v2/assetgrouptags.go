@@ -763,11 +763,11 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if !model.IsValidTagType(reqBody.TagType) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
-	} else if reqBody.Query == "" || len(reqBody.Query) < 3 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, "query"), request), response)
-	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil {
+	} else if len(reqBody.Query) < 3 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
+	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
-	} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}); err != nil {
+	} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
@@ -779,11 +779,8 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		)
 
 		for _, s := range selectors {
-			if strings.Contains(strings.ToLower(s.Name), strings.ToLower(reqBody.Query)) {
+			if strings.Contains(strings.ToLower(s.Name), strings.ToLower(reqBody.Query)) && len(matchedSelectors) < assetGroupTagsSearchLimit {
 				matchedSelectors = append(matchedSelectors, s)
-				if len(matchedSelectors) >= assetGroupTagsSearchLimit {
-					break
-				}
 			}
 		}
 
@@ -792,25 +789,19 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			isOwnedType := t.Type == model.AssetGroupTagTypeOwned
 
 			// group owned with labels
-			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) {
+			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) && len(matchedTags) < assetGroupTagsSearchLimit {
 				kinds = append(kinds, t.ToKind())
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
 					matchedTags = append(matchedTags, t)
-
-					if len(matchedTags) >= assetGroupTagsSearchLimit {
-						break
-					}
 				}
 			}
 
 			if reqBody.TagType == model.AssetGroupTagTypeTier && t.Type == model.AssetGroupTagTypeTier {
 				kinds = append(kinds, t.ToKind())
-				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
+				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
+
 					matchedTags = append(matchedTags, t)
 
-					if len(matchedTags) >= assetGroupTagsSearchLimit {
-						break
-					}
 				}
 			}
 		}
@@ -825,6 +816,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, filter, skip, assetGroupTagsSearchLimit); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
+			return
 		} else {
 			for _, node := range nodes {
 				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
