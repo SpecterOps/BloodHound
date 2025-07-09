@@ -18,10 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
-import {
-    InfiniteQueryFixedList,
-    InfiniteQueryFixedListProps,
-} from '../../../components/InfiniteQueryFixedList/InfiniteQueryFixedList';
+import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';

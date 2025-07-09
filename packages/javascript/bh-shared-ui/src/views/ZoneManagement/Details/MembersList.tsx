@@ -18,10 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { UseInfiniteQueryResult } from 'react-query';
 import { NodeIcon, SortableHeader } from '../../../components';
-import {
-    InfiniteQueryFixedList,
-    InfiniteQueryFixedListProps,
-} from '../../../components/InfiniteQueryFixedList/InfiniteQueryFixedList';
+import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, getListHeight } from './utils';
