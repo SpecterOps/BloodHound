@@ -2,7 +2,7 @@ import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
 import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
@@ -145,9 +145,9 @@ export const ManageColumnsComboBox = ({
                                     itemProps={getItemProps({ item: column, index })}
                                 />
                             )),
-                            ...selectedColumns.map((column, index) => {
+                            ...selectedColumns.reduce((acc, column, index) => {
                                 if (!column?.isPinned) {
-                                    return (
+                                    acc.push(
                                         <ManageColumnsListItem
                                             isSelected
                                             key={`${column?.id}-${index}`}
@@ -157,7 +157,9 @@ export const ManageColumnsComboBox = ({
                                         />
                                     );
                                 }
-                            }),
+
+                                return acc;
+                            }, [] as ReactNode[]),
                             ...unselectedColumns.map((column, index) => (
                                 <ManageColumnsListItem
                                     key={`${column?.id}-${index}`}
