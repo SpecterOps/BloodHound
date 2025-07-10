@@ -41,7 +41,7 @@ import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationD
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { useAssetGroupTags } from '../../hooks';
+import { useTagsQuery } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
@@ -104,7 +104,7 @@ export const TagForm: FC = () => {
         formState: { errors },
     } = useForm<TagFormInputs>();
 
-    const tagsQuery = useAssetGroupTags();
+    const tagsQuery = useTagsQuery();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
     const createTagMutation = useCreateAssetGroupTag();

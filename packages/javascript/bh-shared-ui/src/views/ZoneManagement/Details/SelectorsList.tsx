@@ -15,23 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
+import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
-import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
+import { SelectedHighlight, getListHeight } from './utils';
 
-const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
+const getCountElement = (listItem: AssetGroupTagSelector): React.ReactNode => {
     if (listItem.counts === undefined) {
         return null;
-    } else if (isTag(listItem)) {
-        return <span className='text-base'>{listItem.counts.selectors.toLocaleString()}</span>;
-    } else if (isSelector(listItem)) {
-        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
     } else {
-        return null;
+        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
     }
 };
 
@@ -101,7 +97,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
     }
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
-        const isDisabled = isSelector(item) && item.disabled_at;
+        const isDisabled = item.disabled_at;
 
         return (
             <div

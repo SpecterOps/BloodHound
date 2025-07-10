@@ -18,20 +18,11 @@ import React, { ForwardedRef, useCallback, useMemo, useRef } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { useMeasure } from '../../hooks/useMeasure';
-
-type PageParam = {
-    skip: number;
-    limit: number;
-};
-
-type PageWithItems<T> = {
-    items: T[];
-    nextPageParam?: PageParam;
-};
+import { PaginatedResult } from '../../utils/paginatedFetcher';
 
 export type InfiniteQueryFixedListProps<T> = {
     itemSize: number;
-    queryResult: UseInfiniteQueryResult<PageWithItems<T>>;
+    queryResult: UseInfiniteQueryResult<PaginatedResult<T>>;
     renderRow: (item: T, index: number, style: React.CSSProperties, isScrolling?: boolean) => React.ReactNode;
     overscanCount?: number;
     thresholdCount?: number;

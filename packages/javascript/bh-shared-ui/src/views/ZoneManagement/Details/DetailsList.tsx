@@ -17,7 +17,6 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTag,
-    AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeTier,
@@ -28,30 +27,28 @@ import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
-import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
+import { SelectedHighlight, getListHeight, isTag } from './utils';
 
-const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
+const getCountElement = (listItem: AssetGroupTag): React.ReactNode => {
     if (listItem.counts === undefined) {
         return null;
     } else if (isTag(listItem)) {
         return <span className='text-base ml-4'>{listItem.counts.selectors.toLocaleString()}</span>;
-    } else if (isSelector(listItem)) {
-        return <span className='text-base ml-4'>{listItem.counts.members.toLocaleString()}</span>;
     } else {
         return null;
     }
 };
 
 type DetailsListProps = {
-    title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: UseQueryResult<AssetGroupTag[]> | UseQueryResult<AssetGroupTagSelector[]>;
+    title: 'Tiers' | 'Labels';
+    listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string | undefined;
     onSelect: (id: number) => void;
 };
 /**
- * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
+ * @description This component is meant to display the lists for either Tiers or Labels but not the Members list since that is a paginated list that loads more data as a user scrolls.
  * @param {object} props
- * @param {title} props.title Limited to 'Selectors' | 'Tiers' | 'Labels' as that is what this component is built for
+ * @param {title} props.title Limited to 'Tiers' | 'Labels' as that is what this component is built for
  * @param {UseQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
  * @param {selected} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
@@ -85,7 +82,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
             )}
             <div
                 className={cn(`overflow-y-auto`, {
-                    'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
                     'h-[762px]': getListHeight(window.innerHeight) === 762,
                     'h-[642px]': getListHeight(window.innerHeight) === 642,
                     'h-[438px]': getListHeight(window.innerHeight) === 438,
@@ -132,8 +128,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                     return null;
                                 }
 
-                                const isDisabled = isSelector(listItem) && listItem.disabled_at;
-
                                 return (
                                     <li
                                         key={listItem.id}
@@ -154,12 +148,9 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             <div className='flex items-center'>
                                                 <div
                                                     className={cn(
-                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
-                                                        {
-                                                            'text-[#8E8C95] dark:text-[#919191]': isDisabled,
-                                                        }
+                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]'
                                                     )}
-                                                    title={isDisabled ? `Disabled: ${listItem.name}` : listItem.name}>
+                                                    title={listItem.name}>
                                                     {listItem.name}
                                                 </div>
                                             </div>
