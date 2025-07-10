@@ -28,14 +28,14 @@ func main() {
 	gs, err := graph.NewCommunityGraphService()
 
 	if err != nil {
-		log.Fatal("Failed to create graph service: %w", err)
+		log.Fatal("Failed to create graph service: ", err)
 	}
 
 	command := graph.Create(env, gs)
 
 	if err := command.Parse(); err != nil {
-		log.Fatal("Failed to parse CLI args: %w", err)
+		log.Fatal("Failed to parse CLI args: ", err)
 	} else if err := command.Run(); err != nil {
-		log.Fatal("Failed to run command: %w", err)
+		log.Fatal("Failed to run command: ", err)
 	}
 }

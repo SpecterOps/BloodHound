@@ -107,7 +107,7 @@ func (s *Command) Parse() error {
 }
 
 type GraphService interface {
-	WipeDatabase(context.Context) error
+	TeardownService(context.Context)
 	InitializeService(context.Context, string, graph.Database) error
 	Ingest(context.Context, *graphify.TimestampedBatch, io.ReadSeeker) error
 	RunAnalysis(context.Context, graph.Database) error
@@ -121,7 +121,7 @@ type CommunityGraphService struct {
 func NewCommunityGraphService() (*CommunityGraphService, error) {
 	schema, err := upload.LoadIngestSchema()
 	if err != nil {
-		return nil, fmt.Errorf("error loading ingest schema %w", err)
+		return nil, fmt.Errorf("error loading ingest schema: %w", err)
 	}
 
 	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
@@ -129,21 +129,28 @@ func NewCommunityGraphService() (*CommunityGraphService, error) {
 	return &CommunityGraphService{readOpts: readOpts}, nil
 }
 
-func (s *CommunityGraphService) WipeDatabase(ctx context.Context) error {
-	return s.db.Wipe(ctx)
+func (s *CommunityGraphService) TeardownService(ctx context.Context) {
+	if s.db != nil {
+		err := s.db.Wipe(ctx)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to wipe database after command completion: %v", err))
+		} else {
+			slog.Info("Successfully completed command.")
+		}
+	}
 }
 
 func (s *CommunityGraphService) InitializeService(ctx context.Context, connection string, _ graph.Database) error {
 	var db database.Database
 
 	if gormDB, err := database.OpenDatabase(connection); err != nil {
-		return fmt.Errorf("error opening database %w", err)
+		return fmt.Errorf("error opening database: %w", err)
 	} else {
 		db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
 	}
 
 	if err := db.Migrate(ctx); err != nil {
-		return fmt.Errorf("error migrating database %w", err)
+		return fmt.Errorf("error migrating database: %w", err)
 	}
 
 	s.db = db
@@ -163,21 +170,22 @@ func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.D
 func (s *Command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	defer s.service.TeardownService(ctx)
 
 	if graphDB, err := initializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
 		return fmt.Errorf("error connecting to graphDB: %w", err)
 	} else if err := s.service.InitializeService(ctx, s.env[environment.PostgresConnectionVarName], graphDB); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
-		return fmt.Errorf("error getting ingest file paths from directory %w", err)
+		return fmt.Errorf("error getting ingest file paths from directory: %w", err)
 	} else if err = ingestData(ctx, s.service, ingestFilePaths, graphDB); err != nil {
-		return fmt.Errorf("error ingesting data %w", err)
+		return fmt.Errorf("error ingesting data: %w", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, graphDB); err != nil {
-		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
+		return fmt.Errorf("error retrieving nodes and edges from database: %w", err)
 	} else if graph, err := transformGraph(nodes, edges); err != nil {
-		return fmt.Errorf("error transforming nodes and edges to graph %w", err)
+		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
 	} else if err := writeGraphToFile(&graph, s.outpath, "ingested.json"); err != nil {
-		return fmt.Errorf("error writing graph to file %w", err)
+		return fmt.Errorf("error writing graph to file: %w", err)
 	} else if err := s.service.RunAnalysis(ctx, graphDB); err != nil {
 		return fmt.Errorf("error running analysis: %w", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, graphDB); err != nil {
@@ -186,8 +194,6 @@ func (s *Command) Run() error {
 		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
 	} else if err := writeGraphToFile(&graph, s.outpath, "analyzed.json"); err != nil {
 		return fmt.Errorf("error writing graph to file: %w", err)
-	} else if err := s.service.WipeDatabase(ctx); err != nil {
-		return fmt.Errorf("error wiping db: %w", err)
 	}
 
 	return nil
@@ -197,7 +203,7 @@ func writeGraphToFile(graph *generic.Graph, folder string, fileName string) erro
 	outputFile := filepath.Join(folder, fileName)
 
 	if jsonBytes, err := json.MarshalIndent(generateGenericGraphFile(graph), "", "  "); err != nil {
-		return fmt.Errorf("error occurred while marshalling ingest file into bytes %w", err)
+		return fmt.Errorf("error occurred while marshalling ingest file into bytes: %w", err)
 	} else if err := os.MkdirAll(folder, 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	} else {
@@ -331,7 +337,7 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 			return cursor.Error()
 		})
 		if err != nil {
-			return fmt.Errorf("error fetching nodes %w", err)
+			return fmt.Errorf("error fetching nodes: %w", err)
 		}
 		err = tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for edge := range cursor.Chan() {
@@ -340,12 +346,12 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 			return cursor.Error()
 		})
 		if err != nil {
-			return fmt.Errorf("error fetching relationships %w", err)
+			return fmt.Errorf("error fetching relationships: %w", err)
 		}
 
 		return nil
 	}); err != nil {
-		return nodes, edges, fmt.Errorf("error occurred reading the database %w", err)
+		return nodes, edges, fmt.Errorf("error occurred reading the database: %w", err)
 	} else {
 		return nodes, edges, nil
 	}
@@ -354,17 +360,17 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 func initializeGraphDatabase(ctx context.Context, postgresConnection string) (graph.Database, error) {
 
 	if pool, err := pg.NewPool(postgresConnection); err != nil {
-		return nil, fmt.Errorf("error creating postgres connection %w", err)
+		return nil, fmt.Errorf("error creating postgres connection: %w", err)
 	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
 		ConnectionString:      postgresConnection,
 		Pool:                  pool,
 	}); err != nil {
-		return nil, fmt.Errorf("error connecting to database %w", err)
+		return nil, fmt.Errorf("error connecting to database: %w", err)
 	} else if err = migrations.NewGraphMigrator(database).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
-		return nil, fmt.Errorf("error migrating graph %w", err)
+		return nil, fmt.Errorf("error migrating graph: %w", err)
 	} else if err = database.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
-		return nil, fmt.Errorf("error setting default graph %w", err)
+		return nil, fmt.Errorf("error setting default graph: %w", err)
 	} else {
 		return database, nil
 	}
@@ -393,7 +399,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 			return nil
 		})
 		if err != nil {
-			return fmt.Errorf("unrecoverable error occurred during batch operation %w", err)
+			return fmt.Errorf("unrecoverable error occurred during batch operation: %w", err)
 		}
 	}
 
@@ -413,7 +419,7 @@ func (s *Command) getIngestFilePaths() ([]string, error) {
 
 	if err := filepath.Walk(s.path, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("error walking filepath %w", err)
+			return fmt.Errorf("error walking filepath: %w", err)
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".json" {
@@ -422,7 +428,7 @@ func (s *Command) getIngestFilePaths() ([]string, error) {
 
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("error getting files from directory %w", err)
+		return nil, fmt.Errorf("error getting files from directory: %w", err)
 	}
 
 	return paths, nil
