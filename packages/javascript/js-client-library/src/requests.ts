@@ -194,6 +194,7 @@ export type RiskDetailsRequest = {
 
 export interface CreateUserQueryRequest {
     name: string;
+    description: string;
     query: string;
 }
 

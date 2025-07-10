@@ -85,9 +85,12 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         setShowCommonQueries((v) => !v);
     };
 
-    const handleSaveQuery = async (data: { name: string }) => {
+    const handleSaveQuery = async (data: { name: string; description: string }) => {
+        console.log('onSave');
+        console.log(data);
+
         return createSavedQueryMutation.mutate(
-            { name: data.name, query: cypherQuery },
+            { name: data.name, description: data.description, query: cypherQuery },
             {
                 onSuccess: () => {
                     setShowSaveQueryDialog(false);

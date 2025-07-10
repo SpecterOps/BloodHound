@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 // import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import {
+    Button,
     Dialog,
     DialogActions,
     DialogClose,
@@ -44,7 +44,7 @@ type CypherSearchState = {
 const SaveQueryDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-    onSave: (data: { name: string }) => Promise<any>;
+    onSave: (data: { name: string; description: string }) => Promise<any>;
     isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
@@ -59,15 +59,17 @@ const SaveQueryDialog: React.FC<{
     useEffect(() => {
         if (selectedQuery) {
             setName(selectedQuery.description);
+            setDescription(selectedQuery.description);
         } else {
             setName('');
+            setDescription('');
         }
     }, [selectedQuery]);
 
     const saveDisabled = name.trim() === '';
 
     const handleSave = () => {
-        onSave({ name });
+        onSave({ name, description });
     };
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const kindsQuery = useQuery({
@@ -150,7 +152,7 @@ const SaveQueryDialog: React.FC<{
                             <DialogClose asChild>
                                 <Button variant='secondary'>Cancel</Button>
                             </DialogClose>
-                            <Button>Submit</Button>
+                            <Button onClick={handleSave}>Save</Button>
                         </DialogActions>
                     </DialogContent>
                 </DialogPortal>
