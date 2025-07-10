@@ -194,6 +194,11 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
             },
             {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with vulnerable RPC endpoint (ESC11)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.rpcencryptionenforced = False\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 description: 'Domain controllers with weak certificate binding enabled',
                 cypher: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
             },
