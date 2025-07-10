@@ -1,18 +1,3 @@
-// Copyright 2025 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
 package graph
 
 import (
@@ -22,9 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"log/slog"
-
 	"os"
 	"path/filepath"
 	"time"
@@ -54,24 +37,6 @@ const (
 	Name  = "graph"
 	Usage = "Ingest valid collection files and transform graph data into a generic graph file"
 )
-
-func main() {
-	env := environment.NewEnvironment()
-
-	gs, err := NewBHCEGraphService()
-
-	if err != nil {
-		log.Fatal("Failed to create graph service: %w", err)
-	}
-
-	command := Create(env, gs)
-
-	if err := command.Parse(); err != nil {
-		log.Fatal("Failed to parse CLI args: %w", err)
-	} else if err := command.Run(); err != nil {
-		log.Fatal("Failed to run command: %w", err)
-	}
-}
 
 type Command struct {
 	env     environment.Environment
@@ -133,17 +98,17 @@ func (s *Command) Parse() error {
 
 type GraphService interface {
 	WipeDatabase(context.Context) error
-	InitializeDatabase(context.Context, string) error
+	InitializeService(context.Context, string, graph.Database) error
 	Ingest(context.Context, *graphify.TimestampedBatch, io.ReadSeeker) error
 	RunAnalysis(context.Context, graph.Database) error
 }
 
-type BHCEGraphService struct {
+type CommunityGraphService struct {
 	db       database.Database
 	readOpts graphify.ReadOptions
 }
 
-func NewBHCEGraphService() (*BHCEGraphService, error) {
+func NewCommunityGraphService() (*CommunityGraphService, error) {
 	schema, err := upload.LoadIngestSchema()
 	if err != nil {
 		return nil, fmt.Errorf("error loading ingest schema %w", err)
@@ -151,14 +116,14 @@ func NewBHCEGraphService() (*BHCEGraphService, error) {
 
 	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
 
-	return &BHCEGraphService{readOpts: readOpts}, nil
+	return &CommunityGraphService{readOpts: readOpts}, nil
 }
 
-func (s *BHCEGraphService) WipeDatabase(ctx context.Context) error {
+func (s *CommunityGraphService) WipeDatabase(ctx context.Context) error {
 	return s.db.Wipe(ctx)
 }
 
-func (s *BHCEGraphService) InitializeDatabase(ctx context.Context, connection string) error {
+func (s *CommunityGraphService) InitializeService(ctx context.Context, connection string, _ graph.Database) error {
 	var db database.Database
 
 	if gormDB, err := database.OpenDatabase(connection); err != nil {
@@ -176,11 +141,11 @@ func (s *BHCEGraphService) InitializeDatabase(ctx context.Context, connection st
 	return nil
 }
 
-func (s *BHCEGraphService) Ingest(ctx context.Context, batch *graphify.TimestampedBatch, reader io.ReadSeeker) error {
+func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.TimestampedBatch, reader io.ReadSeeker) error {
 	return graphify.ReadFileForIngest(batch, reader, s.readOpts)
 }
 
-func (s *BHCEGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {
+func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {
 	return datapipe.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{})
 }
 
@@ -191,7 +156,7 @@ func (s *Command) Run() error {
 
 	if graphDB, err := initializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
 		return fmt.Errorf("error connecting to graphDB: %w", err)
-	} else if err := s.service.InitializeDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
+	} else if err := s.service.InitializeService(ctx, s.env[environment.PostgresConnectionVarName], graphDB); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from directory %w", err)
