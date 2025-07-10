@@ -185,13 +185,27 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nRETURN p\nLIMIT 1000`,
             },
             {
+                description: 'Compromising pemissions on ADCS nodes (ESC5)',
+                cypher: `MATCH p = (n:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite]->(m:Base)
+WHERE m.distinguishedname CONTAINS "PUBLIC KEY SERVICES"
+AND NOT n.objectid ENDS WITH "-512" // Domain Admins
+AND NOT n.objectid ENDS WITH "-519" // Enterprise Admins
+AND NOT n.objectid ENDS WITH "-544" // Administrators
+RETURN p\nLIMIT 1000`,
+            },
+            {
                 description:
-                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
+                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled (ESC6)',
                 cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p\nLIMIT 1000`,
             },
             {
-                description: 'CA administrators and CA managers',
+                description: 'CA Administrators and CA Managers (ESC7)',
                 cypher: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with vulnerable HTTP(S) endpoint (ESC8)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Domain controllers with weak certificate binding enabled',
