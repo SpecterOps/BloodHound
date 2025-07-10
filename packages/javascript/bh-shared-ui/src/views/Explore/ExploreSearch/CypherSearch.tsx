@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
@@ -71,15 +71,15 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             performSearch(query);
         }
     };
+    useEffect(() => {
+        setSelected(cypherQuery);
+    }, [cypherQuery]);
 
     const handleSetSelected = (query: string) => {
         setSelected(query);
     };
 
     const selectedQuery: any = useGetSelectedQuery(selected);
-
-    //consider refactor for performance - this gets called multiple times per re-render - maybe abstract this out as a util function and only call when necessary
-    // const matchedQuery: any = useGetSelectedQuery(cypherQuery);
 
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);

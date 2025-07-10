@@ -32,7 +32,6 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
     };
 
     const handleEntered = () => {
-        console.log('handleEntered');
         setTimeout(() => {
             clearMessage();
         }, 5000);

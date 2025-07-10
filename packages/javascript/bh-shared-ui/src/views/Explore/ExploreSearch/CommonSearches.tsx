@@ -148,7 +148,6 @@ const InnerCommonSearches = ({
 
     function getSelectedQuery() {
         const comparator = selected ? selected : cypherQuery;
-
         for (const item of filteredList) {
             let result = null;
             result = item.queries.find((query) => {
@@ -163,7 +162,6 @@ const InnerCommonSearches = ({
     }
 
     const selectedQuery = getSelectedQuery();
-
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
