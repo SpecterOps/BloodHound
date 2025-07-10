@@ -4,17 +4,21 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/genericgraph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/go/callgraph/vta"
+	"golang.org/x/tools/go/cfg"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
@@ -74,13 +78,15 @@ func (s *command) Parse(cmdIndex int) error {
 // Run complexity command
 func (s *command) Run() error {
 	var (
-		cfg = &packages.Config{
+		conf = &packages.Config{
 			Mode:       packages.LoadAllSyntax,
 			BuildFlags: []string{"-tags=" + s.tags},
 		}
 		outGraph     = genericgraph.GenericObject{}
 		nodeMap      = make(map[string]genericgraph.Node)
-		fnStringToID = make(map[string]string)
+		ssaIDToUUID  = make(map[int]uuid.UUID)
+		fnPosToUUID  = make(map[string]uuid.UUID)
+		declsForFile = make(map[string][]ast.Decl)
 	)
 
 	paths, err := workspace.FindPaths(s.env)
@@ -97,7 +103,7 @@ func (s *command) Run() error {
 
 	slog.Info("current module", slog.String("module", currentModule))
 
-	initial, err := packages.Load(cfg, s.additionalArgs...)
+	initial, err := packages.Load(conf, s.additionalArgs...)
 	if err != nil {
 		return err
 	}
@@ -116,9 +122,9 @@ func (s *command) Run() error {
 
 	for fn, node := range callgraph.Nodes {
 		var (
-			pkg      string
-			id       = strconv.Itoa(node.ID)
-			position = fn.Prog.Fset.PositionFor(fn.Pos(), false).String()
+			pkg         string
+			position    = prog.Fset.Position(fn.Pos())
+			positionStr = position.String()
 		)
 
 		if fn.Package() != nil {
@@ -129,29 +135,39 @@ func (s *command) Run() error {
 			continue
 		}
 
-		if _, ok := nodeMap[id]; !ok {
-			fnStringToID[fn.String()] = id
-
-			n := genericgraph.Node{
-				ID:    id,
-				Kinds: []string{"Function", "Golang"},
-				Properties: map[string]any{
-					"name":     fn.Name(),
-					"position": position,
-					"pkg":      pkg,
-					"relname":  fn.String(),
-				},
-			}
-
-			nodeMap[id] = n
-
-			outGraph.Graph.Nodes = append(outGraph.Graph.Nodes, n)
+		fnID, ok := ssaIDToUUID[node.ID]
+		if !ok {
+			fnID, _ = uuid.NewV4()
+			ssaIDToUUID[node.ID] = fnID
 		}
+
+		_, ok = fnPosToUUID[positionStr]
+		if !ok {
+			fnPosToUUID[positionStr] = fnID
+		}
+
+		id := fnID.String()
+
+		n := genericgraph.Node{
+			ID:    id,
+			Kinds: []string{"Function", "Golang"},
+			Properties: map[string]any{
+				"name":     fn.Name(),
+				"position": positionStr,
+				"pkg":      pkg,
+				"relname":  fn.String(),
+			},
+		}
+
+		nodeMap[id] = n
+
+		outGraph.Graph.Nodes = append(outGraph.Graph.Nodes, n)
 
 		for _, edge := range node.Out {
 			var (
-				calleePkg string
-				calleeID  = strconv.Itoa(edge.Callee.ID)
+				calleePkg         string
+				calleePosition    = prog.Fset.Position(fn.Pos())
+				calleePositionStr = calleePosition.String()
 			)
 
 			if edge.Callee.Func.Package() != nil {
@@ -161,6 +177,19 @@ func (s *command) Run() error {
 			if !strings.Contains(calleePkg, currentModule) {
 				continue
 			}
+
+			calleeFnID, ok := ssaIDToUUID[edge.Callee.ID]
+			if !ok {
+				calleeFnID, _ = uuid.NewV4()
+				ssaIDToUUID[edge.Callee.ID] = calleeFnID
+			}
+
+			_, ok = fnPosToUUID[calleePositionStr]
+			if !ok {
+				fnPosToUUID[calleePositionStr] = calleeFnID
+			}
+
+			calleeID := calleeFnID.String()
 
 			outGraph.Graph.Edges = append(outGraph.Graph.Edges, genericgraph.Edge{
 				Start: genericgraph.Terminal{
@@ -176,6 +205,44 @@ func (s *command) Run() error {
 		}
 	}
 
+	prog.Fset.Iterate(func(file *token.File) bool {
+		decls, ok := declsForFile[file.Name()]
+		if !ok {
+			astFile, err := parser.ParseFile(prog.Fset, file.Name(), nil, parser.ParseComments)
+			if err != nil {
+				return true
+			}
+			decls = astFile.Decls
+			declsForFile[file.Name()] = decls
+		}
+
+		for _, d := range decls {
+			switch decl := d.(type) {
+			case *ast.FuncDecl:
+				if decl.Body != nil {
+					addControlFlowToGraph(fnPosToUUID[prog.Fset.Position(decl.Name.Pos()).String()].String(), cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+				}
+			case *ast.GenDecl:
+				for _, spec := range decl.Specs {
+					valueSpec, ok := spec.(*ast.ValueSpec)
+					if !ok {
+						continue
+					}
+					for _, value := range valueSpec.Values {
+						funcLit, ok := value.(*ast.FuncLit)
+						if !ok {
+							continue
+						}
+						if funcLit.Body != nil {
+							addControlFlowToGraph(fnPosToUUID[prog.Fset.Position(funcLit.Pos()).String()].String(), cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	err = enc.Encode(outGraph)
@@ -184,4 +251,56 @@ func (s *command) Run() error {
 	}
 
 	return nil
+}
+
+func fn(block *cfg.Block, graph *genericgraph.Graph) uuid.UUID {
+	kind := block.Kind.String()
+
+	id, _ := uuid.NewV4()
+
+	graph.Nodes = append(graph.Nodes, genericgraph.Node{
+		ID:    id.String(),
+		Kinds: []string{"ControlFlow", "Golang"},
+		Properties: map[string]any{
+			"name": kind,
+		},
+	})
+
+	return id
+}
+
+func addControlFlowToGraph(fnUUID string, c *cfg.CFG, graph *genericgraph.Graph) {
+	idxToUUID := make(map[int32]uuid.UUID)
+
+	for _, block := range c.Blocks {
+		idxToUUID[block.Index] = fn(block, graph)
+	}
+
+	graph.Edges = append(graph.Edges, genericgraph.Edge{
+		Start: genericgraph.Terminal{
+			MatchBy: "id",
+			Value:   fnUUID,
+		},
+		End: genericgraph.Terminal{
+			MatchBy: "id",
+			Value:   idxToUUID[c.Blocks[0].Index].String(),
+		},
+		Kind: "FlowsInto",
+	})
+
+	for _, block := range c.Blocks {
+		for _, succ := range block.Succs {
+			graph.Edges = append(graph.Edges, genericgraph.Edge{
+				Start: genericgraph.Terminal{
+					MatchBy: "id",
+					Value:   idxToUUID[block.Index].String(),
+				},
+				End: genericgraph.Terminal{
+					MatchBy: "id",
+					Value:   idxToUUID[succ.Index].String(),
+				},
+				Kind: "FlowsInto",
+			})
+		}
+	}
 }
