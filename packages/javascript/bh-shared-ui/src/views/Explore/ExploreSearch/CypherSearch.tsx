@@ -123,6 +123,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             if (selectedQuery.canEdit) {
                 //save existing
                 console.log('CAN EDIT - SAVE EXISTING WORKFLOW');
+                setShowSaveQueryDialog(true);
             } else {
                 console.log('CANNOT EDIT - SHOW MESSAGE');
                 // setShowMessage(true);
@@ -278,6 +279,8 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                 onSave={handleSaveQuery}
                 isLoading={createSavedQueryMutation.isLoading}
                 error={createSavedQueryMutation.error}
+                cypherSearchState={cypherSearchState}
+                selectedQuery={selectedQuery}
             />
         </>
     );

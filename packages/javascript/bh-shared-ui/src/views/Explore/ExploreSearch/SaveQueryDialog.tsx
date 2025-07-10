@@ -16,7 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 // import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
     Dialog,
@@ -27,7 +27,19 @@ import {
     DialogPortal,
     DialogTitle,
     Input,
+    Label,
 } from '@bloodhoundenterprise/doodleui';
+import { useTheme } from '@mui/material';
+import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { useQuery } from 'react-query';
+import { graphSchema } from '../../../constants';
+import { apiClient, cn } from '../../../utils';
+
+type CypherSearchState = {
+    cypherQuery: string;
+    setCypherQuery: (query: string) => void;
+    performSearch: (query?: string) => void;
+};
 
 const SaveQueryDialog: React.FC<{
     open: boolean;
@@ -35,48 +47,105 @@ const SaveQueryDialog: React.FC<{
     onSave: (data: { name: string }) => Promise<any>;
     isLoading?: boolean;
     error?: any;
-}> = ({ open, onClose, onSave, isLoading = false, error = undefined }) => {
+    cypherSearchState: CypherSearchState;
+    selectedQuery: any;
+}> = ({ open, onClose, onSave, isLoading = false, error = undefined, cypherSearchState, selectedQuery }) => {
+    const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
+    const theme = useTheme();
+
     const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+
+    useEffect(() => {
+        if (selectedQuery) {
+            setName(selectedQuery.description);
+        } else {
+            setName('');
+        }
+    }, [selectedQuery]);
 
     const saveDisabled = name.trim() === '';
 
     const handleSave = () => {
         onSave({ name });
     };
+    const cypherEditorRef = useRef<CypherEditor | null>(null);
+    const kindsQuery = useQuery({
+        queryKey: ['graph-kinds'],
+        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
+    });
 
     return (
         <>
             <Dialog open={open} onOpenChange={onClose}>
-                {/* <DialogTrigger asChild>
-                    <Button variant='primary'>Default Dialog</Button>
-                </DialogTrigger> */}
                 <DialogPortal>
                     <DialogContent
                         DialogOverlayProps={{
                             blurBackground: false,
                         }}
-                        maxWidth='sm'>
+                        maxWidth='md'>
                         <DialogTitle>Save Query</DialogTitle>
-                        {/* <VisuallyHidden>
-                            something that we want to hide visually but still want in the DOM for accessibility
-                        </VisuallyHidden> */}
-
-                        <Input
-                            type='text'
-                            id='queryName'
-                            value={name}
-                            onChange={(e) => {
-                                setName(e.target.value);
-                            }}
-                        />
-                        {error ? (
-                            <div>An error ocurred while attempting to save this query. Please try again.</div>
-                        ) : null}
 
                         <DialogDescription>
                             To save your query to the Pre-built Query, add a name, optional description, and set sharing
                             permissions.
                         </DialogDescription>
+
+                        <div>
+                            <Label htmlFor='queryName'>Query Name</Label>
+                            <Input
+                                type='text'
+                                id='queryName'
+                                value={name}
+                                onChange={(e) => {
+                                    setName(e.target.value);
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor='queryDescription'>Query Description</Label>
+                            <Input
+                                type='text'
+                                id='queryDescription'
+                                value={description}
+                                onChange={(e) => {
+                                    setDescription(e.target.value);
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <Label>Cypher Query</Label>
+                            <CypherEditor
+                                ref={cypherEditorRef}
+                                className={cn(
+                                    'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
+                                )}
+                                value={cypherQuery}
+                                onValueChanged={(val: string) => {
+                                    setCypherQuery(val);
+                                }}
+                                theme={theme.palette.mode}
+                                // onKeyDown={(e: any) => {
+                                //     // if enter and shift key is pressed, execute cypher search
+                                //     if (e.key === 'Enter' && e.shiftKey) {
+                                //         e.preventDefault();
+                                //         handleCypherSearch();
+                                //     }
+                                // }}
+                                schema={graphSchema(kindsQuery.data)}
+                                lineWrapping
+                                lint
+                                placeholder='Cypher Query'
+                                tooltipAbsolute={false}
+                            />
+                        </div>
+
+                        {error ? (
+                            <div>An error ocurred while attempting to save this query. Please try again.</div>
+                        ) : null}
+
                         <DialogActions className='flex justify-end gap-4'>
                             <DialogClose asChild>
                                 <Button variant='secondary'>Cancel</Button>
