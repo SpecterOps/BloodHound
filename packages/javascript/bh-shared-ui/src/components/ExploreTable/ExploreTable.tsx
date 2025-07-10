@@ -112,7 +112,6 @@ const ExploreTable = ({
     allColumnKeys,
     selectedColumns,
 }: ExploreTableProps) => {
-    console.log({ data });
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
