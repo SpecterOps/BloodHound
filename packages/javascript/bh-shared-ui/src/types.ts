@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphEdge, GraphNode } from 'js-client-library';
+import { GraphEdge, SpreadGraphNode } from 'js-client-library';
 import { EntityKinds } from './utils/content';
 
 // recursively applies Partial<T> to nested object types
@@ -74,4 +74,4 @@ export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
 
-export type WrappedExploreTableItem = { data?: GraphNode | GraphEdge };
+export type WrappedExploreTableItem = { data?: SpreadGraphNode | GraphEdge };

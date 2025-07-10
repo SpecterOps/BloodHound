@@ -17,7 +17,7 @@
 import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doodleui';
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { GraphNode } from 'js-client-library';
+import { SpreadGraphNode } from 'js-client-library';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { WrappedExploreTableItem } from '../../types';
@@ -26,12 +26,72 @@ import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import TableControls from './TableControls';
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
+const KEYS_TO_FILTER_BY: (keyof SpreadGraphNode)[] = ['objectId', 'displayname'];
+
+const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectId', 'displayname'];
 
 const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
-type MungedTableRowWithId = WrappedExploreTableItem['data'] & { id: string };
+type MungedTableRowWithId = SpreadGraphNode & { id: string };
 
-const columnhelper = createColumnHelper();
+const columnHelper = createColumnHelper();
+
+const makeColumnDef = (key: string) =>
+    columnHelper.accessor(key, {
+        header: formatPotentiallyUnknownLabel(key),
+        cell: (info) => {
+            const value = info.getValue() as EntityField['value'];
+
+            if (typeof value === 'boolean') {
+                return (
+                    <div className='h-full w-full flex justify-center items-center text-center'>
+                        <FontAwesomeIcon
+                            icon={value ? faCheck : faCancel}
+                            color={value ? 'green' : 'lightgray'}
+                            className='scale-125'
+                        />{' '}
+                    </div>
+                );
+            }
+
+            return format({ keyprop: key, value, label: key }) || '--';
+        },
+        id: key,
+    });
+
+const requiredColumnDefinitions = [
+    columnHelper.accessor('', {
+        id: 'action-menu',
+        cell: () => (
+            <Button className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
+                <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
+            </Button>
+        ),
+    }),
+    columnHelper.accessor('nodetype', {
+        id: 'nodetype',
+        header: () => {
+            return <span className='dark:text-neutral-light-1'>Type</span>;
+        },
+        cell: (info) => {
+            return (
+                <div className='flex justify-center items-center relative'>
+                    <NodeIcon nodeType={(info.getValue() as string) || ''} />
+                </div>
+            );
+        },
+    }),
+    ...['objectId', 'displayname'].map(makeColumnDef),
+];
+
+type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+    className: 'sticky top-0 z-10',
+};
+
+const tableHeadProps: DataTableProps['TableHeadProps'] = {
+    className: 'pr-4',
+};
 
 interface ExploreTableProps {
     open?: boolean;
@@ -44,29 +104,6 @@ interface ExploreTableProps {
 
 const MemoDataTable = memo(DataTable);
 
-const makeColumnDef = (key: string) =>
-    columnhelper.accessor(key, {
-        header: formatPotentiallyUnknownLabel(key),
-        cell: (info) => {
-            const value = info.getValue() as EntityField['value'];
-
-            if (typeof value === 'boolean') {
-                return value ? (
-                    <div className='h-full w-full flex justify-center items-center text-center'>
-                        <FontAwesomeIcon icon={faCheck} color='green' className='scale-125' />{' '}
-                    </div>
-                ) : (
-                    <div className='h-full w-full flex justify-center items-center text-center'>
-                        <FontAwesomeIcon icon={faCancel} color='lightgray' className='scale-125' />{' '}
-                    </div>
-                );
-            }
-
-            return format({ keyprop: key, value, label: key }) || '--';
-        },
-        id: key,
-    });
-
 const ExploreTable = ({
     data,
     open,
@@ -75,14 +112,15 @@ const ExploreTable = ({
     allColumnKeys,
     selectedColumns,
 }: ExploreTableProps) => {
+    console.log({ data });
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
-    const mungedData: Partial<MungedTableRowWithId>[] = useMemo(
+    const mungedData = useMemo(
         () =>
             (data &&
                 Object.entries(data).map(([key, value]) => {
-                    return Object.assign({}, value?.data || {}, { id: key });
+                    return Object.assign({}, value?.data || {}, { id: key }) as MungedTableRowWithId;
                 })) ||
             [],
         [data]
@@ -91,12 +129,9 @@ const ExploreTable = ({
     const filteredData = useMemo(
         () =>
             mungedData?.filter((potentialRow) => {
-                const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
-                const filterTargets = filterKeys.map((filterKey) => {
-                    const stringyValue = String(potentialRow?.[filterKey]);
-
-                    return stringyValue?.toLowerCase();
-                });
+                const filterTargets = KEYS_TO_FILTER_BY.map((filterKey) =>
+                    String(potentialRow?.[filterKey]).toLowerCase()
+                );
 
                 return filterTargets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
             }),
@@ -113,44 +148,14 @@ const ExploreTable = ({
         [nonRequiredColumnDefinitions, selectedColumns]
     );
 
-    const requiredColumnDefinitions = useMemo(
-        () => [
-            {
-                accessorKey: '',
-                id: 'action-menu',
-                cell: () => (
-                    <Button className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
-                        <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
-                    </Button>
-                ),
-            },
-            {
-                accessorKey: 'nodetype',
-                id: 'nodetype',
-                header: () => {
-                    return <span className='dark:text-neutral-light-1'>Type</span>;
-                },
-                cell: (info) => {
-                    return (
-                        <div className='flex justify-center items-center relative'>
-                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
-                        </div>
-                    );
-                },
-            },
-            ...['objectid', 'displayname'].map(makeColumnDef),
-        ],
-        []
-    );
-
     const tableColumns = useMemo(
         () => [...requiredColumnDefinitions, ...selectedColumnDefinitions],
-        [requiredColumnDefinitions, selectedColumnDefinitions]
+        [selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
     const columnOptionsForDropdown = useMemo(
         () => [...requiredColumnDefinitions, ...nonRequiredColumnDefinitions],
-        [requiredColumnDefinitions, nonRequiredColumnDefinitions]
+        [nonRequiredColumnDefinitions]
     );
 
     const handleSearchInputChange = useCallback(
@@ -165,21 +170,6 @@ const ExploreTable = ({
             placeholder: 'Search',
         }),
         [handleSearchInputChange, searchInput]
-    );
-    type DataTableProps = React.ComponentProps<typeof DataTable>;
-
-    const tableHeaderProps: DataTableProps['TableHeaderProps'] = useMemo(
-        () => ({
-            className: 'sticky top-0 z-10',
-        }),
-        []
-    );
-
-    const tableHeadProps: DataTableProps['TableHeadProps'] = useMemo(
-        () => ({
-            className: 'pr-4',
-        }),
-        []
     );
 
     if (!open || !data) return null;
