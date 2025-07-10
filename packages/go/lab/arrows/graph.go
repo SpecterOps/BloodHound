@@ -175,7 +175,7 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			for i := range listVal {
 				listVal[i] = strings.TrimSpace(listVal[i])
 			}
-			out.Set(k, listVal)
+			out.Set(kLowercase, listVal)
 		case strings.HasPrefix(v, "DECIMAL:"):
 			_, val, found := strings.Cut(v, "DECIMAL:")
 			if !found {
@@ -184,7 +184,7 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			if floatVal, err := strconv.ParseFloat(val, 64); err != nil {
 				return nil, fmt.Errorf("could not process decimal value `%s`: %w", v, err)
 			} else {
-				out.Set(k, floatVal)
+				out.Set(kLowercase, floatVal)
 			}
 		default:
 			out.Set(k, v)
