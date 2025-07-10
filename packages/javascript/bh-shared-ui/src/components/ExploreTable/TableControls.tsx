@@ -74,7 +74,7 @@ const TableControls = <TData, TValue>({
                             className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' color='white' />
+                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
                     </div>
                 )}
                 {onDownloadClick && (

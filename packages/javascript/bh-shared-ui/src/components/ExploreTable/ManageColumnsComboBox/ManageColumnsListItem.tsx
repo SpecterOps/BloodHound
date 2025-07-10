@@ -15,7 +15,7 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
     <li
-        className={`p-2 m-0 w-full ${isSelected ? 'cursor-default dark:bg-neutral-dark-1' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : 'hover:bg-gray-100 dark:hover:bg-neutral-dark-5'}`}
+        className={`p-2 m-0 w-full ${isSelected ? 'cursor-default dark:bg-neutral-dark-2' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : 'hover:bg-gray-100 dark:hover:bg-neutral-dark-4'}`}
         {...itemProps}
         disabled={item?.isPinned}
         onClick={(e) => {

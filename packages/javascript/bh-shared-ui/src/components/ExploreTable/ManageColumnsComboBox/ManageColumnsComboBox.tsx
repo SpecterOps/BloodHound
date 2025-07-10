@@ -111,7 +111,7 @@ export const ManageColumnsComboBox = ({
             </div>
 
             <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-3`} ref={ref}>
-                <div className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-4' {...getComboboxProps()}>
+                <div className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-5' {...getComboboxProps()}>
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input
@@ -130,7 +130,7 @@ export const ManageColumnsComboBox = ({
                             <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
                         </button>
                     </div>
-                    <ul className={`w-inherit mt-1 max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
+                    <ul className={`w-inherit max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
                         {isOpen && [
                             ...pinnedColumns.map((column, index) => (
                                 <ManageColumnsListItem
