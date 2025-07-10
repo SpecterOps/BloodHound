@@ -34,7 +34,6 @@ import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
 import { useMultiTierAnalysis, useGetConfiguration } from '../../../hooks';
-import { ItemSkeleton } from '../utils';
 
 type SummaryCardProps = {
     title: string;
@@ -45,19 +44,15 @@ type SummaryCardProps = {
     analysisEnabled: boolean | null;
 };
 
+
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
-    const { isLoading, isError } = useGetConfiguration();
-    const displayTooltip = useMultiTierAnalysis() && !analysisEnabled;
+    const { isLoading } = useGetConfiguration();
+    const multiTierAnalysisEnabled = useMultiTierAnalysis();
+    const displayTooltip = multiTierAnalysisEnabled && !analysisEnabled;
 
     if (isLoading) {
-        return ItemSkeleton(title, id, 'h-24');
-    }
-
-    if (isError) {
-        <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
-            <span className='text-base'>There was an error fetching this data</span>
-        </li>
+        return
     }
 
     return (
