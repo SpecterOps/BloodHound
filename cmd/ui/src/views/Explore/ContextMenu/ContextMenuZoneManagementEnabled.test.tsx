@@ -176,7 +176,7 @@ describe('ContextMenu', () => {
         const tip = await screen.findByRole('tooltip');
         expect(tip).toBeInTheDocument();
 
-        const nameOption = screen.getByLabelText(/name/i);
+        const nameOption = screen.getByLabelText(/display name/i);
         expect(nameOption).toBeInTheDocument();
 
         const objectIdOption = screen.getByLabelText(/object id/i);
@@ -189,7 +189,7 @@ describe('ContextMenu', () => {
         await userEvent.unhover(copyOption);
 
         await waitFor(() => {
-            expect(screen.queryByText(/name/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/display name/i)).not.toBeInTheDocument();
             expect(screen.queryByText(/object id/i)).not.toBeInTheDocument();
             expect(screen.queryByText(/cypher/i)).not.toBeInTheDocument();
         });
