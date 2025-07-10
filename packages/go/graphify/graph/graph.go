@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -77,7 +78,16 @@ func (s *Command) Parse() error {
 		cmd.PrintDefaults()
 	}
 
-	if err := cmd.Parse(os.Args[1:]); err != nil {
+	flagsIdx := 0
+
+	for idx, arg := range os.Args {
+		if strings.HasPrefix(arg, "-") {
+			flagsIdx = idx
+			break
+		}
+	}
+
+	if err := cmd.Parse(os.Args[flagsIdx:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	}
