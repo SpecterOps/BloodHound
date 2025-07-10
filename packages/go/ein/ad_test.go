@@ -283,3 +283,34 @@ func TestConvertComputerToNode(t *testing.T) {
 	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
 }
+
+func TestParseGroupMiscData(t *testing.T) {
+	group := ein.Group{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "groupBase",
+		},
+		HasSIDHistory: make([]ein.TypedPrincipal, 0),
+	}
+
+	t.Run("ParseGroupMiscData without SIDHistory", func(t *testing.T) {
+		result := ein.ParseGroupMiscData(group)
+		require.Len(t, result, 0)
+	})
+
+	t.Run("ParseGroupMiscData with SIDHistory", func(t *testing.T) {
+		group.HasSIDHistory = append(group.HasSIDHistory, ein.TypedPrincipal{
+			ObjectIdentifier: "historySID",
+			ObjectType:       ad.User.String(),
+		})
+
+		result := ein.ParseGroupMiscData(group)
+		require.Len(t, result, 1)
+		rel := result[0]
+		assert.Equal(t, "groupBase", rel.Source.Value)
+		assert.Equal(t, ad.Group, rel.Source.Kind)
+		assert.Equal(t, "historySID", rel.Target.Value)
+		assert.Equal(t, ad.User, rel.Target.Kind)
+		assert.Equal(t, ad.HasSIDHistory, rel.RelType)
+
+	})
+}
