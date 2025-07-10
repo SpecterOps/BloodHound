@@ -185,7 +185,7 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE ct.nosecurityextension = true\nRETURN p\nLIMIT 1000`,
             },
             {
-                description: 'Compromising pemissions on ADCS nodes (ESC5)',
+                description: 'Compromising permissions on ADCS nodes (ESC5)',
                 cypher: `MATCH p = (n:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite]->(m:Base)
 WHERE m.distinguishedname CONTAINS "PUBLIC KEY SERVICES"
 AND NOT n.objectid ENDS WITH "-512" // Domain Admins
