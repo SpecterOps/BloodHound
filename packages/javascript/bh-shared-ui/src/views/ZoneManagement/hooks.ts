@@ -14,19 +14,40 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTag, AssetGroupTagMemberListItem, AssetGroupTagSelector } from 'js-client-library';
-import { useInfiniteQuery, useQuery } from 'react-query';
+import {
+    AssetGroupTag,
+    AssetGroupTagMemberListItem,
+    AssetGroupTagSelector,
+    CreateAssetGroupTagRequest,
+    RequestOptions,
+    UpdateAssetGroupTagRequest,
+} from 'js-client-library';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { SortOrder } from '../../types';
 import { apiClient } from '../../utils';
 import { PageParam, createPaginatedFetcher } from '../../utils/paginatedFetcher';
+import { CreateSelectorParams, DeleteSelectorParams, PatchSelectorParams } from './Save/SelectorForm/types';
 
+interface CreateAssetGroupTagParams {
+    values: CreateAssetGroupTagRequest;
+}
+
+export interface UpdateAssetGroupTagParams {
+    tagId: number | string;
+    updatedValues: UpdateAssetGroupTagRequest;
+}
 const PAGE_SIZE = 25;
 
 export const zoneManagementKeys = {
     all: ['zone-management'] as const,
     tags: () => [...zoneManagementKeys.all, 'tags'] as const,
-    selectorsByTag: (tagId: string | number) => [...zoneManagementKeys.all, 'selectors', tagId] as const,
-    membersByTag: (tagId: string | number) => [...zoneManagementKeys.all, 'members', 'tag', tagId] as const,
+    tagDetail: (tagId: string | number) => [...zoneManagementKeys.tags(), 'tagId', tagId] as const,
+    selectors: () => [...zoneManagementKeys.all, 'selectors'] as const,
+    selectorsByTag: (tagId: string | number) => [...zoneManagementKeys.selectors(), 'tag', tagId] as const,
+    selectorDetail: (tagId: string | number, selectorId: string | number) =>
+        [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
+    members: () => [...zoneManagementKeys.all, 'members'] as const,
+    membersByTag: (tagId: string | number) => [...zoneManagementKeys.members(), 'tag', tagId] as const,
     membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined) =>
         [...zoneManagementKeys.membersByTag(tagId), 'selector', selectorId] as const,
 };
@@ -134,4 +155,116 @@ export const useSelectorMembersInfiniteQuery = (
             getAssetGroupSelectorMembers(tagId, selectorId, pageParam.skip, pageParam.limit, sortOrder),
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: selectorId !== undefined,
+    });
+
+export const createSelector = async (params: CreateSelectorParams, options?: RequestOptions) => {
+    const { tagId, values } = params;
+
+    const res = await apiClient.createAssetGroupTagSelector(tagId, values, options);
+
+    return res.data.data;
+};
+
+export const useCreateSelector = (tagId: string | number | undefined) => {
+    const queryClient = useQueryClient();
+    return useMutation(createSelector, {
+        onSettled: () => {
+            queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId!));
+        },
+    });
+};
+
+export const patchSelector = async (params: PatchSelectorParams, options?: RequestOptions) => {
+    const { tagId, selectorId, updatedValues } = params;
+
+    const res = await apiClient.updateAssetGroupTagSelector(tagId, selectorId, updatedValues, options);
+
+    return res.data.data;
+};
+
+export const usePatchSelector = (tagId: string | number | undefined) => {
+    const queryClient = useQueryClient();
+    return useMutation(patchSelector, {
+        onSettled: () => {
+            queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId!));
+        },
+    });
+};
+
+export const deleteSelector = async (ids: DeleteSelectorParams, options?: RequestOptions) =>
+    await apiClient.deleteAssetGroupTagSelector(ids.tagId, ids.selectorId, options).then((res) => res.data.data);
+
+export const useDeleteSelector = () => {
+    const queryClient = useQueryClient();
+    return useMutation(deleteSelector, {
+        onSettled: (_data, _error, variables) => {
+            queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(variables.tagId));
+        },
+    });
+};
+
+export const useSelectorInfo = (tagId: string, selectorId: string) =>
+    useQuery({
+        queryKey: zoneManagementKeys.selectorDetail(tagId, selectorId),
+        queryFn: async ({ signal }) => {
+            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId, { signal });
+            return response.data.data['selector'];
+        },
+        enabled: tagId !== '' && selectorId !== '',
+    });
+
+export const createAssetGroupTag = async (params: CreateAssetGroupTagParams, options?: RequestOptions) => {
+    const { values } = params;
+
+    const res = await apiClient.createAssetGroupTag(values, options);
+
+    return res.data.data;
+};
+
+export const useCreateAssetGroupTag = () => {
+    const queryClient = useQueryClient();
+    return useMutation(createAssetGroupTag, {
+        onSettled: async () => {
+            await queryClient.invalidateQueries(zoneManagementKeys.tags());
+        },
+    });
+};
+
+export const patchAssetGroupTag = async (params: UpdateAssetGroupTagParams, options?: RequestOptions) => {
+    const { tagId, updatedValues } = params;
+
+    const res = await apiClient.updateAssetGroupTag(tagId, updatedValues, options);
+
+    return res.data.data;
+};
+
+export const usePatchAssetGroupTag = (tagId: string | number) => {
+    const queryClient = useQueryClient();
+    return useMutation(patchAssetGroupTag, {
+        onSettled: async () => {
+            await queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
+        },
+    });
+};
+
+export const deleteAssetGroupTag = async (tagId: string | number, options?: RequestOptions) =>
+    await apiClient.deleteAssetGroupTag(tagId, options).then((res) => res.data.data);
+
+export const useDeleteAssetGroupTag = () => {
+    const queryClient = useQueryClient();
+    return useMutation(deleteAssetGroupTag, {
+        onSettled: (_data, _error, tagId) => {
+            queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
+        },
+    });
+};
+
+export const useAssetGroupTagInfo = (tagId: string) =>
+    useQuery({
+        queryKey: zoneManagementKeys.tagDetail(tagId),
+        queryFn: async ({ signal }) => {
+            const response = await apiClient.getAssetGroupTag(tagId, { signal });
+            return response.data.data.tag;
+        },
+        enabled: tagId !== '',
     });

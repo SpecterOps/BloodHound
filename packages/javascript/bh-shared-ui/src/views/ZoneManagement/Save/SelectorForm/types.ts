@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library';
 
 export interface SelectorFormInputs {
     name: string;

@@ -25,11 +25,11 @@ import { useLocation, useParams } from 'react-router-dom';
 import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
+import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../hooks';
 import { handleError } from '../utils';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
-import { useCreateSelector, usePatchSelector, useSelectorInfo } from './hooks';
 import { SelectorFormInputs } from './types';
 
 const diffValues = (

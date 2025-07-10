@@ -26,12 +26,12 @@ import { useDebouncedValue } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
+import { useDeleteSelector } from '../../hooks';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
-import { useDeleteSelector } from './hooks';
 import { SelectorFormInputs } from './types';
 
 const getListScalar = (windowHeight: number) => {

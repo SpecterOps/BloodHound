@@ -41,10 +41,15 @@ import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationD
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { useTagsQuery } from '../../hooks';
+import {
+    useAssetGroupTagInfo,
+    useCreateAssetGroupTag,
+    useDeleteAssetGroupTag,
+    usePatchAssetGroupTag,
+    useTagsQuery,
+} from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
-import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
 type TagFormInputs = {
     name: string;
