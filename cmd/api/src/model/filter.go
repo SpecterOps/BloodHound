@@ -19,13 +19,14 @@ package model
 import (
 	"errors"
 	"fmt"
-	"github.com/specterops/dawgs/cypher/models/pgsql"
-	"github.com/specterops/dawgs/cypher/models/pgsql/format"
 	"net/http"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/specterops/dawgs/cypher/models/pgsql"
+	"github.com/specterops/dawgs/cypher/models/pgsql/format"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"

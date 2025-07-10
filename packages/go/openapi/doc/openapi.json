@@ -14850,6 +14850,9 @@
           "200": {
             "$ref": "#/components/responses/api.response.all-findings"
           },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
           "401": {
             "$ref": "#/components/responses/unauthorized"
           },
@@ -19414,13 +19417,23 @@
         "properties": {
           "findings": {
             "type": "array",
-            "description": "List of unified findings."
+            "description": "List of unified findings.",
+            "items": {
+              "$ref": "./../schemas/model.unified-finding.yaml"
+            }
           },
           "finding_assets": {
             "type": "object",
-            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name."
+            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name.",
+            "additionalProperties": {
+              "type": "object"
+            }
           }
-        }
+        },
+        "required": [
+          "findings",
+          "finding_assets"
+        ]
       }
     }
   },

@@ -715,7 +715,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 			label2.ID,
 		}
 
-		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeLabel)) })
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeLabel))})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
@@ -905,7 +905,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
-		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = 2"},0 ,0)
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = 2"}, 0, 0)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 1)
