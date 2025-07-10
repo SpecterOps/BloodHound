@@ -239,8 +239,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 
 		// Test filtering by name
 		sqlFilter := model.SQLFilter{
-			SQLString: "name = ?",
-			Params:    []interface{}{"First Provider"},
+			SQLString: "name = 'First Provider'",
 		}
 		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
 		require.NoError(t, err)
@@ -295,8 +294,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 
 		// Test filtering by name
 		sqlFilter := model.SQLFilter{
-			SQLString: "name = ?",
-			Params:    []interface{}{"Third Provider"},
+			SQLString: "name = 'Third Provider'",
 		}
 		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
 		require.NoError(t, err)

@@ -20,7 +20,7 @@ go 1.24.4
 require (
 	cuelang.org/go v0.13.2
 	github.com/Masterminds/semver/v3 v3.3.1
-	github.com/RoaringBitmap/roaring/v2 v2.5.0
+	github.com/RoaringBitmap/roaring/v2 v2.6.0
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.14.1
@@ -45,7 +45,7 @@ require (
 	github.com/russellhaering/goxmldsig v1.5.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.1.6
+	github.com/specterops/dawgs v0.2.0
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
@@ -86,7 +86,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beevik/etree v1.5.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bits-and-blooms/bitset v1.12.0 // indirect
+	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/bkielbasa/cyclop v1.2.3 // indirect
 	github.com/blizzy78/varnamelen v0.8.0 // indirect
 	github.com/bombsimon/wsl/v4 v4.7.0 // indirect
@@ -112,7 +112,7 @@ require (
 	github.com/dave/dst v0.27.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
-	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
+	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/emicklei/proto v1.14.0 // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
@@ -271,7 +271,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
