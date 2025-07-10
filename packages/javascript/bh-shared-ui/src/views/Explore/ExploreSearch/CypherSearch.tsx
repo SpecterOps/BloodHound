@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
-import { useCreateSavedQuery, useGetSelectedQuery } from '../../../hooks';
+import { useCreateSavedQuery, useGetSelectedQuery, useUpdateSavedQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
@@ -42,6 +42,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const [selected, setSelected] = useState('');
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
+    const updateSavedQueryMutation = useUpdateSavedQuery();
 
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
@@ -95,6 +96,21 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                 onSuccess: () => {
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} saved!`, 'userSavedQuery');
+                },
+            }
+        );
+    };
+
+    const handleUpdateQuery = async (data: { name: string; description: string; id: number }) => {
+        console.log('onUpdate');
+        console.log(data);
+
+        return updateSavedQueryMutation.mutate(
+            { name: data.name, description: data.description, id: data.id, query: cypherQuery },
+            {
+                onSuccess: () => {
+                    setShowSaveQueryDialog(false);
+                    addNotification(`${data.name} updated!`, 'userSavedQuery');
                 },
             }
         );
@@ -280,6 +296,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                 open={showSaveQueryDialog}
                 onClose={handleCloseSaveQueryDialog}
                 onSave={handleSaveQuery}
+                onUpdate={handleUpdateQuery}
                 isLoading={createSavedQueryMutation.isLoading}
                 error={createSavedQueryMutation.error}
                 cypherSearchState={cypherSearchState}

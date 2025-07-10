@@ -6,11 +6,14 @@ import { QueryLineItem } from '../../types';
 export const usePrebuiltQueries = () => {
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
     const userQueries = useSavedQueries();
+    console.log('userQueries');
+    console.log(userQueries);
 
     //Get master list of queries to validate against
     const savedLineItems: QueryLineItem[] =
         userQueries.data?.map((query) => ({
-            description: query.name,
+            name: query.name,
+            description: query.description,
             cypher: query.query,
             canEdit: true,
             id: query.id,

@@ -43,6 +43,7 @@ import {
     UpdateSelectorRequest,
     UpdateSharpHoundClientRequest,
     UpdateSharpHoundEventRequest,
+    UpdateUserQueryRequest,
     UpdateUserRequest,
 } from './requests';
 import {
@@ -143,6 +144,17 @@ class BHEAPIClient {
 
     createUserQuery = (payload: CreateUserQueryRequest, options?: RequestOptions) => {
         return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
+    };
+
+    updateUserQuery = (payload: UpdateUserQueryRequest, options?: RequestOptions) => {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        console.log(payload);
+        return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
+            ...options,
+            ...headers,
+        });
     };
 
     deleteUserQuery = (queryId: number, options?: RequestOptions) => {

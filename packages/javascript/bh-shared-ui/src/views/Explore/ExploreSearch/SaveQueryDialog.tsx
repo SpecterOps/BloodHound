@@ -45,31 +45,45 @@ const SaveQueryDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onSave: (data: { name: string; description: string }) => Promise<any>;
+    onUpdate: (data: { name: string; description: string; id: number }) => Promise<any>;
     isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
     selectedQuery: any;
-}> = ({ open, onClose, onSave, isLoading = false, error = undefined, cypherSearchState, selectedQuery }) => {
-    const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
+}> = ({ open, onClose, onSave, onUpdate, isLoading = false, error = undefined, cypherSearchState, selectedQuery }) => {
+    const { cypherQuery, setCypherQuery } = cypherSearchState;
     const theme = useTheme();
 
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [id, setId] = useState(undefined);
+    const [isNew, setIsNew] = useState(true);
 
     useEffect(() => {
         if (selectedQuery) {
-            setName(selectedQuery.description);
+            console.log(selectedQuery);
+            setName(selectedQuery.name);
             setDescription(selectedQuery.description);
+            setId(selectedQuery.id);
+            setIsNew(false);
         } else {
             setName('');
             setDescription('');
+            setId(undefined);
+            setIsNew(true);
         }
     }, [selectedQuery]);
 
-    const saveDisabled = name.trim() === '';
+    console.log(`isNew = ${isNew}`);
+
+    const saveDisabled = name?.trim() === '';
 
     const handleSave = () => {
-        onSave({ name, description });
+        if (isNew) {
+            onSave({ name, description });
+        } else {
+            onUpdate({ name, description, id });
+        }
     };
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const kindsQuery = useQuery({
@@ -152,7 +166,9 @@ const SaveQueryDialog: React.FC<{
                             <DialogClose asChild>
                                 <Button variant='secondary'>Cancel</Button>
                             </DialogClose>
-                            <Button onClick={handleSave}>Save</Button>
+                            <Button disabled={saveDisabled} onClick={handleSave}>
+                                Save
+                            </Button>
                         </DialogActions>
                     </DialogContent>
                 </DialogPortal>

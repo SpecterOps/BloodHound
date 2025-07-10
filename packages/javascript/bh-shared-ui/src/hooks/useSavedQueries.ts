@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CreateUserQueryRequest, RequestOptions, SavedQuery } from 'js-client-library';
+import { CreateUserQueryRequest, RequestOptions, SavedQuery, UpdateUserQueryRequest } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
 
@@ -38,6 +38,12 @@ export const createSavedQuery = (savedQuery: CreateUserQueryRequest, options?: R
     return apiClient.createUserQuery(savedQuery, options).then((response) => response.data.data);
 };
 
+export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest, options?: RequestOptions): Promise<SavedQuery> => {
+    console.log('updateSavedQuery');
+    console.log(savedQuery);
+    return apiClient.updateUserQuery(savedQuery, options).then((response) => response.data.data);
+};
+
 export const deleteSavedQuery = (id: number): Promise<void> => {
     return apiClient.deleteUserQuery(id).then((response) => response.data);
 };
@@ -48,6 +54,16 @@ export const useCreateSavedQuery = () => {
     const queryClient = useQueryClient();
 
     return useMutation(createSavedQuery, {
+        onSuccess: () => {
+            queryClient.invalidateQueries(savedQueryKeys.all);
+        },
+    });
+};
+
+export const useUpdateSavedQuery = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(updateSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
         },

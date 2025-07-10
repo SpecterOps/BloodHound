@@ -198,6 +198,13 @@ export interface CreateUserQueryRequest {
     query: string;
 }
 
+export interface UpdateUserQueryRequest {
+    id: number;
+    name: string;
+    description: string;
+    query: string;
+}
+
 export interface ClearDatabaseRequest {
     deleteCollectedGraphData: boolean;
     deleteFileIngestHistory: boolean;
