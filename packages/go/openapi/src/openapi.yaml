@@ -694,6 +694,8 @@ paths:
     $ref: './paths/attack-paths.attack-path-types.yaml'
   /api/v2/attack-paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
+  /api/v2/attack-paths/details:
+    $ref: './paths/attack-paths.attack-paths-details.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:
