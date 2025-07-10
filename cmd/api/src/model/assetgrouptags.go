@@ -149,10 +149,6 @@ func (s AssetGroupTag) ToType() string {
 	}
 }
 
-func IsValidTagType(tagType AssetGroupTagType) bool {
-	return tagType == AssetGroupTagTypeTier || tagType == AssetGroupTagTypeLabel || tagType == AssetGroupTagTypeOwned
-}
-
 func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	switch s.Type {
 	case AssetGroupTagTypeTier:

@@ -761,7 +761,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if !model.IsValidTagType(reqBody.TagType) {
+	} else if (model.AssetGroupTag{Type: reqBody.TagType}).ToType() == "unknown" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
 	} else if len(reqBody.Query) < 3 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
@@ -775,7 +775,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else {
 		var (
-			kinds []graph.Kind
+			kinds graph.Kinds
 		)
 
 		for _, s := range selectors {
@@ -789,15 +789,15 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			isOwnedType := t.Type == model.AssetGroupTagTypeOwned
 
 			// group owned with labels
-			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) && len(matchedTags) < assetGroupTagsSearchLimit {
-				kinds = append(kinds, t.ToKind())
-				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
+			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) {
+				kinds.Add(t.ToKind())
+				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
 					matchedTags = append(matchedTags, t)
 				}
 			}
 
 			if reqBody.TagType == model.AssetGroupTagTypeTier && t.Type == model.AssetGroupTagTypeTier {
-				kinds = append(kinds, t.ToKind())
+				kinds.Add(t.ToKind())
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
 
 					matchedTags = append(matchedTags, t)
