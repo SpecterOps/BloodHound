@@ -753,7 +753,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter 
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s%s ORDER BY name ASC, asset_group_tag_id ASC",
+			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s%s ORDER BY name ASC, asset_group_tag_id ASC, id ASC",
 			model.AssetGroupTagSelector{}.TableName(),
 			sqlFilter.SQLString,
 		),

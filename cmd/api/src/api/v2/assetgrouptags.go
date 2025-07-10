@@ -799,9 +799,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			if reqBody.TagType == model.AssetGroupTagTypeTier && t.Type == model.AssetGroupTagTypeTier {
 				kinds.Add(t.ToKind())
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
-
 					matchedTags = append(matchedTags, t)
-
 				}
 			}
 		}
