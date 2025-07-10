@@ -15,7 +15,7 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
     <li
-        className={`p-2 w-full hover:bg-gray-100 ${isSelected ? 'cursor-default' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : ''}`}
+        className={`p-2 m-0 w-full ${isSelected ? 'cursor-default dark:bg-neutral-dark-1' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : 'hover:bg-gray-100 dark:hover:bg-neutral-dark-5'}`}
         {...itemProps}
         disabled={item?.isPinned}
         onClick={(e) => {
@@ -23,9 +23,9 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
             onClick(item);
         }}>
         <button
-            className={`w-full text-left flex justify-between items-center ${isSelected ? 'cursor-default' : 'cursor-pointer'}`}>
+            className={`w-full text-left flex justify-between items-center ${item.isPinned ? 'cursor-default' : 'cursor-pointer'}`}>
             <div>
-                <Checkbox className={`mr-2 ${isSelected ? `&:*['bg-blue-800']` : ''}`} checked={isSelected} />
+                <Checkbox className={`mr-2 ${isSelected ? `*:bg-blue-800` : ''}`} checked={isSelected} />
                 <span>{item.value}</span>
             </div>
             {item.isPinned && (

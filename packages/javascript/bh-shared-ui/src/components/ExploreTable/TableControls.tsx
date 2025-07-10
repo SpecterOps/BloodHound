@@ -22,7 +22,7 @@ import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
-const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
+const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
@@ -74,7 +74,7 @@ const TableControls = <TData, TValue>({
                             className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' color='white' />
                     </div>
                 )}
                 {onDownloadClick && (

@@ -186,7 +186,6 @@ const useExploreTableRowsAndColumns = ({
         [requiredColumnDefinitions, nonRequiredColumnDefinitions]
     );
 
-    console.log({ sortedFilteredRows, data });
     return {
         columnOptionsForDropdown,
         tableColumns,
