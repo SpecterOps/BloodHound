@@ -283,7 +283,7 @@ export type GraphNode = {
     properties?: GraphNodeProperties;
 };
 
-export type SpreadGraphNode = Omit<GraphNode, 'properties'> & GraphNodeProperties;
+export type GraphNodeSpreadWithProperties = Omit<GraphNode, 'properties'> & GraphNodeProperties;
 
 export type GraphNodes = Record<string, GraphNode>;
 
@@ -304,7 +304,7 @@ export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: stri
 
 export type StyledGraphNode = {
     color: string;
-    data: Record<string, any>;
+    data: GraphNodeSpreadWithProperties;
     border: {
         color: string;
     };

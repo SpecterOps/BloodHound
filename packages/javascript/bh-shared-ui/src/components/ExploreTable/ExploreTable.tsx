@@ -17,21 +17,21 @@
 import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doodleui';
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SpreadGraphNode } from 'js-client-library';
+import { FlatGraphResponse, GraphNodeSpreadWithProperties } from 'js-client-library';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
-import { WrappedExploreTableItem } from '../../types';
 import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import TableControls from './TableControls';
 
-const KEYS_TO_FILTER_BY: (keyof SpreadGraphNode)[] = ['objectId', 'displayname'];
+const KEYS_TO_FILTER_BY: (keyof GraphNodeSpreadWithProperties)[] = ['objectId', 'displayname'];
 
 const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectId', 'displayname'];
 
 const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
-type MungedTableRowWithId = SpreadGraphNode & { id: string };
+
+type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
 const columnHelper = createColumnHelper();
 
@@ -96,7 +96,7 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
 interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
-    data?: Record<string, WrappedExploreTableItem>;
+    data?: FlatGraphResponse;
     selectedColumns?: Record<string, boolean>;
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
