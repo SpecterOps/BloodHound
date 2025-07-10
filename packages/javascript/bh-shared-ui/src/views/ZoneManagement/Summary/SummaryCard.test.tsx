@@ -122,6 +122,8 @@ describe('SummaryCard', () => {
             }),
         );
 
+        render(<SummaryCard {...props} />)
+
         const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
         expect(listItem).toBeInTheDocument();
 
