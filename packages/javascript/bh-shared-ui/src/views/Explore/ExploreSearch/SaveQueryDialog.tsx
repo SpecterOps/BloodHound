@@ -15,8 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
+// import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
 import { useState } from 'react';
+
+import {
+    Dialog,
+    DialogActions,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    Input,
+} from '@bloodhoundenterprise/doodleui';
 
 const SaveQueryDialog: React.FC<{
     open: boolean;
@@ -34,44 +45,85 @@ const SaveQueryDialog: React.FC<{
     };
 
     return (
-        <Dialog
-            open={open}
-            fullWidth={true}
-            maxWidth={'sm'}
-            onClose={onClose}
-            disableEscapeKeyDown
-            TransitionProps={{
-                onExited: () => {
-                    setName('');
-                },
-            }}>
-            <DialogTitle>Save Query</DialogTitle>
-            <DialogContent>
-                <TextField
-                    variant='standard'
-                    id='queryName'
-                    value={name}
-                    onChange={(e) => {
-                        setName(e.target.value);
-                    }}
-                    label='Query Name'
-                    fullWidth
-                />
-                {error ? (
-                    <FormHelperText error>
-                        An error ocurred while attempting to save this query. Please try again.
-                    </FormHelperText>
-                ) : null}
-            </DialogContent>
-            <DialogActions>
-                <Button type='button' variant={'tertiary'} onClick={onClose} disabled={isLoading}>
-                    Cancel
-                </Button>
-                <Button type='button' onClick={handleSave} disabled={saveDisabled || isLoading}>
-                    Save
-                </Button>
-            </DialogActions>
-        </Dialog>
+        <>
+            <Dialog open={open} onOpenChange={onClose}>
+                {/* <DialogTrigger asChild>
+                    <Button variant='primary'>Default Dialog</Button>
+                </DialogTrigger> */}
+                <DialogPortal>
+                    <DialogContent
+                        DialogOverlayProps={{
+                            blurBackground: false,
+                        }}
+                        maxWidth='sm'>
+                        <DialogTitle>Save Query</DialogTitle>
+                        {/* <VisuallyHidden>
+                            something that we want to hide visually but still want in the DOM for accessibility
+                        </VisuallyHidden> */}
+
+                        <Input
+                            type='text'
+                            id='queryName'
+                            value={name}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                            }}
+                        />
+                        {error ? (
+                            <div>An error ocurred while attempting to save this query. Please try again.</div>
+                        ) : null}
+
+                        <DialogDescription>
+                            To save your query to the Pre-built Query, add a name, optional description, and set sharing
+                            permissions.
+                        </DialogDescription>
+                        <DialogActions className='flex justify-end gap-4'>
+                            <DialogClose asChild>
+                                <Button variant='secondary'>Cancel</Button>
+                            </DialogClose>
+                            <Button>Submit</Button>
+                        </DialogActions>
+                    </DialogContent>
+                </DialogPortal>
+            </Dialog>
+
+            {/* OLD */}
+
+            {/* <Dialog
+                open={open}
+                onClose={onClose}
+                disableEscapeKeyDown
+                TransitionProps={{
+                    onExited: () => {
+                        setName('');
+                    },
+                }}>
+                <DialogTitle>Save Query</DialogTitle>
+                <DialogContent maxWidth='sm'>
+                    <Input
+                        type='text'
+                        id='queryName'
+                        value={name}
+                        onChange={(e) => {
+                            setName(e.target.value);
+                        }}
+                    />
+                    {error ? (
+                        <FormHelperText error>
+                            An error ocurred while attempting to save this query. Please try again.
+                        </FormHelperText>
+                    ) : null}
+                </DialogContent>
+                <DialogActions>
+                    <Button type='button' variant={'tertiary'} onClick={onClose} disabled={isLoading}>
+                        Cancel
+                    </Button>
+                    <Button type='button' onClick={handleSave} disabled={saveDisabled || isLoading}>
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog> */}
+        </>
     );
 };
 

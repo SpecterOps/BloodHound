@@ -112,11 +112,11 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         //IF NO QUERY SELECTED
         //  //  SAVE NEW WORKFLOW
 
-        if (!cypherQuery) {
-            console.log('cypherQuery is empty - return');
-            setMessageState({ showMessage: true, message: 'Add a Cypher Query' });
-            return;
-        }
+        // if (!cypherQuery) {
+        //     console.log('cypherQuery is empty - return');
+        //     setMessageState({ showMessage: true, message: 'Add a Cypher Query' });
+        //     return;
+        // }
 
         if (selectedQuery) {
             console.log('QUERY EXISTS');
@@ -134,6 +134,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         } else {
             //save new
             console.log('QUERY DOES NOT EXISTS - SAVE NEW WORKFLOW');
+            setShowSaveQueryDialog(true);
         }
     };
 
@@ -270,6 +271,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                     </div>
                 </div>
             </div>
+
             <SaveQueryDialog
                 open={showSaveQueryDialog}
                 onClose={handleCloseSaveQueryDialog}
