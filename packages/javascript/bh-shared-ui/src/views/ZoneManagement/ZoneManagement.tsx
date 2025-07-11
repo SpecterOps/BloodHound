@@ -61,7 +61,7 @@ const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const ownedId = useOwnedTagId();
-    const topTagId = useHighestPrivilegeTagId();
+    const { tagId } = useHighestPrivilegeTagId();
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -98,7 +98,7 @@ const ZoneManagement: FC = () => {
                         onValueChange={(value) => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? topTagId : ownedId;
+                            const id = value === 'tier' ? tagId : ownedId;
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>

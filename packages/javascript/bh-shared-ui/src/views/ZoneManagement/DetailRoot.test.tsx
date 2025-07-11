@@ -13,15 +13,40 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { render } from '../../test-utils';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { render, waitFor } from '../../test-utils';
 import { apiClient } from '../../utils';
 import DetailsRoot from './DetailsRoot';
+
+const handlers = [
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
+];
+
+const server = setupServer(...handlers);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 const assetGroupSpy = vi.spyOn(apiClient, 'getAssetGroupTags');
 
 describe('DetailsRoot', () => {
     it('calls getAssetGroupTags for topTagId', () => {
         render(<DetailsRoot />);
-        expect(assetGroupSpy).toHaveBeenCalled();
+        waitFor(() => {
+            expect(assetGroupSpy).toHaveBeenCalled();
+        });
     });
 });
