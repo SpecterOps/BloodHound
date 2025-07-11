@@ -1,6 +1,8 @@
 package complexity
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,6 +12,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -82,11 +85,13 @@ func (s *command) Run() error {
 			Mode:       packages.LoadAllSyntax,
 			BuildFlags: []string{"-tags=" + s.tags},
 		}
-		outGraph     = genericgraph.GenericObject{}
-		nodeMap      = make(map[string]genericgraph.Node)
-		ssaIDToUUID  = make(map[int]uuid.UUID)
-		fnPosToUUID  = make(map[string]uuid.UUID)
-		declsForFile = make(map[string][]ast.Decl)
+		outGraph             = genericgraph.GenericObject{}
+		nodeMap              = make(map[string]genericgraph.Node)
+		ssaIDToUUID          = make(map[int]uuid.UUID)
+		fnPosToUUID          = make(map[string]uuid.UUID)
+		declsForFile         = make(map[string][]ast.Decl)
+		hashNameToHash       = make(map[string]string)
+		calleeHashNameToHash = make(map[string]string)
 	)
 
 	paths, err := workspace.FindPaths(s.env)
@@ -131,6 +136,10 @@ func (s *command) Run() error {
 			pkg = fn.Package().Pkg.String()
 		}
 
+		if fn.Synthetic != "" {
+			continue
+		}
+
 		if !strings.Contains(pkg, currentModule) {
 			continue
 		}
@@ -146,7 +155,11 @@ func (s *command) Run() error {
 			fnPosToUUID[positionStr] = fnID
 		}
 
-		id := fnID.String()
+		hashName := positionStr + fn.Name()
+		sha := sha256.Sum256([]byte(hashName))
+		id := hex.EncodeToString(sha[:])
+
+		hashNameToHash[hashName] = id
 
 		n := genericgraph.Node{
 			ID:    id,
@@ -166,7 +179,7 @@ func (s *command) Run() error {
 		for _, edge := range node.Out {
 			var (
 				calleePkg         string
-				calleePosition    = prog.Fset.Position(fn.Pos())
+				calleePosition    = prog.Fset.Position(edge.Callee.Func.Pos())
 				calleePositionStr = calleePosition.String()
 			)
 
@@ -175,6 +188,10 @@ func (s *command) Run() error {
 			}
 
 			if !strings.Contains(calleePkg, currentModule) {
+				continue
+			}
+
+			if edge.Callee.Func.Synthetic != "" {
 				continue
 			}
 
@@ -189,7 +206,11 @@ func (s *command) Run() error {
 				fnPosToUUID[calleePositionStr] = calleeFnID
 			}
 
-			calleeID := calleeFnID.String()
+			calleeHashName := calleePositionStr + edge.Callee.Func.Name()
+			calleeSHA := sha256.Sum256([]byte(calleeHashName))
+			calleeID := hex.EncodeToString(calleeSHA[:])
+
+			calleeHashNameToHash[calleeHashName] = calleeID
 
 			outGraph.Graph.Edges = append(outGraph.Graph.Edges, genericgraph.Edge{
 				Start: genericgraph.Terminal{
@@ -206,9 +227,16 @@ func (s *command) Run() error {
 	}
 
 	prog.Fset.Iterate(func(file *token.File) bool {
+		fset := token.NewFileSet()
+		if !strings.Contains(file.Name(), paths.GoModules[0]) {
+			return true
+		}
+
+		slog.Info("Processing File", slog.String("filename", file.Name()))
+
 		decls, ok := declsForFile[file.Name()]
 		if !ok {
-			astFile, err := parser.ParseFile(prog.Fset, file.Name(), nil, parser.ParseComments)
+			astFile, err := parser.ParseFile(fset, file.Name(), nil, parser.ParseComments)
 			if err != nil {
 				return true
 			}
@@ -219,8 +247,11 @@ func (s *command) Run() error {
 		for _, d := range decls {
 			switch decl := d.(type) {
 			case *ast.FuncDecl:
+				hashName := fset.Position(decl.Name.Pos()).String() + decl.Name.Name
+				sha := sha256.Sum256([]byte(hashName))
+				id := hex.EncodeToString(sha[:])
 				if decl.Body != nil {
-					addControlFlowToGraph(fnPosToUUID[prog.Fset.Position(decl.Name.Pos()).String()].String(), cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+					addControlFlowToGraph(id, cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
 				}
 			case *ast.GenDecl:
 				for _, spec := range decl.Specs {
@@ -234,7 +265,10 @@ func (s *command) Run() error {
 							continue
 						}
 						if funcLit.Body != nil {
-							addControlFlowToGraph(fnPosToUUID[prog.Fset.Position(funcLit.Pos()).String()].String(), cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+							hashName := fset.Position(funcLit.Pos()).String() + fset.Position(funcLit.End()).String()
+							sha := sha256.Sum256([]byte(hashName))
+							id := hex.EncodeToString(sha[:])
+							addControlFlowToGraph(id, cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
 						}
 					}
 				}
@@ -253,51 +287,38 @@ func (s *command) Run() error {
 	return nil
 }
 
-func fn(block *cfg.Block, graph *genericgraph.Graph) uuid.UUID {
-	kind := block.Kind.String()
+func addControlFlowToGraph(fnID string, c *cfg.CFG, graph *genericgraph.Graph) {
+	for itr, block := range c.Blocks {
+		kind := block.Kind.String()
 
-	id, _ := uuid.NewV4()
+		id := fnID + strconv.Itoa(int(block.Index))
 
-	graph.Nodes = append(graph.Nodes, genericgraph.Node{
-		ID:    id.String(),
-		Kinds: []string{"ControlFlow", "Golang"},
-		Properties: map[string]any{
-			"name": kind,
-		},
-	})
+		graph.Nodes = append(graph.Nodes, genericgraph.Node{
+			ID:    id,
+			Kinds: []string{"ControlFlow", "Golang"},
+			Properties: map[string]any{
+				"name": kind,
+			},
+		})
 
-	return id
-}
-
-func addControlFlowToGraph(fnUUID string, c *cfg.CFG, graph *genericgraph.Graph) {
-	idxToUUID := make(map[int32]uuid.UUID)
-
-	for _, block := range c.Blocks {
-		idxToUUID[block.Index] = fn(block, graph)
-	}
-
-	graph.Edges = append(graph.Edges, genericgraph.Edge{
-		Start: genericgraph.Terminal{
-			MatchBy: "id",
-			Value:   fnUUID,
-		},
-		End: genericgraph.Terminal{
-			MatchBy: "id",
-			Value:   idxToUUID[c.Blocks[0].Index].String(),
-		},
-		Kind: "FlowsInto",
-	})
-
-	for _, block := range c.Blocks {
 		for _, succ := range block.Succs {
+			// Use the function node itself in place of the body node, but that means we need to attach all relationships that
+			// would have gone to the Body node to instead point directly at the Function node.
+			var startID string
+			if itr == 0 {
+				startID = fnID
+			} else {
+				startID = id
+			}
+
 			graph.Edges = append(graph.Edges, genericgraph.Edge{
 				Start: genericgraph.Terminal{
 					MatchBy: "id",
-					Value:   idxToUUID[block.Index].String(),
+					Value:   startID,
 				},
 				End: genericgraph.Terminal{
 					MatchBy: "id",
-					Value:   idxToUUID[succ.Index].String(),
+					Value:   fnID + strconv.Itoa(int(succ.Index)),
 				},
 				Kind: "FlowsInto",
 			})
