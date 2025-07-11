@@ -154,7 +154,7 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
 		if err != nil {
-			slog.Error(fmt.Sprintf("failed to wipe database after command completion: %v", err))
+			slog.Error("failed to wipe database after command completion", slog.String("error", err.Error()))
 		} else {
 			slog.Info("successfully wiped database")
 		}
