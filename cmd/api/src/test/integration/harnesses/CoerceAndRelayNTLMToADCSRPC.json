@@ -73,7 +73,7 @@
       "caption": "CertTemplate1",
       "labels": [],
       "properties": {
-        "RequiresManagerApproval ": "false",
+        "RequiresManagerApproval": "false",
         "AuthenticationEnabled": "true",
         "SchemaVersion": "1"
       },
