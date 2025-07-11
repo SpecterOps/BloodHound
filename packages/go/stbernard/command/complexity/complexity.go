@@ -193,6 +193,9 @@ func (s *command) Run() error {
 					Value:   calleeID,
 				},
 				Kind: "Calls",
+				Properties: map[string]any{
+					"pkg": calleePkg,
+				},
 			})
 		}
 	}
@@ -212,7 +215,7 @@ func (s *command) Run() error {
 					sha := sha256.Sum256([]byte(hashName))
 					id := hex.EncodeToString(sha[:])
 					if decl.Body != nil {
-						addControlFlowToGraph(id, cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+						addControlFlowToGraph(id, pkg.PkgPath, cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
 					}
 				case *ast.GenDecl:
 					for _, spec := range decl.Specs {
@@ -229,7 +232,7 @@ func (s *command) Run() error {
 								hashName := fset.Position(funcLit.Pos()).String() + fset.Position(funcLit.End()).String()
 								sha := sha256.Sum256([]byte(hashName))
 								id := hex.EncodeToString(sha[:])
-								addControlFlowToGraph(id, cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+								addControlFlowToGraph(id, pkg.PkgPath, cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
 							}
 						}
 					}
@@ -248,7 +251,7 @@ func (s *command) Run() error {
 	return nil
 }
 
-func addControlFlowToGraph(fnID string, c *cfg.CFG, graph *genericgraph.Graph) {
+func addControlFlowToGraph(fnID, pkg string, c *cfg.CFG, graph *genericgraph.Graph) {
 	for itr, block := range c.Blocks {
 		kind := block.Kind.String()
 
@@ -279,6 +282,9 @@ func addControlFlowToGraph(fnID string, c *cfg.CFG, graph *genericgraph.Graph) {
 					Value:   fnID + strconv.Itoa(int(succ.Index)),
 				},
 				Kind: "FlowsInto",
+				Properties: map[string]any{
+					"pkg": pkg,
+				},
 			})
 		}
 	}
