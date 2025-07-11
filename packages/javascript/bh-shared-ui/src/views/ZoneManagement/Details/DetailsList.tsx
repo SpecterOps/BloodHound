@@ -14,14 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -31,12 +24,13 @@ import {
 } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
-import { AppIcon, SortableHeader } from '../../../components';
+import { SortableHeader } from '../../../components';
 import { useMultiTierAnalysis } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
+import { TierAnalysisIcon } from '../TierAnalysisIcon';
 
 const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
     if (listItem.counts === undefined) {
@@ -165,24 +159,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 {multiTierAnalysisEnabled &&
                                                     isTag(listItem) &&
                                                     !listItem?.analysis_enabled && (
-                                                        <TooltipProvider>
-                                                            <TooltipRoot>
-                                                                <TooltipTrigger>
-                                                                    <div className='flex flex-row items-center mb-0.5'>
-                                                                        <AppIcon.DataAlert
-                                                                            size={16}
-                                                                            data-testid='analysis_disabled_icon'
-                                                                            className='mr-2 text-[#ED8537]'
-                                                                        />
-                                                                    </div>
-                                                                </TooltipTrigger>
-                                                                <TooltipPortal>
-                                                                    <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                                                                        Analysis disabled
-                                                                    </TooltipContent>
-                                                                </TooltipPortal>
-                                                            </TooltipRoot>
-                                                        </TooltipProvider>
+                                                        <TierAnalysisIcon size={18} iconClasses='mb-0.5' />
                                                     )}
                                                 <div
                                                     className={cn(

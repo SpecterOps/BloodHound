@@ -16,24 +16,19 @@
 
 import {
     Button,
-    Card,
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
+    Card
 } from '@bloodhoundenterprise/doodleui';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
-import { AppIcon } from '../../../components';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
 import { useMultiTierAnalysis, useGetConfiguration } from '../../../hooks';
+import { TierAnalysisIcon } from '../TierAnalysisIcon';
 
 type SummaryCardProps = {
     title: string;
@@ -62,23 +57,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
         >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
                 {displayTooltip && (
-                    <TooltipProvider>
-                        <TooltipRoot>
-                            <TooltipTrigger>
-                                <div>
-                                    <AppIcon.DataAlert
-                                        size={24}
-                                        data-testid='analysis_disabled_icon'
-                                        className='mr-2 mb-0.5 text-[#ED8537]' />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipPortal>
-                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                                    Analysis disabled
-                                </TooltipContent>
-                            </TooltipPortal>
-                        </TooltipRoot>
-                    </TooltipProvider>
+                    <TierAnalysisIcon size={24} />
                 )}
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
