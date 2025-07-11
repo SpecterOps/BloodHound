@@ -28,10 +28,12 @@ const LinuxAbuse: FC = () => {
                     href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
                     ntlmrelayx.py
                 </Link>
-                . To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and
-                use the arguments:
+                . To relay to the enterprise CA via RPC endpoints and enroll a certificate, specify the RPC endpoint as
+                the target and use the arguments:
             </Typography>
-            <Typography component={'pre'}>{'--adcs --template <TEMPLATE_NAME>'}</Typography>
+            <Typography component={'pre'}>
+                {'-t rpc://<CA_IP> -rpc-mode ICPR -icpr-ca-name <CA_NAME> -smb2support'}
+            </Typography>
 
             <Typography variant={'body2'}>
                 2. Coerce the Target Computer Several coercion methods are documented here:{' '}
@@ -43,6 +45,11 @@ const LinuxAbuse: FC = () => {
                 </Link>
                 . Examples of tools include:
                 <ul>
+                    <li>
+                        <Link target='_blank' rel='noopener' href='https://github.com/p0dalirius/Coercer'>
+                            Coercer.py
+                        </Link>
+                    </li>
                     <li>
                         <Link
                             target='_blank'
@@ -58,9 +65,12 @@ const LinuxAbuse: FC = () => {
                     </li>
                 </ul>
             </Typography>
-            <Typography variant={'body2'}>
-                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>.
+            <Typography variant='body2'>
+                3: Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
+                    Certipy
+                </Link>
+                .
             </Typography>
         </>
     );

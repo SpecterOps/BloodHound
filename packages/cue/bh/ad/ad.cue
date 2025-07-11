@@ -1594,6 +1594,11 @@ CoerceAndRelayNTLMToADCS: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToADCSRPC: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToADCSRPC"
+	schema: "active_directory"
+}
+
 WriteOwnerLimitedRights: types.#Kind & {
 	symbol: "WriteOwnerLimitedRights"
 	schema: "active_directory"
@@ -1724,6 +1729,7 @@ RelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	WriteOwnerRaw,
 	OwnsLimitedRights,
@@ -1815,6 +1821,7 @@ SharedRelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
 	CoerceAndRelayNTLMToLDAP,
@@ -1849,6 +1856,7 @@ EdgeCompositionRelationships: [
 	ADCSESC13,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,

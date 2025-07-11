@@ -143,6 +143,7 @@ export enum ActiveDirectoryRelationshipKind {
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+    CoerceAndRelayNTLMToADCSRPC = 'CoerceAndRelayNTLMToADCSRPC',
     WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
@@ -303,6 +304,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
             return 'CoerceAndRelayNTLMToADCS';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC:
+            return 'CoerceAndRelayNTLMToADCSRPC';
         case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
             return 'WriteOwnerLimitedRights';
         case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
@@ -344,6 +347,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
+    'CoerceAndRelayNTLMToADCSRPC',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
     'GPOAppliesTo',
@@ -802,6 +806,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,

