@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -82,9 +82,8 @@ func (s *Command) Name() string {
 // Parse command flags
 func (s *Command) Parse() error {
 	var (
-		flagsIdx int
-		err      error
-		cmd      = flag.NewFlagSet(Name, flag.ContinueOnError)
+		err error
+		cmd = flag.NewFlagSet(Name, flag.ContinueOnError)
 	)
 
 	cmd.StringVar(&s.outpath, "outpath", "/tmp/", "destination path for generic graph files, default is {root}/tmp/")
@@ -97,15 +96,15 @@ func (s *Command) Parse() error {
 		cmd.PrintDefaults()
 	}
 
-	// Find the index of the first flag in os.Args
-	for i, arg := range os.Args {
+	flagsIdx := 0
+
+	for idx, arg := range os.Args {
 		if strings.HasPrefix(arg, "-") {
-			flagsIdx = i
+			flagsIdx = idx
 			break
 		}
 	}
 
-	// Parse flags from the first flag index onward
 	if err := cmd.Parse(os.Args[flagsIdx:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
@@ -115,6 +114,10 @@ func (s *Command) Parse() error {
 		cmd.Usage()
 		return fmt.Errorf("path flag is required")
 	}
+
+	if s.outpath == "" {
+        s.outpath = "/tmp/"
+    }
 
 	s.path, err = filepath.Abs(s.path)
 	if err != nil {
@@ -186,8 +189,8 @@ func (s *Command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	defer func() {
-		cancel()
 		s.service.TeardownService(ctx)
+		cancel()
 	}()
 
 	if graphDB, err := initializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
@@ -425,7 +428,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 		for _, err := range errs {
 			errStrings = append(errStrings, err.Error())
 		}
-		slog.Warn("errors occurred while ingesting files", "errors", errStrings)
+		slog.Warn("errors occurred while ingesting files", slog.Any("errors", errStrings))
 	}
 
 	return nil

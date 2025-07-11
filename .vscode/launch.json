@@ -66,13 +66,13 @@
             "outFiles": ["${workspaceFolder}/**/*.js"]
         },
         {
-            "name": "St Bernard Graph Ingest & Transform",
+            "name": "Graphify",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "packages/go/stbernard",
+            "program": "packages/go/graphify",
             "cwd": "${workspaceFolder}",
-            "args": ["graph", "--path=${workspaceFolder}/cmd/api/src/test/fixtures/fixtures/v6/ingest", "--outfile=${workspaceFolder}/tmp/graph.json"],
+            "args": ["bh-graphify", "-path=${workspaceFolder}/cmd/api/src/test/fixtures/fixtures/v6/ingest", "-outfile=${workspaceFolder}/tmp/"],
             "env": {
                 "SB_PG_CONNECTION":"user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
             }

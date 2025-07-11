@@ -1,17 +1,21 @@
 # Graphify
 
-Graphify is a tool used to ingest json files into Postgres and runs analysis on the nodes and edges ingested. It creates two generic ingestible output files -- one for ingest, and another for analysis.
+Graphify is a tool used to streamline the process of working with graph data.
+
+This tool ingests user-specified JSON files into PostgreSQL, then performs graph analysis on the ingested data. It outputs two graph-ready files: one representing the raw ingested graph, and another containing the analyzed graph.
 
 The following environment variables are required:
 
 `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
 
-- Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just bhe-graphify lib/go/daemons/datapipe/fixtures/AzureJSON/raw tmp`
-
 The following flags are required:
 
-- `--path`: Specifies the input directory for the consumed files.
+- `-path`: Specifies the input directory for the consumed files.
 
 The following flags are supported:
 
-- `--outpath`: Specifies the output directory for generic ingestible graph file.
+- `-outpath`: Specifies the output directory for generic ingestible graph files. These files will output with static names e.g. ingested.json & analyzed.json. Default is `{root}/tmp/`.
+
+## Usage
+
+Example: `just bh-graphify cmd/api/src/test/fixtures/fixtures/v6/ingest /tmp/`
