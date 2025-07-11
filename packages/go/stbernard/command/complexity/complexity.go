@@ -131,10 +131,6 @@ func (s *command) Run() error {
 			pkg = fn.Package().Pkg.Path()
 		}
 
-		if fn.Synthetic != "" {
-			continue
-		}
-
 		if !strings.HasPrefix(pkg, currentModule) {
 			continue
 		}
@@ -162,22 +158,26 @@ func (s *command) Run() error {
 
 		for _, edge := range node.Out {
 			var (
-				calleePkg string
+				calleePkg  string
+				calleeName = edge.Callee.Func.Name()
 			)
 
 			if edge.Callee.Func.Package() != nil {
 				calleePkg = edge.Callee.Func.Package().Pkg.Path()
 			}
 
+			if edge.Callee.Func.Synthetic != "" &&
+				edge.Callee.Func.Object() != nil &&
+				edge.Callee.Func.Object().Pkg() != nil {
+				calleePkg = edge.Callee.Func.Object().Pkg().Path()
+				calleeName = edge.Callee.Func.Object().Name()
+			}
+
 			if !strings.HasPrefix(calleePkg, currentModule) {
 				continue
 			}
 
-			if edge.Callee.Func.Synthetic != "" {
-				continue
-			}
-
-			calleeHashName := fmt.Sprintf("%s.%s", calleePkg, edge.Callee.Func.Name())
+			calleeHashName := fmt.Sprintf("%s.%s", calleePkg, calleeName)
 			calleeSHA := sha256.Sum256([]byte(calleeHashName))
 			calleeID := hex.EncodeToString(calleeSHA[:])
 
