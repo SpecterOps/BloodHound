@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AppLink, TIER_ZERO_ID, getTagUrlValue } from 'bh-shared-ui';
+import { AppLink, getTagUrlValue, useHighestPrivilegeTagId } from 'bh-shared-ui';
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
 const InfoHeader: FC = () => {
-    const { tierId = TIER_ZERO_ID, labelId } = useParams();
+    const topTagId = useHighestPrivilegeTagId();
+    const { tierId = topTagId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     return (

@@ -49,8 +49,12 @@ const HighestPrivilegePosition = 1 as const;
 
 export const useHighestPrivilegeTag = () => {
     const orderedTags = useOrderedTags();
-
     return orderedTags?.find((tag) => tag.position === HighestPrivilegePosition);
+};
+
+export const useHighestPrivilegeTagId = () => {
+    const orderedTags = useOrderedTags();
+    return orderedTags?.find((tag) => tag.position === HighestPrivilegePosition)?.id;
 };
 
 export const useLabels = () => {
@@ -60,4 +64,9 @@ export const useLabels = () => {
     if (tagsQuery.isLoading || tagsQuery.isError) return [];
 
     return tagsQuery.data?.filter((tag) => labelTypes.includes(tag.type));
+};
+
+export const useOwnedTagId = () => {
+    const tagsQuery = useAssetGroupTags();
+    return tagsQuery.data?.find((tag) => tag.type === AssetGroupTagTypeOwned)?.id;
 };
