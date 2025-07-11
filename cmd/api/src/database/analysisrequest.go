@@ -23,6 +23,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -32,7 +33,7 @@ type AnalysisRequestData interface {
 	HasAnalysisRequest(ctx context.Context) bool
 	HasCollectedGraphDataDeletionRequest(ctx context.Context) bool
 	RequestAnalysis(ctx context.Context, requester string) error
-	RequestCollectedGraphDataDeletion(ctx context.Context, requester string) error
+	RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error
 }
 
 func (s *BloodhoundDB) DeleteAnalysisRequest(ctx context.Context) error {
@@ -72,20 +73,47 @@ func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context)
 // There should only ever be 1 row, if a request is present, subsequent requests no-op
 // If an analysis request is present when a deletion request comes in, that overwrites the analysis to deletion but not vice-versa
 // To request: Use the helper methods `RequestAnalysis` and `RequestCollectedGraphDataDeletion`
-func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model.AnalysisRequestType, requestedBy string) error {
-	if analReq, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
+func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.AnalysisRequest) error {
+	var (
+		now  = time.Now().UTC()
+		args = []any{
+			request.RequestedBy,
+			request.RequestType,
+			now,
+			request.DeleteAllGraph,
+			request.DeleteAllOpenGraph,
+			pq.StringArray(request.DeleteSourceKinds),
+		}
+
+		insertSQL = `
+		INSERT INTO analysis_request_switch (
+			requested_by,
+			request_type,
+			requested_at,
+			delete_all_graph,
+			delete_all_open_graph,
+			delete_source_kinds
+		)
+		VALUES (?, ?, ?, ?, ?, ?::text[]);`
+		updateSQL = `UPDATE analysis_request_switch
+		SET
+			requested_by = ?,
+			request_type = ?,
+			requested_at = ?,
+			delete_all_graph = ?,
+			delete_all_open_graph = ?,
+			delete_source_kinds = ?::text[];`
+	)
+
+	if analysisRequest, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
 		return err
 	} else if errors.Is(err, ErrNotFound) {
-		// Analysis request doesn't exist so insert one
-		insertSql := `insert into analysis_request_switch (requested_by, request_type, requested_at) values (?, ?, ?);`
-		tx := s.db.WithContext(ctx).Exec(insertSql, requestedBy, requestType, time.Now().UTC())
-		return tx.Error
+		// No request exists — insert a new one with all relevant columns
+		return s.db.Exec(insertSQL, args...).Error
 	} else {
 		// Analysis request existed, we only want to overwrite if request is for a deletion request, otherwise ignore additional requests
-		if analReq.RequestType == model.AnalysisRequestAnalysis && requestType == model.AnalysisRequestDeletion {
-			updateSql := `update analysis_request_switch set requested_by = ?, request_type = ?, requested_at = ?;`
-			tx := s.db.WithContext(ctx).Exec(updateSql, requestedBy, requestType, time.Now().UTC())
-			return tx.Error
+		if analysisRequest.RequestType == model.AnalysisRequestAnalysis && request.RequestType == model.AnalysisRequestDeletion {
+			return s.db.Exec(updateSQL, args...).Error
 		}
 		return nil
 	}
@@ -94,11 +122,11 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, requestType model
 // RequestAnalysis will request an analysis be executed, as long as there isn't an existing analysis request or collected graph data deletion request, then it no-ops
 func (s *BloodhoundDB) RequestAnalysis(ctx context.Context, requestedBy string) error {
 	slog.InfoContext(ctx, fmt.Sprintf("Analysis requested by %s", requestedBy))
-	return s.setAnalysisRequest(ctx, model.AnalysisRequestAnalysis, requestedBy)
+	return s.setAnalysisRequest(ctx, model.AnalysisRequest{RequestType: model.AnalysisRequestAnalysis, RequestedBy: requestedBy})
 }
 
 // RequestCollectedGraphDataDeletion will request collected graph data be deleted, if an analysis request is present, it will overwrite that.
-func (s *BloodhoundDB) RequestCollectedGraphDataDeletion(ctx context.Context, requestedBy string) error {
-	slog.InfoContext(ctx, fmt.Sprintf("Collected graph data deletion requested by %s", requestedBy))
-	return s.setAnalysisRequest(ctx, model.AnalysisRequestDeletion, requestedBy)
+func (s *BloodhoundDB) RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error {
+	slog.InfoContext(ctx, fmt.Sprintf("Collected graph data deletion requested by %s", request.RequestedBy))
+	return s.setAnalysisRequest(ctx, request)
 }

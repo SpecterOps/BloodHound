@@ -31,7 +31,10 @@ import (
 )
 
 type DatabaseWipe struct {
-	DeleteCollectedGraphData  bool  `json:"deleteCollectedGraphData"`
+	DeleteCollectedGraphData bool     `json:"deleteCollectedGraphData"`
+	DeleteOpenGraphData      bool     `json:"deleteOpenGraphData"`
+	DeleteSourceKinds        []string `json:"deleteSourceKinds"`
+
 	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
 	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
 	DeleteAssetGroupSelectors []int `json:"deleteAssetGroupSelectors"`
@@ -59,7 +62,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	if !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 {
+	if !payload.DeleteCollectedGraphData && !payload.DeleteOpenGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0 {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "please select something to delete", request),
@@ -118,10 +121,19 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 				userId = user.ID.String()
 			}
 
-			if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), userId); err != nil {
+			deleteRequest := model.AnalysisRequest{
+				RequestedBy:        userId,
+				RequestType:        model.AnalysisRequestDeletion,
+				DeleteAllGraph:     payload.DeleteCollectedGraphData,
+				DeleteAllOpenGraph: payload.DeleteOpenGraphData,
+				DeleteSourceKinds:  payload.DeleteSourceKinds,
+			}
+
+			if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), deleteRequest); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			}
+
 			s.handleAuditLogForDatabaseWipe(request.Context(), &auditEntry, true, "collected graph data")
 		}
 

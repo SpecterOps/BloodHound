@@ -29,8 +29,8 @@ type ListKindsResponse struct {
 	Kinds graph.Kinds `json:"kinds"`
 }
 
-// ListKinds returns all node kinds, edge kinds, and tier tags present in the system. 
-// It is a comprehensive view of the various kinds the graph currently recognizes. 
+// ListKinds returns all node kinds, edge kinds, and tier tags present in the system.
+// It is a comprehensive view of the various kinds the graph currently recognizes.
 func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.Graph.FetchKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -46,7 +46,7 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 
 // ListSourceKinds returns only the subset of kinds that are registered as source kinds.
 //
-// Source kinds typically represent the origin of ingested data, such as Base, AZBase, 
+// Source kinds typically represent the origin of ingested data, such as Base, AZBase,
 // or OpenGraph-related node kinds.
 func (s Resources) ListSourceKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {

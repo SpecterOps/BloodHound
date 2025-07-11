@@ -1946,17 +1946,17 @@ func (mr *MockDatabaseMockRecorder) RequestAnalysis(ctx, requester any) *gomock.
 }
 
 // RequestCollectedGraphDataDeletion mocks base method.
-func (m *MockDatabase) RequestCollectedGraphDataDeletion(ctx context.Context, requester string) error {
+func (m *MockDatabase) RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", ctx, requester)
+	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", ctx, request)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RequestCollectedGraphDataDeletion indicates an expected call of RequestCollectedGraphDataDeletion.
-func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, requester any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, request any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, requester)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, request)
 }
 
 // SavedQueryBelongsToUser mocks base method.
