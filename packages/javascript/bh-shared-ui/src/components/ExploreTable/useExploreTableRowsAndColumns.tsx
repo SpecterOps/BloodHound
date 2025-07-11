@@ -116,7 +116,7 @@ const useExploreTableRowsAndColumns = ({
                     );
                 },
             }),
-            ...['objectId', 'displayname'].map(makeColumnDef),
+            ...['objectid', 'displayname'].map(makeColumnDef),
         ],
         [handleKebabMenuClick, makeColumnDef]
     );
