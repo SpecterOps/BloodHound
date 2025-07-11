@@ -40,6 +40,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -509,22 +511,32 @@ type GetAssetGroupTagMemberCountsResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	environmentIds := request.URL.Query()["environment"]
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind()); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		data := GetAssetGroupTagMemberCountsResponse{
-			Counts: primaryNodeKindsCounts,
+		filters := []graph.Criteria{}
+		if len(environmentIds) > 0 {
+			filters = append(filters, query.Or(
+				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+			))
 		}
+		if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			data := GetAssetGroupTagMemberCountsResponse{
+				Counts: primaryNodeKindsCounts,
+			}
 
-		for _, count := range primaryNodeKindsCounts {
-			data.TotalCount += count
+			for _, count := range primaryNodeKindsCounts {
+				data.TotalCount += count
+			}
+
+			api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 		}
-
-		api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 	}
 }
 
