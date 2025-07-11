@@ -44,14 +44,18 @@ type CypherSearchState = {
 const SaveQueryDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-    onSave: (data: { name: string; description: string }) => Promise<any>;
-    onUpdate: (data: { name: string; description: string; id: number }) => Promise<any>;
+    onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<any>;
+    onUpdate: (data: {
+        name: string;
+        description: string;
+        id: number | undefined;
+        localCypherQuery: string;
+    }) => Promise<any>;
     isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
     selectedQuery: any;
 }> = ({ open, onClose, onSave, onUpdate, isLoading = false, error = undefined, cypherSearchState, selectedQuery }) => {
-    const { cypherQuery, setCypherQuery } = cypherSearchState;
     const theme = useTheme();
 
     const [name, setName] = useState('');
@@ -59,30 +63,36 @@ const SaveQueryDialog: React.FC<{
     const [id, setId] = useState(undefined);
     const [isNew, setIsNew] = useState(true);
 
+    const [localCypherQuery, setLocalCypherQuery] = useState('');
+    const { cypherQuery } = cypherSearchState;
+
     useEffect(() => {
         if (selectedQuery) {
-            console.log(selectedQuery);
             setName(selectedQuery.name);
             setDescription(selectedQuery.description);
             setId(selectedQuery.id);
             setIsNew(false);
+            setLocalCypherQuery(cypherQuery);
         } else {
             setName('');
             setDescription('');
             setId(undefined);
             setIsNew(true);
+            setLocalCypherQuery(cypherQuery);
         }
     }, [selectedQuery]);
 
-    console.log(`isNew = ${isNew}`);
+    useEffect(() => {
+        setLocalCypherQuery(cypherQuery);
+    }, [cypherQuery]);
 
     const saveDisabled = name?.trim() === '';
 
     const handleSave = () => {
         if (isNew) {
-            onSave({ name, description });
+            onSave({ name, description, localCypherQuery });
         } else {
-            onUpdate({ name, description, id });
+            onUpdate({ name, description, id, localCypherQuery });
         }
     };
     const cypherEditorRef = useRef<CypherEditor | null>(null);
@@ -138,9 +148,9 @@ const SaveQueryDialog: React.FC<{
                                 className={cn(
                                     'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
                                 )}
-                                value={cypherQuery}
+                                value={localCypherQuery}
                                 onValueChanged={(val: string) => {
-                                    setCypherQuery(val);
+                                    setLocalCypherQuery(val);
                                 }}
                                 theme={theme.palette.mode}
                                 // onKeyDown={(e: any) => {

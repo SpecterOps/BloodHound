@@ -6,8 +6,6 @@ import { QueryLineItem } from '../../types';
 export const usePrebuiltQueries = () => {
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
     const userQueries = useSavedQueries();
-    console.log('userQueries');
-    console.log(userQueries);
 
     //Get master list of queries to validate against
     const savedLineItems: QueryLineItem[] =
@@ -27,7 +25,6 @@ export const usePrebuiltQueries = () => {
     const queryList = tierFlag?.enabled
         ? [...prebuiltSearchListAGT, savedQueries]
         : [...prebuiltSearchListAGI, savedQueries];
-
     return queryList;
 };
 

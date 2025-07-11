@@ -80,6 +80,7 @@ export type QueryListSection = {
 
 export type QueryLineItem = {
     id?: number;
+    name?: string;
     description: string;
     cypher: string;
     canEdit?: boolean;

@@ -150,7 +150,6 @@ class BHEAPIClient {
         const headers = {
             'Content-Type': 'application/json',
         };
-        console.log(payload);
         return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
             ...options,
             ...headers,

@@ -39,8 +39,6 @@ export const createSavedQuery = (savedQuery: CreateUserQueryRequest, options?: R
 };
 
 export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest, options?: RequestOptions): Promise<SavedQuery> => {
-    console.log('updateSavedQuery');
-    console.log(savedQuery);
     return apiClient.updateUserQuery(savedQuery, options).then((response) => response.data.data);
 };
 

@@ -54,10 +54,8 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
-    // const [selected, setSelected] = useState('');
 
     const styles = useStyles();
-    // const { cypherQuery } = useCypherSearch();
 
     const handleOpen = () => {
         setOpen(true);
@@ -75,6 +73,18 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         handleOpen();
     };
 
+    //This is necessary due to inconsistent data shape between new saved user queries and existing prebuilt AGT/AGI queries
+
+    const testMatch = (name?: string, description?: string) => {
+        if (!selectedQuery) return false;
+        if (name && name === selectedQuery.name) {
+            return true;
+        } else if (description && description === selectedQuery.description) {
+            return true;
+        }
+        return false;
+    };
+
     return (
         <>
             {listSections && (
@@ -87,20 +97,15 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                 return (
                                     <li key={i} className='list-none'>
                                         {queries?.map((lineItem, idx) => {
-                                            console.log(lineItem);
                                             const { id, name, description, cypher, canEdit = false } = lineItem;
                                             return (
                                                 <div
                                                     className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 justify-between pl-4 ${
-                                                        selectedQuery?.description === description
-                                                            ? styles.selected
-                                                            : ''
+                                                        testMatch(name, description) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
                                                     onClick={() => clickHandler(cypher)}>
                                                     <div>
-                                                        {/* {name && <p className='mb-0 leading-none'>{name}</p>} */}
-
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>
                                                         ) : (

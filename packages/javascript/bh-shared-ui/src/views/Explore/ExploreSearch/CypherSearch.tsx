@@ -72,45 +72,53 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             performSearch(query);
         }
     };
+
+    const getCypherValueOnLoadRef = useRef(false);
+    const selectedQuery: any = useGetSelectedQuery(selected);
     useEffect(() => {
-        setSelected(cypherQuery);
+        //Setting the selected query once on load
+        if (!getCypherValueOnLoadRef.current && cypherQuery) {
+            getCypherValueOnLoadRef.current = true;
+            setSelected(cypherQuery);
+        }
     }, [cypherQuery]);
 
     const handleSetSelected = (query: string) => {
         setSelected(query);
     };
 
-    const selectedQuery: any = useGetSelectedQuery(selected);
-
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);
     };
 
-    const handleSaveQuery = async (data: { name: string; description: string }) => {
-        console.log('onSave');
-        console.log(data);
-
+    const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
         return createSavedQueryMutation.mutate(
-            { name: data.name, description: data.description, query: cypherQuery },
+            { name: data.name, description: data.description, query: data.localCypherQuery },
             {
                 onSuccess: () => {
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} saved!`, 'userSavedQuery');
+                    performSearch(data.localCypherQuery);
+                    setSelected(data.localCypherQuery);
                 },
             }
         );
     };
 
-    const handleUpdateQuery = async (data: { name: string; description: string; id: number }) => {
-        console.log('onUpdate');
-        console.log(data);
-
+    const handleUpdateQuery = async (data: {
+        name: string;
+        description: string;
+        id: number | undefined;
+        localCypherQuery: string;
+    }) => {
         return updateSavedQueryMutation.mutate(
-            { name: data.name, description: data.description, id: data.id, query: cypherQuery },
+            { name: data.name, description: data.description, id: data.id as number, query: data.localCypherQuery },
             {
                 onSuccess: () => {
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
+                    performSearch(data.localCypherQuery);
+                    setSelected(data.localCypherQuery);
                 },
             }
         );
