@@ -16,7 +16,7 @@
 
 import { AssetGroupTag, AssetGroupTagTypeTier, ConfigurationKey } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
-import { longWait, render, screen, within } from '../../../test-utils';
+import { render, screen, within } from '../../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { DetailsList } from './DetailsList';
@@ -142,11 +142,11 @@ describe('List', async () => {
 
         render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
 
-        expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        const listItem = await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1');
+        expect(listItem).toBeInTheDocument();
 
-        longWait(() => {
-            expect(screen.queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
-        })
+        const icon = within(listItem).queryByTestId('analysis_disabled_icon');
+        expect(icon).not.toBeInTheDocument();
     });
 
     it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
@@ -158,11 +158,11 @@ describe('List', async () => {
 
         render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
 
-        expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        const listItem = await screen.findByTestId('zone-management_details_tiers-list_item-2');
+        expect(listItem).toBeInTheDocument();
 
-        longWait(() => {
-            expect(screen.getByTestId('analysis_disabled_icon')).toBeInTheDocument();
-        })
+        const icon = within(listItem).getByTestId('analysis_disabled_icon');
+        expect(icon).toBeInTheDocument();
     });
 
     it('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
@@ -180,9 +180,7 @@ describe('List', async () => {
 
         const listItem2 = await screen.findByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem2).toBeInTheDocument();
-        longWait(() => {
-            expect(within(listItem2).getByTestId('analysis_disabled_icon')).toBeInTheDocument();
-        })
+        expect(within(listItem2).getByTestId('analysis_disabled_icon')).toBeInTheDocument();
     });
 
     it('handles rendering a selected item', async () => {

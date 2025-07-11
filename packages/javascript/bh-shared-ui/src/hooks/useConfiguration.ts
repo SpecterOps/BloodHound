@@ -33,11 +33,11 @@ export const useGetConfiguration = () => {
 };
 
 export const usePrivilegeZoneAnalysis = () => {
-    const { data } = useGetConfiguration();
+    const { data, isLoading } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
     const privilegeZoneAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
 
-    return privilegeZoneAnalysisEnabled;
+    return isLoading ? isLoading : privilegeZoneAnalysisEnabled;
 }
 
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {

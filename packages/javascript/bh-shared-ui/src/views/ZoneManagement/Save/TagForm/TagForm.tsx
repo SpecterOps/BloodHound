@@ -285,7 +285,7 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
-                                {isEditPage && showAnalysisToggle ? (
+                                {isEditPage && showAnalysisToggle && (
                                     <div>
                                         <Label htmlFor='analysis'>Enable Analysis</Label>
                                         <div className='flex gap-3'>
@@ -302,7 +302,7 @@ export const TagForm: FC = () => {
                                             <p className='text-xs'>Include this tier when running analysis</p>
                                         </div>
                                     </div>
-                                ) : null}
+                                )}
 
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>

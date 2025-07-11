@@ -2,20 +2,27 @@ import { TooltipProvider, TooltipRoot, TooltipTrigger, TooltipPortal, TooltipCon
 import { FC } from 'react';
 import { AppIcon } from '../../components';
 import clsx from 'clsx';
+import { usePrivilegeZoneAnalysis } from '../../hooks';
 
 type TierAnalysisIconProps = {
     iconClasses?: string | null,
-    size: number;
+    size?: number;
+    tooltip?: boolean,
     wrapperClasses?: string,
 };
 
-export const TierAnalysisIcon: FC<TierAnalysisIconProps> = ({ iconClasses, size, wrapperClasses }) => {
+export const TierAnalysisIcon: FC<TierAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
-    return (
+    if (!privilegeZoneAnalysisEnabled) {
+        return
+    }
+
+    return tooltip ? (
         <TooltipProvider>
             <TooltipRoot>
                 <TooltipTrigger>
-                    <div className={clsx(wrapperClasses, 'flex flex-row items-center')} >
+                    <div className={clsx(wrapperClasses)} >
                         <AppIcon.DataAlert
                             size={size}
                             data-testid='analysis_disabled_icon'
@@ -29,5 +36,11 @@ export const TierAnalysisIcon: FC<TierAnalysisIconProps> = ({ iconClasses, size,
                 </TooltipPortal>
             </TooltipRoot>
         </TooltipProvider>
+    ) : (
+        <AppIcon.DataAlert
+            size={size}
+            className={clsx(iconClasses, 'mr-2 text-[#ED8537]')}
+            data-testid='analysis_disabled_icon'
+        />
     )
 };

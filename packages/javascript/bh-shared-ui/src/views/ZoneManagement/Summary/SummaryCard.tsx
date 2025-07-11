@@ -27,7 +27,6 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { usePrivilegeZoneAnalysis, useGetConfiguration } from '../../../hooks';
 import { TierAnalysisIcon } from '../TierAnalysisIcon';
 
 type SummaryCardProps = {
@@ -39,16 +38,8 @@ type SummaryCardProps = {
     analysisEnabled: boolean | null;
 };
 
-
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
-    const { isLoading } = useGetConfiguration();
-    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
-    const displayTooltip = privilegeZoneAnalysisEnabled && !analysisEnabled;
-
-    if (isLoading) {
-        return
-    }
 
     return (
         <Card
@@ -56,8 +47,8 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, "_")}-list_item-${id}`}
         >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {displayTooltip && (
-                    <TierAnalysisIcon size={24} />
+                {!analysisEnabled && (
+                    <TierAnalysisIcon size={24} tooltip iconClasses='mb-0.5' />
                 )}
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
