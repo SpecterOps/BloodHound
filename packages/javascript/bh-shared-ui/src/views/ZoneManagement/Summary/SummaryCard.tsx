@@ -27,7 +27,7 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { useMultiTierAnalysis, useGetConfiguration } from '../../../hooks';
+import { usePrivilegeZoneAnalysis, useGetConfiguration } from '../../../hooks';
 import { TierAnalysisIcon } from '../TierAnalysisIcon';
 
 type SummaryCardProps = {
@@ -43,8 +43,8 @@ type SummaryCardProps = {
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
     const { isLoading } = useGetConfiguration();
-    const multiTierAnalysisEnabled = useMultiTierAnalysis();
-    const displayTooltip = multiTierAnalysisEnabled && !analysisEnabled;
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
+    const displayTooltip = privilegeZoneAnalysisEnabled && !analysisEnabled;
 
     if (isLoading) {
         return

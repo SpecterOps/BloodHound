@@ -26,15 +26,6 @@ vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({
     default: () => <div data-testid='large-right-arrow' />,
 }));
 
-// Mock route and navigation
-vi.mock('../../../routes', async () => {
-    const actual = await vi.importActual('../../../routes');
-    return {
-        ...actual,
-        ROUTE_ZONE_MANAGEMENT_DETAILS: 'details',
-    }
-});
-
 const mockNavigate = vi.fn();
 vi.mock('../../../../utils', async () => {
     const actual = await vi.importActual('../../../../utils');

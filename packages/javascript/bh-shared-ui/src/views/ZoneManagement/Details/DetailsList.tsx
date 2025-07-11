@@ -25,7 +25,7 @@ import {
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
-import { useMultiTierAnalysis } from '../../../hooks';
+import { usePrivilegeZoneAnalysis } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
@@ -61,7 +61,7 @@ type DetailsListProps = {
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-    const multiTierAnalysisEnabled = useMultiTierAnalysis();
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
@@ -156,7 +156,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                {multiTierAnalysisEnabled &&
+                                                {privilegeZoneAnalysisEnabled &&
                                                     isTag(listItem) &&
                                                     !listItem?.analysis_enabled && (
                                                         <TierAnalysisIcon size={18} iconClasses='mb-0.5' />

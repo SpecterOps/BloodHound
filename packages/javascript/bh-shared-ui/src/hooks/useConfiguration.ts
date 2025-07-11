@@ -32,12 +32,12 @@ export const useGetConfiguration = () => {
     });
 };
 
-export const useMultiTierAnalysis = () => {
+export const usePrivilegeZoneAnalysis = () => {
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
-    const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
+    const privilegeZoneAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
 
-    return multiTierAnalysisEnabled;
+    return privilegeZoneAnalysisEnabled;
 }
 
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
