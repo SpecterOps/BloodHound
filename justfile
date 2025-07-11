@@ -39,7 +39,7 @@ generate *FLAGS:
 show *FLAGS:
   @just stbernard show {{FLAGS}}
 
-# Run all analyzers (requires jq to be installed locally)
+# Run all analyzers
 analyze *FLAGS:
   @just stbernard analysis {{FLAGS}}
 
@@ -51,7 +51,7 @@ test *FLAGS:
 build *FLAGS:
   @just stbernard build {{FLAGS}}
 
-# prepare for code review (requires jq)
+# prepare for code review
 prepare-for-codereview:
   @(test -e tmp && rm -r tmp) || echo "skip rm tmp"
   @mkdir -p tmp
