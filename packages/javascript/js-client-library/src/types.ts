@@ -263,22 +263,27 @@ interface CollectorAsset {
     arch: string;
 }
 
-export type GraphNode = {
-    label: string;
-    kind: string;
-    objectId: string;
-    objectid?: string;
-    lastSeen: string;
-    isTierZero: boolean;
-    isOwnedObject: boolean;
+export interface GraphNodeProperties {
     nodetype?: string;
     displayname?: string;
     enabled?: boolean;
     pwdlastset?: number;
     lastlogontimestamp?: number;
     descendent_count?: number | null;
-    properties?: Record<string, any>;
-} & Record<string, any>;
+    [key: string]: any;
+}
+
+export type GraphNode = {
+    label: string;
+    kind: string;
+    objectId: string;
+    lastSeen: string;
+    isTierZero: boolean;
+    isOwnedObject: boolean;
+    properties?: GraphNodeProperties;
+};
+
+export type GraphNodeSpreadWithProperties = Omit<GraphNode, 'properties'> & GraphNodeProperties;
 
 export type GraphNodes = Record<string, GraphNode>;
 
@@ -291,7 +296,7 @@ export type GraphEdge = {
     impactPercent?: number;
     exploreGraphId?: string;
     data?: Record<string, any>;
-} & Record<string, any>;
+};
 
 export type GraphEdges = GraphEdge[];
 
@@ -299,7 +304,7 @@ export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: stri
 
 export type StyledGraphNode = {
     color: string;
-    data: GraphNode;
+    data: GraphNodeSpreadWithProperties;
     border: {
         color: string;
     };
@@ -317,7 +322,7 @@ export type StyledGraphNode = {
 
 export type StyledGraphEdge = {
     color: string;
-    data: GraphEdge;
+    data: Record<string, any>;
     end1?: {
         arrow: boolean;
     };

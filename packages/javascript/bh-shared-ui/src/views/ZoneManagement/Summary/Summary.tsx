@@ -73,7 +73,11 @@ const Summary: FC = () => {
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
+                            <Link
+                                data-testid='zone-management_edit-button'
+                                to={getSavePath(tierId, labelId, selectorId)}>
+                                Edit
+                            </Link>
                         </Button>
                     )}
                 </div>

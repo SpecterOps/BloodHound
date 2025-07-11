@@ -2,7 +2,6 @@ import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '@mui/material';
-import { GraphNode } from 'js-client-library';
 import { useCallback, useMemo, useState } from 'react';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
@@ -52,9 +51,16 @@ const useExploreTableRowsAndColumns = ({
         [sortBy, sortOrder]
     );
 
+    const handleKebabMenuClick = useCallback(
+        (e: React.MouseEvent, id: string) => {
+            if (onKebabMenuClick) onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
+        },
+        [onKebabMenuClick]
+    );
+
     const makeColumnDef = useCallback(
         (key: keyof MungedTableRowWithId) =>
-            columnHelper.accessor(key, {
+            columnHelper.accessor(String(key), {
                 header: () => (
                     <ExploreTableHeaderCell
                         sortBy={sortBy}
@@ -67,29 +73,52 @@ const useExploreTableRowsAndColumns = ({
                     const value = info.getValue() as EntityField['value'];
 
                     if (typeof value === 'boolean') {
-                        return value ? (
+                        return (
                             <div className='h-full w-full flex justify-center items-center text-center'>
-                                <FontAwesomeIcon icon={faCheck} color='green' className='scale-125' />{' '}
-                            </div>
-                        ) : (
-                            <div className='h-full w-full flex justify-center items-center text-center'>
-                                <FontAwesomeIcon icon={faCancel} color='lightgray' className='scale-125' />{' '}
+                                <FontAwesomeIcon
+                                    icon={value ? faCheck : faCancel}
+                                    color={value ? 'green' : 'lightgray'}
+                                    className='scale-125'
+                                />
                             </div>
                         );
                     }
 
-                    return format({ keyprop: key, value, label: key }) || '--';
+                    return format({ keyprop: String(key), value, label: String(key) }) || '--';
                 },
-                id: key,
+                id: String(key),
             }),
         [handleSort, sortOrder, sortBy]
     );
 
-    const handleKebabMenuClick = useCallback(
-        (e: MouseEvent, id: string) => {
-            if (onKebabMenuClick) onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
-        },
-        [onKebabMenuClick]
+    const requiredColumnDefinitions = useMemo(
+        () => [
+            columnHelper.accessor('', {
+                id: 'action-menu',
+                cell: ({ row }) => (
+                    <Button
+                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
+                        <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
+                    </Button>
+                ),
+            }),
+            columnHelper.accessor('nodetype', {
+                id: 'nodetype',
+                header: () => {
+                    return <span className='dark:text-neutral-light-1'>Type</span>;
+                },
+                cell: (info) => {
+                    return (
+                        <div className='flex justify-center items-center relative'>
+                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
+                        </div>
+                    );
+                },
+            }),
+            ...['objectId', 'displayname'].map(makeColumnDef),
+        ],
+        [handleKebabMenuClick, makeColumnDef]
     );
 
     const rows = useMemo(
@@ -107,7 +136,7 @@ const useExploreTableRowsAndColumns = ({
     const filteredRows = useMemo(
         () =>
             rows?.filter((item) => {
-                const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
+                const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
                 const filterTargets = filterKeys.map((filterKey) => {
                     const stringyValue = String(item?.[filterKey]);
 
@@ -144,36 +173,6 @@ const useExploreTableRowsAndColumns = ({
     const selectedColumnDefinitions = useMemo(
         () => nonRequiredColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
         [nonRequiredColumnDefinitions, selectedColumns]
-    );
-
-    const requiredColumnDefinitions = useMemo(
-        () => [
-            {
-                accessorKey: '',
-                id: 'action-menu',
-                cell: ({ row }) => (
-                    <Button
-                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
-                        <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
-                    </Button>
-                ),
-            },
-            {
-                accessorKey: 'nodetype',
-                id: 'nodetype',
-                header: () => <span className='dark:text-neutral-light-1'>Type</span>,
-                cell: (info) => {
-                    return (
-                        <div className='flex justify-center items-center relative'>
-                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
-                        </div>
-                    );
-                },
-            },
-            ...['objectid', 'displayname'].map(makeColumnDef),
-        ],
-        [makeColumnDef, handleKebabMenuClick]
     );
 
     const tableColumns = useMemo(

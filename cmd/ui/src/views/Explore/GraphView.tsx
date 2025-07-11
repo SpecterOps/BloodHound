@@ -21,6 +21,7 @@ import {
     FeatureFlag,
     GraphControls,
     GraphProgress,
+    GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     NodeClickInfo,
     WebGLDisabledAlert,
@@ -38,10 +39,10 @@ import {
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
+
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes, StyledGraphNode } from 'js-client-library';
-import isEmpty from 'lodash/isEmpty';
+import { type GraphNodes } from 'js-client-library';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
@@ -102,8 +103,7 @@ const GraphView: FC = () => {
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
-        // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
@@ -165,7 +165,7 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError) throw new Error();
+    if (isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabled()) {
         return <WebGLDisabledAlert />;
@@ -259,7 +259,7 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes as Record<string, StyledGraphNode>}
+                    data={graphQuery.data?.nodes}
                     allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
                     selectedColumns={selectedColumns}

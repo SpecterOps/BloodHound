@@ -5631,6 +5631,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
             "name": "auto_certify",
             "in": "query",
             "required": false,
@@ -14826,6 +14832,42 @@
         }
       }
     },
+    "/api/v2/attack-paths/details": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "put": {
+        "operationId": "GetAllAttackPathFindings",
+        "summary": "Get all attack path findings",
+        "description": "Fetches all attack path findings and their associated details, including documentation.",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/api.response.all-findings"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/domains/{domain_id}/available-types": {
       "parameters": [
         {
@@ -19369,6 +19411,29 @@
             "example": "header1,header2,header3\ncell1,cell2,cell3\ncell4,cell5,cell6\n...\n"
           }
         }
+      },
+      "api.response.all-findings": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "description": "List of unified findings.",
+            "items": {
+              "$ref": "./../schemas/model.unified-finding.yaml"
+            }
+          },
+          "finding_assets": {
+            "type": "object",
+            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name.",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "findings",
+          "finding_assets"
+        ]
       }
     }
   },

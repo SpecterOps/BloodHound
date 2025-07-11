@@ -109,7 +109,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 						args    = []string{"generate", nextPackage.Dir}
 					)
 
-					if _, err := cmdrunner.Run(command, args, nextPackage.Dir, env); err != nil {
+					if _, err := cmdrunner.RunInteractive(command, args, nextPackage.Dir, env); err != nil {
 						addErr(err)
 					}
 				}

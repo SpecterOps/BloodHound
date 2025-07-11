@@ -15,38 +15,44 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { FlatGraphResponse, GraphNodeSpreadWithProperties } from 'js-client-library';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
-import { WrappedExploreTableItem } from '../../types';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import TableControls from './TableControls';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
-
-export const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
-    (acc, curr) => ({ ...acc, [curr]: true }),
-    {}
-) as Record<string, boolean>;
-
-export type MungedTableRowWithId = WrappedExploreTableItem['data'] & { id: string };
-
-export type ExploreTableProps = {
-    open?: boolean;
-    onClose?: () => void;
-    data?: Record<string, WrappedExploreTableItem>;
-    selectedNode: string;
-    selectedColumns?: Record<string, boolean>;
-    allColumnKeys?: string[];
-    onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    onDownloadClick: () => void;
-    onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
-};
-
-export type DataTableProps = React.ComponentProps<typeof DataTable>;
 export type NodeClickInfo = { id: string; x: number; y: number };
 
 const MemoDataTable = memo(DataTable);
+
+const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectId', 'displayname'];
+
+export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+
+export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
+
+type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+    className: 'sticky top-0 z-10',
+};
+
+const tableHeadProps: DataTableProps['TableHeadProps'] = {
+    className: 'pr-4',
+};
+
+export interface ExploreTableProps {
+    open?: boolean;
+    onClose?: () => void;
+    data?: FlatGraphResponse;
+    selectedColumns?: Record<string, boolean>;
+    allColumnKeys?: string[];
+    onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    selectedNode: string;
+    onDownloadClick: () => void;
+    onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
+}
 
 const ExploreTable = ({
     data,
@@ -82,20 +88,6 @@ const ExploreTable = ({
             placeholder: 'Search',
         }),
         [handleSearchInputChange, searchInput]
-    );
-
-    const tableHeaderProps: DataTableProps['TableHeaderProps'] = useMemo(
-        () => ({
-            className: 'sticky top-0 z-10',
-        }),
-        []
-    );
-
-    const tableHeadProps: DataTableProps['TableHeadProps'] = useMemo(
-        () => ({
-            className: 'pr-4',
-        }),
-        []
     );
 
     if (!open || !data) return null;

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isGraphResponse, transformToFlatGraphResponse, useExploreGraph } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphData, GraphResponse } from 'js-client-library';
+import { FlatGraphResponse, GraphResponse, type GraphData } from 'js-client-library';
 import { useMemo } from 'react';
 
 export const normalizeGraphDataForSigma = (

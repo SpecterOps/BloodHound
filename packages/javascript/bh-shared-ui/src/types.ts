@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphNode } from 'js-client-library';
 import { EntityKinds } from './utils/content';
 
 // recursively applies Partial<T> to nested object types
@@ -73,5 +72,3 @@ export type SelectedNode = {
 export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
-
-export type WrappedExploreTableItem = { data?: GraphNode; label: { text: string } };

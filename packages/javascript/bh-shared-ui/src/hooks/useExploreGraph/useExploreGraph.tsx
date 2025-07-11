@@ -33,7 +33,9 @@ type UseExploreGraphParams = {
     enabled?: boolean;
 };
 
-export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
+export function exploreGraphQueryFactory(
+    paramOptions: Partial<ExploreQueryParams>
+): ExploreGraphQuery | CypherExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
             return nodeSearchQuery;
@@ -65,7 +67,7 @@ export const useExploreGraph = ({
 
     const queryConfig =
         params?.searchType === 'cypher'
-            ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
+            ? query.getQueryConfig(params, includeProperties)
             : query.getQueryConfig(params);
 
     const shouldFetch = Boolean(enabled && queryConfig?.queryFn);

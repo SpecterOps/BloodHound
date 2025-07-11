@@ -43,7 +43,7 @@ func GenerateOpenAPIDoc(projectPath string, submodules []string, env environment
 		args       = []string{"@redocly/cli@1.18.1", "bundle", inputPath, "--output", outputPath}
 	)
 
-	if _, err := cmdrunner.Run(command, args, srcPath, env); err != nil {
+	if _, err := cmdrunner.RunInteractive(command, args, srcPath, env); err != nil {
 		return fmt.Errorf("generate openapi docs: %w", err)
 	}
 
