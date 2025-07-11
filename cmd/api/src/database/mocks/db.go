@@ -1663,6 +1663,21 @@ func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetSharedSavedQueries), ctx, userID)
 }
 
+// GetSourceKinds mocks base method.
+func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]graph.Kind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
+	ret0, _ := ret[0].([]graph.Kind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKinds indicates an expected call of GetSourceKinds.
+func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKinds), ctx)
+}
+
 // GetTimeRangedAssetGroupCollections mocks base method.
 func (m *MockDatabase) GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from, to int64, order string) (model.AssetGroupCollections, error) {
 	m.ctrl.T.Helper()

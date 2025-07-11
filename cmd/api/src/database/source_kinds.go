@@ -25,6 +25,8 @@ import (
 
 // RegisterSourceKind returns a function that inserts a source kind by name,
 // using the provided context. The returned function can be called later with just the name.
+// The function is curried in this way because it is primarily used in datapipe during ingest decoding when
+// there is no ctx in scope.
 func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error {
 	return func(sourceKind graph.Kind) error {
 		const query = `
@@ -40,4 +42,25 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 
 		return nil
 	}
+}
+
+func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]graph.Kind, error) {
+	const query = `
+		SELECT name
+		FROM source_kinds
+		ORDER BY name;
+	`
+
+	var kinds []string
+	result := s.db.WithContext(ctx).Raw(query).Scan(&kinds)
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch source kinds: %w", err)
+	}
+
+	out := make([]graph.Kind, len(kinds))
+	for i, k := range kinds {
+		out[i] = graph.StringKind(k)
+	}
+
+	return out, nil
 }
