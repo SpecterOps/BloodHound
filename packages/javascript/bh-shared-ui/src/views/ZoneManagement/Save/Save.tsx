@@ -38,7 +38,7 @@ const Save: FC = () => {
     const tagValue = location.pathname.includes('label') ? 'label' : 'tier';
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
-    const topTagId = useHighestPrivilegeTagId();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
     return (
         <div>
@@ -47,6 +47,7 @@ const Save: FC = () => {
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
                             <AppLink
+                                data-testid='zone-management_save_details-breadcrumb'
                                 to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`}>
                                 {captitalizedPluralTagValue}
                             </AppLink>
@@ -57,7 +58,9 @@ const Save: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <AppLink to={`/zone-management/save/${tagValue}/${tagId}`}>
+                                    <AppLink
+                                        data-testid='zone-management_save_tag-breadcrumb'
+                                        to={`/zone-management/save/${tagValue}/${tagId}`}>
                                         {`${capitalizedTagValue} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>

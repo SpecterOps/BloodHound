@@ -108,7 +108,7 @@ export const TagForm: FC = () => {
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
 
-    const topTagId = useHighestPrivilegeTagId();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
     const showAnalysisToggle =
