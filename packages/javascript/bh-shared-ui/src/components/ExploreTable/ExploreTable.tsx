@@ -49,7 +49,7 @@ export interface ExploreTableProps {
     selectedColumns?: Record<string, boolean>;
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    selectedNode: string;
+    selectedNode: string | null;
     onDownloadClick: () => void;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }
