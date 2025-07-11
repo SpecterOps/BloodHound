@@ -8874,6 +8874,66 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
 }
 
+type CoerceAndRelayNTLMtoADCSRPC struct {
+	AuthenticatedUsersGroup *graph.Node
+	CertTemplate1           *graph.Node
+	Computer                *graph.Node
+	CAHost                  *graph.Node
+	Domain                  *graph.Node
+	EnterpriseCA1           *graph.Node
+	NTAuthStore             *graph.Node
+	RootCA                  *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMtoADCSRPC) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.AuthenticatedUsersGroup = graphTestContext.NewActiveDirectoryGroup("Authenticated Users Group", domainSid)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:           []string{},
+		AuthenticationEnabled:         true,
+		AuthorizedSignatures:          0,
+		EffectiveEKUs:                 []string{},
+		EnrolleeSuppliesSubject:       false,
+		NoSecurityExtension:           false,
+		RequiresManagerApproval:       false,
+		SchannelAuthenticationEnabled: false,
+		SchemaVersion:                 1,
+		SubjectAltRequireEmail:        false,
+		SubjectAltRequireUPN:          false,
+	})
+	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
+	s.CAHost = graphTestContext.NewActiveDirectoryComputer("CAHost", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+
+	// CA Host relationships
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.CAHost, ad.HostsCAService)
+	graphTestContext.NewRelationship(s.CAHost, s.Domain, ad.DCFor)
+
+	// Enterprise CA relationships
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.RootCA, s.EnterpriseCA1, ad.EnterpriseCAFor)
+	graphTestContext.NewRelationship(s.RootCA, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+
+	// Both groups get enrollment rights on the cert template
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
+
+	// Set necessary properties for Computer, CAHost, and AuthenticatedUsersGroup
+	s.EnterpriseCA1.Properties.Set(ad.RPCEncryptionEnforced.String(), false)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer)
+	s.CAHost.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.CAHost)
+	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", wellknown.AuthenticatedUsersSIDSuffix))
+	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
+}
+
 type CoerceAndRelayNTLMToSMB struct {
 	Computer1  *graph.Node
 	Computer10 *graph.Node
@@ -10294,6 +10354,7 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
 	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
 	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
+	NTLMCoerceAndRelayNTLMToADCSRPC                 CoerceAndRelayNTLMtoADCSRPC
 	NTLMCoerceAndRelayToLDAPSelfRelay               CoerceAndRelayNTLMToLDAPSelfRelay
 	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay

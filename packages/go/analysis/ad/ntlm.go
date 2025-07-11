@@ -278,8 +278,12 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
 			Driver: coerceAndRelayNTLMtoADCSPath2Pattern(domainNode.ID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
-				enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
 				})
 
 				lock.Lock()
@@ -304,6 +308,103 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 		return true
 	})
+
+	return paths, nil
+}
+
+func GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	var (
+		endNode    *graph.Node
+		domainNode *graph.Node
+		startNodes = graph.NodeSet{}
+
+		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		paths              = graph.PathSet{}
+		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs = cardinality.NewBitmap64()
+		path2EnterpriseCAs = cardinality.NewBitmap64()
+		lock               = &sync.Mutex{}
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
+			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
+		} else {
+			startNodes.AddSet(nodeSet)
+			startNodes.Add(endNode)
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
+		return nil, err
+	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		domainNode, err = analysis.FetchNodeByObjectID(tx, domainsid)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
+				})
+
+				lock.Lock()
+				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				lock.Unlock()
+
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: coerceAndRelayNTLMtoADCSPath2Pattern(domainNode.ID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
+				})
+
+				lock.Lock()
+				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				lock.Unlock()
+
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	for enterpriseCAID, segments := range candidateSegments {
+		if path1EnterpriseCAs.Contains(uint64(enterpriseCAID)) && path2EnterpriseCAs.Contains(uint64(enterpriseCAID)) {
+			for _, segment := range segments {
+				paths.AddPath(segment.Path())
+			}
+		}
+	}
 
 	return paths, nil
 }
@@ -380,12 +481,6 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) || !adcsCache.DoesCAHaveHostingComputer(enterpriseCA) {
 					// If the CA doesn't chain up to the domain properly then its invalid. It also requires a hosting computer
 					return nil
-				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
-					return nil
-				} else if !ecaValid {
-					// Check some prereqs on the enterprise CA. If the enterprise CA is invalid, we can fast skip it
-					return nil
 				} else if domainsid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 					slog.WarnContext(ctx, fmt.Sprintf("Error getting domainsid for domain %d: %v", domain.ID, err))
 					return nil
@@ -394,9 +489,29 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 					slog.WarnContext(ctx, fmt.Sprintf("Unable to find auth users group for domain %s", domainsid))
 					return nil
 				} else {
+					// Check if the enterprise CA is valid for HTTP endpoints (original ADCS)
+					ecaValidForHTTP, err := isEnterpriseCAValidForADCS(enterpriseCA)
+					if err != nil {
+						slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))
+						return nil
+					}
+
+					// Check if the enterprise CA is valid for RPC endpoints (ADCS RPC)
+					ecaValidForRPC, err := isEnterpriseCAValidForADCSRPC(enterpriseCA)
+					if err != nil {
+						slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS RPC relay: %v", enterpriseCA.ID, err))
+						return nil
+					}
+
+					// Skip if the CA is not valid for either attack path
+					if !ecaValidForHTTP && !ecaValidForRPC {
+						return nil
+					}
+
 					// If auth users doesn't have enroll rights here than it's not valid either. Unroll enrollers into a slice and check if auth users is in it
 					ecaEnrollers := adcsCache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
-					results := cardinality.NewBitmap64()
+					resultsHTTP := cardinality.NewBitmap64()
+					resultsRPC := cardinality.NewBitmap64()
 
 					for _, certTemplate := range publishedCertTemplates {
 						// Verify cert template enables authentication and get cert template enrollers
@@ -436,18 +551,40 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 							}
 
 							enrollersBitmap.And(ntlmCache.UnprotectedComputersCache)
-							results.Or(enrollersBitmap)
+
+							// Add results to both bitmaps if both attack paths are valid
+							if ecaValidForHTTP {
+								resultsHTTP.Or(enrollersBitmap)
+							}
+							if ecaValidForRPC {
+								resultsRPC.Or(enrollersBitmap)
+							}
 						}
 					}
 
-					results.Each(func(value uint64) bool {
-						outC <- analysis.CreatePostRelationshipJob{
-							FromID: authUsersGroup,
-							ToID:   graph.ID(value),
-							Kind:   ad.CoerceAndRelayNTLMToADCS,
-						}
-						return true
-					})
+					// Create HTTP ADCS edges
+					if ecaValidForHTTP {
+						resultsHTTP.Each(func(value uint64) bool {
+							outC <- analysis.CreatePostRelationshipJob{
+								FromID: authUsersGroup,
+								ToID:   graph.ID(value),
+								Kind:   ad.CoerceAndRelayNTLMToADCS,
+							}
+							return true
+						})
+					}
+
+					// Create RPC ADCS edges
+					if ecaValidForRPC {
+						resultsRPC.Each(func(value uint64) bool {
+							outC <- analysis.CreatePostRelationshipJob{
+								FromID: authUsersGroup,
+								ToID:   graph.ID(value),
+								Kind:   ad.CoerceAndRelayNTLMToADCSRPC,
+							}
+							return true
+						})
+					}
 
 					return nil
 				}
@@ -460,9 +597,19 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 
 func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
 	if vulnerable, err := eca.Properties.Get(ad.HasVulnerableEndpoint.String()).Bool(); err != nil {
-		return false, err
+		// Missing property is treated as not valid, not as an error
+		return false, nil
 	} else {
 		return vulnerable, nil
+	}
+}
+
+func isEnterpriseCAValidForADCSRPC(eca *graph.Node) (bool, error) {
+	if rpcEncryptionEnforced, err := eca.Properties.Get(ad.RPCEncryptionEnforced.String()).Bool(); err != nil {
+		// Missing property is treated as not valid, not as an error
+		return false, nil
+	} else {
+		return !rpcEncryptionEnforced, nil
 	}
 }
 
@@ -606,6 +753,28 @@ func GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx context.Context, db graph.
 		return nodes, nil
 	}
 
+}
+
+func GetVulnerableEnterpriseCAsForRelayNTLMtoADCSRPC(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+	var (
+		nodes = graph.NodeSet{}
+	)
+
+	if composition, err := GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx, db, edge); err != nil {
+		return graph.NodeSet{}, err
+	} else {
+		for _, node := range composition.AllNodes().ContainingNodeKinds(ad.EnterpriseCA) {
+			if rpcEncryption, err := node.Properties.Get(ad.RPCEncryptionEnforced.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+				continue
+			} else if err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("error getting rpcencryptionenforced from node %d", node.ID))
+			} else if !rpcEncryption {
+				nodes.Add(node)
+			}
+		}
+
+		return nodes, nil
+	}
 }
 
 func GetVulnerableDomainControllersForRelayNTLMtoLDAP(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {

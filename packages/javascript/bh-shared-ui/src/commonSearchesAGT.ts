@@ -426,11 +426,15 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All coerce and NTLM relay edges',
-                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
+                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToADCSRPC|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
             },
             {
                 description: 'ESC8-vulnerable Enterprise CAs',
                 cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.hasvulnerableendpoint=true\nRETURN n',
+            },
+            {
+                description: 'ESC11-vulnerable Enterprise CAs',
+                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.rpcencryptionenforced = False\nRETURN n',
             },
             {
                 description: 'Computers with the outgoing NTLM setting set to Deny all',
