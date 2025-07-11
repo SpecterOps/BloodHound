@@ -66,7 +66,7 @@ const LinuxAbuse: FC = () => {
                 </ul>
             </Typography>
             <Typography variant='body2'>
-                3: Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                3. Authenticate using the certificate obtained as the target principal, for example by using{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
                     Certipy
                 </Link>

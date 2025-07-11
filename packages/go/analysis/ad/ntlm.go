@@ -212,48 +212,35 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 	}
 }
 
-func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	var (
-		endNode    *graph.Node
-		domainNode *graph.Node
-		startNodes = graph.NodeSet{}
+// adcsTraversalResult contains the results of ADCS path traversal
+type adcsTraversalResult struct {
+	candidateSegments  map[graph.ID][]*graph.PathSegment
+	path1EnterpriseCAs cardinality.Duplex[uint64]
+	path2EnterpriseCAs cardinality.Duplex[uint64]
+}
 
+// collectADCSCandidateSegments performs the shared traversal logic for ADCS edge composition
+func collectADCSCandidateSegments(ctx context.Context, db graph.Database, startNodes graph.NodeSet, domainNode *graph.Node, isRPC bool) (*adcsTraversalResult, error) {
+	var (
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		paths              = graph.PathSet{}
 		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
 		path1EnterpriseCAs = cardinality.NewBitmap64()
 		path2EnterpriseCAs = cardinality.NewBitmap64()
 		lock               = &sync.Mutex{}
 	)
 
-	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
-			return err
-		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
-			return err
-		} else {
-			startNodes.AddSet(nodeSet)
-			startNodes.Add(endNode)
-			return nil
-		}
-	}); err != nil {
-		return nil, err
-	}
-
-	if domainsid, err := endNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", endNode.ID, err))
-		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		domainNode, err = analysis.FetchNodeByObjectID(tx, domainsid)
-		return err
-	}); err != nil {
-		return nil, err
+	// Path 1 traversal - use different patterns based on attack type
+	var path1Pattern traversal.PatternContinuation
+	if isRPC {
+		path1Pattern = coerceAndRelayNTLMtoADCSRPCPath1Pattern(domainNode.ID)
+	} else {
+		path1Pattern = coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID)
 	}
 
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
-			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
+			Driver: path1Pattern.Do(func(terminal *graph.PathSegment) error {
 				var enterpriseCANode *graph.Node
 				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
 					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
@@ -274,6 +261,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		}
 	}
 
+	// Path 2 traversal
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
@@ -298,32 +286,27 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		}
 	}
 
-	// Intersect the CAs and take only those seen in both paths
-	path1EnterpriseCAs.And(path2EnterpriseCAs)
-	// Render paths from the segments
-	path1EnterpriseCAs.Each(func(value uint64) bool {
-		for _, segment := range candidateSegments[graph.ID(value)] {
-			paths.AddPath(segment.Path())
-		}
+	return &adcsTraversalResult{
+		candidateSegments:  candidateSegments,
+		path1EnterpriseCAs: path1EnterpriseCAs,
+		path2EnterpriseCAs: path2EnterpriseCAs,
+	}, nil
+}
 
-		return true
-	})
-
-	return paths, nil
+func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	return getCoerceAndRelayNTLMtoADCSEdgeCompositionBase(ctx, db, edge, false)
 }
 
 func GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	return getCoerceAndRelayNTLMtoADCSEdgeCompositionBase(ctx, db, edge, true)
+}
+
+func getCoerceAndRelayNTLMtoADCSEdgeCompositionBase(ctx context.Context, db graph.Database, edge *graph.Relationship, isRPC bool) (graph.PathSet, error) {
 	var (
 		endNode    *graph.Node
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
-
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
-		paths              = graph.PathSet{}
-		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		path2EnterpriseCAs = cardinality.NewBitmap64()
-		lock               = &sync.Mutex{}
+		paths      = graph.PathSet{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -350,63 +333,21 @@ func GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx context.Context, db graph
 		return nil, err
 	}
 
-	for _, n := range startNodes.Slice() {
-		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: n,
-			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
-				var enterpriseCANode *graph.Node
-				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-						enterpriseCANode = nextSegment.Node
-					}
-					return true
-				})
-
-				lock.Lock()
-				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
-				lock.Unlock()
-
-				return nil
-			}),
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, n := range startNodes.Slice() {
-		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-			Root: n,
-			Driver: coerceAndRelayNTLMtoADCSPath2Pattern(domainNode.ID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
-				var enterpriseCANode *graph.Node
-				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-						enterpriseCANode = nextSegment.Node
-					}
-					return true
-				})
-
-				lock.Lock()
-				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
-				lock.Unlock()
-
-				return nil
-			}),
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	for enterpriseCAID, segments := range candidateSegments {
-		if path1EnterpriseCAs.Contains(uint64(enterpriseCAID)) && path2EnterpriseCAs.Contains(uint64(enterpriseCAID)) {
-			for _, segment := range segments {
+	if result, err := collectADCSCandidateSegments(ctx, db, startNodes, domainNode, isRPC); err != nil {
+		return nil, err
+	} else {
+		// Intersect the CAs and take only those seen in both paths
+		result.path1EnterpriseCAs.And(result.path2EnterpriseCAs)
+		// Render paths from the segments
+		result.path1EnterpriseCAs.Each(func(value uint64) bool {
+			for _, segment := range result.candidateSegments[graph.ID(value)] {
 				paths.AddPath(segment.Path())
 			}
-		}
-	}
+			return true
+		})
 
-	return paths, nil
+		return paths, nil
+	}
 }
 
 func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
@@ -435,6 +376,47 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
 			query.Equals(query.EndProperty(ad.HasVulnerableEndpoint.String()), true),
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.Equals(query.EndID(), domainID),
+		))
+}
+
+func coerceAndRelayNTLMtoADCSRPCPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
+	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+		query.Kind(query.Relationship(), ad.MemberOf),
+		query.Kind(query.End(), ad.Group),
+	)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
+			query.Kind(query.End(), ad.CertTemplate),
+			query.Or(
+				query.And(
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+					query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+				),
+				query.And(
+					query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthenticationEnabled.String()), true),
+				),
+			),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.PublishedTo),
+			query.Kind(query.End(), ad.EnterpriseCA),
+			query.Equals(query.EndProperty(ad.RPCEncryptionEnforced.String()), false),
 		)).
 		OutboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
