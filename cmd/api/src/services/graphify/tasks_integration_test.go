@@ -155,7 +155,7 @@ func TestVersion6ADCSZIP(t *testing.T) {
 		require.Equal(t, 13, total)
 	}
 
-	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join(path.Join("fixtures", "Version6ADCSZIP", "ingest"))), "ingested.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6ADCSZIP", "ingest")), "ingested.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }

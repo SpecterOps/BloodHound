@@ -66,27 +66,31 @@ func (s *Command) Name() string {
 
 // Parse command flags
 func (s *Command) Parse() error {
-	var err error
-	cmd := flag.NewFlagSet(Name, flag.ContinueOnError)
+	var (
+		flagsIdx int
+		err      error
+		cmd      = flag.NewFlagSet(Name, flag.ContinueOnError)
+	)
 
 	cmd.StringVar(&s.outpath, "outpath", "/tmp/", "destination path for generic graph files, default is {root}/tmp/")
 	cmd.StringVar(&s.path, "path", "", "directory containing bloodhound collection files")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
+		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n",
+			Usage, filepath.Base(os.Args[0]), Name)
 		cmd.PrintDefaults()
 	}
 
-	flagsIdx := 0
-
-	for idx, arg := range os.Args {
+	// Find the index of the first flag in os.Args
+	for i, arg := range os.Args {
 		if strings.HasPrefix(arg, "-") {
-			flagsIdx = idx
+			flagsIdx = i
 			break
 		}
 	}
 
+	// Parse flags from the first flag index onward
 	if err := cmd.Parse(os.Args[flagsIdx:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
@@ -94,7 +98,6 @@ func (s *Command) Parse() error {
 
 	if s.path == "" {
 		cmd.Usage()
-
 		return fmt.Errorf("path flag is required")
 	}
 
@@ -133,27 +136,24 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to wipe database after command completion: %v", err))
+			slog.Error(fmt.Sprintf("failed to wipe database after command completion: %v", err))
 		} else {
-			slog.Info("Successfully wiped database.")
+			slog.Info("successfully wiped database")
 		}
 	}
 }
 
 func (s *CommunityGraphService) InitializeService(ctx context.Context, connection string, _ graph.Database) error {
-	var db database.Database
-
-	if gormDB, err := database.OpenDatabase(connection); err != nil {
+	gormDB, err := database.OpenDatabase(connection)
+	if err != nil {
 		return fmt.Errorf("error opening database: %w", err)
-	} else {
-		db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
 	}
 
-	if err := db.Migrate(ctx); err != nil {
+	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+
+	if err := s.db.Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating database: %w", err)
 	}
-
-	s.db = db
 
 	return nil
 }
@@ -169,8 +169,11 @@ func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.D
 // Run generate command
 func (s *Command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	defer s.service.TeardownService(ctx)
+
+	defer func() {
+		cancel()
+		s.service.TeardownService(ctx)
+	}()
 
 	if graphDB, err := initializeGraphDatabase(ctx, s.env[environment.PostgresConnectionVarName]); err != nil {
 		return fmt.Errorf("error connecting to graphDB: %w", err)
@@ -358,7 +361,6 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 }
 
 func initializeGraphDatabase(ctx context.Context, postgresConnection string) (graph.Database, error) {
-
 	if pool, err := pg.NewPool(postgresConnection); err != nil {
 		return nil, fmt.Errorf("error creating postgres connection: %w", err)
 	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
