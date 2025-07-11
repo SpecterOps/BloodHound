@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"log/slog"
 	"os"
@@ -15,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/genericgraph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
@@ -87,9 +85,6 @@ func (s *command) Run() error {
 		}
 		outGraph             = genericgraph.GenericObject{}
 		nodeMap              = make(map[string]genericgraph.Node)
-		ssaIDToUUID          = make(map[int]uuid.UUID)
-		fnPosToUUID          = make(map[string]uuid.UUID)
-		declsForFile         = make(map[string][]ast.Decl)
 		hashNameToHash       = make(map[string]string)
 		calleeHashNameToHash = make(map[string]string)
 	)
@@ -108,18 +103,18 @@ func (s *command) Run() error {
 
 	slog.Info("current module", slog.String("module", currentModule))
 
-	initial, err := packages.Load(conf, s.additionalArgs...)
+	pkgs, err := packages.Load(conf, s.additionalArgs...)
 	if err != nil {
 		return err
 	}
 
-	if packages.PrintErrors(initial) > 0 {
+	if packages.PrintErrors(pkgs) > 0 {
 		return fmt.Errorf("packages contain errors")
 	}
 
 	// Create and build SSA-form program representation.
 	mode := ssa.InstantiateGenerics // instantiate generics by default for soundness
-	prog, _ := ssautil.AllPackages(initial, mode)
+	prog, _ := ssautil.AllPackages(pkgs, mode)
 	prog.Build()
 
 	// results := rta.Analyze(roots, true)
@@ -133,29 +128,18 @@ func (s *command) Run() error {
 		)
 
 		if fn.Package() != nil {
-			pkg = fn.Package().Pkg.String()
+			pkg = fn.Package().Pkg.Path()
 		}
 
 		if fn.Synthetic != "" {
 			continue
 		}
 
-		if !strings.Contains(pkg, currentModule) {
+		if !strings.HasPrefix(pkg, currentModule) {
 			continue
 		}
 
-		fnID, ok := ssaIDToUUID[node.ID]
-		if !ok {
-			fnID, _ = uuid.NewV4()
-			ssaIDToUUID[node.ID] = fnID
-		}
-
-		_, ok = fnPosToUUID[positionStr]
-		if !ok {
-			fnPosToUUID[positionStr] = fnID
-		}
-
-		hashName := positionStr + fn.Name()
+		hashName := fmt.Sprintf("%s.%s", pkg, fn.Name())
 		sha := sha256.Sum256([]byte(hashName))
 		id := hex.EncodeToString(sha[:])
 
@@ -178,16 +162,14 @@ func (s *command) Run() error {
 
 		for _, edge := range node.Out {
 			var (
-				calleePkg         string
-				calleePosition    = prog.Fset.Position(edge.Callee.Func.Pos())
-				calleePositionStr = calleePosition.String()
+				calleePkg string
 			)
 
 			if edge.Callee.Func.Package() != nil {
-				calleePkg = edge.Callee.Func.Package().Pkg.String()
+				calleePkg = edge.Callee.Func.Package().Pkg.Path()
 			}
 
-			if !strings.Contains(calleePkg, currentModule) {
+			if !strings.HasPrefix(calleePkg, currentModule) {
 				continue
 			}
 
@@ -195,18 +177,7 @@ func (s *command) Run() error {
 				continue
 			}
 
-			calleeFnID, ok := ssaIDToUUID[edge.Callee.ID]
-			if !ok {
-				calleeFnID, _ = uuid.NewV4()
-				ssaIDToUUID[edge.Callee.ID] = calleeFnID
-			}
-
-			_, ok = fnPosToUUID[calleePositionStr]
-			if !ok {
-				fnPosToUUID[calleePositionStr] = calleeFnID
-			}
-
-			calleeHashName := calleePositionStr + edge.Callee.Func.Name()
+			calleeHashName := fmt.Sprintf("%s.%s", calleePkg, edge.Callee.Func.Name())
 			calleeSHA := sha256.Sum256([]byte(calleeHashName))
 			calleeID := hex.EncodeToString(calleeSHA[:])
 
@@ -226,56 +197,46 @@ func (s *command) Run() error {
 		}
 	}
 
-	prog.Fset.Iterate(func(file *token.File) bool {
-		fset := token.NewFileSet()
-		if !strings.Contains(file.Name(), paths.GoModules[0]) {
-			return true
-		}
+	for _, pkg := range pkgs {
+		for _, file := range pkg.Syntax {
+			fset := token.NewFileSet()
 
-		slog.Info("Processing File", slog.String("filename", file.Name()))
-
-		decls, ok := declsForFile[file.Name()]
-		if !ok {
-			astFile, err := parser.ParseFile(fset, file.Name(), nil, parser.ParseComments)
-			if err != nil {
-				return true
+			if !strings.HasPrefix(pkg.PkgPath, currentModule) {
+				continue
 			}
-			decls = astFile.Decls
-			declsForFile[file.Name()] = decls
-		}
 
-		for _, d := range decls {
-			switch decl := d.(type) {
-			case *ast.FuncDecl:
-				hashName := fset.Position(decl.Name.Pos()).String() + decl.Name.Name
-				sha := sha256.Sum256([]byte(hashName))
-				id := hex.EncodeToString(sha[:])
-				if decl.Body != nil {
-					addControlFlowToGraph(id, cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
-				}
-			case *ast.GenDecl:
-				for _, spec := range decl.Specs {
-					valueSpec, ok := spec.(*ast.ValueSpec)
-					if !ok {
-						continue
+			for _, d := range file.Decls {
+				switch decl := d.(type) {
+				case *ast.FuncDecl:
+					hashName := fmt.Sprintf("%s.%s", pkg.PkgPath, decl.Name.Name)
+					sha := sha256.Sum256([]byte(hashName))
+					id := hex.EncodeToString(sha[:])
+					if decl.Body != nil {
+						addControlFlowToGraph(id, cfg.New(decl.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
 					}
-					for _, value := range valueSpec.Values {
-						funcLit, ok := value.(*ast.FuncLit)
+				case *ast.GenDecl:
+					for _, spec := range decl.Specs {
+						valueSpec, ok := spec.(*ast.ValueSpec)
 						if !ok {
 							continue
 						}
-						if funcLit.Body != nil {
-							hashName := fset.Position(funcLit.Pos()).String() + fset.Position(funcLit.End()).String()
-							sha := sha256.Sum256([]byte(hashName))
-							id := hex.EncodeToString(sha[:])
-							addControlFlowToGraph(id, cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+						for _, value := range valueSpec.Values {
+							funcLit, ok := value.(*ast.FuncLit)
+							if !ok {
+								continue
+							}
+							if funcLit.Body != nil {
+								hashName := fset.Position(funcLit.Pos()).String() + fset.Position(funcLit.End()).String()
+								sha := sha256.Sum256([]byte(hashName))
+								id := hex.EncodeToString(sha[:])
+								addControlFlowToGraph(id, cfg.New(funcLit.Body, func(*ast.CallExpr) bool { return true }), &outGraph.Graph)
+							}
 						}
 					}
 				}
 			}
 		}
-		return true
-	})
+	}
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
@@ -291,30 +252,27 @@ func addControlFlowToGraph(fnID string, c *cfg.CFG, graph *genericgraph.Graph) {
 	for itr, block := range c.Blocks {
 		kind := block.Kind.String()
 
-		id := fnID + strconv.Itoa(int(block.Index))
-
-		graph.Nodes = append(graph.Nodes, genericgraph.Node{
-			ID:    id,
-			Kinds: []string{"ControlFlow", "Golang"},
-			Properties: map[string]any{
-				"name": kind,
-			},
-		})
+		// Use the function node itself in place of the body node, but that means we need to attach all relationships that
+		// would have gone to the Body node to instead point directly at the Function node.
+		var id string
+		if itr == 0 {
+			id = fnID
+		} else {
+			id = fnID + strconv.Itoa(int(block.Index))
+			graph.Nodes = append(graph.Nodes, genericgraph.Node{
+				ID:    id,
+				Kinds: []string{"ControlFlow", "Golang"},
+				Properties: map[string]any{
+					"name": kind,
+				},
+			})
+		}
 
 		for _, succ := range block.Succs {
-			// Use the function node itself in place of the body node, but that means we need to attach all relationships that
-			// would have gone to the Body node to instead point directly at the Function node.
-			var startID string
-			if itr == 0 {
-				startID = fnID
-			} else {
-				startID = id
-			}
-
 			graph.Edges = append(graph.Edges, genericgraph.Edge{
 				Start: genericgraph.Terminal{
 					MatchBy: "id",
-					Value:   startID,
+					Value:   id,
 				},
 				End: genericgraph.Terminal{
 					MatchBy: "id",
