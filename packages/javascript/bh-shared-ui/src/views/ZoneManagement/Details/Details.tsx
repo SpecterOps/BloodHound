@@ -76,8 +76,8 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-    const topTagId = useHighestPrivilegeTagId()?.toString();
-    const { tierId = topTagId, labelId, selectorId, memberId } = useParams();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);

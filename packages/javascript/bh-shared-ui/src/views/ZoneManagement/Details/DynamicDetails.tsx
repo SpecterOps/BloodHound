@@ -54,7 +54,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const { SalesMessage } = useContext(ZoneManagementContext);
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-    const topTagId = useHighestPrivilegeTagId();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
     return (
