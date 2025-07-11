@@ -27,6 +27,7 @@ import (
 
 func ParseAssetGroupTagIdWithFallback(ctx context.Context, db database.Database, maybeAssetGroupTagId string) ([]int, error) {
 	var tagIds []int
+
 	if maybeAssetGroupTagId != "" {
 		if tierIdParam, err := strconv.Atoi(maybeAssetGroupTagId); err != nil {
 			return tagIds, err
