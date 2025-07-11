@@ -62,23 +62,23 @@ const SaveQueryDialog: React.FC<{
     const [description, setDescription] = useState('');
     const [id, setId] = useState(undefined);
     const [isNew, setIsNew] = useState(true);
-
     const [localCypherQuery, setLocalCypherQuery] = useState('');
     const { cypherQuery } = cypherSearchState;
 
     useEffect(() => {
         if (selectedQuery) {
-            setName(selectedQuery.name);
+            //The prebuilt queries do not have a name property.  Returns undefined and throws an error surrounding controlled/uncontrolled components.  Need unified data shape for saved queries.
+            setName(selectedQuery.name ? selectedQuery.name : '');
             setDescription(selectedQuery.description);
             setId(selectedQuery.id);
             setIsNew(false);
-            setLocalCypherQuery(cypherQuery);
+            // setLocalCypherQuery(cypherQuery);
         } else {
             setName('');
             setDescription('');
             setId(undefined);
             setIsNew(true);
-            setLocalCypherQuery(cypherQuery);
+            // setLocalCypherQuery(cypherQuery);
         }
     }, [selectedQuery]);
 

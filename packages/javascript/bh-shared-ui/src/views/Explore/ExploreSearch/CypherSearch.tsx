@@ -27,8 +27,8 @@ import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import CypherSearchMessage from './CypherSearchMessage';
+import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
-
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
@@ -38,7 +38,6 @@ type CypherSearchState = {
 const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
-    // const selectedQuery = useGetSelectedQuery();
     const [selected, setSelected] = useState('');
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
@@ -190,6 +189,12 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         setAutoRunQuery(event.target.checked);
     };
 
+    const handleSaveAs = () => {
+        console.log('handle  save as');
+        setSelected('');
+        setShowSaveQueryDialog(true);
+    };
+
     return (
         <>
             <div className='flex flex-col h-full'>
@@ -266,18 +271,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                                 <p className='ml-2 text-base'>Save </p>
                             </div>
                         </Button>
-
-                        <Button
-                            variant='secondary'
-                            onClick={() => {
-                                setShowSaveQueryDialog(true);
-                            }}
-                            size={'small'}
-                            className='rounded-l-none pl-2 -ml-1'>
-                            <div className='flex items-center'>
-                                <AppIcon.CaretDown size={10} />
-                            </div>
-                        </Button>
+                        <SaveQueryActionMenu saveAs={handleSaveAs} />
 
                         <Button asChild variant='secondary' size={'small'} className='px-1.5'>
                             <a
