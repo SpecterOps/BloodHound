@@ -26,7 +26,7 @@ export const TierAnalysisIcon: FC<TierAnalysisIconProps> = ({ iconClasses, size 
                         <AppIcon.DataAlert
                             size={size}
                             data-testid='analysis_disabled_icon'
-                            className={clsx(iconClasses, 'mr-2 text-[#ED8537]')} />
+                            className={clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]')} />
                     </div>
                 </TooltipTrigger>
                 <TooltipPortal>
@@ -39,7 +39,7 @@ export const TierAnalysisIcon: FC<TierAnalysisIconProps> = ({ iconClasses, size 
     ) : (
         <AppIcon.DataAlert
             size={size}
-            className={clsx(iconClasses, 'mr-2 text-[#ED8537]')}
+            className={clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]')}
             data-testid='analysis_disabled_icon'
         />
     )
