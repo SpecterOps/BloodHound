@@ -24,7 +24,7 @@ import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 export type NodeClickInfo = { id: string; x: number; y: number };
 
-const MemoDataTable = memo(DataTable);
+const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
 const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectId', 'displayname'];
 
@@ -32,7 +32,7 @@ export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_
 
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-type DataTableProps = React.ComponentProps<typeof DataTable>;
+type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
     className: 'sticky top-0 z-10',
@@ -42,11 +42,16 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
     className: 'pr-4',
 };
 
+const tableOptions: DataTableProps['tableOptions'] = {
+    getRowId: (row: MungedTableRowWithId) => row.id,
+};
+
 export interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
     data?: FlatGraphResponse;
     selectedColumns?: Record<string, boolean>;
+    onRowClick?: (row: MungedTableRowWithId) => void;
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
     selectedNode: string | null;
@@ -59,6 +64,7 @@ const ExploreTable = ({
     selectedNode,
     open,
     onClose,
+    onRowClick,
     onDownloadClick,
     onKebabMenuClick,
     onManageColumnsChange,
@@ -113,8 +119,11 @@ const ExploreTable = ({
                     className='h-full *:h-[calc(100%-72px)]'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
+                    onRowClick={onRowClick}
+                    selectedRow={selectedNode}
                     data={sortedFilteredRows}
-                    columns={tableColumns}
+                    columns={tableColumns as DataTableProps['columns']}
+                    tableOptions={tableOptions}
                 />
             </div>
         </div>

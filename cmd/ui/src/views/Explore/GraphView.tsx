@@ -40,6 +40,7 @@ import {
     useToggle,
 } from 'bh-shared-ui';
 
+import { MungedTableRowWithId } from 'bh-shared-ui/dist/components/ExploreTable/ExploreTable';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { type GraphNodes } from 'js-client-library';
@@ -132,6 +133,16 @@ const GraphView: FC = () => {
             setHighlightedItem(id);
         },
         [setSelectedItem]
+    );
+
+    const handleRowClick = useCallback(
+        (row: MungedTableRowWithId) => {
+            if (selectedItem === row.id) {
+                setSelectedItem('');
+            }
+            setSelectedItem(row.id);
+        },
+        [setSelectedItem, selectedItem]
     );
 
     const handleContextMenu = useCallback(
@@ -266,6 +277,7 @@ const GraphView: FC = () => {
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
                     onDownloadClick={handleDownloadClick}
+                    onRowClick={handleRowClick}
                     selectedNode={selectedItem}
                     onClose={() => {
                         setAutoDisplayTable(false);
