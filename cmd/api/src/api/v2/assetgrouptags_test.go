@@ -1643,7 +1643,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1670,7 +1670,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1697,7 +1697,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1718,7 +1718,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(5)).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1739,7 +1739,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Eq(100), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1774,7 +1774,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 								})},
 						}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(2), nil)
 				},
 				Test: func(output apitest.Output) {
