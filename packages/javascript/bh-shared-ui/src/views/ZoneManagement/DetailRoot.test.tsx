@@ -13,7 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { render } from '../../test-utils';
+import { apiClient } from '../../utils';
+import DetailsRoot from './DetailsRoot';
 
-export { default as ExploreTable } from './ExploreTable';
-export type { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
-export * from './explore-table-utils';
+const assetGroupSpy = vi.spyOn(apiClient, 'getAssetGroupTags');
+
+describe('DetailsRoot', () => {
+    it('calls getAssetGroupTags for topTagId', () => {
+        render(<DetailsRoot />);
+        expect(assetGroupSpy).toHaveBeenCalled();
+    });
+});

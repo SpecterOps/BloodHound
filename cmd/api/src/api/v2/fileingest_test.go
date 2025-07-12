@@ -100,7 +100,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 					apitest.AddQueryParam(input, "user_id", "eq:123")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = ?", Params: []any{"123"}}).Return([]model.IngestJob{}, 0, nil)
+					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = 123"}).Return([]model.IngestJob{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
