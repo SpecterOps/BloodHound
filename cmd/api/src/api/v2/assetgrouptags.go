@@ -541,11 +541,12 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 }
 
 type AssetGroupMember struct {
-	NodeId      graph.ID       `json:"id"`
-	ObjectID    string         `json:"object_id"`
-	PrimaryKind string         `json:"primary_kind"`
-	Name        string         `json:"name"`
-	Properties  map[string]any `json:"properties,omitempty"`
+	NodeId        graph.ID       `json:"id"`
+	ObjectID      string         `json:"object_id"`
+	EnvironmentID string         `json:"environment_id"`
+	PrimaryKind   string         `json:"primary_kind"`
+	Name          string         `json:"name"`
+	Properties    map[string]any `json:"properties,omitempty"`
 
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
@@ -555,13 +556,15 @@ func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroup
 	var (
 		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+		envID, _    = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
 	)
 
 	member := AssetGroupMember{
-		NodeId:      node.ID,
-		ObjectID:    objectID,
-		PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
-		Name:        name,
+		NodeId:        node.ID,
+		ObjectID:      objectID,
+		EnvironmentID: envID,
+		PrimaryKind:   analysis.GetNodeKindDisplayLabel(node),
+		Name:          name,
 	}
 
 	if includeProperties {
