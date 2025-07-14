@@ -20,8 +20,9 @@ import React from 'react';
 import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';
 import { useExploreParams } from '../../hooks';
-import { EntityKinds } from '../../utils';
-import { useHeaderStyles, useObjectInfoPanelContext } from '../../views';
+import { EntityKinds } from '../../utils/content';
+import { useHeaderStyles } from '../../views/Explore/InfoStyles';
+import { useObjectInfoPanelContext } from '../../views/Explore/providers';
 
 export interface HeaderProps {
     expanded: boolean;
