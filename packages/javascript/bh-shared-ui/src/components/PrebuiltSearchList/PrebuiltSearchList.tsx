@@ -97,14 +97,14 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                 return (
                                     <li key={i} className='list-none'>
                                         {queries?.map((lineItem, idx) => {
-                                            const { id, name, description, cypher, canEdit = false } = lineItem;
+                                            const { id, name, description, query, canEdit = false } = lineItem;
                                             return (
                                                 <div
                                                     className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 justify-between pl-4 ${
                                                         testMatch(name, description) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    onClick={() => clickHandler(cypher)}>
+                                                    onClick={() => clickHandler(query)}>
                                                     <div>
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>

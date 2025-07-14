@@ -12,7 +12,7 @@ export const usePrebuiltQueries = () => {
         userQueries.data?.map((query) => ({
             name: query.name,
             description: query.description,
-            cypher: query.query,
+            query: query.query,
             canEdit: true,
             id: query.id,
         })) || [];
@@ -33,7 +33,7 @@ export const useGetSelectedQuery = (cypherQuery: string) => {
     for (const item of queryList) {
         let result = null;
         result = item.queries.find((query) => {
-            if (query.cypher === cypherQuery) {
+            if (query.query === cypherQuery) {
                 return query;
             }
         });

@@ -117,7 +117,7 @@ const InnerCommonSearches = ({
                 .map((obj) => ({
                     ...obj,
                     queries: obj.queries.filter((item: QueryLineItem) =>
-                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+                        item.name?.toLowerCase().includes(searchTerm.toLowerCase())
                     ),
                 }))
                 .filter((x) => x.queries.length);
@@ -151,7 +151,7 @@ const InnerCommonSearches = ({
         for (const item of filteredList) {
             let result = null;
             result = item.queries.find((query) => {
-                if (query.cypher === comparator) {
+                if (query.query === comparator) {
                     return query;
                 }
             });

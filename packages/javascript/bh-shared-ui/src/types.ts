@@ -58,8 +58,10 @@ export type CommonSearchType = {
     subheader: string;
     category: string;
     queries: {
+        name: string;
         description: string;
-        cypher: string;
+        query: string;
+        id?: number;
     }[];
 };
 
@@ -67,8 +69,10 @@ export type QuerySearchType = {
     subheader: string;
     category: string;
     queries: {
+        name: string;
         description: string;
-        cypher: string;
+        query: string;
+        id?: number;
     }[];
 };
 
@@ -80,9 +84,9 @@ export type QueryListSection = {
 
 export type QueryLineItem = {
     id?: number;
-    name?: string;
+    name: string;
     description: string;
-    cypher: string;
+    query: string;
     canEdit?: boolean;
 };
 
