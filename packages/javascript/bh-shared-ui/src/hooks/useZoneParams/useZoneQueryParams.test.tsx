@@ -41,6 +41,18 @@ const handlers = [
             })
         );
     }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
 ];
 
 const server = setupServer(...handlers);
@@ -69,7 +81,9 @@ describe('useZoneQueryParams', () => {
 
         const { result } = renderHook(() => useZoneQueryParams());
 
-        expect(result.current.assetGroupTagId).toBe(777);
+        waitFor(() => {
+            expect(result.current.assetGroupTagId).toBe(777);
+        });
     });
 
     test('when there is no ID in the URL the highest position tag ID is returned', async () => {
@@ -111,7 +125,9 @@ describe('useZoneQueryParams', () => {
 
         const { result } = renderHook(() => useZoneQueryParams());
 
-        expect(result.current.assetGroupTagId).toBe(0);
+        await waitFor(() => {
+            expect(result.current.assetGroupTagId).toBe(0);
+        });
         expect(result.current.params.get('asset_group_tag_id')).toBe('0');
     });
 });

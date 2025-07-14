@@ -17,6 +17,7 @@ import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { setParamsFactory } from '../../utils';
 import { useHighestPrivilegeTagId } from '../useAssetGroupTags/useAssetGroupTags';
+import { useFeatureFlag } from '../useFeatureFlags';
 
 export type ZoneQueryParams = {
     assetGroupTagId: number | undefined;
@@ -32,20 +33,32 @@ const parseAssetGroupTagId = (assetGroupTagId: string | null, topTagId: number |
 
 export const useZoneQueryParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const topTagId = useHighestPrivilegeTagId();
+    const pzFlagQuery = useFeatureFlag('tier_management_engine');
 
-    const assetGroupTagId = parseAssetGroupTagId(searchParams.get('assetGroupTagId'), topTagId);
+    const { tagId, isLoading, isError } = useHighestPrivilegeTagId();
+
+    const setZoneQueryParams = useCallback(
+        (updatedParams: Partial<ZoneQueryParams>) =>
+            setParamsFactory(setSearchParams, ['assetGroupTagId'])(updatedParams),
+        [setSearchParams]
+    );
 
     const params = new URLSearchParams();
+
+    if (isLoading || isError || pzFlagQuery.isLoading || pzFlagQuery.isError || !pzFlagQuery.data?.enabled) {
+        return {
+            assetGroupTagId: undefined,
+            params,
+            setZoneQueryParams,
+        };
+    }
+
+    const assetGroupTagId = parseAssetGroupTagId(searchParams.get('assetGroupTagId'), tagId);
     if (typeof assetGroupTagId === 'number') params.append('asset_group_tag_id', assetGroupTagId.toString());
 
     return {
         assetGroupTagId,
         params,
-        setZoneQueryParams: useCallback(
-            (updatedParams: Partial<ZoneQueryParams>) =>
-                setParamsFactory(setSearchParams, ['assetGroupTagId'])(updatedParams),
-            [setSearchParams]
-        ),
+        setZoneQueryParams,
     };
 };
