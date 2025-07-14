@@ -28,6 +28,8 @@ export * from './useAssetGroupTags';
 
 export * from './useAvailableEnvironments';
 
+export * from './useContextMenuItems';
+
 export * from './useConfiguration';
 
 export * from './useDataQualityStats';

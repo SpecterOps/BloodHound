@@ -72,3 +72,8 @@ export type SelectedNode = {
 export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
+
+export interface MousePosition {
+    mouseX: number;
+    mouseY: number;
+}

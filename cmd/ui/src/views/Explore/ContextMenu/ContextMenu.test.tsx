@@ -16,25 +16,44 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
-import { DeepPartial, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { Permission, createAuthStateWithPermissions, type DeepPartial, type PathfindingFilters } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
-import { AppState } from 'src/store';
+import { type UseQueryResult } from 'react-query';
+import { type AppState } from 'src/store';
 import { render, screen, waitFor } from 'src/test-utils';
 import ContextMenu from './ContextMenu';
 
-const mockUseExploreParams = vi.spyOn(bhSharedUi, 'useExploreParams');
-const mockSelectedItemQuery = vi.spyOn(bhSharedUi, 'useExploreSelectedItem');
+type QueryResponse = UseQueryResult<bhSharedUi.ItemResponse, unknown>;
+
+const mockUseContextMenuItems = vi.spyOn(bhSharedUi, 'useContextMenuItems');
+const mockSetExploreParams = vi.fn();
 
 const fakeSelectedItemId = 'abc';
-mockSelectedItemQuery.mockReturnValue({
-    selectedItemQuery: {
-        data: {
-            objectId: fakeSelectedItemId,
-        },
-    },
-} as any);
+const fakeSelectedNode = {
+    objectId: fakeSelectedItemId,
+} as bhSharedUi.ItemResponse;
+
+const fakeSelectedEdge = {
+    id: '123_MemberOf_456',
+    source: 'edge_source',
+} as bhSharedUi.ItemResponse;
+
+const fakeSelectedNonFilterable = {
+    id: '123_CrossForestTrust_456',
+    source: 'edge_source',
+} as bhSharedUi.ItemResponse;
+
+const fakeSelectedNonEdge = {
+    id: '345',
+    source: 'edge_source',
+} as bhSharedUi.ItemResponse;
+
+const menuPosition = { mouseX: 0, mouseY: 0 };
+
+const asEdgeItem = (query: QueryResponse) => (bhSharedUi.isEdge(query.data) ? query.data : undefined);
+const asNodeItem = (query: QueryResponse) => (bhSharedUi.isNode(query.data) ? query.data : undefined);
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -66,7 +85,42 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const setup = async (permissions?: Permission[], primarySearch?: string, secondarySearch?: string) => {
+const mockPathfindingFilters: PathfindingFilters = {
+    handleApplyFilters: vi.fn(),
+    handleUpdateAndApplyFilter: vi.fn(),
+    handleUpdateFilters: vi.fn(),
+    initialize: vi.fn(),
+    selectedFilters: [],
+};
+
+const setUseContextMenuItems = ({
+    isAssetGroupEnabled = false,
+    primarySearch = fakeSelectedItemId,
+    secondarySearch = '',
+    selectedItem,
+}: {
+    isAssetGroupEnabled?: boolean;
+    primarySearch?: string;
+    secondarySearch?: string;
+    selectedItem: bhSharedUi.ItemResponse;
+}) => {
+    mockUseContextMenuItems.mockReturnValue({
+        asEdgeItem,
+        asNodeItem,
+        exploreParams: {
+            setExploreParams: mockSetExploreParams,
+            primarySearch,
+            secondarySearch,
+        },
+        isAssetGroupEnabled,
+        menuPosition: { left: menuPosition.mouseX, top: menuPosition.mouseY },
+        selectedItemQuery: {
+            data: selectedItem as bhSharedUi.ItemResponse,
+        },
+    } as any);
+};
+
+const setup = async () => {
     const initialState: DeepPartial<AppState> = {
         assetgroups: {
             assetGroups: [
@@ -76,30 +130,20 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
         },
     };
 
-    if (permissions) {
-        initialState.auth = createAuthStateWithPermissions(permissions);
-    }
-
-    const mockSetExploreParams = vi.fn();
-    mockUseExploreParams.mockReturnValue({
-        setExploreParams: mockSetExploreParams,
-        primarySearch,
-        secondarySearch,
-    } as any);
-
     const screen = await act(async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
+        render(<ContextMenu pathfindingFilters={mockPathfindingFilters} position={menuPosition} onClose={vi.fn()} />, {
             initialState,
         });
     });
 
     const user = userEvent.setup();
-    return { screen, user, mockSetExploreParams };
+    return { screen, user, mockPathfindingFilters };
 };
 
-describe('ContextMenu', async () => {
+describe('ContextMenu - Nodes', async () => {
     it('renders asset group edit options with graph write permissions', async () => {
-        await setup([Permission.GRAPH_DB_WRITE]);
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode, isAssetGroupEnabled: true });
+        await setup();
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
@@ -113,6 +157,15 @@ describe('ContextMenu', async () => {
     });
 
     it('renders no asset group edit options without graph write permissions', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode });
+        await setup();
+
+        const filterEdgeOption = screen.queryByText(/Filter out Edge/i);
+        expect(filterEdgeOption).toBeNull();
+    });
+
+    it('renders no edge path filters', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode });
         await setup();
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
@@ -125,7 +178,8 @@ describe('ContextMenu', async () => {
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
-        const { user, mockSetExploreParams } = await setup(undefined);
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode, primarySearch: fakeSelectedItemId });
+        const { user } = await setup();
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
@@ -138,8 +192,8 @@ describe('ContextMenu', async () => {
     });
 
     it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truthy', async () => {
-        const secondarySearch = 'cdf';
-        const { user, mockSetExploreParams } = await setup(undefined, undefined, secondarySearch);
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode, secondarySearch: fakeSelectedItemId });
+        const { user } = await setup();
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
@@ -152,7 +206,8 @@ describe('ContextMenu', async () => {
     });
 
     it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
-        const { user, mockSetExploreParams } = await setup(undefined);
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode, primarySearch: '' });
+        const { user } = await setup();
 
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         await user.click(endNodeOption);
@@ -165,8 +220,8 @@ describe('ContextMenu', async () => {
     });
 
     it('sets a secondary=id and searchType=pathfinding when primary is truthy', async () => {
-        const secondarySearch = 'cdf';
-        const { user, mockSetExploreParams } = await setup(undefined, secondarySearch);
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode, primarySearch: fakeSelectedItemId });
+        const { user } = await setup();
 
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         await user.click(endNodeOption);
@@ -179,6 +234,7 @@ describe('ContextMenu', async () => {
     });
 
     it('opens a submenu when user hovers over `Copy`', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedNode, isAssetGroupEnabled: true });
         await setup();
 
         const user = userEvent.setup();
@@ -206,5 +262,43 @@ describe('ContextMenu', async () => {
             expect(screen.queryByText(/object id/i)).not.toBeInTheDocument();
             expect(screen.queryByText(/cypher/i)).not.toBeInTheDocument();
         });
+    });
+});
+
+describe('ContextMenu - Edges', () => {
+    it('shows edge filtering options on pathfinding tab', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedEdge });
+        await setup();
+
+        const filterEdgeOption = screen.getByRole('menuitem', { name: /Filter out Edge/i });
+        expect(filterEdgeOption).toBeInTheDocument();
+    });
+
+    it('shows edge as non-filterable where there is no edge id', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedNonFilterable });
+        await setup();
+
+        const filterEdgeOption = screen.queryByText('Filter out Edge');
+        const nonFilterEdgeOption = screen.getByRole('menuitem', { name: /Non-filterable Edge/i });
+        expect(filterEdgeOption).not.toBeInTheDocument();
+        expect(nonFilterEdgeOption).toBeInTheDocument();
+    });
+
+    it('filters out the selected edge', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedEdge });
+        const { user } = await setup();
+
+        const filterEdgeOption = screen.getByRole('menuitem', { name: /Filter out Edge/i });
+        await user.click(filterEdgeOption);
+
+        expect(mockPathfindingFilters.handleUpdateAndApplyFilter).toBeCalled();
+    });
+
+    it('does not show edge filtering when bad edge id', async () => {
+        setUseContextMenuItems({ selectedItem: fakeSelectedNonEdge });
+        await setup();
+
+        const filterEdgeOption = screen.queryByText('Filter out Edge');
+        expect(filterEdgeOption).not.toBeInTheDocument();
     });
 });

@@ -218,3 +218,9 @@ export const AllEdgeTypes: Category[] = [
         ],
     },
 ];
+
+// Used to test is selected item is known edge type
+const EDGE_TYPES = AllEdgeTypes.flatMap((category) => category.subcategories.flatMap((sub) => sub.edgeTypes));
+
+/** Returns the edge type referenced in given selected item id, or undefined if not found */
+export const getEdgeType = (id: string) => EDGE_TYPES.find((edge) => id.includes(`_${edge}_`));

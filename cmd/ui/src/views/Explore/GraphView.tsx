@@ -16,7 +16,6 @@
 
 import { useTheme } from '@mui/material';
 import {
-    BaseExploreLayoutOptions,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -26,7 +25,6 @@ import {
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
-    isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
@@ -35,19 +33,23 @@ import {
     useExploreTableAutoDisplay,
     useFeatureFlag,
     useGraphHasData,
+    usePathfindingFilters,
     useToggle,
+    type BaseExploreLayoutOptions,
+    type MousePosition,
 } from 'bh-shared-ui';
 
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { type GraphNodes } from 'js-client-library';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
+import type { SigmaEdgeEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { isNodeEvent } from 'src/utils';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ContextMenuZoneManagementEnabled from './ContextMenu/ContextMenuZoneManagementEnabled';
@@ -64,7 +66,7 @@ const GraphView: FC = () => {
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
     const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
-    const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
 
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
 
@@ -88,7 +90,10 @@ const GraphView: FC = () => {
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [contextMenuPosition, setContextMenuPosition] = useState<MousePosition | null>(null);
+
+    const pathfindingFilters = usePathfindingFilters();
+
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
     const [exportJsonData, setExportJsonData] = useState();
@@ -147,13 +152,14 @@ const GraphView: FC = () => {
         setHighlightedItem(null);
     };
 
-    const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        selectItem(event.node);
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+    const handleContextMenu = (event: SigmaNodeEventPayload | SigmaEdgeEventPayload) => {
+        const { x: mouseX, y: mouseY } = event.event;
+        setContextMenuPosition(contextMenuPosition === null ? { mouseX, mouseY } : null);
+        selectItem(isNodeEvent(event) ? event.node : event.edge);
     };
 
     const handleCloseContextMenu = () => {
-        setContextMenu(null);
+        setContextMenuPosition(null);
     };
 
     const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
@@ -196,7 +202,7 @@ const GraphView: FC = () => {
             />
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
-                <ExploreSearch />
+                <ExploreSearch pathfindingFilters={pathfindingFilters} />
                 <GraphControls
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
@@ -219,14 +225,16 @@ const GraphView: FC = () => {
                 flagKey='tier_management_engine'
                 enabled={
                     <ContextMenuZoneManagementEnabled
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
                         onClose={handleCloseContextMenu}
+                        position={contextMenuPosition}
+                        pathfindingFilters={pathfindingFilters}
                     />
                 }
                 disabled={
                     <ContextMenu
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
-                        handleClose={handleCloseContextMenu}
+                        onClose={handleCloseContextMenu}
+                        position={contextMenuPosition}
+                        pathfindingFilters={pathfindingFilters}
                     />
                 }
             />

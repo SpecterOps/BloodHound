@@ -16,9 +16,12 @@
 
 import { useState } from 'react';
 import { EdgeCheckboxType } from '../../edgeTypes';
+import { areArraysSimilar } from '../../utils';
 import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
-import { compareEdgeTypes, extractEdgeTypes, mapParamsToFilters } from './utils';
+import { extractEdgeTypes, mapParamsToFilters } from './utils';
+
+export type PathfindingFilters = ReturnType<typeof usePathfindingFilters>;
 
 export const usePathfindingFilters = () => {
     const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
@@ -40,29 +43,32 @@ export const usePathfindingFilters = () => {
 
     const handleUpdateFilters = (checked: EdgeCheckboxType[]) => updateSelectedFilters(checked);
 
-    const handleApplyFilters = () => {
-        const selectedEdgeTypes = extractEdgeTypes(selectedFilters);
+    const handleApplyFilters = (filters = selectedFilters) => {
+        const selectedEdgeTypes = extractEdgeTypes(filters);
 
         if (selectedEdgeTypes.length === 0) {
             // query string stores a value indicating an empty set if every option is unselected
             setExploreParams({ pathFilters: [EMPTY_FILTER_VALUE] });
-        } else if (compareEdgeTypes(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
+        } else if (areArraysSimilar(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
             // query string is not set if user selects the default
             setExploreParams({ pathFilters: null });
         } else {
-            setExploreParams({ pathFilters: extractEdgeTypes(selectedFilters) });
+            setExploreParams({ pathFilters: selectedEdgeTypes });
         }
     };
 
-    // In our new implementation, these two functions are equivalent. Once we no longer need to support the old approach,
-    // we can consider removing this.
-    const handleCancelFilters = () => initialize();
+    /** Update and applies the filter at the same time. Needed for Graph context menu filtering */
+    const handleUpdateAndApplyFilter = (edgeType: string) => {
+        const filteredTypes = selectedFilters.filter((item) => item.edgeType !== edgeType);
+        handleUpdateFilters(filteredTypes);
+        handleApplyFilters(filteredTypes);
+    };
 
     return {
         selectedFilters,
         initialize,
         handleApplyFilters,
         handleUpdateFilters,
-        handleCancelFilters,
+        handleUpdateAndApplyFilter,
     };
 };

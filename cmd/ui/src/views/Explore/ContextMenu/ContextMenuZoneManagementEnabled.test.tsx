@@ -15,11 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { Permission, createAuthStateWithPermissions, type PathfindingFilters } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from 'src/test-utils';
 import ContextMenu from './ContextMenuZoneManagementEnabled';
+
+const mockPathfindingFilters: PathfindingFilters = {
+    handleApplyFilters: vi.fn(),
+    handleUpdateAndApplyFilter: vi.fn(),
+    handleUpdateFilters: vi.fn(),
+    initialize: vi.fn(),
+    selectedFilters: [],
+};
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -65,9 +73,14 @@ afterAll(() => server.close());
 
 describe('ContextMenu', () => {
     it('renders asset group edit options with graph write permissions', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc' }
+        );
 
         const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
@@ -91,9 +104,14 @@ describe('ContextMenu', () => {
             })
         );
 
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc' }
+        );
 
         const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
@@ -107,9 +125,14 @@ describe('ContextMenu', () => {
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc' }
+        );
 
         const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
 
@@ -122,9 +145,14 @@ describe('ContextMenu', () => {
     });
 
     it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truethy', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc&secondarySearch=def',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc&secondarySearch=def' }
+        );
 
         const startNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as starting node/i }));
         const user = userEvent.setup();
@@ -136,9 +164,14 @@ describe('ContextMenu', () => {
     });
 
     it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc' }
+        );
 
         const endNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as ending node/i }));
         const user = userEvent.setup();
@@ -150,9 +183,14 @@ describe('ContextMenu', () => {
     });
 
     it('sets a secondary=id and searchType=pathfinding when primary is truethy', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc&primarySearch=def',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc&primarySearch=def' }
+        );
 
         const endNodeOption = await waitFor(() => screen.findByRole('menuitem', { name: /set as ending node/i }));
         const user = userEvent.setup();
@@ -164,9 +202,14 @@ describe('ContextMenu', () => {
     });
 
     it('opens a submenu when user hovers over `Copy`', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
-        });
+        render(
+            <ContextMenu
+                pathfindingFilters={mockPathfindingFilters}
+                position={{ mouseX: 0, mouseY: 0 }}
+                onClose={vi.fn()}
+            />,
+            { route: '/test?selectedItem=abc' }
+        );
 
         const user = userEvent.setup();
 
