@@ -26,7 +26,7 @@ export type NodeClickInfo = { id: string; x: number; y: number };
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectId', 'displayname'];
+const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
 
 export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
 
@@ -40,10 +40,6 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
     className: 'pr-4',
-};
-
-const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row: MungedTableRowWithId) => row.id,
 };
 
 export interface ExploreTableProps {
@@ -123,7 +119,6 @@ const ExploreTable = ({
                     selectedRow={selectedNode}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
-                    tableOptions={tableOptions}
                 />
             </div>
         </div>

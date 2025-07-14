@@ -137,10 +137,9 @@ const GraphView: FC = () => {
 
     const handleRowClick = useCallback(
         (row: MungedTableRowWithId) => {
-            if (selectedItem === row.id) {
-                setSelectedItem('');
+            if (row.id !== selectedItem) {
+                setSelectedItem(row.id);
             }
-            setSelectedItem(row.id);
         },
         [setSelectedItem, selectedItem]
     );
