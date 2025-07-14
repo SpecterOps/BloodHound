@@ -158,10 +158,10 @@ describe('List', async () => {
 
         render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
 
-        const listItem = await screen.findByTestId('zone-management_details_tiers-list_item-2');
+        const listItem = screen.getByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem).toBeInTheDocument();
 
-        const icon = within(listItem).getByTestId('analysis_disabled_icon');
+        const icon = await within(listItem).findByTestId('analysis_disabled_icon');
         expect(icon).toBeInTheDocument();
     });
 
@@ -174,13 +174,13 @@ describe('List', async () => {
 
         render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
 
-        const listItem1 = await screen.findByTestId('zone-management_details_tiers-list_item-1');
+        const listItem1 = screen.getByTestId('zone-management_details_tiers-list_item-1');
         expect(listItem1).toBeInTheDocument();
-        expect(within(listItem1).queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+        expect(await within(listItem1).queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
 
-        const listItem2 = await screen.findByTestId('zone-management_details_tiers-list_item-2');
+        const listItem2 = screen.getByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem2).toBeInTheDocument();
-        expect(within(listItem2).getByTestId('analysis_disabled_icon')).toBeInTheDocument();
+        expect(await within(listItem2).findByTestId('analysis_disabled_icon')).toBeInTheDocument();
     });
 
     it('handles rendering a selected item', async () => {

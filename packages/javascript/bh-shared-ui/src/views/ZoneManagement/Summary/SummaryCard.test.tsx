@@ -140,10 +140,10 @@ describe('SummaryCard', () => {
 
         render(<SummaryCard {...props} />);
 
-        const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-3');
+        const listItem = screen.getByTestId('zone-management_summary_test_tier-list_item-3');
         expect(listItem).toBeInTheDocument();
 
-        const icon = within(listItem).getByTestId('analysis_disabled_icon');
+        const icon = await within(listItem).findByTestId('analysis_disabled_icon');
         expect(icon).toBeInTheDocument();
     });
 

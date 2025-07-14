@@ -37,10 +37,7 @@ export const usePrivilegeZoneAnalysis = () => {
     const tieringConfig = parseTieringConfiguration(data);
     const privilegeZoneAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
 
-    if (isLoading) {
-        return 'isLoading';
-    }
-    return privilegeZoneAnalysisEnabled ?? false;
+    return isLoading ? false : privilegeZoneAnalysisEnabled;
 }
 
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
