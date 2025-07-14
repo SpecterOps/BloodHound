@@ -24,7 +24,7 @@ import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
     selectedQuery: any;
-    clickHandler: (query: string) => void;
+    clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
     clearFiltersHandler: () => void;
 }
@@ -73,15 +73,15 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         handleOpen();
     };
 
-    //This is necessary due to inconsistent data shape between new saved user queries and existing prebuilt AGT/AGI queries
-
-    const testMatch = (name?: string, description?: string) => {
+    const testMatch = (name: string, id?: number) => {
         if (!selectedQuery) return false;
-        if (name && name === selectedQuery.name) {
+
+        if (id && id === selectedQuery.id) {
             return true;
-        } else if (description && description === selectedQuery.description) {
+        } else if (name && name === selectedQuery.name) {
             return true;
         }
+
         return false;
     };
 
@@ -101,10 +101,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                             return (
                                                 <div
                                                     className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 justify-between pl-4 ${
-                                                        testMatch(name, description) ? styles.selected : ''
+                                                        testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    onClick={() => clickHandler(query)}>
+                                                    onClick={() => clickHandler(query, id)}>
                                                     <div>
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>
@@ -146,46 +146,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                     </Button>
                 </Box>
             )}
-            {/* <List dense disablePadding>
-                {listSections.map((section) => {
-                    const { category, subheader, lineItems } = section;
-                    return (
-                        <Box key={subheader}>
-                            <ListSubheader className={styles.subheader}>{subheader} </ListSubheader>
-
-                            {lineItems?.map((lineItem, idx) => {
-                                const { id, description, cypher, canEdit = false } = lineItem;
-
-                                return (
-                                    <ListItem
-                                        disablePadding
-                                        key={`${id}-${idx}`}
-                                        sx={{ borderRadius: '8px', py: '4px' }}
-                                        secondaryAction={
-                                            canEdit && (
-                                                <Button
-                                                    aria-label='Delete Query'
-                                                    size='small'
-                                                    variant='secondary'
-                                                    onClick={() => {
-                                                        setQueryId(id);
-                                                        handleOpen();
-                                                    }}>
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </Button>
-                                            )
-                                        }>
-                                        <ListItemButton onClick={() => clickHandler(cypher)}>
-                                            <ListItemText primary={description} />
-                                            {category && <Chip label={category} size='small' className='ml-3'></Chip>}
-                                        </ListItemButton>
-                                    </ListItem>
-                                );
-                            })}
-                        </Box>
-                    );
-                })}
-            </List> */}
 
             <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
                 <DialogTitle>Delete Query</DialogTitle>

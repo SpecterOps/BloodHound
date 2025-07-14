@@ -39,10 +39,11 @@ import QuerySearchFilter from './QuerySearchFilter';
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
-    onSetSelected: (query: string) => void;
+    onSetSelected: (query: string, id?: number) => void;
     onToggleCommonQueries: () => void;
-    selected: string;
+    selected: { query: string; id?: number };
     showCommonQueries: boolean;
+    selectedQuery: any;
 };
 
 const InnerCommonSearches = ({
@@ -53,6 +54,7 @@ const InnerCommonSearches = ({
     prebuiltSearchList,
     selected,
     showCommonQueries,
+    selectedQuery,
 }: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
@@ -74,15 +76,15 @@ const InnerCommonSearches = ({
         setFilteredList(queryList);
     }, [userQueries.data]);
 
-    const handleClick = (query: string) => {
-        if (selected === query) {
+    const handleClick = (query: string, id: number | undefined) => {
+        if (selected.query === query && selected.id === id) {
             //deselect
-            onSetSelected('');
+            onSetSelected('', undefined);
             // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
             onSetCypherQuery('');
             onPerformCypherSearch('');
         } else {
-            onSetSelected(query);
+            onSetSelected(query, id);
             // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
             onSetCypherQuery(query);
             onPerformCypherSearch(query);
@@ -146,22 +148,6 @@ const InnerCommonSearches = ({
         });
     };
 
-    function getSelectedQuery() {
-        const comparator = selected ? selected : cypherQuery;
-        for (const item of filteredList) {
-            let result = null;
-            result = item.queries.find((query) => {
-                if (query.query === comparator) {
-                    return query;
-                }
-            });
-            if (result) {
-                return result;
-            }
-        }
-    }
-
-    const selectedQuery = getSelectedQuery();
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>

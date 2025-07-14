@@ -35,12 +35,20 @@ type CypherSearchState = {
     performSearch: (query?: string) => void;
 };
 
+type SelectedType = {
+    query: string;
+    id?: number;
+};
+
 const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
-    const [selected, setSelected] = useState('');
+    // const [selected, setSelected] = useState('');
+    const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
+
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
+
     const updateSavedQueryMutation = useUpdateSavedQuery();
 
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
@@ -73,17 +81,17 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     };
 
     const getCypherValueOnLoadRef = useRef(false);
-    const selectedQuery: any = useGetSelectedQuery(selected);
+    const selectedQuery: any = useGetSelectedQuery(selected.query, selected.id);
     useEffect(() => {
         //Setting the selected query once on load
         if (!getCypherValueOnLoadRef.current && cypherQuery) {
             getCypherValueOnLoadRef.current = true;
-            setSelected(cypherQuery);
+            setSelected({ query: cypherQuery, id: undefined });
         }
     }, [cypherQuery]);
 
-    const handleSetSelected = (query: string) => {
-        setSelected(query);
+    const handleSetSelected = (query: string, id?: number) => {
+        setSelected({ query: query, id: id });
     };
 
     const handleToggleCommonQueries = () => {
@@ -94,11 +102,11 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         return createSavedQueryMutation.mutate(
             { name: data.name, description: data.description, query: data.localCypherQuery },
             {
-                onSuccess: () => {
+                onSuccess: (res) => {
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} saved!`, 'userSavedQuery');
                     performSearch(data.localCypherQuery);
-                    setSelected(data.localCypherQuery);
+                    setSelected({ query: data.localCypherQuery, id: res.id });
                 },
             }
         );
@@ -117,15 +125,13 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
                     performSearch(data.localCypherQuery);
-                    setSelected(data.localCypherQuery);
+                    setSelected({ query: data.localCypherQuery, id: data.id });
                 },
             }
         );
     };
 
     const handleClickSave = () => {
-        console.log('handleClickSave');
-
         //FROM TICKET
 
         //IF QUERY SELECTED
@@ -138,21 +144,11 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         //IF NO QUERY SELECTED
         //  //  SAVE NEW WORKFLOW
 
-        // if (!cypherQuery) {
-        //     console.log('cypherQuery is empty - return');
-        //     setMessageState({ showMessage: true, message: 'Add a Cypher Query' });
-        //     return;
-        // }
-
         if (selectedQuery) {
-            console.log('QUERY EXISTS');
             if (selectedQuery.canEdit) {
                 //save existing
-                console.log('CAN EDIT - SAVE EXISTING WORKFLOW');
                 setShowSaveQueryDialog(true);
             } else {
-                console.log('CANNOT EDIT - SHOW MESSAGE');
-                // setShowMessage(true);
                 setMessageState({
                     showMessage: true,
                     message: 'You do not have permission to update this query, save as a new query instead',
@@ -160,7 +156,6 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             }
         } else {
             //save new
-            console.log('QUERY DOES NOT EXISTS - SAVE NEW WORKFLOW');
             setShowSaveQueryDialog(true);
         }
     };
@@ -190,8 +185,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     };
 
     const handleSaveAs = () => {
-        console.log('handle  save as');
-        setSelected('');
+        setSelected({ query: '' });
         setShowSaveQueryDialog(true);
     };
 
@@ -207,6 +201,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                         onToggleCommonQueries={handleToggleCommonQueries}
                         showCommonQueries={showCommonQueries}
                         selected={selected}
+                        selectedQuery={selectedQuery}
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
