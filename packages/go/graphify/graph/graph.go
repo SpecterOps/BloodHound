@@ -116,8 +116,8 @@ func (s *Command) Parse() error {
 	}
 
 	if s.outpath == "" {
-        s.outpath = "/tmp/"
-    }
+		s.outpath = "/tmp/"
+	}
 
 	s.path, err = filepath.Abs(s.path)
 	if err != nil {
@@ -344,23 +344,33 @@ func removeNullSliceValues(l []any) []any {
 
 func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
 	var (
-		nodes []*graph.Node
-		edges []*graph.Relationship
+		nodes   []*graph.Node
+		edges   []*graph.Relationship
+		nodeIDs []graph.ID
 	)
 
 	if err := database.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		err := tx.Nodes().Filter(
-			query.Not(query.Kind(query.Node(), common.MigrationData)),
+			query.And(
+				query.Not(query.Kind(query.Node(), common.MigrationData)),
+				query.IsNotNull(query.NodeProperty(common.ObjectID.String())),
+			),
 		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for node := range cursor.Chan() {
 				nodes = append(nodes, node)
+				nodeIDs = append(nodeIDs, node.ID)
 			}
 			return cursor.Error()
 		})
 		if err != nil {
 			return fmt.Errorf("error fetching nodes: %w", err)
 		}
-		err = tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+		err = tx.Relationships().Filter(
+			query.And(
+				query.InIDs(query.StartID(), nodeIDs...),
+				query.InIDs(query.EndID(), nodeIDs...),
+			),
+		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for edge := range cursor.Chan() {
 				edges = append(edges, edge)
 			}
