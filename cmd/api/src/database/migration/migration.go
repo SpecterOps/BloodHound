@@ -20,7 +20,7 @@ import (
 	"embed"
 	"io/fs"
 
-	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"gorm.io/gorm"
 )
 

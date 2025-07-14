@@ -31,7 +31,7 @@ const MAX_CONTAINER_HEIGHT = 350;
 const SearchCurrentNodes: FC<{
     currentNodes: GraphNodes;
     onSelect: (node: FlatNode) => void;
-    onClose?: () => void;
+    onClose: () => void;
     sx?: SxProps;
 }> = ({ sx, currentNodes, onSelect, onClose }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -50,7 +50,7 @@ const SearchCurrentNodes: FC<{
         virtualizationHeight = MAX_CONTAINER_HEIGHT - 10;
     }
 
-    useOnClickOutside(containerRef, () => onClose && onClose());
+    useOnClickOutside(containerRef, onClose);
 
     const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue } = useCombobox({
         items,

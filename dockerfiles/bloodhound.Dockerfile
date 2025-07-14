@@ -47,7 +47,7 @@ ADD https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERS
   https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256 \
   https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip \
   https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256 \
-  /tmp/azurehound
+  /tmp/azurehound/
 
 WORKDIR /tmp/azurehound
 RUN sha256sum -cw *.sha256
@@ -72,8 +72,8 @@ RUN yarn build
 ########
 # Version Build
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS ldflag-builder
-ENV VERSION_PKG="github.com/specterops/bloodhound/src/version"
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS ldflag-builder
+ENV VERSION_PKG="github.com/specterops/bloodhound/cmd/api/src/version"
 RUN apk add --update --no-cache git
 WORKDIR /build
 COPY .git ./.git
@@ -94,7 +94,7 @@ RUN git --no-pager -c 'versionsort.suffix=-rc' tag --list v*.*.* --sort=-v:refna
 ########
 # API Build
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS api-builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS api-builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -109,7 +109,7 @@ WORKDIR /build
 COPY --parents go* cmd/api packages/go ./
 COPY --from=ldflag-builder /build/LDFLAGS ./
 COPY --from=ui-builder /build/cmd/ui/dist ./cmd/api/src/api/static/assets
-RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/src/cmd/bhapi
+RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
 ########
 # Package Bloodhound

@@ -27,10 +27,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util"
 )
@@ -127,9 +127,9 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 	}
 }
 
-// processIngestFile reads the files at the path supplied, and returns the total number of files in the
+// ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) processIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
+func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
@@ -210,7 +210,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
 			return
 		}
-		total, failed, err := s.processIngestFile(s.ctx, task, time.Now().UTC())
+		total, failed, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
 
 		if errors.Is(err, fs.ErrNotExist) {
 			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))

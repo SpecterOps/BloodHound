@@ -22,9 +22,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -1005,7 +1005,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					slog.ErrorContext(ctx, "Error getting display name for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
 					continue
 				} else if tenantName, ok := tenantMap[tenantId]; !ok {
-					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
+					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()))
 					continue
 				} else {
 					managementGroup.Properties.Set(common.Name.String(), strings.ToUpper(fmt.Sprintf("%s@%s", displayName, tenantName)))

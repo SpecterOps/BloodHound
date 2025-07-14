@@ -23,10 +23,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -239,8 +239,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 
 		// Test filtering by name
 		sqlFilter := model.SQLFilter{
-			SQLString: "name = ?",
-			Params:    []interface{}{"First Provider"},
+			SQLString: "name = 'First Provider'",
 		}
 		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
 		require.NoError(t, err)
@@ -295,8 +294,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 
 		// Test filtering by name
 		sqlFilter := model.SQLFilter{
-			SQLString: "name = ?",
-			Params:    []interface{}{"Third Provider"},
+			SQLString: "name = 'Third Provider'",
 		}
 		providers, err = dbInst.GetAllSSOProviders(testCtx, "", sqlFilter)
 		require.NoError(t, err)

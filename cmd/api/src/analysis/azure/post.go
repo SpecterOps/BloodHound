@@ -20,11 +20,11 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/analysis"
-	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/analysis/hybrid"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 

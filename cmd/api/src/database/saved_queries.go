@@ -22,7 +22,7 @@ import (
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type SavedQueriesData interface {
