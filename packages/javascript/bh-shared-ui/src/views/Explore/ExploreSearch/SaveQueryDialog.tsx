@@ -29,7 +29,7 @@ import {
     Input,
     Label,
 } from '@bloodhoundenterprise/doodleui';
-import { useTheme } from '@mui/material';
+import { useMediaQuery, useTheme } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../../constants';
@@ -57,6 +57,8 @@ const SaveQueryDialog: React.FC<{
     selectedQuery: any;
 }> = ({ open, onClose, onSave, onUpdate, isLoading = false, error = undefined, cypherSearchState, selectedQuery }) => {
     const theme = useTheme();
+
+    const lgDown = useMediaQuery(theme.breakpoints.down('lg'));
 
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -109,7 +111,7 @@ const SaveQueryDialog: React.FC<{
                         DialogOverlayProps={{
                             blurBackground: false,
                         }}
-                        maxWidth='md'>
+                        maxWidth={lgDown ? 'sm' : 'md'}>
                         <DialogTitle>Save Query</DialogTitle>
 
                         <DialogDescription>
