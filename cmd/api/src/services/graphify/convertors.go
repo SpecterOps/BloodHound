@@ -198,7 +198,7 @@ func CreateConvertedSessionData(count int) ConvertedSessionData {
 }
 
 func convertContainerData(container ein.Container, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(container.IngestBase, ad.Container, ingestTime)
+	baseNodeProp := ein.ConvertContainerToNode(container, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, container.Aces, container.ObjectIdentifier, ad.Container)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseObjectContainer(container.IngestBase, ad.Container, baseNodeProp)...)
