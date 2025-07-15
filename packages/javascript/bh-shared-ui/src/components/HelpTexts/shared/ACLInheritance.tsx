@@ -27,6 +27,9 @@ type ACLInheritanceListProps = {
     inheritanceHash: string;
 };
 
+export const INHERITANCE_DROPDOWN_DESCRIPTION =
+    'An ACE granting access permissions to a Domain, OU, or Container can be inherited by entities contained within them. This panel lists the source object(s) for the inherited ACE.';
+
 const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, edgeName, inheritanceHash }) => {
     const { isLoading, isError, nodesArray } = useEdgeInfoItems(
         {
@@ -64,10 +67,7 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
 
     return (
         <>
-            <Typography variant='body2'>
-                An ACE granting access permissions to a Domain, OU, or Container can be inherited by entities contained
-                within them. This panel lists the source object(s) for the inherited ACE.
-            </Typography>
+            <Typography variant='body2'>{INHERITANCE_DROPDOWN_DESCRIPTION}</Typography>
             <Box py={1}>{getSourceObjectContent()}</Box>
         </>
     );

@@ -16,6 +16,13 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { INHERITANCE_DROPDOWN_DESCRIPTION } from '../../../components/HelpTexts/shared/ACLInheritance';
+import {
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    CommonKindProperties,
+} from '../../../graphSchema';
 import { SelectedEdge } from '../../../store';
 import { render, screen, waitFor } from '../../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
@@ -90,45 +97,91 @@ const server = setupServer(
 const selectedEdge: SelectedEdge = {
     id: 'rel_1',
     name: 'CustomEdge',
-    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: false,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
+    },
     sourceNode: {
         name: 'source node',
         id: '1',
         objectId: '1',
-        type: 'User',
+        type: ActiveDirectoryNodeKind.User,
     },
-    targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
+    targetNode: {
+        name: 'target node',
+        id: '2',
+        objectId: '2',
+        type: ActiveDirectoryNodeKind.User,
+    },
 };
 
 const selectedEdgeHasLapsEnabled: SelectedEdge = {
     id: '2',
-    name: 'GenericAll',
-    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    name: ActiveDirectoryRelationshipKind.GenericAll,
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: false,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
+    },
     sourceNode: {
         name: 'source node',
         id: '1',
         objectId: '1',
-        type: 'User',
+        type: ActiveDirectoryNodeKind.User,
     },
-    targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
+    targetNode: {
+        name: 'target node',
+        id: '3',
+        objectId: 'testing-node-123',
+        type: ActiveDirectoryNodeKind.Computer,
+    },
 };
 
 const selectedEdgeHasLapsDisabled: SelectedEdge = {
     id: '3',
-    name: 'GenericAll',
-    data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
+    name: ActiveDirectoryRelationshipKind.GenericAll,
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: false,
+        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
+    },
     sourceNode: {
         name: 'source node',
         id: '1',
         objectId: '1',
-        type: 'User',
+        type: ActiveDirectoryNodeKind.User,
     },
-    targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
+    targetNode: {
+        name: 'target node',
+        id: '4',
+        objectId: 'testing-node-456',
+        type: ActiveDirectoryNodeKind.Computer,
+    },
 };
 
 const selectedEdgeADCSESC4: SelectedEdge = {
     ...selectedEdge,
-    name: 'ADCSESC4',
+    name: ActiveDirectoryRelationshipKind.ADCSESC4,
+};
+
+const selectedEdgeACLInheritance: SelectedEdge = {
+    id: '3',
+    name: ActiveDirectoryRelationshipKind.WriteOwner,
+    data: {
+        [ActiveDirectoryKindProperties.IsACL]: true,
+        [CommonKindProperties.IsInherited]: true,
+        [ActiveDirectoryKindProperties.InheritanceHash]: 'test_hash',
+    },
+    sourceNode: {
+        name: 'source node',
+        id: '1',
+        objectId: '1',
+        type: ActiveDirectoryNodeKind.Group,
+    },
+    targetNode: {
+        name: 'target node',
+        id: '4',
+        objectId: 'testing-node-456',
+        type: ActiveDirectoryNodeKind.Group,
+    },
 };
 
 const windowsAbuseHasLapsText = (sourceName: string, targetName: string) => {
@@ -196,6 +249,15 @@ describe('EdgeInfoContent', () => {
         await user.click(windowAbuseAccordion);
 
         expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
+    });
+    test('Selecting an edge that meets ACL inheritance criteria shows the "ACE Inherited From" dropdown', async () => {
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeACLInheritance} />);
+
+        const user = userEvent.setup();
+        const inheritanceAccordion = screen.getByText('ACE Inherited From');
+        await user.click(inheritanceAccordion);
+
+        expect(screen.queryByText(INHERITANCE_DROPDOWN_DESCRIPTION)).toBeInTheDocument();
     });
     describe('EdgeInfoContent support for Deep Linking', () => {
         const test_id = selectedEdgeADCSESC4.id;
