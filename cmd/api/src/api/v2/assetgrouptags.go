@@ -608,7 +608,7 @@ type GetAssetGroupMembersResponse struct {
 
 func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, request *http.Request) {
 	var (
-		members     []AssetGroupMember
+		members     = []AssetGroupMember{}
 		queryParams = request.URL.Query()
 	)
 

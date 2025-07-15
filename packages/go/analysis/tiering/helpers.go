@@ -23,12 +23,24 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-type SearchTierNodesCriteria struct {
+type SearchTierNodesCtx struct {
+	IsTierZero                bool
 	PrimaryTierKind           graph.Kind
 	SearchTierNodes           graph.Criteria
 	SearchTierNodesRel        graph.Criteria
 	SearchPrimaryTierNodes    graph.Criteria
 	SearchPrimaryTierNodesRel graph.Criteria
+}
+
+func NewSearchTierNodesCtx(tieringEnabled bool, isTierZero bool, primaryKind graph.Kind, tierKinds ...graph.Kind) SearchTierNodesCtx {
+	return SearchTierNodesCtx{
+		IsTierZero:                isTierZero,
+		PrimaryTierKind:           primaryKind,
+		SearchTierNodesRel:        searchTierNodesRel(tieringEnabled, tierKinds...),
+		SearchTierNodes:           SearchTierNodes(tieringEnabled, tierKinds...),
+		SearchPrimaryTierNodes:    SearchTierNodes(tieringEnabled, primaryKind),
+		SearchPrimaryTierNodesRel: searchTierNodesRel(tieringEnabled, primaryKind),
+	}
 }
 
 func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
@@ -43,7 +55,7 @@ func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteri
 	}
 }
 
-func SearchTierNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
+func searchTierNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
 		// Default to tier zero in the event no tierKinds are supplied
 		if len(tierKinds) == 0 {

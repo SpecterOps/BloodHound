@@ -15,13 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import ZoneManagement from '.';
-import { zoneHandlers } from '../../mocks/handlers';
 import { render, screen, waitFor } from '../../test-utils';
-
-const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -31,6 +29,55 @@ vi.mock('react-router-dom', async () => ({
     ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
     useNavigate: vi.fn,
 }));
+
+const server = setupServer(
+    rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    tags: [
+                        {
+                            id: 2,
+                            type: 3,
+                            kind_id: 179,
+                            name: 'Owned',
+                            description: 'Owned',
+                            position: null,
+                            require_certify: null,
+                            analysis_enabled: null,
+                        },
+                        {
+                            id: 1,
+                            type: 1,
+                            kind_id: 173,
+                            name: 'Tier Zero',
+                            description: 'Tier Zero description',
+                            position: 1,
+                            require_certify: false,
+                            analysis_enabled: true,
+                        },
+                    ],
+                },
+            })
+        );
+    }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('Zone Management', async () => {
     const user = userEvent.setup();

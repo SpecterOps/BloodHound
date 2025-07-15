@@ -14,109 +14,188 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
-import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doodleui';
+import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import capitalize from 'lodash/capitalize';
-import { useMemo, useState } from 'react';
-import { makeFormattedObjectInfoFieldsMap } from '../../utils';
+import { FlatGraphResponse, GraphNodeSpreadWithProperties } from 'js-client-library';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { useToggle } from '../../hooks';
+import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
-import { TableControls } from './TableControls';
+import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
+import TableControls from './TableControls';
 
-type HasData = { data?: object };
+const KEYS_TO_FILTER_BY: (keyof GraphNodeSpreadWithProperties)[] = ['objectId', 'displayname'];
 
-interface ExploreTableProps<TData extends HasData> {
+const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectId', 'displayname'];
+
+const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+
+type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
+
+const columnHelper = createColumnHelper();
+
+const makeColumnDef = (key: string) =>
+    columnHelper.accessor(key, {
+        header: formatPotentiallyUnknownLabel(key),
+        cell: (info) => {
+            const value = info.getValue() as EntityField['value'];
+
+            if (typeof value === 'boolean') {
+                return (
+                    <div className='h-full w-full flex justify-center items-center text-center'>
+                        <FontAwesomeIcon
+                            icon={value ? faCheck : faCancel}
+                            color={value ? 'green' : 'lightgray'}
+                            className='scale-125'
+                        />{' '}
+                    </div>
+                );
+            }
+
+            return format({ keyprop: key, value, label: key }) || '--';
+        },
+        id: key,
+    });
+
+const requiredColumnDefinitions = [
+    columnHelper.accessor('', {
+        id: 'action-menu',
+        cell: () => (
+            <Button className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
+                <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
+            </Button>
+        ),
+    }),
+    columnHelper.accessor('nodetype', {
+        id: 'nodetype',
+        header: () => {
+            return <span className='dark:text-neutral-light-1'>Type</span>;
+        },
+        cell: (info) => {
+            return (
+                <div className='flex justify-center items-center relative'>
+                    <NodeIcon nodeType={(info.getValue() as string) || ''} />
+                </div>
+            );
+        },
+    }),
+    ...['objectId', 'displayname'].map(makeColumnDef),
+];
+
+type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+    className: 'sticky top-0 z-10',
+};
+
+const tableHeadProps: DataTableProps['TableHeadProps'] = {
+    className: 'pr-4',
+};
+
+interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
-    data?: Record<string, TData>;
+    data?: FlatGraphResponse;
+    selectedColumns?: Record<string, boolean>;
+    allColumnKeys?: string[];
+    onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
 }
 
-const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTableProps<TData>) => {
+const MemoDataTable = memo(DataTable);
+
+const ExploreTable = ({
+    data,
+    open,
+    onClose,
+    onManageColumnsChange,
+    allColumnKeys,
+    selectedColumns,
+}: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
+    const [isExpanded, toggleIsExpanded] = useToggle(false);
+
     const mungedData = useMemo(
-        () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
+        () =>
+            (data &&
+                Object.entries(data).map(([key, value]) => {
+                    return Object.assign({}, value?.data || {}, { id: key }) as MungedTableRowWithId;
+                })) ||
+            [],
         [data]
     );
 
-    const firstItem = mungedData?.[0];
-
-    const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
-
-    const initialColumns: ColumnDef<any, any>[] = [
-        {
-            accessorKey: '',
-            id: 'action-menu',
-            cell: () => (
-                <button className='pl-4'>
-                    <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
-                </button>
-            ),
-        },
-        {
-            accessorKey: 'nonTierZeroPrincipal',
-            header: () => {
-                return <span className='dark:text-neutral-light-1'>Non Tier Zero Principal</span>;
-            },
-            cell: ({ row }) => {
-                return (
-                    <div className='flex justify-center items-center relative'>
-                        <NodeIcon nodeType={row?.original?.nodetype || 'N/A'} />
-                    </div>
-                );
-            },
-        },
-    ];
-
-    const columns: ColumnDef<any, any>[] = useMemo(
+    const filteredData = useMemo(
         () =>
-            firstItem
-                ? // If column order exists in redux/localStorage, use that
-                  Object.keys(firstItem).map((key: any) => {
-                      return {
-                          accessorKey: key,
-                          header: labelsMap?.[key]?.label || capitalize(key),
-                          cell: (info: any) => String(info.getValue()),
-                          id: key,
-                          size: 150,
-                      } as ColumnDef<any, any>;
-                  })
-                : [],
-        [labelsMap, firstItem]
+            mungedData?.filter((potentialRow) => {
+                const filterTargets = KEYS_TO_FILTER_BY.map((filterKey) =>
+                    String(potentialRow?.[filterKey]).toLowerCase()
+                );
+
+                return filterTargets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
+            }),
+        [searchInput, mungedData]
+    );
+
+    const nonRequiredColumnDefinitions = useMemo(
+        () => allColumnKeys?.filter((key) => !requiredColumns[key]).map(makeColumnDef) || [],
+        [allColumnKeys]
+    );
+
+    const selectedColumnDefinitions = useMemo(
+        () => nonRequiredColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
+        [nonRequiredColumnDefinitions, selectedColumns]
+    );
+
+    const tableColumns = useMemo(
+        () => [...requiredColumnDefinitions, ...selectedColumnDefinitions],
+        [selectedColumnDefinitions]
+    ) as DataTableProps['columns'];
+
+    const columnOptionsForDropdown = useMemo(
+        () => [...requiredColumnDefinitions, ...nonRequiredColumnDefinitions],
+        [nonRequiredColumnDefinitions]
+    );
+
+    const handleSearchInputChange = useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
+        []
+    );
+
+    const searchInputProps = useMemo(
+        () => ({
+            onChange: handleSearchInputChange,
+            value: searchInput,
+            placeholder: 'Search',
+        }),
+        [handleSearchInputChange, searchInput]
     );
 
     if (!open || !data) return null;
 
-    const finalColumns = [...initialColumns, ...columns];
     return (
         <div
-            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 max-h-1/2 h-[475px] bg-neutral-light-2`}>
+            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
+                    className='h-[72px]'
+                    columns={columnOptionsForDropdown}
+                    selectedColumns={selectedColumns || requiredColumns}
+                    pinnedColumns={requiredColumns}
                     onDownloadClick={() => console.log('download icon clicked')}
-                    onExpandClick={() => console.log('expand icon clicked')}
-                    onManageColumnsClick={() => console.log('manage columns button clicked')}
+                    onExpandClick={toggleIsExpanded}
+                    onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
-                    resultsCount={mungedData?.length}
-                    SearchInputProps={{
-                        onChange: (e) => setSearchInput(e.target.value),
-                        value: searchInput,
-                        placeholder: 'Search',
-                    }}
+                    resultsCount={filteredData?.length}
+                    SearchInputProps={searchInputProps}
                 />
-                <DataTable
+                <MemoDataTable
                     className='h-full *:h-[calc(100%-72px)]'
-                    // TableProps={{
-                    //     containerClassName: 'h-full',
-                    // }}
-                    TableHeaderProps={{
-                        className: 'sticky top-0 z-10',
-                    }}
-                    tableOptions={{
-                        getRowId: (row) => row?.id,
-                    }}
-                    data={mungedData}
-                    columns={finalColumns}
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    data={filteredData}
+                    columns={tableColumns}
                 />
             </div>
         </div>

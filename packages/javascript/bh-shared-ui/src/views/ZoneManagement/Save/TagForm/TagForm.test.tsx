@@ -93,6 +93,18 @@ const handlers = [
     rest.get('/api/v2/config', async (_, res, ctx) => {
         return res(ctx.json(configResponse));
     }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
 ];
 
 const configResponse = {
@@ -316,7 +328,9 @@ describe('Tag Form', () => {
         });
 
         // The delete button should not render when editing Owned
-        expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        longWait(() => {
+            expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        });
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
         expect(screen.queryByTestId('zone-management_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();

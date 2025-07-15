@@ -263,6 +263,16 @@ interface CollectorAsset {
     arch: string;
 }
 
+export interface GraphNodeProperties {
+    nodetype?: string;
+    displayname?: string;
+    enabled?: boolean;
+    pwdlastset?: number;
+    lastlogontimestamp?: number;
+    descendent_count?: number | null;
+    [key: string]: any;
+}
+
 export type GraphNode = {
     label: string;
     kind: string;
@@ -270,9 +280,10 @@ export type GraphNode = {
     lastSeen: string;
     isTierZero: boolean;
     isOwnedObject: boolean;
-    descendent_count?: number | null;
-    properties?: Record<string, any>;
+    properties?: GraphNodeProperties;
 };
+
+export type GraphNodeSpreadWithProperties = Omit<GraphNode, 'properties'> & GraphNodeProperties;
 
 export type GraphNodes = Record<string, GraphNode>;
 
@@ -289,11 +300,11 @@ export type GraphEdge = {
 
 export type GraphEdges = GraphEdge[];
 
-export type GraphData = { nodes: GraphNodes; edges: GraphEdges };
+export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: string[] };
 
 export type StyledGraphNode = {
     color: string;
-    data: Record<string, any>;
+    data: GraphNodeSpreadWithProperties;
     border: {
         color: string;
     };

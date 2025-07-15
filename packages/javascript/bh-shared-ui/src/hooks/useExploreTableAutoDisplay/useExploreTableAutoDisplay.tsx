@@ -32,7 +32,7 @@ interface UseExploreTableAutoDisplayParams {
 // Auto display when current search is cypher and returned data contains nodes but not edges.
 // And dont auto display if the auto display has been closed.
 export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDisplayParams) => {
-    const { data: graphData, isFetching } = useExploreGraph();
+    const { data: graphData, isFetching } = useExploreGraph({ includeProperties: true, enabled });
     const { searchType } = useExploreParams();
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
 

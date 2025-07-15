@@ -19,13 +19,14 @@ package impact
 import (
 	"fmt"
 	"log/slog"
+	"sync"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 )
 
-// Aggregator is a cardinality aggregator for paths and shortcut paths.
+// PathAggregator is a cardinality aggregator for paths and shortcut paths.
 //
 // When encoding shortcut paths the aggregator will track node dependencies for nodes that otherwise would have missing
 // cardinality entries. Dependencies are organized as an adjacency list for each node. These adjacency lists combine to
@@ -34,15 +35,54 @@ import (
 // Once all paths are encoded, shortcut or otherwise, into the aggregator, users may then resolve the full cardinality
 // of nodes by calling the cardinality functions of the aggregator. Resolution is accomplished using a recursive
 // depth-first strategy.
-type Aggregator struct {
+type PathAggregator interface {
+	Cardinality(targets ...uint64) cardinality.Provider[uint64]
+	AddPath(path *graph.PathSegment)
+	AddShortcut(path *graph.PathSegment)
+}
+
+type ThreadSafeAggregator struct {
+	aggregator PathAggregator
+	lock       *sync.RWMutex
+}
+
+func (s ThreadSafeAggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.aggregator.Cardinality(targets...)
+}
+
+func (s ThreadSafeAggregator) AddPath(path *graph.PathSegment) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.aggregator.AddPath(path)
+}
+
+func (s ThreadSafeAggregator) AddShortcut(path *graph.PathSegment) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.aggregator.AddShortcut(path)
+}
+
+func NewThreadSafeAggregator(aggregator PathAggregator) PathAggregator {
+	return &ThreadSafeAggregator{
+		aggregator: aggregator,
+		lock:       &sync.RWMutex{},
+	}
+}
+
+type aggregator struct {
 	resolved               cardinality.Duplex[uint64]
 	cardinalities          *graph.IndexedSlice[uint64, cardinality.Provider[uint64]]
 	dependencies           map[uint64]cardinality.Duplex[uint64]
 	newCardinalityProvider cardinality.ProviderConstructor[uint64]
 }
 
-func NewAggregator(newCardinalityProvider cardinality.ProviderConstructor[uint64]) Aggregator {
-	return Aggregator{
+func NewAggregator(newCardinalityProvider cardinality.ProviderConstructor[uint64]) PathAggregator {
+	return aggregator{
 		cardinalities:          graph.NewIndexedSlice[uint64, cardinality.Provider[uint64]](),
 		dependencies:           map[uint64]cardinality.Duplex[uint64]{},
 		resolved:               cardinality.NewBitmap64(),
@@ -51,7 +91,7 @@ func NewAggregator(newCardinalityProvider cardinality.ProviderConstructor[uint64
 }
 
 // pushDependency adds a new dependency for the given target.
-func (s Aggregator) pushDependency(target, dependency uint64) {
+func (s aggregator) pushDependency(target, dependency uint64) {
 	if dependencies, hasDependencies := s.dependencies[target]; hasDependencies {
 		dependencies.Add(dependency)
 	} else {
@@ -64,7 +104,7 @@ func (s Aggregator) pushDependency(target, dependency uint64) {
 
 // popDependencies will take the simplex cardinality provider reference for the given target, remove it from the
 // containing map in the aggregator and then return it
-func (s Aggregator) popDependencies(targetID uint64) []uint64 {
+func (s aggregator) popDependencies(targetID uint64) []uint64 {
 	dependencies, hasDependencies := s.dependencies[targetID]
 	delete(s.dependencies, targetID)
 
@@ -75,7 +115,7 @@ func (s Aggregator) popDependencies(targetID uint64) []uint64 {
 	return nil
 }
 
-func (s Aggregator) getImpact(targetID uint64) cardinality.Provider[uint64] {
+func (s aggregator) getImpact(targetID uint64) cardinality.Provider[uint64] {
 	return s.cardinalities.GetOr(targetID, s.newCardinalityProvider)
 }
 
@@ -96,7 +136,7 @@ type resolution struct {
 
 // resolve takes the target uint64 ID of a node and calculates the cardinality of nodes that have a path that traverse
 // it
-func (s Aggregator) resolve(targetID uint64) cardinality.Provider[uint64] {
+func (s aggregator) resolve(targetID uint64) cardinality.Provider[uint64] {
 	var (
 		targetImpact = s.getImpact(targetID)
 		resolutions  = map[uint64]*resolution{
@@ -160,7 +200,7 @@ func (s Aggregator) resolve(targetID uint64) cardinality.Provider[uint64] {
 	return targetImpact
 }
 
-func (s Aggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
+func (s aggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
 	slog.Debug(fmt.Sprintf("Calculating pathMembers cardinality for %d targets", len(targets)))
 	defer measure.Measure(slog.LevelDebug, "Calculated pathMembers cardinality", "num_targets", len(targets))()
 
@@ -177,11 +217,9 @@ func (s Aggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] 
 	return impact
 }
 
-func (s Aggregator) AddPath(path *graph.PathSegment, impactKinds graph.Kinds) {
-	var impactingNodes []uint64
-
-	if path.Node.Kinds.ContainsOneOf(impactKinds...) {
-		impactingNodes = append(impactingNodes, path.Node.ID.Uint64())
+func (s aggregator) AddPath(path *graph.PathSegment) {
+	impactingNodes := []uint64{
+		path.Node.ID.Uint64(),
 	}
 
 	for cursor := path.Trunk; cursor != nil; cursor = cursor.Trunk {
@@ -190,24 +228,17 @@ func (s Aggregator) AddPath(path *graph.PathSegment, impactKinds graph.Kinds) {
 			s.getImpact(cursor.Node.ID.Uint64()).Add(impactingNodes...)
 		}
 
-		// Only roll up cardinalities for nodes that belong to the set of impacting kinds
-		if cursor.Node.Kinds.ContainsOneOf(impactKinds...) {
-			impactingNodes = append(impactingNodes, cursor.Node.ID.Uint64())
-		}
+		impactingNodes = append(impactingNodes, cursor.Node.ID.Uint64())
 	}
 }
 
-func (s Aggregator) AddShortcut(path *graph.PathSegment, impactKinds graph.Kinds) {
+func (s aggregator) AddShortcut(path *graph.PathSegment) {
 	var (
 		terminalUint32ID = path.Node.ID.Uint64()
-		impactingNodes   []uint64
+		impactingNodes   = []uint64{
+			terminalUint32ID,
+		}
 	)
-
-	// Only add the terminal to the impacting nodes if it's a type that imparts impact - this does not remove the
-	// shortcut from dependency tracking of upstream impacted nodes
-	if path.Node.Kinds.ContainsOneOf(impactKinds...) {
-		impactingNodes = append(impactingNodes, terminalUint32ID)
-	}
 
 	for cursor := path.Trunk; cursor != nil; cursor = cursor.Trunk {
 		cursorNodeUint32ID := cursor.Node.ID.Uint64()
@@ -220,13 +251,10 @@ func (s Aggregator) AddShortcut(path *graph.PathSegment, impactKinds graph.Kinds
 			s.getImpact(cursorNodeUint32ID).Add(impactingNodes...)
 		}
 
-		// Only roll up cardinalities for nodes that belong to the set of impacting kinds
-		if cursor.Node.Kinds.ContainsOneOf(impactKinds...) {
-			impactingNodes = append(impactingNodes, cursor.Node.ID.Uint64())
-		}
+		impactingNodes = append(impactingNodes, cursor.Node.ID.Uint64())
 	}
 }
 
-func (s Aggregator) Resolved() cardinality.Duplex[uint64] {
+func (s aggregator) Resolved() cardinality.Duplex[uint64] {
 	return s.resolved
 }

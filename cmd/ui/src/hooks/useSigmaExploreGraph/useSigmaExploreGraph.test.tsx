@@ -32,15 +32,12 @@ const typicalFlatGraphResponse: FlatGraphResponse = {
     '1234': {
         color: '#DBE617',
         data: {
-            admincount: false,
-            description:
-                'Users are prevented from making accidental or intentional system-wide changes and can run most applications',
-            domain: 'FAKEDOMAIN.CORP',
-            isaclprotected: false,
-            lastseen: '2025-03-26T20:45:30.715175335Z',
-            nodetype: 'Group',
-            samaccountname: 'Users',
-            whencreated: 1668394808,
+            label: '',
+            kind: '',
+            lastSeen: '',
+            objectId: '',
+            isTierZero: true,
+            isOwnedObject: true,
         },
         border: {
             color: 'black',

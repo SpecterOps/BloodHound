@@ -22,11 +22,13 @@ import {
     GraphControls,
     GraphProgress,
     GraphViewErrorAlert,
+    ManageColumnsComboBoxOption,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
     isNode,
     isWebGLEnabled,
+    makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
     useCustomNodeKinds,
     useExploreSelectedItem,
@@ -38,13 +40,12 @@ import {
 
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes } from 'js-client-library';
-import isEmpty from 'lodash/isEmpty';
+import { type GraphNodes } from 'js-client-library';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout, setIsExploreTableSelected } from 'src/ducks/global/actions';
+import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -61,54 +62,46 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
-    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
+    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
+        enabled: !exploreLayout,
+    });
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;
     }
 
-    const includeProperties = !!isExploreTableSelected;
-
+    const displayTable = autoDisplayTable || !!isExploreTableSelected;
+    const includeProperties = displayTable;
     const graphQuery = useSigmaExploreGraph(includeProperties);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
-
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
-
     const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
 
-    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
-
-    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-        enabled: !exploreLayout,
-    });
-    const displayTable = autoDisplayTable || !!isExploreTableSelected;
-
     useEffect(() => {
-        let items: any = graphQuery.data;
+        let items: any = graphQuery.data?.nodes;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
-        // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
@@ -119,7 +112,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -161,6 +154,12 @@ const GraphView: FC = () => {
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
+    };
+
+    const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
+        const newItems = makeStoreMapFromColumnOptions(columnOptions);
+
+        dispatch(setSelectedExploreTableColumns(newItems));
     };
 
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
@@ -236,8 +235,11 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    data={graphQuery.data}
+                    data={graphQuery.data?.nodes}
+                    allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
+                    selectedColumns={selectedColumns}
+                    onManageColumnsChange={handleManageColumnsChange}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

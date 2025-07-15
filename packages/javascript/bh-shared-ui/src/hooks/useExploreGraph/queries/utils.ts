@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
+import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { extractEdgeTypes, getInitialPathFilters } from '../utils';
@@ -69,8 +69,8 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
             const lastSeen = getLastSeenValue(node);
             result.nodes[key] = {
                 label: node.label.text || '',
-                kind: node.data.nodetype,
-                objectId: node.data.objectid,
+                kind: node.data.nodetype || '',
+                objectId: node.data.objectid || '',
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
                 isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
                 lastSeen: lastSeen,
@@ -117,6 +117,8 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 objectid: value.objectId,
                 system_tags: tags.join(' '),
                 lastseen: lastSeen,
+                isTierZero: value.isTierZero,
+                ...(value?.properties || {}),
             },
         };
     }
@@ -129,7 +131,11 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 text: edge.label,
             },
             lastSeen: lastSeen,
-            data: { ...(edge.data || {}), lastseen: lastSeen },
+            data: {
+                ...(edge.data || {}),
+                lastseen: lastSeen,
+                ...(edge.data?.properties || {}),
+            },
         };
     }
     return result;
@@ -146,7 +152,7 @@ const getLastSeenValue = (object: any): string => {
 };
 
 const isLink = (item: any): boolean => {
-    return item.id1 !== undefined;
+    return item?.id1 !== undefined;
 };
 
 const isNode = (item: any): boolean => {

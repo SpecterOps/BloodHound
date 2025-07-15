@@ -453,8 +453,20 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 					return CheckError(result)
 				}
 			}
+
 			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
 				return err
+			}
+
+			// Analysis was updated, create an additional separate history record
+			if !origTag.AnalysisEnabled.Equal(tag.AnalysisEnabled) {
+				action := model.AssetGroupHistoryActionAnalysisDisabledTag
+				if tag.AnalysisEnabled.ValueOrZero() {
+					action = model.AssetGroupHistoryActionAnalysisEnabledTag
+				}
+				if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), tag.Name, action, tag.ID, null.String{}, null.String{}); err != nil {
+					return err
+				}
 			}
 		}
 

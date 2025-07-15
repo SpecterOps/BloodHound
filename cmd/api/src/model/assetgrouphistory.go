@@ -29,6 +29,9 @@ const (
 	AssetGroupHistoryActionUpdateTag AssetGroupHistoryAction = "UpdateTag"
 	AssetGroupHistoryActionDeleteTag AssetGroupHistoryAction = "DeleteTag"
 
+	AssetGroupHistoryActionAnalysisEnabledTag  AssetGroupHistoryAction = "AnalysisEnabledTag"
+	AssetGroupHistoryActionAnalysisDisabledTag AssetGroupHistoryAction = "AnalysisDisabledTag"
+
 	AssetGroupHistoryActionCreateSelector AssetGroupHistoryAction = "CreateSelector"
 	AssetGroupHistoryActionUpdateSelector AssetGroupHistoryAction = "UpdateSelector"
 	AssetGroupHistoryActionDeleteSelector AssetGroupHistoryAction = "DeleteSelector"

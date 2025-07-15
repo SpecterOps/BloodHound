@@ -18,7 +18,6 @@ package cmdrunner
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io"
 	"log/slog"
@@ -152,12 +151,8 @@ func Run(command string, args []string, path string, env environment.Environment
 // to stdout and stderr as they are written to by the executed application.
 func RunInteractive(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
 	cmd, result := prepareCommand(command, args, path, env)
-
-	// Interactive output should only emit if the log level is verbose enough
-	if slog.Default().Enabled(context.Background(), slog.LevelInfo) {
-		cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
-		cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
-	}
+	cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
+	cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
 
 	return result, run(cmd, result)
 }
