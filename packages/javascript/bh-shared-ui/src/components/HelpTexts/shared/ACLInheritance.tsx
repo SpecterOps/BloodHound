@@ -65,8 +65,8 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
     return (
         <>
             <Typography variant='body2'>
-                An ACE granting access permissions to a Domain or OU can be inherited by entities contained within them.
-                This panel lists the source object(s) for the inherited ACE.
+                An ACE granting access permissions to a Domain, OU, or Container can be inherited by entities contained
+                within them. This panel lists the source object(s) for the inherited ACE.
             </Typography>
             <Box py={1}>{getSourceObjectContent()}</Box>
         </>
