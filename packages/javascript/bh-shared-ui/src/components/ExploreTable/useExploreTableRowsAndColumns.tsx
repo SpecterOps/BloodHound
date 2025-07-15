@@ -38,7 +38,6 @@ const useExploreTableRowsAndColumns = ({
                             setSortOrder('desc');
                             break;
                         default:
-                        case null:
                             setSortOrder('desc');
                             break;
                     }
