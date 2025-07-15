@@ -115,10 +115,6 @@ func (s *Command) Parse() error {
 		return fmt.Errorf("path flag is required")
 	}
 
-	if s.outpath == "" {
-		s.outpath = "/tmp/"
-	}
-
 	s.path, err = filepath.Abs(s.path)
 	if err != nil {
 		return fmt.Errorf("could not convert path to absolute path: %w", err)
