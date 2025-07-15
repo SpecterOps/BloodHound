@@ -39,13 +39,13 @@ const (
 
 // Pipeline defines instance methods that operate on pipeline state.
 // These methods require a fully initialized Pipeline instance including
-// graph and db connections. Whatever is neeeded by the pipe to do the work
+// graph and db connections. Whatever is needed by the pipe to do the work
 type Pipeline interface {
-	PruneData(context.Context) bool
-	DeleteData(context.Context) bool
-	IngestTasks(context.Context) bool
-	Analyze(context.Context) bool
-	Start(context.Context) bool
+	PruneData(context.Context) error
+	DeleteData(context.Context) error
+	IngestTasks(context.Context) error
+	Analyze(context.Context) error
+	Start(context.Context) error
 	IsActive(context.Context, model.DatapipeStatus) (bool, context.Context)
 }
 
@@ -131,26 +131,25 @@ func (s *Daemon) Stop(ctx context.Context) error {
 
 // Any function can be wrapped with a datapipe lock, giving it the status. If everything locks
 // the datapipe through this same wrapper, it should always defer the idle status after.
-func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeStatus, action func(context.Context) bool) {
+func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeStatus, action func(context.Context) error) {
+
 	active, pipelineContext := s.pipeline.IsActive(ctx, status)
-	successful := false
 	if !active {
 		return
 	}
 
-	if err := s.db.SetDatapipeStatus(pipelineContext, status, false); err != nil {
-		slog.ErrorContext(pipelineContext, fmt.Sprintf("Error setting datapipe status: %v", err))
-		return
-	}
 	defer func() {
-		// The set datapipe status has a sneaky update in it's depths. This flag being set true sets the
-		// last_analyzed time on the datapipe status. This should only happen after analyzsis (no other steps)
-		// and only if the analysis is successful
-		flagAsAnalyzedComplete := (status == model.DatapipeStatusAnalyzing && successful)
-		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle, flagAsAnalyzedComplete); err != nil {
-			slog.ErrorContext(pipelineContext, "failed to reset datapipe status", "error", err)
+		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle); err != nil {
+			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", slog.String("err", err.Error()))
 		}
 	}()
 
-	successful = action(pipelineContext)
+	if err := s.db.SetDatapipeStatus(pipelineContext, status); err != nil {
+		slog.ErrorContext(pipelineContext, fmt.Sprintf("Error setting datapipe status: %v", err))
+		return
+	}
+
+	if err := action(pipelineContext); err != nil {
+		slog.ErrorContext(pipelineContext, "Datapipe action failed", slog.String("err", err.Error()))
+	}
 }
