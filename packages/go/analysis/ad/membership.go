@@ -171,7 +171,7 @@ func FetchPathMembers(ctx context.Context, db graph.Database, root graph.ID, dir
 		Driver: func(ctx context.Context, tx graph.Transaction, segment *graph.PathSegment) ([]*graph.PathSegment, error) {
 			if nextQuery, err := newTraversalQuery(tx, segment, direction, queryCriteria...); err != nil {
 				return nil, err
-			} else if reverseDirection ,err := direction.Reverse(); err != nil {
+			} else if reverseDirection, err := direction.Reverse(); err != nil {
 				return nil, err
 			} else {
 				var nextSegments []*graph.PathSegment

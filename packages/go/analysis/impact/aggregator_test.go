@@ -26,9 +26,9 @@ import (
 )
 
 var (
-	aKind       = graph.StringKind("A")
-	edgeKind    = graph.StringKind("EDGE")
-	nextID      = graph.ID(0)
+	aKind    = graph.StringKind("A")
+	edgeKind = graph.StringKind("EDGE")
+	nextID   = graph.ID(0)
 )
 
 func resetNextID() {
