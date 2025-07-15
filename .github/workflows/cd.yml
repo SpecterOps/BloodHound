@@ -14,15 +14,10 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-name: Continuous Deployment (CD)
+name: Continuous Deployment (test) (CD)
 
-on:
-  push:
-    branches:
-      - main
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
-      - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
+### TODO: Fix before live
+on: workflow_dispatch
 
 jobs:
   bloodhound-container-image:
@@ -34,7 +29,8 @@ jobs:
       build_context: .
       image_sbom: true
       image_provenance: mode=max
-      build_outputs: type=image,push=true
+      ### TODO: Fix before live
+      build_outputs: type=image,push=false
       dockerfile: dockerfiles/bloodhound.Dockerfile
       image_cache_from: type=gha
       image_cache_to: type=gha,mode=max
@@ -68,3 +64,11 @@ jobs:
       docker_content_trust_repository_passphrase: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }}
       docker_content_trust_repository_key: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_KEY }}
       docker_content_trust_repository_public_key: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PUBLIC_KEY }}
+
+  bloodhound-debian-package:
+    needs: bloodhound-container-image
+    name: Build and Publish BloodHound Distro Packages
+    uses: ./.github/workflows/reusable.package-distro.yml
+    with:
+      dockerhub_image_reference: ${{ needs.bloodhound-container-image.outputs.image_reference }}
+      product_version: ${{ github.ref_name }}

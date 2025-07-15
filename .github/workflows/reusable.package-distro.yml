@@ -1,0 +1,92 @@
+---
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Distro Package Product
+on:
+  workflow_call:
+    inputs:
+      dockerhub_image_reference:
+        type: string
+        required: true
+        description: >
+          The full reference to the Docker image that needs files extracted,
+          including registry, repository name, and tag/digest (e.g.
+          'organization/image:tag'). This image must already exist in DockerHub
+          and be accessible with the provided credentials.
+      product_version:
+        type: string
+        required: true
+        description: >
+          Product version
+    secrets:
+      gh_access_token:
+        required: true
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+      docker_content_trust_repository_key_id:
+        required: true
+      docker_content_trust_repository_passphrase:
+        required: true
+      docker_content_trust_repository_key:
+        required: true
+      docker_content_trust_repository_public_key:
+        required: true
+
+jobs:
+  extract-files:
+    name: Extract Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@v3
+        name: Authenticate with DockerHub Registry
+        with:
+          registry: docker.io
+          username: ${{ secrets.dockerhub_account }}
+          password: ${{ secrets.dockerhub_token }}
+      - name: Install Pre-requirements
+        shell: bash
+        run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install ruby && sudo gem install fpm
+      - name: Pull Image
+        shell: bash
+        run: docker pull ${{ inputs.dockerhub_image_reference }}
+      - name: Extract Product
+        shell: bash
+        run: |
+          container_id=$(docker create ${{ inputs.dockerhub_image_reference }})
+          mkdir -p release/usr/bin
+          mkdir -p release/etc/bloodhound/collectors
+          docker cp $container_id:/bloodhound release/usr/bin/bloodhound
+          docker cp $container_id:/bloodhound.config.json release/etc/bloodhound.config.json
+          docker cp $container_id:/etc/bloodhound/collectors release/etc/bloodhound/collectors
+      - name: Build Debian Package
+        shell: bash
+        run: |
+          ARCH="$(uname -m)"
+          VERSION="${{ inputs.product_version }}"
+          fpm \
+            -s dir -t deb \
+            -p bloodhound-community-$VERSION-$ARCH.deb \
+            --name bloodhound-community \
+            --license apache \
+            --version $VERSION \
+            --architecture all \
+            --description "An advanced security tool which uses graph theory to analyze and visualize attack paths within Active Directory and Azure environments" \
+            --url "https://specterops.io" \
+            --maintainer "SpecterOps Engineering <info@specterops.io>" \
+            release/usr/bin/bloodhound=/usr/bin/bloodhound  release/etc/bloodhound.config.json=/etc/bloodhound.config.json

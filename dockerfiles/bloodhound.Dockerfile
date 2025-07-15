@@ -118,6 +118,7 @@ FROM gcr.io/distroless/static-debian11 AS bloodhound
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
+# These target paths matter in the distro package github action workflows which extract them
 COPY --from=api-builder /bloodhound /opt/bloodhound /etc/bloodhound /var/log /
 COPY dockerfiles/configs/bloodhound.config.json /bloodhound.config.json
 
