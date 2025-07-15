@@ -116,7 +116,7 @@ const ExploreTable = ({
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     onRowClick={onRowClick}
-                    selectedRow={selectedNode}
+                    selectedRow={selectedNode || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
                 />
