@@ -14,8 +14,16 @@ type ZoneAnalysisIconProps = {
 export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
+    const iconProps = {
+        size,
+        'data-testid': 'analysis_disabled_icon',
+        'aria-label': 'Analysis disabled for this tier',
+        role: 'img',
+        className: clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]')
+    };
+
     if (!privilegeZoneAnalysisEnabled) {
-        return
+        return null
     }
 
     return tooltip ? (
@@ -24,9 +32,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 <TooltipTrigger>
                     <div className={clsx(wrapperClasses)} >
                         <AppIcon.DataAlert
-                            size={size}
-                            data-testid='analysis_disabled_icon'
-                            className={clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]')} />
+                            {...iconProps} />
                     </div>
                 </TooltipTrigger>
                 <TooltipPortal>
@@ -38,9 +44,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
         </TooltipProvider>
     ) : (
         <AppIcon.DataAlert
-            size={size}
-            className={clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]')}
-            data-testid='analysis_disabled_icon'
+            {...iconProps}
         />
     )
 };
