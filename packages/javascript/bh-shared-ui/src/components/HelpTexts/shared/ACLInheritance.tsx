@@ -38,6 +38,7 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
         { withProperties: true }
     );
 
+    // Filter our source node(s) from the result set by checking if the node's inheritance hash list includes the target edge's hash
     const checkNodeForHash = (node: NormalizedNodeItem) => {
         const hashes = node.properties?.[ActiveDirectoryKindProperties.InheritanceHashes];
         return !!(Array.isArray(hashes) && hashes.includes(inheritanceHash));
@@ -45,21 +46,29 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
 
     const nodesInheritedFrom = inheritanceHash.length > 0 ? nodesArray.filter(checkNodeForHash) : [];
 
+    const getSourceObjectContent = () => {
+        if (isLoading) {
+            return <Skeleton variant='rounded' />;
+        }
+
+        if (isError) {
+            return <Alert severity='error'>Couldn't load ACL inheritance sources</Alert>;
+        }
+
+        if (nodesInheritedFrom.length === 0) {
+            return <Alert severity='warning'>No valid ACL inheritance sources found</Alert>;
+        }
+
+        return <VirtualizedNodeList nodes={nodesInheritedFrom} />;
+    };
+
     return (
         <>
             <Typography variant='body2'>
                 An ACE granting access permissions to a Domain or OU can be inherited by entities contained within them.
                 This panel lists the source object(s) for the inherited ACE.
             </Typography>
-            <Box py={1}>
-                {isLoading ? (
-                    <Skeleton variant='rounded' />
-                ) : isError ? (
-                    <Alert severity='error'>Couldn't load ACL inheritance</Alert>
-                ) : (
-                    <VirtualizedNodeList nodes={nodesInheritedFrom} />
-                )}
-            </Box>
+            <Box py={1}>{getSourceObjectContent()}</Box>
         </>
     );
 };
