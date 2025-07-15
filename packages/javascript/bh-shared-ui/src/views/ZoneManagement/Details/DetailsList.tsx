@@ -29,7 +29,7 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
-import { TierAnalysisIcon } from '../TierAnalysisIcon';
+import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 
 const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
     if (listItem.counts === undefined) {
@@ -156,7 +156,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             <div className='flex items-center'>
                                                 {isTag(listItem) &&
                                                     !listItem?.analysis_enabled && (
-                                                        <TierAnalysisIcon size={18} />
+                                                        <ZoneAnalysisIcon size={18} />
                                                     )}
                                                 <div
                                                     className={cn(

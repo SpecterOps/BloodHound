@@ -4,14 +4,14 @@ import { AppIcon } from '../../components';
 import clsx from 'clsx';
 import { usePrivilegeZoneAnalysis } from '../../hooks';
 
-type TierAnalysisIconProps = {
+type ZoneAnalysisIconProps = {
     iconClasses?: string | null,
     size?: number;
     tooltip?: boolean,
     wrapperClasses?: string,
 };
 
-export const TierAnalysisIcon: FC<TierAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
+export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     if (!privilegeZoneAnalysisEnabled) {

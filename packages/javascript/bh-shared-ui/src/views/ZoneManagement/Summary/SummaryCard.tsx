@@ -27,7 +27,7 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { TierAnalysisIcon } from '../TierAnalysisIcon';
+import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 
 type SummaryCardProps = {
     title: string;
@@ -48,7 +48,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
         >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
                 {!analysisEnabled && (
-                    <TierAnalysisIcon size={24} tooltip />
+                    <ZoneAnalysisIcon size={24} tooltip />
                 )}
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
