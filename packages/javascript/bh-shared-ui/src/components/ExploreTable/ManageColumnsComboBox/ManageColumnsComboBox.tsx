@@ -102,7 +102,9 @@ export const ManageColumnsComboBox = ({
         return shouldSelectAll;
     };
 
-    const handleManageColumnsClick = () => setIsOpen(true);
+    const handleManageColumnsClick = () => {
+        setIsOpen(true);
+    };
 
     return (
         <>

@@ -78,13 +78,13 @@ const TableControls = <TData, TValue>({
                     </div>
                 )}
                 {onDownloadClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onDownloadClick} className={ICON_CLASSES} icon={faDownload} />
+                    <div onClick={onDownloadClick} data-testid='download-button'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
                     </div>
                 )}
                 {onExpandClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onExpandClick} className={ICON_CLASSES} icon={faExpand} />
+                    <div onClick={onExpandClick} data-testid='expand-button'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
                 {onManageColumnsChange && (
@@ -95,8 +95,8 @@ const TableControls = <TData, TValue>({
                     />
                 )}
                 {onCloseClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onCloseClick} className={ICON_CLASSES} icon={faClose} />
+                    <div onClick={onCloseClick} data-testid='close-button'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
                     </div>
                 )}
             </div>

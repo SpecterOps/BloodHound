@@ -96,6 +96,7 @@ const ExploreTable = ({
 
     return (
         <div
+            data-testid='explore-table-container-wrapper'
             className={`dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${selectedNode ? 'w-[calc(100%-450px)]' : ''} ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls

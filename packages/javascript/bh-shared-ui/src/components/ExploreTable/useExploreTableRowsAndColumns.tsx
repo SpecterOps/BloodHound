@@ -97,6 +97,7 @@ const useExploreTableRowsAndColumns = ({
                 id: 'action-menu',
                 cell: ({ row }) => (
                     <Button
+                        data-testid='kebab-menu'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
                         className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
                         <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
