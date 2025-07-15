@@ -219,7 +219,7 @@ export const TagForm: FC = () => {
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
-    }, [labelId, tagId, deleteTagMutation, addNotification, navigate]);
+    }, [labelId, tagId, deleteTagMutation, addNotification, navigate, ownedId, topTagId]);
 
     const onSubmit: SubmitHandler<UpdateAssetGroupTagRequest | CreateAssetGroupTagRequest> = useCallback(
         (formData) => {
