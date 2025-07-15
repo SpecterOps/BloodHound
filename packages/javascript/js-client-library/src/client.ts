@@ -176,6 +176,19 @@ class BHEAPIClient {
             })
         );
 
+    importUserQuery = (payload: any, contentType: string, options?: RequestOptions) => {
+        console.log('importUseQuery');
+        console.log(payload);
+        const headers = {
+            'Content-Type': contentType,
+        };
+
+        return this.baseClient.post<BasicResponse<any>>('/api/v2/saved-queries/import', payload, {
+            ...options,
+            ...headers,
+        });
+    };
+
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 

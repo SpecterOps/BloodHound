@@ -7,6 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
 import { AppIcon } from '../../../components';
+import ImportQueryDialog from './ImportQueryDialog';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
     exportHandler: () => void;
@@ -20,7 +21,8 @@ interface QuerySearchProps {
 const QuerySearchFilter = (props: QuerySearchProps) => {
     const { queryFilterHandler, exportHandler, categories, searchTerm, platform, categoryFilter, selectedQuery } =
         props;
-    const [categoriesOpen, setCategoriesOpen] = useState(false);
+    const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
+    const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
     const handleInput = (val: string) => {
         doFuzzySearch(val);
@@ -58,6 +60,11 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
 
     const exportEnabled = selectedQuery?.id ? true : false;
 
+    const importHandler = () => {
+        console.log('importHandler');
+        setShowImportDialog(true);
+    };
+
     return (
         <>
             <div className='mb-2'>
@@ -75,7 +82,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                     </div>
 
                     <div className='flex items-center ml-4'>
-                        <Button variant='secondary' size='medium'>
+                        <Button variant='secondary' size='medium' onClick={importHandler}>
                             Import
                         </Button>
                         <Button
@@ -143,6 +150,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                     </FormControl>
                 </div>
             </div>
+            <ImportQueryDialog open={showImportDialog} onClose={() => setShowImportDialog(false)} />
         </>
     );
 };

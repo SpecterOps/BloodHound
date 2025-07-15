@@ -42,6 +42,10 @@ export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest, options?: R
     return apiClient.updateUserQuery(savedQuery, options).then((response) => response.data.data);
 };
 
+export const importSavedQuery = (savedQuery: any, options?: RequestOptions): Promise<any> => {
+    return apiClient.importUserQuery(savedQuery, options).then((response) => response.data);
+};
+
 export const deleteSavedQuery = (id: number): Promise<void> => {
     return apiClient.deleteUserQuery(id).then((response) => response.data);
 };
@@ -72,6 +76,16 @@ export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
 
     return useMutation(deleteSavedQuery, {
+        onSuccess: () => {
+            queryClient.invalidateQueries(savedQueryKeys.all);
+        },
+    });
+};
+
+export const useImportSavedQuery = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(importSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
         },
