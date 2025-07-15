@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/src/config"
 )
 
 const (
@@ -66,15 +67,11 @@ func afterPooledConnectionRelease(conn *pgx.Conn) bool {
 	return true
 }
 
-func NewPool(connectionString string) (*pgxpool.Pool, error) {
-	if connectionString == "" {
-		return nil, fmt.Errorf("graph connection requires a connection url to be set")
-	}
-
+func NewPool(cfg config.DatabaseConfiguration) (*pgxpool.Pool, error) {
 	poolCtx, done := context.WithTimeout(context.Background(), poolInitConnectionTimeout)
 	defer done()
 
-	poolCfg, err := pgxpool.ParseConfig(connectionString)
+	poolCfg, err := pgxpool.ParseConfig(cfg.PostgreSQLConnectionString())
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +85,19 @@ func NewPool(connectionString string) (*pgxpool.Pool, error) {
 	// respective Golang structs.
 	poolCfg.AfterConnect = afterPooledConnectionEstablished
 	poolCfg.AfterRelease = afterPooledConnectionRelease
+
+	if cfg.Address != "" {
+		poolCfg.BeforeConnect = func(ctx context.Context, poolCfg *pgx.ConnConfig) error {
+			slog.Info(fmt.Sprint("RDS credentional beforeConnect(), creating new IAM credentials"))
+			refreshConnectionString := cfg.PostgreSQLConnectionString()
+			newPoolCfg, err := pgxpool.ParseConfig(refreshConnectionString)
+			if err != nil {
+				return err
+			}
+			poolCfg.Password = newPoolCfg.ConnConfig.Password
+			return nil
+		}
+	}
 
 	pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg)
 	if err != nil {

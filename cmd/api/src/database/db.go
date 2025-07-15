@@ -26,7 +26,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database/migration"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -208,7 +211,7 @@ func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundD
 	return &BloodhoundDB{db: db, idResolver: idResolver}
 }
 
-func OpenDatabase(connection string) (*gorm.DB, error) {
+func OpenDatabase(cfg config.Configuration) (*gorm.DB, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLogAdapter{
 			SlowQueryErrorThreshold: time.Second * 10,
@@ -216,7 +219,14 @@ func OpenDatabase(connection string) (*gorm.DB, error) {
 		},
 	}
 
-	if db, err := gorm.Open(postgres.Open(connection), gormConfig); err != nil {
+	pool, err := pg.NewPool(cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	dbPool := stdlib.OpenDBFromPool(pool)
+
+	if db, err := gorm.Open(postgres.New(postgres.Config{Conn: dbPool}), gormConfig); err != nil {
 		return nil, err
 	} else {
 		return db, nil

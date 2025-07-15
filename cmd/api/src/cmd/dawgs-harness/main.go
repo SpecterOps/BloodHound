@@ -37,6 +37,8 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
+
+	"github.com/specterops/bloodhound/src/config"
 )
 
 func fatalf(format string, args ...any) {
@@ -44,14 +46,14 @@ func fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
-func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.TestSuite {
+func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg config.DatabaseConfiguration) tests.TestSuite {
 	var (
 		pool *pgxpool.Pool
 		err  error
 	)
 
 	if driverName == pg.DriverName {
-		pool, err = pg.NewPool(connectionStr)
+		pool, err = pg.NewPool(cfg)
 		if err != nil {
 			fatalf("Failed creating a new pgxpool: %s", err)
 		}
@@ -140,11 +142,12 @@ func main() {
 	flag.Parse()
 
 	bhlog.ConfigureDefaultText(os.Stdout)
+	var dummyconfig config.DatabaseConfiguration
 
 	switch testType {
 	case "both":
 		n4jTestSuite := execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, dummyconfig)
 		})
 
 		fmt.Println()
@@ -153,7 +156,7 @@ func main() {
 		time.Sleep(time.Second * 3)
 
 		pgTestSuite := execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, dummyconfig)
 		})
 		fmt.Println()
 
@@ -161,12 +164,12 @@ func main() {
 
 	case "postgres":
 		execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, dummyconfig)
 		})
 
 	case "neo4j":
 		execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, dummyconfig)
 		})
 	}
 }
