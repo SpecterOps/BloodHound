@@ -86,7 +86,7 @@ func (s *Command) Parse() error {
 		cmd = flag.NewFlagSet(Name, flag.ContinueOnError)
 	)
 
-	cmd.StringVar(&s.outpath, "outpath", "/tmp/", "destination path for generic graph files, default is {root}/tmp/")
+	cmd.StringVar(&s.outpath, "outpath", "tmp/", "destination path for generic graph files, default is tmp/")
 	cmd.StringVar(&s.path, "path", "", "directory containing bloodhound collection files")
 
 	cmd.Usage = func() {
@@ -161,7 +161,7 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 	}
 }
 
-func (s *CommunityGraphService) InitializeService(ctx context.Context, connection string, _ graph.Database) error {
+func (s *CommunityGraphService) InitializeService(ctx context.Context, connection string, graphDB graph.Database) error {
 	gormDB, err := database.OpenDatabase(connection)
 	if err != nil {
 		return fmt.Errorf("error opening database: %w", err)
@@ -171,6 +171,10 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 
 	if err := s.db.Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating database: %w", err)
+	} else if err := migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
+		return fmt.Errorf("error migrating graph schema: %w", err)
+	} else if err = graphDB.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
+		return fmt.Errorf("error setting default graph: %w", err)
 	}
 
 	return nil
@@ -397,10 +401,6 @@ func initializeGraphDatabase(ctx context.Context, postgresConnection string) (gr
 		Pool:                  pool,
 	}); err != nil {
 		return nil, fmt.Errorf("error connecting to database: %w", err)
-	} else if err = migrations.NewGraphMigrator(database).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
-		return nil, fmt.Errorf("error migrating graph: %w", err)
-	} else if err = database.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
-		return nil, fmt.Errorf("error setting default graph: %w", err)
 	} else {
 		return database, nil
 	}
