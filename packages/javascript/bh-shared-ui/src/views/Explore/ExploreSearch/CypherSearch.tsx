@@ -160,6 +160,11 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         }
     };
 
+    const handleEditQuery = (id: number) => {
+        setSelected({ query: '', id: id });
+        setShowSaveQueryDialog(true);
+    };
+
     const handleClearMessage = () => {
         setMessageState((prevState) => ({
             ...prevState,
@@ -202,6 +207,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                         showCommonQueries={showCommonQueries}
                         selected={selected}
                         selectedQuery={selectedQuery}
+                        onEditQuery={handleEditQuery}
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}

@@ -24,13 +24,7 @@ import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearches
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
-import {
-    getExportQuery,
-    useCypherSearch,
-    useDeleteSavedQuery,
-    usePrebuiltQueries,
-    useSavedQueries,
-} from '../../../hooks';
+import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
@@ -41,6 +35,7 @@ type CommonSearchesProps = {
     onPerformCypherSearch: (query: string) => void;
     onSetSelected: (query: string, id?: number) => void;
     onToggleCommonQueries: () => void;
+    onEditQuery: (id: number) => void;
     selected: { query: string; id?: number };
     showCommonQueries: boolean;
     selectedQuery: any;
@@ -51,7 +46,7 @@ const InnerCommonSearches = ({
     onPerformCypherSearch,
     onSetSelected,
     onToggleCommonQueries,
-    prebuiltSearchList,
+    onEditQuery,
     selected,
     showCommonQueries,
     selectedQuery,
@@ -62,7 +57,6 @@ const InnerCommonSearches = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
-    const { cypherQuery } = useCypherSearch();
 
     //master list of pre-made queries
     const queryList = usePrebuiltQueries();
@@ -177,6 +171,7 @@ const InnerCommonSearches = ({
                     deleteHandler={handleDeleteQuery}
                     clearFiltersHandler={handleClearFilters}
                     selectedQuery={selectedQuery}
+                    editHandler={onEditQuery}
                 />
             </div>
         </div>

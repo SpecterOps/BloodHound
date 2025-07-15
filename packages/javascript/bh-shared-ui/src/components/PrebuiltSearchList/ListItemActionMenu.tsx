@@ -5,28 +5,18 @@ import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
     id?: number;
     deleteQuery: (id: number) => void;
+    editQuery: (id: number) => void;
 }
 
-const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery }) => {
-    const handleClose = (event: MouseEvent) => {
-        // event.stopPropagation();
-        console.log('handle close');
-    };
-
-    // const handleRun = (event: MouseEvent) => {
-    //     console.log(event);
-    //     // handleClose(event);
-    // };
-
+const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery, editQuery }) => {
     const handleDelete = (event: MouseEvent) => {
-        // handleClose(event);
         event.stopPropagation();
         deleteQuery(id as number);
-        handleClose(event);
     };
 
     const handleEdit = (event: MouseEvent) => {
         event.stopPropagation();
+        editQuery(id as number);
     };
 
     const listItemStyles = 'w-full px-2 py-3 cursor-pointer hover:bg-neutral-light-4';

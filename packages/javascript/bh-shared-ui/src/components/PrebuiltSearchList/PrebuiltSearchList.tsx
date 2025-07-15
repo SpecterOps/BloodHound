@@ -26,6 +26,7 @@ interface PrebuiltSearchListProps {
     selectedQuery: any;
     clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
+    editHandler: (id: number) => void;
     clearFiltersHandler: () => void;
 }
 
@@ -50,16 +51,13 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     selectedQuery,
     clickHandler,
     deleteHandler,
+    editHandler,
     clearFiltersHandler,
 }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
 
     const styles = useStyles();
-
-    const handleOpen = () => {
-        setOpen(true);
-    };
 
     const handleClose = () => {
         setOpen(false);
@@ -70,7 +68,11 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 
     const handleDelete = (id: number) => {
         setQueryId(id);
-        handleOpen();
+        setOpen(true);
+    };
+
+    const handleEdit = (id: number) => {
+        editHandler(id);
     };
 
     const testMatch = (name: string, id?: number) => {
@@ -122,8 +124,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                     </div>
                                                     {canEdit && (
                                                         <ListItemActionMenu
-                                                            id={id}
+                                                            id={id as number}
                                                             deleteQuery={() => handleDelete(id as number)}
+                                                            editQuery={() => handleEdit(id as number)}
                                                         />
                                                     )}
                                                 </div>
