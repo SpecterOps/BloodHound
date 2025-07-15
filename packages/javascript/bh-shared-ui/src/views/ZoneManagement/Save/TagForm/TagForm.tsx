@@ -40,15 +40,18 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
-import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
+import { useGetConfiguration } from '../../../../hooks';
+import {
+    useAssetGroupTags,
+    useHighestPrivilegeTagId,
+    useOwnedTagId,
+} from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
+import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-
-import { useGetConfiguration } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
@@ -68,13 +71,6 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
 
     // We should never reach this default return
     return 'Tag Details';
-};
-
-const showDeleteButton = (labelId: string | undefined, tierId: string) => {
-    if (tierId === '' && !labelId) return false;
-    if (labelId === OWNED_ID) return false;
-    if (tierId === TIER_ZERO_ID) return false;
-    return true;
 };
 
 const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs): UpdateAssetGroupTagRequest => {
@@ -111,8 +107,12 @@ export const TagForm: FC = () => {
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
+
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
+
     const showAnalysisToggle =
-        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
+        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
@@ -124,6 +124,13 @@ export const TagForm: FC = () => {
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
+
+    const showDeleteButton = (labelId: string | undefined, tierId: string) => {
+        if (tierId === '' && !labelId) return false;
+        if (labelId === ownedId?.toString()) return false;
+        if (tierId === topTagId?.toString()) return false;
+        return true;
+    };
 
     const handleCreateTag = useCallback(
         async (formData: TagFormInputs) => {
@@ -208,7 +215,7 @@ export const TagForm: FC = () => {
             const tagValue = getTagUrlValue(labelId);
 
             setDeleteDialogOpen(false);
-            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
+            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
@@ -253,9 +260,10 @@ export const TagForm: FC = () => {
                                 <div>
                                     <Label htmlFor='name'>Name</Label>
                                     <Input
+                                        data-testid='zone-management_save_tag-form_name-input'
                                         id='name'
                                         type='text'
-                                        disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
+                                        disabled={tagId === topTagId?.toString() || tagId === ownedId?.toString()}
                                         {...register('name', {
                                             required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
                                             value: tagQuery.data?.name,
@@ -278,6 +286,7 @@ export const TagForm: FC = () => {
                                     <Label htmlFor='description'>Description</Label>
                                     <textarea
                                         id='description'
+                                        data-testid='zone-management_save_tag-form_description-input'
                                         {...register('description', { value: tagQuery.data?.description })}
                                         placeholder='Description Input'
                                         rows={3}
@@ -294,7 +303,7 @@ export const TagForm: FC = () => {
                                                 id='analysis'
                                                 checked={toggleEnabled}
                                                 {...register('analysis_enabled')}
-                                                data-testid='analysis_enabled'
+                                                data-testid='zone-management_save_tag-form_analysis-enabled-switch'
                                                 onCheckedChange={(checked: boolean) => {
                                                     setToggleEnabled(checked);
                                                     setValue('analysis_enabled', checked);
@@ -307,7 +316,12 @@ export const TagForm: FC = () => {
 
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
-                                    <Input id='position' type='number' {...register('position', { value: position })} />
+                                    <Input
+                                        data-testid='zone-management_save_tag-form_position-input'
+                                        id='position'
+                                        type='number'
+                                        {...register('position', { value: position })}
+                                    />
                                 </div>
                             </div>
                         </CardContent>
@@ -316,6 +330,7 @@ export const TagForm: FC = () => {
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
+                                data-testid='zone-management_save_tag-form_delete-button'
                                 variant={'text'}
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
@@ -327,13 +342,17 @@ export const TagForm: FC = () => {
                             </Button>
                         )}
                         <Button
+                            data-testid='zone-management_save_tag-form_cancel-button'
                             variant={'secondary'}
                             onClick={() => {
                                 navigate(-1);
                             }}>
                             Cancel
                         </Button>
-                        <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                        <Button
+                            data-testid='zone-management_save_tag-form_save-button'
+                            variant={'primary'}
+                            onClick={handleSubmit(onSubmit)}>
                             {tagId === '' ? 'Define Selector' : 'Save Edits'}
                         </Button>
                     </div>
