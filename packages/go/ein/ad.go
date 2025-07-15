@@ -80,6 +80,20 @@ func ConvertOUToNode(item OU, ingestTime time.Time) IngestibleNode {
 	}
 }
 
+func ConvertContainerToNode(item Container, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Container},
+	}
+}
+
 func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 

@@ -224,7 +224,8 @@ type User struct {
 
 type Container struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
+	ChildObjects      []TypedPrincipal
+	InheritanceHashes []string
 }
 
 type Trust struct {

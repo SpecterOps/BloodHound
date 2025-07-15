@@ -116,6 +116,17 @@ func TestConvertOUToNode_InheritanceHashes(t *testing.T) {
 	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
 }
 
+func TestConvertContainerToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	containerObject := ein.Container{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertContainerToNode(containerObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
 func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 	domainObject := ein.Domain{
 		IngestBase:   ein.IngestBase{},
