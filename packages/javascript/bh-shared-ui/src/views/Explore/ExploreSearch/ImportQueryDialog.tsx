@@ -15,7 +15,9 @@ import FileStatusListItem from '../../../components/FileStatusListItem';
 
 import { FileForIngest, FileStatus, FileUploadStep } from '../../../components/FileUploadDialog/types';
 
+import { ErrorResponse } from 'js-client-library';
 import { useImportSavedQuery } from '../../../hooks';
+import { useNotifications } from '../../../providers';
 
 const allowedFileTypes = ['application/json', 'application/zip'];
 
@@ -25,6 +27,8 @@ const ImportQueryDialog: React.FC<{
 }> = ({ open, onClose }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
+
+    const { addNotification } = useNotifications();
 
     const importSavedQueryMutation = useImportSavedQuery();
 
@@ -59,24 +63,86 @@ const ImportQueryDialog: React.FC<{
     const handleSubmit = () => {
         if (fileUploadStep === FileUploadStep.ADD_FILES) {
             setFileUploadStep(FileUploadStep.UPLOAD);
-            handleUpload();
+            handleUploadAll();
         }
     };
 
-    const handleUpload = () => {
-        // console.log('handleUpload');
-        const fileToUpload = filesForIngest[0];
-        console.log(fileToUpload.file);
-        if (fileToUpload.file.type === 'application/zip') {
-            //create blob
+    const updateStatusOfReadyFiles = (status: FileStatus) => {
+        setFilesForIngest((prevFiles) =>
+            prevFiles.map((file) => {
+                return {
+                    ...file,
+                    status: file.status === FileStatus.READY ? status : file.status,
+                };
+            })
+        );
+    };
+    const setNewFileStatus = (name: string, status: FileStatus) => {
+        setFilesForIngest((prevFiles) =>
+            prevFiles.map((file) => {
+                if (file.file.name === name) {
+                    return { ...file, status };
+                }
+                return file;
+            })
+        );
+    };
+    const setUploadFailureError = (name: string, error: string) => {
+        setNewFileStatus(name, FileStatus.FAILURE);
 
-            const blob = new Blob([fileToUpload.file], {
-                type: 'application/json',
-            });
-            importSavedQueryMutation.mutate(blob);
-        } else if (fileToUpload.file.type === 'application/json') {
-            importSavedQueryMutation.mutate(fileToUpload.file);
+        setFilesForIngest((prevFiles) =>
+            prevFiles.map((file) => {
+                if (file.file.name === name) {
+                    return { ...file, errors: [error] };
+                }
+                return file;
+            })
+        );
+    };
+    const uploadFile = (ingestFile: FileForIngest) => {
+        console.log(ingestFile);
+
+        importSavedQueryMutation.mutate(ingestFile.file, {
+            onError: (error: any) => {
+                const apiError = error?.response?.data as ErrorResponse;
+
+                if (apiError?.errors?.length && apiError.errors[0].message?.length) {
+                    const { message } = apiError.errors[0];
+                    addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
+                    setUploadFailureError(ingestFile.file.name, message);
+                } else {
+                    addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
+                    setUploadFailureError(ingestFile.file.name, 'Upload Failed');
+                }
+            },
+        });
+    };
+
+    const handleUploadAll = () => {
+        updateStatusOfReadyFiles(FileStatus.UPLOADING);
+        // const fileToUpload = filesForIngest[0];
+
+        let errorCount = 0;
+
+        for (const ingestFile of filesForIngest) {
+            // Separate error handling so we can continue on when a file fails
+
+            try {
+                uploadFile(ingestFile);
+            } catch (error) {
+                errorCount += 1;
+            }
+
+            setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
         }
+
+        // try {
+        //     importSavedQueryMutation.mutate(fileToUpload.file);
+        //     setFileUploadStep(FileUploadStep.ADD_FILES);
+        //     setFilesForIngest([]);
+        // } catch (error) {
+        //     console.log(error);
+        // }
     };
 
     return (
@@ -99,6 +165,7 @@ const ImportQueryDialog: React.FC<{
                         <>
                             <div>Files</div>
                             {filesForIngest.map((file, index) => {
+                                console.log(file);
                                 return (
                                     <FileStatusListItem
                                         file={file}

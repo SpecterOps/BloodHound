@@ -177,10 +177,6 @@ class BHEAPIClient {
         );
 
     importUserQuery = (payload: any, options?: RequestOptions) => {
-        console.log('importUserQuery');
-        // console.log(payload);
-        // console.log(options);
-
         const headers = {
             'Content-Type': payload.type,
         };
