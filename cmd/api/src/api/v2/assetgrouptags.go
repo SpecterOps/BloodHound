@@ -752,11 +752,11 @@ type AssetGroupTagSearchRequest struct {
 
 func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *http.Request) {
 	var (
-		reqBody          = AssetGroupTagSearchRequest{}
-		queryParams      = request.URL.Query()
-		members          = []AssetGroupMember{}
-		matchedTags      = model.AssetGroupTags{}
-		matchedSelectors = model.AssetGroupTagSelectors{}
+		reqBody     = AssetGroupTagSearchRequest{}
+		queryParams = request.URL.Query()
+		members     = []AssetGroupMember{}
+		matchedTags = model.AssetGroupTags{}
+		selectors   model.AssetGroupTagSelectors
 	)
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
@@ -767,22 +767,14 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
 	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
-	} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
+	} else if selectors, err = s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{SQLString: "name ILIKE ?", Params: []any{fmt.Sprintf("%%%s%%", reqBody.Query)}}, assetGroupTagsSearchLimit); err != nil && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else {
-		var (
-			kinds graph.Kinds
-		)
-
-		for _, s := range selectors {
-			if strings.Contains(strings.ToLower(s.Name), strings.ToLower(reqBody.Query)) && len(matchedSelectors) < assetGroupTagsSearchLimit {
-				matchedSelectors = append(matchedSelectors, s)
-			}
-		}
+		var kinds graph.Kinds
 
 		for _, t := range tags {
 			isLabelType := t.Type == model.AssetGroupTagTypeLabel
@@ -820,6 +812,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
 			}
 		}
+
+		api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tags: matchedTags, Selectors: selectors, Members: members}, http.StatusOK, response)
 	}
-	api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tags: matchedTags, Selectors: matchedSelectors, Members: members}, http.StatusOK, response)
 }
