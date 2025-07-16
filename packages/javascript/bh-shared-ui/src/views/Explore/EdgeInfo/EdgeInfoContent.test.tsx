@@ -85,10 +85,31 @@ const server = setupServer(
             })
         );
     }),
+    rest.get(`/api/v2/groups/testing-node-456`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    props: {
+                        objectid: 'testing-node-456',
+                    },
+                },
+            })
+        );
+    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/graphs/acl-inheritance', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    nodes: {},
+                    edges: [],
+                },
             })
         );
     })
