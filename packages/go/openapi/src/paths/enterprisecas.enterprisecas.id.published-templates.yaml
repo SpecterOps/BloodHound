@@ -1,4 +1,4 @@
-# Copyright 2024 Specter Ops, Inc.
+# Copyright 2025 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.object-id.yaml'
 get:
-  operationId: GetEnterpriseCaEntityControllers
-  summary: Get Enterprise CA entity controllers
-  description: Get a list, graph, or count of the principals that can control this Enterprise CA.
+  operationId: GetEnterpriseCaEntityPublishedTemplates
+  summary: Get published certificate templates of Enterprise CA entity
+  description: Get a list, graph, or count of the published certificate templates of this Enterprise CA.
   tags:
     - Enterprise CAs
     - Community
@@ -39,8 +39,6 @@ get:
       $ref: './../responses/unauthorized.yaml'
     403:
       $ref: './../responses/forbidden.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

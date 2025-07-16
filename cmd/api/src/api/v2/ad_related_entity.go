@@ -216,3 +216,27 @@ func (s *Resources) ListADGPOAffectedTierZero(response http.ResponseWriter, requ
 func (s *Resources) ListADIssuancePolicyLinkedCertTemplates(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADIssuancePolicyLinkedCertTemplates", adAnalysis.FetchPolicyLinkedCertTemplatePaths, adAnalysis.FetchPolicyLinkedCertTemplates)
 }
+
+func (s *Resources) ListRootCAPKIHierarchy(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListRootCAPKIHierarchy", adAnalysis.CreateRootCAPKIHierarchyPathDelegate, adAnalysis.CreateRootCAPKIHierarchyListDelegate)
+}
+
+func (s *Resources) ListCAPKIHierarchy(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListCAPKIHierarchy", adAnalysis.CreateCAPKIHierarchyPathDelegate, adAnalysis.CreateCAPKIHierarchyListDelegate)
+}
+
+func (s *Resources) ListPublishedTemplates(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListPublishedTemplates", adAnalysis.CreatePublishedTemplatesPathDelegate, adAnalysis.CreatePublishedTemplatesListDelegate)
+}
+
+func (s *Resources) ListPublishedToCAs(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListPublishedToCAs", adAnalysis.CreatePublishedToCAsPathDelegate, adAnalysis.CreatePublishedToCAsListDelegate)
+}
+
+func (s *Resources) ListTrustedCAs(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListTrustedCAs", adAnalysis.CreateTrustedCAsPathDelegate, adAnalysis.CreateTrustedCAsListDelegate)
+}
+
+func (s *Resources) ListADCSEscalations(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADCSEscalations", adAnalysis.CreateADCSEscalationsPathDelegate, adAnalysis.CreateADCSEscalationsListDelegate)
+}
