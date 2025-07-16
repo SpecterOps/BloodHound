@@ -60,25 +60,6 @@ The following environment variables are supported:
 -   `SB_COVERAGE_PATH`: allows setting a path other than `./tmp/coverage` to store Go coverage files in
 -   Pass-through of any tool specific environment variables, such as for changing the Go path for caching purposes. Some pass-through variables have sane defaults defined, but will be overridden if you set the environment variables yourself.
 
-### Sub-Commands
-
-#### Graph
-
-The subcommand `graph` ingests json files into Postgres, retrieves the nodes and edges from the database, and then outputs the data as a generic ingestible file.
-
-The following environment variables are required:
-
--   `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
-    -   Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
-
-The following flags are required:
-
--   `--path`: Specifies the input directory for the consumed files.
-
-The following flags are supported:
-
--   `--outfile`: Specifies the output file for generic ingestible graph file. Defaults to {root}/tmp/graph.json".
-
 ### Contributing
 
 St Bernard is a tool for BloodHound devs. If you think of something you want to see added, feel free to create a pull request. New subcommands can be added fairly easily by observing an existing subcommand and changing out the details as needed, then registering the new subcommand in `command/command.go`. Additional packages are used to group useful tools that multiple subcommands could make use of or for better code structuring.
