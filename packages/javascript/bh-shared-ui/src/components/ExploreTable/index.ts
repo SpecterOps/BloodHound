@@ -15,6 +15,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { default as ExploreTable } from './ExploreTable';
-export type { NodeClickInfo } from './ExploreTable';
 export type { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 export * from './explore-table-utils';
