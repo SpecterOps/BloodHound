@@ -5,10 +5,11 @@ import { Button } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './ExploreTable';
+import { requiredColumns, type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
+
 type DataTableProps = React.ComponentProps<typeof DataTable>;
 
 const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
