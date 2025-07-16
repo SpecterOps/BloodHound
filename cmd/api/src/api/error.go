@@ -74,7 +74,7 @@ const (
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 	ErrorResponseAssetGroupTagExceededNameLimit     = "asset group tag name is limited to 250 characters"
 	ErrorResponseAssetGroupTagDuplicateKindName     = "asset group tag name must be unique"
-	ErrorResponseAssetGroupTagInvalid               = "valid tag type is required"
+	ErrorResponseAssetGroupTagInvalid               = "valid tag_type is required"
 	ErrorResponseAssetGroupTagExceededTagLimit      = "tag limit has been exceeded"
 	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
 	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided tier position is out of range"

@@ -750,6 +750,15 @@ type AssetGroupTagSearchRequest struct {
 	TagType model.AssetGroupTagType `json:"tag_type"`
 }
 
+func validateAssetGroupTagType(maybeType model.AssetGroupTagType) bool {
+	switch maybeType {
+	case model.AssetGroupTagTypeTier, model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned:
+		return true
+	default:
+		return false
+	}
+}
+
 func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *http.Request) {
 	var (
 		reqBody     = AssetGroupTagSearchRequest{}
@@ -761,7 +770,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if (model.AssetGroupTag{Type: reqBody.TagType}).ToType() == "unknown" {
+	} else if !validateAssetGroupTagType(reqBody.TagType) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
 	} else if len(reqBody.Query) < 3 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
