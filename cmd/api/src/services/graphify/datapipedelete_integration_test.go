@@ -90,7 +90,7 @@ func TestDeleteSourcelessData(t *testing.T) {
 	}
 
 	var (
-		deleteRequest = model.AnalysisRequest{DeleteSourcelessKinds: true}
+		deleteRequest = model.AnalysisRequest{DeleteSourcelessGraph: true}
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 

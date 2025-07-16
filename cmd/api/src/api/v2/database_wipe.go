@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -28,12 +29,12 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/dawgs/graph"
 )
 
 type DatabaseWipe struct {
-	DeleteCollectedGraphData bool     `json:"deleteCollectedGraphData"`
-	DeleteOpenGraphData      bool     `json:"deleteOpenGraphData"`
-	DeleteSourceKinds        []string `json:"deleteSourceKinds"`
+	DeleteCollectedGraphData bool  `json:"deleteCollectedGraphData"`
+	DeleteSourceKinds        []int `json:"deleteSourceKinds"` // an id of 0 represents "sourceless" data
 
 	DeleteFileIngestHistory   bool  `json:"deleteFileIngestHistory"`
 	DeleteDataQualityHistory  bool  `json:"deleteDataQualityHistory"`
@@ -62,10 +63,21 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 	}
 
 	// return `BadRequest` if request is empty
-	if !payload.DeleteCollectedGraphData && !payload.DeleteOpenGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0 {
+	isEmptyRequest := !payload.DeleteCollectedGraphData && !payload.DeleteDataQualityHistory && !payload.DeleteFileIngestHistory && len(payload.DeleteAssetGroupSelectors) == 0 && len(payload.DeleteSourceKinds) == 0
+	if isEmptyRequest {
 		api.WriteErrorResponse(
 			request.Context(),
 			api.BuildErrorResponse(http.StatusBadRequest, "please select something to delete", request),
+			response,
+		)
+		return
+	}
+
+	isMixedDeleteRequest := payload.DeleteCollectedGraphData && len(payload.DeleteSourceKinds) > 0
+	if isMixedDeleteRequest {
+		api.WriteErrorResponse(
+			request.Context(),
+			api.BuildErrorResponse(http.StatusBadRequest, "request may only specify either deleteCollectedGraphData or deleteSourceKinds, not both", request),
 			response,
 		)
 		return
@@ -96,7 +108,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	deleteGraph := payload.DeleteCollectedGraphData || payload.DeleteOpenGraphData || len(payload.DeleteSourceKinds) > 0
+	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0
 	if deleteGraph {
 		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
@@ -121,15 +133,13 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 				userId = user.ID.String()
 			}
 
-			deleteRequest := model.AnalysisRequest{
-				RequestedBy:           userId,
-				RequestType:           model.AnalysisRequestDeletion,
-				DeleteAllGraph:        payload.DeleteCollectedGraphData,
-				DeleteSourcelessKinds: payload.DeleteOpenGraphData,
-				DeleteSourceKinds:     payload.DeleteSourceKinds,
-			}
-
-			if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), deleteRequest); err != nil {
+			if deleteRequest, err := s.buildDeleteRequest(request.Context(), userId, payload); err != nil {
+				api.WriteErrorResponse(
+					request.Context(),
+					api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("failure building delete request: %s", err.Error()), request),
+					response,
+				)
+			} else if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), deleteRequest); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
 			}
@@ -243,4 +253,63 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	if err := s.DB.AppendAuditLog(ctx, *auditEntry); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "error writing to audit log", err.Error()))
 	}
+}
+
+func (s Resources) buildDeleteRequest(ctx context.Context, userID string, payload DatabaseWipe) (model.AnalysisRequest, error) {
+	deleteRequest := model.AnalysisRequest{
+		RequestedBy:    userID,
+		RequestType:    model.AnalysisRequestDeletion,
+		DeleteAllGraph: payload.DeleteCollectedGraphData,
+	}
+
+	if slices.Contains(payload.DeleteSourceKinds, 0) {
+		deleteRequest.DeleteSourcelessGraph = true
+	}
+
+	if len(payload.DeleteSourceKinds) > 0 {
+		// Load source kind definitions from DB
+		sourceKinds, err := s.DB.GetSourceKinds(ctx)
+		if err != nil {
+			return deleteRequest, fmt.Errorf("failed to get source kinds: %w", err)
+		}
+
+		// Recover the source kind names from the provided IDs
+		requestedKinds := make(graph.Kinds, 0, len(payload.DeleteSourceKinds))
+		for _, id := range payload.DeleteSourceKinds {
+			found := false
+			for _, sk := range sourceKinds {
+				if sk.ID == id {
+					requestedKinds = append(requestedKinds, sk.Name)
+					found = true
+					break
+				}
+			}
+			if !found && id != 0 { // id of 0 is our internal convention meaning "sourceless". this is not an error case
+				return deleteRequest, fmt.Errorf("requested source kind id %d not found", id)
+			}
+		}
+
+		// Validate that all requested kinds are legitimate
+		validKinds, err := s.Graph.FetchKinds(ctx)
+		if err != nil {
+			return deleteRequest, fmt.Errorf("failed to fetch valid kinds: %w", err)
+		}
+
+		// Create a fast lookup map for validation
+		validSet := make(map[graph.Kind]struct{}, len(validKinds))
+		for _, k := range validKinds {
+			validSet[k] = struct{}{}
+		}
+
+		for _, rk := range requestedKinds {
+			if _, ok := validSet[rk]; !ok {
+				return deleteRequest, fmt.Errorf("requested source kind %q is not a valid kind", rk)
+			}
+		}
+
+		// All kinds are valid
+		deleteRequest.DeleteSourceKinds = requestedKinds.Strings()
+	}
+
+	return deleteRequest, nil
 }

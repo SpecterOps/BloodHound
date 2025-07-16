@@ -114,7 +114,7 @@ func DeleteCollectedGraphData2(ctx context.Context, graphDB graph.Database, dele
 		if deleteRequest.DeleteAllGraph {
 			// no filter. fetch em all
 			nodeQuery = tx.Nodes()
-		} else if deleteRequest.DeleteSourcelessKinds {
+		} else if deleteRequest.DeleteSourcelessGraph {
 			// fetch all nodes which don't have a source kind
 			nodeQuery = tx.Nodes().Filter(
 				query.Not(query.KindIn(query.Node(), sourceKinds...)),

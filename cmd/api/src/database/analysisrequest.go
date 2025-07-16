@@ -86,7 +86,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			request.RequestType,
 			now,
 			request.DeleteAllGraph,
-			request.DeleteSourcelessKinds,
+			request.DeleteSourcelessGraph,
 			pq.StringArray(request.DeleteSourceKinds),
 		}
 
@@ -96,7 +96,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			request_type,
 			requested_at,
 			delete_all_graph,
-			delete_all_open_graph,
+			delete_sourceless_graph,
 			delete_source_kinds
 		)
 		VALUES (?, ?, ?, ?, ?, ?::text[]);`
@@ -106,7 +106,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			request_type = ?,
 			requested_at = ?,
 			delete_all_graph = ?,
-			delete_all_open_graph = ?,
+			delete_sourceless_graph = ?,
 			delete_source_kinds = ?::text[];`
 	)
 	if analysisRequest, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {

@@ -29,6 +29,6 @@ ON CONFLICT (name) DO NOTHING;
 
 ALTER TABLE analysis_request_switch
 ADD COLUMN IF NOT EXISTS delete_all_graph boolean DEFAULT false,
-ADD COLUMN IF NOT EXISTS delete_all_open_graph boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS delete_sourceless_graph boolean DEFAULT false,
 ADD COLUMN IF NOT EXISTS delete_source_kinds text[] DEFAULT ARRAY[]::text[];
 
