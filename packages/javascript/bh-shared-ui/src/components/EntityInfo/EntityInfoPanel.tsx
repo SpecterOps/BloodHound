@@ -25,12 +25,18 @@ interface EntityInfoPanelProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
+    /*
     additionalTables?: [
         {
             sectionProps: EntityInfoDataTableProps;
             TableComponent: React.FC<EntityInfoDataTableProps>;
         },
     ];
+    */
+    additionalTables?: {
+        sectionProps: EntityInfoDataTableProps;
+        TableComponent: React.FC<EntityInfoDataTableProps>;
+    }[];
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {

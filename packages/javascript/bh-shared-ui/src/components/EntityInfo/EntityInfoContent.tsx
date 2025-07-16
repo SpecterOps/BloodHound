@@ -15,22 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box } from '@mui/material';
 import React from 'react';
-import { EntityInfoDataTableProps, EntityKinds } from '../../utils/content';
+import { EntityInfoContentProps } from '../../utils/content';
 import EntityInfoDataTableList from './EntityInfoDataTableList';
 import EntityObjectInformation from './EntityObjectInformation';
-
-export interface EntityInfoContentProps {
-    DataTable: React.FC<EntityInfoDataTableProps>;
-    id: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
-    additionalTables?: [
-        {
-            sectionProps: EntityInfoDataTableProps;
-            TableComponent: React.FC<EntityInfoDataTableProps>;
-        },
-    ];
-}
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (

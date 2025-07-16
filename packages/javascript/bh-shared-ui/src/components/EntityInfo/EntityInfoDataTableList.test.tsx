@@ -63,12 +63,10 @@ const EntityInfoContentWithProvider = ({
     testId: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    additionalTables?: [
-        {
-            sectionProps: EntityInfoDataTableProps;
-            TableComponent: React.FC<EntityInfoDataTableProps>;
-        },
-    ];
+    additionalTables?: {
+        sectionProps: EntityInfoDataTableProps;
+        TableComponent: React.FC<EntityInfoDataTableProps>;
+    }[];
 }) => (
     <ObjectInfoPanelContextProvider>
         <EntityInfoContent
