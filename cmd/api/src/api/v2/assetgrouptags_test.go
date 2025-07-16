@@ -2300,7 +2300,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		handler.ServeHTTP(response, req)
 
 		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), "valid tag type is required")
+		require.Contains(t, response.Body.String(), "valid tag_type is required")
 	})
 	t.Run("empty query error", func(t *testing.T) {
 
@@ -2330,7 +2330,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("get selectors db error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
@@ -2344,7 +2344,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("parse graph sort error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
@@ -2358,7 +2358,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("parse skip error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
@@ -2372,7 +2372,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("success - query by name type tier", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
 		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return([]*graph.Node{
 				{
@@ -2427,7 +2427,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("success - query by name type label", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test label", Type: 2}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
 		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return([]*graph.Node{
 				{
@@ -2482,7 +2482,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("success - query by name and type label and include owned type", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test owned label", Type: 2}, {Name: "owned", Type: 3}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, nil)
 		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return([]*graph.Node{
 				{
@@ -2537,7 +2537,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("success - query by object id", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, nil)
 		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return([]*graph.Node{
 				{

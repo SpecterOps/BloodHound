@@ -1080,7 +1080,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("returns all selectors", func(t *testing.T) {
-		items, err := dbInst.GetAssetGroupTagSelectors(testCtx, model.SQLFilter{})
+		items, err := dbInst.GetAssetGroupTagSelectors(testCtx, model.SQLFilter{}, 0)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 	})
