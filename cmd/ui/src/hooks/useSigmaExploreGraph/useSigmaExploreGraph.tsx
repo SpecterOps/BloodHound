@@ -36,11 +36,10 @@ export const useSigmaExploreGraph = (includeProperties: boolean) => {
 
     const castGraphData = graphQuery?.data?.data as GraphData;
 
-    const nodeKeys = castGraphData?.node_keys;
-
-    if (Array.isArray(nodeKeys)) {
-        nodeKeys.push('isTierZero');
-    }
+    const nodeKeys = useMemo(
+        () => (Array.isArray(castGraphData?.node_keys) ? castGraphData?.node_keys.concat(['isTierZero']) : undefined),
+        [castGraphData?.node_keys]
+    );
 
     // return the full query so we can know loading/error state, and use react-query tools. But override the data field with the normalized value
     return {

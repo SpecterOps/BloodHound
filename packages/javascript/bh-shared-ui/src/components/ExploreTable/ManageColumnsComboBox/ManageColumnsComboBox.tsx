@@ -2,7 +2,7 @@ import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
 import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
@@ -48,6 +48,17 @@ export const ManageColumnsComboBox = ({
         });
     }, [allColumns, selectedColumnMap, inputValue]);
 
+    const handleResetDefault = useCallback(() => {
+        setSelectedColumns([...pinnedColumns]);
+        onChange([...pinnedColumns]);
+    }, [onChange, pinnedColumns]);
+
+    useEffect(() => {
+        if (selectedColumns.length === 0) {
+            handleResetDefault();
+        }
+    }, [selectedColumns, handleResetDefault]);
+
     const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
 
     const { getDropdownProps, removeSelectedItem, addSelectedItem } = useMultipleSelection({
@@ -85,11 +96,6 @@ export const ManageColumnsComboBox = ({
             }
         },
     });
-
-    const handleResetDefault = () => {
-        setSelectedColumns([...pinnedColumns]);
-        onChange([...pinnedColumns]);
-    };
 
     const handleSelectAll = () => {
         if (shouldSelectAll) {
@@ -138,15 +144,19 @@ export const ManageColumnsComboBox = ({
                     </div>
                     <ul className={`w-inherit max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
                         {isOpen && [
-                            ...pinnedColumns.map((column, index) => (
-                                <ManageColumnsListItem
-                                    isSelected
-                                    key={`${column?.id}-${index}`}
-                                    item={column}
-                                    onClick={removeSelectedItem}
-                                    itemProps={getItemProps({ item: column, index })}
-                                />
-                            )),
+                            ...pinnedColumns.map((column, index) => {
+                                const isSelected = selectedColumnMap[column.id];
+
+                                return (
+                                    <ManageColumnsListItem
+                                        isSelected={selectedColumnMap[column.id]}
+                                        key={`${column?.id}-${index}`}
+                                        item={column}
+                                        onClick={isSelected ? removeSelectedItem : addSelectedItem}
+                                        itemProps={getItemProps({ item: column, index })}
+                                    />
+                                );
+                            }),
                             ...selectedColumns.reduce((acc, column, index) => {
                                 if (!column?.isPinned) {
                                     acc.push(

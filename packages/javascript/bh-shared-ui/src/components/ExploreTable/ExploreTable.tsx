@@ -26,7 +26,7 @@ export type NodeClickInfo = { id: string; x: number; y: number };
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
+const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname', 'isTierZero'];
 
 export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
 

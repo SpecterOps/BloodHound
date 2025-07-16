@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useMemo, useState } from 'react';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './ExploreTable';
+import { ExploreTableProps, MungedTableRowWithId } from './ExploreTable';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
@@ -70,6 +70,14 @@ const useExploreTableRowsAndColumns = ({
                 cell: (info) => {
                     const value = info.getValue() as EntityField['value'];
 
+                    if (info.column.id === 'nodetype') {
+                        return (
+                            <div className='flex justify-center items-center relative'>
+                                <NodeIcon nodeType={(info.getValue() as string) || ''} />
+                            </div>
+                        );
+                    }
+                    console.log(info.column.id);
                     if (typeof value === 'boolean' || !value) {
                         return (
                             <div className='h-full w-full flex justify-center items-center'>
@@ -102,22 +110,8 @@ const useExploreTableRowsAndColumns = ({
                     />
                 ),
             }),
-            columnHelper.accessor('nodetype', {
-                id: 'nodetype',
-                header: () => {
-                    return <span className='dark:text-neutral-light-1'>Type</span>;
-                },
-                cell: (info) => {
-                    return (
-                        <div className='flex justify-center items-center relative'>
-                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
-                        </div>
-                    );
-                },
-            }),
-            ...['objectid', 'displayname'].map(makeColumnDef),
         ],
-        [handleKebabMenuClick, makeColumnDef]
+        [handleKebabMenuClick]
     );
 
     const rows = useMemo(
@@ -164,14 +158,11 @@ const useExploreTableRowsAndColumns = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    const nonRequiredColumnDefinitions = useMemo(
-        () => allColumnKeys?.filter((key) => !requiredColumns[key]).map(makeColumnDef) || [],
-        [allColumnKeys, makeColumnDef]
-    );
+    const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
 
     const selectedColumnDefinitions = useMemo(
-        () => nonRequiredColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
-        [nonRequiredColumnDefinitions, selectedColumns]
+        () => allColumnDefintions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
+        [allColumnDefintions, selectedColumns]
     );
 
     const tableColumns = useMemo(
@@ -180,8 +171,8 @@ const useExploreTableRowsAndColumns = ({
     ) as DataTableProps['columns'];
 
     const columnOptionsForDropdown = useMemo(
-        () => [...requiredColumnDefinitions, ...nonRequiredColumnDefinitions],
-        [requiredColumnDefinitions, nonRequiredColumnDefinitions]
+        () => [...requiredColumnDefinitions, ...allColumnDefintions],
+        [requiredColumnDefinitions, allColumnDefintions]
     );
 
     return {
