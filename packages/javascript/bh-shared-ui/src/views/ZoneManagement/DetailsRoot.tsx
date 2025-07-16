@@ -13,7 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Skeleton } from '@mui/material';
+import { FC } from 'react';
+import { AppNavigate } from '../../components';
+import { useHighestPrivilegeTagId } from '../../hooks';
+import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
+const DetailsRoot: FC = () => {
+    const { tagId } = useHighestPrivilegeTagId();
+    if (tagId) {
+        return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + tagId} replace />;
+    } else {
+        return <Skeleton className='h-24' />;
+    }
+};
 
-export { default as ExploreTable } from './ExploreTable';
-export type { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
-export * from './explore-table-utils';
+export default DetailsRoot;
