@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -684,7 +685,6 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			}
 
 			filter := query.And(
-				// isolating all nodes to tag
 				query.KindIn(query.Node(), assetGroupTag.ToKind()),
 				query.InIDs(query.NodeID(), nodeIds...),
 			)
@@ -830,30 +830,10 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, filter, skip, assetGroupTagsSearchLimit); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 		} else {
-
-			if selectors == nil {
-				selectors = newSelectors
+			for _, node := range nodes {
+				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
 			}
-
-			filter := query.And(
-				query.KindIn(query.Node(), tag.ToKind()),
-			)
-
-			if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sort, filter); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
-			} else if nodes == nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "no nodes found", request), response)
-			} else {
-				for _, node := range nodes {
-					if node != nil {
-						members = append(members, nodeToAssetGroupMember(node, excludeProperties))
-					}
-				}
-				api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tags: tags, Selectors: selectors, Nodes: members}, http.StatusOK, response)
-			}
-
 		}
-
 	}
-
+	api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tags: matchedTags, Selectors: matchedSelectors, Members: members}, http.StatusOK, response)
 }

@@ -6144,6 +6144,117 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/search": {
+      "post": {
+        "operationId": "AssetGroupTagSearch",
+        "summary": "Search Asset Group Tags",
+        "description": "Supports searching by name on asset group tags and asset group tag selectors, and by name or object ID on members.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "requestBody": {
+          "description": "The request body for searching asset group tags.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "tag_type": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "query",
+                  "type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tag"
+                          }
+                        },
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                          }
+                        },
+                        "members": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "object_id": {
+                                "type": "string"
+                              },
+                              "primary_kind": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "properties": {
+                                "type": "object",
+                                "additionalProperties": true
+                              },
+                              "source": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {

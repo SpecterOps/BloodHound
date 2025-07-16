@@ -230,7 +230,6 @@ func (s AssetGroupTagSelector) IsStringColumn(filter string) bool {
 
 func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"id":           {Equals, NotEquals},
 		"auto_certify": {Equals, NotEquals},
 		"created_at":   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"created_by":   {Equals, NotEquals},

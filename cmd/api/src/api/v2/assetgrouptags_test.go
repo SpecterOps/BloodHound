@@ -2262,17 +2262,8 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		}
 		handler  = http.HandlerFunc(resources.SearchAssetGroupTags)
 		endpoint = "/api/v2/asset-group-tags/search"
-
-		// selector        = model.AssetGroupTagSelector{
-		// 	AssetGroupTagId: 5,
-		// 	ID:              7,
-		// 	Name:            "Selector 7",
-		// 	Description:     "777",
-		// 	CreatedBy:       "spam@exaple.com",
-		// 	UpdatedBy:       "spam@exaple.com",
-		// }
-
 	)
+
 	type WrappedResponse struct {
 		Data v2.SearchAssetGroupTagsResponse `json:"data"`
 	}

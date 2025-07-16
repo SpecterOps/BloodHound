@@ -55,7 +55,7 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
-	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -705,30 +705,6 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }
 
-<<<<<<< HEAD
-=======
-func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
-	var selectors model.AssetGroupTagSelectors
-
-	if sqlFilter.SQLString != "" {
-		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
-	}
-
-	if result := s.db.WithContext(ctx).Raw(
-		fmt.Sprintf(
-			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s%s ORDER BY name ASC, asset_group_tag_id ASC, id ASC",
-			model.AssetGroupTagSelector{}.TableName(),
-			sqlFilter.SQLString,
-		),
-		sqlFilter.Params...,
-	).Scan(&selectors); result.Error != nil {
-		return model.AssetGroupTagSelectors{}, CheckError(result)
-	}
-
-	return selectors, nil
-}
-
->>>>>>> 339291ed9 (finished adding tests)
 func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {
 	for newPos, tag := range orderedTags {
 		newPos++ // position is 1 based not zero
@@ -768,7 +744,7 @@ func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User,
 	return nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error) {
+func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
 	var selectors model.AssetGroupTagSelectors
 
 	if sqlFilter.SQLString != "" {
