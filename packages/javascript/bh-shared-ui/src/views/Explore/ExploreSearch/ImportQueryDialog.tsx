@@ -36,8 +36,6 @@ const ImportQueryDialog: React.FC<{
     }, [filesForIngest]);
 
     const handleFileDrop = (files: FileList | null) => {
-        console.log(files);
-
         if (files && files.length > 0) {
             const validatedFiles: FileForIngest[] = [...files].map((file) => {
                 if (allowedFileTypes.includes(file.type)) {
@@ -46,7 +44,6 @@ const ImportQueryDialog: React.FC<{
                     return { file, errors: ['invalid file type'], status: FileStatus.READY };
                 }
             });
-            console.log(validatedFiles);
             handleAppendFiles(validatedFiles);
         }
     };
@@ -70,25 +67,16 @@ const ImportQueryDialog: React.FC<{
         // console.log('handleUpload');
         const fileToUpload = filesForIngest[0];
         console.log(fileToUpload.file);
-        // console.log(fileToUpload.file.type);
-        // const formData = new FormData();
-        // formData.append('payload', fileToUpload);
+        if (fileToUpload.file.type === 'application/zip') {
+            //create blob
 
-        // const blob = new Blob([fileToUpload.file], { type: fileToUpload.file.type });
-        // console.log(blob);
-        const fileType = fileToUpload.file.type;
-        // const formData = new FormData();
-        // formData.append('payload', fileToUpload.file);
-        // formData.append('contentType', fileType);
-
-        // importSavedQueryMutation.mutate(formData);
-    };
-
-    const handleFileChange = (event: any) => {
-        const selectedFile = event.target.files[0];
-        // Get the first selected file
-        // Perform actions with the selected file, e.g., display its name, read its content, or prepare for upload.
-        console.log(selectedFile);
+            const blob = new Blob([fileToUpload.file], {
+                type: 'application/json',
+            });
+            importSavedQueryMutation.mutate(blob);
+        } else if (fileToUpload.file.type === 'application/json') {
+            importSavedQueryMutation.mutate(fileToUpload.file);
+        }
     };
 
     return (
@@ -100,8 +88,6 @@ const ImportQueryDialog: React.FC<{
                     }}
                     maxWidth='sm'>
                     <DialogTitle>Upload Files</DialogTitle>
-
-                    <input type='file' onChange={handleFileChange} />
 
                     <FileDrop
                         onDrop={handleFileDrop}
@@ -125,7 +111,14 @@ const ImportQueryDialog: React.FC<{
                     )}
 
                     <DialogActions className='flex justify-end gap-4'>
-                        {fileUploadStep === FileUploadStep.ADD_FILES && (
+                        <DialogClose asChild>
+                            <Button variant='text'>Cancel</Button>
+                        </DialogClose>
+                        <Button variant='text' onClick={handleSubmit}>
+                            Upload
+                        </Button>
+
+                        {/* {fileUploadStep === FileUploadStep.ADD_FILES && (
                             <>
                                 <DialogClose asChild>
                                     <Button variant='text'>Cancel</Button>
@@ -134,13 +127,13 @@ const ImportQueryDialog: React.FC<{
                                     Upload
                                 </Button>
                             </>
-                        )}
+                        )} */}
 
-                        {fileUploadStep === FileUploadStep.UPLOAD && (
+                        {/* {fileUploadStep === FileUploadStep.UPLOAD && (
                             <DialogClose asChild>
                                 <Button variant='text'>Uploading</Button>
                             </DialogClose>
-                        )}
+                        )} */}
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>

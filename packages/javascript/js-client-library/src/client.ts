@@ -151,8 +151,8 @@ class BHEAPIClient {
             'Content-Type': 'application/json',
         };
         return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
-            ...options,
-            ...headers,
+            // ...options,
+            headers,
         });
     };
 
@@ -176,17 +176,20 @@ class BHEAPIClient {
             })
         );
 
-    importUserQuery = (payload: any, contentType: string, options?: RequestOptions) => {
-        console.log('importUseQuery');
-        console.log(payload);
+    importUserQuery = (payload: any, options?: RequestOptions) => {
+        console.log('importUserQuery');
+        // console.log(payload);
+        // console.log(options);
+
         const headers = {
-            'Content-Type': contentType,
+            'Content-Type': payload.type,
         };
 
-        return this.baseClient.post<BasicResponse<any>>('/api/v2/saved-queries/import', payload, {
-            ...options,
-            ...headers,
-        });
+        return this.baseClient.post<BasicResponse<any>>(
+            '/api/v2/saved-queries/import',
+            payload,
+            Object.assign({ headers })
+        );
     };
 
     getKinds = (options?: RequestOptions) =>
