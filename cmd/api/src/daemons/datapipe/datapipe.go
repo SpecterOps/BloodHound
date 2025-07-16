@@ -148,8 +148,8 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.clearOrphanedData()
 
 		case <-datapipeLoopTimer.C:
-			if s.db.HasCollectedGraphDataDeletionRequest(s.ctx) {
-				s.deleteData()
+			if ok, deleteRequest := s.db.HasCollectedGraphDataDeletionRequest(s.ctx); ok {
+				s.deleteData(deleteRequest)
 			}
 
 			s.IngestTasks()
@@ -169,7 +169,7 @@ func (s *Daemon) Start(ctx context.Context) {
 	}
 }
 
-func (s *Daemon) deleteData() {
+func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 	defer func() {
 		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
 		_ = s.db.DeleteAnalysisRequest(s.ctx)
@@ -188,7 +188,9 @@ func (s *Daemon) deleteData() {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
 	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
-	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
+	} else if sourceKinds, err := s.db.GetSourceKinds(s.ctx); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error getting source kinds during data deletion: %v", err))
+	} else if err := DeleteCollectedGraphData2(s.ctx, s.graphdb, deleteRequest, sourceKinds); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
 	}
 }

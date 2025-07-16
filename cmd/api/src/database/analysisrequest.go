@@ -25,13 +25,14 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"gorm.io/gorm"
 )
 
 type AnalysisRequestData interface {
 	DeleteAnalysisRequest(ctx context.Context) error
 	GetAnalysisRequest(ctx context.Context) (model.AnalysisRequest, error)
 	HasAnalysisRequest(ctx context.Context) bool
-	HasCollectedGraphDataDeletionRequest(ctx context.Context) bool
+	HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest)
 	RequestAnalysis(ctx context.Context, requester string) error
 	RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error
 }
@@ -59,14 +60,18 @@ func (s *BloodhoundDB) HasAnalysisRequest(ctx context.Context) bool {
 	return exists
 }
 
-func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context) bool {
-	var exists bool
+func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest) {
+	var record model.AnalysisRequest
 
-	tx := s.db.WithContext(ctx).Raw(`select exists(select * from analysis_request_switch where request_type = ? limit 1);`, model.AnalysisRequestDeletion).Scan(&exists)
+	tx := s.db.WithContext(ctx).Raw(`select * from analysis_request_switch where request_type = ? limit 1;`, model.AnalysisRequestDeletion).First(&record)
 	if tx.Error != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error determining if there's a deletion request: %v", tx.Error))
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return false, record
+		}
+		slog.ErrorContext(ctx, fmt.Sprintf("Error querying deletion request: %v", tx.Error))
+		return false, record
 	}
-	return exists
+	return true, record
 }
 
 // setAnalysisRequest inserts a row into analysis_request_switch for both a collected graph data deletion request or an analysis request.
@@ -104,7 +109,6 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			delete_all_open_graph = ?,
 			delete_source_kinds = ?::text[];`
 	)
-
 	if analysisRequest, err := s.GetAnalysisRequest(ctx); err != nil && !errors.Is(err, ErrNotFound) {
 		return err
 	} else if errors.Is(err, ErrNotFound) {

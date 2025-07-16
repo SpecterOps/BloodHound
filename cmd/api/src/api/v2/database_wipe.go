@@ -96,8 +96,8 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 		return
 	}
 
-	// delete graph
-	if payload.DeleteCollectedGraphData {
+	deleteGraph := payload.DeleteCollectedGraphData || payload.DeleteOpenGraphData || len(payload.DeleteSourceKinds) > 0
+	if deleteGraph {
 		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
