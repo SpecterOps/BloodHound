@@ -82,6 +82,7 @@ import CanApplyGPO from './CanApplyGPO/CanApplyGPO';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
+import CoerceAndRelayNTLMToADCSRPC from './CoerceAndRelayNTLMToADCSRPC/CoerceAndRelayNTLMToADCSRPC';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRelayNTLMToLDAPS';
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
@@ -273,6 +274,7 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
+    CoerceAndRelayNTLMToADCSRPC: CoerceAndRelayNTLMToADCSRPC,
     ContainsIdentity: ContainsIdentity,
     PropagatesACEsTo: PropagatesACEsTo,
     CanApplyGPO: CanApplyGPO,

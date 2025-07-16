@@ -970,6 +970,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+RPCEncryptionEnforced: types.#StringEnum & {
+	symbol: 		"RPCEncryptionEnforced"
+	schema: 		"ad"
+	name:           "RPC Encryption Enforced"
+	representation: "rpcencryptionenforced"
+}
+
+RPCEncryptionCollected: types.#StringEnum & {
+	symbol: 		"RPCEncryptionCollected"
+	schema: 		"ad"
+	name:           "RPC Encryption Collected"
+	representation: "rpcencryptioncollected"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1102,6 +1116,8 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	RPCEncryptionEnforced,
+	RPCEncryptionCollected,
 ]
 
 // Kinds
@@ -1578,6 +1594,11 @@ CoerceAndRelayNTLMToADCS: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToADCSRPC: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToADCSRPC"
+	schema: "active_directory"
+}
+
 WriteOwnerLimitedRights: types.#Kind & {
 	symbol: "WriteOwnerLimitedRights"
 	schema: "active_directory"
@@ -1708,6 +1729,7 @@ RelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	WriteOwnerRaw,
 	OwnsLimitedRights,
@@ -1799,6 +1821,7 @@ SharedRelationshipKinds: [
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
 	CoerceAndRelayNTLMToLDAP,
@@ -1833,6 +1856,7 @@ EdgeCompositionRelationships: [
 	ADCSESC13,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
