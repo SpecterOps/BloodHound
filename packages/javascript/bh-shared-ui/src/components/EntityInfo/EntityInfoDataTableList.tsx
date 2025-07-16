@@ -16,20 +16,7 @@
 import { Box, Divider } from '@mui/material';
 import React from 'react';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
-import { EntityInfoDataTableProps, EntityKinds, allSections } from '../../utils';
-
-export interface EntityInfoContentProps {
-    DataTable: React.FC<EntityInfoDataTableProps>;
-    id: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
-    additionalTables?: [
-        {
-            sectionProps: EntityInfoDataTableProps;
-            TableComponent: React.FC<EntityInfoDataTableProps>;
-        },
-    ];
-}
+import { EntityInfoContentProps, EntityKinds, allSections } from '../../utils';
 
 const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType, additionalTables, DataTable }) => {
     let type = nodeType as EntityKinds;
