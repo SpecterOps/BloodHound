@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lib/pq"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -29,6 +30,10 @@ import (
 // there is no ctx in scope.
 func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error {
 	return func(sourceKind graph.Kind) error {
+		if sourceKind == nil || sourceKind == graph.EmptyKind {
+			return nil
+		}
+
 		const query = `
 			INSERT INTO source_kinds (name)
 			VALUES (?)
@@ -75,4 +80,25 @@ func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error)
 	}
 
 	return out, nil
+}
+
+func (s *BloodhoundDB) DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
+	if len(kinds) == 0 {
+		return nil
+	}
+
+	// Convert to []string for the SQL query
+	names := kinds.Strings()
+
+	const query = `
+		DELETE FROM source_kinds
+		WHERE name = ANY (?);
+	`
+
+	result := s.db.WithContext(ctx).Exec(query, pq.Array(names))
+	if err := result.Error; err != nil {
+		return fmt.Errorf("failed to delete source kinds by name: %w", err)
+	}
+
+	return nil
 }

@@ -191,12 +191,24 @@ func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 	} else if sourceKinds, err := s.db.GetSourceKinds(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error getting source kinds during data deletion: %v", err))
 	} else {
-		var kinds graph.Kinds
+		var (
+			kinds         graph.Kinds
+			filteredKinds graph.Kinds
+		)
 		for _, k := range sourceKinds {
 			kinds = append(kinds, k.Name)
 		}
+		// Filter out reserved kinds
+		for _, kind := range kinds {
+			if kind.String() != "Base" && kind.String() != "AZBase" {
+				filteredKinds = append(filteredKinds, kind)
+			}
+		}
+
 		if err := DeleteCollectedGraphData(s.ctx, s.graphdb, deleteRequest, kinds); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
+		} else if err := s.db.DeleteSourceKindsByName(s.ctx, filteredKinds); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting source kinds: %v", err))
 		}
 	}
 }

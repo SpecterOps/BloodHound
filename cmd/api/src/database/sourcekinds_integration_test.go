@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,4 +42,18 @@ func TestGetSourceKinds(t *testing.T) {
 	require.Len(t, sourceKinds, 2)
 	require.Equal(t, "Base", sourceKinds[0].Name.String())
 	require.Equal(t, "AZBase", sourceKinds[1].Name.String())
+}
+
+func TestDeleteSourceKinds(t *testing.T) {
+	var (
+		ctx    = context.Background()
+		dbInst = integration.SetupDB(t)
+	)
+
+	err := dbInst.DeleteSourceKindsByName(ctx, graph.StringsToKinds([]string{"Base", "AZBase"}))
+	require.Nil(t, err)
+
+	sourceKinds, err := dbInst.GetSourceKinds(ctx)
+	require.Nil(t, err)
+	require.Len(t, sourceKinds, 0)
 }
