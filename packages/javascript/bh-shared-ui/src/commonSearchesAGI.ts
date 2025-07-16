@@ -190,6 +190,11 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p\nLIMIT 1000`,
             },
             {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with disabled security extension (ESC16)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.25.2" IN eca.disabledextensions\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 description: 'CA administrators and CA managers',
                 cypher: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
             },
