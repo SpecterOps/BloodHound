@@ -786,19 +786,9 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		var kinds graph.Kinds
 
 		for _, t := range tags {
-			isLabelType := t.Type == model.AssetGroupTagTypeLabel
-			isOwnedType := t.Type == model.AssetGroupTagTypeOwned
-
-			// group owned with labels
-			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) {
-				kinds.Add(t.ToKind())
-				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
-					matchedTags = append(matchedTags, t)
-				}
-			}
-
-			if reqBody.TagType == model.AssetGroupTagTypeTier && t.Type == model.AssetGroupTagTypeTier {
-				kinds.Add(t.ToKind())
+			kinds.Add(t.ToKind())
+			// owned tag is a label despite distinct designation
+			if reqBody.TagType == t.Type || (reqBody.TagType == model.AssetGroupTagTypeLabel && t.Type == model.AssetGroupTagTypeOwned) {
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
 					matchedTags = append(matchedTags, t)
 				}
