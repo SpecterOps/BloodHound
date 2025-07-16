@@ -53,7 +53,7 @@ const TableControls = <TData, TValue>({
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
-            columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
+            columns?.map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',
                 value: formatPotentiallyUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,

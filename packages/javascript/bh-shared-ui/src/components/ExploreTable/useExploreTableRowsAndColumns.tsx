@@ -1,10 +1,9 @@
 import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
-import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useMemo, useState } from 'react';
-import { EntityField, format } from '../../utils';
-import NodeIcon from '../NodeIcon';
 import { type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
+import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
@@ -62,6 +61,7 @@ const useExploreTableRowsAndColumns = ({
     const makeColumnDef = useCallback(
         (key: keyof MungedTableRowWithId) =>
             columnHelper.accessor(String(key), {
+                enableResizing: true, //disable resizing for just this column
                 header: () => (
                     <ExploreTableHeaderCell
                         sortBy={sortBy}
@@ -70,49 +70,27 @@ const useExploreTableRowsAndColumns = ({
                         headerKey={key}
                     />
                 ),
-                cell: (info) => {
-                    const value = info.getValue() as EntityField['value'];
-
-                    if (info.column.id === 'nodetype') {
-                        return (
-                            <div className='flex justify-center items-center relative'>
-                                <NodeIcon nodeType={(info.getValue() as string) || ''} />
-                            </div>
-                        );
-                    }
-                    console.log(info.column.id);
-                    if (typeof value === 'boolean' || !value) {
-                        return (
-                            <div className='h-full w-full flex justify-center items-center'>
-                                <FontAwesomeIcon
-                                    icon={value ? faCheck : faCancel}
-                                    color={value ? 'green' : 'lightgray'}
-                                    className='scale-125'
-                                />
-                            </div>
-                        );
-                    }
-
-                    return format({ keyprop: key?.toString(), value, label: String(key) }) || '--';
-                },
+                cell: (info) => <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />,
                 id: key?.toString(),
             }),
         [handleSort, sortOrder, sortBy]
     );
 
-    const requiredColumnDefinitions = useMemo(
-        () => [
+    const kebabColumDefinition = useMemo(
+        () =>
             columnHelper.accessor('', {
                 id: 'action-menu',
                 cell: ({ row }) => (
-                    <FontAwesomeIcon
-                        icon={faEllipsis}
-                        data-testid='kebab-menu'
-                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                    />
+                    <div className='h-full w-full flex justify-center items-center'>
+                        <FontAwesomeIcon
+                            icon={faEllipsis}
+                            data-testid='kebab-menu'
+                            className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'
+                            onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        />
+                    </div>
                 ),
             }),
-        ],
         [handleKebabMenuClick]
     );
 
@@ -167,17 +145,12 @@ const useExploreTableRowsAndColumns = ({
     );
 
     const tableColumns = useMemo(
-        () => [...requiredColumnDefinitions, ...selectedColumnDefinitions],
-        [requiredColumnDefinitions, selectedColumnDefinitions]
+        () => [kebabColumDefinition, ...selectedColumnDefinitions],
+        [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
-    const columnOptionsForDropdown = useMemo(
-        () => [...requiredColumnDefinitions, ...allColumnDefintions],
-        [requiredColumnDefinitions, allColumnDefintions]
-    );
-
     return {
-        columnOptionsForDropdown,
+        columnOptionsForDropdown: allColumnDefintions,
         tableColumns,
         sortedFilteredRows,
     };

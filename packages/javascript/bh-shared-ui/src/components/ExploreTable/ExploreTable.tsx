@@ -31,7 +31,7 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-4',
+    className: 'pr-2',
 };
 
 const ExploreTable = ({
@@ -106,6 +106,9 @@ const ExploreTable = ({
                     selectedRow={selectedNode || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
+                    tableOptions={{
+                        columnResizeMode: 'onChange', //change column resize mode to "onChange"
+                    }}
                 />
             </div>
         </div>
