@@ -1,7 +1,6 @@
 import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
@@ -71,9 +70,9 @@ const useExploreTableRowsAndColumns = ({
                 cell: (info) => {
                     const value = info.getValue() as EntityField['value'];
 
-                    if (typeof value === 'boolean') {
+                    if (typeof value === 'boolean' || !value) {
                         return (
-                            <div className='h-full w-full flex justify-center items-center text-center'>
+                            <div className='h-full w-full flex justify-center items-center'>
                                 <FontAwesomeIcon
                                     icon={value ? faCheck : faCancel}
                                     color={value ? 'green' : 'lightgray'}
@@ -95,12 +94,12 @@ const useExploreTableRowsAndColumns = ({
             columnHelper.accessor('', {
                 id: 'action-menu',
                 cell: ({ row }) => (
-                    <Button
+                    <FontAwesomeIcon
+                        icon={faEllipsis}
                         data-testid='kebab-menu'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
-                        <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
-                    </Button>
+                        className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'
+                    />
                 ),
             }),
             columnHelper.accessor('nodetype', {

@@ -1,45 +1,13 @@
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
 import ExploreTable from './ExploreTable';
 
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { render } from '../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../utils';
 import exploreTableTestProps from './explore-table-test-props';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
 
 const SELECTED_ROW_INDICATOR_CLASS = 'border-primary';
-
-const server = setupServer(
-    rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
-            })
-        );
-    }),
-    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
-            })
-        );
-    }),
-    rest.get(`/api/v2/custom-nodes`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [],
-            })
-        );
-    })
-);
-
-beforeAll(() => server.listen());
-beforeEach(() => mockCodemirrorLayoutMethods());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 const downloadCallbackSpy = vi.fn();
 const closeCallbackSpy = vi.fn();
