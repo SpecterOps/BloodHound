@@ -85,9 +85,9 @@ const useExploreTableRowsAndColumns = ({
                         );
                     }
 
-                    return format({ keyprop: String(key), value, label: String(key) }) || '--';
+                    return format({ keyprop: key?.toString(), value, label: String(key) }) || '--';
                 },
-                id: String(key),
+                id: key?.toString(),
             }),
         [handleSort, sortOrder, sortBy]
     );
