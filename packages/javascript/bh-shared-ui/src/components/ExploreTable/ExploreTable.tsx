@@ -15,22 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
-import { FlatGraphResponse, GraphNodeSpreadWithProperties } from 'js-client-library';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
-import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
+import { cn } from '../../utils';
 import TableControls from './TableControls';
+import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
-export type NodeClickInfo = { id: string; x: number; y: number };
-
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
-
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname', 'isTierZero'];
-
-export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
-
-export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
@@ -41,19 +33,6 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
     className: 'pr-4',
 };
-
-export interface ExploreTableProps {
-    open?: boolean;
-    onClose?: () => void;
-    data?: FlatGraphResponse;
-    selectedColumns?: Record<string, boolean>;
-    onRowClick?: (row: MungedTableRowWithId) => void;
-    allColumnKeys?: string[];
-    onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    selectedNode: string | null;
-    onDownloadClick: () => void;
-    onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
-}
 
 const ExploreTable = ({
     data,
@@ -97,7 +76,14 @@ const ExploreTable = ({
     return (
         <div
             data-testid='explore-table-container-wrapper'
-            className={`dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${selectedNode ? 'w-[calc(100%-450px)]' : ''} ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
+            className={cn(
+                'dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2',
+                {
+                    'h-1/2': !isExpanded,
+                    'h-[calc(100%-72px)]': isExpanded,
+                    'w-[calc(100%-450px)]': selectedNode,
+                }
+            )}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
                     className='h-[72px]'

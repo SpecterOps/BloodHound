@@ -23,6 +23,7 @@ import {
     GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
+    MungedTableRowWithId,
     NodeClickInfo,
     WebGLDisabledAlert,
     baseGraphLayouts,
@@ -40,7 +41,6 @@ import {
     useToggle,
 } from 'bh-shared-ui';
 
-import { MungedTableRowWithId } from 'bh-shared-ui/dist/components/ExploreTable/ExploreTable';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { type GraphNodes } from 'js-client-library';

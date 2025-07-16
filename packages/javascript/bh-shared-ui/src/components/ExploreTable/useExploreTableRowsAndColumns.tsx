@@ -4,11 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useMemo, useState } from 'react';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
-import { ExploreTableProps, MungedTableRowWithId } from './ExploreTable';
+import { type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
+
 type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
 
 type UseExploreTableRowsAndColumnsProps = Pick<
     ExploreTableProps,
@@ -90,9 +93,9 @@ const useExploreTableRowsAndColumns = ({
                         );
                     }
 
-                    return format({ keyprop: String(key), value, label: String(key) }) || '--';
+                    return format({ keyprop: key?.toString(), value, label: String(key) }) || '--';
                 },
-                id: String(key),
+                id: key?.toString(),
             }),
         [handleSort, sortOrder, sortBy]
     );
@@ -106,7 +109,6 @@ const useExploreTableRowsAndColumns = ({
                         icon={faEllipsis}
                         data-testid='kebab-menu'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'
                     />
                 ),
             }),
@@ -126,31 +128,30 @@ const useExploreTableRowsAndColumns = ({
         [data]
     );
 
-    const filteredRows = useMemo(
-        () =>
-            rows?.filter((item) => {
-                const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
-                const filterTargets = filterKeys.map((filterKey) => {
-                    const stringyValue = String(item?.[filterKey]);
+    const filteredRows: MungedTableRowWithId[] = useMemo(() => {
+        const lowercaseSearchInput = searchInput?.toLowerCase();
 
-                    return stringyValue?.toLowerCase();
-                });
+        return rows.filter((item) => {
+            const filterTargets = filterKeys.map((filterKey) => {
+                const stringyValue = String(item?.[filterKey]);
 
-                return filterTargets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
-            }),
-        [searchInput, rows]
-    );
+                return stringyValue?.toLowerCase();
+            });
+
+            return filterTargets.some((filterTarget) => filterTarget?.includes(lowercaseSearchInput));
+        });
+    }, [rows, searchInput]);
 
     const sortedFilteredRows = useMemo(() => {
         const dataToSort = filteredRows.slice();
         if (sortBy) {
             if (sortOrder === 'asc') {
                 dataToSort.sort((a, b) => {
-                    return a[sortBy] < b[sortBy] ? 1 : -1;
+                    return a[sortBy]?.toString().localeCompare(b[sortBy]?.toString());
                 });
             } else {
                 dataToSort.sort((a, b) => {
-                    return a[sortBy] < b[sortBy] ? -1 : 1;
+                    return b[sortBy]?.toString().localeCompare(a[sortBy]?.toString());
                 });
             }
         }
