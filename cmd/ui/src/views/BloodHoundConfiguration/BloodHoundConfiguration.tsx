@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Link, Typography } from '@mui/material';
-import { CitrixRDPConfiguration, PageWithTitle } from 'bh-shared-ui';
+import { AnalyzeNowConfiguration, CitrixRDPConfiguration, PageWithTitle } from 'bh-shared-ui';
 
 const BloodHoundConfiguration = () => {
     return (
@@ -31,6 +31,7 @@ const BloodHoundConfiguration = () => {
                 </Typography>
             }>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <AnalyzeNowConfiguration />
                 <CitrixRDPConfiguration />
             </Box>
         </PageWithTitle>
