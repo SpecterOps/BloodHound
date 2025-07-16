@@ -11,6 +11,8 @@ import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
 type DataTableProps = React.ComponentProps<typeof DataTable>;
 
+const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
+
 type UseExploreTableRowsAndColumnsProps = Pick<
     ExploreTableProps,
     'onKebabMenuClick' | 'allColumnKeys' | 'selectedColumns' | 'data'
@@ -133,31 +135,30 @@ const useExploreTableRowsAndColumns = ({
         [data]
     );
 
-    const filteredRows = useMemo(
-        () =>
-            rows?.filter((item) => {
-                const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
-                const filterTargets = filterKeys.map((filterKey) => {
-                    const stringyValue = String(item?.[filterKey]);
+    const filteredRows: MungedTableRowWithId[] = useMemo(() => {
+        const lowercaseSearchInput = searchInput?.toLowerCase();
 
-                    return stringyValue?.toLowerCase();
-                });
+        return rows.filter((item) => {
+            const filterTargets = filterKeys.map((filterKey) => {
+                const stringyValue = String(item?.[filterKey]);
 
-                return filterTargets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
-            }),
-        [searchInput, rows]
-    );
+                return stringyValue?.toLowerCase();
+            });
+
+            return filterTargets.some((filterTarget) => filterTarget?.includes(lowercaseSearchInput));
+        });
+    }, [rows, searchInput]);
 
     const sortedFilteredRows = useMemo(() => {
         const dataToSort = filteredRows.slice();
         if (sortBy) {
             if (sortOrder === 'asc') {
                 dataToSort.sort((a, b) => {
-                    return a[sortBy] < b[sortBy] ? 1 : -1;
+                    return a[sortBy]?.toString().localeCompare(b[sortBy]?.toString());
                 });
             } else {
                 dataToSort.sort((a, b) => {
-                    return a[sortBy] < b[sortBy] ? -1 : 1;
+                    return b[sortBy]?.toString().localeCompare(a[sortBy]?.toString());
                 });
             }
         }
