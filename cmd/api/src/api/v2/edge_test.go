@@ -552,3 +552,280 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 		})
 	}
 }
+
+func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockGraph *graphmocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: missing edge_type parameter - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/acl-inheritance",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Expected edge_type parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: missing source_node parameter - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Expected source_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: missing target_node parameter - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=test&source_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Expected target_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: edge_type is more than 1 - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=test&edge_type=test2&source_node=test&target_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Expected only one edge_type."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: source_node is more than 1 - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=test&source_node=test2&source_node=test&target_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Expected only one source_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: target_node is more than 1 - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=test&target_node=test2&source_node=test&target_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Expected only one target_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: invalid edge_type - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=test&source_node=test&target_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Invalid edge requested: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: invalid startID for source_node - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=test&target_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Invalid value for startID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: invalid endID for targetNode - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=test",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Invalid value for endID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: database error fetching edge by start and end - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Could not find edge matching criteria: error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: database error getting ACL inheritance path - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"Error getting ACL inheritance path for edge: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: retrieved ACL inheritance - OK",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"nodes":{},"edges":[]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockGraph: graphmocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				Graph: mocks.mockGraph,
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/graphs/acl-inheritance", resources.GetEdgeACLInheritancePath).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}
