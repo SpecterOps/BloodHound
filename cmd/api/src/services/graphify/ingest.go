@@ -260,7 +260,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 		sourceKind := graph.EmptyKind
 
 		// decode metadata, if present
-		if decoder, err := CreateIngestDecoder(reader, "metadata", 2); err != nil {
+		if decoder, err := CreateIngestDecoder(reader, "metadata", 1); err != nil {
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}

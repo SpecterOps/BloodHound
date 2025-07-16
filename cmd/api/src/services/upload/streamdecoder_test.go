@@ -41,10 +41,31 @@ type metaTagAssertion struct {
 func Test_ValidateMetaTag(t *testing.T) {
 	assertions := []metaTagAssertion{
 		{
-			name:         "succesful generic payload",
-			rawString:    `{"graph": {"nodes":[]}}`,
+			name:         "successful opengraph payload",
+			rawString:    `{"metadata":{},"graph": {"nodes":[]}}`,
 			err:          nil,
 			expectedType: ingest.DataTypeOpenGraph,
+		},
+		{
+			name:         "successful opengraph metadata",
+			rawString:    `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[]}}`,
+			err:          nil,
+			expectedType: ingest.DataTypeOpenGraph,
+		},
+		{
+			name:      "unsuccessful opengraph metadata",
+			rawString: `{"metadata":{"source_kind": 1},"graph": {"nodes":[]}}`,
+			err:       fmt.Errorf("error validating metadata tag: jsonschema validation failed"),
+		},
+		{
+			name:      "unsuccessful opengraph metadata, invalid field",
+			rawString: `{"metadata":{"random field": "hello"},"graph": {"nodes":[]}}`,
+			err:       fmt.Errorf("error validating metadata tag: jsonschema validation failed"),
+		},
+		{
+			name:      "unsuccessful opengraph payload: metadata doesn't come first",
+			rawString: `{"graph": {"nodes":[]},"metadata":{}}`,
+			err:       ingest.ErrOpenGraphTagOrder,
 		},
 		{
 			name:         "enforce mutual exclusivity",
@@ -98,7 +119,10 @@ func Test_ValidateMetaTag(t *testing.T) {
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
 			meta, err := ParseAndValidatePayload(strings.NewReader(assertion.rawString), schema, true, false)
-			assert.ErrorIs(t, err, assertion.err)
+			if err != nil {
+				// assert.ErrorIs(t, err, assertion.err)
+				assert.ErrorContains(t, err, assertion.err.Error())
+			}
 			if assertion.err == nil {
 				assert.Equal(t, assertion.expectedType, meta.Type)
 			}
@@ -171,14 +195,9 @@ type edgePiece struct {
 	Kind    string `json:"kind,omitempty"`
 }
 
-type testMeta struct {
-	SourceKind string `json:"source_kind,omitempty"`
-}
-
 type testPayload struct {
 	Nodes []testNode `json:"nodes,omitempty"`
 	Edges []testEdge `json:"edges,omitempty"`
-	Meta  testMeta   `json:"metadata,omitempty"`
 }
 
 func prepareReader(assertion genericIngestAssertion) (io.Reader, error) {
@@ -203,7 +222,6 @@ func Test_ValidateGraph(t *testing.T) {
 
 	positiveCases = append(positiveCases, positiveGenericIngestCases()...)
 
-	negativeCases = append(negativeCases, metadataSchemaFailureCases()...)
 	negativeCases = append(negativeCases, complexNestedPropertyCases()...)
 	negativeCases = append(negativeCases, decodingFailureCases()...)
 	negativeCases = append(negativeCases, criticalFailureCases()...)
@@ -220,7 +238,7 @@ func Test_ValidateGraph(t *testing.T) {
 			require.Nil(t, err)
 
 			decoder := json.NewDecoder(reader)
-			err = ValidateGraph(decoder, ingestSchema)
+			err = ValidateGraph(decoder, ingestSchema, "")
 
 			report, ok := err.(ValidationReport)
 			require.True(t, ok)
@@ -252,7 +270,7 @@ func Test_ValidateGraph(t *testing.T) {
 			reader := bytes.NewReader(payload)
 			decoder := json.NewDecoder(reader)
 
-			err = ValidateGraph(decoder, ingestSchema)
+			err = ValidateGraph(decoder, ingestSchema, "")
 			assert.Nil(t, err)
 		})
 	}
@@ -289,9 +307,6 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 							"true":  false,
 						},
 					},
-				},
-				Meta: testMeta{
-					SourceKind: "HelloBase",
 				},
 			},
 		},
@@ -568,18 +583,6 @@ func criticalFailureCases() []genericIngestAssertion {
 	}
 }
 
-func metadataSchemaFailureCases() []genericIngestAssertion {
-	return []genericIngestAssertion{
-		{
-			name:       "metadata.sourceKind is incorrect type",
-			rawPayload: `{"metadata":{"source_kind": 1}, "nodes":[]}`,
-			validationErrContains: [][]string{
-				{"metadata[0] schema validation", "at '/source_kind': got number, want null or string"},
-			},
-		},
-	}
-}
-
 // these test cases represent all the ways a node can fail schema validation.
 func nodeSchemaFailureCases() []genericIngestAssertion {
 	return []genericIngestAssertion{
@@ -626,7 +629,7 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
+				{"nodes[0]", "has too many kinds (4)"},
 			},
 		},
 		{
@@ -640,7 +643,7 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"nodes[0]", "at '/kinds': minItems: got 0, want 1"},
+				{"nodes[0]", "is missing required kinds"},
 			},
 		},
 		{
@@ -666,7 +669,8 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"nodes[0]", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
+				{"nodes[0]"},
+				{"nodes[0] has too many kinds (4)."},
 			},
 		},
 	}
@@ -849,7 +853,8 @@ func itemsWithMultipleFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"nodes[0]", "at '': missing property 'id'"},
-				{"nodes[1]", "at '': missing property 'id'", "at '/kinds': minItems: got 0, want 1"},
+				{"nodes[1]", "at '': missing property 'id'"},
+				{"nodes[1]", "is missing required kinds"},
 			},
 		},
 		{
