@@ -59,7 +59,7 @@ func TestDeleteAllData(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData2(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "deleteAllExpected.json")
@@ -94,7 +94,7 @@ func TestDeleteSourcelessData(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData2(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "deleteSourcelessExpected.json")
@@ -129,7 +129,7 @@ func TestDeleteSourceKindsData(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData2(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "deleteSourceKindsExpected.json")

@@ -133,7 +133,7 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 				userId = user.ID.String()
 			}
 
-			if deleteRequest, err := s.buildDeleteRequest(request.Context(), userId, payload); err != nil {
+			if deleteRequest, err := s.BuildDeleteRequest(request.Context(), userId, payload); err != nil {
 				api.WriteErrorResponse(
 					request.Context(),
 					api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("failure building delete request: %s", err.Error()), request),
@@ -255,7 +255,7 @@ func (s Resources) handleAuditLogForDatabaseWipe(ctx context.Context, auditEntry
 	}
 }
 
-func (s Resources) buildDeleteRequest(ctx context.Context, userID string, payload DatabaseWipe) (model.AnalysisRequest, error) {
+func (s Resources) BuildDeleteRequest(ctx context.Context, userID string, payload DatabaseWipe) (model.AnalysisRequest, error) {
 	deleteRequest := model.AnalysisRequest{
 		RequestedBy:    userID,
 		RequestType:    model.AnalysisRequestDeletion,

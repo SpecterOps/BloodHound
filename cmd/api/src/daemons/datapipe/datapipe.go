@@ -195,7 +195,7 @@ func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 		for _, k := range sourceKinds {
 			kinds = append(kinds, k.Name)
 		}
-		if err := DeleteCollectedGraphData2(s.ctx, s.graphdb, deleteRequest, kinds); err != nil {
+		if err := DeleteCollectedGraphData(s.ctx, s.graphdb, deleteRequest, kinds); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
 		}
 	}

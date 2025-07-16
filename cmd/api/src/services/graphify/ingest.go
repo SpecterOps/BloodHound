@@ -257,7 +257,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 
 var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 	ingest.DataTypeOpenGraph: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, registerSourceKind registrationFn) error {
-		var sourceKind graph.Kind
+		sourceKind := graph.EmptyKind
 
 		// decode metadata, if present
 		if decoder, err := CreateIngestDecoder(reader, "metadata", 2); err != nil {
@@ -347,7 +347,7 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
 		nodeUpdate           = graph.NodeUpdate{
 			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
-			IdentityKind: baseKind,
+			IdentityKind: baseKind, // todo: when this is empty kind i think it gets saved to the kinds property
 			IdentityProperties: []string{
 				common.ObjectID.String(),
 			},
