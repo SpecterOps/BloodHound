@@ -44,22 +44,34 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 	}
 }
 
-func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]graph.Kind, error) {
+type SourceKind struct {
+	ID   int
+	Name graph.Kind
+}
+
+func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {
 	const query = `
-		SELECT name
-		FROM source_kinds
-		ORDER BY name;
+		SELECT id, name
+		FROM source_kinds;
 	`
 
-	var kinds []string
+	type rawSourceKind struct {
+		ID   int
+		Name string
+	}
+
+	var kinds []rawSourceKind
 	result := s.db.WithContext(ctx).Raw(query).Scan(&kinds)
 	if err := result.Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch source kinds: %w", err)
 	}
 
-	out := make([]graph.Kind, len(kinds))
+	out := make([]SourceKind, len(kinds))
 	for i, k := range kinds {
-		out[i] = graph.StringKind(k)
+		out[i] = SourceKind{
+			ID:   k.ID,
+			Name: graph.StringKind(k.Name),
+		}
 	}
 
 	return out, nil

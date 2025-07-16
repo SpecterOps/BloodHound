@@ -34,7 +34,7 @@ type AnalysisRequest struct {
 	RequestType AnalysisRequestType `json:"request_type"`
 	RequestedAt time.Time           `json:"requested_at"`
 
-	DeleteAllGraph     bool           `json:"delete_all_graph"`                       // Deletes all nodes and edges in the graph
-	DeleteAllOpenGraph bool           `json:"delete_all_open_graph"`                  // Deletes all nodes and edges in the graph not of type "Base" or "AZBase"
-	DeleteSourceKinds  pq.StringArray `gorm:"type:text[];column:delete_source_kinds"` // Deletes all nodes and edges per kind provided.
+	DeleteAllGraph        bool           `json:"delete_all_graph"`                       // Deletes all nodes and edges in the graph
+	DeleteSourcelessKinds bool           `json:"delete_sourceless_kinds"`                // Deletes all nodes and edges in the graph that have a type not registered in the source_kinds table
+	DeleteSourceKinds     pq.StringArray `gorm:"type:text[];column:delete_source_kinds"` // Deletes all nodes and edges per kind provided.
 }

@@ -95,8 +95,6 @@ func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database) error
 	return nil
 }
 
-// step 1. delete nodes. pg trigger func drop_node_edges() will drop edges automatically
-// step 2. if source kinds requested for deletion, remove them from source_kinds pg table
 func DeleteCollectedGraphData2(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
 	operation := ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,
@@ -105,9 +103,6 @@ func DeleteCollectedGraphData2(ctx context.Context, graphDB graph.Database, dele
 		NumWriters: 1,
 	})
 
-	// pretend for now that i have read the source kinds from the delete request.
-	// TODO: parse this out of the deleteRequest. gorm nonsense
-	// deleteSourceKinds := []graph.Kind{graph.StringKind("hellobase")}
 	deleteSourceKinds := make(graph.Kinds, len(deleteRequest.DeleteSourceKinds))
 	for i, s := range deleteRequest.DeleteSourceKinds {
 		deleteSourceKinds[i] = graph.StringKind(s)
@@ -119,7 +114,7 @@ func DeleteCollectedGraphData2(ctx context.Context, graphDB graph.Database, dele
 		if deleteRequest.DeleteAllGraph {
 			// no filter. fetch em all
 			nodeQuery = tx.Nodes()
-		} else if deleteRequest.DeleteAllOpenGraph {
+		} else if deleteRequest.DeleteSourcelessKinds {
 			// fetch all nodes which don't have a source kind
 			nodeQuery = tx.Nodes().Filter(
 				query.Not(query.KindIn(query.Node(), sourceKinds...)),

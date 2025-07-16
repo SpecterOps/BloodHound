@@ -1664,10 +1664,10 @@ func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomo
 }
 
 // GetSourceKinds mocks base method.
-func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]graph.Kind, error) {
+func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]database.SourceKind, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
-	ret0, _ := ret[0].([]graph.Kind)
+	ret0, _ := ret[0].([]database.SourceKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1753,11 +1753,12 @@ func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(ctx any) *gomock.Call {
 }
 
 // HasCollectedGraphDataDeletionRequest mocks base method.
-func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) bool {
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", ctx)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(model.AnalysisRequest)
+	return ret0, ret1
 }
 
 // HasCollectedGraphDataDeletionRequest indicates an expected call of HasCollectedGraphDataDeletionRequest.

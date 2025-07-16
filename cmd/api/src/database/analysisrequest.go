@@ -86,7 +86,7 @@ func (s *BloodhoundDB) setAnalysisRequest(ctx context.Context, request model.Ana
 			request.RequestType,
 			now,
 			request.DeleteAllGraph,
-			request.DeleteAllOpenGraph,
+			request.DeleteSourcelessKinds,
 			pq.StringArray(request.DeleteSourceKinds),
 		}
 

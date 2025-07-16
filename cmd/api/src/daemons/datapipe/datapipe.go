@@ -190,8 +190,14 @@ func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
 	} else if sourceKinds, err := s.db.GetSourceKinds(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error getting source kinds during data deletion: %v", err))
-	} else if err := DeleteCollectedGraphData2(s.ctx, s.graphdb, deleteRequest, sourceKinds); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
+	} else {
+		var kinds graph.Kinds
+		for _, k := range sourceKinds {
+			kinds = append(kinds, k.Name)
+		}
+		if err := DeleteCollectedGraphData2(s.ctx, s.graphdb, deleteRequest, kinds); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
+		}
 	}
 }
 

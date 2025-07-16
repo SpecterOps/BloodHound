@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -44,6 +45,10 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 	}
 }
 
+type ListSourceKindsResponse struct {
+	Kinds []database.SourceKind `json:"kinds"`
+}
+
 // ListSourceKinds returns only the subset of kinds that are registered as source kinds.
 //
 // Source kinds typically represent the origin of ingested data, such as Base, AZBase,
@@ -52,6 +57,9 @@ func (s Resources) ListSourceKinds(response http.ResponseWriter, request *http.R
 	if kinds, err := s.DB.GetSourceKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), ListKindsResponse{Kinds: kinds}, http.StatusOK, response)
+		// inject 0, Sourceless into the payload. We don't track this as an official kind
+		// but it will facilitate delete requests for data that isn't associated with a kind.
+		kinds = append(kinds, database.SourceKind{ID: 0, Name: graph.StringKind("Sourceless")})
+		api.WriteBasicResponse(request.Context(), ListSourceKindsResponse{Kinds: kinds}, http.StatusOK, response)
 	}
 }

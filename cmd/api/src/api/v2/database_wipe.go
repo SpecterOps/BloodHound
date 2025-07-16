@@ -122,11 +122,11 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 			}
 
 			deleteRequest := model.AnalysisRequest{
-				RequestedBy:        userId,
-				RequestType:        model.AnalysisRequestDeletion,
-				DeleteAllGraph:     payload.DeleteCollectedGraphData,
-				DeleteAllOpenGraph: payload.DeleteOpenGraphData,
-				DeleteSourceKinds:  payload.DeleteSourceKinds,
+				RequestedBy:           userId,
+				RequestType:           model.AnalysisRequestDeletion,
+				DeleteAllGraph:        payload.DeleteCollectedGraphData,
+				DeleteSourcelessKinds: payload.DeleteOpenGraphData,
+				DeleteSourceKinds:     payload.DeleteSourceKinds,
 			}
 
 			if err := s.DB.RequestCollectedGraphDataDeletion(request.Context(), deleteRequest); err != nil {
