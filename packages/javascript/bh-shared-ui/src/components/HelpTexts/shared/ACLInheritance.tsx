@@ -49,7 +49,7 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
 
     const nodesInheritedFrom = inheritanceHash.length > 0 ? nodesArray.filter(checkNodeForHash) : [];
 
-    const getSourceObjectContent = () => {
+    const renderDropdownContent = () => {
         if (isLoading) {
             return <Skeleton variant='rounded' />;
         }
@@ -68,7 +68,7 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
     return (
         <>
             <Typography variant='body2'>{INHERITANCE_DROPDOWN_DESCRIPTION}</Typography>
-            <Box py={1}>{getSourceObjectContent()}</Box>
+            <Box py={1}>{renderDropdownContent()}</Box>
         </>
     );
 };
