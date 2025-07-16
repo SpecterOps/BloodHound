@@ -34,6 +34,7 @@ func TestVersion5Analysis(t *testing.T) {
 	var (
 		ctx = context.Background()
 
+		analysisFilePath = path.Join("fixtures", "Version5JSON", "analysis")
 		ingestFilePath = path.Join("fixtures", "Version5JSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
@@ -50,7 +51,7 @@ func TestVersion5Analysis(t *testing.T) {
 	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
-	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version5JSON", "analysis")), "analyzed.json")
+	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
 	require.NoError(t, err)
 
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
@@ -61,6 +62,7 @@ func TestVersion6ADCSAnalysis(t *testing.T) {
 	var (
 		ctx = context.Background()
 
+		analysisFilePath = path.Join("fixtures", "Version6ADCSJSON", "analysis")
 		ingestFilePath = path.Join("fixtures", "Version6ADCSJSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
@@ -77,7 +79,7 @@ func TestVersion6ADCSAnalysis(t *testing.T) {
 	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
-	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6ADCSJSON", "analysis")), "analyzed.json")
+	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
 	require.NoError(t, err)
 
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
@@ -88,6 +90,7 @@ func TestVersion6AllAnalysis(t *testing.T) {
 	var (
 		ctx = context.Background()
 
+		analysisFilePath = path.Join("fixtures", "Version6AllJSON", "analysis")
 		ingestFilePath = path.Join("fixtures", "Version6AllJSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
@@ -104,7 +107,7 @@ func TestVersion6AllAnalysis(t *testing.T) {
 	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
-	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6AllJSON", "analysis")), "analyzed.json")
+	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
 	require.NoError(t, err)
 
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
@@ -115,6 +118,7 @@ func TestVersion6Analysis(t *testing.T) {
 	var (
 		ctx = context.Background()
 
+		analysisFilePath = path.Join("fixtures", "Version6JSON", "analysis")
 		ingestFilePath = path.Join("fixtures", "Version6JSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
@@ -131,7 +135,7 @@ func TestVersion6Analysis(t *testing.T) {
 	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
 	require.NoError(t, err)
 
-	expected, err = generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "Version6JSON", "analysis")), "analyzed.json")
+	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
 	require.NoError(t, err)
 
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
