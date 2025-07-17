@@ -27,6 +27,9 @@ const ImportQueryDialog: React.FC<{
 }> = ({ open, onClose }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
+    const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
+    const [uploadDialogDisabled, setUploadDialogDisabled] = useState<boolean>(false);
+    const [uploadMessage, setUploadMessage] = useState<string>('');
 
     const { addNotification } = useNotifications();
 
@@ -35,13 +38,15 @@ const ImportQueryDialog: React.FC<{
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
         const filesAreUploading = filesForIngest.filter((file) => file.status === FileStatus.UPLOADING).length > 0;
-
+        setUploadDialogDisabled(filesAreUploading);
         const shouldDisableSubmit = filesHaveErrors || !filesForIngest.length;
+        setSubmitDialogDisabled(shouldDisableSubmit);
     }, [filesForIngest]);
 
     const handleFileDrop = (files: FileList | null) => {
         if (files && files.length > 0) {
             const validatedFiles: FileForIngest[] = [...files].map((file) => {
+                //Consider validating against userQueries as well.
                 if (allowedFileTypes.includes(file.type)) {
                     return { file, status: FileStatus.READY };
                 } else {
@@ -99,10 +104,8 @@ const ImportQueryDialog: React.FC<{
             })
         );
     };
-    const uploadFile = (ingestFile: FileForIngest) => {
-        console.log(ingestFile);
-
-        importSavedQueryMutation.mutate(ingestFile.file, {
+    const uploadFile = async (ingestFile: FileForIngest) => {
+        await importSavedQueryMutation.mutateAsync(ingestFile.file, {
             onError: (error: any) => {
                 const apiError = error?.response?.data as ErrorResponse;
 
@@ -118,7 +121,7 @@ const ImportQueryDialog: React.FC<{
         });
     };
 
-    const handleUploadAll = () => {
+    const handleUploadAll = async () => {
         updateStatusOfReadyFiles(FileStatus.UPLOADING);
         // const fileToUpload = filesForIngest[0];
 
@@ -128,7 +131,7 @@ const ImportQueryDialog: React.FC<{
             // Separate error handling so we can continue on when a file fails
 
             try {
-                uploadFile(ingestFile);
+                await uploadFile(ingestFile);
             } catch (error) {
                 errorCount += 1;
             }
@@ -136,17 +139,28 @@ const ImportQueryDialog: React.FC<{
             setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
         }
 
-        // try {
-        //     importSavedQueryMutation.mutate(fileToUpload.file);
-        //     setFileUploadStep(FileUploadStep.ADD_FILES);
-        //     setFilesForIngest([]);
-        // } catch (error) {
-        //     console.log(error);
-        // }
+        if (errorCount === filesForIngest.length) {
+            //all fail
+            addNotification(`${errorCount} files have failed to upload.`, 'EndIngestFail');
+        } else {
+            addNotification(
+                `Successfully uploaded ${filesForIngest.length - errorCount} files for ingest`,
+                'FileIngestSuccess'
+            );
+        }
+        const uploadMessage =
+            errorCount > 0 ? 'Some files have failed to upload.' : 'All files have successfully been uploaded.';
+        setUploadMessage(uploadMessage);
+    };
+
+    const handleClose = () => {
+        setFileUploadStep(FileUploadStep.ADD_FILES);
+        setFilesForIngest([]);
+        onClose();
     };
 
     return (
-        <Dialog open={open} onOpenChange={onClose}>
+        <Dialog open={open} onOpenChange={handleClose}>
             <DialogPortal>
                 <DialogContent
                     DialogOverlayProps={{
@@ -155,17 +169,17 @@ const ImportQueryDialog: React.FC<{
                     maxWidth='sm'>
                     <DialogTitle>Upload Files</DialogTitle>
 
-                    <FileDrop
-                        onDrop={handleFileDrop}
-                        // disabled={listFileTypesForIngest.isLoading}
-                        disabled={false}
-                        accept={allowedFileTypes}
-                    />
+                    {fileUploadStep === FileUploadStep.ADD_FILES && (
+                        <FileDrop onDrop={handleFileDrop} disabled={false} accept={allowedFileTypes} />
+                    )}
+                    {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
+                        <div className='text-lg mb-4'>{uploadMessage}</div>
+                    )}
+
                     {filesForIngest.length > 0 && (
                         <>
                             <div>Files</div>
                             {filesForIngest.map((file, index) => {
-                                console.log(file);
                                 return (
                                     <FileStatusListItem
                                         file={file}
@@ -178,29 +192,23 @@ const ImportQueryDialog: React.FC<{
                     )}
 
                     <DialogActions className='flex justify-end gap-4'>
-                        <DialogClose asChild>
-                            <Button variant='text'>Cancel</Button>
-                        </DialogClose>
-                        <Button variant='text' onClick={handleSubmit}>
-                            Upload
-                        </Button>
-
-                        {/* {fileUploadStep === FileUploadStep.ADD_FILES && (
+                        {fileUploadStep === FileUploadStep.ADD_FILES && (
                             <>
                                 <DialogClose asChild>
                                     <Button variant='text'>Cancel</Button>
                                 </DialogClose>
-                                <Button variant='text' onClick={handleSubmit}>
+                                <Button variant='text' onClick={handleSubmit} disabled={submitDialogDisabled}>
                                     Upload
                                 </Button>
                             </>
-                        )} */}
-
-                        {/* {fileUploadStep === FileUploadStep.UPLOAD && (
+                        )}
+                        {fileUploadStep === FileUploadStep.UPLOAD && (
                             <DialogClose asChild>
-                                <Button variant='text'>Uploading</Button>
+                                <Button variant='text' disabled={uploadDialogDisabled}>
+                                    Complete
+                                </Button>
                             </DialogClose>
-                        )} */}
+                        )}
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>

@@ -134,20 +134,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             ))}
                         </Select>
                     </FormControl>
-                    <FormControl size='small' className='w-full ml-2'>
-                        <Select
-                            labelId='demo-simple-select-helper-label'
-                            id='demo-simple-select-helper'
-                            value={age}
-                            onChange={handleChange}>
-                            <MenuItem value=''>
-                                <em>None</em>
-                            </MenuItem>
-                            <MenuItem value={10}>Ten</MenuItem>
-                            <MenuItem value={20}>Twenty</MenuItem>
-                            <MenuItem value={30}>Thirty</MenuItem>
-                        </Select>
-                    </FormControl>
                 </div>
             </div>
             <ImportQueryDialog open={showImportDialog} onClose={() => setShowImportDialog(false)} />
