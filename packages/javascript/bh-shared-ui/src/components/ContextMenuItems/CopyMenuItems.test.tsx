@@ -19,8 +19,6 @@ import { type ItemResponse } from '../../hooks';
 import { render } from '../../test-utils';
 import { CopyMenuItems } from './CopyMenuItems';
 
-// const useExploreSelectedItemSpy = vi.spyOn(bhSharedUI, 'useExploreSelectedItem');
-
 describe('CopyMenuItems', () => {
     const selectedNode = {
         label: 'foo',
