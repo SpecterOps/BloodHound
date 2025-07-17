@@ -51,7 +51,7 @@ var (
 )
 
 // TestWorkspace runs all Go tests for a given workspace. Setting integration to true will run integration tests, otherwise we only run unit tests
-func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool) error {
+func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool, tags string) error {
 	var (
 		manifest = make(map[string]string, len(modPaths))
 		command  = "go"
@@ -65,7 +65,7 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, integrationConfigPath)
 		}
 
-		args = append(args, []string{"-p", "1", "-tags", "integration serial_integration"}...)
+		args = append(args, []string{"-p", "1", "-tags", tags}...)
 	}
 
 	for _, modPath := range modPaths {

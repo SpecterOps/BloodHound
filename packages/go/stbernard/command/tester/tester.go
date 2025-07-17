@@ -40,6 +40,7 @@ type command struct {
 	yarnOnly    bool
 	goOnly      bool
 	integration bool
+	tags        string
 }
 
 // Create new instance of command to capture given environment
@@ -62,9 +63,10 @@ func (s *command) Name() string {
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
-	yarnOnly := cmd.Bool("y", false, "Yarn only")
-	goOnly := cmd.Bool("g", false, "Go only")
-	integration := cmd.Bool("i", false, "Include integration tests")
+	cmd.BoolVar(&s.yarnOnly, "y", false, "Yarn only")
+	cmd.BoolVar(&s.goOnly, "g", false, "Go only")
+	cmd.BoolVar(&s.integration, "i", false, "Include integration tests")
+	cmd.StringVar(&s.tags, "tags", "integration,serial_integration", "Go build tags to include")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -75,12 +77,7 @@ func (s *command) Parse(cmdIndex int) error {
 	if err := cmd.Parse(os.Args[cmdIndex+1:]); err != nil {
 		cmd.Usage()
 		return fmt.Errorf("parsing %s command: %w", Name, err)
-	} else if yarnOnly != goOnly {
-		s.yarnOnly = *yarnOnly
-		s.goOnly = *goOnly
 	}
-
-	s.integration = *integration
 
 	return nil
 }
@@ -122,7 +119,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 			}
 		}
 
-		if err := golang.TestWorkspace(cwd, modPaths, coverPath, s.env, s.integration); err != nil {
+		if err := golang.TestWorkspace(cwd, modPaths, coverPath, s.env, s.integration, s.tags); err != nil {
 			return fmt.Errorf("testing go workspace: %w", err)
 		}
 	}
