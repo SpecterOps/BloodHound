@@ -138,7 +138,7 @@ func Run(env environment.Environment) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error walking the path: %w", err)
+		errs = append(errs, fmt.Errorf("error walking the path: %w", err))
 	}
 
 	// close path channel to signal we're done sending values

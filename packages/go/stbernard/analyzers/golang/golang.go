@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
@@ -38,7 +39,7 @@ func Run(cwd string, modPath string, env environment.Environment) (codeclimate.S
 		args        = []string{"tool", "golangci-lint", "run", "--fix", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
-	args = append(args, modPath)
+	args = append(args, filepath.Join(modPath, "..."))
 
 	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		var errResult *cmdrunner.ExecutionError

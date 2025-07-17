@@ -138,9 +138,12 @@ func logCommand(result *ExecutionResult) func() {
 func run(cmd *exec.Cmd, result *ExecutionResult) error {
 	defer logCommand(result)()
 
-	var debugEnabled = slog.Default().Enabled(context.TODO(), slog.LevelDebug)
+	var (
+		ctx           = context.TODO()
+		quietDisabled = slog.Default().Enabled(ctx, slog.LevelInfo)
+	)
 
-	if debugEnabled {
+	if quietDisabled {
 		cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
 		cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
 	}
@@ -150,10 +153,11 @@ func run(cmd *exec.Cmd, result *ExecutionResult) error {
 		var exitErr *exec.ExitError
 
 		if errors.As(err, &exitErr) {
+			slog.Error("Command run failed", slog.String("cwd", cmd.Dir), slog.String("command", cmd.String()))
 			// Avoid double logging
-			if !debugEnabled {
+			if !quietDisabled {
 				// Send the command's logs to stderr for the user to know what happened
-				fmt.Fprint(os.Stderr, result.CombinedOutput)
+				fmt.Fprint(os.Stderr, result.ErrorOutput)
 			}
 			return newExecutionError(result, exitErr)
 		}

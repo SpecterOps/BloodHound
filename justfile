@@ -53,17 +53,11 @@ build *FLAGS:
 
 # prepare for code review
 prepare-for-codereview:
-  @(test -e tmp && rm -r tmp) || echo "skip rm tmp"
-  @mkdir -p tmp
-  -@just _prep-steps
-  @ echo "For more details, see output files in {{absolute_path('./tmp')}}"
-
-_prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
-  @just show > tmp/repo-status.txt
   @just analyze
+  @just show
 
 # check license is applied to source files
 check-license *ARGS:
