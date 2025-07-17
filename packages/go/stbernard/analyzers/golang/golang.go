@@ -21,9 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path"
 
-	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
@@ -32,7 +30,7 @@ import (
 // Run golangci-lint for all module paths passed to it
 //
 // This is a single runner that accepts the paths for all passed modules, rather than separate runs for each path
-func Run(cwd string, modPaths []string, env environment.Environment) (codeclimate.SeverityMap, error) {
+func Run(cwd string, modPath string, env environment.Environment) (codeclimate.SeverityMap, error) {
 	var (
 		lintEntries []codeclimate.Entry
 		output      *bytes.Buffer
@@ -40,9 +38,7 @@ func Run(cwd string, modPaths []string, env environment.Environment) (codeclimat
 		args        = []string{"tool", "golangci-lint", "run", "--fix", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
-	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
-		return path.Join(modPath, "...")
-	})...)
+	args = append(args, modPath)
 
 	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		var errResult *cmdrunner.ExecutionError

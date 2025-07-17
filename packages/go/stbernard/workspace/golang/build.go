@@ -31,12 +31,9 @@ import (
 )
 
 // BuildMainPackages builds all main packages for a list of module paths
-func BuildMainPackages(workRoot string, modPaths []string, env environment.Environment) error {
+func BuildMainPackages(workRoot string, modPath string, env environment.Environment) error {
 	var (
 		err      error
-		errs     []error
-		wg       sync.WaitGroup
-		mu       sync.Mutex
 		version  semver.Version
 		buildDir = filepath.Join(workRoot, "dist") + string(filepath.Separator)
 	)
@@ -52,21 +49,11 @@ func BuildMainPackages(workRoot string, modPaths []string, env environment.Envir
 
 	slog.Info(fmt.Sprintf("Building for version %s", version.Original()))
 
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(buildDir, modPath string) {
-			defer wg.Done()
-			if err := buildModuleMainPackages(buildDir, modPath, version, env); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("build main package: %w", err))
-				mu.Unlock()
-			}
-		}(buildDir, modPath)
+	if err := buildModuleMainPackages(buildDir, modPath, version, env); err != nil {
+		return fmt.Errorf("build main packages: %w", err)
 	}
 
-	wg.Wait()
-
-	return errors.Join(errs...)
+	return nil
 }
 
 func buildModuleMainPackages(buildDir string, modPath string, version semver.Version, env environment.Environment) error {

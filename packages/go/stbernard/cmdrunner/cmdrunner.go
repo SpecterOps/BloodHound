@@ -153,7 +153,7 @@ func run(cmd *exec.Cmd, result *ExecutionResult) error {
 			// Avoid double logging
 			if !debugEnabled {
 				// Send the command's logs to stderr for the user to know what happened
-				fmt.Fprint(os.Stderr, result.ErrorOutput)
+				fmt.Fprint(os.Stderr, result.CombinedOutput)
 			}
 			return newExecutionError(result, exitErr)
 		}

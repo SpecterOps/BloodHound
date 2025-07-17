@@ -88,14 +88,14 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if _, err := yarn.ParseWorkspace(paths.Root); err != nil {
 		return fmt.Errorf("parsing yarn workspace absolute paths: %w", err)
-	} else if err := s.runTests(paths.Root, paths.Coverage, paths.GoModules); err != nil {
+	} else if err := s.runTests(paths.Root, paths.Coverage, paths.GoModule); err != nil {
 		return fmt.Errorf("running tests: %w", err)
 	} else {
 		return nil
 	}
 }
 
-func (s *command) runTests(cwd string, coverPath string, modPaths []string) error {
+func (s *command) runTests(cwd string, coverPath string, modPath string) error {
 	if !s.goOnly {
 		if err := yarn.TestWorkspace(cwd, s.env); err != nil {
 			return fmt.Errorf("testing yarn workspace: %w", err)
@@ -119,7 +119,7 @@ func (s *command) runTests(cwd string, coverPath string, modPaths []string) erro
 			}
 		}
 
-		if err := golang.TestWorkspace(cwd, modPaths, coverPath, s.env, s.integration, s.tags); err != nil {
+		if err := golang.TestWorkspace(cwd, modPath, coverPath, s.env, s.integration, s.tags); err != nil {
 			return fmt.Errorf("testing go workspace: %w", err)
 		}
 	}
