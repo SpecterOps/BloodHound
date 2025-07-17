@@ -28,6 +28,7 @@ vi.mock('react-router-dom', async () => {
         useSearchParams: vi.fn(),
     };
 });
+
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherResponse));
