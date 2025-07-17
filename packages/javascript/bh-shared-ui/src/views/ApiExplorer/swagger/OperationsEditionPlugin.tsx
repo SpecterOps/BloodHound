@@ -29,18 +29,19 @@ export const OperationsEditionPlugin = function () {
                     // The component only has access to the tag that is currently being rendered and not the entire array.
                     // This looks up the array by the top-level system attribute so it can be passed into the component at render time.
                     const [, path, action] = props.specPath.toJS();
-                    const tags = system.spec().toJS().json.paths[path][action].tags;
+                    const tags = system.spec().get('json').getIn(['paths', path, action, 'tags'])?.toJS() || [];
+
                     const isCommunity = tags.includes('Community');
                     const isEnterprise = tags.includes('Enterprise');
 
                     return (
-                        <div>
+                        <>
                             <OperationSummaryWithEdition
                                 {...props}
                                 isCommunity={isCommunity}
                                 isEnterprise={isEnterprise}
                             />
-                        </div>
+                        </>
                     );
                 };
                 return OperationSummaryComponent;
