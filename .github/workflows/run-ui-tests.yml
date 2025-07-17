@@ -1,0 +1,31 @@
+name: Run UI Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "stage/**"
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "~1.24.4"
+          cache: true
+
+      # Telling yarn that CI is false because of flap
+      - name: Run Tests
+        run: |
+          export CI=false
+          go tool stbernard deps
+          go tool stbernard test -y

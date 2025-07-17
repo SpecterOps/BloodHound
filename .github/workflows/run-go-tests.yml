@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Run Tests
+name: Run Go Tests
 
 on:
   pull_request:
@@ -31,40 +31,34 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Compose
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y docker-compose
-          docker-compose version
+        uses: actions/checkout@v4
 
       - name: Start PostgreSQL and Neo4j Containers
         run: |
-          BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker-compose -f docker-compose.testing.yml up -d
+          BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker compose -f docker-compose.testing.yml up -d
 
       - name: Install Go
         uses: actions/setup-go@v4
         with:
           go-version: "~1.24.4"
+          cache: true
 
       - name: Run Tests
         run: |
           export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
-          go tool stbernard deps
-          go tool stbernard test -i
+          go tool stbernard test -g -i
 
       - name: Neo4j Debug Logs
         if: failure()
         run: |
-          docker-compose -f docker-compose.testing.yml exec -T testgraph cat /logs/debug.log
+          docker compose -f docker-compose.testing.yml exec -T testgraph cat /logs/debug.log
 
       - name: Postgres Debug Logs
         if: failure()
         run: |
-          docker-compose -f docker-compose.testing.yml logs testdb
+          docker compose -f docker-compose.testing.yml logs testdb
 
       - name: Stop and Remove Containers
         if: ${{ ! cancelled() }}
         run: |
-          docker-compose -f docker-compose.testing.yml down
+          docker compose -f docker-compose.testing.yml down

@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/git"
 )
 
-// BuildMainPackages builds all main packages for a list of module paths
+// BuildMainPackages builds all main packages for the given module
 func BuildMainPackages(workRoot string, modPath string, env environment.Environment) error {
 	var (
 		err      error
