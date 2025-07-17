@@ -36,7 +36,10 @@ export const useSigmaExploreGraph = (includeProperties: boolean) => {
     const castGraphData = graphQuery?.data?.data as GraphData;
 
     const nodeKeys = useMemo(
-        () => (Array.isArray(castGraphData?.node_keys) ? castGraphData?.node_keys.concat(['isTierZero']) : undefined),
+        () =>
+            Array.isArray(castGraphData?.node_keys)
+                ? ['nodetype', 'isTierZero'].concat(castGraphData?.node_keys)
+                : undefined,
         [castGraphData?.node_keys]
     );
 

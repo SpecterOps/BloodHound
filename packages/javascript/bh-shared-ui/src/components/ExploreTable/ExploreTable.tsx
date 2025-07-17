@@ -54,7 +54,7 @@ const ExploreTable = ({
         []
     );
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns } = useExploreTableRowsAndColumns({
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
         searchInput,
         allColumnKeys,
@@ -95,7 +95,7 @@ const ExploreTable = ({
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
-                    resultsCount={sortedFilteredRows?.length}
+                    resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable

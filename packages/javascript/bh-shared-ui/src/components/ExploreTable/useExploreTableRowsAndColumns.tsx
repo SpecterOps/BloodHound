@@ -27,6 +27,18 @@ const useExploreTableRowsAndColumns = ({
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 
+    const rows = useMemo(
+        () =>
+            ((data &&
+                Object.entries(data).map(([key, value]) => ({
+                    ...value.data,
+                    id: key,
+                    displayname: value?.label?.text,
+                }))) ||
+                []) as MungedTableRowWithId[],
+        [data]
+    );
+
     const handleSort = useCallback(
         (sortByColumn: keyof MungedTableRowWithId) => {
             if (sortByColumn) {
@@ -44,7 +56,7 @@ const useExploreTableRowsAndColumns = ({
                     }
                 } else {
                     setSortBy(sortByColumn);
-                    setSortOrder('desc');
+                    setSortOrder('asc');
                 }
             }
         },
@@ -61,8 +73,8 @@ const useExploreTableRowsAndColumns = ({
     const makeColumnDef = useCallback(
         (key: keyof MungedTableRowWithId) =>
             columnHelper.accessor(String(key), {
-                header: (header) => {
-                    const dataType = typeof header.table.getRow('0')?.original?.[key];
+                header: () => {
+                    const dataType = rows?.length ? typeof rows[0][key] : '';
 
                     return (
                         <ExploreTableHeaderCell
@@ -81,7 +93,7 @@ const useExploreTableRowsAndColumns = ({
                 ),
                 id: key?.toString(),
             }),
-        [handleSort, sortOrder, sortBy]
+        [handleSort, sortOrder, sortBy, rows]
     );
 
     const kebabColumDefinition = useMemo(
@@ -89,7 +101,7 @@ const useExploreTableRowsAndColumns = ({
             columnHelper.accessor('', {
                 id: 'action-menu',
                 cell: ({ row }) => (
-                    <div className='h-full w-full flex justify-center items-center'>
+                    <div className='h-full w-8 flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
                             data-testid='kebab-menu'
@@ -100,18 +112,6 @@ const useExploreTableRowsAndColumns = ({
                 ),
             }),
         [handleKebabMenuClick]
-    );
-
-    const rows = useMemo(
-        () =>
-            ((data &&
-                Object.entries(data).map(([key, value]) => ({
-                    ...value.data,
-                    id: key,
-                    displayname: value?.label?.text,
-                }))) ||
-                []) as MungedTableRowWithId[],
-        [data]
     );
 
     const filteredRows: MungedTableRowWithId[] = useMemo(() => {
@@ -133,10 +133,14 @@ const useExploreTableRowsAndColumns = ({
         if (sortBy) {
             if (sortOrder === 'asc') {
                 dataToSort.sort((a, b) => {
+                    if (a[sortBy] === true) return 1;
+
                     return a[sortBy]?.toString().localeCompare(b[sortBy]?.toString());
                 });
             } else {
                 dataToSort.sort((a, b) => {
+                    if (b[sortBy] === true) return 1;
+
                     return b[sortBy]?.toString().localeCompare(a[sortBy]?.toString());
                 });
             }
@@ -161,6 +165,7 @@ const useExploreTableRowsAndColumns = ({
         columnOptionsForDropdown: allColumnDefintions,
         tableColumns,
         sortedFilteredRows,
+        resultsCount: rows.length,
     };
 };
 

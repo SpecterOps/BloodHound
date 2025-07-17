@@ -16,9 +16,7 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
     <li
-        className={cn('p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer', {
-            'dark:bg-neutral-dark-2': isSelected,
-        })}
+        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer'
         {...itemProps}
         onClick={(e) => {
             e.stopPropagation();

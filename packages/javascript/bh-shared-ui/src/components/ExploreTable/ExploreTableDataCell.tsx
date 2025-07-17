@@ -13,7 +13,7 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
             </div>
         );
     }
-    if (typeof value === 'boolean' || !value) {
+    if (typeof value === 'boolean' || value === undefined || value === null) {
         return (
             <div className='h-full flex justify-center items-center'>
                 <FontAwesomeIcon
