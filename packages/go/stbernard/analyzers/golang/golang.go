@@ -47,7 +47,9 @@ func Run(cwd string, modPaths []string, env environment.Environment) (codeclimat
 	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		var errResult *cmdrunner.ExecutionError
 
-		if !errors.As(err, &errResult) {
+		// exit code 1 is for major or higher analyzer output, higher exit codes indicate something wrong with golangci-lint
+		// or its environment, so make sure to fail out
+		if !errors.As(err, &errResult) || errResult.ReturnCode > 1 {
 			return nil, fmt.Errorf("golangci-lint execution: %w", err)
 		}
 

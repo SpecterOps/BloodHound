@@ -19,6 +19,7 @@ package cmdrunner
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -64,6 +65,9 @@ type ExecutionError struct {
 func newExecutionError(result *ExecutionResult, exitErr *exec.ExitError) error {
 	// Update the return code and wrap the result to return it as an error
 	result.ReturnCode = exitErr.ExitCode()
+
+	// Send the command's logs to stderr for the user to know what happened
+	fmt.Fprint(os.Stderr, result.ErrorOutput)
 
 	return &ExecutionError{
 		ExecutionResult: *result,
