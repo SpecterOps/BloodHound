@@ -2605,10 +2605,8 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupHistoryRecords(gomock.Any(), model.SQLFilter{
-							SQLString: "created_at > ?",
-							Params:    []any{"2025-06-17T00:00:00Z"},
-						},
+						GetAssetGroupHistoryRecords(gomock.Any(),
+							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
 							100).
@@ -2703,11 +2701,11 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 					wrapper := api.ResponseWrapper{}
 					apitest.UnmarshalBody(output, &wrapper)
 
-					// unmarshall data as []model.AssetGroupHistory
+					// unmarshall data as v2.AssetGroupHistoryResp
 					dataBytes, err := json.Marshal(wrapper.Data)
 					require.NoError(t, err)
-					historyRecords := []model.AssetGroupHistory{}
-					err = json.Unmarshal(dataBytes, &historyRecords)
+					historyRecordsResp := v2.AssetGroupHistoryResp{}
+					err = json.Unmarshal(dataBytes, &historyRecordsResp)
 					require.NoError(t, err)
 
 					// verify skip, limit and count
@@ -2716,7 +2714,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 					require.Equal(t, len(expectedHistoryRecs), wrapper.Count)
 
 					// verify the records are as expected
-					require.Equal(t, expectedHistoryRecs, historyRecords)
+					require.Equal(t, expectedHistoryRecs, historyRecordsResp.Records)
 				},
 			},
 		})
