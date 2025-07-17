@@ -44,7 +44,14 @@ const fakeEnvironmentC = {
     collected: false,
     id: 'a',
 };
-const fakeUncollectedEnvironments = [fakeEnvironmentC];
+const fakeEnvironmentD = {
+    type: 'active-directory',
+    impactValue: 5,
+    name: 'b',
+    collected: false,
+    id: 'b',
+};
+const fakeUncollectedEnvironments = [fakeEnvironmentC, fakeEnvironmentD];
 
 const server = setupServer();
 
