@@ -14,82 +14,53 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
+import { Menu } from '@mui/material';
 
 import {
-    Permission,
-    isNode,
-    useExploreParams,
-    useExploreSelectedItem,
-    useFeatureFlag,
-    usePermissions,
+    CopyMenuItems,
+    EdgeMenuItems,
+    NodeMenuItems,
+    useContextMenuItems,
+    type MousePosition,
+    type PathfindingFilters,
 } from 'bh-shared-ui';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
-import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
-    contextMenu: { mouseX: number; mouseY: number } | null;
-    handleClose: () => void;
-}> = ({ contextMenu, handleClose }) => {
-    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { selectedItemQuery } = useExploreSelectedItem();
-    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
+    onClose: () => void;
+    pathfindingFilters: PathfindingFilters;
+    position: MousePosition | null;
+}> = ({ onClose, pathfindingFilters, position }) => {
+    const { asEdgeItem, asNodeItem, exploreParams, isAssetGroupEnabled, menuPosition, selectedItemQuery } =
+        useContextMenuItems(position);
 
-    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
-    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+    const edgeItem = asEdgeItem(selectedItemQuery);
+    const nodeItem = asNodeItem(selectedItemQuery);
 
-    const { checkPermission } = usePermissions();
+    const tierZeroId = useAppSelector(selectTierZeroAssetGroupId);
+    const ownedId = useAppSelector(selectOwnedAssetGroupId);
 
-    const handleSetStartingNode = () => {
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            const searchType = secondarySearch ? 'pathfinding' : 'node';
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                primarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
-
-    const handleSetEndingNode = () => {
-        const searchType = primarySearch ? 'pathfinding' : 'node';
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                secondarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
+    if (!menuPosition || !(edgeItem || nodeItem)) {
+        return null;
+    }
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+        <Menu open anchorPosition={menuPosition} anchorReference='anchorPosition' onClick={onClose}>
+            {edgeItem && <EdgeMenuItems id={edgeItem.id} pathfindingFilters={pathfindingFilters} />}
 
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
-                        assetGroupId={tierZeroAssetGroupId}
-                        assetGroupName='High Value'
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
-                ]}
-            <CopyMenuItem />
+            {nodeItem && <NodeMenuItems exploreParams={exploreParams} objectId={nodeItem.objectId} />}
+
+            {nodeItem && isAssetGroupEnabled && (
+                <>
+                    <AssetGroupMenuItem assetGroupId={tierZeroId} assetGroupName='High Value' />
+                    <AssetGroupMenuItem assetGroupId={ownedId} assetGroupName='Owned' />
+                </>
+            )}
+
+            <CopyMenuItems selectedItem={selectedItemQuery.data} />
         </Menu>
     );
 };

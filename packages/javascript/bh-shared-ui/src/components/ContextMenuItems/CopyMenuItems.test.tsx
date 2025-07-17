@@ -15,20 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import * as bhSharedUI from 'bh-shared-ui';
-import { render } from 'src/test-utils';
-import CopyMenuItem from './CopyMenuItem';
+import { type ItemResponse } from '../../hooks';
+import { render } from '../../test-utils';
+import { CopyMenuItems } from './CopyMenuItems';
 
-const useExploreSelectedItemSpy = vi.spyOn(bhSharedUI, 'useExploreSelectedItem');
-
-describe('CopyMenuItem', () => {
+describe('CopyMenuItems', () => {
     const selectedNode = {
         label: 'foo',
     };
 
     const setup = () => {
-        useExploreSelectedItemSpy.mockReturnValue({ selectedItemQuery: { data: selectedNode } } as any);
-        const screen = render(<CopyMenuItem />);
+        const screen = render(<CopyMenuItems selectedItem={selectedNode as ItemResponse} />);
         return screen;
     };
 

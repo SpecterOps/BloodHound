@@ -30,8 +30,9 @@ import {
     resetCamera,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { getNodeRadius, preventAllDefaults } from 'src/rendering/utils/utils';
+import { getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
+import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
 interface SigmaChartRef {
