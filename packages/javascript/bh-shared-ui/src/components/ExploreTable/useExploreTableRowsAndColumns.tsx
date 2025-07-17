@@ -61,16 +61,24 @@ const useExploreTableRowsAndColumns = ({
     const makeColumnDef = useCallback(
         (key: keyof MungedTableRowWithId) =>
             columnHelper.accessor(String(key), {
-                enableResizing: true, //disable resizing for just this column
-                header: () => (
-                    <ExploreTableHeaderCell
-                        sortBy={sortBy}
-                        sortOrder={sortOrder}
-                        onClick={() => handleSort(key)}
-                        headerKey={key}
-                    />
+                header: (header) => {
+                    const dataType = typeof header.table.getRow('0')?.original?.[key];
+
+                    return (
+                        <ExploreTableHeaderCell
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                            onClick={() => handleSort(key)}
+                            headerKey={key}
+                            dataType={dataType}
+                        />
+                    );
+                },
+                cell: (info) => (
+                    <div className='max-w-80 pt-1 pb-1 overflow-hidden line-clamp-1'>
+                        <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />
+                    </div>
                 ),
-                cell: (info) => <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />,
                 id: key?.toString(),
             }),
         [handleSort, sortOrder, sortBy]

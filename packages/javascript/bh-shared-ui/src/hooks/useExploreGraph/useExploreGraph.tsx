@@ -71,6 +71,7 @@ export const useExploreGraph = ({
             : query.getQueryConfig(params);
 
     const shouldFetch = Boolean(enabled && queryConfig?.queryFn);
+
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {

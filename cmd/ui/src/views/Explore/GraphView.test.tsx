@@ -16,12 +16,24 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { useSearchParams } from 'react-router-dom';
 import { render, screen, waitFor } from 'src/test-utils';
 import GraphView from './GraphView';
+import { cypherResponse, featureFlagsResponse } from './graph-view-test-data';
 
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useSearchParams: vi.fn(),
+    };
+});
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json(cypherResponse));
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(ctx.json(featureFlagsResponse));
     }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
@@ -34,6 +46,9 @@ const server = setupServer(
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
+
+const urlSearchParams = new URLSearchParams();
+vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
 
 describe('GraphView', () => {
     it('renders a graph view', () => {
@@ -55,5 +70,59 @@ describe('GraphView', () => {
         );
 
         expect(errorAlert).toBeInTheDocument();
+    });
+
+    it('renders a table if the query has NO node edges', async () => {
+        const urlSearchParams = new URLSearchParams();
+        urlSearchParams.append('searchType', 'cypher');
+        urlSearchParams.append('cypherSearch', 'encodedquery');
+        vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
+
+        render(<GraphView />);
+
+        const table = await screen.findByRole('table');
+
+        expect(table).toBeInTheDocument();
+
+        const rows = await screen.findAllByRole('row');
+
+        const expectedNumberOfRows = Object.keys(cypherResponse.data.nodes).length + 1; // plus one for the header row
+        expect(rows.length).toBe(expectedNumberOfRows);
+    });
+
+    it('renders a graph if the query has any node edges', async () => {
+        const urlSearchParams = new URLSearchParams();
+        urlSearchParams.append('searchType', 'cypher');
+        urlSearchParams.append('cypherSearch', 'encodedquery');
+        vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
+
+        const clonedCypherResponse = Object.assign({}, cypherResponse);
+
+        clonedCypherResponse.data.edges.push({
+            source: '108',
+            target: '108',
+            label: 'some label',
+            kind: 'some kind',
+            lastSeen: 'some lastSeen',
+            impactPercent: 10,
+            exploreGraphId: 'some exploreGraphId',
+            data: {},
+        });
+
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(ctx.json(clonedCypherResponse));
+            })
+        );
+
+        render(<GraphView />);
+
+        await new Promise((res) => setTimeout(res, 2000));
+
+        const sigma = await screen.findByTestId('sigma-container-wrapper');
+        const table = screen.queryByRole('table');
+
+        expect(sigma).toBeInTheDocument();
+        expect(table).not.toBeInTheDocument();
     });
 });
