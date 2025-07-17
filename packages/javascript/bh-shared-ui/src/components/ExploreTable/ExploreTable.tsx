@@ -37,7 +37,6 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
 const ExploreTable = ({
     data,
     selectedNode,
-    open,
     onClose,
     onRowClick,
     onDownloadClick,
@@ -71,7 +70,7 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
-    if (!open || !data) return null;
+    if (!data) return null;
 
     return (
         <div

@@ -233,6 +233,7 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     layoutOptions={baseGraphLayouts}
+                    isExploreTableSelected={isExploreTableSelected}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}
@@ -267,11 +268,10 @@ const GraphView: FC = () => {
 
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            {tableViewFeatureFlag?.enabled && (
+            {tableViewFeatureFlag?.enabled && displayTable && (
                 <ExploreTable
                     data={graphQuery.data?.nodes}
                     allColumnKeys={graphQuery.data.node_keys}
-                    open={displayTable}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}

@@ -69,6 +69,7 @@ type PersistedState = {
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
             selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
+            isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
         };
     };
 };
@@ -115,6 +116,7 @@ store.subscribe(
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
                     selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
+                    isExploreTableSelected: state.global.view.isExploreTableSelected,
                 },
             },
         });

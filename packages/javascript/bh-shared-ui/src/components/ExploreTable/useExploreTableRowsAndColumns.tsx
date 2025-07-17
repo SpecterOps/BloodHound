@@ -1,6 +1,7 @@
 import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { StyledGraphEdge } from 'js-client-library';
 import { useCallback, useMemo, useState } from 'react';
 import { type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
 import ExploreTableDataCell from './ExploreTableDataCell';
@@ -29,13 +30,26 @@ const useExploreTableRowsAndColumns = ({
 
     const rows = useMemo(
         () =>
-            ((data &&
-                Object.entries(data).map(([key, value]) => ({
-                    ...value.data,
-                    id: key,
-                    displayname: value?.label?.text,
-                }))) ||
-                []) as MungedTableRowWithId[],
+            (data &&
+                Object.entries(data).reduce((acc: MungedTableRowWithId[], curr) => {
+                    const [key, value] = curr;
+
+                    const valueAsPotentialEdge = value as StyledGraphEdge;
+
+                    if (!!valueAsPotentialEdge.id1 || !!valueAsPotentialEdge.id2) {
+                        return acc;
+                    }
+
+                    const nextRow = Object.assign({}, value.data);
+
+                    nextRow.id = key;
+                    nextRow.displayname = value?.label?.text;
+
+                    acc.push(nextRow as MungedTableRowWithId);
+
+                    return acc;
+                }, [])) ||
+            [],
         [data]
     );
 
