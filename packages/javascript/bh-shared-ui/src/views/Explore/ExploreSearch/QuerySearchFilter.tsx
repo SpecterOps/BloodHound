@@ -28,12 +28,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         doFuzzySearch(val);
     };
 
-    const [age, setAge] = useState('');
-
-    const handleChange = (event: SelectChangeEvent) => {
-        setAge(event.target.value);
-    };
-
     const doFuzzySearch = (term: string) => {
         queryFilterHandler(term, platform, categoryFilter);
     };
