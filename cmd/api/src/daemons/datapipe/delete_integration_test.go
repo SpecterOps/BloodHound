@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //go:build integration
 
-package graphify_test
+package datapipe_test
 
 import (
 	"context"

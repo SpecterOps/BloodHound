@@ -56,8 +56,12 @@ type Graph struct {
 	Edges []Edge `json:"edges"`
 }
 
+type Metadata struct {
+	SourceKind string `json:"source_kind"`
+}
 type GenericObject struct {
-	Graph Graph `json:"graph"`
+	Graph    Graph    `json:"graph"`
+	Metadata Metadata `json:"metadata"`
 }
 
 func WriteGraphToDatabase(db graph.Database, g *Graph) error {

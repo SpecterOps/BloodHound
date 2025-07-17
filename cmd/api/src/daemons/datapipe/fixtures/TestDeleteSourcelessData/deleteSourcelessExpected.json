@@ -1,10 +1,10 @@
 {
+    "metadata":{},
     "graph": {
         "nodes": [
             { "id": "1", "kinds": ["Base", "Computer"], "properties": { "hello": "world" } },
             { "id": "2", "kinds": ["AZBase", "Computer"], "properties": { "hello": "world" } },
-            { "id": "3", "kinds": ["GithubBase", "Computer"], "properties": { "hello": "world" } },
-            { "id": "4", "kinds": [ "Computer"], "properties": { "hello": "world" } }
+            { "id": "3", "kinds": ["GithubBase", "Computer"], "properties": { "hello": "world" } }
         ]
     }
 }
