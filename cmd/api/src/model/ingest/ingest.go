@@ -224,6 +224,5 @@ var (
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
 	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
 
-	ErrOpenGraphTagOrder          = errors.New("metadata tag must come before graph tag")
 	ErrOpenGraphMetaTagValidation = errors.New("metadata tag is invalid")
 )

@@ -38,11 +38,17 @@ type metaTagAssertion struct {
 	expectedType ingest.DataType
 }
 
-func Test_ValidateMetaTag(t *testing.T) {
+func Test_ParseAndValidatePayload(t *testing.T) {
 	assertions := []metaTagAssertion{
 		{
 			name:         "successful opengraph payload",
 			rawString:    `{"metadata":{},"graph": {"nodes":[]}}`,
+			err:          nil,
+			expectedType: ingest.DataTypeOpenGraph,
+		},
+		{
+			name:         "successful opengraph payload with no metadata",
+			rawString:    `{"graph": {"nodes":[]}}`,
 			err:          nil,
 			expectedType: ingest.DataTypeOpenGraph,
 		},
@@ -61,11 +67,6 @@ func Test_ValidateMetaTag(t *testing.T) {
 			name:      "unsuccessful opengraph metadata, invalid field",
 			rawString: `{"metadata":{"random field": "hello"},"graph": {"nodes":[]}}`,
 			err:       fmt.Errorf("error validating metadata tag: jsonschema validation failed"),
-		},
-		{
-			name:      "unsuccessful opengraph payload: metadata doesn't come first",
-			rawString: `{"graph": {"nodes":[]},"metadata":{}}`,
-			err:       ingest.ErrOpenGraphTagOrder,
 		},
 		{
 			name:         "enforce mutual exclusivity",
@@ -238,7 +239,7 @@ func Test_ValidateGraph(t *testing.T) {
 			require.Nil(t, err)
 
 			decoder := json.NewDecoder(reader)
-			err = ValidateGraph(decoder, ingestSchema, "")
+			err = ValidateGraph(decoder, ingestSchema)
 
 			report, ok := err.(ValidationReport)
 			require.True(t, ok)
@@ -270,7 +271,7 @@ func Test_ValidateGraph(t *testing.T) {
 			reader := bytes.NewReader(payload)
 			decoder := json.NewDecoder(reader)
 
-			err = ValidateGraph(decoder, ingestSchema, "")
+			err = ValidateGraph(decoder, ingestSchema)
 			assert.Nil(t, err)
 		})
 	}
@@ -629,21 +630,7 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"nodes[0]", "has too many kinds (4)"},
-			},
-		},
-		{
-			name: "node validation: atleast one kind must be specified",
-			payload: &testPayload{
-				Nodes: []testNode{
-					{
-						ID:    "1234",
-						Kinds: []string{},
-					},
-				},
-			},
-			validationErrContains: [][]string{
-				{"nodes[0]", "is missing required kinds"},
+				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
 		{
@@ -669,8 +656,7 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"nodes[0]"},
-				{"nodes[0] has too many kinds (4)."},
+				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
 	}
@@ -847,14 +833,13 @@ func itemsWithMultipleFailureCases() []genericIngestAssertion {
 						Kinds: []string{"kind A"},
 					},
 					{ // no kinds
-						Kinds: []string{},
+						Kinds: []string{"a", "b", "c", "d"},
 					},
 				},
 			},
 			validationErrContains: [][]string{
 				{"nodes[0]", "at '': missing property 'id'"},
-				{"nodes[1]", "at '': missing property 'id'"},
-				{"nodes[1]", "is missing required kinds"},
+				{"nodes[1]", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
 		{

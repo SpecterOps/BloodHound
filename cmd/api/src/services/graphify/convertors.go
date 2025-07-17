@@ -54,7 +54,9 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 
 	// the first element in node.Labels determines which icon the UI renders for the node.
 	// it is critical to specify this information because a node can have up to 3 kinds.
-	node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+	if len(node.Labels) > 0 {
+		node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+	}
 
 	converted.NodeProps = append(converted.NodeProps, node)
 	return nil

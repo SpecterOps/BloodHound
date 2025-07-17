@@ -72,7 +72,7 @@ func ParseAndValidatePayload(reader io.Reader, schema IngestSchema, shouldValida
 // If critical errors (e.g., malformed JSON, missing brackets) or a sufficient number
 // of validation errors are encountered, a ValidationReport is returned as an error.
 // If no errors are found, the function returns nil.
-func ValidateGraph(decoder *json.Decoder, schema IngestSchema, sourceKind string) error {
+func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 	v := &validator{
 		decoder:    decoder,
 		nodeSchema: schema.NodeSchema,
@@ -101,13 +101,13 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema, sourceKind string
 			switch key {
 			case "nodes":
 				v.nodesFound = true
-				v.validateArray("nodes", v.nodeSchema, sourceKind)
+				v.validateArray("nodes", v.nodeSchema)
 				if len(v.criticalErrors) > 0 {
 					return v.report()
 				}
 			case "edges":
 				v.edgesFound = true
-				v.validateArray("edges", v.edgeSchema, sourceKind)
+				v.validateArray("edges", v.edgeSchema)
 				if len(v.criticalErrors) > 0 {
 					return v.report()
 				}
@@ -195,11 +195,9 @@ func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
 
 func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, schema IngestSchema) (ingest.Metadata, error) {
 	var (
-		dataFound     bool
-		metaFound     bool
-		metadataFound bool // opengraph-only tag. must come before graph tag or reject request
-		sourceKind    string
-		meta          ingest.Metadata
+		dataFound bool
+		metaFound bool
+		meta      ingest.Metadata
 	)
 
 	for {
@@ -229,27 +227,17 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 					return ingest.Metadata{}, fmt.Errorf("error decoding metadata tag: %w", err)
 				} else if err := schema.MetaSchema.Validate(item); err != nil {
 					return ingest.Metadata{}, fmt.Errorf("error validating metadata tag: %w", err)
-				} else {
-					metadataFound = true
-					if sk, ok := item["source_kind"].(string); ok {
-						sourceKind = sk
-					}
 				}
-
 			case "graph":
 				// enforce mutual exclusivity
 				if dataFound || metaFound {
 					return ingest.Metadata{}, ingest.ErrMixedIngestFormat
 				}
 
-				if !metadataFound {
-					return ingest.Metadata{}, ingest.ErrOpenGraphTagOrder
-				}
-
 				// opengraph ingest path
 				meta = ingest.Metadata{Type: ingest.DataTypeOpenGraph}
 				if shouldValidateGraph {
-					if err := ValidateGraph(scanner.decoder, schema, sourceKind); err != nil {
+					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
 							slog.With("validation", report).Warn("opengraph ingest failed")
 						}
@@ -451,7 +439,7 @@ func (v *validator) hasErrors() bool {
 	return len(v.criticalErrors) > 0 || len(v.validationErrors) > 0
 }
 
-func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema, sourceKind string) {
+func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 	if err := expectOpenArray(v.decoder, arrayName); err != nil {
 		v.reportCritical(0, err.Error())
 		return
@@ -475,31 +463,6 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema, s
 			for key, val := range props {
 				if arr, ok := val.([]any); ok && !isHomogeneousArray(arr) {
 					v.reportValidation(index, fmt.Sprintf("%s[%d] schema validation error. properties[\"%s\"] contains a mixed-type array", arrayName, index, key))
-				}
-			}
-		}
-
-		if kinds, ok := item["kinds"].([]any); ok {
-			if sourceKind == "" {
-				// No sourceKind: expect 1–3 kinds
-				if len(kinds) == 0 {
-					v.reportValidation(index, fmt.Sprintf(
-						"%s[%d] is missing required kinds. Each node must specify at least one kind when metadata.source_kind is not provided.",
-						arrayName, index,
-					))
-				} else if len(kinds) > 3 {
-					v.reportValidation(index, fmt.Sprintf(
-						"%s[%d] has too many kinds (%d). A node may have at most 3 kinds when metadata.source_kind is not provided.",
-						arrayName, index, len(kinds),
-					))
-				}
-			} else {
-				// sourceKind present: expect 0–2 kinds
-				if len(kinds) > 2 {
-					v.reportValidation(index, fmt.Sprintf(
-						"%s[%d] has too many kinds (%d). When metadata.source_kind is specified, each node may specify at most 2 kinds.",
-						arrayName, index, len(kinds),
-					))
 				}
 			}
 		}

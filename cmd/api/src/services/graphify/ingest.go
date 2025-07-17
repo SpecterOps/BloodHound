@@ -354,7 +354,22 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 		}
 	)
 
-	return batch.Batch.UpdateNodeBy(nodeUpdate)
+	if len(nodeKinds) == 0 {
+		slog.Warn("skipping node with no kinds",
+			slog.String("objectid", nodeUpdate.Node.ID.String()),
+			slog.Int("num_kinds", 0),
+		)
+		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", nodeUpdate.Node.ID.String())
+	} else if len(nodeKinds) > 3 {
+		slog.Warn("skipping node with too many kinds",
+			slog.String("objectid", nodeUpdate.Node.ID.String()),
+			slog.Int("num_kinds", len(nodeKinds)),
+			slog.String("kinds", strings.Join(graph.Kinds(nodeKinds).Strings(), ", ")),
+		)
+		return fmt.Errorf("node %s has too many kinds (%d); max allowed is 3", nodeUpdate.Node.ID.String(), len(nodeKinds))
+	} else {
+		return batch.Batch.UpdateNodeBy(nodeUpdate)
+	}
 }
 
 func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
