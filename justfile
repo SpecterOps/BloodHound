@@ -175,6 +175,13 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
   @just build-bhce-container {{platform}} {{tag}} {{version}} {{ARGS}}
   @cd examples/docker-compose && BLOODHOUND_TAG={{tag}} docker compose up
 
+# remove all node modules forcefully
+reset-node-modules:
+  @cd packages/javascript/js-client-library && rm -r node_modules
+  @cd packages/javascript/bh-shared-ui && rm -r node_modules
+  @cd cmd/ui && rm -r node_modules
+  @rm -r node_modules
+  @just ensure-deps
 
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":
