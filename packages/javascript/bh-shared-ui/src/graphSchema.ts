@@ -375,6 +375,8 @@ export enum ActiveDirectoryKindProperties {
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
+    InheritanceHash = 'inheritancehash',
+    InheritanceHashes = 'inheritancehashes',
     IsDeleted = 'isdeleted',
     Enforced = 'enforced',
     Department = 'department',
@@ -534,6 +536,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
+        case ActiveDirectoryKindProperties.InheritanceHash:
+            return 'ACL Inheritance Hash';
+        case ActiveDirectoryKindProperties.InheritanceHashes:
+            return 'ACL Inheritance Hashes';
         case ActiveDirectoryKindProperties.IsDeleted:
             return 'Is Deleted';
         case ActiveDirectoryKindProperties.Enforced:

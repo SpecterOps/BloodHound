@@ -44,7 +44,7 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { type GraphNodes } from 'js-client-library';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -97,6 +97,8 @@ const GraphView: FC = () => {
     const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
+
+    const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
         let items: any = graphQuery.data?.nodes;
@@ -177,9 +179,7 @@ const GraphView: FC = () => {
 
     if (isError) return <GraphViewErrorAlert />;
 
-    if (!isWebGLEnabled()) {
-        return <WebGLDisabledAlert />;
-    }
+    if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
     /* Event Handlers */
     const cancelHighlight = () => {
