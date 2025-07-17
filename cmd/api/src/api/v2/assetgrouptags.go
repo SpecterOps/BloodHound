@@ -801,7 +801,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				),
 				query.KindIn(query.Node(), kinds...),
 			)
-			selectorFilter = model.SQLFilter{SQLString: "name ILIKE ? AND asset_group_tag_id IN ?", Params: []any{fmt.Sprintf("%%%s%%", reqBody.Query), tagIds}}
+			selectorFilter = model.SQLFilter{SQLString: "name ILIKE ? AND asset_group_tag_id IN ?", Params: []any{"%" + reqBody.Query + "%", tagIds}}
 		)
 
 		if selectors, err = s.DB.GetAssetGroupTagSelectors(request.Context(), selectorFilter, assetGroupTagsSearchLimit); err != nil && !errors.Is(err, database.ErrNotFound) {
