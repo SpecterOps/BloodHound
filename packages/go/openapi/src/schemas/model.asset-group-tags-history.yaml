@@ -27,24 +27,28 @@ properties:
     items:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        created_at:
-          type: string
-          format: date-time
-        actor:
-          type: string
-        email:
-          $ref: './null.string.yaml'
-          format: email
-        action:
-          type: string
-        target:
-          type: string
-        asset_group_tag_id:
-          type: integer
-        environment_id:
-          $ref: './null.string.yaml'
-        note:
-          $ref: './null.string.yaml'
+        records:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+              created_at:
+                type: string
+                format: date-time
+              actor:
+                type: string
+              email:
+                $ref: './null.string.yaml'
+              action:
+                type: string
+              target:
+                type: string
+              asset_group_tag_id:
+                type: integer
+              environment_id:
+                $ref: './null.string.yaml'
+              note:
+                $ref: './null.string.yaml'

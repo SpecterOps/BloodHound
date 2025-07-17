@@ -17938,34 +17938,42 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "created_at": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "actor": {
-                  "type": "string"
-                },
-                "email": {
-                  "type": "string",
-                  "format": "email"
-                },
-                "action": {
-                  "type": "string"
-                },
-                "target": {
-                  "type": "string"
-                },
-                "asset_group_tag_id": {
-                  "type": "integer"
-                },
-                "environment_id": {
-                  "type": "integer"
-                },
-                "note": {
-                  "type": "string"
+                "records": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "actor": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "$ref": "#/components/schemas/null.string"
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "target": {
+                        "type": "string"
+                      },
+                      "asset_group_tag_id": {
+                        "type": "integer"
+                      },
+                      "environment_id": {
+                        "$ref": "#/components/schemas/null.string"
+                      },
+                      "note": {
+                        "$ref": "#/components/schemas/null.string"
+                      }
+                    }
+                  }
                 }
               }
             }
