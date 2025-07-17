@@ -41,21 +41,24 @@ func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilte
 		historyRecs     []model.AssetGroupHistory
 		skipLimitString string
 		rowCount        int
-		sortColumns     []string
+		sortString      string
 	)
 
 	if sqlFilter.SQLString != "" {
 		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
 	}
 
-	for _, item := range sortItems {
-		dirString := "ASC"
-		if item.Direction == model.DescendingSortDirection {
-			dirString = "DESC"
+	if len(sortItems) > 0 {
+		var sortColumns []string
+		for _, item := range sortItems {
+			dirString := "ASC"
+			if item.Direction == model.DescendingSortDirection {
+				dirString = "DESC"
+			}
+			sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
 		}
-		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
+		sortString = "ORDER BY " + strings.Join(sortColumns, ", ")
 	}
-	sortString := "ORDER BY " + strings.Join(sortColumns, ", ")
 
 	if limit > 0 {
 		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)

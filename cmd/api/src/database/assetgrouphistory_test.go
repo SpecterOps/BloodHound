@@ -82,6 +82,15 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[0].Action)
 	})
 
+	t.Run("Verify empty sort", func(t *testing.T) {
+		records, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{}, 0, 0)
+		require.NoError(t, err)
+
+		require.Len(t, records, 4)
+		require.Equal(t, model.AssetGroupHistoryActionCreateSelector, records[0].Action)
+		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[3].Action)
+	})
+
 	t.Run("Verify limit", func(t *testing.T) {
 		records, totalRows, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 2)
 		require.NoError(t, err)
