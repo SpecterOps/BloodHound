@@ -19,7 +19,7 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
 type AssetGroupHistoryAction string
@@ -28,6 +28,9 @@ const (
 	AssetGroupHistoryActionCreateTag AssetGroupHistoryAction = "CreateTag"
 	AssetGroupHistoryActionUpdateTag AssetGroupHistoryAction = "UpdateTag"
 	AssetGroupHistoryActionDeleteTag AssetGroupHistoryAction = "DeleteTag"
+
+	AssetGroupHistoryActionAnalysisEnabledTag  AssetGroupHistoryAction = "AnalysisEnabledTag"
+	AssetGroupHistoryActionAnalysisDisabledTag AssetGroupHistoryAction = "AnalysisDisabledTag"
 
 	AssetGroupHistoryActionCreateSelector AssetGroupHistoryAction = "CreateSelector"
 	AssetGroupHistoryActionUpdateSelector AssetGroupHistoryAction = "UpdateSelector"

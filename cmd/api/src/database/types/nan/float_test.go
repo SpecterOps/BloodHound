@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database/types/nan"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/nan"
 	"github.com/stretchr/testify/require"
 )
 

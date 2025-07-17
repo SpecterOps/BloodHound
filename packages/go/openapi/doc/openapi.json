@@ -2891,25 +2891,32 @@
                     }
                   }
                 },
-                "example": [
-                  {
-                    "data": [
-                      {
-                          "id": 1,
-                          "kindName": "KindA",
-                          "config": {
-                              "icon": {
-                                  "type": "font-awesome",
-                                  "name": "house",
-                                  "color": "#FFFFFF"
-                              }
-                          }
+                "example": {
+                  "data": [
+                    {
+                      "id": 1,
+                      "kindName": "KindA",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "house",
+                          "color": "#FFFFFF"
+                        }
                       }
-                    ]
-                  }
-                  
-                  
-                ]
+                    },
+                    {
+                      "id": 2,
+                      "kindName": "KindB",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "coffee",
+                          "color": "#000000"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },
@@ -3054,9 +3061,11 @@
                   "id": 1,
                   "kindName": "KindA",
                   "config": {
-                    "type": "font-awesome",
-                    "name": "house",
-                    "color": "#FFFFFF"
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
                   }
                 }
               }
@@ -4556,8 +4565,9 @@
       ],
       "get": {
         "operationId": "ListAssetGroupMembers",
+        "deprecated": true,
         "summary": "List all asset isolation group members",
-        "description": "List all members of an asset isolation group.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/asset-group-tags/{asset_group_tag_id}/members` or `GET /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members` instead.\n",
         "tags": [
           "Asset Isolation",
           "Community",
@@ -5621,6 +5631,12 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
             "name": "auto_certify",
             "in": "query",
             "required": false,
@@ -6563,6 +6579,86 @@
         }
       }
     },
+    "/api/v2/graphs/acl-inheritance": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetACLInheritancePath",
+        "summary": "Get ACL inheritance path",
+        "description": "Returns a graph representing the path that an ACE is inherited through for a given edge.",
+        "tags": [
+          "Graph",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "source_node",
+            "description": "The ID of the starting node.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "target_node",
+            "description": "The ID of the ending node.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "edge_type",
+            "description": "The type of edge the ACL inheritance path is being fetched for.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns graph data that contains a collection of nodes and edges that make up the ACL inheritance path.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.unified-graph.graph"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -6948,193 +7044,6 @@
           },
           "204": {
             "$ref": "#/components/responses/no-content"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/saved-queries/{saved_query_id}/export": {
-      "parameters": [
-        {
-          "name": "saved_query_id",
-          "description": "ID of the saved query",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      ],
-      "get": {
-        "operationId": "ExportSavedQuery",
-        "summary": "Export a saved query",
-        "description": "Export an existing saved query by ID",
-        "tags": [
-          "Cypher",
-          "Community",
-          "Enterprise"
-        ],
-        "responses": {
-          "200": {
-            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
-            "headers": {
-              "Content-Disposition": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                },
-                "example": "[this request has a binary response]"
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/saved-queries/import": {
-      "post": {
-        "operationId": "ImportSavedQueries",
-        "summary": "Import one or more cypher queries.",
-        "description": "Import one or more cypher queries.\n\nThe request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.\n\nThe underlying JSON file(s) is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
-        "tags": [
-          "Cypher",
-          "Community",
-          "Enterprise"
-        ],
-        "requestBody": {
-          "description": "Request body should be a JSON or Zip file.",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
-              }
-            },
-            "application/zip": {
-              "schema": {
-                "type": "string",
-                "format": "binary"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "$ref": "#/components/responses/no-content"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "415": {
-            "$ref": "#/components/responses/unsupported-media-type"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/saved-queries/export": {
-      "parameters": [
-        {
-          "name": "scope",
-          "description": "Scope of saved queries, only the first scope parameter is used.",
-          "in": "query",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "enum": [
-              "all",
-              "public",
-              "shared",
-              "owned"
-            ]
-          }
-        }
-      ],
-      "get": {
-        "operationId": "ExportSavedQueries",
-        "summary": "Export one or more saved queries",
-        "description": "Export existing saved queries using the scope parameter.",
-        "tags": [
-          "Cypher",
-          "Community",
-          "Enterprise"
-        ],
-        "responses": {
-          "200": {
-            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
-            "headers": {
-              "Content-Disposition": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                },
-                "example": "[this request has a binary response]"
-              }
-            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -12167,6 +12076,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -12227,6 +12139,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -14498,6 +14413,7 @@
         "operationId": "ExportAttackPathFindings",
         "summary": "Export attack path findings",
         "description": "Export the finding table for a given attack path",
+        "deprecated": true,
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -14598,6 +14514,9 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
@@ -14806,6 +14725,42 @@
         }
       }
     },
+    "/api/v2/attack-paths/details": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "put": {
+        "operationId": "GetAllAttackPathFindings",
+        "summary": "Get all attack path findings",
+        "description": "Fetches all attack path findings and their associated details, including documentation.",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/api.response.all-findings"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/domains/{domain_id}/available-types": {
       "parameters": [
         {
@@ -14819,6 +14774,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -14899,6 +14857,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15330,6 +15291,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15576,6 +15540,9 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
@@ -15641,6 +15608,9 @@
           "schema": {
             "$ref": "#/components/schemas/enum.posture-history-type"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15951,6 +15921,14 @@
         "description": "Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available\nfor sorting are dependent on the entity object kind.\n",
         "schema": {
           "$ref": "#/components/schemas/api.params.query.sort-by"
+        }
+      },
+      "query.asset-group-tag-id": {
+        "name": "asset_group_tag_id",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "in": "query",
+        "schema": {
+          "type": "integer"
         }
       },
       "query.clients.hydrate-domains": {
@@ -19234,27 +19212,6 @@
           }
         }
       },
-      "unsupported-media-type": {
-        "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/api.error-wrapper"
-            },
-            "example": {
-              "http_status": 415,
-              "timestamp": "2024-02-19T19:27:43.866Z",
-              "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "errors": [
-                {
-                  "context": "clients",
-                  "message": "invalid content-type: [application/incorrect]; Content type must be application/json or application/zip"
-                }
-              ]
-            }
-          }
-        }
-      },
       "entity-info-query-results": {
         "description": "**OK**\n\nThis response is polymorphic and depends on the the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
         "content": {
@@ -19326,6 +19283,29 @@
             "example": "header1,header2,header3\ncell1,cell2,cell3\ncell4,cell5,cell6\n...\n"
           }
         }
+      },
+      "api.response.all-findings": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "description": "List of unified findings.",
+            "items": {
+              "$ref": "./../schemas/model.unified-finding.yaml"
+            }
+          },
+          "finding_assets": {
+            "type": "object",
+            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name.",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "findings",
+          "finding_assets"
+        ]
       }
     }
   },

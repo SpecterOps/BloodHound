@@ -89,6 +89,7 @@ const BasicInfo: FC = () => {
                         </Label>
                         <div className='flex gap-2 items-center mt-2'>
                             <Switch
+                                data-testid='zone-management_save_selector-form_disable-switch'
                                 id='disabled'
                                 checked={enabled}
                                 disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
@@ -118,6 +119,7 @@ const BasicInfo: FC = () => {
                             </Label>
                             <Input
                                 id='name'
+                                data-testid='zone-management_save_selector-form_name-input'
                                 {...register('name', { required: true, value: selectorQuery.data?.name })}
                                 autoComplete='off'
                                 className={
@@ -135,6 +137,7 @@ const BasicInfo: FC = () => {
                                 Description
                             </Label>
                             <textarea
+                                data-testid='zone-management_save_selector-form_description-input'
                                 id='description'
                                 {...register('description', { value: selectorQuery.data?.description })}
                                 rows={3}
@@ -147,6 +150,7 @@ const BasicInfo: FC = () => {
                         <div>
                             <Label className='text-base font-bold'>Selector Type</Label>
                             <Select
+                                data-testid='zone-management_save_selector-form_type-select'
                                 value={selectorType.toString()}
                                 onValueChange={(value: string) => {
                                     if (value === SeedTypeObjectId.toString()) {

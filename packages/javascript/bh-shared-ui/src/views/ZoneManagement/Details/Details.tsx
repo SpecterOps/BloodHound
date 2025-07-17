@@ -18,7 +18,9 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeTier } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { AppLink } from '../../../components/Navigation';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -28,7 +30,7 @@ import {
     useTagMembersInfiniteQuery,
     useTagsQuery,
 } from '../hooks';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
+import { getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
@@ -66,8 +68,12 @@ export const getEditButtonState = (
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
+
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);
@@ -97,7 +103,7 @@ const Details: FC = () => {
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
+                            <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
                         </Button>
                     )}
                 </div>

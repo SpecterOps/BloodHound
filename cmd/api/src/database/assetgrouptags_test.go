@@ -20,16 +20,19 @@ package database_test
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -712,7 +715,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 			label2.ID,
 		}
 
-		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeLabel}})
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeLabel))})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
@@ -730,7 +733,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 			tier2.ID,
 		}
 
-		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeTier))})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
@@ -857,6 +860,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		}
 	)
 
+	test_started_at := time.Now()
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
 	created_at := time.Now()
@@ -864,7 +868,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
-		orig_results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{}, 0, 0)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 2)
@@ -901,7 +905,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
-		orig_results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = 2"}, 0, 0)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 1)
@@ -919,12 +923,30 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of selector filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{})
+		results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{}, 0, 0)
 		require.NoError(t, err)
 
 		require.Equal(t, 1, len(results))
 		require.True(t, results[0].CreatedAt.After(created_at))
 
+	})
+
+	t.Run("successfully returns an array using the skip param", func(t *testing.T) {
+		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 1, 0)
+		require.NoError(t, err)
+
+		require.Equal(t, 1, len(results))
+		require.Equal(t, 2, count)
+		require.Equal(t, test2Selector.Name, results[0].Name)
+	})
+
+	t.Run("successfully returns an array using the limit param", func(t *testing.T) {
+		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 0, 1)
+		require.NoError(t, err)
+
+		require.Equal(t, 1, len(results))
+		require.Equal(t, 2, count)
+		require.Equal(t, test1Selector.Name, results[0].Name)
 	})
 
 }
@@ -997,4 +1019,34 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		require.Len(t, history, 2)
 		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, history[1].Action)
 	})
+}
+
+func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
+	var (
+		testCtx      = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		tagToDelete  model.AssetGroupTag
+	)
+
+	// Create tiers
+	for i := range 5 {
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, user, fmt.Sprintf("tag %d", i), "", null.Int32From(int32(i+2)), null.Bool{})
+		require.NoError(t, err)
+		// Delete the fourth entry to ensure positions are changed
+		if i == 3 {
+			tagToDelete = tag
+		}
+	}
+
+	// Delete a tier to ensure deleted tiers are skipped
+	err := dbInst.DeleteAssetGroupTag(testCtx, user, tagToDelete)
+	require.NoError(t, err)
+
+	orderedTags, err := dbInst.GetOrderedAssetGroupTagTiers(testCtx)
+	require.NoError(t, err)
+	for i, tag := range orderedTags {
+		assert.Equal(t, model.AssetGroupTagTypeTier, tag.Type)
+		assert.True(t, tag.DeletedAt.IsZero())
+		assert.EqualValues(t, i+1, tag.Position.ValueOrZero())
+	}
 }

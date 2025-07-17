@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -41,13 +41,8 @@ var (
 // ListSubmodulePaths finds all submodules in cwd and returns them as a slice of absolute paths
 func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, error) {
 	var (
-		output bytes.Buffer
-
-		command    = "git"
-		args       = []string{"config", "--file", ".gitmodules", "--get-regexp", "path"}
-		bindOutput = func(c *exec.Cmd) {
-			c.Stdout = &output
-		}
+		command  = "git"
+		args     = []string{"config", "--file", ".gitmodules", "--get-regexp", "path"}
 		subPaths = make([]string, 0, 4)
 	)
 
@@ -55,15 +50,16 @@ func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, erro
 		return subPaths, nil
 	} else if err != nil {
 		return subPaths, fmt.Errorf("stat .gitmodules: %w", err)
-	} else if err := cmdrunner.Run(command, args, cwd, env, bindOutput); err != nil {
+	} else if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return subPaths, fmt.Errorf("git submodule names: %w", err)
 	} else {
-		for _, keyvalstr := range strings.Split(strings.TrimSpace(output.String()), "\n") {
-			keyval := strings.Split(keyvalstr, " ")
-			if len(keyval) != 2 {
-				return subPaths, fmt.Errorf("%w: %s", ErrInvalidConfigValue, keyvalstr)
+		for _, keyValueStr := range strings.Split(strings.TrimSpace(result.StandardOutput.String()), "\n") {
+			keyValue := strings.Split(keyValueStr, " ")
+
+			if len(keyValue) != 2 {
+				return subPaths, fmt.Errorf("%w: %s", ErrInvalidConfigValue, keyValueStr)
 			} else {
-				subPaths = append(subPaths, filepath.Join(cwd, keyval[1]))
+				subPaths = append(subPaths, filepath.Join(cwd, keyValue[1]))
 			}
 		}
 
@@ -73,25 +69,21 @@ func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, erro
 
 // CheckClean checks if the git repository is clean and returns status as a bool. Codes other than exit 1 are returned as an error
 func CheckClean(cwd string, env environment.Environment) (bool, error) {
-	cmd := exec.Command("git", "diff-index", "--quiet", "HEAD", "--")
-	cmd.Env = env.Slice()
-	cmd.Dir = cwd
-
-	if level.GlobalAccepts(slog.LevelDebug) {
-		cmd.Stderr = os.Stderr
-	}
-
 	slog.Info(fmt.Sprintf("Checking repository clean for %s", cwd))
 
 	// We need to run git status first to ensure we don't hit a cache issue
-	if err := cmdrunner.Run("git", []string{"status"}, cwd, env, func(c *exec.Cmd) { c.Stdout = nil }); err != nil {
+	if _, err := cmdrunner.Run("git", []string{"status"}, cwd, env); err != nil {
 		return false, fmt.Errorf("git status: %w", err)
-	} else if err := cmd.Run(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); !ok || exiterr.ExitCode() != 1 {
-			return false, fmt.Errorf("git diff-index --quiet HEAD --: %w", err)
-		} else {
+	}
+
+	if _, err := cmdrunner.Run("git", []string{"diff-index", "--quiet", "HEAD", "--"}, cwd, env); err != nil {
+		var errResult *cmdrunner.ExecutionError
+
+		if errors.As(err, &errResult) && errResult.ReturnCode == 1 {
 			return false, nil
 		}
+
+		return false, fmt.Errorf("git diff-index: %w", err)
 	}
 
 	slog.Info(fmt.Sprintf("Finished checking repository clean for %s", cwd))
@@ -102,19 +94,14 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 // FetchCurrentCommitSHA pulls the SHA for the currently active HEAD and returns it as a string
 func FetchCurrentCommitSHA(cwd string, env environment.Environment) (string, error) {
 	var (
-		sha bytes.Buffer
-
-		command    = "git"
-		args       = []string{"rev-parse", "HEAD"}
-		bindOutput = func(c *exec.Cmd) {
-			c.Stdout = &sha
-		}
+		command = "git"
+		args    = []string{"rev-parse", "HEAD"}
 	)
 
-	if err := cmdrunner.Run(command, args, cwd, env, bindOutput); err != nil {
-		return "", err
+	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		return "", fmt.Errorf("git rev-parse: %w", err)
 	} else {
-		return strings.TrimSpace(sha.String()), nil
+		return strings.TrimSpace(result.StandardOutput.String()), nil
 	}
 }
 

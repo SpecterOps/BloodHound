@@ -29,6 +29,12 @@ import {
 } from '../graphSchema';
 import { LuxonFormat } from './datetime';
 
+export const formatPotentiallyUnknownLabel = (propKey: string) => {
+    const { kind, isKnownProperty } = validateProperty(propKey);
+
+    return isKnownProperty ? getFieldLabel(kind!, propKey) : `${startCase(propKey)}`;
+};
+
 export const formatObjectInfoFields = (props: any): EntityField[] => {
     let mappedFields: EntityField[] = [];
     const propKeys = Object.keys(props || {});
@@ -44,23 +50,14 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
         )
             continue;
 
-        const { kind, isKnownProperty } = validateProperty(propKeys[i]);
+        const { kind } = validateProperty(propKeys[i]);
 
-        if (isKnownProperty) {
-            mappedFields.push({
-                kind: kind,
-                label: getFieldLabel(kind!, propKeys[i]),
-                value: value,
-                keyprop: propKeys[i],
-            });
-        } else {
-            mappedFields.push({
-                kind: kind,
-                label: `${startCase(propKeys[i])}:`,
-                value: value,
-                keyprop: propKeys[i],
-            });
-        }
+        mappedFields.push({
+            kind: kind,
+            label: `${formatPotentiallyUnknownLabel(propKeys[i])}:`,
+            value: value,
+            keyprop: propKeys[i],
+        });
     }
 
     mappedFields = mappedFields.sort((a, b) => {
@@ -72,6 +69,23 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     });
 
     return mappedFields;
+};
+
+export const makeFormattedObjectInfoFieldsMap = (props: any) => {
+    const fieldsData: { keyprop?: string }[] = formatObjectInfoFields(props);
+
+    if (fieldsData.length) {
+        return fieldsData.reduce(
+            (acc, curr) => {
+                if (curr?.keyprop) {
+                    acc[curr?.keyprop] = curr;
+                }
+
+                return acc;
+            },
+            {} as Record<string, any>
+        );
+    }
 };
 
 const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
@@ -116,7 +130,7 @@ const getFieldLabel = (kind: string, key: string): string => {
             label = key;
     }
 
-    return `${label}:`;
+    return label;
 };
 
 export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;

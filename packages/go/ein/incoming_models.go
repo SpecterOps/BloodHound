@@ -17,8 +17,8 @@
 package ein
 
 import (
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -52,10 +52,11 @@ func (s TypedPrincipal) Kind() graph.Kind {
 }
 
 type ACE struct {
-	PrincipalSID  string
-	PrincipalType string
-	RightName     string
-	IsInherited   bool
+	PrincipalSID    string
+	PrincipalType   string
+	RightName       string
+	IsInherited     bool
+	InheritanceHash string
 }
 
 type SPNTarget struct {
@@ -74,7 +75,8 @@ func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
 			Value: s.PrincipalSID,
 			Kind:  s.Kind(),
 		},
-		IsInherited: s.IsInherited,
+		IsInherited:     s.IsInherited,
+		InheritanceHash: s.InheritanceHash,
 	}
 }
 
@@ -222,7 +224,8 @@ type User struct {
 
 type Container struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
+	ChildObjects      []TypedPrincipal
+	InheritanceHashes []string
 }
 
 type Trust struct {
@@ -243,10 +246,11 @@ type GPLink struct {
 
 type Domain struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
-	Trusts       []Trust
-	Links        []GPLink
-	GPOChanges   GPOChanges
+	ChildObjects      []TypedPrincipal
+	Trusts            []Trust
+	Links             []GPLink
+	GPOChanges        GPOChanges
+	InheritanceHashes []string
 }
 
 type SessionAPIResult struct {
@@ -347,9 +351,10 @@ type GPOChanges struct {
 
 type OU struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
-	Links        []GPLink
-	GPOChanges   GPOChanges
+	ChildObjects      []TypedPrincipal
+	Links             []GPLink
+	GPOChanges        GPOChanges
+	InheritanceHashes []string
 }
 
 type GenericNode struct {

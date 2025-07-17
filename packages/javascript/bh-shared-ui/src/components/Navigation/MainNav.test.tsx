@@ -18,7 +18,6 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, within } from '../../test-utils';
-import { GloballySupportedSearchParams } from '../../utils/searchParams';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -42,7 +41,6 @@ const MainNavLogoData: MainNavLogoDataObject = {
             altText: 'BHE Text Logo',
         },
     },
-    supportedSearchParams: GloballySupportedSearchParams,
 };
 const MainNavPrimaryListData: MainNavDataListItem[] = [
     {
@@ -50,14 +48,12 @@ const MainNavPrimaryListData: MainNavDataListItem[] = [
         icon: <AppIcon.LineChart size={24} />,
         route: '/test',
         testId: 'global_nav-test-link',
-        supportedSearchParams: GloballySupportedSearchParams,
     },
     {
         label: 'Link Item 2',
         icon: <AppIcon.LineChart size={24} />,
         route: '/secondroute',
         testId: 'global_nav-test-link-2',
-        supportedSearchParams: GloballySupportedSearchParams,
     },
 ];
 
@@ -69,7 +65,6 @@ const MainNavSecondaryListData: MainNavDataListItem[] = [
         icon: <AppIcon.LineChart size={24} />,
         functionHandler: handleClick,
         testId: 'global_nav-test-action',
-        supportedSearchParams: GloballySupportedSearchParams,
     },
 ];
 

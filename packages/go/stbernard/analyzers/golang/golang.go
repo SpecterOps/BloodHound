@@ -21,41 +21,44 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os/exec"
 	"path"
 
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/slicesext"
 )
 
 // Run golangci-lint for all module paths passed to it
 //
 // This is a single runner that accepts the paths for all passed modules, rather than separate runs for each path
-func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
+func Run(cwd string, modPaths []string, env environment.Environment) (codeclimate.SeverityMap, error) {
 	var (
-		result []codeclimate.Entry
-		outb   bytes.Buffer
-
-		command        = "golangci-lint"
-		args           = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
-		redirectStdout = func(c *exec.Cmd) { c.Stdout = &outb }
+		lintEntries []codeclimate.Entry
+		output      *bytes.Buffer
+		command     = "go"
+		args        = []string{"tool", "golangci-lint", "run", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
 	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
 		return path.Join(modPath, "...")
 	})...)
 
-	cmdErr := cmdrunner.Run(command, args, cwd, env, redirectStdout)
-	// If the command has a non-zero exit, we're going to return it up the stack, but we want to attempt to process the output anyway
-	if cmdErr != nil && !errors.Is(cmdErr, cmdrunner.ErrNonZeroExit) {
-		return result, fmt.Errorf("unexpected run error: %w", cmdErr)
+	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		var errResult *cmdrunner.ExecutionError
+
+		if !errors.As(err, &errResult) {
+			return nil, fmt.Errorf("golangci-lint execution: %w", err)
+		}
+
+		output = errResult.StandardOutput
+	} else {
+		output = result.StandardOutput
 	}
 
-	if err := json.NewDecoder(&outb).Decode(&result); err != nil {
-		return result, fmt.Errorf("golangci-lint: decoding output: %w", err)
+	if err := json.NewDecoder(output).Decode(&lintEntries); err != nil {
+		return nil, fmt.Errorf("golangci-lint decoding output: %w", err)
 	}
 
-	return result, cmdErr
+	return codeclimate.NewSeverityMap(lintEntries), nil
 }

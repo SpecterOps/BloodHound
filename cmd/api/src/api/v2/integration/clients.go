@@ -17,8 +17,8 @@
 package integration
 
 import (
-	"github.com/specterops/bloodhound/src/api/v2/apiclient"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apiclient"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func (s *Context) NewAPIClientWithToken(token model.AuthToken) apiclient.Client {

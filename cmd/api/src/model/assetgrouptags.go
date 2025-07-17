@@ -21,13 +21,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/dawgs/graph"
 )
 
 const (
-	AssetGroupActorSystem      = "SYSTEM"
-	AssetGroupTierZeroPosition = 1
+	AssetGroupActorSystem              = "SYSTEM"
+	AssetGroupTierZeroPosition         = 1
+	AssetGroupTierHygienePlaceholderId = 0
 )
 
 type SelectorType int

@@ -23,15 +23,15 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -165,9 +165,9 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 			query.KindIn(query.End(), azure.Entity),
 		))
 	case node.Kinds.ContainsOneOf(azure.Role):
-		// MATCH (n:AZRole)<-[:AZHasRole]-(m:AZBase) RETURN m
+		// MATCH (n:AZRole)<-[:AZHasRole|AZRoleEligible]-(m:AZBase) RETURN m
 		pattern = traversal.NewPattern().InboundWithDepth(0, 1, query.And(
-			query.KindIn(query.Relationship(), azure.HasRole),
+			query.KindIn(query.Relationship(), azure.HasRole, azure.AZRoleEligible),
 			query.KindIn(query.End(), azure.Entity),
 		))
 	default:
@@ -275,17 +275,28 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 
 // fetchADParentNodes -  fetches all parents for a single active directory node and submits any found to supplied collector ch
 func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, ch chan<- *nodeWithSource) error {
-	// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
-	// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
+	// MATCH (n:Base)-[:PropagatesACEsTo*..]->(m:Base) RETURN n
 	if err := tx.BreadthFirst(ctx, traversal.Plan{
 		Root: node,
 		Driver: traversal.NewPattern().InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.Start(), ad.OU),
-			)).InboundWithDepth(0, 1,
+				query.Kind(query.Relationship(), ad.PropagatesACEsTo),
+				query.Kind(query.Start(), ad.Entity),
+			)).Do(func(path *graph.PathSegment) error {
+			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+			})
+			return nil
+		})}); err != nil {
+		return err
+	}
+
+	// MATCH (n:GPO)-[:GPOAppliesTo]->(m:Base) RETURN n
+	if err := tx.BreadthFirst(ctx, traversal.Plan{
+		Root: node,
+		Driver: traversal.NewPattern().InboundWithDepth(0, 1,
 			query.And(
-				query.Kind(query.Relationship(), ad.GPLink),
+				query.Kind(query.Relationship(), ad.GPOAppliesTo),
 				query.Kind(query.Start(), ad.GPO),
 			)).Do(func(path *graph.PathSegment) error {
 			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
@@ -296,22 +307,6 @@ func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph
 		return err
 	}
 
-	// MATCH (n:Container)-[:Contains*..]->(m:Base) AND m.isaclprotected = False RETURN n
-	if isAclProtected, err := node.Properties.Get(ad.IsACLProtected.String()).Bool(); err == nil && !isAclProtected {
-		if err := tx.BreadthFirst(ctx, traversal.Plan{
-			Root: node,
-			Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.Start(), ad.Container),
-			)).Do(func(path *graph.PathSegment) error {
-				path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-					return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
-				})
-				return nil
-			})}); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -480,7 +475,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 		return err
 	} else {
 		for _, tag := range tags {
-			if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
+			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
 				return err
 			} else {
 				var (
@@ -518,7 +513,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
 func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, nodesSeen cardinality.Duplex[uint64], additionalFilters ...graph.Criteria) error {
-	if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
+	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
 		return err
 	} else {
 		var (
@@ -528,8 +523,9 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 			tagKind = tag.ToKind()
 
-			oldTaggedNodes = cardinality.NewBitmap64()
-			newTaggedNodes = cardinality.NewBitmap64()
+			oldTaggedNodes         = cardinality.NewBitmap64()
+			newTaggedNodes         = cardinality.NewBitmap64()
+			missingSystemTagsNodes = cardinality.NewBitmap64()
 		)
 
 		for _, selector := range selectors {
@@ -550,33 +546,55 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 				return err
 			} else {
 				oldTaggedNodes = oldTaggedNodeSet.IDBitmap()
-			}
 
-			// 3. Diff the sets filling the respective sets for later db updates
-			for _, nodeDb := range selectedNodes {
-				if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
-					// Skip any that are not certified when tag requires certification or are selected by disabled selectors
-					if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
-						continue
-					}
+				// 3. Diff the sets filling the respective sets for later db updates
+				for _, nodeDb := range selectedNodes {
+					if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
+						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
+						if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
+							continue
+						}
 
-					// If the id is not present, we must queue it for tagging
-					if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
-						newTaggedNodes.Add(nodeDb.NodeId.Uint64())
-					} else {
-						// If it is present, we don't need to update anything and will remove tags from any nodes left in this bitmap
-						oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
+						// If the id is not present, we must queue it for tagging
+						if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
+							newTaggedNodes.Add(nodeDb.NodeId.Uint64())
+						} else {
+							// TODO Cleanup system tagging after Tiering GA
+							if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition && oldTaggedNodeSet.Get(nodeDb.NodeId).Properties.Get(common.SystemTags.String()).IsNil() {
+								missingSystemTagsNodes.Add(nodeDb.NodeId.Uint64())
+							}
+
+							// If it is present, we don't need to update anything and will remove tags from any nodes left in this bitmap
+							oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
+						}
+						// Once a node is processed, we can skip future duplicates that might be selected by other selectors
+						nodesSeen.Add(nodeDb.NodeId.Uint64())
+						countTotal++
 					}
-					// Once a node is processed, we can skip future duplicates that might be selected by other selectors
-					nodesSeen.Add(nodeDb.NodeId.Uint64())
-					countTotal++
 				}
 			}
 
 			// 4. Tag the new nodes
 			newTaggedNodes.Each(func(nodeId uint64) bool {
 				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+				// Temporarily include this for backwards compatibility with old asset group system
+				if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
+					node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+				}
+
 				node.AddKinds(tagKind)
+				err = tx.UpdateNode(node)
+				return err == nil
+			})
+			if err != nil {
+				return err
+			}
+			/// TODO Cleanup system tagging after Tiering GA
+			// 4.5 Update already tagged nodes missing system tags
+			missingSystemTagsNodes.Each(func(nodeId uint64) bool {
+				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+				node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+
 				err = tx.UpdateNode(node)
 				return err == nil
 			})

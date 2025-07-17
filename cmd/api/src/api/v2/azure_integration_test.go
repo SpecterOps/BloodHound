@@ -24,11 +24,11 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/specterops/bloodhound/analysis/azure"
-	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/graphschema/common"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/test/integration"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )

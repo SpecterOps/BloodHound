@@ -20,14 +20,15 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
-	"github.com/RoaringBitmap/roaring/roaring64"
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/tiering"
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/RoaringBitmap/roaring/v2/roaring64"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/graphcache"
@@ -562,6 +563,68 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 
 			return nil
 		})
+	})
+}
+
+func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var (
+			hash, _        = edge.Properties.GetOrDefault(ad.InheritanceHash.String(), "").String()
+			isAcl, _       = edge.Properties.GetOrDefault(ad.IsACL.String(), false).Bool()
+			isInherited, _ = edge.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+		)
+
+		// If the target edge is not ACL-related or does not have an inheritance hash to match against, return an empty result set
+		if !isAcl || !isInherited || len(hash) == 0 {
+			return nil
+		} else if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+			return err
+		} else {
+			err = ops.Traversal(tx, ops.TraversalPlan{
+				Root:      endNode,
+				Direction: graph.DirectionInbound,
+				BranchQuery: func() graph.Criteria {
+					return query.And(
+						query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Container),
+						query.KindIn(query.Relationship(), ad.Contains),
+					)
+				},
+				ExpansionFilter: func(segment *graph.PathSegment) bool {
+					// Check that our hash is included in the current node
+					hashes, _ := segment.Node.Properties.GetOrDefault(ad.InheritanceHashes.String(), []string{}).StringSlice()
+
+					if slices.Contains(hashes, hash) {
+						isInheritable := true
+						// Walk back up the inheritance chain until we reach our start node, checking that inheritance is not blocked
+						segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+							// If we run into an intermediary node that is protected, we can stop walking this path
+							if isACLProtected, _ := end.Properties.GetOrDefault(ad.IsACLProtected.String(), false).Bool(); isACLProtected {
+								isInheritable = false
+								return false
+							}
+							return true
+						})
+
+						if isInheritable {
+							pathSet.AddPath(segment.Path())
+						}
+					}
+					return true
+				},
+			}, nil)
+
+			// If an inheritance path was found, append the starting path to our result
+			if pathSet.AllNodes().Len() > 0 {
+				pathSet.AddPath(graph.Path{
+					Nodes: []*graph.Node{startNode, endNode},
+					Edges: []*graph.Relationship{edge},
+				})
+			}
+
+			return err
+		}
 	})
 }
 
