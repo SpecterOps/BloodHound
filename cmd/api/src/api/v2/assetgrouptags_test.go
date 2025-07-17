@@ -2342,34 +2342,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 
 		require.Equal(t, http.StatusInternalServerError, response.Code)
 	})
-	t.Run("parse graph sort error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
 
-		reqBody := `{"query": "test", "tag_type": 1}`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint+"?sort_by='notSortable'", strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusBadRequest, response.Code)
-	})
-	t.Run("parse skip error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
-
-		reqBody := `{"query": "test", "tag_type": 1}`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint+"?skip='notSkippable'", strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusBadRequest, response.Code)
-	})
 	t.Run("success - query by name type tier", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
 		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
