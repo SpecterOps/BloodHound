@@ -71,6 +71,7 @@ const TableControls = <TData, TValue>({
                 {SearchInputProps && (
                     <div className='flex justify-center items-center relative'>
                         <Input
+                            data-testid='explore-table-search'
                             className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
                             {...SearchInputProps}
                         />

@@ -105,9 +105,6 @@ const ExploreTable = ({
                     selectedRow={selectedNode || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
-                    tableOptions={{
-                        columnResizeMode: 'onChange', //change column resize mode to "onChange"
-                    }}
                 />
             </div>
         </div>

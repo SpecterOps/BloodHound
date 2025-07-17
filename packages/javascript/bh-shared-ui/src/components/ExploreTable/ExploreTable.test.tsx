@@ -147,7 +147,46 @@ describe('ExploreTable', async () => {
         expect(closeCallbackSpy).toBeCalled();
     });
 
-    it('Clicking on a raw causes row to be selected', async () => {
+    it.only('Typing in the search bar filters the results', async () => {
+        const { user } = await setup();
+
+        const SVC_DOMAIN_NAME = 'SVC_DOMAINJOIN@PHANTOM.CORP';
+        const ANDY_OBJECT_ID = 'S-1-5-21-2697957641-2271029196-387917394-2187';
+        const ANDY_NAME = 'ANDY@PHANTOM.CORP';
+        const GUEST_NAME = 'GUEST@PHANTOM.CORP';
+        const searchInput = screen.getByTestId('explore-table-search');
+
+        const andyRowBefore = screen.getByText(ANDY_NAME);
+        const svcRowBefore = screen.getByText(SVC_DOMAIN_NAME);
+        const guestRowBefore = screen.getByText(GUEST_NAME);
+
+        expect(andyRowBefore).toBeInTheDocument();
+        expect(guestRowBefore).toBeInTheDocument();
+        expect(svcRowBefore).toBeInTheDocument();
+
+        await user.type(searchInput, ANDY_OBJECT_ID);
+
+        const andyRowAfter = screen.queryByText(ANDY_NAME);
+        const svcRowAfter = screen.queryByText(SVC_DOMAIN_NAME);
+        const guestRowAfter = screen.queryByText(GUEST_NAME);
+
+        expect(andyRowAfter).toBeInTheDocument();
+        expect(guestRowAfter).not.toBeInTheDocument();
+        expect(svcRowAfter).not.toBeInTheDocument();
+
+        await user.clear(searchInput);
+        await user.type(searchInput, GUEST_NAME);
+
+        const andyRowFinal = screen.queryByText(ANDY_NAME);
+        const svcRowFinal = screen.queryByText(SVC_DOMAIN_NAME);
+        const guestRowFinal = screen.queryByText(GUEST_NAME);
+
+        expect(andyRowFinal).not.toBeInTheDocument();
+        expect(guestRowFinal).toBeInTheDocument();
+        expect(svcRowFinal).not.toBeInTheDocument();
+    });
+
+    it('Clicking on a row causes row to be selected', async () => {
         const { user } = await setup();
 
         const jdPhantomRow = screen.getByRole('row', { name: /JD@PHANTOM.CORP/ });
