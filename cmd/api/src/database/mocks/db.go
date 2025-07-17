@@ -772,6 +772,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesBySelectorIds(ctx any, se
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesBySelectorIds), varargs...)
 }
 
+// DeleteSourceKindsByName mocks base method.
+func (m *MockDatabase) DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSourceKindsByName", ctx, kinds)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSourceKindsByName indicates an expected call of DeleteSourceKindsByName.
+func (mr *MockDatabaseMockRecorder) DeleteSourceKindsByName(ctx, kinds any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSourceKindsByName), ctx, kinds)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(ctx context.Context, user model.User) error {
 	m.ctrl.T.Helper()

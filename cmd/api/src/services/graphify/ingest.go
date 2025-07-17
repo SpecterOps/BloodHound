@@ -343,11 +343,11 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, inge
 
 func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
 	var (
-		nodeKinds            = mergeBaseKind(baseKind, nextNode.Labels...)
+		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
 		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
 		nodeUpdate           = graph.NodeUpdate{
 			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
-			IdentityKind: baseKind, // todo: when this is empty kind i think it gets saved to the kinds property
+			IdentityKind: baseKind,
 			IdentityProperties: []string{
 				common.ObjectID.String(),
 			},
