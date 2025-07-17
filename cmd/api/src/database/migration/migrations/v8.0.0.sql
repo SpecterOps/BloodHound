@@ -32,3 +32,8 @@ ADD COLUMN IF NOT EXISTS delete_all_graph boolean DEFAULT false,
 ADD COLUMN IF NOT EXISTS delete_sourceless_graph boolean DEFAULT false,
 ADD COLUMN IF NOT EXISTS delete_source_kinds text[] DEFAULT ARRAY[]::text[];
 
+
+-- Remove the ReadAppConfig / WriteAppConfig from power users role
+DELETE FROM roles_permissions
+WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Power User')
+  AND permission_id IN (SELECT id FROM permissions WHERE permissions.authority = 'app' AND permissions.name IN ('ReadAppConfig', 'WriteAppConfig'));

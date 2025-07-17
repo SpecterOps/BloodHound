@@ -69,14 +69,6 @@ func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, erro
 
 // CheckClean checks if the git repository is clean and returns status as a bool. Codes other than exit 1 are returned as an error
 func CheckClean(cwd string, env environment.Environment) (bool, error) {
-	cmd := exec.Command("git", "diff-index", "--quiet", "HEAD", "--")
-	cmd.Env = env.Slice()
-	cmd.Dir = cwd
-
-	if level.GlobalAccepts(slog.LevelDebug) {
-		cmd.Stderr = os.Stderr
-	}
-
 	slog.Info(fmt.Sprintf("Checking repository clean for %s", cwd))
 
 	// We need to run git status first to ensure we don't hit a cache issue
@@ -85,7 +77,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 	}
 
 	if _, err := cmdrunner.Run("git", []string{"diff-index", "--quiet", "HEAD", "--"}, cwd, env); err != nil {
-		var errResult *cmdrunner.ExecutionResult
+		var errResult *cmdrunner.ExecutionError
 
 		if errors.As(err, &errResult) && errResult.ReturnCode == 1 {
 			return false, nil

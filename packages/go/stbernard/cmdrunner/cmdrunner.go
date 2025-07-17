@@ -44,10 +44,6 @@ type ExecutionResult struct {
 	ReturnCode     int
 }
 
-func (s *ExecutionResult) Error() string {
-	return "command execution failed: " + s.Command
-}
-
 func newExecutionResult(command string, args []string, path string) *ExecutionResult {
 	return &ExecutionResult{
 		Command:        command,
@@ -58,6 +54,24 @@ func newExecutionResult(command string, args []string, path string) *ExecutionRe
 		CombinedOutput: &bytes.Buffer{},
 		ReturnCode:     0,
 	}
+}
+
+// ExecutionError is a wrapper for an ExecutionResult that satisfies the error interface.
+type ExecutionError struct {
+	ExecutionResult
+}
+
+func newExecutionError(result *ExecutionResult, exitErr *exec.ExitError) error {
+	// Update the return code and wrap the result to return it as an error
+	result.ReturnCode = exitErr.ExitCode()
+
+	return &ExecutionError{
+		ExecutionResult: *result,
+	}
+}
+
+func (s *ExecutionError) Error() string {
+	return "command execution failed"
 }
 
 func prepareCommand(command string, args []string, path string, env environment.Environment) (*exec.Cmd, *ExecutionResult) {
@@ -99,12 +113,6 @@ func logCommand(result *ExecutionResult) func() {
 			elapsed       = time.Since(started)
 		)
 
-		if result.ReturnCode != 0 {
-			if _, err := io.Copy(os.Stderr, result.ErrorOutput); err != nil {
-				slog.Error("failed to copy result to stderr", slog.String("error", err.Error()))
-			}
-		}
-
 		slog.Debug("exec result",
 			slog.String("command", commandStr),
 			slog.String("args", formattedArgs),
@@ -115,10 +123,7 @@ func logCommand(result *ExecutionResult) func() {
 	}
 }
 
-// Run a command with ars and environment variables set at a specified path
-func Run(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
-	cmd, result := prepareCommand(command, args, path, env)
-
+func run(cmd *exec.Cmd, result *ExecutionResult) error {
 	defer logCommand(result)()
 
 	// Pull the return code from the error, if possible
@@ -126,14 +131,28 @@ func Run(command string, args []string, path string, env environment.Environment
 		var exitErr *exec.ExitError
 
 		if errors.As(err, &exitErr) {
-			// Update the return code and return the result as the error instead
-			result.ReturnCode = exitErr.ExitCode()
-			return nil, result
+			return newExecutionError(result, exitErr)
 		}
 
 		// Likely a system fault that prevented the command from ever running
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
+}
+
+// Run a command with ars and environment variables set at a specified path.
+func Run(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
+	cmd, result := prepareCommand(command, args, path, env)
+	return result, run(cmd, result)
+}
+
+// RunInteractive a command with args and environment variables set at a specified path. This Run variant will output
+// to stdout and stderr as they are written to by the executed application.
+func RunInteractive(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
+	cmd, result := prepareCommand(command, args, path, env)
+	cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
+	cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
+
+	return result, run(cmd, result)
 }

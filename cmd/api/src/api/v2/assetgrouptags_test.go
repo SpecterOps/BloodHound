@@ -128,8 +128,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
-							SQLString: "type = ?",
-							Params:    []any{strconv.Itoa(int(model.AssetGroupTagTypeLabel))},
+							SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeLabel)),
 						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
@@ -154,8 +153,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
-							SQLString: "type = ?",
-							Params:    []any{strconv.Itoa(int(model.AssetGroupTagTypeTier))},
+							SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeTier)),
 						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
@@ -1100,8 +1098,8 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTagSelectors{}, errors.New("some error")).Times(1)
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTagSelectors{}, 0, errors.New("some error")).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
@@ -1125,8 +1123,8 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, nil).Times(1)
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, 1, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
@@ -1157,8 +1155,8 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 						Return(assetGroupTag, nil).Times(1)
 
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(agtSelectors, nil).Times(1)
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(agtSelectors, 0, nil).Times(1)
 
 					mockDB.EXPECT().
 						GetSelectorNodesBySelectorIds(gomock.Any(), agtSelectors[0].ID).

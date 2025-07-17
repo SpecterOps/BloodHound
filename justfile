@@ -13,10 +13,10 @@ export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhou
 
 set positional-arguments
 
-# generate generic ingestible file with default CLI arguments
+# generate generic graph files
 [no-cd]
-graphify-ingest path="" outfile="":
-  @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outfile={{outfile}}
+bh-graphify path="" outpath="":
+  @go run github.com/specterops/bloodhound/packages/go/graphify --path={{path}} --outpath={{outpath}}
 
 # run st bernard directly
 stbernard *ARGS:
@@ -40,8 +40,8 @@ show *FLAGS:
   @just stbernard show {{FLAGS}}
 
 # Run all analyzers (requires jq to be installed locally)
-analyze:
-  just stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
+analyze *FLAGS:
+  @just stbernard analysis {{FLAGS}}
 
 # Run tests
 test *FLAGS:
@@ -63,7 +63,7 @@ _prep-steps:
   @just modsync
   @just generate
   @just show > tmp/repo-status.txt
-  @just analyze > tmp/analysis-report.txt
+  @just analyze
 
 # check license is applied to source files
 check-license *ARGS:

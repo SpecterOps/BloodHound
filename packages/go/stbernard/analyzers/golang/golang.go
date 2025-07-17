@@ -17,6 +17,7 @@
 package golang
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,33 +32,33 @@ import (
 // Run golangci-lint for all module paths passed to it
 //
 // This is a single runner that accepts the paths for all passed modules, rather than separate runs for each path
-func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
+func Run(cwd string, modPaths []string, env environment.Environment) (codeclimate.SeverityMap, error) {
 	var (
 		lintEntries []codeclimate.Entry
-
-		command = "go"
-		args    = []string{"tool", "golangci-lint", "run", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
+		output      *bytes.Buffer
+		command     = "go"
+		args        = []string{"tool", "golangci-lint", "run", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
 	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
 		return path.Join(modPath, "...")
 	})...)
 
-	result, err := cmdrunner.Run(command, args, cwd, env)
-
-	if err != nil {
-		var errResult *cmdrunner.ExecutionResult
+	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+		var errResult *cmdrunner.ExecutionError
 
 		if !errors.As(err, &errResult) {
 			return nil, fmt.Errorf("golangci-lint execution: %w", err)
 		}
 
-		result = errResult
+		output = errResult.StandardOutput
+	} else {
+		output = result.StandardOutput
 	}
 
-	if err := json.NewDecoder(result.StandardOutput).Decode(&lintEntries); err != nil {
+	if err := json.NewDecoder(output).Decode(&lintEntries); err != nil {
 		return nil, fmt.Errorf("golangci-lint decoding output: %w", err)
 	}
 
-	return lintEntries, nil
+	return codeclimate.NewSeverityMap(lintEntries), nil
 }

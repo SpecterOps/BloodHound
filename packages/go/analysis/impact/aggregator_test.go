@@ -26,11 +26,9 @@ import (
 )
 
 var (
-	aKind       = graph.StringKind("A")
-	bKind       = graph.StringKind("B")
-	edgeKind    = graph.StringKind("EDGE")
-	impactKinds = graph.Kinds{aKind}
-	nextID      = graph.ID(0)
+	aKind    = graph.StringKind("A")
+	edgeKind = graph.StringKind("EDGE")
+	nextID   = graph.ID(0)
 )
 
 func resetNextID() {
@@ -48,10 +46,6 @@ func descend(trunk *graph.PathSegment, nextNode *graph.Node) *graph.PathSegment 
 	return trunk.Descend(nextNode, rel(nextNode, trunk.Node))
 }
 
-func idDescend(trunk *graph.IDSegment, nextNode graph.ID) *graph.IDSegment {
-	return trunk.Descend(nextNode, getNextID())
-}
-
 func rel(start, end *graph.Node) *graph.Relationship {
 	return graph.NewRelationship(getNextID(), start.ID, end.ID, nil, edgeKind)
 }
@@ -60,7 +54,7 @@ func node(nodeKinds ...graph.Kind) *graph.Node {
 	return graph.NewNode(getNextID(), nil, nodeKinds...)
 }
 
-func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint64, containedNodes ...uint64) {
+func requireImpact(t *testing.T, agg impact.PathAggregator, nodeID uint64, containedNodes ...uint64) {
 	nodeImpact := agg.Cardinality(nodeID).(cardinality.Duplex[uint64])
 
 	if int(nodeImpact.Cardinality()) != len(containedNodes) {
@@ -70,42 +64,6 @@ func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint64, contained
 	for _, containedNode := range containedNodes {
 		require.Truef(t, nodeImpact.Contains(containedNode), "Expected node %d to contain node %d. Impact for node 0: %v", int(nodeID), int(containedNode), nodeImpact.Slice())
 	}
-}
-
-func TestAggregator_NonImpactingShortcut(t *testing.T) {
-	resetNextID()
-	var (
-		node0 = node(aKind)
-		node1 = node(bKind)
-		node2 = node(aKind)
-		node3 = node(aKind)
-		node4 = node(aKind)
-
-		rootSegment = graph.NewRootPathSegment(node0)
-
-		// Node1 represents a node with a non-impacting kind that has descending nodes attached to it
-		node1Segment = descend(rootSegment, node1)
-		node3Segment = descend(node1Segment, node3)
-		node4Segment = descend(node1Segment, node4)
-
-		// Node2 represents a node with an impacting kind that descends from the root and contains an ascending
-		// edge from Node1 encoded as a shortcut
-		node2Segment         = descend(rootSegment, node2)
-		node1ToNode2Shortcut = descend(node2Segment, node1)
-
-		agg = impact.NewAggregator(func() cardinality.Provider[uint64] {
-			return cardinality.NewBitmap64()
-		})
-	)
-
-	agg.AddPath(node3Segment, impactKinds)
-	agg.AddPath(node4Segment, impactKinds)
-	agg.AddShortcut(node1ToNode2Shortcut, impactKinds)
-
-	// Despite node 2 not having a kind that contributes to upstream impact, all of its impacting members must apply
-	// to upstream nodes
-	requireImpact(t, agg, 0, 2, 3, 4)
-	requireImpact(t, agg, 2, 3, 4)
 }
 
 func TestAggregator_Impact(t *testing.T) {
@@ -157,45 +115,23 @@ func TestAggregator_Impact(t *testing.T) {
 		})
 	)
 
-	agg.AddPath(node9to10Terminal, impactKinds)
-	agg.AddPath(node11to10Terminal, impactKinds)
+	agg.AddPath(node9to10Terminal)
+	agg.AddPath(node11to10Terminal)
 
-	agg.AddShortcut(node2to3Shortcut, impactKinds)
-	agg.AddShortcut(node11to4Shortcut, impactKinds)
-	agg.AddShortcut(node6to7Shortcut, impactKinds)
-	agg.AddShortcut(node7to3Shortcut, impactKinds)
-	agg.AddShortcut(node8to10Shortcut, impactKinds)
+	agg.AddShortcut(node2to3Shortcut)
+	agg.AddShortcut(node11to4Shortcut)
+	agg.AddShortcut(node6to7Shortcut)
+	agg.AddShortcut(node7to3Shortcut)
+	agg.AddShortcut(node8to10Shortcut)
 
 	// Validate node 2 impact values and resolutions
 	requireImpact(t, agg, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-	require.Equal(t, 4, int(agg.Resolved().Cardinality()))
-
-	require.True(t, agg.Resolved().Contains(2))
-	require.True(t, agg.Resolved().Contains(3))
-	require.True(t, agg.Resolved().Contains(7))
-	require.True(t, agg.Resolved().Contains(10))
 
 	// Validate node 1 impact values and resolutions
 	requireImpact(t, agg, 1, 3, 5, 6, 7, 8, 9, 10)
-	require.Equal(t, 5, int(agg.Resolved().Cardinality()))
-
-	require.True(t, agg.Resolved().Contains(1))
-	require.True(t, agg.Resolved().Contains(2))
-	require.True(t, agg.Resolved().Contains(3))
-	require.True(t, agg.Resolved().Contains(7))
-	require.True(t, agg.Resolved().Contains(10))
 
 	// Validate node 11 impact values and resolutions
 	requireImpact(t, agg, 11, 3, 4, 5, 6, 7, 8, 9, 10)
-	require.Equal(t, 7, int(agg.Resolved().Cardinality()))
-
-	require.True(t, agg.Resolved().Contains(1))
-	require.True(t, agg.Resolved().Contains(2))
-	require.True(t, agg.Resolved().Contains(3))
-	require.True(t, agg.Resolved().Contains(4))
-	require.True(t, agg.Resolved().Contains(7))
-	require.True(t, agg.Resolved().Contains(10))
-	require.True(t, agg.Resolved().Contains(11))
 
 	// Validate cached resolutions are correct for node 2
 	requireImpact(t, agg, 2, 3, 4, 5, 6, 7, 8, 9, 10)

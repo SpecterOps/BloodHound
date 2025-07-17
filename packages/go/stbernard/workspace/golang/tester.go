@@ -83,7 +83,7 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 		manifest[modName] = coverFile
 		testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
 
-		if _, err := cmdrunner.Run(command, testArgs, modPath, env); err != nil {
+		if _, err := cmdrunner.RunInteractive(command, testArgs, modPath, env); err != nil {
 			return fmt.Errorf("go test at %v: %w", modPath, err)
 		}
 	}

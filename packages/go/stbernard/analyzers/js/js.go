@@ -17,6 +17,7 @@
 package js
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,14 +44,14 @@ type esLintMessage struct {
 }
 
 // Run eslint for all passed jsPaths and returns a slice of CodeClimate-like entries
-func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, error) {
+func Run(jsPaths []string, env environment.Environment) (codeclimate.SeverityMap, error) {
 	result := make([]codeclimate.Entry, 0, len(jsPaths))
 
 	slog.Info("Running eslint")
 
 	for _, path := range jsPaths {
 		if entries, err := runEslint(path, env); err != nil {
-			return result, fmt.Errorf("running eslint at %v: %w", path, err)
+			return nil, fmt.Errorf("running eslint at %v: %w", path, err)
 		} else {
 			result = append(result, entries...)
 		}
@@ -58,7 +59,7 @@ func Run(jsPaths []string, env environment.Environment) ([]codeclimate.Entry, er
 
 	slog.Info("Completed eslint")
 
-	return result, nil
+	return codeclimate.NewSeverityMap(result), nil
 }
 
 // runEslint runs the actual yarn command and processes the raw output to a slice of CodeClimate-like entries
@@ -66,37 +67,39 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 	var (
 		lintEntries   []codeclimate.Entry
 		esLintEntries []esLintEntry
+		output        *bytes.Buffer
 
-		command     = "yarn"
-		args        = []string{"run", "lint", "--format", "json"}
-		result, err = cmdrunner.Run(command, args, path, env)
+		command = "yarn"
+		args    = []string{"run", "lint", "--format", "json"}
 	)
 
-	if err != nil {
-		var errResult *cmdrunner.ExecutionResult
+	if result, err := cmdrunner.Run(command, args, path, env); err != nil {
+		var errResult *cmdrunner.ExecutionError
 
 		if !errors.As(err, &errResult) {
 			return lintEntries, fmt.Errorf("yarn run lint: %w", err)
 		}
 
-		result = errResult
+		output = errResult.StandardOutput
+	} else {
+		output = result.StandardOutput
 	}
 
-	if err := json.NewDecoder(result.StandardOutput).Decode(&esLintEntries); err != nil {
+	if err := json.NewDecoder(output).Decode(&esLintEntries); err != nil {
 		return lintEntries, fmt.Errorf("yarn run lint: decoding output: %w", err)
 	}
 
 	for _, entry := range esLintEntries {
 		for _, msg := range entry.Messages {
-			var severity string
+			var severity codeclimate.Severity
 
 			switch msg.Severity {
 			case 0:
-				severity = "info"
+				severity = codeclimate.SeverityInfo
 			case 1:
-				severity = "warning"
+				severity = codeclimate.SeverityMinor
 			case 2:
-				severity = "error"
+				severity = codeclimate.SeverityMajor
 			default:
 				return nil, fmt.Errorf("yarn run lint: unknown severity %d", msg.Severity)
 			}

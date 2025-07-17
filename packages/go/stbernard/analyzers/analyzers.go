@@ -17,60 +17,56 @@
 package analyzers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
-	"path/filepath"
 
+	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/js"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
 var (
 	ErrSeverityExit = errors.New("high severity linter result")
 )
 
-// Run all registered analyzers and collects the results into a CodeClimate-like JSON string
+func outputSeverityMap(results codeclimate.SeverityMap, outputAllSeverity bool) {
+	for _, nextSeverity := range results.SortedSeverities() {
+		if nextSeverity.Priority() > codeclimate.SeverityMinor.Priority() || outputAllSeverity {
+			fileEntries := results[nextSeverity]
+
+			// Issues of this severity should be output directly
+			for _, entries := range fileEntries {
+				for _, entry := range entries {
+					fmt.Printf("%s:%d - %s\n", entry.Location.Path, entry.Location.Lines.Begin, entry.Description)
+				}
+			}
+		}
+	}
+}
+
+// Run all registered analyzers and collects the results into a CodeClimate-like structure
 //
-// If one or more entries have a severity of "error", this function will return a valid JSON string AND an error stating
-// that a high severity result was found
-func Run(cwd string, modPaths []string, jsPaths []string, env environment.Environment) (string, error) {
-	var (
-		severityError bool
-	)
-
-	golint, err := golang.Run(cwd, modPaths, env)
-	if err != nil {
-		return "", fmt.Errorf("golangci-lint: %w", err)
-	}
-
-	eslint, err := js.Run(jsPaths, env)
-	if err != nil {
-		return "", fmt.Errorf("eslint: %w", err)
-	}
-
-	codeClimateReport := append(golint, eslint...)
-
-	for idx, entry := range codeClimateReport {
-		// We're using err == nil here because we want to do nothing if an error occurs
-		if path, err := filepath.Rel(cwd, entry.Location.Path); err != nil {
-			slog.Debug("File path is either already relative or cannot be relative to workspace root", "err", err)
-		} else {
-			codeClimateReport[idx].Location.Path = path
-		}
-
-		if entry.Severity == "error" || entry.Severity == "major" || entry.Severity == "critical" || entry.Severity == "blocker" {
-			severityError = true
-		}
-	}
-
-	if jsonBytes, err := json.MarshalIndent(codeClimateReport, "", "    "); err != nil {
-		return "", fmt.Errorf("marshaling code climate report: %w", err)
-	} else if severityError {
-		return string(jsonBytes), ErrSeverityExit
+// If one or more entries have a severity of "error" this function returns an error stating
+// that a high severity result was found.
+func Run(paths workspace.WorkspacePaths, env environment.Environment, outputAllSeverity bool) error {
+	if golintResults, err := golang.Run(paths.Root, paths.GoModules, env); err != nil {
+		return fmt.Errorf("golangci-lint: %w", err)
+	} else if eslintResults, err := js.Run(paths.YarnWorkspaces, env); err != nil {
+		return fmt.Errorf("eslint: %w", err)
 	} else {
-		return string(jsonBytes), nil
+		outputSeverityMap(golintResults, outputAllSeverity)
+		outputSeverityMap(eslintResults, outputAllSeverity)
+
+		// Check to see if any high severity issues were identified after output
+		combinedResults := codeclimate.CombineSeverityMaps(golintResults, eslintResults)
+
+		// Any finding with a priority greater than Minor is considered a high severity finding
+		if combinedResults.HasGreaterSeverity(codeclimate.SeverityMinor) {
+			return ErrSeverityExit
+		}
 	}
+
+	return nil
 }
