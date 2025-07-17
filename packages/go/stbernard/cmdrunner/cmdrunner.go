@@ -18,6 +18,7 @@ package cmdrunner
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +30,9 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
+
+// maxShortArgs is the limit for how many command arguments to print when printing the shorthand of the command
+const maxShortArgs = 2
 
 // ExecutionResult data structure that represents the result of running a command and captures information about
 // an executed command's output.
@@ -66,9 +70,6 @@ func newExecutionError(result *ExecutionResult, exitErr *exec.ExitError) error {
 	// Update the return code and wrap the result to return it as an error
 	result.ReturnCode = exitErr.ExitCode()
 
-	// Send the command's logs to stderr for the user to know what happened
-	fmt.Fprint(os.Stderr, result.ErrorOutput)
-
 	return &ExecutionError{
 		ExecutionResult: *result,
 	}
@@ -92,12 +93,19 @@ func prepareCommand(command string, args []string, path string, env environment.
 	return cmd, result
 }
 
-func shortCommandString(command string, args []string) string {
-	if len(args) > 0 {
-		return command + " " + args[0]
+func shortCommandString(command string, args []string, limit int) string {
+	var sb strings.Builder
+
+	sb.WriteString(command)
+
+	for i, arg := range args {
+		if i < limit {
+			sb.WriteString(" ")
+			sb.WriteString(arg)
+		}
 	}
 
-	return command
+	return sb.String()
 }
 
 // logCommand outputs command execution intent into the log with a short version of the command and its arguments. The
@@ -105,7 +113,7 @@ func shortCommandString(command string, args []string) string {
 // elapsed run time to debug output.
 func logCommand(result *ExecutionResult) func() {
 	var (
-		commandStr = shortCommandString(result.Command, result.Arguments)
+		commandStr = shortCommandString(result.Command, result.Arguments, maxShortArgs)
 		started    = time.Now()
 	)
 
@@ -130,11 +138,23 @@ func logCommand(result *ExecutionResult) func() {
 func run(cmd *exec.Cmd, result *ExecutionResult) error {
 	defer logCommand(result)()
 
+	var debugEnabled = slog.Default().Enabled(context.TODO(), slog.LevelDebug)
+
+	if debugEnabled {
+		cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
+		cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
+	}
+
 	// Pull the return code from the error, if possible
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError
 
 		if errors.As(err, &exitErr) {
+			// Avoid double logging
+			if !debugEnabled {
+				// Send the command's logs to stderr for the user to know what happened
+				fmt.Fprint(os.Stderr, result.ErrorOutput)
+			}
 			return newExecutionError(result, exitErr)
 		}
 
@@ -145,18 +165,8 @@ func run(cmd *exec.Cmd, result *ExecutionResult) error {
 	return nil
 }
 
-// Run a command with ars and environment variables set at a specified path.
+// Run a command with args and environment variables set at a specified path.
 func Run(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
 	cmd, result := prepareCommand(command, args, path, env)
-	return result, run(cmd, result)
-}
-
-// RunInteractive a command with args and environment variables set at a specified path. This Run variant will output
-// to stdout and stderr as they are written to by the executed application.
-func RunInteractive(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
-	cmd, result := prepareCommand(command, args, path, env)
-	cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
-	cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
-
 	return result, run(cmd, result)
 }
