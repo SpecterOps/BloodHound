@@ -144,7 +144,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 				readOpts := ReadOptions{
 					IngestSchema:       s.schema,
 					FileType:           task.FileType,
-					registerSourceKind: s.db.RegisterSourceKind(s.ctx)}
+					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx)}
 
 				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
 					failedIngestion++

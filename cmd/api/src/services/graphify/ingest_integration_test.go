@@ -355,8 +355,9 @@ func Test_ReadFileForIngest(t *testing.T) {
 		// ReadFileForIngest() should kick out, ingesting no graph data
 		invalidReader = bytes.NewReader([]byte(`{"graph":{"nodes": [{"id":1234}]}}`))
 		readOptions   = graphify.ReadOptions{
-			IngestSchema: ingestSchema,
-			FileType:     model.FileTypeZip,
+			IngestSchema:       ingestSchema,
+			FileType:           model.FileTypeZip,
+			RegisterSourceKind: func(k graph.Kind) error { return nil }, // stub this out
 		}
 	)
 

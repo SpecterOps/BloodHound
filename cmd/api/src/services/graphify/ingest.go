@@ -50,7 +50,7 @@ type registrationFn func(kind graph.Kind) error
 type ReadOptions struct {
 	FileType           model.FileType // JSON or ZIP
 	IngestSchema       upload.IngestSchema
-	registerSourceKind registrationFn
+	RegisterSourceKind registrationFn
 }
 
 type TimestampedBatch struct {
@@ -179,10 +179,10 @@ func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) erro
 func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, readOpts ReadOptions) error {
 	// Source-kind-aware handler
 	if handler, ok := sourceKindHandlers[meta.Type]; ok {
-		if readOpts.registerSourceKind == nil {
+		if readOpts.RegisterSourceKind == nil {
 			return fmt.Errorf("missing source kind registration function for data type: %v", meta.Type)
 		}
-		return handler(batch, reader, meta, readOpts.registerSourceKind)
+		return handler(batch, reader, meta, readOpts.RegisterSourceKind)
 	}
 
 	// Basic handler
