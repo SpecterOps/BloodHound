@@ -6129,6 +6129,7 @@
           {
             "name": "created_at",
             "in": "query",
+            "description": "For example, you can filter a date range of records by doing `created_at=gt:2025-07-08T17:00:00Z&created_at=lt:2025-07-30T17:00:00Z`",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.time"
