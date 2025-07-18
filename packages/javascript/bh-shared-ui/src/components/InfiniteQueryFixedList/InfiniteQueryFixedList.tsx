@@ -24,8 +24,10 @@ export type InfiniteQueryFixedListProps<T> = {
     itemSize: number;
     queryResult: UseInfiniteQueryResult<PaginatedResult<T>>;
     renderRow: (item: T, index: number, style: React.CSSProperties, isScrolling?: boolean) => React.ReactNode;
+    renderLoadingRow?: (index: number, style: React.CSSProperties) => React.ReactNode;
     overscanCount?: number;
     thresholdCount?: number;
+    placeholderCount?: number;
     listRef?: ForwardedRef<FixedSizeList<T[]>>;
 };
 
@@ -33,8 +35,10 @@ export const InfiniteQueryFixedList = <T,>({
     itemSize,
     queryResult,
     renderRow,
+    renderLoadingRow,
     overscanCount = 5,
     thresholdCount = 5,
+    placeholderCount = 1,
     listRef,
 }: InfiniteQueryFixedListProps<T>) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -54,12 +58,19 @@ export const InfiniteQueryFixedList = <T,>({
     const Row = useCallback(
         ({ index, style, data: itemData, isScrolling }: ListChildComponentProps<T[]>) => {
             if (!isItemLoaded(index)) {
-                return <div style={style}>Loading...</div>;
+                if (renderLoadingRow) return renderLoadingRow(index, style);
+                return <div style={style}>Loading {index}...</div>;
             }
             return renderRow(itemData[index], index, style, isScrolling);
         },
-        [isItemLoaded, renderRow]
+        [isItemLoaded, renderRow, renderLoadingRow]
     );
+
+    const isInitialLoading = queryResult.isLoading && !isFetchingNextPage;
+
+    const totalRows = hasNextPage ? items.length + 1 : items.length;
+
+    const itemCount = isInitialLoading ? placeholderCount : totalRows;
 
     return (
         <div ref={containerRef} className='h-full w-full'>
@@ -68,7 +79,7 @@ export const InfiniteQueryFixedList = <T,>({
                     ref={listRef}
                     height={height}
                     itemSize={itemSize}
-                    itemCount={hasNextPage ? items.length + 1 : items.length}
+                    itemCount={itemCount}
                     overscanCount={overscanCount}
                     width={width}
                     onItemsRendered={({ visibleStopIndex }) => {
