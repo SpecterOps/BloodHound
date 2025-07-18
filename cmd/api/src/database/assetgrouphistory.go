@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -27,7 +28,7 @@ import (
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
-	GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error)
+	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -35,7 +36,60 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorI
 		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
-func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
-	var result []model.AssetGroupHistory
-	return result, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s ORDER BY id ASC", (model.AssetGroupHistory{}).TableName())).Find(&result))
+func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error) {
+	var (
+		historyRecs     []model.AssetGroupHistory
+		skipLimitString string
+		rowCount        int
+		sortString      string
+	)
+
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
+	}
+
+	if len(sortItems) > 0 {
+		var sortColumns []string
+		for _, item := range sortItems {
+			dirString := "ASC"
+			if item.Direction == model.DescendingSortDirection {
+				dirString = "DESC"
+			}
+			sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
+		}
+		sortString = "ORDER BY " + strings.Join(sortColumns, ", ")
+	}
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	sqlStr := fmt.Sprintf(
+		"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s %s %s",
+		(model.AssetGroupHistory{}).TableName(),
+		sqlFilter.SQLString,
+		sortString,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, sqlFilter.Params...).Find(&historyRecs); result.Error != nil {
+		return []model.AssetGroupHistory{}, 0, CheckError(result)
+	}
+
+	if limit > 0 || skip > 0 {
+		sqlCountStr := fmt.Sprintf(
+			"SELECT COUNT(*) FROM %s%s",
+			(model.AssetGroupHistory{}).TableName(),
+			sqlFilter.SQLString)
+		if result := s.db.WithContext(ctx).Raw(sqlCountStr, sqlFilter.Params...).Scan(&rowCount); result.Error != nil {
+			return []model.AssetGroupHistory{}, 0, CheckError(result)
+		}
+	} else {
+		rowCount = len(historyRecs)
+	}
+
+	return historyRecs, rowCount, nil
 }

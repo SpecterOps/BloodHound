@@ -51,25 +51,14 @@ get:
                 type: object
                 properties:
                   member:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      object_id:
-                        type: string
-                      primary_kind:
-                        type: string
-                      name:
-                          type: string
+                    allOf:
+                    - $ref: './../schemas/model.asset-group-tags-member.yaml'
+                    - type: object
                       properties:
-                          type: object
-                          additionalProperties: true
-                      source:
-                        type: integer
-                      selectors:
-                        type: array
-                        items:
-                          $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+                        selectors:
+                          type: array
+                          items:
+                            $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
