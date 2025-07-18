@@ -63,7 +63,7 @@ func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environm
 	)
 
 	for _, path := range jsPaths {
-		if _, err := cmdrunner.RunInteractive(command, args, path, env); err != nil {
+		if _, err := cmdrunner.Run(command, args, path, env); err != nil {
 			return fmt.Errorf("yarn install at %v: %w", path, err)
 		}
 	}
@@ -78,7 +78,7 @@ func Format(cwd string, env environment.Environment) error {
 		args    = []string{"format"}
 	)
 
-	if _, err := cmdrunner.RunInteractive(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("running yarn format: %w", err)
 	} else {
 		return nil
@@ -92,7 +92,7 @@ func BuildWorkspace(cwd string, env environment.Environment) error {
 		args    = []string{"build"}
 	)
 
-	if _, err := cmdrunner.RunInteractive(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("yarn build at %v: %w", cwd, err)
 	} else {
 		return nil
@@ -106,7 +106,7 @@ func TestWorkspace(cwd string, env environment.Environment) error {
 		args    = []string{"test", "--coverage", "--run"}
 	)
 
-	if _, err := cmdrunner.RunInteractive(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("yarn test at %v: %w", cwd, err)
 	} else {
 		return nil

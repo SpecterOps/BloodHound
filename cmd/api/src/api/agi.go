@@ -114,43 +114,48 @@ func (s AssetGroupMembers) Filter(filterMap model.QueryParameterFilterMap) (Asse
 func (s AssetGroupMembers) BuildFilteringConditional(column string, operator model.FilterOperator, value string) (func(t AssetGroupMember) bool, error) {
 	switch column {
 	case "object_id":
-		if operator == model.Equals {
+		switch operator {
+		case model.Equals:
 			return func(t AssetGroupMember) bool { return t.ObjectID == value }, nil
-		} else if operator == model.NotEquals {
+		case model.NotEquals:
 			return func(t AssetGroupMember) bool { return t.ObjectID != value }, nil
-		} else {
+		default:
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "primary_kind":
-		if operator == model.Equals {
+		switch operator {
+		case model.Equals:
 			return func(t AssetGroupMember) bool { return t.PrimaryKind == value }, nil
-		} else if operator == model.NotEquals {
+		case model.NotEquals:
 			return func(t AssetGroupMember) bool { return t.PrimaryKind != value }, nil
-		} else {
+		default:
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "environment_id":
-		if operator == model.Equals {
+		switch operator {
+		case model.Equals:
 			return func(t AssetGroupMember) bool { return t.EnvironmentID == value }, nil
-		} else if operator == model.NotEquals {
+		case model.NotEquals:
 			return func(t AssetGroupMember) bool { return t.EnvironmentID != value }, nil
-		} else {
+		default:
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "environment_kind":
-		if operator == model.Equals {
+		switch operator {
+		case model.Equals:
 			return func(t AssetGroupMember) bool { return t.EnvironmentKind == value }, nil
-		} else if operator == model.NotEquals {
+		case model.NotEquals:
 			return func(t AssetGroupMember) bool { return t.EnvironmentKind != value }, nil
-		} else {
+		default:
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "name":
-		if operator == model.Equals {
+		switch operator {
+		case model.Equals:
 			return func(t AssetGroupMember) bool { return t.Name == value }, nil
-		} else if operator == model.NotEquals {
+		case model.NotEquals:
 			return func(t AssetGroupMember) bool { return t.Name != value }, nil
-		} else {
+		default:
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "asset_group_id":

@@ -316,8 +316,8 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 		groupBObjectID := harness.AssetGroupComboNodeHarness.GroupB.ID.String()
 		groupAObjectID := harness.AssetGroupComboNodeHarness.GroupA.ID.String()
 
-		groupACategory := comboNode[groupAObjectID].(bloodhoundgraph.BloodHoundGraphNode).BloodHoundGraphItem.Data["category"]
-		groupBCategory := comboNode[groupBObjectID].(bloodhoundgraph.BloodHoundGraphNode).BloodHoundGraphItem.Data["category"]
+		groupACategory := comboNode[groupAObjectID].(bloodhoundgraph.BloodHoundGraphNode).Data["category"]
+		groupBCategory := comboNode[groupBObjectID].(bloodhoundgraph.BloodHoundGraphNode).Data["category"]
 
 		// ensure that nodes from within T0 as well as from other domains all have the category tagged
 		require.Equal(t, "Asset Groups", groupACategory)
