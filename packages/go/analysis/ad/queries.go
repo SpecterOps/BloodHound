@@ -599,7 +599,8 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 						isInheritable := true
 						// Walk back up the inheritance chain until we reach our start node, checking that inheritance is not blocked
 						segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-							// If we run into an intermediary node that is protected, we can stop walking this path
+							// If we run into an intermediary node that is protected, we can stop walking this path. Checking just
+							// the start node of each segment purposefully excludes the inheritance source from this check.
 							if isACLProtected, _ := start.Properties.GetOrDefault(ad.IsACLProtected.String(), false).Bool(); isACLProtected {
 								isInheritable = false
 								return false
