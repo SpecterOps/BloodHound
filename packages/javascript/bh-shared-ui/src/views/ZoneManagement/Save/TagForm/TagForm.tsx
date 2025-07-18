@@ -49,9 +49,14 @@ import {
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
+import {
+    useAssetGroupTagInfo,
+    useCreateAssetGroupTag,
+    useDeleteAssetGroupTag,
+    usePatchAssetGroupTag,
+} from '../../hooks';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
-import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
 const MAX_NAME_LENGTH = 250;
 
