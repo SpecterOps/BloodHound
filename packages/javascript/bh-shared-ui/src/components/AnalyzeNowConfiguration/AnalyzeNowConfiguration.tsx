@@ -53,17 +53,14 @@ const AnalyzeNowConfiguration: FC = () => {
 
     const handleConfirm = () => {
         showDialog();
-        requestAnalysis.mutateAsync(
-            {},
-            {
-                onError: () => {
-                    addNotification('There was an error requesting analysis.');
-                },
-                onSuccess: () => {
-                    addNotification('Analysis requested successfully.');
-                },
-            }
-        );
+        requestAnalysis.mutate(undefined, {
+            onError: () => {
+                addNotification('There was an error requesting analysis.');
+            },
+            onSuccess: () => {
+                addNotification('Analysis requested successfully.');
+            },
+        });
     };
 
     return (
