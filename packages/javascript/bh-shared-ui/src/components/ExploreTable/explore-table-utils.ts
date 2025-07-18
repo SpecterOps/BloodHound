@@ -31,7 +31,7 @@ export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-export const requiredColumns = Object.fromEntries(KNOWN_NODE_KEYS.map((key) => [key, true]));
+export const knownColumns = Object.fromEntries(KNOWN_NODE_KEYS.map((key) => [key, true]));
 
 export interface ExploreTableProps {
     open?: boolean;

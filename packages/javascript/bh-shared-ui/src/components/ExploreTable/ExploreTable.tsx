@@ -15,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { isEmpty } from 'lodash';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import { ExploreTableProps, MungedTableRowWithId, knownColumns } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -88,10 +89,8 @@ const ExploreTable = ({
                     rows={rows}
                     className='h-[72px]'
                     columns={columnOptionsForDropdown}
-                    selectedColumns={
-                        selectedColumns && Object.keys(selectedColumns).length ? selectedColumns : requiredColumns
-                    }
-                    pinnedColumns={requiredColumns}
+                    selectedColumns={isEmpty(selectedColumns) ? knownColumns : selectedColumns}
+                    pinnedColumns={knownColumns}
                     onDownloadClick={onDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
