@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ConfigurationPayload, RequestOptions } from 'js-client-library';
+import { ConfigurationPayload, parseTieringConfiguration, RequestOptions } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
 
@@ -31,6 +31,14 @@ export const useGetConfiguration = () => {
         refetchOnWindowFocus: false,
     });
 };
+
+export const usePrivilegeZoneAnalysis = () => {
+    const { data, isLoading } = useGetConfiguration();
+    const tieringConfig = parseTieringConfiguration(data);
+    const privilegeZoneAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
+
+    return isLoading ? undefined : privilegeZoneAnalysisEnabled;
+}
 
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
     return apiClient.updateConfiguration(payload, options).then((res) => res.data);

@@ -33,14 +33,12 @@ import {
     AssetGroupTagTypeTier,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
-    parseTieringConfiguration,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
-import { useGetConfiguration } from '../../../../hooks';
 import {
     useAssetGroupTags,
     useHighestPrivilegeTagId,
@@ -52,6 +50,7 @@ import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
+import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -97,6 +96,7 @@ export const TagForm: FC = () => {
 
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -105,14 +105,11 @@ export const TagForm: FC = () => {
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
 
-    const { data } = useGetConfiguration();
-    const tieringConfig = parseTieringConfiguration(data);
-
-    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const topTagId = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
     const showAnalysisToggle =
-        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';
+        privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
@@ -295,13 +292,13 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
-                                {isEditPage && showAnalysisToggle ? (
+                                {isEditPage && showAnalysisToggle && (
                                     <div>
                                         <Label htmlFor='analysis'>Enable Analysis</Label>
                                         <div className='flex gap-3'>
                                             <Switch
                                                 id='analysis'
-                                                checked={toggleEnabled}
+                                                checked={toggleEnabled || undefined}
                                                 {...register('analysis_enabled')}
                                                 data-testid='zone-management_save_tag-form_analysis-enabled-switch'
                                                 onCheckedChange={(checked: boolean) => {
@@ -312,7 +309,7 @@ export const TagForm: FC = () => {
                                             <p className='text-xs'>Include this tier when running analysis</p>
                                         </div>
                                     </div>
-                                ) : null}
+                                )}
 
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>

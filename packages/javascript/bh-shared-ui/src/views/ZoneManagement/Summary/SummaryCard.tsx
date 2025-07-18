@@ -14,7 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    Card
+} from '@bloodhoundenterprise/doodleui';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -24,6 +27,7 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
+import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 
 type SummaryCardProps = {
     title: string;
@@ -31,13 +35,21 @@ type SummaryCardProps = {
     selectorCount: number | undefined;
     memberCount: number | undefined;
     id: number;
+    analysisEnabled: boolean | null;
 };
 
-const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id }) => {
+const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
+
     return (
-        <Card className='w-full flex px-6 py-4 rounded-xl'>
+        <Card
+            className='w-full flex px-6 py-4 rounded-xl'
+            data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, "_")}-list_item-${id}`}
+        >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
+                {!analysisEnabled && (
+                    <ZoneAnalysisIcon size={24} tooltip />
+                )}
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
             <LargeRightArrow className='w-8 h-16' />
