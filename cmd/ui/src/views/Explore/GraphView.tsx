@@ -86,8 +86,7 @@ const GraphView: FC = () => {
     }
 
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
-    const includeProperties = displayTable;
-    const graphQuery = useSigmaExploreGraph(includeProperties);
+    const graphQuery = useSigmaExploreGraph();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -101,7 +100,7 @@ const GraphView: FC = () => {
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
-        let items: any = graphQuery.data?.nodes;
+        let items: any = graphQuery.data;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
@@ -117,7 +116,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -233,7 +232,7 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     layoutOptions={baseGraphLayouts}
-                    isExploreTableSelected={isExploreTableSelected}
+                    isExploreTableSelected={isExploreTableSelected ?? false}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}
@@ -270,14 +269,11 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && displayTable && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes}
-                    allColumnKeys={graphQuery.data.node_keys}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
                     onDownloadClick={handleDownloadClick}
                     onRowClick={handleRowClick}
-                    selectedNode={selectedItem}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

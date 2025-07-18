@@ -57,15 +57,14 @@ export const ManageColumnsComboBox = ({
 
     // The columns change when a new query is fired. Reset the selected columns in this case.
     useEffect(handleResetDefault, [rows]);
-
-    useEffect(() => {
-        if (selectedColumns.length === 0) {
-            handleResetDefault();
-        }
-    }, [selectedColumns, handleResetDefault]);
+    // useEffect(() => {
+    //     if (selectedColumns.length === 0) {
+    //         handleResetDefault();
+    //     }
+    // }, [selectedColumns, handleResetDefault]);
 
     const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
-
+    console.log('allColumns', allColumns);
     const { getDropdownProps, removeSelectedItem, addSelectedItem } = useMultipleSelection({
         initialSelectedItems: allColumns.filter((item) => selectedColumnsProp[item.id]),
         selectedItems: selectedColumns,
