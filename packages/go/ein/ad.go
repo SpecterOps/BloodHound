@@ -356,6 +356,30 @@ func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID stri
 	)
 }
 
+// ParseGroupMiscData parses HasSIDHistory
+func ParseGroupMiscData(group Group) []IngestibleRelationship {
+	data := make([]IngestibleRelationship, 0)
+
+	for _, target := range group.HasSIDHistory {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: group.ObjectIdentifier,
+				Kind:  ad.Group,
+			},
+			IngestibleEndpoint{
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.HasSIDHistory,
+			},
+		))
+	}
+
+	return data
+}
+
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 	result := ParsedGroupMembershipData{}
 	for _, member := range group.Members {
