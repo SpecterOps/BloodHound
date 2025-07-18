@@ -72,12 +72,12 @@ const SelectorsListWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 /**
- * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
+ * @description This component displays an infinitely scrolling list of Selectors
  * @param {object} props
- * @param {UseQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
- * @param {selected} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
+ * @param {UseInfiniteQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
+ * @param {(string|undefined)} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
- * @returns The component that displays a list of entities for the zone management page
+ * @returns The component that displays a list of selectors for the zone management page
  */
 export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onSelect }) => {
     if (listQuery.isError) {

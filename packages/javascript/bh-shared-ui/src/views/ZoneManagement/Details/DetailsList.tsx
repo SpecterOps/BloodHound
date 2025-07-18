@@ -15,12 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import {
-    AssetGroupTag,
-    AssetGroupTagTypeLabel,
-    AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
-} from 'js-client-library';
+import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
@@ -113,21 +108,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
-                                // Filters out Tier Tags when the active tab is 'Labels'
-                                if (isTag(listItem) && listItem.type === AssetGroupTagTypeTier && title !== 'Tiers') {
-                                    return null;
-                                }
-
-                                // Filters out Label and Owned Tags when the active tab is 'Tiers'
-                                if (
-                                    isTag(listItem) &&
-                                    (listItem.type === AssetGroupTagTypeLabel ||
-                                        listItem.type === AssetGroupTagTypeOwned) &&
-                                    title === 'Tiers'
-                                ) {
-                                    return null;
-                                }
-
                                 return (
                                     <li
                                         key={listItem.id}
