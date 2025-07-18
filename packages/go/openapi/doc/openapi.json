@@ -4847,34 +4847,22 @@
                       "type": "object",
                       "properties": {
                         "member": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "integer"
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/model.asset-group-tags-member"
                             },
-                            "object_id": {
-                              "type": "string"
-                            },
-                            "primary_kind": {
-                              "type": "string"
-                            },
-                            "name": {
-                              "type": "string"
-                            },
-                            "properties": {
+                            {
                               "type": "object",
-                              "additionalProperties": true
-                            },
-                            "source": {
-                              "type": "integer"
-                            },
-                            "selectors": {
-                              "type": "array",
-                              "items": {
-                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              "properties": {
+                                "selectors": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                                  }
+                                }
                               }
                             }
-                          }
+                          ]
                         }
                       }
                     }
@@ -5362,25 +5350,7 @@
                             "members": {
                               "type": "array",
                               "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "object_id": {
-                                    "type": "string"
-                                  },
-                                  "primary_kind": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "source": {
-                                    "type": "integer"
-                                  }
-                                }
+                                "$ref": "#/components/schemas/model.asset-group-tags-member"
                               }
                             }
                           }
@@ -5553,25 +5523,7 @@
                             "members": {
                               "type": "array",
                               "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "object_id": {
-                                    "type": "string"
-                                  },
-                                  "primary_kind": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "source": {
-                                    "type": "integer"
-                                  }
-                                }
+                                "$ref": "#/components/schemas/model.asset-group-tags-member"
                               }
                             }
                           }
@@ -6144,6 +6096,96 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/search": {
+      "post": {
+        "operationId": "AssetGroupTagSearch",
+        "summary": "Search Asset Group Tags",
+        "description": "Supports searching by name on asset group tags and selectors, and by name or object ID on members.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "requestBody": {
+          "description": "The request body for searching asset group tags.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "tag_type": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "query",
+                  "tag_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tag"
+                          }
+                        },
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                          }
+                        },
+                        "members": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-member"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
@@ -6174,68 +6216,6 @@
                           "type": "array",
                           "items": {
                             "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/graphs/source-kinds": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "get": {
-        "operationId": "GetSourceKinds",
-        "summary": "Get Source Kinds",
-        "description": "This endpoint returns a list of kinds that are registered as source kinds, (eg. Base, AZBase)",
-        "tags": [
-          "Graph",
-          "Community",
-          "Enterprise"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "kinds": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "integer"
-                              },
-                              "name": {
-                                "type": "string"
-                              }
-                            }
                           }
                         }
                       }
@@ -11966,12 +11946,6 @@
                   "deleteCollectedGraphData": {
                     "type": "boolean"
                   },
-                  "deleteSourceKinds": {
-                    "type": "array",
-                    "items": {
-                      "type": "integer"
-                    }
-                  },
                   "deleteFileIngestHistory": {
                     "type": "boolean"
                   },
@@ -17678,6 +17652,30 @@
           },
           "custom_member": {
             "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tags-member": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "primary_kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "source": {
+            "type": "integer"
           }
         }
       },

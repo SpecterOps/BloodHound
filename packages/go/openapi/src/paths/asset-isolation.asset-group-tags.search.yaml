@@ -13,32 +13,30 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-parameters:
-  - $ref: './../parameters/header.prefer.yaml'
-  - name: asset_group_tag_id
-    description: ID of the asset_group_tag of a selector
-    in: path
-    required: true
-    schema:
-      type: integer
-      format: int32
-  - name: asset_group_member_id
-    description: ID of member to list selectors
-    in: path
-    required: true
-    schema:
-      type: integer
-      format: int32
-
-get:
-  operationId: GetAssetGroupSelectorsByMemberId
-  summary: Get asset group tag selectors of a specific object by member id
-  description: Get a list of selectors for an object by member id.
+post:
+  operationId: AssetGroupTagSearch
+  summary: Search Asset Group Tags
+  description: Supports searching by name on asset group tags and selectors, and by name or object ID on members.
   tags:
     - Asset Isolation
     - Enterprise
     - Community
+  requestBody:
+    description: The request body for searching asset group tags. 
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            query:
+              type: string
+            tag_type:
+              type: integer
+          required:
+            - query
+            - tag_type
+
   responses:
     200:
       description: OK
@@ -50,15 +48,18 @@ get:
               data:
                 type: object
                 properties:
-                  member:
-                    allOf:
-                    - $ref: './../schemas/model.asset-group-tags-member.yaml'
-                    - type: object
-                      properties:
-                        selectors:
-                          type: array
-                          items:
-                            $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+                  tags: 
+                    type: array
+                    items:
+                      $ref: './../schemas/model.asset-group-tag.yaml'
+                  selectors:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+                  members: 
+                    type: array
+                    items:
+                      $ref: './../schemas/model.asset-group-tags-member.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
