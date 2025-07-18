@@ -27,11 +27,11 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10',
+    className: 'sticky top-0 z-10 shadow-sm',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2 max-w-1/8',
+    className: 'pr-2',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
@@ -80,15 +80,12 @@ const ExploreTable = ({
     return (
         <div
             data-testid='explore-table-container-wrapper'
-            className={cn(
-                'dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2',
-                {
-                    'h-1/2': !isExpanded,
-                    'h-[calc(100%-72px)]': isExpanded,
-                    'w-[calc(100%-450px)]': selectedNode,
-                }
-            )}>
-            <div className='explore-table-container w-full h-full'>
+            className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2', {
+                'h-1/2': !isExpanded,
+                'h-[calc(100%-72px)]': isExpanded,
+                'w-[calc(100%-450px)]': selectedNode,
+            })}>
+            <div className='explore-table-container w-full h-full overflow-hidden'>
                 <TableControls
                     rows={rows}
                     className='h-[72px]'
@@ -104,7 +101,7 @@ const ExploreTable = ({
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable
-                    className='h-full *:h-[calc(100%-72px)]'
+                    className='h-full *:h-[calc(100%-72px)] overflow-auto'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     TableCellProps={tableCellProps}

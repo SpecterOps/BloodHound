@@ -11,9 +11,11 @@ const ExploreTableHeaderCell = ({
     sortOrder,
     onClick,
     dataType,
+    className,
 }: {
     headerKey: keyof MungedTableRowWithId;
     sortBy?: keyof MungedTableRowWithId;
+    className?: string;
     dataType: string;
     sortOrder?: string;
     onClick: () => void;
@@ -22,6 +24,7 @@ const ExploreTableHeaderCell = ({
         <div
             className={cn(
                 'flex items-center m-0 cursor-pointer h-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4',
+                className,
                 { 'justify-center': dataType === 'boolean' || KEYS_TO_RENDER_AS_ICON.includes(headerKey.toString()) }
             )}
             onClick={onClick}>

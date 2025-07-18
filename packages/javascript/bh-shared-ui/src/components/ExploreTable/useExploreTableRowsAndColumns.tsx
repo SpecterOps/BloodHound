@@ -12,6 +12,8 @@ const columnHelper = createColumnHelper<MungedTableRowWithId>();
 
 type DataTableProps = React.ComponentProps<typeof DataTable>;
 
+const LARGE_COLUMNS = ['displayname, objectid'];
+
 const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
 
 type UseExploreTableRowsAndColumnsProps = Pick<
@@ -32,7 +34,54 @@ const useExploreTableRowsAndColumns = ({
     const rows = useMemo(
         () =>
             (data &&
-                Object.entries(data).reduce((acc: MungedTableRowWithId[], curr) => {
+                [
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                    ...Object.entries(data),
+                ].reduce((acc: MungedTableRowWithId[], curr) => {
                     const [key, value] = curr;
 
                     const valueAsPotentialEdge = value as StyledGraphEdge;
@@ -86,8 +135,9 @@ const useExploreTableRowsAndColumns = ({
     );
 
     const makeColumnDef = useCallback(
-        (key: keyof MungedTableRowWithId) =>
-            columnHelper.accessor(String(key), {
+        (rawKey: keyof MungedTableRowWithId) => {
+            const key = rawKey?.toString();
+            return columnHelper.accessor(String(key), {
                 header: () => {
                     const dataType = rows?.length ? typeof rows[0][key] : '';
 
@@ -101,15 +151,17 @@ const useExploreTableRowsAndColumns = ({
                         />
                     );
                 },
+                size: 2,
                 cell: (info) => (
                     <Tooltip title={info.getValue()}>
-                        <div className='max-w-60 line-clamp-2'>
+                        <div className='line-clamp-2'>
                             <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />
                         </div>
                     </Tooltip>
                 ),
                 id: key?.toString(),
-            }),
+            });
+        },
         [handleSort, sortOrder, sortBy, rows]
     );
 
@@ -117,8 +169,11 @@ const useExploreTableRowsAndColumns = ({
         () =>
             columnHelper.accessor('', {
                 id: 'action-menu',
+                size: 1,
+                minSize: 1,
+                maxSize: 1,
                 cell: ({ row }) => (
-                    <div className='explore-table-cell-icon h-full w-8 flex justify-center items-center'>
+                    <div className='explore-table-cell-icon h-full flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
                             data-testid='kebab-menu'
