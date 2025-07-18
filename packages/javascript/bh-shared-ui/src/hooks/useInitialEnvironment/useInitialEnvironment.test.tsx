@@ -37,11 +37,23 @@ const fakeEnvironmentB = {
 };
 const fakeEnvironments = [fakeEnvironmentA, fakeEnvironmentB];
 
-const server = setupServer(
-    rest.get('/api/v2/available-domains', (req, res, ctx) => {
-        return res(ctx.json({ data: fakeEnvironments }));
-    })
-);
+const fakeEnvironmentC = {
+    type: 'active-directory',
+    impactValue: 10,
+    name: 'a',
+    collected: false,
+    id: 'a',
+};
+const fakeEnvironmentD = {
+    type: 'active-directory',
+    impactValue: 5,
+    name: 'b',
+    collected: false,
+    id: 'b',
+};
+const fakeUncollectedEnvironments = [fakeEnvironmentC, fakeEnvironmentD];
+
+const server = setupServer();
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -49,12 +61,24 @@ afterAll(() => server.close());
 
 describe('useInitialEnvironment', async () => {
     it('calls handleInitialEnvironment with the highest impactValue as the initial environment', async () => {
+        server.use(
+            rest.get('/api/v2/available-domains', (req, res, ctx) => {
+                return res(ctx.json({ data: fakeEnvironments }));
+            })
+        );
+
         const mockHandleInitialEnv = vi.fn();
         renderHook(() => useInitialEnvironment({ orderBy: 'name', handleInitialEnvironment: mockHandleInitialEnv }));
 
         await waitFor(() => expect(mockHandleInitialEnv).toBeCalledWith(fakeEnvironmentA));
     });
     it('disables useAvailableEnvironment and does not attempt calling handleInitialEnvironment if queryOptions.enabled', async () => {
+        server.use(
+            rest.get('/api/v2/available-domains', (req, res, ctx) => {
+                return res(ctx.json({ data: fakeEnvironments }));
+            })
+        );
+
         const mockHandleInitialEnv = vi.fn();
         renderHook(() =>
             useInitialEnvironment({
@@ -65,6 +89,18 @@ describe('useInitialEnvironment', async () => {
         );
 
         expect(useAvailableEnvironmentsSpy).toBeCalledWith(expect.objectContaining({ enabled: false }));
+        await waitFor(() => expect(mockHandleInitialEnv).not.toBeCalled());
+    });
+    it("returns early if there are no 'collected' environments", async () => {
+        server.use(
+            rest.get('/api/v2/available-domains', (req, res, ctx) => {
+                return res(ctx.json({ data: fakeUncollectedEnvironments }));
+            })
+        );
+
+        const mockHandleInitialEnv = vi.fn();
+        renderHook(() => useInitialEnvironment({ orderBy: 'name', handleInitialEnvironment: mockHandleInitialEnv }));
+
         await waitFor(() => expect(mockHandleInitialEnv).not.toBeCalled());
     });
 });
