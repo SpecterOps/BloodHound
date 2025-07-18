@@ -40,6 +40,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleNodeLabels: () => void;
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
+    isExploreTableSelected: boolean;
     layoutOptions: T;
     selectedLayout: T[number];
     showNodeLabels: boolean;
@@ -55,6 +56,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onToggleNodeLabels,
         onToggleEdgeLabels,
         onSearchedNodeClick,
+        isExploreTableSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
@@ -62,8 +64,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         jsonData,
         currentNodes,
     } = props;
-
-    const { data: featureFlag } = useFeatureFlag('explore_table_view');
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
@@ -132,20 +133,27 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 <GraphMenu label='Layout'>
                     {layoutOptions
                         .filter((layout) => {
-                            if (!featureFlag?.enabled) {
+                            if (!tableViewFeatureFlag?.enabled) {
                                 return layout !== 'table';
                             }
                             return true;
                         })
-                        .map((layout) => (
-                            <MenuItem
-                                data-testid={`explore_graph-controls_${layout}-layout`}
-                                key={layout}
-                                selected={featureFlag?.enabled ? selectedLayout === layout : undefined}
-                                onClick={() => onLayoutChange(layout)}>
-                                {capitalize(layout)}
-                            </MenuItem>
-                        ))}
+                        .map((buttonLabel) => {
+                            const tableViewIsSelected = tableViewFeatureFlag?.enabled && isExploreTableSelected;
+                            const isSelected = tableViewIsSelected
+                                ? buttonLabel === 'table'
+                                : selectedLayout === buttonLabel;
+
+                            return (
+                                <MenuItem
+                                    data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
+                                    key={buttonLabel}
+                                    selected={isSelected}
+                                    onClick={() => onLayoutChange(buttonLabel)}>
+                                    {capitalize(buttonLabel)}
+                                </MenuItem>
+                            );
+                        })}
                 </GraphMenu>
 
                 <GraphMenu label='Export'>

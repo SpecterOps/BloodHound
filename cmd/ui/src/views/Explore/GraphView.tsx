@@ -77,17 +77,15 @@ const GraphView: FC = () => {
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
-    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-        enabled: !exploreLayout,
-    });
+    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;
     }
 
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
-    const includeProperties = displayTable;
-    const graphQuery = useSigmaExploreGraph(includeProperties);
+    const graphQuery = useSigmaExploreGraph();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -233,6 +231,7 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     layoutOptions={baseGraphLayouts}
+                    isExploreTableSelected={isExploreTableSelected}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}
@@ -267,11 +266,10 @@ const GraphView: FC = () => {
 
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            {tableViewFeatureFlag?.enabled && (
+            {tableViewFeatureFlag?.enabled && displayTable && (
                 <ExploreTable
                     data={graphQuery.data?.nodes}
                     allColumnKeys={graphQuery.data.node_keys}
-                    open={displayTable}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}

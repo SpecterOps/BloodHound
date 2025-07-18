@@ -29,9 +29,13 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
+export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'isTierZero', 'name', 'objectid'];
 
 export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+
+export const isSmallColumn = (key: string, value: any) => key === 'nodetype' || typeof value === 'boolean';
+
+export const isIconField = (value: any) => typeof value === 'boolean' || value === undefined || value === null;
 
 export interface ExploreTableProps {
     open?: boolean;
