@@ -17,6 +17,7 @@
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
+    EntityInfoDataTable,
     EntityInfoPanel,
     EntityKinds,
     ExploreQueryParams,
