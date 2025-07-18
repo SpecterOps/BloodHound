@@ -141,7 +141,7 @@ func NewCommunityGraphService() (*CommunityGraphService, error) {
 		return nil, fmt.Errorf("error loading ingest schema: %w", err)
 	}
 
-	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
+	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson}
 
 	return &CommunityGraphService{readOpts: readOpts}, nil
 }

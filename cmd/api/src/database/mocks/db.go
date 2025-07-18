@@ -772,6 +772,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesBySelectorIds(ctx any, se
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesBySelectorIds), varargs...)
 }
 
+// DeleteSourceKindsByName mocks base method.
+func (m *MockDatabase) DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSourceKindsByName", ctx, kinds)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSourceKindsByName indicates an expected call of DeleteSourceKindsByName.
+func (mr *MockDatabaseMockRecorder) DeleteSourceKindsByName(ctx, kinds any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSourceKindsByName), ctx, kinds)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(ctx context.Context, user model.User) error {
 	m.ctrl.T.Helper()
@@ -1679,6 +1693,21 @@ func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetSharedSavedQueries), ctx, userID)
 }
 
+// GetSourceKinds mocks base method.
+func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]database.SourceKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
+	ret0, _ := ret[0].([]database.SourceKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKinds indicates an expected call of GetSourceKinds.
+func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKinds), ctx)
+}
+
 // GetTimeRangedAssetGroupCollections mocks base method.
 func (m *MockDatabase) GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from, to int64, order string) (model.AssetGroupCollections, error) {
 	m.ctrl.T.Helper()
@@ -1754,11 +1783,12 @@ func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(ctx any) *gomock.Call {
 }
 
 // HasCollectedGraphDataDeletionRequest mocks base method.
-func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) bool {
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", ctx)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(model.AnalysisRequest)
+	return ret0, ret1
 }
 
 // HasCollectedGraphDataDeletionRequest indicates an expected call of HasCollectedGraphDataDeletionRequest.
@@ -1932,6 +1962,20 @@ func (mr *MockDatabaseMockRecorder) Migrate(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), ctx)
 }
 
+// RegisterSourceKind mocks base method.
+func (m *MockDatabase) RegisterSourceKind(ctx context.Context) func(graph.Kind) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterSourceKind", ctx)
+	ret0, _ := ret[0].(func(graph.Kind) error)
+	return ret0
+}
+
+// RegisterSourceKind indicates an expected call of RegisterSourceKind.
+func (mr *MockDatabaseMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSourceKind", reflect.TypeOf((*MockDatabase)(nil).RegisterSourceKind), ctx)
+}
+
 // RequestAnalysis mocks base method.
 func (m *MockDatabase) RequestAnalysis(ctx context.Context, requester string) error {
 	m.ctrl.T.Helper()
@@ -1947,17 +1991,17 @@ func (mr *MockDatabaseMockRecorder) RequestAnalysis(ctx, requester any) *gomock.
 }
 
 // RequestCollectedGraphDataDeletion mocks base method.
-func (m *MockDatabase) RequestCollectedGraphDataDeletion(ctx context.Context, requester string) error {
+func (m *MockDatabase) RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", ctx, requester)
+	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", ctx, request)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RequestCollectedGraphDataDeletion indicates an expected call of RequestCollectedGraphDataDeletion.
-func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, requester any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, request any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, requester)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, request)
 }
 
 // SavedQueryBelongsToUser mocks base method.

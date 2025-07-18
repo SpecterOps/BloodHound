@@ -13,6 +13,25 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
+create table if not exists source_kinds
+(
+  id   smallserial,
+  name varchar(256) not null,
+  primary key (id),
+  unique (name)
+);
+
+INSERT INTO source_kinds (name)
+VALUES 
+  ('Base'),
+  ('AZBase')
+ON CONFLICT (name) DO NOTHING;
+
+ALTER TABLE analysis_request_switch
+ADD COLUMN IF NOT EXISTS delete_all_graph boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS delete_sourceless_graph boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS delete_source_kinds text[] DEFAULT ARRAY[]::text[];
+
 
 -- Remove the ReadAppConfig / WriteAppConfig from power users role
 DELETE FROM roles_permissions

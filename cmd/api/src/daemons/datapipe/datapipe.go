@@ -33,6 +33,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -148,8 +150,8 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.clearOrphanedData()
 
 		case <-datapipeLoopTimer.C:
-			if s.db.HasCollectedGraphDataDeletionRequest(s.ctx) {
-				s.deleteData()
+			if ok, deleteRequest := s.db.HasCollectedGraphDataDeletionRequest(s.ctx); ok {
+				s.deleteData(deleteRequest)
 			}
 
 			s.IngestTasks()
@@ -169,7 +171,7 @@ func (s *Daemon) Start(ctx context.Context) {
 	}
 }
 
-func (s *Daemon) deleteData() {
+func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 	defer func() {
 		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
 		_ = s.db.DeleteAnalysisRequest(s.ctx)
@@ -188,8 +190,28 @@ func (s *Daemon) deleteData() {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
 	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
-	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
+	} else if sourceKinds, err := s.db.GetSourceKinds(s.ctx); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error getting source kinds during data deletion: %v", err))
+	} else {
+		var (
+			kinds         graph.Kinds
+			filteredKinds graph.Kinds
+		)
+		for _, k := range sourceKinds {
+			kinds = append(kinds, k.Name)
+		}
+		// Filter out reserved kinds before removing records from source_kinds table
+		for _, kind := range kinds {
+			if !kind.Is(ad.Entity) && !kind.Is(azure.Entity) {
+				filteredKinds = append(filteredKinds, kind)
+			}
+		}
+
+		if err := DeleteCollectedGraphData(s.ctx, s.graphdb, deleteRequest, kinds); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
+		} else if err := s.db.DeleteSourceKindsByName(s.ctx, filteredKinds); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting source kinds: %v", err))
+		}
 	}
 }
 

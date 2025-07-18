@@ -1,0 +1,11 @@
+{
+    "title": "Metadata",
+    "description": "Optional metadata about the ingest payload",
+    "type": "object",
+    "properties": {
+        "source_kind": {
+            "type": ["string","null"]
+        }
+    },
+    "additionalProperties": false
+}

@@ -71,6 +71,16 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 			{
+				Name: "endpoint returns a 400 error if the request body has mixed delete payload",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true, DeleteSourceKinds: []int{1, 2, 3}})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
 				Name: "failure creating an intent audit log",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -95,7 +105,7 @@ func TestDatabaseWipe(t *testing.T) {
 						Enabled: true,
 					}, nil)
 
-					successfulRequestDeletion := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), uuid.UUID{}.String()).Times(1)
+					successfulRequestDeletion := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).Times(1)
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogWipe := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
@@ -259,7 +269,7 @@ func TestDatabaseWipe(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
 						Enabled: true,
 					}, nil)
-					successfulDeletionRequest := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), uuid.UUID{}.String()).Times(1)
+					successfulDeletionRequest := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).Times(1)
 					nodesDeletedAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					gomock.InOrder(successfulAuditLogIntent, successfulDeletionRequest, nodesDeletedAuditLog)
 

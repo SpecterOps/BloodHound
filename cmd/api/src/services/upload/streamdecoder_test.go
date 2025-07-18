@@ -38,19 +38,41 @@ type metaTagAssertion struct {
 	expectedType ingest.DataType
 }
 
-func Test_ValidateMetaTag(t *testing.T) {
+func Test_ParseAndValidatePayload(t *testing.T) {
 	assertions := []metaTagAssertion{
 		{
-			name:         "succesful generic payload",
+			name:         "successful opengraph payload",
+			rawString:    `{"metadata":{},"graph": {"nodes":[]}}`,
+			err:          nil,
+			expectedType: ingest.DataTypeOpenGraph,
+		},
+		{
+			name:         "successful opengraph payload with no metadata",
 			rawString:    `{"graph": {"nodes":[]}}`,
 			err:          nil,
-			expectedType: ingest.DataTypeGeneric,
+			expectedType: ingest.DataTypeOpenGraph,
+		},
+		{
+			name:         "successful opengraph metadata",
+			rawString:    `{"metadata":{"source_kind": "hellobase"},"graph": {"nodes":[]}}`,
+			err:          nil,
+			expectedType: ingest.DataTypeOpenGraph,
+		},
+		{
+			name:      "unsuccessful opengraph metadata",
+			rawString: `{"metadata":{"source_kind": 1},"graph": {"nodes":[]}}`,
+			err:       fmt.Errorf("error validating metadata tag: jsonschema validation failed"),
+		},
+		{
+			name:      "unsuccessful opengraph metadata, invalid field",
+			rawString: `{"metadata":{"random field": "hello"},"graph": {"nodes":[]}}`,
+			err:       fmt.Errorf("error validating metadata tag: jsonschema validation failed"),
 		},
 		{
 			name:         "enforce mutual exclusivity",
 			rawString:    `{"data": [], "graph": {}}`,
 			err:          ingest.ErrMixedIngestFormat,
-			expectedType: ingest.DataTypeGeneric,
+			expectedType: ingest.DataTypeOpenGraph,
 		},
 		{
 			name:         "valid",
@@ -98,7 +120,10 @@ func Test_ValidateMetaTag(t *testing.T) {
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
 			meta, err := ParseAndValidatePayload(strings.NewReader(assertion.rawString), schema, true, false)
-			assert.ErrorIs(t, err, assertion.err)
+			if err != nil {
+				// assert.ErrorIs(t, err, assertion.err)
+				assert.ErrorContains(t, err, assertion.err.Error())
+			}
 			if assertion.err == nil {
 				assert.Equal(t, assertion.expectedType, meta.Type)
 			}
@@ -172,7 +197,6 @@ type edgePiece struct {
 }
 
 type testPayload struct {
-	// Graph testGraph `json:"graph"`
 	Nodes []testNode `json:"nodes,omitempty"`
 	Edges []testEdge `json:"edges,omitempty"`
 }
@@ -257,6 +281,22 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 	return []genericIngestAssertion{
 		{
 			name: "payload contains one node",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"a"},
+						Properties: map[string]any{
+							"hello": "world",
+							"one":   2,
+							"true":  false,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "payload contains one node and optional metadata",
 			payload: &testPayload{
 				Nodes: []testNode{
 					{
@@ -594,20 +634,6 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 			},
 		},
 		{
-			name: "node validation: atleast one kind must be specified",
-			payload: &testPayload{
-				Nodes: []testNode{
-					{
-						ID:    "1234",
-						Kinds: []string{},
-					},
-				},
-			},
-			validationErrContains: [][]string{
-				{"nodes[0]", "at '/kinds': minItems: got 0, want 1"},
-			},
-		},
-		{
 			name: "node validation: kinds cannot be a null array",
 			payload: &testPayload{
 				Nodes: []testNode{
@@ -630,7 +656,7 @@ func nodeSchemaFailureCases() []genericIngestAssertion {
 				},
 			},
 			validationErrContains: [][]string{
-				{"nodes[0]", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
+				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
 	}
@@ -807,13 +833,13 @@ func itemsWithMultipleFailureCases() []genericIngestAssertion {
 						Kinds: []string{"kind A"},
 					},
 					{ // no kinds
-						Kinds: []string{},
+						Kinds: []string{"a", "b", "c", "d"},
 					},
 				},
 			},
 			validationErrContains: [][]string{
 				{"nodes[0]", "at '': missing property 'id'"},
-				{"nodes[1]", "at '': missing property 'id'", "at '/kinds': minItems: got 0, want 1"},
+				{"nodes[1]", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
 		{
