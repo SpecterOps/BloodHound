@@ -17,9 +17,10 @@
 package ein_test
 
 import (
-	"github.com/specterops/dawgs/graph"
 	"testing"
 	"time"
+
+	"github.com/specterops/dawgs/graph"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
