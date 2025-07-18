@@ -152,6 +152,12 @@ class BHEAPIClient {
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 
+    getSourceKinds = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string[] } }>>(
+            '/api/v2/graphs/source-kinds',
+            options
+        );
+
     clearDatabase = (payload: ClearDatabaseRequest, options?: RequestOptions) => {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };

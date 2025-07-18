@@ -31,13 +31,15 @@ import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { SourceKindsCheckboxes } from './SourceKindsCheckboxes';
 
 const initialState: State = {
+    deleteAllAssetGroupSelectors: false,
     deleteCollectedGraphData: false,
     deleteCustomHighValueSelectors: false,
-    deleteAllAssetGroupSelectors: false,
-    deleteFileIngestHistory: false,
     deleteDataQualityHistory: false,
+    deleteFileIngestHistory: false,
+    deleteSourceKinds: [],
 
     noSelectionError: false,
     mutationError: false,
@@ -48,11 +50,12 @@ const initialState: State = {
 
 type State = {
     // checkbox state
+    deleteAllAssetGroupSelectors: boolean;
     deleteCollectedGraphData: boolean;
     deleteCustomHighValueSelectors: boolean;
-    deleteAllAssetGroupSelectors: boolean;
-    deleteFileIngestHistory: boolean;
     deleteDataQualityHistory: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteSourceKinds: number[];
 
     // error state
     noSelectionError: boolean;
@@ -69,6 +72,7 @@ type Action =
     | { type: 'mutation_error'; message?: string }
     | { type: 'mutation_success' }
     | { type: 'selection'; targetName: string; checked: boolean }
+    | { type: 'source_kinds'; checked: number[] }
     | { type: 'open_dialog' }
     | { type: 'close_dialog' };
 
@@ -93,11 +97,12 @@ const reducer = (state: State, action: Action): State => {
             return {
                 ...state,
                 // reset checkboxes
+                deleteAllAssetGroupSelectors: false,
                 deleteCollectedGraphData: false,
                 deleteCustomHighValueSelectors: false,
-                deleteAllAssetGroupSelectors: false,
                 deleteDataQualityHistory: false,
                 deleteFileIngestHistory: false,
+                deleteSourceKinds: [],
 
                 showSuccessMessage: true,
             };
@@ -110,6 +115,14 @@ const reducer = (state: State, action: Action): State => {
                 noSelectionError: false,
             };
         }
+        case 'source_kinds': {
+            const { checked } = action;
+            return {
+                ...state,
+                deleteSourceKinds: checked,
+                noSelectionError: false,
+            };
+        }
         case 'open_dialog': {
             const noSelection =
                 [
@@ -118,7 +131,7 @@ const reducer = (state: State, action: Action): State => {
                     state.deleteFileIngestHistory,
                     state.deleteAllAssetGroupSelectors,
                     state.deleteCustomHighValueSelectors,
-                ].filter(Boolean).length === 0;
+                ].filter(Boolean).length === 0 && state.deleteSourceKinds.length === 0;
 
             if (noSelection) {
                 return {
@@ -152,11 +165,12 @@ const useDatabaseManagement = () => {
     const highValueAssetGroupId = useSelector(selectTierZeroAssetGroupId);
 
     const {
+        deleteAllAssetGroupSelectors,
         deleteCollectedGraphData,
         deleteCustomHighValueSelectors,
-        deleteAllAssetGroupSelectors,
-        deleteFileIngestHistory,
         deleteDataQualityHistory,
+        deleteFileIngestHistory,
+        deleteSourceKinds,
     } = state;
 
     const mutation = useMutation({
@@ -198,10 +212,11 @@ const useDatabaseManagement = () => {
 
         mutation.mutate({
             deleteThisData: {
+                deleteAssetGroupSelectors,
                 deleteCollectedGraphData,
                 deleteDataQualityHistory,
                 deleteFileIngestHistory,
-                deleteAssetGroupSelectors,
+                deleteSourceKinds,
             },
         });
     };
@@ -235,11 +250,11 @@ const DatabaseManagement: FC = () => {
     useMountEffect(effect);
 
     const {
-        deleteCollectedGraphData,
         deleteAllAssetGroupSelectors,
         deleteCustomHighValueSelectors,
-        deleteFileIngestHistory,
         deleteDataQualityHistory,
+        deleteFileIngestHistory,
+        deleteSourceKinds,
     } = state;
 
     const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,6 +262,13 @@ const DatabaseManagement: FC = () => {
             type: 'selection',
             targetName: event.target.name,
             checked: event.target.checked,
+        });
+    };
+
+    const setSourceKinds = (checked: number[]) => {
+        dispatch({
+            type: 'source_kinds',
+            checked,
         });
     };
 
@@ -288,16 +310,10 @@ const DatabaseManagement: FC = () => {
                             <FeatureFlag
                                 flagKey='clear_graph_data'
                                 enabled={
-                                    <FormControlLabel
-                                        label='Collected graph data (all nodes and edges)'
-                                        control={
-                                            <Checkbox
-                                                checked={deleteCollectedGraphData}
-                                                onChange={handleCheckbox}
-                                                name='deleteCollectedGraphData'
-                                                disabled={!hasPermission}
-                                            />
-                                        }
+                                    <SourceKindsCheckboxes
+                                        checked={deleteSourceKinds}
+                                        disabled={!hasPermission}
+                                        onChange={setSourceKinds}
                                     />
                                 }
                             />

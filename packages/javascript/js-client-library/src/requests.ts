@@ -204,10 +204,11 @@ export interface CreateUserQueryRequest {
 }
 
 export interface ClearDatabaseRequest {
-    deleteCollectedGraphData: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
     deleteAssetGroupSelectors: number[];
+    deleteCollectedGraphData: boolean;
+    deleteDataQualityHistory: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteSourceKinds: number[];
 }
 
 export interface UpdateUserRequest {
