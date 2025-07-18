@@ -103,7 +103,7 @@ const (
 	DataTypeCertTemplate   DataType = "certtemplates"
 	DataTypeAzure          DataType = "azure"
 	DataTypeIssuancePolicy DataType = "issuancepolicies"
-	DataTypeGeneric        DataType = "generic"
+	DataTypeOpenGraph      DataType = "opengraph"
 )
 
 func AllIngestDataTypes() []DataType {
@@ -223,4 +223,6 @@ var (
 	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
 	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
+
+	ErrOpenGraphMetaTagValidation = errors.New("metadata tag is invalid")
 )

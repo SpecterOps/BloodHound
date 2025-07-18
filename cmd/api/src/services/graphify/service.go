@@ -31,6 +31,8 @@ type GraphifyData interface {
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
 	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
+
+	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
 }
 
 type GraphifyService struct {
