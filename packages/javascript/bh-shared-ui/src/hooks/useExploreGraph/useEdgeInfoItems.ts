@@ -23,12 +23,17 @@ import { useExploreParams } from '../useExploreParams';
 export enum EdgeInfoItems {
     relayTargets = 'relayTargets',
     composition = 'composition',
+    aclInheritance = 'aclinheritance',
 }
 
 type EdgeInfoItemsArguments = Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName' | 'onNodeClick'>;
 
 export type EdgeInfoItemsProps = EdgeInfoItemsArguments & {
     type: EdgeInfoItems;
+};
+
+type EdgeInfoItemOpts = {
+    withProperties: boolean;
 };
 
 const queryConfig = {
@@ -42,14 +47,22 @@ const queryConfig = {
             return apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data);
         },
     },
+    [EdgeInfoItems.aclInheritance]: {
+        endpoint: ({ sourceDBId, targetDBId, edgeName }: EdgeInfoItemsArguments) => {
+            return apiClient.getACLInheritance(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data);
+        },
+    },
 };
 
-export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
+export const useEdgeInfoItems = (
+    { sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps,
+    opts?: EdgeInfoItemOpts
+) => {
     const { setExploreParams } = useExploreParams();
     const { data, isLoading, isError } = useQuery(
         [type, sourceDBId, targetDBId, edgeName],
         () => queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName }),
-        { enabled: !!(sourceDBId && targetDBId && edgeName) }
+        { enabled: !!(Number.isInteger(sourceDBId) && Number.isInteger(targetDBId) && edgeName) }
     );
 
     const handleNodeClick = (item: number) => {
@@ -67,6 +80,7 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: Edg
         objectId: node.objectId,
         graphId,
         kind: node.kind,
+        ...(opts?.withProperties && { properties: node.properties }),
         onClick: handleNodeClick,
     }));
     return { isLoading, isError, nodesArray };

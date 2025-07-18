@@ -2309,6 +2309,21 @@ class BHEAPIClient {
             )
         );
 
+    getACLInheritance = (sourceNode: number, targetNode: number, edgeType: string, options?: RequestOptions) =>
+        this.baseClient.get<GraphResponse>(
+            '/api/v2/graphs/acl-inheritance',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
+                    },
+                },
+                options
+            )
+        );
+
     /* remote assets */
     getRemoteAsset = (assetPath: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/assets/${assetPath}`, options);
