@@ -399,7 +399,9 @@ class BHEAPIClient {
             options
         );
 
-    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+    requestAnalysisBHE = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+
+    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/analysis', options);
 
     /**
      * getAvailableFindingTypes returns a list of findings that were discovered through the most recent analysis for a given environment

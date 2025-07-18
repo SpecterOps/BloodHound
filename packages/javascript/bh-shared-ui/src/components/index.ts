@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+export { default as AnalyzeNowConfiguration } from './AnalyzeNowConfiguration';
 
 export * from './AppNotifications';
 export { default as AppNotifications } from './AppNotifications';
