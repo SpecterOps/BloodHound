@@ -132,6 +132,11 @@ func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, e
 			for node := range cursor.Chan() {
 				objectId, err := node.Properties.Get(common.ObjectID.String()).String()
 
+				// edge case: MigrationData node will NOT have an objectid
+				if node.Kinds.ContainsOneOf(common.MigrationData) {
+					continue
+				}
+
 				if err == nil {
 					actualNodes[objectId] = node
 					nodeIDToObjectID[node.ID] = objectId
