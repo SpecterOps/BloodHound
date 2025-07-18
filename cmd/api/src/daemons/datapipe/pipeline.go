@@ -68,10 +68,10 @@ func (s *BHCEPipeline) Start(ctx context.Context) error {
 
 // This handles the deletion of data if the customer requests it
 func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
-	deleteRequest, ok := s.db.HasCollectedGraphDataDeletionRequest()
+	deleteRequest, ok := s.db.HasCollectedGraphDataDeletionRequest(ctx)
 	if !ok {
-		return false
-	}	
+		return nil
+	}
 	defer func() {
 		_ = s.db.DeleteAnalysisRequest(ctx)
 		_ = s.db.RequestAnalysis(ctx, "datapipe")
@@ -159,7 +159,7 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 }
 
 // If the pipeline needs to do anything to the context, this is called before each other pipeline stage
-func (s *BHCEPipeline) IsActive(ctx context.Context, status model.DatapipeStatus) (bool, context.Context) {
+func (s *BHCEPipeline) IsPrimary(ctx context.Context, status model.DatapipeStatus) (bool, context.Context) {
 	return true, ctx
 }
 

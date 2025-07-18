@@ -24,13 +24,6 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
-	"github.com/specterops/bloodhound/cmd/api/src/services/job"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/cache"
-	"github.com/specterops/dawgs/graph"
 )
 
 const (
@@ -41,12 +34,18 @@ const (
 // These methods require a fully initialized Pipeline instance including
 // graph and db connections. Whatever is needed by the pipe to do the work
 type Pipeline interface {
-	PruneData(context.Context) error
-	DeleteData(context.Context) error
-	IngestTasks(context.Context) error
-	Analyze(context.Context) error
+	// Start provides an entrypoint into the pipeline
 	Start(context.Context) error
-	IsActive(context.Context, model.DatapipeStatus) (bool, context.Context)
+	// IsPrimary provides a way to detect if the current instance of the pipeline is in control
+	IsPrimary(context.Context, model.DatapipeStatus) (bool, context.Context)
+	// PruneData provides a way to remove outdated/invalid ingest files
+	PruneData(context.Context) error
+	// DeleteData provides a way to handle requests for database table/graph deletion
+	DeleteData(context.Context) error
+	// IngestTasks provides a way to ingest previously uploaded files
+	IngestTasks(context.Context) error
+	// Analyze provides a way to analyze and enhance graph data, including post processing
+	Analyze(context.Context) error
 }
 
 type Daemon struct {
@@ -101,30 +100,6 @@ func (s *Daemon) Start(ctx context.Context) {
 	}
 }
 
-func (s *Daemon) deleteData() {
-	defer func() {
-		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
-		_ = s.db.DeleteAnalysisRequest(s.ctx)
-		_ = s.db.RequestAnalysis(s.ctx, "datapie")
-	}()
-	defer measure.Measure(slog.LevelInfo, "Purge Graph Data Completed")()
-
-	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-		return
-	}
-
-	slog.Info("Begin Purge Graph Data")
-
-	if err := s.db.CancelAllIngestJobs(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
-	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
-	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
-	}
-}
-
 func (s *Daemon) Stop(ctx context.Context) error {
 	return nil
 }
@@ -133,7 +108,7 @@ func (s *Daemon) Stop(ctx context.Context) error {
 // the datapipe through this same wrapper, it should always defer the idle status after.
 func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeStatus, action func(context.Context) error) {
 
-	active, pipelineContext := s.pipeline.IsActive(ctx, status)
+	active, pipelineContext := s.pipeline.IsPrimary(ctx, status)
 	if !active {
 		return
 	}

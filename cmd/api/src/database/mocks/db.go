@@ -1783,11 +1783,11 @@ func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(ctx any) *gomock.Call {
 }
 
 // HasCollectedGraphDataDeletionRequest mocks base method.
-func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest) {
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", ctx)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(model.AnalysisRequest)
+	ret0, _ := ret[0].(model.AnalysisRequest)
+	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
