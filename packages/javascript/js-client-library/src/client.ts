@@ -153,7 +153,7 @@ class BHEAPIClient {
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 
     getSourceKinds = (options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string[] } }>>(
+        this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string }[] }>>(
             '/api/v2/graphs/source-kinds',
             options
         );

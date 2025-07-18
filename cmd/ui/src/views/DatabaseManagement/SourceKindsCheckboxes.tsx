@@ -1,32 +1,43 @@
+// Copyright 2024 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { Checkbox, FormControlLabel } from '@mui/material';
+import { apiClient, useNotifications } from 'bh-shared-ui';
+import { type OptionsObject } from 'notistack';
 import { type FC } from 'react';
 import { useQuery } from 'react-query';
 
-// TODO: This goes away once the API is in place
-const STUB_SOURCE_KINDS = [
-    {
-        id: 1,
-        name: 'Base',
-    },
-    {
-        id: 2,
-        name: 'AZBase',
-    },
-    {
-        id: 3,
-        name: 'ACustomBase',
-    },
-    {
-        id: 0,
-        name: 'Sourceless',
-    },
-];
+const ERROR = {
+    key: 'database-management-source-kind',
+    message: 'An error occurred while loading source kinds. Deleting graph data is diabled. Try refreshing the page.',
+    options: {
+        persist: true,
+        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+    } as OptionsObject,
+};
 
-// The default source kind names are replaced with friendlier ones
-const KIND_LABEL_MAP: Record<string, string> = {
-    Base: 'Active Directory',
-    AZBase: 'Azure',
+const useSourceKindsQuery = () => {
+    const { addNotification } = useNotifications();
+
+    return useQuery({
+        queryKey: ['source-kinds'],
+        queryFn: ({ signal }) => apiClient.getSourceKinds({ signal }).then((res) => res.data.data.kinds),
+        onError: () => addNotification(ERROR.message, ERROR.key, ERROR.options),
+    });
 };
 
 // Displayed while source kinds are loading
@@ -47,34 +58,35 @@ const LOADING_CHECKBOXES = (
     </>
 );
 
+// The default source kind names are replaced with friendlier ones
+const KIND_LABEL_MAP: Record<string, string> = {
+    Base: 'Active Directory',
+    AZBase: 'Azure',
+};
+
 export const SourceKindsCheckboxes: FC<{
     checked: number[];
-    disabled: boolean;
+    disabled?: boolean;
     onChange: (checked: number[]) => void;
-}> = ({ checked, disabled, onChange }) => {
-    const {
-        data: sourceKinds,
-        isLoading,
-        isSuccess,
-    } = useQuery({
-        queryKey: ['source-kinds'],
-        // TODO: Use the API once it's available
-        // queryFn: ({ signal }) => apiClient.getSourceKinds({ signal }).then((res) => res.data.data.kinds),
-        queryFn: () => STUB_SOURCE_KINDS,
-    });
+}> = ({ checked, disabled = true, onChange }) => {
+    const { data: sourceKinds, isLoading, isSuccess } = useSourceKindsQuery();
 
+    // Feature disabled is passed in prop or if query fails
+    const isDisabled = disabled || !isSuccess;
     let amountChecked = 'none';
 
     if (isSuccess && checked.length > 0) {
         amountChecked = sourceKinds.length === checked.length ? 'all' : 'some';
     }
 
+    // If all boxes are checked, they are all unchecked; other wise all boxes are checked
     const toggleAllChecked = () => {
         if (sourceKinds) {
             onChange(['none', 'some'].includes(amountChecked) ? sourceKinds.map((item) => item.id) : []);
         }
     };
 
+    // Toggle a source kind on or off, then update the set of checked boxes
     const toggleSourceKind = (id: number) => () => {
         const newChecked = checked.includes(id) ? checked.filter((item) => item !== id) : [...checked, id];
         onChange(newChecked);
@@ -87,7 +99,7 @@ export const SourceKindsCheckboxes: FC<{
                 control={
                     <Checkbox
                         checked={amountChecked === 'all'}
-                        disabled={disabled}
+                        disabled={isDisabled}
                         indeterminate={amountChecked === 'some'}
                         name='All GraphData'
                         onChange={toggleAllChecked}
@@ -106,7 +118,7 @@ export const SourceKindsCheckboxes: FC<{
                                 checked={checked.includes(item.id)}
                                 onChange={toggleSourceKind(item.id)}
                                 name={item.name}
-                                disabled={disabled}
+                                disabled={isDisabled}
                             />
                         }
                         label={(KIND_LABEL_MAP[item.name] ?? item.name) + ' data'}
