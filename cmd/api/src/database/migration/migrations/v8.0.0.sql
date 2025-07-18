@@ -18,3 +18,6 @@
 DELETE FROM roles_permissions
 WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Power User')
   AND permission_id IN (SELECT id FROM permissions WHERE permissions.authority = 'app' AND permissions.name IN ('ReadAppConfig', 'WriteAppConfig'));
+
+-- Add name index to asset_group_tag_selectors table for search
+CREATE INDEX IF NOT EXISTS idx_asset_group_tag_selectors_name ON asset_group_tag_selectors USING btree (name);

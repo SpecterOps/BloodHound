@@ -352,6 +352,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
   /api/v2/asset-group-tags/preview-selectors:
     $ref: './paths/asset-isolation.preview-selectors.yaml'
+  /api/v2/asset-group-tags/search:
+    $ref: './paths/asset-isolation.asset-group-tags.search.yaml'
 
   # graph
   /api/v2/graphs/kinds:
@@ -366,6 +368,8 @@ paths:
     $ref: './paths/graph.graphs.edge-composition.yaml'
   /api/v2/graphs/relay-targets:
     $ref: './paths/graph.graphs.relay-targets.yaml'
+  /api/v2/graphs/acl-inheritance:
+    $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
   # cypher
   /api/v2/saved-queries:
