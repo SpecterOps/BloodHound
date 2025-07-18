@@ -67,6 +67,45 @@ func TestDeleteAllData(t *testing.T) {
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
 
+// TestDeleteAllData_Alternative covers the case where a client intends to delete all data,
+// but they do so by forming a request which specifies "sourceless" as well as an exhaustive list of all kinds.
+// This is an equivalent operation to only specifying "DeleteAllGraph"
+func TestDeleteAllData_Alternative(t *testing.T) {
+	var (
+		ctx = context.Background()
+
+		fixturesPath = path.Join("fixtures", "TestDeleteAllData", "opengraph")
+
+		testSuite = setupIntegrationTestSuite(t, fixturesPath)
+
+		files = []string{
+			path.Join(testSuite.WorkDir, "base.json"),
+		}
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	for _, file := range files {
+		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		require.NoError(t, err)
+		require.Zero(t, failed)
+		require.Equal(t, 1, total)
+	}
+
+	// DELETE ALL
+	var (
+		deleteRequest = model.AnalysisRequest{DeleteSourcelessGraph: true, DeleteSourceKinds: []string{"Base", "AZBase", "GithubBase"}}
+		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
+	)
+
+	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	require.Nil(t, err)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "TestDeleteAllData")), "deleteAllExpected.json")
+	require.NoError(t, err)
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}
+
 func TestDeleteSourcelessData(t *testing.T) {
 	var (
 		ctx = context.Background()
