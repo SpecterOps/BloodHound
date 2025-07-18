@@ -24,6 +24,12 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
+type SourceKindsData interface {
+	GetSourceKinds(ctx context.Context) ([]SourceKind, error)
+	DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
+	RegisterSourceKind(ctx context.Context) func(sourceKind graph.Kind) error
+}
+
 // RegisterSourceKind returns a function that inserts a source kind by name,
 // using the provided context. The returned function can be called later with just the name.
 // The function is curried in this way because it is primarily used in datapipe during ingest decoding when

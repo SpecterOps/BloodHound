@@ -33,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"github.com/specterops/dawgs/graph"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -173,8 +172,8 @@ type Database interface {
 	// Custom Node Kinds
 	CustomNodeKindData
 
-	GetSourceKinds(ctx context.Context) ([]SourceKind, error)
-	DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error
+	// Source Kinds
+	SourceKindsData
 }
 
 type BloodhoundDB struct {

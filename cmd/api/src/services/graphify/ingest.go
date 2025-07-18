@@ -283,7 +283,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 				return err
 			}
 			slog.Debug("no nodes found in opengraph payload; continuing to edges")
-		} else if err := decodeGenericData(batch, decoder, sourceKind, convertGenericNode); err != nil {
+		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
 			return err
 		}
 
@@ -294,7 +294,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			}
 			slog.Debug("no edges found in opengraph payload")
 		} else {
-			return decodeGenericData(batch, decoder, sourceKind, convertGenericEdge)
+			return DecodeGenericData(batch, decoder, sourceKind, ConvertGenericEdge)
 		}
 
 		return nil
@@ -356,17 +356,17 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 
 	if len(nodeKinds) == 0 {
 		slog.Warn("skipping node with no kinds",
-			slog.String("objectid", nodeUpdate.Node.ID.String()),
+			slog.String("objectid", nextNode.ObjectID),
 			slog.Int("num_kinds", 0),
 		)
-		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", nodeUpdate.Node.ID.String())
+		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", nextNode.ObjectID)
 	} else if len(nodeKinds) > 3 {
 		slog.Warn("skipping node with too many kinds",
-			slog.String("objectid", nodeUpdate.Node.ID.String()),
+			slog.String("objectid", nextNode.ObjectID),
 			slog.Int("num_kinds", len(nodeKinds)),
 			slog.String("kinds", strings.Join(graph.Kinds(nodeKinds).Strings(), ", ")),
 		)
-		return fmt.Errorf("node %s has too many kinds (%d); max allowed is 3", nodeUpdate.Node.ID.String(), len(nodeKinds))
+		return fmt.Errorf("node %s has too many kinds (%d); max allowed is 3", nextNode.ObjectID, len(nodeKinds))
 	} else {
 		return batch.Batch.UpdateNodeBy(nodeUpdate)
 	}

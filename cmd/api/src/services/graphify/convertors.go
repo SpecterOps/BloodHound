@@ -28,7 +28,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
+func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
 	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
 
 	node := ein.IngestibleNode{
@@ -62,7 +62,7 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	return nil
 }
 
-func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
+func ConvertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
 			Value:   strings.ToUpper(entity.Start.Value),

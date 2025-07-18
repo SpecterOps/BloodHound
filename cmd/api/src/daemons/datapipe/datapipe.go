@@ -198,7 +198,7 @@ func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 		for _, k := range sourceKinds {
 			kinds = append(kinds, k.Name)
 		}
-		// Filter out reserved kinds
+		// Filter out reserved kinds before removing records from source_kinds table
 		for _, kind := range kinds {
 			if kind.String() != "Base" && kind.String() != "AZBase" {
 				filteredKinds = append(filteredKinds, kind)

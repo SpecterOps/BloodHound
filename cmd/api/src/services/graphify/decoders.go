@@ -77,7 +77,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 	return errs.Combined()
 }
 
-func decodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
+func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
