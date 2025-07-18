@@ -6198,6 +6198,68 @@
         }
       }
     },
+    "/api/v2/graphs/source-kinds": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetSourceKinds",
+        "summary": "Get Source Kinds",
+        "description": "This endpoint returns a list of kinds that are registered as source kinds, (eg. Base, AZBase)",
+        "tags": [
+          "Graph",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "kinds": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ID": {
+                                "type": "integer"
+                              },
+                              "Name": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/pathfinding": {
       "parameters": [
         {
@@ -11903,6 +11965,12 @@
                 "properties": {
                   "deleteCollectedGraphData": {
                     "type": "boolean"
+                  },
+                  "deleteSourceKinds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
                   },
                   "deleteFileIngestHistory": {
                     "type": "boolean"
