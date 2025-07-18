@@ -1,6 +1,7 @@
 import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tooltip } from '@mui/material';
 import { StyledGraphEdge } from 'js-client-library';
 import { useCallback, useMemo, useState } from 'react';
 import { type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
@@ -101,9 +102,11 @@ const useExploreTableRowsAndColumns = ({
                     );
                 },
                 cell: (info) => (
-                    <div className='max-w-80 pt-1 pb-1 overflow-hidden line-clamp-1'>
-                        <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />
-                    </div>
+                    <Tooltip title={info.getValue()} PopperProps={{ className: 'z-10' }}>
+                        <div className='max-w-60 line-clamp-2'>
+                            <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />
+                        </div>
+                    </Tooltip>
                 ),
                 id: key?.toString(),
             }),
@@ -115,7 +118,7 @@ const useExploreTableRowsAndColumns = ({
             columnHelper.accessor('', {
                 id: 'action-menu',
                 cell: ({ row }) => (
-                    <div className='h-full w-8 flex justify-center items-center'>
+                    <div className='explore-table-cell-icon h-full w-8 flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
                             data-testid='kebab-menu'
@@ -176,6 +179,7 @@ const useExploreTableRowsAndColumns = ({
     ) as DataTableProps['columns'];
 
     return {
+        rows,
         columnOptionsForDropdown: allColumnDefintions,
         tableColumns,
         sortedFilteredRows,

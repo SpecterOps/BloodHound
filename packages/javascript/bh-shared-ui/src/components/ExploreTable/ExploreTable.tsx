@@ -31,7 +31,11 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2',
+    className: 'pr-2 max-w-1/8',
+};
+
+const tableCellProps: DataTableProps['TableCellProps'] = {
+    className: 'has-[.explore-table-cell-icon]:w-2',
 };
 
 const ExploreTable = ({
@@ -53,13 +57,14 @@ const ExploreTable = ({
         []
     );
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
-        onKebabMenuClick,
-        searchInput,
-        allColumnKeys,
-        selectedColumns,
-        data,
-    });
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, rows } =
+        useExploreTableRowsAndColumns({
+            onKebabMenuClick,
+            searchInput,
+            allColumnKeys,
+            selectedColumns,
+            data,
+        });
 
     const searchInputProps = useMemo(
         () => ({
@@ -85,6 +90,7 @@ const ExploreTable = ({
             )}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
+                    rows={rows}
                     className='h-[72px]'
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns || requiredColumns}
@@ -101,6 +107,7 @@ const ExploreTable = ({
                     className='h-full *:h-[calc(100%-72px)]'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
+                    TableCellProps={tableCellProps}
                     onRowClick={onRowClick}
                     selectedRow={selectedNode || undefined}
                     data={sortedFilteredRows}

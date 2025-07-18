@@ -21,11 +21,13 @@ import { ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
+import { MungedTableRowWithId } from './explore-table-utils';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
+    rows: MungedTableRowWithId[];
     columns: ColumnDef<TData, TValue>[];
     selectedColumns: Record<string, boolean>;
     pinnedColumns?: Record<string, boolean>;
@@ -50,6 +52,7 @@ const TableControls = <TData, TValue>({
     onCloseClick,
     onExpandClick,
     onManageColumnsChange,
+    rows,
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
@@ -90,6 +93,7 @@ const TableControls = <TData, TValue>({
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
+                        rows={rows}
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}

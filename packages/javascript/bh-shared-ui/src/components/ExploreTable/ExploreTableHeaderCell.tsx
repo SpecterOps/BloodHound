@@ -21,7 +21,7 @@ const ExploreTableHeaderCell = ({
     return (
         <div
             className={cn(
-                'w-full flex items-center p-1 m-0 cursor-pointer h-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4',
+                'flex items-center m-0 cursor-pointer h-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4',
                 { 'justify-center': dataType === 'boolean' || KEYS_TO_RENDER_AS_ICON.includes(headerKey.toString()) }
             )}
             onClick={onClick}>

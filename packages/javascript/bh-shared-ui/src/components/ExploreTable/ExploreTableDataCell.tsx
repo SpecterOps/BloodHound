@@ -8,14 +8,14 @@ const FALLBACK_STRING = '--';
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
     if (columnKey === 'nodetype') {
         return (
-            <div className='flex justify-center'>
+            <div className='flex justify-center explore-table-cell-icon'>
                 <NodeIcon nodeType={value?.toString() || ''} />
             </div>
         );
     }
     if (typeof value === 'boolean' || value === undefined || value === null) {
         return (
-            <div className='h-full flex justify-center items-center'>
+            <div className='flex justify-center items-center explore-table-cell-icon pb-1 pt-1'>
                 <FontAwesomeIcon
                     icon={value ? faCheck : faCancel}
                     color={value ? 'green' : 'lightgray'}
