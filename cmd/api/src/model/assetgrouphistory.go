@@ -54,6 +54,15 @@ func (AssetGroupHistory) TableName() string {
 	return "asset_group_history"
 }
 
+func (s AssetGroupHistory) IsSortable(criteria string) bool {
+	switch criteria {
+	case "created_at":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s AssetGroupHistory) AuditData() AuditData {
 	return AuditData{
 		"id":                 s.ID,
@@ -65,5 +74,22 @@ func (s AssetGroupHistory) AuditData() AuditData {
 		"asset_group_tag_id": s.AssetGroupTagId,
 		"environment_id":     s.EnvironmentId,
 		"note":               s.Note,
+	}
+}
+
+func (s AssetGroupHistory) IsStringColumn(filter string) bool {
+	return filter == "actor" || filter == "email" || filter == "action" || filter == "target" || filter == "environment_id" || filter == "note"
+}
+
+func (s AssetGroupHistory) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"created_at":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"actor":              {Equals, NotEquals, ApproximatelyEquals},
+		"email":              {Equals, NotEquals, ApproximatelyEquals},
+		"action":             {Equals, NotEquals, ApproximatelyEquals},
+		"target":             {Equals, NotEquals, ApproximatelyEquals},
+		"asset_group_tag_id": {Equals, NotEquals},
+		"environment_id":     {Equals, NotEquals, ApproximatelyEquals},
+		"note":               {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
