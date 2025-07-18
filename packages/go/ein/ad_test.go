@@ -17,6 +17,7 @@
 package ein_test
 
 import (
+	"github.com/specterops/dawgs/graph"
 	"testing"
 	"time"
 
@@ -285,32 +286,68 @@ func TestConvertComputerToNode(t *testing.T) {
 }
 
 func TestParseGroupMiscData(t *testing.T) {
-	group := ein.Group{
-		IngestBase: ein.IngestBase{
-			ObjectIdentifier: "groupBase",
-		},
-		HasSIDHistory: make([]ein.TypedPrincipal, 0),
+	t.Parallel()
+	type args struct {
+		group ein.Group
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected []ein.IngestibleRelationship
 	}
 
-	t.Run("ParseGroupMiscData without SIDHistory", func(t *testing.T) {
-		result := ein.ParseGroupMiscData(group)
-		require.Len(t, result, 0)
-	})
+	tt := []testData{
+		{
+			name: "ParseGroupMiscData without SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: make([]ein.TypedPrincipal, 0),
+				},
+			},
+			expected: make([]ein.IngestibleRelationship, 0),
+		},
+		{
+			name: "ParseGroupMiscData with SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: []ein.TypedPrincipal{
+						{
+							ObjectIdentifier: "historySID",
+							ObjectType:       ad.User.String(),
+						},
+					},
+				},
+			},
+			expected: []ein.IngestibleRelationship{
+				{
+					Source: ein.IngestibleEndpoint{
+						Value:   "groupBase",
+						MatchBy: "",
+						Kind:    graph.StringKind(ad.Group.String()),
+					},
+					Target: ein.IngestibleEndpoint{
+						Value: "historySID",
+						Kind:  graph.StringKind(ad.User.String()),
+					},
+					RelType:  ad.HasSIDHistory,
+					RelProps: map[string]any{"isacl": false},
+				},
+			},
+		},
+	}
 
-	t.Run("ParseGroupMiscData with SIDHistory", func(t *testing.T) {
-		group.HasSIDHistory = append(group.HasSIDHistory, ein.TypedPrincipal{
-			ObjectIdentifier: "historySID",
-			ObjectType:       ad.User.String(),
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGroupMiscData(testCase.args.group)
+			assert.Equal(t, testCase.expected, result)
 		})
-
-		result := ein.ParseGroupMiscData(group)
-		require.Len(t, result, 1)
-		rel := result[0]
-		assert.Equal(t, "groupBase", rel.Source.Value)
-		assert.Equal(t, ad.Group, rel.Source.Kind)
-		assert.Equal(t, "historySID", rel.Target.Value)
-		assert.Equal(t, ad.User, rel.Target.Kind)
-		assert.Equal(t, ad.HasSIDHistory, rel.RelType)
-
-	})
+	}
 }
