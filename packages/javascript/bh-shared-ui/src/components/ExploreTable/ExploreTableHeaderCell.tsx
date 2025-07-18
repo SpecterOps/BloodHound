@@ -21,7 +21,7 @@ const ExploreTableHeaderCell = ({
 }) => {
     const label = formatPotentiallyUnknownLabel(String(headerKey));
     return (
-        <Tooltip title={label}>
+        <Tooltip title={<p>{label}</p>}>
             <div
                 className={cn(
                     'flex items-center m-0 cursor-pointer h-full w-full hover:bg-neutral-100 dark:hover:bg-neutral-dark-4',

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
-import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { ChangeEvent, memo, useCallback, useMemo, useState, useTransition } from 'react';
 import { useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
@@ -28,14 +28,12 @@ type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
     className: 'w-[default] w-full table-fixed',
+    disableDefaultOverflowAuto: true,
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
     className: 'sticky top-0 z-10 shadow-sm',
 };
-// const tableBodyProps: DataTableProps['TableBodyProps'] = {
-//     className: 'sticky top-0 z-10 shadow-sm grid-cols-subgrid',
-// };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
     className: 'pr-2 text-center',
@@ -58,20 +56,26 @@ const ExploreTable = ({
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [isPending, startTransition] = useTransition();
 
     const handleSearchInputChange = useCallback(
-        (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
-        []
+        (e: ChangeEvent<HTMLInputElement>) => {
+            // This allows the user to keep typing as the fitlering computes
+            startTransition(() => {
+                setSearchInput(e.target.value);
+            });
+        },
+        [setSearchInput]
     );
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, rows } =
-        useExploreTableRowsAndColumns({
-            onKebabMenuClick,
-            searchInput,
-            allColumnKeys,
-            selectedColumns,
-            data,
-        });
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        allColumnKeys,
+        selectedColumns,
+        data,
+    });
 
     const searchInputProps = useMemo(
         () => ({
@@ -109,7 +113,6 @@ const ExploreTable = ({
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}
-                    // TableBodyProps={tableBodyProps}
                     TableCellProps={tableCellProps}
                     onRowClick={onRowClick}
                     selectedRow={selectedNode || undefined}

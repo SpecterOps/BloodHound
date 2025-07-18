@@ -6,7 +6,13 @@ import { StyledGraphEdge } from 'js-client-library';
 import { isEmpty } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { cn } from '../../utils';
-import { isSmallColumn, type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
+import {
+    isSmallColumn,
+    REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
+    requiredColumns,
+    type ExploreTableProps,
+    type MungedTableRowWithId,
+} from './explore-table-utils';
 import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
@@ -159,7 +165,9 @@ const useExploreTableRowsAndColumns = ({
                     const useIcon = isSmallColumn(key, value);
 
                     return (
-                        <Tooltip title={info.getValue()} disableHoverListener={key === 'nodetype' || isEmpty(value)}>
+                        <Tooltip
+                            title={<p>{info.getValue()}</p>}
+                            disableHoverListener={key === 'nodetype' || isEmpty(value)}>
                             <div
                                 className={cn('truncate', {
                                     'explore-table-cell-icon': useIcon,
@@ -237,9 +245,31 @@ const useExploreTableRowsAndColumns = ({
         [allColumnDefintions, selectedColumns]
     );
 
+    const sortedColumnDefinitions = useMemo(
+        () =>
+            selectedColumnDefinitions.sort((a, b) => {
+                const idA = a?.id || '';
+                const idB = b?.id || '';
+                const aIsRequired = requiredColumns[idA];
+                const bIsRequired = requiredColumns[idB];
+                if (aIsRequired) {
+                    if (bIsRequired) {
+                        return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
+                            REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
+                            ? 1
+                            : -1;
+                    }
+                    return -1;
+                }
+
+                return 1;
+            }),
+        [selectedColumnDefinitions]
+    );
+
     const tableColumns = useMemo(
-        () => [kebabColumDefinition, ...selectedColumnDefinitions],
-        [kebabColumDefinition, selectedColumnDefinitions]
+        () => [kebabColumDefinition, ...sortedColumnDefinitions],
+        [kebabColumDefinition, sortedColumnDefinitions]
     ) as DataTableProps['columns'];
 
     return {
