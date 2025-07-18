@@ -15,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { isEmpty } from 'lodash';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { useToggle } from '../../hooks';
+import { useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import { ExploreTableProps, MungedTableRowWithId, knownColumns } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -39,18 +40,17 @@ const tableCellProps: DataTableProps['TableCellProps'] = {
 };
 
 const ExploreTable = ({
-    data,
-    selectedNode,
     onClose,
     onRowClick,
     onDownloadClick,
     onKebabMenuClick,
     onManageColumnsChange,
-    allColumnKeys,
     selectedColumns,
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
+
+    const { selectedItem } = useExploreSelectedItem();
 
     const handleSearchInputChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
@@ -61,9 +61,7 @@ const ExploreTable = ({
         useExploreTableRowsAndColumns({
             onKebabMenuClick,
             searchInput,
-            allColumnKeys,
             selectedColumns,
-            data,
         });
 
     const searchInputProps = useMemo(
@@ -75,8 +73,6 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
-    if (!data) return null;
-
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -85,7 +81,7 @@ const ExploreTable = ({
                 {
                     'h-1/2': !isExpanded,
                     'h-[calc(100%-72px)]': isExpanded,
-                    'w-[calc(100%-450px)]': selectedNode,
+                    'w-[calc(100%-450px)]': selectedItem,
                 }
             )}>
             <div className='explore-table-container w-full h-full'>
@@ -93,8 +89,8 @@ const ExploreTable = ({
                     rows={rows}
                     className='h-[72px]'
                     columns={columnOptionsForDropdown}
-                    selectedColumns={selectedColumns || requiredColumns}
-                    pinnedColumns={requiredColumns}
+                    selectedColumns={isEmpty(selectedColumns) ? knownColumns : selectedColumns}
+                    pinnedColumns={knownColumns}
                     onDownloadClick={onDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
@@ -109,7 +105,7 @@ const ExploreTable = ({
                     TableHeadProps={tableHeadProps}
                     TableCellProps={tableCellProps}
                     onRowClick={onRowClick}
-                    selectedRow={selectedNode || undefined}
+                    selectedRow={selectedItem || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
                 />

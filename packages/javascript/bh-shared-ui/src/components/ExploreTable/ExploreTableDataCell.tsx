@@ -6,7 +6,7 @@ import NodeIcon from '../NodeIcon';
 const FALLBACK_STRING = '--';
 
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
-    if (columnKey === 'nodetype') {
+    if (columnKey === 'kind') {
         return (
             <div className='flex justify-center explore-table-cell-icon'>
                 <NodeIcon nodeType={value?.toString() || ''} />

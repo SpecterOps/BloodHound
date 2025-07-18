@@ -57,7 +57,7 @@ export const ManageColumnsComboBox = ({
 
     // The columns change when a new query is fired. Reset the selected columns in this case.
     useEffect(handleResetDefault, [rows]);
-
+    console.log('selectedColumns', selectedColumns);
     useEffect(() => {
         if (selectedColumns.length === 0) {
             handleResetDefault();

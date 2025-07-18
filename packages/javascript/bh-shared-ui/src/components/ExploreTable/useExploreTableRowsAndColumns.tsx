@@ -2,9 +2,9 @@ import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
-import { StyledGraphEdge } from 'js-client-library';
 import { useCallback, useMemo, useState } from 'react';
-import { type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
+import { useExploreGraph } from '../..';
+import { getExploreTableData, type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
 import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
@@ -14,44 +14,35 @@ type DataTableProps = React.ComponentProps<typeof DataTable>;
 
 const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
 
-type UseExploreTableRowsAndColumnsProps = Pick<
-    ExploreTableProps,
-    'onKebabMenuClick' | 'allColumnKeys' | 'selectedColumns' | 'data'
-> & { searchInput: string };
+type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuClick' | 'selectedColumns'> & {
+    searchInput: string;
+};
 
 const useExploreTableRowsAndColumns = ({
     onKebabMenuClick,
     searchInput,
-    allColumnKeys,
     selectedColumns,
-    data,
 }: UseExploreTableRowsAndColumnsProps) => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 
+    const { data: graphData } = useExploreGraph();
+    const exploreTableData = getExploreTableData(graphData);
+
     const rows = useMemo(
         () =>
-            (data &&
-                Object.entries(data).reduce((acc: MungedTableRowWithId[], curr) => {
-                    const [key, value] = curr;
-
-                    const valueAsPotentialEdge = value as StyledGraphEdge;
-
-                    if (!!valueAsPotentialEdge.id1 || !!valueAsPotentialEdge.id2) {
-                        return acc;
-                    }
-
-                    const nextRow = Object.assign({}, value.data);
-
-                    nextRow.id = key;
-                    nextRow.displayname = value?.label?.text;
-
-                    acc.push(nextRow as MungedTableRowWithId);
-
-                    return acc;
-                }, [])) ||
-            [],
-        [data]
+            ((exploreTableData?.nodes &&
+                Object.entries(exploreTableData?.nodes).map(([key, value]) => {
+                    const { properties, ...rest } = value;
+                    return {
+                        ...rest,
+                        ...properties,
+                        id: key,
+                        displayname: value?.label,
+                    };
+                })) ||
+                []) as MungedTableRowWithId[],
+        [exploreTableData?.nodes]
     );
 
     const handleSort = useCallback(
@@ -166,11 +157,14 @@ const useExploreTableRowsAndColumns = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
+    const allColumnDefinitions = useMemo(
+        () => exploreTableData?.node_keys?.map(makeColumnDef) || [],
+        [exploreTableData?.node_keys, makeColumnDef]
+    );
 
     const selectedColumnDefinitions = useMemo(
-        () => allColumnDefintions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
-        [allColumnDefintions, selectedColumns]
+        () => allColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
+        [allColumnDefinitions, selectedColumns]
     );
 
     const tableColumns = useMemo(
@@ -180,7 +174,7 @@ const useExploreTableRowsAndColumns = ({
 
     return {
         rows,
-        columnOptionsForDropdown: allColumnDefintions,
+        columnOptionsForDropdown: allColumnDefinitions,
         tableColumns,
         sortedFilteredRows,
         resultsCount: rows.length,
