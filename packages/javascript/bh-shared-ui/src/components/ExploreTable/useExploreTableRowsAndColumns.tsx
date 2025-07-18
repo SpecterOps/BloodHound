@@ -3,16 +3,16 @@ import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import { StyledGraphEdge } from 'js-client-library';
+import { isEmpty } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
+import { cn } from '../../utils';
+import { isSmallColumn, type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
 import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
 
 type DataTableProps = React.ComponentProps<typeof DataTable>;
-
-const LARGE_COLUMNS = ['displayname, objectid'];
 
 const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
 
@@ -137,10 +137,12 @@ const useExploreTableRowsAndColumns = ({
     const makeColumnDef = useCallback(
         (rawKey: keyof MungedTableRowWithId) => {
             const key = rawKey?.toString();
+
+            const firstRowCellValue = rows?.length ? rows[0]?.[key] : null;
+            const dataType = typeof firstRowCellValue;
+
             return columnHelper.accessor(String(key), {
                 header: () => {
-                    const dataType = rows?.length ? typeof rows[0][key] : '';
-
                     return (
                         <ExploreTableHeaderCell
                             sortBy={sortBy}
@@ -151,14 +153,23 @@ const useExploreTableRowsAndColumns = ({
                         />
                     );
                 },
-                size: 2,
-                cell: (info) => (
-                    <Tooltip title={info.getValue()}>
-                        <div className='line-clamp-2'>
-                            <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />
-                        </div>
-                    </Tooltip>
-                ),
+                size: isSmallColumn(key, firstRowCellValue) ? 100 : 250,
+                cell: (info) => {
+                    const value = info.getValue();
+                    const useIcon = isSmallColumn(key, value);
+
+                    return (
+                        <Tooltip title={info.getValue()} disableHoverListener={key === 'nodetype' || isEmpty(value)}>
+                            <div
+                                className={cn('truncate', {
+                                    'explore-table-cell-icon': useIcon,
+                                    'explore-table-cell-string': !useIcon,
+                                })}>
+                                <ExploreTableDataCell value={value} columnKey={key?.toString()} />
+                            </div>
+                        </Tooltip>
+                    );
+                },
                 id: key?.toString(),
             });
         },
@@ -169,9 +180,7 @@ const useExploreTableRowsAndColumns = ({
         () =>
             columnHelper.accessor('', {
                 id: 'action-menu',
-                size: 1,
-                minSize: 1,
-                maxSize: 1,
+                size: 50,
                 cell: ({ row }) => (
                     <div className='explore-table-cell-icon h-full flex justify-center items-center'>
                         <FontAwesomeIcon

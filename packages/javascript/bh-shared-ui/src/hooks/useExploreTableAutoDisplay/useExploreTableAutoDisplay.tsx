@@ -20,19 +20,11 @@ import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
 import { useFeatureFlag } from '../useFeatureFlags';
 
-interface UseExploreTableAutoDisplayParams {
-    /**
-     * If preconditions are met that disable the auto-display, we should be able
-     * to disable any expensive calculations in this hook if the auto-display isnt required
-     */
-    enabled: boolean;
-}
-
 // This should be able to detect when the Explore Table should display automatically and when NOT to display it.
 // Auto display when current search is cypher and returned data contains nodes but not edges.
 // And dont auto display if the auto display has been closed.
-export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDisplayParams) => {
-    const { data: graphData, isFetching } = useExploreGraph({ includeProperties: true, enabled });
+export const useExploreTableAutoDisplay = (enabled: boolean) => {
+    const { data: graphData, isFetching } = useExploreGraph(enabled);
     const { searchType } = useExploreParams();
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
 

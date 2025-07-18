@@ -30,8 +30,8 @@ export const normalizeGraphDataForSigma = (
     }
 };
 
-export const useSigmaExploreGraph = (includeProperties: boolean) => {
-    const graphQuery = useExploreGraph({ includeProperties });
+export const useSigmaExploreGraph = () => {
+    const graphQuery = useExploreGraph();
     const normalizedGraphData = useMemo(() => normalizeGraphDataForSigma(graphQuery.data), [graphQuery.data]);
     const castGraphData = graphQuery?.data?.data as GraphData;
 

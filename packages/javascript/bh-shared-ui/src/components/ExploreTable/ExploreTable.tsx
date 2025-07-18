@@ -26,16 +26,23 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
+const tableProps: DataTableProps['TableProps'] = {
+    className: 'w-[default] w-full table-fixed',
+};
+
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
     className: 'sticky top-0 z-10 shadow-sm',
 };
+// const tableBodyProps: DataTableProps['TableBodyProps'] = {
+//     className: 'sticky top-0 z-10 shadow-sm grid-cols-subgrid',
+// };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-2',
+    className: 'pr-2 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'has-[.explore-table-cell-icon]:w-2',
+    className: 'truncate',
 };
 
 const ExploreTable = ({
@@ -75,8 +82,6 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
-    if (!data) return null;
-
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -87,7 +92,6 @@ const ExploreTable = ({
             })}>
             <div className='explore-table-container w-full h-full overflow-hidden'>
                 <TableControls
-                    rows={rows}
                     className='h-[72px]'
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns || requiredColumns}
@@ -104,6 +108,8 @@ const ExploreTable = ({
                     className='h-full *:h-[calc(100%-72px)] overflow-auto'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    // TableBodyProps={tableBodyProps}
                     TableCellProps={tableCellProps}
                     onRowClick={onRowClick}
                     selectedRow={selectedNode || undefined}

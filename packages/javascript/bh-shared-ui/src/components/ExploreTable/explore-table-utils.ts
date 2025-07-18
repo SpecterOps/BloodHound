@@ -18,6 +18,10 @@ const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'name', 'isT
 
 export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
 
+export const isSmallColumn = (key: string, value: any) => key === 'nodetype' || typeof value === 'boolean';
+
+export const isIconField = (value: any) => typeof value === 'boolean' || value === undefined || value === null;
+
 export interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;

@@ -4,19 +4,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
-import { MungedTableRowWithId, makeStoreMapFromColumnOptions } from '../explore-table-utils';
+import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
 
 type ManageColumnsComboBoxProps = {
-    rows: MungedTableRowWithId[];
     allColumns: ManageColumnsComboBoxOption[];
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
     selectedColumns: Record<string, boolean>;
 };
 export const ManageColumnsComboBox = ({
-    rows,
     allColumns,
     onChange = () => {},
     selectedColumns: selectedColumnsProp,
@@ -54,9 +52,6 @@ export const ManageColumnsComboBox = ({
         setSelectedColumns([...pinnedColumns]);
         onChange([...pinnedColumns]);
     }, [onChange, pinnedColumns]);
-
-    // The columns change when a new query is fired. Reset the selected columns in this case.
-    useEffect(handleResetDefault, [rows]);
 
     useEffect(() => {
         if (selectedColumns.length === 0) {
