@@ -68,11 +68,13 @@ const testQuery = {
 
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
-        const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
+        const testQuery = { isLoading: true, isError: false, data: undefined } as unknown as UseQueryResult<
+            AssetGroupTag[]
+        >;
 
         render(<DetailsList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(screen.getAllByTestId('zone-management_selectors-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('zone-management_labels-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('handles data fetching errors', async () => {

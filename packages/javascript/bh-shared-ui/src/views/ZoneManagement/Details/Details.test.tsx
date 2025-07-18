@@ -21,6 +21,10 @@ import { zoneHandlers } from '../../../mocks/handlers';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
 
+vi.mock('../../../hooks/useMeasure', () => ({
+    useMeasure: vi.fn().mockImplementation(() => [200, 200]),
+}));
+
 const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
@@ -95,7 +99,7 @@ describe('Details', async () => {
         });
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');
-        const selectorsListItems = within(selectors).getAllByRole('listitem');
+        const selectorsListItems = await within(selectors).findAllByRole('listitem');
 
         // After selecting an object, the edit action is not viable and thus the button is not rendered
         expect(screen.queryByRole('button', { name: /Edit/ })).toBeNull();

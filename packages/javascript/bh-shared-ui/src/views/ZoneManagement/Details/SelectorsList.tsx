@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { cn } from '../../../utils';
-import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight } from './utils';
 
 const getCountElement = (listItem: AssetGroupTagSelector): React.ReactNode => {
@@ -30,6 +29,15 @@ const getCountElement = (listItem: AssetGroupTagSelector): React.ReactNode => {
         return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
     }
 };
+
+const LoadingRow = (index: number, style: React.CSSProperties) => (
+    <div
+        data-testid={`zone-management_selectors-list_loading-skeleton`}
+        style={style}
+        className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        <Skeleton className={`h-full`} />
+    </div>
+);
 
 type SelectorsListProps = {
     listQuery: UseInfiniteQueryResult<{
@@ -72,18 +80,6 @@ const SelectorsListWrapper = ({ children }: { children: React.ReactNode }) => {
  * @returns The component that displays a list of entities for the zone management page
  */
 export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onSelect }) => {
-    if (listQuery.isLoading) {
-        return (
-            <SelectorsListWrapper>
-                <ul>
-                    {itemSkeletons.map((skeleton, index) => {
-                        return skeleton('Selectors', index);
-                    })}
-                </ul>
-            </SelectorsListWrapper>
-        );
-    }
-
     if (listQuery.isError) {
         return (
             <SelectorsListWrapper>
@@ -102,6 +98,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
         return (
             <div
                 style={style}
+                role='listitem'
                 key={item.id}
                 className={cn('border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10', {
                     'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === item.id.toString(),
@@ -133,7 +130,12 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
 
     return (
         <SelectorsListWrapper>
-            <InfiniteQueryFixedList<AssetGroupTagSelector> itemSize={40} queryResult={listQuery} renderRow={Row} />
+            <InfiniteQueryFixedList<AssetGroupTagSelector>
+                itemSize={40}
+                queryResult={listQuery}
+                renderRow={Row}
+                renderLoadingRow={LoadingRow}
+            />
         </SelectorsListWrapper>
     );
 };

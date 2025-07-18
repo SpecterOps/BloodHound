@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { UseInfiniteQueryResult } from 'react-query';
 import { NodeIcon, SortableHeader } from '../../../components';
@@ -34,6 +34,15 @@ interface MembersListProps {
     onChangeSortOrder: (sort: SortOrder) => void;
 }
 
+const LoadingRow = (index: number, style: React.CSSProperties) => (
+    <div
+        data-testid={`zone-management_members-list_loading-skeleton`}
+        style={style}
+        className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        <Skeleton className={`h-full`} />
+    </div>
+);
+
 /**
  * @description This component is used to render the Objects/Members list for a given Tier, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
  * @param props
@@ -52,6 +61,7 @@ export const MembersList: React.FC<MembersListProps> = ({
         return (
             <div
                 key={index}
+                role='listitem'
                 className={cn('border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative', {
                     'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === item.id.toString(),
                 })}
@@ -85,7 +95,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                 }}
             />
             <div
-                className={cn(`overflow-y-auto border-x-2 border-neutral-light-5 dark:border-neutral-dark-5`, {
+                className={cn(`overflow-y-auto border-neutral-light-5 dark:border-neutral-dark-5`, {
                     'h-[762px]': getListHeight(window.innerHeight) === 762,
                     'h-[642px]': getListHeight(window.innerHeight) === 642,
                     'h-[438px]': getListHeight(window.innerHeight) === 438,
@@ -94,6 +104,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                     itemSize={40}
                     queryResult={listQuery}
                     renderRow={Row}
+                    renderLoadingRow={LoadingRow}
                 />
             </div>
         </div>
