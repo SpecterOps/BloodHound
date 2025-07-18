@@ -102,7 +102,7 @@ const useExploreTableRowsAndColumns = ({
                     );
                 },
                 cell: (info) => (
-                    <Tooltip title={info.getValue()} PopperProps={{ className: 'z-10' }}>
+                    <Tooltip title={info.getValue()}>
                         <div className='max-w-60 line-clamp-2'>
                             <ExploreTableDataCell value={info.getValue()} columnKey={key?.toString()} />
                         </div>
