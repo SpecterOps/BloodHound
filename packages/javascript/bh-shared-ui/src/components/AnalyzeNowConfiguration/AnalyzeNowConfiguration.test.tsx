@@ -19,6 +19,18 @@ import { setupServer } from 'msw/node';
 import { render, screen } from '../../test-utils';
 import AnalyzeNowConfiguration from './AnalyzeNowConfiguration';
 
+const addNotificationMock = vi.fn();
+
+vi.mock('../../providers', async () => {
+    const actual = await vi.importActual('../../providers');
+    return {
+        ...actual,
+        useNotifications: () => {
+            return { addNotification: addNotificationMock };
+        },
+    };
+});
+
 describe('AnalyzeNowConfiguration', () => {
     const server = setupServer(
         rest.get(`/api/v2/datapipe/status`, async (_req, res, ctx) => {
@@ -121,7 +133,35 @@ describe('AnalyzeNowConfiguration', () => {
 
         await user.click(confirmButton);
 
-        const errorNotification = await screen.findByRole('alert');
-        expect(errorNotification).toHaveTextContent(/There was an error requesting analysis./i);
+        expect(addNotificationMock).toBeCalledWith('There was an error requesting analysis.');
+    });
+
+    it('Displays a notification when analysis has been requested successfully', async () => {
+        server.use(
+            rest.put(`/api/v2/analysis`, (req, res, ctx) => {
+                return res(ctx.status(202));
+            })
+        );
+        console.error = vi.fn();
+        render(<AnalyzeNowConfiguration />);
+
+        const user = userEvent.setup();
+        const button = screen.getByRole('button', { name: /Analyze Now/i });
+
+        await user.click(button);
+
+        const modalDialog = await screen.getByText(
+            /Analysis may take some time, during which your data will be in flux. Proceed with analysis?/i
+        );
+        const confirmButton = screen.getByRole('button', { name: /Confirm/i });
+        const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+
+        expect(modalDialog).toBeInTheDocument();
+        expect(confirmButton).toBeInTheDocument();
+        expect(cancelButton).toBeInTheDocument();
+
+        await user.click(confirmButton);
+
+        expect(addNotificationMock).toBeCalledWith('Analysis requested successfully.');
     });
 });
