@@ -11,6 +11,7 @@ import ImportQueryDialog from './ImportQueryDialog';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
     exportHandler: () => void;
+    deleteHandler: (id: number) => void;
     categories: string[];
     searchTerm: string;
     platform: string;
@@ -19,8 +20,16 @@ interface QuerySearchProps {
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
-    const { queryFilterHandler, exportHandler, categories, searchTerm, platform, categoryFilter, selectedQuery } =
-        props;
+    const {
+        queryFilterHandler,
+        exportHandler,
+        deleteHandler,
+        categories,
+        searchTerm,
+        platform,
+        categoryFilter,
+        selectedQuery,
+    } = props;
     const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
     const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
@@ -87,8 +96,12 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             onClick={exportHandler}>
                             Export
                         </Button>
-                        <Button className='ml-2' variant='icon'>
-                            <FontAwesomeIcon icon={faTrash} />{' '}
+                        <Button
+                            disabled={!exportEnabled}
+                            className='ml-2'
+                            variant='icon'
+                            onClick={() => deleteHandler(selectedQuery?.id)}>
+                            <FontAwesomeIcon icon={faTrash} />
                         </Button>
                     </div>
                 </div>

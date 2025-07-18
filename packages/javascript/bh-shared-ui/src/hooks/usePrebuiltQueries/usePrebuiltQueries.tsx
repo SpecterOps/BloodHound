@@ -30,8 +30,6 @@ export const usePrebuiltQueries = () => {
 
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
     const queryList = usePrebuiltQueries();
-
-    // console.log('useGetSelectedQuery -- id=' + id);
     if (id) {
         for (const item of queryList) {
             let result = null;

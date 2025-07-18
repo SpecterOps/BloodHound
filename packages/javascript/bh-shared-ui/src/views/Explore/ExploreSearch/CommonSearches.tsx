@@ -85,12 +85,13 @@ const InnerCommonSearches = ({
         }
     };
 
-    const handleDeleteQuery = (id: number) =>
+    const handleDeleteQuery = (id: number) => {
         deleteQueryMutation.mutate(id, {
             onSuccess: () => {
                 addNotification(`Query deleted.`, 'userDeleteQuery');
             },
         });
+    };
 
     if (userQueries.isLoading) {
         return (
@@ -157,6 +158,7 @@ const InnerCommonSearches = ({
                 <QuerySearchFilter
                     queryFilterHandler={handleFilter}
                     exportHandler={handleExport}
+                    deleteHandler={handleDeleteQuery}
                     categories={categories}
                     searchTerm={searchTerm}
                     platform={platform}
