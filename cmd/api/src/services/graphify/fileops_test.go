@@ -55,11 +55,11 @@ func TestSeekToKey(t *testing.T) {
 		require.Nil(t, err)
 	})
 
-	t.Run("seek to metadata tag at depth 2", func(t *testing.T) {
-		r := strings.NewReader(`{"graph":{"metadata":{}}}`)
+	t.Run("seek to metadata tag at depth 1", func(t *testing.T) {
+		r := strings.NewReader(`{"graph":{},"metadata":{}}`)
 		j := json.NewDecoder(r)
 
-		err := graphify.SeekToKey(j, "metadata", 2)
+		err := graphify.SeekToKey(j, "metadata", 1)
 		require.Nil(t, err)
 	})
 }

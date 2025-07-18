@@ -33,6 +33,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -200,7 +202,7 @@ func (s *Daemon) deleteData(deleteRequest model.AnalysisRequest) {
 		}
 		// Filter out reserved kinds before removing records from source_kinds table
 		for _, kind := range kinds {
-			if kind.String() != "Base" && kind.String() != "AZBase" {
+			if !kind.Is(ad.Entity) && !kind.Is(azure.Entity) {
 				filteredKinds = append(filteredKinds, kind)
 			}
 		}

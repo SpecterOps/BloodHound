@@ -56,8 +56,8 @@ func (s *BloodhoundDB) RegisterSourceKind(ctx context.Context) func(sourceKind g
 }
 
 type SourceKind struct {
-	ID   int
-	Name graph.Kind
+	ID   int        `json:"id"`
+	Name graph.Kind `json:"name"`
 }
 
 func (s *BloodhoundDB) GetSourceKinds(ctx context.Context) ([]SourceKind, error) {

@@ -6229,10 +6229,10 @@
                           "items": {
                             "type": "object",
                             "properties": {
-                              "ID": {
+                              "id": {
                                 "type": "integer"
                               },
-                              "Name": {
+                              "name": {
                                 "type": "string"
                               }
                             }

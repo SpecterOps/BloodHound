@@ -478,21 +478,6 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 	}
 }
 
-func (v *validator) validateMetadata(metadataSchema *jsonschema.Schema) {
-	var item map[string]any
-
-	if err := v.decoder.Decode(&item); err != nil {
-		switch err.(type) {
-		case *json.UnmarshalTypeError:
-			v.reportValidation(0, fmt.Sprintf("%s[%d] type mismatch: %s", "metadata", 0, err))
-		default:
-			v.reportCritical(0, fmt.Sprintf("%s[%d] syntax error: %s", "metadata", 0, err))
-		}
-	} else if err := metadataSchema.Validate(item); err != nil {
-		v.reportValidation(0, formatSchemaValidationError("metadata", 0, err))
-	}
-}
-
 func (v *validator) report() error {
 	if v.hasErrors() {
 		return ValidationReport{
