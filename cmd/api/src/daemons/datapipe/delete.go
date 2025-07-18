@@ -19,6 +19,8 @@ package datapipe
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
@@ -28,6 +30,11 @@ import (
 )
 
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
+	slog.Info("DeleteCollectedGraphData",
+		slog.Bool("delete all data", deleteRequest.DeleteAllGraph),
+		slog.Bool("delete sourceless data", deleteRequest.DeleteSourcelessGraph),
+		slog.String("delete source kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")))
+
 	operation := ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,
 		DB:         graphDB,
