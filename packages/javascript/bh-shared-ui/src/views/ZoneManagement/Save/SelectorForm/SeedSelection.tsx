@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
@@ -29,7 +29,6 @@ import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
-import DeleteSelectorButton from './DeleteSelectorButton';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
@@ -120,13 +119,14 @@ const SeedSelection: FC<{
                             <Cypher preview={false} initialInput={firstSeed?.value} />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
+                            {/* 
                             <DeleteSelectorButton
                                 selectorId={selectorId}
                                 selectorData={selectorQuery.data}
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
                                 }}
-                            />
+                            />  
                             <Button
                                 data-testid='zone-management_save_selector-form_cancel-button'
                                 variant={'secondary'}
@@ -139,6 +139,7 @@ const SeedSelection: FC<{
                                 onClick={handleSubmit(onSubmit)}>
                                 Save
                             </Button>
+                            */}
                         </div>
                     </div>
                 </div>
