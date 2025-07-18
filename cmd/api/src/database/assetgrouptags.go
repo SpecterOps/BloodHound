@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -55,6 +56,7 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error)
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -238,9 +240,10 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	}
 
 	var tags model.AssetGroupTags
+
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE deleted_at IS NULL%s",
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE deleted_at IS NULL%s ORDER BY name ASC",
 			model.AssetGroupTag{}.TableName(),
 			sqlFilter.SQLString,
 		),
@@ -248,6 +251,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	).Find(&tags); result.Error != nil {
 		return model.AssetGroupTags{}, CheckError(result)
 	}
+
 	return tags, nil
 }
 
@@ -739,4 +743,31 @@ func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User,
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error) {
+	var selectors = model.AssetGroupTagSelectors{}
+
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = "WHERE " + sqlFilter.SQLString
+	}
+
+	limitStr := ""
+	if limit > 0 {
+		limitStr = "LIMIT " + strconv.Itoa(limit)
+	}
+
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s %s ORDER BY name ASC, asset_group_tag_id ASC, id ASC %s",
+			model.AssetGroupTagSelector{}.TableName(),
+			sqlFilter.SQLString,
+			limitStr,
+		),
+		sqlFilter.Params...,
+	).Scan(&selectors); result.Error != nil {
+		return model.AssetGroupTagSelectors{}, CheckError(result)
+	}
+
+	return selectors, nil
 }

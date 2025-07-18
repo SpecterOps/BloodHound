@@ -26,24 +26,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
-	baseItem := ein.IngestBase{
-		ObjectIdentifier: "ABC123",
-		Properties: map[string]any{
-			ad.MachineAccountQuota.String():                    "1",
-			ad.MinPwdLength.String():                           "1",
-			ad.PwdProperties.String():                          "1",
-			ad.PwdHistoryLength.String():                       "1",
-			ad.LockoutThreshold.String():                       "1",
-			ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): "false",
+func TestConvertDomainToNode_DomainInvalidProperties(t *testing.T) {
+	baseItem := ein.Domain{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "ABC123",
+			Properties: map[string]any{
+				ad.MachineAccountQuota.String():                    "1",
+				ad.MinPwdLength.String():                           "1",
+				ad.PwdProperties.String():                          "1",
+				ad.PwdHistoryLength.String():                       "1",
+				ad.LockoutThreshold.String():                       "1",
+				ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): "false",
+			},
+			Aces:           nil,
+			IsDeleted:      false,
+			IsACLProtected: false,
+			ContainedBy:    ein.TypedPrincipal{},
 		},
-		Aces:           nil,
-		IsDeleted:      false,
-		IsACLProtected: false,
-		ContainedBy:    ein.TypedPrincipal{},
 	}
 
-	result := ein.ConvertObjectToNode(baseItem, ad.Domain, time.Now().UTC())
+	result := ein.ConvertDomainToNode(baseItem, time.Now().UTC())
 	props := result.PropertyMap
 	assert.Contains(t, props, ad.MachineAccountQuota.String())
 	assert.Contains(t, props, ad.MinPwdLength.String())
@@ -58,23 +60,25 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 	assert.Equal(t, 1, props[ad.LockoutThreshold.String()])
 	assert.Equal(t, false, props[ad.ExpirePasswordsOnSmartCardOnlyAccounts.String()])
 
-	baseItem = ein.IngestBase{
-		ObjectIdentifier: "ABC123",
-		Properties: map[string]any{
-			ad.MachineAccountQuota.String():                    1,
-			ad.MinPwdLength.String():                           1,
-			ad.PwdProperties.String():                          1,
-			ad.PwdHistoryLength.String():                       1,
-			ad.LockoutThreshold.String():                       1,
-			ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): false,
+	baseItem = ein.Domain{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "ABC123",
+			Properties: map[string]any{
+				ad.MachineAccountQuota.String():                    1,
+				ad.MinPwdLength.String():                           1,
+				ad.PwdProperties.String():                          1,
+				ad.PwdHistoryLength.String():                       1,
+				ad.LockoutThreshold.String():                       1,
+				ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): false,
+			},
+			Aces:           nil,
+			IsDeleted:      false,
+			IsACLProtected: false,
+			ContainedBy:    ein.TypedPrincipal{},
 		},
-		Aces:           nil,
-		IsDeleted:      false,
-		IsACLProtected: false,
-		ContainedBy:    ein.TypedPrincipal{},
 	}
 
-	result = ein.ConvertObjectToNode(baseItem, ad.Domain, time.Now().UTC())
+	result = ein.ConvertDomainToNode(baseItem, time.Now().UTC())
 	props = result.PropertyMap
 	assert.Contains(t, props, ad.MachineAccountQuota.String())
 	assert.Contains(t, props, ad.MinPwdLength.String())
@@ -88,6 +92,39 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 	assert.Equal(t, 1, props[ad.PwdHistoryLength.String()])
 	assert.Equal(t, 1, props[ad.LockoutThreshold.String()])
 	assert.Equal(t, false, props[ad.ExpirePasswordsOnSmartCardOnlyAccounts.String()])
+}
+
+func TestConvertDomainToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	domainObject := ein.Domain{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertDomainToNode(domainObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestConvertOUToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	ouObject := ein.OU{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertOUToNode(ouObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestConvertContainerToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	containerObject := ein.Container{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertContainerToNode(containerObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
 }
 
 func TestParseDomainTrusts_TrustAttributes(t *testing.T) {

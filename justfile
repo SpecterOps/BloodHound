@@ -13,10 +13,10 @@ export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhou
 
 set positional-arguments
 
-# generate generic ingestible file with default CLI arguments
+# generate generic graph files
 [no-cd]
-graphify-ingest path="" outfile="":
-  @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outfile={{outfile}}
+bh-graphify path="" outpath="":
+  @go run github.com/specterops/bloodhound/packages/go/graphify --path={{path}} --outpath={{outpath}}
 
 # run st bernard directly
 stbernard *ARGS:

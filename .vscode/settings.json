@@ -2,7 +2,7 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "go.buildFlags": ["-tags=integration,serial_integration"],
+    "go.buildFlags": ["-tags=integration,serial_integration,slow_integration"],
     "go.formatTool": "goimports",
     "go.lintTool": "golangci-lint",
     "go.testEnvVars": {

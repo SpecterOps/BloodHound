@@ -9863,6 +9863,123 @@ func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	graphTestContext.UpdateNode(s.Computer1)
 }
 
+type ACLInheritanceHarness struct {
+	Domain1 *graph.Node
+	Domain2 *graph.Node
+	Domain3 *graph.Node
+
+	OU1 *graph.Node
+	OU2 *graph.Node
+	OU3 *graph.Node
+	OU4 *graph.Node
+	OU5 *graph.Node
+	OU6 *graph.Node
+
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+	Computer3 *graph.Node
+
+	Group1 *graph.Node
+	Group2 *graph.Node
+	Group3 *graph.Node
+
+	User1 *graph.Node
+	User2 *graph.Node
+	User3 *graph.Node
+
+	Container1 *graph.Node
+}
+
+func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
+	domain1SID := RandomDomainSID()
+	domain2SID := RandomDomainSID()
+	domain3SID := RandomDomainSID()
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1SID, false, false)
+	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2SID, false, false)
+	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3SID, false, false)
+
+	s.OU1 = graphTestContext.NewActiveDirectoryOU("OU1", domain1SID, false)
+	s.OU2 = graphTestContext.NewActiveDirectoryOU("OU2", domain1SID, false)
+	s.OU3 = graphTestContext.NewActiveDirectoryOU("OU3", domain1SID, false)
+	s.OU4 = graphTestContext.NewActiveDirectoryOU("OU4", domain2SID, false)
+	s.OU5 = graphTestContext.NewActiveDirectoryOU("OU5", domain2SID, false)
+	s.OU6 = graphTestContext.NewActiveDirectoryOU("OU6", domain2SID, false)
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1SID)
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain2SID)
+	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain3SID)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1SID)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain2SID)
+	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain3SID)
+
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domain1SID)
+	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domain1SID)
+	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domain1SID)
+
+	s.Container1 = graphTestContext.NewActiveDirectoryContainer("Container1", domain2SID)
+
+	s.Domain1.Properties.Set(ad.InheritanceHashes.String(), []string{"my_hash", "some_other_hash"})
+	s.OU4.Properties.Set(ad.InheritanceHashes.String(), []string{"my_hash_2", "some_other_hash_2"})
+	s.Domain3.Properties.Set(ad.InheritanceHashes.String(), []string{"my_hash_3", "some_other_hash_3"})
+
+	s.Domain2.Properties.Set(ad.InheritanceHashes.String(), []string{})
+	s.OU5.Properties.Set(ad.InheritanceHashes.String(), []string{})
+	s.OU6.Properties.Set(ad.InheritanceHashes.String(), []string{})
+
+	s.OU3.Properties.Set(ad.IsACLProtected.String(), true)
+	s.OU6.Properties.Set(ad.IsACLProtected.String(), true)
+
+	graphTestContext.UpdateNode(s.Domain1)
+	graphTestContext.UpdateNode(s.Domain2)
+	graphTestContext.UpdateNode(s.Domain3)
+	graphTestContext.UpdateNode(s.OU3)
+	graphTestContext.UpdateNode(s.OU4)
+	graphTestContext.UpdateNode(s.OU5)
+	graphTestContext.UpdateNode(s.OU6)
+
+	graphTestContext.NewRelationship(s.Domain1, s.OU1, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain1, s.OU3, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain1, s.Group1, ad.Contains)
+	graphTestContext.NewRelationship(s.OU1, s.OU2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU3, s.OU2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU2, s.Computer1, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain2, s.OU4, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain2, s.OU5, ad.Contains)
+	graphTestContext.NewRelationship(s.OU4, s.Container1, ad.Contains)
+	graphTestContext.NewRelationship(s.OU5, s.Container1, ad.Contains)
+	graphTestContext.NewRelationship(s.Container1, s.Computer2, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain3, s.OU6, ad.Contains)
+	graphTestContext.NewRelationship(s.OU6, s.Computer3, ad.Contains)
+
+	graphTestContext.NewRelationship(s.Group1, s.OU2, ad.GenericWrite)
+
+	graphTestContext.NewRelationship(s.User1, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
+		ad.IsACL:           true,
+		common.IsInherited: true,
+		ad.InheritanceHash: "my_hash",
+	}))
+	graphTestContext.NewRelationship(s.User2, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
+		ad.IsACL:           false,
+		common.IsInherited: true,
+		ad.InheritanceHash: "my_hash",
+	}))
+	graphTestContext.NewRelationship(s.User3, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
+		ad.IsACL: true,
+	}))
+	graphTestContext.NewRelationship(s.Group2, s.Computer2, ad.ReadLAPSPassword, graph.AsProperties(graph.PropertyMap{
+		ad.IsACL:           true,
+		common.IsInherited: true,
+		ad.InheritanceHash: "my_hash_2",
+	}))
+	graphTestContext.NewRelationship(s.Group3, s.Computer3, ad.ReadLAPSPassword, graph.AsProperties(graph.PropertyMap{
+		ad.IsACL:           true,
+		common.IsInherited: true,
+		ad.InheritanceHash: "my_hash_3",
+	}))
+}
+
 type AZPIMRolesHarness struct {
 	TenantNode *graph.Node
 
@@ -10184,4 +10301,5 @@ type HarnessDetails struct {
 	IngestRelationships                             IngestRelationships
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
+	ACLInheritanceHarness                           ACLInheritanceHarness
 }

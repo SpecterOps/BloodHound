@@ -831,7 +831,7 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	})
 }
 
-func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
+func TestDatabase_GetAssetGroupTagSelectorsBySelectorId(t *testing.T) {
 	var (
 		dbInst        = integration.SetupDB(t)
 		testCtx       = context.Background()
@@ -1049,4 +1049,39 @@ func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
 		assert.True(t, tag.DeletedAt.IsZero())
 		assert.EqualValues(t, i+1, tag.Position.ValueOrZero())
 	}
+}
+
+func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
+	var (
+		dbInst        = integration.SetupDB(t)
+		testCtx       = context.Background()
+		isDefault     = false
+		allowDisable  = true
+		autoCertify   = null.BoolFrom(false)
+		test1Selector = model.AssetGroupTagSelector{
+			Name:        "test selector name",
+			Description: "test description",
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+		test2Selector = model.AssetGroupTagSelector{
+			Name:        "test2 selector name",
+			Description: "test2 description",
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
+			},
+		}
+	)
+
+	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
+	require.NoError(t, err)
+
+	t.Run("returns all selectors", func(t *testing.T) {
+		items, err := dbInst.GetAssetGroupTagSelectors(testCtx, model.SQLFilter{}, 0)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+	})
 }
