@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,24 +37,22 @@ func TestDatapipeStatus(t *testing.T) {
 
 	status, err := db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)
-	require.Equal(t, model.DatapipeStatusIdle, status.Status)
+	assert.Equal(t, model.DatapipeStatusIdle, status.Status)
 
 	oldAnalysisTime := status.LastAnalysisRunAt
-
-	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusAnalyzing, false)
-	require.Nil(t, err)
-
-	status, err = db.GetDatapipeStatus(testCtx)
-	require.Nil(t, err)
-	require.Equal(t, model.DatapipeStatusAnalyzing, status.Status)
-	require.True(t, oldAnalysisTime.Before(status.LastAnalysisRunAt))
-
-	// when `SetDatapipeStatus` is called with `true` for the `updateAnalysisTime` parameter, assert that the time is no longer null
-	require.True(t, status.LastCompleteAnalysisAt.IsZero())
-	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusIdle, true)
+	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusAnalyzing)
 	require.Nil(t, err)
 	status, err = db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)
-	require.True(t, !status.LastCompleteAnalysisAt.IsZero())
+	assert.Equal(t, model.DatapipeStatusAnalyzing, status.Status)
+	assert.True(t, oldAnalysisTime.Before(status.LastAnalysisRunAt))
+	assert.True(t, status.LastCompleteAnalysisAt.IsZero())
 
+	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusIdle)
+	require.Nil(t, err)
+	err = db.UpdateLastAnalysisCompleteTime(testCtx)
+	require.Nil(t, err)
+	status, err = db.GetDatapipeStatus(testCtx)
+	require.Nil(t, err)
+	assert.True(t, !status.LastCompleteAnalysisAt.IsZero())
 }

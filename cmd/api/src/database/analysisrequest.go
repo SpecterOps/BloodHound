@@ -32,7 +32,7 @@ type AnalysisRequestData interface {
 	DeleteAnalysisRequest(ctx context.Context) error
 	GetAnalysisRequest(ctx context.Context) (model.AnalysisRequest, error)
 	HasAnalysisRequest(ctx context.Context) bool
-	HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest)
+	HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool)
 	RequestAnalysis(ctx context.Context, requester string) error
 	RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error
 }
@@ -60,18 +60,18 @@ func (s *BloodhoundDB) HasAnalysisRequest(ctx context.Context) bool {
 	return exists
 }
 
-func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest) {
+func (s *BloodhoundDB) HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool) {
 	var record model.AnalysisRequest
 
 	tx := s.db.WithContext(ctx).Raw(`select * from analysis_request_switch where request_type = ? limit 1;`, model.AnalysisRequestDeletion).First(&record)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			return false, record
+			return record, false
 		}
 		slog.ErrorContext(ctx, fmt.Sprintf("Error querying deletion request: %v", tx.Error))
-		return false, record
+		return record, false
 	}
-	return true, record
+	return record, true
 }
 
 // setAnalysisRequest inserts a row into analysis_request_switch for both a collected graph data deletion request or an analysis request.
