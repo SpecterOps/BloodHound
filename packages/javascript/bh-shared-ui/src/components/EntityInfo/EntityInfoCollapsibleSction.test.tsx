@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '../../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 describe('EntityInfoCollapsibleSection', () => {
@@ -45,5 +45,30 @@ describe('EntityInfoCollapsibleSection', () => {
         await waitFor(() =>
             expect(screen.getByText('An unknown error occurred during the request.')).toBeInTheDocument()
         );
+    });
+
+    it('renders section when no errors occur', async () => {
+        const user = userEvent.setup();
+        const testLabel = 'Section';
+        const testCount = 100;
+        const testOnChange = vi.fn();
+        const testIsLoading = false;
+        const isExpanded = true;
+
+        render(
+            <EntityInfoCollapsibleSection
+                label={testLabel}
+                count={testCount}
+                onChange={testOnChange}
+                isLoading={testIsLoading}
+                isExpanded={isExpanded}
+            />
+        );
+
+        expect(screen.getByText(testLabel)).toBeInTheDocument();
+        user.click(screen.getByText(testLabel));
+        expect(screen.queryByText('An unknown error occurred during the request.')).not.toBeInTheDocument();
+        expect(screen.getByText('Section')).toBeInTheDocument();
+        expect(screen.getByText('100')).toBeInTheDocument();
     });
 });
