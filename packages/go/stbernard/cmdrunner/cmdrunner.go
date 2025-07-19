@@ -153,11 +153,15 @@ func run(cmd *exec.Cmd, result *ExecutionResult) error {
 		var exitErr *exec.ExitError
 
 		if errors.As(err, &exitErr) {
-			slog.Error("Command run failed", slog.String("cwd", cmd.Dir), slog.String("command", cmd.String()))
 			// Avoid double logging
 			if !quietDisabled {
 				// Send the command's logs to stderr for the user to know what happened
 				fmt.Fprint(os.Stderr, result.ErrorOutput)
+				// NOTE: it may be better to use context and a custom slog handler to gather this information and allow the caller to
+				// determine how to log. This would also mean that moving these attributes out of this if statement would make sense.
+				// The goal here is to give better context about what the exact command that failed was, but without context and
+				// an slog handler to help write the fields higher up, this is best effort.
+				slog.Error("Command run failed", slog.String("cwd", cmd.Dir), slog.String("command", cmd.String()))
 			}
 			return newExecutionError(result, exitErr)
 		}

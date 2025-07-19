@@ -17,6 +17,8 @@
 package integration
 
 import (
+	"testing"
+
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/dawgs/graph"
 )
@@ -38,22 +40,7 @@ func (s *GraphContext) WriteTransaction(ctx test.Context, delegate graph.Transac
 	test.RequireNilErr(ctx, s.Database.WriteTransaction(ctx, delegate))
 }
 
-func (s *GraphContext) wipe(ctx test.Context) {
-	s.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if nodeCount, err := tx.Nodes().Count(); err != nil {
-			return err
-		} else if nodeCount > 0 {
-			return tx.Nodes().Delete()
-		}
-
-		return nil
-	})
-}
-
 func (s *GraphContext) Begin(ctx test.Context) {
-	// Clear the graph to ensure a clean slate
-	s.wipe(ctx)
-
 	// Assert the graph schema before continuing
 	test.RequireNilErr(ctx, s.Database.AssertSchema(ctx, s.schema))
 }
@@ -64,10 +51,14 @@ func (s *GraphContext) End(t test.Context) {
 	}
 }
 
-func NewGraphContext(ctx test.Context, schema graph.Schema) *GraphContext {
+// NewGraphContext creates a new GraphContext
+//
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
+func NewGraphContext(t *testing.T, ctx test.Context, schema graph.Schema) *GraphContext {
 	graphContext := &GraphContext{
 		schema:   schema,
-		Database: OpenGraphDB(ctx, schema),
+		Database: OpenGraphDB(t, schema),
 	}
 
 	// Initialize the graph context

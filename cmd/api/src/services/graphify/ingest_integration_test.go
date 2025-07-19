@@ -39,9 +39,8 @@ import (
 
 // verify that nodes and edges are created or updated based on existing graph state
 func Test_IngestRelationships(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	t.Run("Create rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -86,6 +85,7 @@ func Test_IngestRelationships(t *testing.T) {
 	})
 
 	t.Run("Update rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -140,6 +140,7 @@ func Test_IngestRelationships(t *testing.T) {
 	})
 
 	t.Run("Create rel using source/target nodes that specify objectid.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -184,6 +185,7 @@ func Test_IngestRelationships(t *testing.T) {
 	})
 
 	t.Run("Update rel using source/target nodes that specify objectid.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -238,6 +240,7 @@ func Test_IngestRelationships(t *testing.T) {
 	})
 
 	t.Run("Create rel. Source/target nodes' objectid's dont exist. Both nodes get created and rel gets created.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -301,6 +304,7 @@ func Test_IngestRelationships(t *testing.T) {
 	})
 
 	t.Run("Dont create rel. Source/target nodes' have names that don't resolve to objectids. Neither node gets created and rel creation is skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -346,9 +350,7 @@ func Test_IngestRelationships(t *testing.T) {
 // verifies that files that bypassed validation controls due to being uploaded as zips receive validation attention in the datapipe,
 // and that invalid files are not ingested into the graph
 func Test_ReadFileForIngest(t *testing.T) {
-
 	var (
-		testContext     = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		ingestSchema, _ = upload.LoadIngestSchema()
 		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world"}}]}}`))
 		// invalidReader simulates reading a file that doesn't pass jsonschema validation against the nodes schema.
@@ -362,6 +364,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 	)
 
 	t.Run("happy path. a file uploaded as a zip passes validation and is written to the graph", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
 			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
 			err := graphify.ReadFileForIngest(timestampedBatch, validReader, readOptions)
@@ -397,6 +400,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 	})
 
 	t.Run("failure path. a file uploaded as a zip fails validation and nothing is written to the graph", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 				timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())

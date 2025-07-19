@@ -65,7 +65,7 @@ func TestWorkspace(cwd string, modPath string, profileDir string, env environmen
 			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, integrationConfigPath)
 		}
 
-		args = append(args, []string{"-p", "1", "-tags", tags}...)
+		args = append(args, []string{"-tags", tags}...)
 	}
 
 	modName, err := getModuleName(modPath)

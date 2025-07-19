@@ -23,11 +23,10 @@ import (
 	"context"
 	"testing"
 
-	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -38,134 +37,151 @@ import (
 )
 
 func TestHybridAttackPaths(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	t.Run("SyncedEdgesCreatedAndLinkExistingNodes", func(t *testing.T) {
+		// ADUser.ObjectID matches AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
+		// SyncedToEntraUser and SyncedToADUser edges should be created and link the two nodes
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				adUserObjectID := integration.RandomObjectID(t)
+				azUserOnPremID := adUserObjectID
+				harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true, false)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-	// ADUser.ObjectID matches AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
-	// SyncedToEntraUser and SyncedToADUser edges should be created and link the two nodes
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			adUserObjectID := integration.RandomObjectID(t)
-			azUserOnPremID := adUserObjectID
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true, false)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+				}
+				operation.Done()
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
-			}
-			operation.Done()
+				verifyHybridPaths(t, db, harness, true, true)
+			},
+		)
+	})
 
-			verifyHybridPaths(t, db, harness, true, true)
-		},
-	)
+	t.Run("SyncedEdgesNotCreated", func(t *testing.T) {
 
-	// ADUser.ObjectID do NOT match as AZUser.OnPremID is null, AZUser.OnPremSyncEnabled is false
-	// SyncedToEntraUser and SyncedToADUser edges should NOT be created
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			adUserObjectID := integration.RandomObjectID(t)
-			azUserOnPremID := ""
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true, false)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+		// ADUser.ObjectID do NOT match as AZUser.OnPremID is null, AZUser.OnPremSyncEnabled is false
+		// SyncedToEntraUser and SyncedToADUser edges should NOT be created
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				adUserObjectID := integration.RandomObjectID(t)
+				azUserOnPremID := ""
+				harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true, false)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
-			}
-			operation.Done()
+				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+				}
+				operation.Done()
 
-			verifyHybridPaths(t, db, harness, false, true)
-		},
-	)
+				verifyHybridPaths(t, db, harness, false, true)
+			},
+		)
+	})
 
-	// ADUser.ObjectID matches AZUser.OnPremID, AZUser.OnPremSyncEnabled is false
-	// SyncedToEntraUser and SyncedToADUser edges should NOT be created
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			adUserObjectID := integration.RandomObjectID(t)
-			azUserOnPremID := adUserObjectID
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true, false)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+	t.Run("OnPremSyncEnabled False", func(t *testing.T) {
+		// ADUser.ObjectID matches AZUser.OnPremID, AZUser.OnPremSyncEnabled is false
+		// SyncedToEntraUser and SyncedToADUser edges should NOT be created
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				adUserObjectID := integration.RandomObjectID(t)
+				azUserOnPremID := adUserObjectID
+				harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, false, true, false)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
-			}
-			operation.Done()
+				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+				}
+				operation.Done()
 
-			verifyHybridPaths(t, db, harness, false, true)
-		},
-	)
+				verifyHybridPaths(t, db, harness, false, true)
+			},
+		)
+	})
 
-	// ADUser does not exist. AZUser has OnPremID and OnPremSyncEnabled=true
-	// A new ADUser node should be created. SyncedToADUser and SyncedToEntraUser edges should be created and linked to new ADUser node.
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			adUserObjectID := ""
-			azUserOnPremID := integration.RandomObjectID(t)
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false, false)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+	t.Run("SyncedEdgesCreatedWithPlaceholderADNode", func(t *testing.T) {
+		// ADUser does not exist. AZUser has OnPremID and OnPremSyncEnabled=true
+		// A new ADUser node should be created. SyncedToADUser and SyncedToEntraUser edges should be created and linked to new ADUser node.
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				adUserObjectID := ""
+				azUserOnPremID := integration.RandomObjectID(t)
+				harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false, false)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
-			}
-			operation.Done()
+				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+				}
+				operation.Done()
 
-			verifyHybridPaths(t, db, harness, true, true)
-		},
-	)
+				verifyHybridPaths(t, db, harness, true, true)
+			},
+		)
+	})
 
-	// ADUser does not exist, but the objectid from a selected AZUser exists in the graph. Selected AZUser has OnPremID and
-	// OnPremSyncEnabled=true
-	// The existing node should be used to create SyncedToADUser and SyncedToEntraUser edges.
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			adUserObjectID := ""
-			azUserOnPremID := integration.RandomObjectID(t)
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false, true)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+	t.Run("CreateSyncedEdges NonUserADNode", func(t *testing.T) {
+		// ADUser does not exist, but the objectid from a selected AZUser exists in the graph. Selected AZUser has OnPremID and
+		// OnPremSyncEnabled=true
+		// The existing node should be used to create SyncedToADUser and SyncedToEntraUser edges.
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				adUserObjectID := ""
+				azUserOnPremID := integration.RandomObjectID(t)
+				harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, false, true)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
-			}
-			operation.Done()
+				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+				}
+				operation.Done()
 
-			verifyHybridPaths(t, db, harness, true, false)
-		},
-	)
+				verifyHybridPaths(t, db, harness, true, false)
+			},
+		)
+	})
 
-	// ADUser.ObjectID does NOT match AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
-	// SyncedToEntraUser and SyncedToADUser edges should be created, but a new ADUser node should be created with ObjectID that matches AZUser.OnPremID
-	testContext.DatabaseTestWithSetup(
-		func(harness *integration.HarnessDetails) error {
-			adUserObjectID := integration.RandomObjectID(t)
-			azUserOnPremID := integration.RandomObjectID(t)
-			harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true, false)
-			return nil
-		},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
+	t.Run("CreateSyncedEdges ObjectID No Match OnPremID", func(t *testing.T) {
+		// ADUser.ObjectID does NOT match AZUser.OnPremID, AZUser.OnPremSyncEnabled is true
+		// SyncedToEntraUser and SyncedToADUser edges should be created, but a new ADUser node should be created with ObjectID that matches AZUser.OnPremID
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				adUserObjectID := integration.RandomObjectID(t)
+				azUserOnPremID := integration.RandomObjectID(t)
+				harness.HybridAttackPaths.Setup(testContext, adUserObjectID, azUserOnPremID, true, true, false)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				operation := analysis.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-			if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
-				t.Fatalf("failed post processing for hybrid attack paths: %v", err)
-			}
-			operation.Done()
+				if _, err := hybrid.PostHybrid(context.Background(), db); err != nil {
+					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
+				}
+				operation.Done()
 
-			verifyHybridPaths(t, db, harness, true, true)
-		},
-	)
+				verifyHybridPaths(t, db, harness, true, true)
+			},
+		)
+	})
 }
 
 func verifyHybridPaths(t *testing.T, db graph.Database, harness integration.HarnessDetails, shouldHaveEdges bool, shouldHaveUserNode bool) {

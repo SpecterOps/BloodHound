@@ -95,6 +95,10 @@
         "severity": "minor"
       },
       {
+        "text": "SA1019:",
+        "severity": "minor"
+      },
+      {
         "text": "QF([0-9]+):",
         "severity": "minor"
       }

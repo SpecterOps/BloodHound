@@ -145,10 +145,8 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 }
 
 func TestPostNTLMRelaySMB(t *testing.T) {
-	// TODO: Add some negative tests here
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	t.Run("NTLMCoerceAndRelayNTLMToSMB Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 			return nil
@@ -207,6 +205,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToSMB Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToSMBSelfRelay.Setup(testContext)
 			return nil
@@ -329,9 +328,8 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 }
 
 func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	t.Run("NTLMCoerceAndRelayNTLMToLDAP Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToLDAP.Setup(testContext)
 			return nil
@@ -411,6 +409,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAPS Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToLDAPS.Setup(testContext)
 			return nil
@@ -486,6 +485,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAPS Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayToLDAPSSelfRelay.Setup(testContext)
 			return nil
@@ -540,6 +540,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAP Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayToLDAPSelfRelay.Setup(testContext)
 			return nil
