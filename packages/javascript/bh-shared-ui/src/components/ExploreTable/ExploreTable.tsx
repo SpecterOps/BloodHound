@@ -27,9 +27,9 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
-    className: 'w-[default] w-full',
-    // className: 'w-[default] w-full table-fixed',
-    // disableDefaultOverflowAuto: true,
+    // className: 'w-[default] w-full',
+    className: 'w-[default] w-full table-fixed',
+    disableDefaultOverflowAuto: true,
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
@@ -90,9 +90,8 @@ const ExploreTable = ({
                 'h-[calc(100%-72px)]': isExpanded,
                 'w-[calc(100%-450px)]': selectedNode,
             })}>
-            <div className='explore-table-container w-full h-full overflow-hidden'>
+            <div className='explore-table-container w-full h-full overflow-hidden grid'>
                 <TableControls
-                    className='h-[72px]'
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns || requiredColumns}
                     pinnedColumns={requiredColumns}
@@ -105,7 +104,7 @@ const ExploreTable = ({
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable
-                    className='h-full *:h-[calc(100%-72px)] overflow-auto'
+                    className='overflow-auto'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}
