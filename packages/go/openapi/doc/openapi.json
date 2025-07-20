@@ -7107,6 +7107,46 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetSavedQueryPermissions",
+        "summary": "Retrieves saved query permissions for provided query id",
+        "description": "Retrieves saved query permissions for provided query id",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.saved-queries-permissions.response"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSavedQueryPermissions",
         "summary": "Revokes permission of a saved query from users",
@@ -18442,6 +18482,26 @@
             }
           }
         ]
+      },
+      "model.saved-queries-permissions.response": {
+        "type": "object",
+        "properties": {
+          "shared_to_user_ids": {
+            "type": "array",
+            "items": [
+              {
+                "$ref": "#/components/schemas/model.components.uuid"
+              }
+            ]
+          },
+          "query_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "public": {
+            "type": "boolean"
+          }
+        }
       },
       "model.saved-queries-permissions": {
         "allOf": [
