@@ -32,10 +32,11 @@ import SaveQueryDialog from './SaveQueryDialog';
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
+    onCypherSearch: () => void;
     performSearch: (query?: string) => void;
 };
 
-const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
+const CypherSearch = ({ cypherSearchState, onCypherSearch }: { cypherSearchState: CypherSearchState }) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
 
@@ -57,6 +58,10 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const handleCypherSearch = () => {
         if (cypherQuery) {
             performSearch();
+        }
+
+        if (typeof onCypherSearch === 'function') {
+            onCypherSearch();
         }
     };
 

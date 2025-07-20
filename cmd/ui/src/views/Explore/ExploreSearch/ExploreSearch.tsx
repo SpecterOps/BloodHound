@@ -28,13 +28,15 @@ import {
     PathfindingSearch,
     cn,
     encodeCypherQuery,
-    useCypherSearch,
+    requiredColumns,
     useExploreParams,
     useNodeSearch,
     usePathfindingFilters,
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
+import { setSelectedExploreTableColumns } from 'src/ducks/global/actions';
+import { useAppDispatch } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -76,6 +78,7 @@ const ExploreSearch: React.FC = () => {
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
     const cypherSearchState = useCypherSearch();
+    const dispatch = useAppDispatch();
     // We can move this back down into the filter modal once we remove the redux implementation
     const pathfindingFilterState = usePathfindingFilters();
 
@@ -147,6 +150,8 @@ const ExploreSearch: React.FC = () => {
         return params;
     };
 
+    const resetSelectedColumns = () => dispatch(setSelectedExploreTableColumns(requiredColumns));
+
     return (
         <div
             data-testid='explore_search-container'
@@ -190,7 +195,7 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <CypherSearch cypherSearchState={cypherSearchState} />,
+                        <CypherSearch cypherSearchState={cypherSearchState} onCypherSearch={resetSelectedColumns} />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
