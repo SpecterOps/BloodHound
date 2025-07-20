@@ -37,7 +37,10 @@ get:
       content:
         application/json:
           schema:
-            $ref: './../schemas/model.saved-queries-permissions.response.yaml'
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.saved-queries-permissions.response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
