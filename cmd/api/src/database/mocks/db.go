@@ -1629,6 +1629,21 @@ func (mr *MockDatabaseMockRecorder) GetSavedQuery(ctx, savedQueryID any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetSavedQuery), ctx, savedQueryID)
 }
 
+// GetSavedQueryPermissions mocks base method.
+func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueryPermissions", ctx, queryID)
+	ret0, _ := ret[0].([]model.SavedQueriesPermissions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueryPermissions indicates an expected call of GetSavedQueryPermissions.
+func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
+}
+
 // GetScopeForSavedQuery mocks base method.
 func (m *MockDatabase) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (database.SavedQueryScopeMap, error) {
 	m.ctrl.T.Helper()

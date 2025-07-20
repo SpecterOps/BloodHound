@@ -24,11 +24,12 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T) {
@@ -342,4 +343,36 @@ func TestSavedQueriesPermissions_IsSavedQuerySharedToUser(t *testing.T) {
 	isShared, err := dbInst.IsSavedQuerySharedToUser(testCtx, query.ID, user1.ID)
 	require.NoError(t, err)
 	assert.True(t, isShared)
+}
+
+func TestSavedQueriesPermissions_GetSavedQueryPermissions(t *testing.T) {
+	var (
+		testCtx                       = context.Background()
+		dbInst, user1                 = initAndCreateUser(t)
+		user2                         = createUser(t, dbInst, user2Principal)
+		expectedSavedQueryPermissions = []model.SavedQueriesPermissions{{
+			SharedToUserID: uuid.NullUUID{
+				UUID:  user2.ID,
+				Valid: true,
+			},
+			QueryID: 1,
+			Public:  false,
+			BigSerial: model.BigSerial{
+				ID: 1,
+			},
+		}}
+	)
+
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Test Description")
+	require.NoError(t, err)
+	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
+	require.NoError(t, err)
+	actualSavedQueryPermissions, err := dbInst.GetSavedQueryPermissions(testCtx, query.ID)
+	require.NoError(t, err)
+	assert.Equal(t, len(expectedSavedQueryPermissions), len(actualSavedQueryPermissions))
+	for idx, _ := range expectedSavedQueryPermissions {
+		expectedSavedQueryPermissions[idx].CreatedAt = actualSavedQueryPermissions[idx].CreatedAt
+		expectedSavedQueryPermissions[idx].UpdatedAt = actualSavedQueryPermissions[idx].UpdatedAt
+		assert.Equal(t, expectedSavedQueryPermissions[idx], actualSavedQueryPermissions[idx])
+	}
 }
