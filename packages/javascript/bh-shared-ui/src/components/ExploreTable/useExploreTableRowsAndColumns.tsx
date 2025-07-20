@@ -20,7 +20,6 @@ import { Tooltip } from '@mui/material';
 import { StyledGraphEdge } from 'js-client-library';
 import { isEmpty } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { cn } from '../../utils';
 import {
     isSmallColumn,
     REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
@@ -130,18 +129,12 @@ const useExploreTableRowsAndColumns = ({
                 size: isSmallColumn(key, firstRowCellValue) ? 100 : 250,
                 cell: (info) => {
                     const value = info.getValue();
-                    const useIcon = isSmallColumn(key, value);
 
                     return (
                         <Tooltip
                             title={<p>{info.getValue()}</p>}
                             disableHoverListener={key === 'nodetype' || isEmpty(value)}>
-                            <div
-                                data-testid={`table-cell-${key}`}
-                                className={cn('truncate', {
-                                    'explore-table-cell-icon': useIcon,
-                                    'explore-table-cell-string': !useIcon,
-                                })}>
+                            <div data-testid={`table-cell-${key}`} className='truncate'>
                                 <ExploreTableDataCell value={value} columnKey={key?.toString()} />
                             </div>
                         </Tooltip>
@@ -158,6 +151,7 @@ const useExploreTableRowsAndColumns = ({
             columnHelper.accessor('', {
                 id: 'action-menu',
                 size: 50,
+                maxSize: 50,
                 cell: ({ row }) => (
                     <div
                         data-testid='kebab-menu'
@@ -215,27 +209,31 @@ const useExploreTableRowsAndColumns = ({
         [allColumnDefintions, selectedColumns]
     );
 
-    const sortedColumnDefinitions = useMemo(
-        () =>
-            selectedColumnDefinitions.sort((a, b) => {
-                const idA = a?.id || '';
-                const idB = b?.id || '';
-                const aIsRequired = requiredColumns[idA];
-                const bIsRequired = requiredColumns[idB];
-                if (aIsRequired) {
-                    if (bIsRequired) {
-                        return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
-                            REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
-                            ? 1
-                            : -1;
-                    }
-                    return -1;
+    const sortedColumnDefinitions = useMemo(() => {
+        const columnDefs = selectedColumnDefinitions.sort((a, b) => {
+            const idA = a?.id || '';
+            const idB = b?.id || '';
+            const aIsRequired = requiredColumns[idA];
+            const bIsRequired = requiredColumns[idB];
+            if (aIsRequired) {
+                if (bIsRequired) {
+                    return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
+                        REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
+                        ? 1
+                        : -1;
                 }
+                return -1;
+            }
 
-                return 1;
-            }),
-        [selectedColumnDefinitions]
-    );
+            return 1;
+        });
+
+        if (columnDefs[columnDefs.length - 1]) {
+            columnDefs[columnDefs.length - 1].size = Infinity;
+        }
+
+        return columnDefs;
+    }, [selectedColumnDefinitions]);
 
     const tableColumns = useMemo(
         () => [kebabColumDefinition, ...sortedColumnDefinitions],
