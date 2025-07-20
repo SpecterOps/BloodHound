@@ -40,7 +40,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleNodeLabels: () => void;
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
-    isExploreTableSelected: boolean;
+    isExploreTableSelected?: boolean;
     layoutOptions: T;
     selectedLayout: T[number];
     showNodeLabels: boolean;

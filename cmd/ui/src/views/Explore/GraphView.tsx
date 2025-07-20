@@ -230,8 +230,8 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
-                    layoutOptions={baseGraphLayouts}
                     isExploreTableSelected={isExploreTableSelected}
+                    layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}

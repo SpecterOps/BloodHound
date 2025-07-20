@@ -56,7 +56,7 @@ const ExploreTable = ({
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // @ts-ignore
     const [isPending, startTransition] = useTransition();
 
     const handleSearchInputChange = useCallback(
