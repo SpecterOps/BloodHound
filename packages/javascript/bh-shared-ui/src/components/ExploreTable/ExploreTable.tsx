@@ -28,6 +28,7 @@ type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
     className: 'w-[default] w-full',
+    // className: 'w-[default] w-full table-fixed',
     // disableDefaultOverflowAuto: true,
 };
 
