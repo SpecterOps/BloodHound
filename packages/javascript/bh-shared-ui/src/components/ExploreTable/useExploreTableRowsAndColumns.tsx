@@ -137,6 +137,7 @@ const useExploreTableRowsAndColumns = ({
                             title={<p>{info.getValue()}</p>}
                             disableHoverListener={key === 'nodetype' || isEmpty(value)}>
                             <div
+                                data-testid={`table-cell-${key}`}
                                 className={cn('truncate', {
                                     'explore-table-cell-icon': useIcon,
                                     'explore-table-cell-string': !useIcon,
@@ -158,12 +159,13 @@ const useExploreTableRowsAndColumns = ({
                 id: 'action-menu',
                 size: 50,
                 cell: ({ row }) => (
-                    <div className='explore-table-cell-icon h-full flex justify-center items-center'>
+                    <div
+                        data-testid='kebab-menu'
+                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        className='explore-table-cell-icon h-full flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
-                            data-testid='kebab-menu'
                             className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'
-                            onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
                         />
                     </div>
                 ),

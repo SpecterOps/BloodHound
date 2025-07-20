@@ -13,8 +13,15 @@ const downloadCallbackSpy = vi.fn();
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
 
+const getFirstCellOfType = (type: string) => screen.getAllByTestId(`table-cell-${type}`)[0];
+
 const WrappedExploreTable = () => {
-    const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>();
+    const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
+        nodetype: true,
+        isTierZero: true,
+        name: true,
+        objectid: true,
+    });
     const [selectedNode, setSelectedNode] = useState<string>();
 
     return (
@@ -47,8 +54,8 @@ describe('ExploreTable', async () => {
         await setup();
         expect(screen.getByText('10 results')).toBeInTheDocument();
         expect(screen.getByText('Object ID')).toBeInTheDocument();
-        expect(screen.getByText('Type')).toBeInTheDocument();
-        expect(screen.getByText('Display Name')).toBeInTheDocument();
+        expect(screen.getByText('Nodetype')).toBeInTheDocument();
+        expect(screen.getByText('Name')).toBeInTheDocument();
         expect(screen.getByText('CERTMAN@PHANTOM.CORP')).toBeInTheDocument();
         expect(screen.getByText('S-1-5-21-2697957641-2271029196-387917394-2201')).toBeInTheDocument();
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
@@ -82,35 +89,28 @@ describe('ExploreTable', async () => {
     it('Clicking header allows user to sort by column', async () => {
         const { user } = await setup();
 
-        const tableCells = screen.getAllByRole('cell');
-
-        // A bit brittle, but as long as the component remains 'table shaped', this should work
-        const firstDisplayNameCell = tableCells[3];
-
         // Unsorted first display name cell
-        expect(firstDisplayNameCell).toHaveTextContent('CERTMAN@PHANTOM.CORP');
+        expect(getFirstCellOfType('name')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
-        await user.click(screen.getByText('Display Name'));
+        await user.click(screen.getByText('Name'));
 
         // Alphabetically sorted first display name cell
-        expect(firstDisplayNameCell).toHaveTextContent('ALICE@PHANTOM.CORP');
+        expect(getFirstCellOfType('name')).toHaveTextContent('ALICE@PHANTOM.CORP');
 
-        await user.click(screen.getByText('Display Name'));
+        await user.click(screen.getByText('Name'));
 
         // Reverse Alphabetically sorted first display name cell
-        expect(firstDisplayNameCell).toHaveTextContent('T1_TONYMONTANA@PHANTOM.CORP');
+        expect(getFirstCellOfType('name')).toHaveTextContent('T1_TONYMONTANA@PHANTOM.CORP');
 
         await user.click(screen.getByText('Object ID'));
 
-        const firstObjectIdCell = tableCells[2];
-
         // Descending sorted first object id cell
-        expect(firstObjectIdCell).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2110');
+        expect(getFirstCellOfType('objectid')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2110');
 
         await user.click(screen.getByText('Object ID'));
 
         // Ascending sorted first object id cell
-        expect(firstObjectIdCell).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-501');
+        expect(getFirstCellOfType('objectid')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-501');
     });
 
     it('Expand button causes table to expand to full height', async () => {
@@ -147,7 +147,7 @@ describe('ExploreTable', async () => {
         expect(closeCallbackSpy).toBeCalled();
     });
 
-    it.only('Typing in the search bar filters the results', async () => {
+    it('Typing in the search bar filters the results', async () => {
         const { user } = await setup();
 
         const SVC_DOMAIN_NAME = 'SVC_DOMAINJOIN@PHANTOM.CORP';

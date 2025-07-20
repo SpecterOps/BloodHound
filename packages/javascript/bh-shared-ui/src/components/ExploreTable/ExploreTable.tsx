@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
-import { ChangeEvent, memo, useCallback, useMemo, useState, useTransition } from 'react';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
@@ -27,7 +27,7 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
-    className: 'w-[default] w-full table-fixed',
+    className: 'w-[default] w-full',
     // disableDefaultOverflowAuto: true,
 };
 
@@ -56,15 +56,10 @@ const ExploreTable = ({
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
-    // @ts-ignore
-    const [isPending, startTransition] = useTransition();
 
     const handleSearchInputChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
-            // This allows the user to keep typing as the fitlering computes
-            startTransition(() => {
-                setSearchInput(e.target.value);
-            });
+            setSearchInput(e.target.value);
         },
         [setSearchInput]
     );

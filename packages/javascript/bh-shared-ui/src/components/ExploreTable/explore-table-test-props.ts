@@ -560,6 +560,8 @@ export default {
     selectedNode: null,
     open: true,
     allColumnKeys: [
+        'nodetype',
+        'isTierZero',
         'admincount',
         'description',
         'displayname',
