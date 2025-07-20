@@ -1822,8 +1822,16 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expect.responseError, errWrapper.Error())
 			} else {
-				var actualSavedQueryPermissions v2.SavedQueryPermissionResponse
-				err = json.Unmarshal(response.Body.Bytes(), &actualSavedQueryPermissions)
+				var (
+					actualSavedQueryPermissions v2.SavedQueryPermissionResponse
+					basicResponse               api.BasicResponse
+				)
+				err = json.Unmarshal(response.Body.Bytes(), &basicResponse)
+				require.NoError(t, err)
+				basicResponseDataJson, err := basicResponse.Data.MarshalJSON()
+				require.NoError(t, err)
+				err = json.Unmarshal(basicResponseDataJson, &actualSavedQueryPermissions)
+				require.NoError(t, err)
 				assert.Equal(t, tt.expect.responsePermissions, actualSavedQueryPermissions)
 			}
 		})

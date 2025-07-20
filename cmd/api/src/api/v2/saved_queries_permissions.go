@@ -122,7 +122,7 @@ func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, reques
 				savedQueryPermissionResponse.AppendUserId(savedQueryPermission.SharedToUserID)
 			}
 		}
-		api.WriteJSONResponse(request.Context(), savedQueryPermissionResponse, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), savedQueryPermissionResponse, http.StatusOK, response)
 	}
 }
 
