@@ -2951,3 +2951,253 @@ func TestResources_ExportSavedQueries(t *testing.T) {
 		})
 	}
 }
+
+func TestResources_GetSavedQuery(t *testing.T) {
+	t.Parallel()
+
+	// testQuery1 owner
+	user1Id, err := uuid2.NewV4()
+	require.NoError(t, err)
+
+	user2Id, err := uuid2.NewV4()
+	require.NoError(t, err)
+
+	// Setup
+	var (
+		mockCtrl        = gomock.NewController(t)
+		mockDB          = mocks.NewMockDatabase(mockCtrl)
+		testSavedQuery1 = model.SavedQuery{
+			UserID:      user1Id.String(),
+			Name:        "Test Query 1",
+			Query:       "Match (n:Base) return n",
+			Description: "test query",
+			BigSerial: model.BigSerial{
+				ID: 1,
+			},
+		}
+		testSavedQuery2 = model.SavedQuery{
+			UserID:      "userid2",
+			Name:        "Test2Query",
+			Query:       "match (n:Base) return n",
+			Description: "test description 2",
+			BigSerial: model.BigSerial{
+				ID: 2,
+			},
+		}
+	)
+
+	defer mockCtrl.Finish()
+
+	type expected struct {
+		responseCode  int
+		responseQuery model.SavedQuery
+		responseError string
+	}
+
+	type fields struct {
+		setupMocks func(t *testing.T, mock *mocks.MockDatabase)
+	}
+
+	type args struct {
+		buildRequest func() (*http.Request, error)
+	}
+
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		expect expected
+	}{
+		{
+			name: "fail - not a user",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					return http.NewRequest(http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusBadRequest,
+				responseError: "Code: 400 - errors: No associated user found",
+			},
+		},
+		{
+			name: "fail - saved query URI parameter not an int",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/not-an-int/permissions", nil)
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusBadRequest,
+				responseError: "Code: 400 - errors: id is malformed.",
+			},
+		},
+		{
+			name: "fail - database error retrieving saved query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQuery{}, fmt.Errorf("test error"))
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusInternalServerError,
+				responseError: "Code: 500 - errors: an internal error has occurred that is preventing the service from servicing this request",
+			},
+		},
+		{
+			name: "fail - database error checking if user can access query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(2)).Return(testSavedQuery2, nil)
+					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(2), user1Id).Return(false, fmt.Errorf("test error"))
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/2", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusInternalServerError,
+				responseError: "Code: 500 - errors: an internal error has occurred that is preventing the service from servicing this request",
+			},
+		},
+		{
+			name: "fail - user cannot view query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(2)).Return(testSavedQuery2, nil)
+					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(2), user1Id).Return(false, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/2", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusNotFound,
+				responseError: "Code: 404 - errors: query not found",
+			},
+		},
+		{
+			name: "success - user owns query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusOK,
+				responseQuery: testSavedQuery1,
+			},
+		},
+		{
+			name: "success - user is admin",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(user2Id), http.MethodGet, "/api/v2/saved-queries/1", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusOK,
+				responseQuery: testSavedQuery1,
+			},
+		},
+		{
+			name: "success - public or shared to user query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(2)).Return(testSavedQuery2, nil)
+					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(2), user1Id).Return(true, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/2", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode:  http.StatusOK,
+				responseQuery: testSavedQuery2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fields.setupMocks(t, mockDB)
+
+			s := v2.Resources{
+				DB: mockDB,
+			}
+
+			response := httptest.NewRecorder()
+			if request, err := tt.args.buildRequest(); err != nil {
+				require.NoError(t, err, "unexpected build request error")
+			} else {
+				s.GetSavedQuery(response, request)
+			}
+
+			assert.Equal(t, tt.expect.responseCode, response.Code)
+			if tt.expect.responseCode != http.StatusOK {
+				var errWrapper api.ErrorWrapper
+				err = json.Unmarshal(response.Body.Bytes(), &errWrapper)
+				require.NoError(t, err)
+				assert.Equal(t, tt.expect.responseError, errWrapper.Error())
+			} else {
+				var (
+					actualSavedQuery model.SavedQuery
+					basicResponse    api.BasicResponse
+				)
+				err = json.Unmarshal(response.Body.Bytes(), &basicResponse)
+				require.NoError(t, err)
+				basicResponseDataJson, err := basicResponse.Data.MarshalJSON()
+				require.NoError(t, err)
+				err = json.Unmarshal(basicResponseDataJson, &actualSavedQuery)
+				require.NoError(t, err)
+				assert.Equal(t, tt.expect.responseQuery, actualSavedQuery)
+			}
+		})
+	}
+}
