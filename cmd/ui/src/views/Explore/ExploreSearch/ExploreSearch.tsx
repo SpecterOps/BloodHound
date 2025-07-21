@@ -29,6 +29,7 @@ import {
     cn,
     encodeCypherQuery,
     requiredColumns,
+    useCypherSearch,
     useExploreParams,
     useNodeSearch,
     usePathfindingFilters,
