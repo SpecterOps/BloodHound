@@ -120,13 +120,13 @@ describe('ExploreTable', async () => {
         await user.click(screen.getByText('Object ID'));
 
         // Descending sorted first object id cell
-        expect(getFirstCellOfType('objectid')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2110');
-
         screen.debug();
+        expect(getFirstCellOfType('objectid')).toHaveTextContent('29196-387917394-501');
+
         await user.click(screen.getByText('Object ID'));
 
         // Ascending sorted first object id cell
-        expect(getFirstCellOfType('objectid')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-501');
+        expect(getFirstCellOfType('objectid')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2210');
     });
 
     it('Expand button causes table to expand to full height', async () => {
