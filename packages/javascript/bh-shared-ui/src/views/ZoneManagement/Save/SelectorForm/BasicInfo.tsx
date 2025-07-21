@@ -118,7 +118,7 @@ const BasicInfo: FC<{
     if (isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
-        <div className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 pt-0 h-[30rem]'}>
+        <div className={'min-w-[27rem] grow pt-0 h-[30rem]'}>
             <Card>
                 <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
                 <CardContent>
