@@ -196,7 +196,7 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <CypherSearch cypherSearchState={cypherSearchState} onCypherSearch={resetSelectedColumns} />,
+                        <CypherSearch cypherSearchState={cypherSearchState} onRunSearchClick={resetSelectedColumns} />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}

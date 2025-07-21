@@ -37,10 +37,10 @@ type CypherSearchState = {
 
 type CypherSearchProps = {
     cypherSearchState: CypherSearchState;
-    onCypherSearch?: () => void;
+    onRunSearchClick?: () => void;
 };
 
-const CypherSearch = ({ cypherSearchState, onCypherSearch }: CypherSearchProps) => {
+const CypherSearch = ({ cypherSearchState, onRunSearchClick }: CypherSearchProps) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
 
@@ -64,8 +64,8 @@ const CypherSearch = ({ cypherSearchState, onCypherSearch }: CypherSearchProps) 
             performSearch();
         }
 
-        if (typeof onCypherSearch === 'function') {
-            onCypherSearch();
+        if (typeof onRunSearchClick === 'function') {
+            onRunSearchClick();
         }
     };
 
