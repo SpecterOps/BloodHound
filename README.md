@@ -1,7 +1,7 @@
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="cmd/ui/public/img/logo-secondary-transparent-full.svg">
-        <img src="cmd/ui/public/img/logo-transparent-full.svg" alt="BloodHound Community Edition" width='400' />
+        <source media="(prefers-color-scheme: dark)" srcset="cmd/ui/public/img/BloodHoundCE_Color.svg">
+        <img src="cmd/ui/public/img/BloodHoundCE_Color.svg`" alt="BloodHound Community Edition" width='400' />
     </picture>
 </p>
 
@@ -11,7 +11,7 @@ BloodHound is a monolithic web application composed of an embedded React fronten
 
 BloodHound uses graph theory to reveal the hidden and often unintended relationships within an Active Directory or Azure environment. Attackers can use BloodHound to quickly identify highly complex attack paths that would otherwise be impossible to find. Defenders can use BloodHound to identify and eliminate those same attack paths. Both red and blue teams can use BloodHound to better understand privileged relationships in an Active Directory or Azure environment.
 
-BloodHound CE is created and maintained by the [BloodHound Enterprise Team](https://bloodhoundenterprise.io). The original BloodHound was created by [@\_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and [@harmj0y](https://twitter.com/harmj0y).
+BloodHound CE is created and maintained by the [SpecterOps](https://specterops.io/) team who also brought you [BloodHound Enterprise](https://bloodhoundenterprise.io). The original BloodHound was created by [@\_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and [@harmj0y](https://twitter.com/harmj0y).
 
 ## Running BloodHound Community Edition
 Please refer to the [Quickstart Guide for BloodHound Community Edition](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart), which is part of the [BloodHound documentation](https://bloodhound.specterops.io).
