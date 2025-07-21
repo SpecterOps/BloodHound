@@ -357,6 +357,10 @@ type OU struct {
 	InheritanceHashes []string
 }
 
+type GenericMetadata struct {
+	SourceKind string `json:"source_kind"`
+}
+
 type GenericNode struct {
 	ID         string
 	Kinds      []string

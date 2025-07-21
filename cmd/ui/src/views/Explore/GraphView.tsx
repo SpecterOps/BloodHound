@@ -23,9 +23,12 @@ import {
     GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
+    MungedTableRowWithId,
+    NodeClickInfo,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
+    exportToJson,
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
@@ -41,7 +44,7 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { type GraphNodes } from 'js-client-library';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -125,6 +128,47 @@ const GraphView: FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedItem]);
 
+    /* useCallback Event Handlers must appear before return statement */
+    const selectItem = useCallback(
+        (id: string) => {
+            setSelectedItem(id);
+            setHighlightedItem(id);
+        },
+        [setSelectedItem]
+    );
+
+    const handleRowClick = useCallback(
+        (row: MungedTableRowWithId) => {
+            if (row.id !== selectedItem) {
+                setSelectedItem(row.id);
+            }
+        },
+        [setSelectedItem, selectedItem]
+    );
+
+    const handleContextMenu = useCallback(
+        (event: SigmaNodeEventPayload) => {
+            selectItem(event.node);
+            setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        },
+        [contextMenu, selectItem, setContextMenu]
+    );
+
+    /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
+    const handleKebabMenuClick = useCallback(
+        (nodeInfo: NodeClickInfo) => {
+            if (!nodeInfo.id) return;
+            handleContextMenu({ event: { x: nodeInfo.x, y: nodeInfo.y }, node: nodeInfo.id } as SigmaNodeEventPayload);
+        },
+        [handleContextMenu]
+    );
+
+    const handleDownloadClick = useCallback(() => {
+        if (graphQuery.data) {
+            exportToJson({ nodes: graphQuery.data.rawNodes });
+        }
+    }, [graphQuery.data]);
+
     if (isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -138,18 +182,8 @@ const GraphView: FC = () => {
     if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
     /* Event Handlers */
-    const selectItem = (id: string) => {
-        setSelectedItem(id);
-        setHighlightedItem(id);
-    };
-
     const cancelHighlight = () => {
         setHighlightedItem(null);
-    };
-
-    const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        selectItem(event.node);
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
     };
 
     const handleCloseContextMenu = () => {
@@ -240,6 +274,10 @@ const GraphView: FC = () => {
                     open={displayTable}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
+                    onKebabMenuClick={handleKebabMenuClick}
+                    onDownloadClick={handleDownloadClick}
+                    onRowClick={handleRowClick}
+                    selectedNode={selectedItem}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

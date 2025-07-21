@@ -4847,34 +4847,22 @@
                       "type": "object",
                       "properties": {
                         "member": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "integer"
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/model.asset-group-tags-member"
                             },
-                            "object_id": {
-                              "type": "string"
-                            },
-                            "primary_kind": {
-                              "type": "string"
-                            },
-                            "name": {
-                              "type": "string"
-                            },
-                            "properties": {
+                            {
                               "type": "object",
-                              "additionalProperties": true
-                            },
-                            "source": {
-                              "type": "integer"
-                            },
-                            "selectors": {
-                              "type": "array",
-                              "items": {
-                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              "properties": {
+                                "selectors": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                                  }
+                                }
                               }
                             }
-                          }
+                          ]
                         }
                       }
                     }
@@ -5362,25 +5350,7 @@
                             "members": {
                               "type": "array",
                               "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "object_id": {
-                                    "type": "string"
-                                  },
-                                  "primary_kind": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "source": {
-                                    "type": "integer"
-                                  }
-                                }
+                                "$ref": "#/components/schemas/model.asset-group-tags-member"
                               }
                             }
                           }
@@ -5553,25 +5523,7 @@
                             "members": {
                               "type": "array",
                               "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "object_id": {
-                                    "type": "string"
-                                  },
-                                  "primary_kind": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "source": {
-                                    "type": "integer"
-                                  }
-                                }
+                                "$ref": "#/components/schemas/model.asset-group-tags-member"
                               }
                             }
                           }
@@ -6119,6 +6071,224 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/search": {
+      "post": {
+        "operationId": "AssetGroupTagSearch",
+        "summary": "Search Asset Group Tags",
+        "description": "Supports searching by name on asset group tags and selectors, and by name or object ID on members.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "requestBody": {
+          "description": "The request body for searching asset group tags.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "tag_type": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "query",
+                  "tag_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tag"
+                          }
+                        },
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                          }
+                        },
+                        "members": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-member"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/history": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTagHistory",
+        "summary": "Get history records",
+        "description": "Retrieves history records for actions on asset group tags",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `created_at`.",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "description": "For example, you can filter a date range of records by doing `created_at=gt:2025-07-08T17:00:00Z&created_at=lt:2025-07-30T17:00:00Z`",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-history"
                 }
               }
             }
@@ -17613,6 +17783,30 @@
           }
         }
       },
+      "model.asset-group-tags-member": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "primary_kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "source": {
+            "type": "integer"
+          }
+        }
+      },
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
@@ -17817,6 +18011,65 @@
             }
           }
         ]
+      },
+      "model.asset-group-tags-history": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "records": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "actor": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "$ref": "#/components/schemas/null.string"
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "target": {
+                        "type": "string"
+                      },
+                      "asset_group_tag_id": {
+                        "type": "integer"
+                      },
+                      "environment_id": {
+                        "$ref": "#/components/schemas/null.string"
+                      },
+                      "note": {
+                        "$ref": "#/components/schemas/null.string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",

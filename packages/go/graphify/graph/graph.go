@@ -141,7 +141,7 @@ func NewCommunityGraphService() (*CommunityGraphService, error) {
 		return nil, fmt.Errorf("error loading ingest schema: %w", err)
 	}
 
-	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
+	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson}
 
 	return &CommunityGraphService{readOpts: readOpts}, nil
 }
@@ -255,11 +255,12 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (generic.G
 		var kinds = make([]string, 0, len(node.Kinds))
 
 		for _, kind := range node.Kinds {
-			if kind == ad.Entity {
+			switch kind {
+			case ad.Entity:
 				isBase = true
-			} else if kind == azure.Entity {
+			case azure.Entity:
 				isAZBase = true
-			} else {
+			default:
 				kinds = append(kinds, kind.String())
 			}
 		}

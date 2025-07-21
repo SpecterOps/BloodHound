@@ -41,7 +41,9 @@ export type CreateAssetGroupTagRequest = {
     analysis_enabled?: boolean;
 };
 
-export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
+export type UpdateAssetGroupTagRequest = Partial<
+    Omit<CreateAssetGroupTagRequest, 'analysis_enabled'> & { analysis_enabled: string | boolean | undefined }
+>;
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 
@@ -202,10 +204,11 @@ export interface CreateUserQueryRequest {
 }
 
 export interface ClearDatabaseRequest {
-    deleteCollectedGraphData: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
     deleteAssetGroupSelectors: number[];
+    deleteCollectedGraphData: boolean;
+    deleteDataQualityHistory: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteSourceKinds: number[];
 }
 
 export interface UpdateUserRequest {

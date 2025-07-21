@@ -35,7 +35,7 @@ func TestVersion5Analysis(t *testing.T) {
 		ctx = context.Background()
 
 		analysisFilePath = path.Join("fixtures", "Version5JSON", "analysis")
-		ingestFilePath = path.Join("fixtures", "Version5JSON", "ingest")
+		ingestFilePath   = path.Join("fixtures", "Version5JSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
 	)
@@ -63,7 +63,7 @@ func TestVersion6ADCSAnalysis(t *testing.T) {
 		ctx = context.Background()
 
 		analysisFilePath = path.Join("fixtures", "Version6ADCSJSON", "analysis")
-		ingestFilePath = path.Join("fixtures", "Version6ADCSJSON", "ingest")
+		ingestFilePath   = path.Join("fixtures", "Version6ADCSJSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
 	)
@@ -91,7 +91,7 @@ func TestVersion6AllAnalysis(t *testing.T) {
 		ctx = context.Background()
 
 		analysisFilePath = path.Join("fixtures", "Version6AllJSON", "analysis")
-		ingestFilePath = path.Join("fixtures", "Version6AllJSON", "ingest")
+		ingestFilePath   = path.Join("fixtures", "Version6AllJSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
 	)
@@ -119,7 +119,7 @@ func TestVersion6Analysis(t *testing.T) {
 		ctx = context.Background()
 
 		analysisFilePath = path.Join("fixtures", "Version6JSON", "analysis")
-		ingestFilePath = path.Join("fixtures", "Version6JSON", "ingest")
+		ingestFilePath   = path.Join("fixtures", "Version6JSON", "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, ingestFilePath)
 	)

@@ -56,8 +56,12 @@ type Graph struct {
 	Edges []Edge `json:"edges"`
 }
 
+type Metadata struct {
+	SourceKind string `json:"source_kind"`
+}
 type GenericObject struct {
-	Graph Graph `json:"graph"`
+	Graph    Graph    `json:"graph"`
+	Metadata Metadata `json:"metadata"`
 }
 
 func WriteGraphToDatabase(db graph.Database, g *Graph) error {
@@ -127,6 +131,11 @@ func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, e
 		err := tx.Nodes().Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for node := range cursor.Chan() {
 				objectId, err := node.Properties.Get(common.ObjectID.String()).String()
+
+				// edge case: MigrationData node will NOT have an objectid
+				if node.Kinds.ContainsOneOf(common.MigrationData) {
+					continue
+				}
 
 				if err == nil {
 					actualNodes[objectId] = node

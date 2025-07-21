@@ -31,7 +31,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
-    AssetGroupTagTypes,
+    CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
@@ -52,14 +52,6 @@ import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 
-type TagFormInputs = {
-    name: string;
-    description: string;
-    position: number | null;
-    type: AssetGroupTagTypes;
-    analysis_enabled: boolean;
-};
-
 const MAX_NAME_LENGTH = 250;
 
 const formTitleFromPath = (labelId: string | undefined, tierId: string, location: Location): string => {
@@ -72,12 +64,20 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
     return 'Tag Details';
 };
 
-const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs): UpdateAssetGroupTagRequest => {
+const diffValues = (
+    data: AssetGroupTag | undefined,
+    formValues: UpdateAssetGroupTagRequest
+): UpdateAssetGroupTagRequest => {
     if (data === undefined) return formValues;
 
     const workingCopy = { ...formValues };
 
     const diffed: UpdateAssetGroupTagRequest = {};
+
+    // 'on' means the switch hasn't been touched yet which means default to current analysis_enabled state
+    if (workingCopy.analysis_enabled === 'on') {
+        workingCopy.analysis_enabled = data.analysis_enabled;
+    }
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
@@ -116,7 +116,7 @@ export const TagForm: FC = () => {
         handleSubmit,
         formState: { errors },
         setValue,
-    } = useForm<TagFormInputs>();
+    } = useForm<UpdateAssetGroupTagRequest>();
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -130,7 +130,7 @@ export const TagForm: FC = () => {
     };
 
     const handleCreateTag = useCallback(
-        async (formData: TagFormInputs) => {
+        async (formData: CreateAssetGroupTagRequest) => {
             try {
                 const response = await createTagMutation.mutateAsync({
                     values: {
@@ -163,7 +163,7 @@ export const TagForm: FC = () => {
     );
 
     const handleUpdateTag = useCallback(
-        async (formData: TagFormInputs) => {
+        async (formData: UpdateAssetGroupTagRequest) => {
             try {
                 const diffedValues = diffValues(tagQuery.data, formData);
 
@@ -216,12 +216,12 @@ export const TagForm: FC = () => {
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
-    }, [labelId, tagId, deleteTagMutation, addNotification, navigate]);
+    }, [labelId, tagId, deleteTagMutation, addNotification, navigate, ownedId, topTagId]);
 
-    const onSubmit: SubmitHandler<TagFormInputs> = useCallback(
+    const onSubmit: SubmitHandler<UpdateAssetGroupTagRequest | CreateAssetGroupTagRequest> = useCallback(
         (formData) => {
             if (tagId === '') {
-                handleCreateTag(formData);
+                handleCreateTag(formData as CreateAssetGroupTagRequest);
             } else {
                 handleUpdateTag(formData);
             }

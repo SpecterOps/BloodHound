@@ -165,6 +165,8 @@ export { default as SearchCurrentNodes } from './SearchCurrentNodes';
 export * from './SearchResultItem';
 export { default as SearchResultItem } from './SearchResultItem';
 
+export * from './SourceKindsCheckboxes';
+
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
 

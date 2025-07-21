@@ -9929,6 +9929,7 @@ func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
 	s.OU6.Properties.Set(ad.InheritanceHashes.String(), []string{})
 
 	s.OU3.Properties.Set(ad.IsACLProtected.String(), true)
+	s.OU4.Properties.Set(ad.IsACLProtected.String(), true)
 	s.OU6.Properties.Set(ad.IsACLProtected.String(), true)
 
 	graphTestContext.UpdateNode(s.Domain1)

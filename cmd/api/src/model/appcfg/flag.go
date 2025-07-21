@@ -31,7 +31,6 @@ const (
 	FeatureAzureSupport               = "azure_support"
 	FeatureEntityPanelCaching         = "entity_panel_cache"
 	FeatureAdcs                       = "adcs"
-	FeaturePGMigrationDualIngest      = "pg_migration_dual_ingest"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 	FeatureFedRAMPEULA                = "fedramp_eula"

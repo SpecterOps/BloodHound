@@ -94,7 +94,8 @@
       },
       "labels": [],
       "properties": {
-        "inheritancehashes": "[HASH_VALUE, ...]"
+        "inheritancehashes": "[HASH_VALUE, ...]",
+        "isaclprotected": "true"
       }
     },
     {

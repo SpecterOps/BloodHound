@@ -25,6 +25,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 )
 
+// SeekToKey positions the JSON decoder at the value of the given key,
+// which must appear at the specified object depth. If the key is "nodes" or "edges" or "data",
+// the decoder advances past the key and opening '[' token, positioning at the first array element.
+// For other keys (e.g., "metadata"), the decoder stops at the delimiter token itself (e.g., '{') so that
+// callers can handle decoding.
 func SeekToKey(decoder *json.Decoder, key string, targetDepth int) error {
 	var (
 		depth    = 0
@@ -61,6 +66,11 @@ func SeekToKey(decoder *json.Decoder, key string, targetDepth int) error {
 			case string:
 				if !keyFound && depth == targetDepth && typed == key {
 					keyFound = true
+					// don't consume the opening object bracket when seeking to metadata.
+					// the caller needs to decode this object
+					if key == "metadata" {
+						return nil
+					}
 				}
 			}
 		}
