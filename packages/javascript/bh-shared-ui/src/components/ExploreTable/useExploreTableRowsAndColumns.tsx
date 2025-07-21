@@ -21,6 +21,7 @@ import { StyledGraphEdge } from 'js-client-library';
 import { isEmpty } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import {
+    compareForExploreTableSort,
     isSmallColumn,
     REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
     requiredColumns,
@@ -110,9 +111,8 @@ const useExploreTableRowsAndColumns = ({
     const makeColumnDef = useCallback(
         (rawKey: keyof MungedTableRowWithId) => {
             const key = rawKey?.toString();
-
-            const firstRowCellValue = rows?.length ? rows[0]?.[key] : null;
-            const dataType = typeof firstRowCellValue;
+            const firstTruthyValueInFirst10Rows = rows?.slice(0, 10).find((row) => !!row?.[key]);
+            const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
 
             return columnHelper.accessor(String(key), {
                 header: () => {
@@ -122,11 +122,11 @@ const useExploreTableRowsAndColumns = ({
                             sortOrder={sortOrder}
                             onClick={() => handleSort(key)}
                             headerKey={key}
-                            dataType={dataType}
+                            dataType={bestGuessAtDataType}
                         />
                     );
                 },
-                size: isSmallColumn(key, firstRowCellValue) ? 100 : 250,
+                size: isSmallColumn(key, firstTruthyValueInFirst10Rows) ? 100 : 250,
                 cell: (info) => {
                     const value = info.getValue();
 
@@ -185,23 +185,16 @@ const useExploreTableRowsAndColumns = ({
         const dataToSort = filteredRows.slice();
         if (sortBy) {
             if (sortOrder === 'asc') {
-                dataToSort.sort((a, b) => {
-                    if (a[sortBy] === true) return 1;
-
-                    return a[sortBy]?.toString().localeCompare(b[sortBy]?.toString());
-                });
+                return dataToSort.sort((a, b) => compareForExploreTableSort(a?.[sortBy], b?.[sortBy]));
             } else {
-                dataToSort.sort((a, b) => {
-                    if (b[sortBy] === true) return 1;
-
-                    return b[sortBy]?.toString().localeCompare(a[sortBy]?.toString());
-                });
+                return dataToSort.sort((a, b) => compareForExploreTableSort(b?.[sortBy], a?.[sortBy]));
             }
         }
 
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
+    console.log(sortedFilteredRows.map((it) => it.blocksinheritance));
     const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
 
     const selectedColumnDefinitions = useMemo(

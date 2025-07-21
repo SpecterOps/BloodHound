@@ -68,21 +68,17 @@ export const ManageColumnsComboBox = ({
         onChange([...pinnedColumns]);
     }, [onChange, pinnedColumns]);
 
-    useEffect(() => {
-        if (selectedColumns.length === 0) {
-            handleResetDefault();
-        }
-    }, [selectedColumns, handleResetDefault]);
-
     const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
 
     const { getDropdownProps, removeSelectedItem, addSelectedItem } = useMultipleSelection({
         initialSelectedItems: allColumns.filter((item) => selectedColumnsProp[item.id]),
         selectedItems: selectedColumns,
         onStateChange({ selectedItems: newSelectedColumns, type }) {
-            if (type !== useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace) {
+            if (type !== useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace && newSelectedColumns?.length) {
                 setSelectedColumns(newSelectedColumns || []);
                 onChange(newSelectedColumns || []);
+            } else {
+                handleResetDefault();
             }
         },
     });

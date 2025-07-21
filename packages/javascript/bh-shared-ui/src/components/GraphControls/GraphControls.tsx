@@ -142,7 +142,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                             const tableViewIsSelected = tableViewFeatureFlag?.enabled && isExploreTableSelected;
                             const isSelected = tableViewIsSelected
                                 ? buttonLabel === 'table'
-                                : selectedLayout === buttonLabel;
+                                : buttonLabel === selectedLayout;
 
                             return (
                                 <MenuItem

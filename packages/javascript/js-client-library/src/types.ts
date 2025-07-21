@@ -304,7 +304,7 @@ export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: stri
 
 export type StyledGraphNode = {
     color: string;
-    data: Partial<GraphNodeSpreadWithProperties>;
+    data: GraphNodeSpreadWithProperties;
     border: {
         color: string;
     };
