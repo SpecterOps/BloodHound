@@ -16,10 +16,11 @@
 
 import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { Checkbox, FormControlLabel } from '@mui/material';
-import { apiClient, useNotifications } from 'bh-shared-ui';
 import { type OptionsObject } from 'notistack';
 import { type FC } from 'react';
 import { useQuery } from 'react-query';
+import { useNotifications } from '../../providers/NotificationProvider/hooks';
+import { apiClient } from '../../utils/api';
 
 const ERROR = {
     key: 'database-management-source-kind',
@@ -43,16 +44,16 @@ const useSourceKindsQuery = () => {
 // Displayed while source kinds are loading
 const LOADING_CHECKBOXES = (
     <>
-        <div className='pl-5 flex items-center'>
-            <Checkbox />
+        <div role='status' className='pl-5 flex items-center'>
+            <Checkbox disabled />
             <Skeleton className='h-4 w-[200px]' />
         </div>
-        <div className='pl-5 flex items-center'>
-            <Checkbox />
+        <div role='status' className='pl-5 flex items-center'>
+            <Checkbox disabled />
             <Skeleton className='h-4 w-[200px]' />
         </div>
-        <div className='pl-5 flex items-center'>
-            <Checkbox />
+        <div role='status' className='pl-5 flex items-center'>
+            <Checkbox disabled />
             <Skeleton className='h-4 w-[200px]' />
         </div>
     </>
@@ -93,7 +94,7 @@ export const SourceKindsCheckboxes: FC<{
     };
 
     return (
-        <>
+        <div className='flex flex-col' data-testid='source-kinds-checkboxes'>
             <FormControlLabel
                 label='All graph data'
                 control={
@@ -125,6 +126,6 @@ export const SourceKindsCheckboxes: FC<{
                         key={item.id}
                     />
                 ))}
-        </>
+        </div>
     );
 };

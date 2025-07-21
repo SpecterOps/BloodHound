@@ -21,6 +21,7 @@ import {
     FeatureFlag,
     PageWithTitle,
     Permission,
+    SourceKindsCheckboxes,
     apiClient,
     useMountEffect,
     useNotifications,
@@ -31,7 +32,6 @@ import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { SourceKindsCheckboxes } from './SourceKindsCheckboxes';
 
 const initialState: State = {
     deleteAllAssetGroupSelectors: false,
@@ -126,11 +126,11 @@ const reducer = (state: State, action: Action): State => {
         case 'open_dialog': {
             const noSelection =
                 [
+                    state.deleteAllAssetGroupSelectors,
                     state.deleteCollectedGraphData,
+                    state.deleteCustomHighValueSelectors,
                     state.deleteDataQualityHistory,
                     state.deleteFileIngestHistory,
-                    state.deleteAllAssetGroupSelectors,
-                    state.deleteCustomHighValueSelectors,
                 ].filter(Boolean).length === 0 && state.deleteSourceKinds.length === 0;
 
             if (noSelection) {

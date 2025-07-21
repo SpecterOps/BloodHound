@@ -18,15 +18,43 @@ import userEvent from '@testing-library/user-event';
 import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import { act, render, screen, waitFor } from 'src/test-utils';
 import DatabaseManagement from '.';
+
+const SOURCE_KINDS_RESPONSE = {
+    data: {
+        kinds: [
+            {
+                id: 1,
+                name: 'Base',
+            },
+            {
+                id: 2,
+                name: 'AZBase',
+            },
+            {
+                id: 3,
+                name: 'ACustomBase',
+            },
+            {
+                id: 0,
+                name: 'Sourceless',
+            },
+        ],
+    },
+};
+
+let permissionResponse = createAuthStateWithPermissions([Permission.WIPE_DB]).user;
 
 describe('DatabaseManagement', () => {
     const server = setupServer(
+        rest.get('/api/v2/graphs/source-kinds', (req, res, ctx) => {
+            return res(ctx.json(SOURCE_KINDS_RESPONSE));
+        }),
         rest.get('/api/v2/self', (req, res, ctx) => {
             return res(
                 ctx.json({
-                    data: createAuthStateWithPermissions([Permission.WIPE_DB]).user,
+                    data: permissionResponse,
                 })
             );
         }),
@@ -56,21 +84,32 @@ describe('DatabaseManagement', () => {
     afterAll(() => server.close());
 
     it('renders', async () => {
-        render(<DatabaseManagement />);
+        // Must await render as component has a child with a loading state
+        await act(async () => render(<DatabaseManagement />));
 
         const title = screen.getByText(/Database Management/i);
         const deleteButton = screen.getByRole('button', { name: /delete/i });
 
         expect(title).toBeInTheDocument();
-        expect(await screen.findByRole('checkbox', { name: /Collected graph data/i })).toBeInTheDocument();
+        expect(await screen.findByRole('checkbox', { name: /All graph data/i })).toBeInTheDocument();
 
+        // [ ] All graph data
+        //    [ ] Active Directory data
+        //    [ ] Azure data
+        //    [ ] ACustomBase data
+        //    [ ] Sourceless data
+        // [ ] Custom High Value selectors
+        // [ ] All asset group selectors
+        // [ ] File ingest log history
+        // [ ] Data quality
         const checkboxes = screen.getAllByRole('checkbox');
-        expect(checkboxes.length).toEqual(5);
+        expect(checkboxes.length).toEqual(9);
         expect(deleteButton).toBeInTheDocument();
     });
 
     it('disables the delete button and all checkboxes if the user lacks permission', async () => {
-        render(<DatabaseManagement />);
+        permissionResponse = createAuthStateWithPermissions([]).user;
+        await act(async () => render(<DatabaseManagement />));
 
         const checkboxes = await screen.getAllByRole('checkbox');
 
@@ -81,10 +120,11 @@ describe('DatabaseManagement', () => {
         const deleteButton = screen.getByRole('button', { name: 'Delete' });
 
         expect(deleteButton).toBeDisabled();
+        permissionResponse = createAuthStateWithPermissions([Permission.WIPE_DB]).user;
     });
 
     it('displays error if delete button is clicked when no checkbox is selected', async () => {
-        render(<DatabaseManagement />);
+        await act(async () => render(<DatabaseManagement />));
 
         const user = userEvent.setup();
 
@@ -97,7 +137,7 @@ describe('DatabaseManagement', () => {
     });
 
     it('clicking checkbox will remove error if present', async () => {
-        render(<DatabaseManagement />);
+        await act(async () => render(<DatabaseManagement />));
 
         const user = userEvent.setup();
 
@@ -115,7 +155,7 @@ describe('DatabaseManagement', () => {
     });
 
     it('open and closes dialog', async () => {
-        render(<DatabaseManagement />);
+        await act(async () => render(<DatabaseManagement />));
 
         const user = userEvent.setup();
 
@@ -138,11 +178,35 @@ describe('DatabaseManagement', () => {
     });
 
     it('handles posting a mutation', async () => {
-        render(<DatabaseManagement />);
+        await act(async () => render(<DatabaseManagement />));
 
         const user = userEvent.setup();
 
         const checkbox = screen.getByRole('checkbox', { name: /All asset group selectors/i });
+        await waitFor(() => expect(checkbox).not.toBeDisabled());
+        await user.click(checkbox);
+
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
+
+        const textField = screen.getByRole('textbox');
+        await user.type(textField, 'Delete this environment data');
+
+        const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        await user.click(confirmButton);
+
+        const successMessage = screen.getByText(
+            /Deletion of the data is under way. Depending on data volume, this may take some time to complete./i
+        );
+        expect(successMessage).toBeInTheDocument();
+    });
+
+    it('handles delete by source kind', async () => {
+        await act(async () => render(<DatabaseManagement />));
+
+        const user = userEvent.setup();
+
+        const checkbox = screen.getByRole('checkbox', { name: /Active Directory data/i });
         await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
