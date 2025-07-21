@@ -119,7 +119,9 @@ func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, reques
 		}
 		if !savedQueryPermissionResponse.Public {
 			for _, savedQueryPermission := range savedQueryPermissions {
-				savedQueryPermissionResponse.AppendUserId(savedQueryPermission.SharedToUserID)
+				if savedQueryPermission.SharedToUserID.Valid {
+					savedQueryPermissionResponse.AppendUserId(savedQueryPermission.SharedToUserID)
+				}
 			}
 		}
 		api.WriteBasicResponse(request.Context(), savedQueryPermissionResponse, http.StatusOK, response)
