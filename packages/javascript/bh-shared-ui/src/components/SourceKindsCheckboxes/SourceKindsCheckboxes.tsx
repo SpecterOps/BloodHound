@@ -24,7 +24,7 @@ import { apiClient } from '../../utils/api';
 
 const ERROR = {
     key: 'database-management-source-kind',
-    message: 'An error occurred while loading source kinds. Deleting graph data is diabled. Try refreshing the page.',
+    message: 'An error occurred while loading source kinds. Deleting graph data is disabled. Try refreshing the page.',
     options: {
         persist: true,
         anchorOrigin: { vertical: 'top', horizontal: 'right' },
