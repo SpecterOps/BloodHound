@@ -112,7 +112,7 @@ const useExploreTableRowsAndColumns = ({
         (rawKey: keyof MungedTableRowWithId) => {
             const key = rawKey?.toString();
             const firstTruthyValueInFirst10Rows = rows?.slice(0, 10).find((row) => !!row?.[key]);
-            const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
+            const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows?.[key];
 
             return columnHelper.accessor(String(key), {
                 header: () => {
