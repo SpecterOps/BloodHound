@@ -19,13 +19,13 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery, edit
         editQuery(id as number);
     };
 
-    const listItemStyles = 'w-full px-2 py-3 cursor-pointer hover:bg-neutral-light-4';
+    const listItemStyles = 'w-full px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
     return (
         <>
             <Popover>
                 <PopoverTrigger
-                    className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4'
+                    className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-2'
                     onClick={(event) => event.stopPropagation()}>
                     <VerticalEllipsis size={24} />
                 </PopoverTrigger>

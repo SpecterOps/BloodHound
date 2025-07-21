@@ -78,7 +78,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             id='query-search'
                             placeholder='Search'
                             value={searchTerm}
-                            className='w-full bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0'
+                            className='w-full bg-transparent dark:bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0'
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
                         <AppIcon.MagnifyingGlass size={16} className='absolute right-2 top-[50%] -mt-[8px]' />

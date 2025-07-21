@@ -102,7 +102,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                             const { id, name, description, query, canEdit = false } = lineItem;
                                             return (
                                                 <div
-                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 justify-between pl-4 ${
+                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 ${
                                                         testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}

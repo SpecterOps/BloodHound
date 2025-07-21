@@ -140,18 +140,6 @@ const CypherSearch = ({
     };
 
     const handleClickSave = () => {
-        //FROM TICKET
-
-        //IF QUERY SELECTED
-        //  //  IF canEdit
-        //  //  //  SAVE EXISTING WORKFLOW
-        //  //  ELSE
-        //  //  //  Display message:
-        //  //  //“You do not have permission to update this     query, save as a new query instead”
-
-        //IF NO QUERY SELECTED
-        //  //  SAVE NEW WORKFLOW
-
         if (selectedQuery) {
             if (selectedQuery.canEdit) {
                 //save existing
@@ -221,11 +209,7 @@ const CypherSearch = ({
                 {/* CYPHER EDITOR SECTION */}
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
                     <div className='flex items-center justify-between mb-2'>
-                        <CypherSearchMessage
-                            messageState={messageState}
-                            // showMessage={showMessage}
-                            clearMessage={handleClearMessage}
-                        />
+                        <CypherSearchMessage messageState={messageState} clearMessage={handleClearMessage} />
                         <FormControlLabel
                             className='mr-0 whitespace-nowrap'
                             control={
