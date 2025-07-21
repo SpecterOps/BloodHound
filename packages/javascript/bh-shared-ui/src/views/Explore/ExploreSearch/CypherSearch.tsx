@@ -32,7 +32,6 @@ import SaveQueryDialog from './SaveQueryDialog';
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
-    onCypherSearch: () => void;
     performSearch: (query?: string) => void;
 };
 
