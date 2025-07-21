@@ -370,7 +370,7 @@ func TestSavedQueriesPermissions_GetSavedQueryPermissions(t *testing.T) {
 	actualSavedQueryPermissions, err := dbInst.GetSavedQueryPermissions(testCtx, query.ID)
 	require.NoError(t, err)
 	assert.Equal(t, len(expectedSavedQueryPermissions), len(actualSavedQueryPermissions))
-	for idx, _ := range expectedSavedQueryPermissions {
+	for idx := range expectedSavedQueryPermissions {
 		expectedSavedQueryPermissions[idx].CreatedAt = actualSavedQueryPermissions[idx].CreatedAt
 		expectedSavedQueryPermissions[idx].UpdatedAt = actualSavedQueryPermissions[idx].UpdatedAt
 		assert.Equal(t, expectedSavedQueryPermissions[idx], actualSavedQueryPermissions[idx])

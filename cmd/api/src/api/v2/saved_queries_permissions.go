@@ -105,7 +105,7 @@ func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if savedQueryPermissions, err := s.DB.GetSavedQueryPermissions(request.Context(), savedQueryID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if savedQueryPermissions == nil || len(savedQueryPermissions) == 0 {
+	} else if len(savedQueryPermissions) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "no query permissions exist for saved query", request), response)
 	} else if isAccessibleToUser, err := s.canUserAccessSavedQueryPermissions(request.Context(), savedQueryPermissions[0], user); err != nil {
 		api.HandleDatabaseError(request, response, err)
