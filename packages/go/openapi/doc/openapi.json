@@ -7010,6 +7010,18 @@
           "Community",
           "Enterprise"
         ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -7055,6 +7067,18 @@
           "Community",
           "Enterprise"
         ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "$ref": "#/components/responses/no-content"
@@ -7087,6 +7111,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for updating a saved query",
@@ -7161,6 +7197,18 @@
           "Community",
           "Enterprise"
         ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -7205,6 +7253,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for revoking permissions of a saved query from users",
@@ -7259,6 +7319,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for sharing a saved query or making it public",
@@ -18538,11 +18610,9 @@
         "properties": {
           "shared_to_user_ids": {
             "type": "array",
-            "items": [
-              {
-                "$ref": "#/components/schemas/model.components.uuid"
-              }
-            ]
+            "items": {
+              "$ref": "#/components/schemas/model.components.uuid"
+            }
           },
           "query_id": {
             "type": "integer",

@@ -31,6 +31,14 @@ get:
     - Cypher
     - Community
     - Enterprise
+  parameters:
+    - name: saved_query_id
+      description: ID of the saved query
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
   responses:
     200:
       description: OK
@@ -61,6 +69,14 @@ delete:
     - Cypher
     - Community
     - Enterprise
+  parameters:
+    - name: saved_query_id
+      description: ID of the saved query
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
   responses:
     204:
       $ref: './../responses/no-content.yaml'
@@ -84,6 +100,14 @@ put:
     - Cypher
     - Community
     - Enterprise
+  parameters:
+    - name: saved_query_id
+      description: ID of the saved query
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
   requestBody:
     description: The request body for updating a saved query
     required: true
