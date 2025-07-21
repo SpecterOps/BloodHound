@@ -221,7 +221,7 @@ const useExploreTableRowsAndColumns = ({
         });
 
         if (columnDefs[columnDefs.length - 1]) {
-            columnDefs[columnDefs.length - 1].size = Infinity;
+            columnDefs[columnDefs.length - 1].size = 'auto' as unknown as number;
         }
 
         return columnDefs;

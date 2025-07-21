@@ -27,10 +27,10 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
-    className: 'w-[default] w-full',
+    // className: 'w-[default] w-full',
     // TODO: uncomment these when DoodleUI change goes
-    // className: 'w-[default]  table-fixed',
-    // disableDefaultOverflowAuto: true,
+    className: 'table-fixed',
+    disableDefaultOverflowAuto: true,
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
@@ -91,7 +91,7 @@ const ExploreTable = ({
                 'h-[calc(100%-72px)]': isExpanded,
                 'w-[calc(100%-450px)]': selectedNode,
             })}>
-            <div className='explore-table-container w-full h-full overflow-hidden grid'>
+            <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns || requiredColumns}

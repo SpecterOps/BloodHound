@@ -63,9 +63,8 @@ export const compareForExploreTableSort = (a: any, b: any) => {
     return a.toString().localeCompare(b.toString(), undefined, { numeric: true });
 };
 
-export const isSmallColumn = (key: string, value: any) => key === 'nodetype' || typeof value === 'boolean';
-
-export const isIconField = (value: any) => typeof value === 'boolean';
+export const isSmallColumn = (key: string, value: any) =>
+    key === 'nodetype' || key === 'isTierZero' || typeof value === 'boolean';
 
 export interface ExploreTableProps {
     open?: boolean;

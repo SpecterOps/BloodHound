@@ -17,7 +17,6 @@ import { faCancel, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
-import { isIconField } from './explore-table-utils';
 
 const FALLBACK_STRING = '--';
 
@@ -29,7 +28,7 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
             </div>
         );
     }
-    if (isIconField(value)) {
+    if (typeof value === 'boolean') {
         return (
             <div className='flex justify-center items-center pb-1 pt-1'>
                 <FontAwesomeIcon
