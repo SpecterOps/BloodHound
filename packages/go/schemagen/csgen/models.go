@@ -20,7 +20,6 @@ import (
 	"strings"
 )
 
-type Expression interface{}
 type Symbol string
 
 func (s Symbol) NodeType() string {
@@ -52,10 +51,6 @@ func (s Visibility) String() string {
 		return "protected"
 	}
 	return ""
-}
-
-func (s Visibility) AsExpression() Expression {
-	return s
 }
 
 func (s Visibility) NodeType() string {
@@ -203,10 +198,6 @@ func (s Literal) Children() []SyntaxNode {
 }
 
 type FormattingLiteral string
-
-func (s FormattingLiteral) AsExpression() Expression {
-	return s
-}
 
 func (s FormattingLiteral) NodeType() string {
 	return "formatting_literal"
