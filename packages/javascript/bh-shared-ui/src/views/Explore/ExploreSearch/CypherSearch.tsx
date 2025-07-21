@@ -38,7 +38,7 @@ type CypherSearchState = {
 
 type CypherSearchProps = {
     cypherSearchState: CypherSearchState;
-    onCypherSearch: () => void;
+    onCypherSearch?: () => void;
 };
 
 const CypherSearch = ({ cypherSearchState, onCypherSearch }: CypherSearchProps) => {
