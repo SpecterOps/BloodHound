@@ -116,6 +116,7 @@ import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
 import OwnsLimitedRights from './OwnsLimitedRights/OwnsLimitedRights';
 import OwnsRaw from './OwnsRaw/OwnsRaw';
+import ProtectAdminGroups from './ProtectAdminGroups/ProtectAdminGroups';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
@@ -269,6 +270,11 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
+    ProtectAdminGroups: ProtectAdminGroups,
+    ContainsIdentity: ContainsIdentity,
+    PropagatesACEsTo: PropagatesACEsTo,
+    CanApplyGPO: CanApplyGPO,
+    GPOAppliesTo: GPOAppliesTo,
     HasTrustKeys: HasTrustKeys,
 };
 

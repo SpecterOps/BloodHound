@@ -292,6 +292,13 @@ AdminCount: types.#StringEnum & {
 	representation: "admincount"
 }
 
+AdminSDHolderProtected: types.#StringEnum & {
+	symbol:         "AdminSDHolderProtected"
+	schema:         "ad"
+	name:           "AdminSDHolder Protected"
+	representation: "adminsdholderprotected"
+}
+
 DontRequirePreAuth: types.#StringEnum & {
 	symbol:         "DontRequirePreAuth"
 	schema:         "ad"
@@ -1126,6 +1133,7 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	AdminSDHolderProtected,
 ]
 
 // Kinds
@@ -1657,6 +1665,11 @@ CanApplyGPO: types.#Kind & {
 	schema: "active_directory"
 }
 
+ProtectAdminGroups: types.#Kind & {
+	symbol:         "ProtectAdminGroups"
+	schema:         "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1743,6 +1756,7 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	ProtectAdminGroups,
 ]
 
 // ACL Relationships
