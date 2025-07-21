@@ -194,7 +194,6 @@ const useExploreTableRowsAndColumns = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    console.log(sortedFilteredRows.map((it) => it.blocksinheritance));
     const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
 
     const selectedColumnDefinitions = useMemo(

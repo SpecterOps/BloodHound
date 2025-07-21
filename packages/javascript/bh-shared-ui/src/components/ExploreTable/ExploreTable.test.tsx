@@ -122,6 +122,7 @@ describe('ExploreTable', async () => {
         // Descending sorted first object id cell
         expect(getFirstCellOfType('objectid')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2110');
 
+        screen.debug();
         await user.click(screen.getByText('Object ID'));
 
         // Ascending sorted first object id cell
