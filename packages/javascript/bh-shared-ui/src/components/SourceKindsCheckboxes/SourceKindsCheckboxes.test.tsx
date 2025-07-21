@@ -123,7 +123,7 @@ describe('SourceKindsCheckboxes', () => {
         await user.click(parent);
 
         // Component `checked` state update is controlled from parent
-        // Instead of testing fo new checked state, test onChange args
+        // Instead of testing for new checked state, test onChange args
         expect(onChange).toHaveBeenCalledWith([]);
     });
 
@@ -139,7 +139,6 @@ describe('SourceKindsCheckboxes', () => {
         await user.click(parent);
 
         // Component `checked` state update is controlled from parent
-        // Instead of testing fo new checked state, test onChange args
         expect(onChange).toHaveBeenCalledWith([1, 2, 3, 0]);
     });
 
@@ -155,7 +154,6 @@ describe('SourceKindsCheckboxes', () => {
         await user.click(parent);
 
         // Component `checked` state update is controlled from parent
-        // Instead of testing fo new checked state, test onChange args
         expect(onChange).toHaveBeenCalledWith([1, 2, 3, 0]);
     });
 
@@ -169,7 +167,6 @@ describe('SourceKindsCheckboxes', () => {
         await user.click(parent);
 
         // Component `checked` state update is controlled from parent
-        // Instead of testing fo new checked state, test onChange args
         expect(onChange).toHaveBeenCalledWith([1]);
     });
 
@@ -185,7 +182,6 @@ describe('SourceKindsCheckboxes', () => {
         await user.click(parent);
 
         // Component `checked` state update is controlled from parent
-        // Instead of testing fo new checked state, test onChange args
         expect(onChange).toHaveBeenCalledWith([2]);
     });
 });
