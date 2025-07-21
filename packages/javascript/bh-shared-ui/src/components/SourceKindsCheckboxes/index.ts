@@ -13,28 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-package golang
-
-import (
-	"os"
-
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-)
-
-// Running checks for unused go imports and formatting .go files
-func RunGoImports(env environment.Environment) error {
-	rootDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	cmd := "go"
-	args := []string{"tool", "goimports", "-w", rootDir}
-
-	if _, err := cmdrunner.Run(cmd, args, rootDir, env); err != nil {
-		return err
-	}
-
-	return nil
-}
+export * from './SourceKindsCheckboxes';

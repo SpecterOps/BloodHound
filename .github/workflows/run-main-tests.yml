@@ -14,43 +14,49 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Static Code Analysis
+name: Run Tests
 
 on:
-  pull_request:
+  push:
     branches:
       - main
       - "stage/**"
-    types:
-      - opened
-      - synchronize
 
 jobs:
-  run-analysis:
+  run-tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code for this repository
         uses: actions/checkout@v4
 
+      - name: Start PostgreSQL and Neo4j Containers
+        run: |
+          BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker compose -f docker-compose.testing.yml up -d
+
       - name: Install Go
         uses: actions/setup-go@v5
         with:
           go-version: "~1.24.4"
+          cache: true
 
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Yarn
+      - name: Run Tests
         run: |
-          npm install --global yarn
-
-      - name: Install Deps
-        run: |
+          export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
           go tool stbernard deps
+          go tool stbernard test -i -tags integration,serial_integration,slow_integration
 
-      - name: Run Analysis
+      - name: Neo4j Debug Logs
+        if: failure()
         run: |
-          go tool stbernard analysis
+          docker compose -f docker-compose.testing.yml exec -T testgraph cat /logs/debug.log
+
+      - name: Postgres Debug Logs
+        if: failure()
+        run: |
+          docker compose -f docker-compose.testing.yml logs testdb
+
+      - name: Stop and Remove Containers
+        if: ${{ ! cancelled() }}
+        run: |
+          docker compose -f docker-compose.testing.yml down

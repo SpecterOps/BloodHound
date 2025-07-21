@@ -37,7 +37,7 @@ func main() {
 	bhlog.ConfigureDefaultText(os.Stderr)
 
 	if rawLvl == "" {
-		rawLvl = "warn"
+		rawLvl = "info"
 	}
 
 	if lvl, err := bhlog.ParseLevel(rawLvl); err != nil {
