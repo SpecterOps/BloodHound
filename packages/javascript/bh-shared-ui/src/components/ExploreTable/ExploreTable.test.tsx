@@ -120,7 +120,6 @@ describe('ExploreTable', async () => {
         await user.click(screen.getByText('Object ID'));
 
         // Descending sorted first object id cell
-        screen.debug();
         expect(getFirstCellOfType('objectid')).toHaveTextContent('29196-387917394-501');
 
         await user.click(screen.getByText('Object ID'));
