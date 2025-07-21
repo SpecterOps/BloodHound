@@ -94,7 +94,7 @@ func (s *SavedQueryPermissionResponse) AppendUserId(userId uuid.NullUUID) {
 	}
 }
 
-// GetSavedQueryPermissions - users or admins can retrieve who queries
+// GetSavedQueryPermissions - returns the query permissions for users who own the query or admins.
 // Public queries will return for any user with no attached user ids.
 func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, request *http.Request) {
 	var rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
