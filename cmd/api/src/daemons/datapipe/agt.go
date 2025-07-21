@@ -78,7 +78,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 			switch seed.Type {
 			case model.SelectorTypeObjectId:
 				if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value)).First(); err != nil {
-					slog.WarnContext(ctx, "AGT: Fetch Object ID Err", "objectId", seed.Value, "error", err)
+					slog.WarnContext(ctx, "AGT: Fetch Object ID Err", "objectId", seed.Value, "err", err)
 				} else {
 					nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
 					if result.AddIfNotExists(nodeWithSrc) {
@@ -90,7 +90,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 				}
 			case model.SelectorTypeCypher:
 				if nodes, err := ops.FetchNodesByQuery(tx, seed.Value, limit); err != nil {
-					slog.WarnContext(ctx, "AGT: Fetch Cypher Err", "cypherQuery", seed.Value, "error", err)
+					slog.WarnContext(ctx, "AGT: Fetch Cypher Err", "cypherQuery", seed.Value, "err", err)
 				} else {
 					for _, node := range nodes {
 						nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
@@ -737,12 +737,12 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 			} else if len(selector.Seeds) == 1 {
 				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Seeds[0].Value)).First(); err != nil {
-						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "error", err)
+						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "err", err)
 						countSkipped++
 					} else {
 						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
 						if name == "" {
-							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "error", err)
+							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "err", err)
 							countSkipped++
 							return nil
 						}

@@ -109,7 +109,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 						args    = []string{"generate", nextPackage.Dir}
 					)
 
-					if _, err := cmdrunner.RunInteractive(command, args, nextPackage.Dir, env); err != nil {
+					if _, err := cmdrunner.Run(command, args, nextPackage.Dir, env); err != nil {
 						addErr(err)
 					}
 				}
@@ -119,7 +119,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 }
 
 // WorkspaceGenerate runs go generate ./... for all module paths passed
-func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
+func WorkspaceGenerate(modPath string, env environment.Environment) error {
 	defer measure.LogAndMeasure(slog.LevelDebug, "WorkspaceGenerate")()
 	var (
 		errs     []error
@@ -139,14 +139,12 @@ func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	go parallelGenerateModulePackages(jobC, waitGroup, env, addErr)
 
 	// For each known module path attempt generation of each module package
-	for _, modPath := range modPaths {
-		if modulePackages, err := moduleListPackages(modPath); err != nil {
-			return fmt.Errorf("getting module packages for %s: %w", modPath, err)
-		} else {
-			for _, modulePackage := range modulePackages {
-				if !channels.Submit(context.Background(), jobC, modulePackage) {
-					return fmt.Errorf("canceled")
-				}
+	if modulePackages, err := moduleListPackages(modPath); err != nil {
+		return fmt.Errorf("getting module packages for %s: %w", modPath, err)
+	} else {
+		for _, modulePackage := range modulePackages {
+			if !channels.Submit(context.Background(), jobC, modulePackage) {
+				return fmt.Errorf("canceled")
 			}
 		}
 	}

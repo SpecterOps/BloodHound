@@ -3,8 +3,10 @@
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
     "go.buildFlags": ["-tags=integration,serial_integration,slow_integration"],
+    "go.lintOnSave": "workspace",
+    "go.lintTool": "golangci-lint-v2",
+    "go.lintFlags": ["--path-mode=abs", "--config", ".golangci.json"],
     "go.formatTool": "goimports",
-    "go.lintTool": "golangci-lint",
     "go.testEnvVars": {
         "INTEGRATION_CONFIG_PATH": "${workspaceFolder}/local-harnesses/integration.config.json"
     },

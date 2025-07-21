@@ -2564,3 +2564,158 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		require.Equal(t, http.StatusOK, response.Code)
 	})
 }
+
+func TestResources_GetAssetGroupTagHistory(t *testing.T) {
+	var (
+		mockCtrl      = gomock.NewController(t)
+		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
+		resourcesInst = v2.Resources{
+			DB: mockDB,
+		}
+
+		expectedHistoryRecs = []model.AssetGroupHistory{
+			{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
+			{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
+			{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
+			{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
+		}
+	)
+
+	defer mockCtrl.Finish()
+
+	apitest.
+		NewHarness(t, resourcesInst.GetAssetGroupTagHistory).
+		Run([]apitest.Case{
+			{
+				Name: "Invalid Filter Column",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "invalid_column", "eq:2")
+				},
+				Setup: func() {
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Filter on created_at",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "created_at", "gt:2025-06-17T00:00:00Z") // model.AssetGroupHistory
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupHistoryRecords(gomock.Any(),
+							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
+							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
+							0,
+							100).
+						Return([]model.AssetGroupHistory{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Bad limit query param",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "foo")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Success with limit",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "5")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
+							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
+							0,
+							5).
+						Return([]model.AssetGroupHistory{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Bad skip query param",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, model.PaginationQueryParameterSkip, "foo")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Success with skip",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, model.PaginationQueryParameterSkip, "10")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
+							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
+							10,
+							100).
+						Return([]model.AssetGroupHistory{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with sort",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "sort_by", "created_at")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
+							model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}},
+							0,
+							100).
+						Return([]model.AssetGroupHistory{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(expectedHistoryRecs, len(expectedHistoryRecs), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+
+					wrapper := api.ResponseWrapper{}
+					apitest.UnmarshalBody(output, &wrapper)
+
+					// unmarshall data as v2.AssetGroupHistoryResp
+					dataBytes, err := json.Marshal(wrapper.Data)
+					require.NoError(t, err)
+					historyRecordsResp := v2.AssetGroupHistoryResp{}
+					err = json.Unmarshal(dataBytes, &historyRecordsResp)
+					require.NoError(t, err)
+
+					// verify skip, limit and count
+					require.Equal(t, 0, wrapper.Skip)
+					require.Equal(t, 100, wrapper.Limit)
+					require.Equal(t, len(expectedHistoryRecs), wrapper.Count)
+
+					// verify the records are as expected
+					require.Equal(t, expectedHistoryRecs, historyRecordsResp.Records)
+				},
+			},
+		})
+}

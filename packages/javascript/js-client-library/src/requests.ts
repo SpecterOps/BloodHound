@@ -41,7 +41,9 @@ export type CreateAssetGroupTagRequest = {
     analysis_enabled?: boolean;
 };
 
-export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
+export type UpdateAssetGroupTagRequest = Partial<
+    Omit<CreateAssetGroupTagRequest, 'analysis_enabled'> & { analysis_enabled: string | boolean | undefined }
+>;
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 
