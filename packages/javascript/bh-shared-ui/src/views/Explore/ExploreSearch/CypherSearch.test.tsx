@@ -30,8 +30,12 @@ describe('CypherSearch', () => {
             setCypherQuery: vi.fn(),
             performSearch: vi.fn(),
         };
+        const autoRun = true;
+        const handleAutoRun = () => {};
 
-        const screen = await render(<CypherSearch cypherSearchState={state} />);
+        const screen = await render(
+            <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
+        );
         const user = await userEvent.setup();
 
         return { state, screen, user };

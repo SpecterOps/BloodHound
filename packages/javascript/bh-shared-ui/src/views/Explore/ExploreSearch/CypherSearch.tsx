@@ -54,14 +54,12 @@ const CypherSearch = ({
     const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
-    const createSavedQueryMutation = useCreateSavedQuery();
 
+    const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
 
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-
-    // const [autoRun, setAutoRun] = useState(true);
 
     const [messageState, setMessageState] = useState({
         showMessage: false,
@@ -78,11 +76,13 @@ const CypherSearch = ({
     const { addNotification } = useNotifications();
 
     const handleCypherSearch = () => {
+        console.log('handleCypher');
         if (cypherQuery) {
             performSearch();
         }
     };
     const handleSavedSearch = (query: any) => {
+        console.log('handleSavedSearch');
         if (autoRun) {
             performSearch(query);
         }
@@ -195,8 +195,6 @@ const CypherSearch = ({
 
     const handleAutoRunQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAutoRun(event.target.checked);
-        // console.log('handleAutoRunChanged');
-        // console.log(event.target.checked);
     };
 
     const handleSaveAs = () => {
