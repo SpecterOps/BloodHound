@@ -22,10 +22,7 @@ import (
 )
 
 type OutputBuilder struct {
-	MaterializeParameters bool
-	StripLiterals         bool
-	parameters            map[string]any
-	builder               *strings.Builder
+	builder *strings.Builder
 }
 
 func NewOutputBuilder() *OutputBuilder {
