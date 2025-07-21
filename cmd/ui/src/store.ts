@@ -66,6 +66,7 @@ type PersistedState = {
     global: {
         view: {
             darkMode: GlobalViewState['darkMode'];
+            autoRunQueries: GlobalViewState['autoRunQueries'];
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
         };
@@ -111,6 +112,7 @@ store.subscribe(
             global: {
                 view: {
                     darkMode: state.global.view.darkMode,
+                    autoRunQueries: state.global.view.autoRunQueries,
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
                 },

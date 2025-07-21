@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
@@ -40,10 +39,18 @@ type SelectedType = {
     id?: number;
 };
 
-const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
+const CypherSearch = ({
+    cypherSearchState,
+    autoRun,
+    setAutoRun,
+}: {
+    cypherSearchState: CypherSearchState;
+    autoRun: boolean;
+    setAutoRun: (autoRunQueries: boolean) => void;
+}) => {
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
-    // const [selected, setSelected] = useState('');
+
     const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
@@ -54,7 +61,8 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
 
-    const [autoRunQuery, setAutoRunQuery] = useState(true);
+    // const [autoRun, setAutoRun] = useState(true);
+
     const [messageState, setMessageState] = useState({
         showMessage: false,
         message: '',
@@ -75,7 +83,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         }
     };
     const handleSavedSearch = (query: any) => {
-        if (autoRunQuery) {
+        if (autoRun) {
             performSearch(query);
         }
     };
@@ -186,7 +194,9 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
     const handleAutoRunQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setAutoRunQuery(event.target.checked);
+        setAutoRun(event.target.checked);
+        // console.log('handleAutoRunChanged');
+        // console.log(event.target.checked);
     };
 
     const handleSaveAs = () => {
@@ -222,7 +232,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                             className='mr-0 whitespace-nowrap'
                             control={
                                 <Checkbox
-                                    checked={autoRunQuery}
+                                    checked={autoRun}
                                     onChange={handleAutoRunQueryChange}
                                     inputProps={{ 'aria-label': 'controlled' }}
                                 />

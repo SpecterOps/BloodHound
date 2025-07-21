@@ -35,6 +35,8 @@ import {
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
+import { setAutoRunQueries } from 'src/ducks/global/actions';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -76,6 +78,7 @@ const ExploreSearch: React.FC = () => {
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
     const cypherSearchState = useCypherSearch();
+
     // We can move this back down into the filter modal once we remove the redux implementation
     const pathfindingFilterState = usePathfindingFilters();
 
@@ -147,6 +150,13 @@ const ExploreSearch: React.FC = () => {
         return params;
     };
 
+    //auto run queries
+    const autoRun = useAppSelector((state) => state.global.view.autoRunQueries);
+    const dispatch = useAppDispatch();
+    const handleAutoRunChange = (autoRun: boolean) => {
+        dispatch(setAutoRunQueries(autoRun));
+    };
+
     return (
         <div
             className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
@@ -187,7 +197,11 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <CypherSearch cypherSearchState={cypherSearchState} />,
+                        <CypherSearch
+                            cypherSearchState={cypherSearchState}
+                            autoRun={autoRun}
+                            setAutoRun={handleAutoRunChange}
+                        />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}

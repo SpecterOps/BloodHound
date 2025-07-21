@@ -54,7 +54,6 @@ export const Inner: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
     const featureFlagsRes = useFeatureFlags({
         retry: false,
         enabled: !!(authState.isInitialized && fullyAuthenticated),

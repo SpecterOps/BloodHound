@@ -22,6 +22,7 @@ import * as types from './types';
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
+    autoRunQueries: true,
     exploreLayout: undefined,
     isExploreTableSelected: false,
 };
@@ -44,6 +45,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.exploreLayout = action.exploreLayout;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
             draft.isExploreTableSelected = action.isExploreTableSelected;
+        } else if (action.type === types.GLOBAL_SET_AUTO_RUN_QUERIES) {
+            draft.autoRunQueries = action.autoRunQueries;
         }
     });
 };
