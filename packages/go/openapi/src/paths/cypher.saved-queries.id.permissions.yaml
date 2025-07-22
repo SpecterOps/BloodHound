@@ -38,7 +38,7 @@ get:
       required: true
       schema:
         type: integer
-        format: int32
+        format: int64
   responses:
     200:
       description: OK
@@ -76,7 +76,7 @@ delete:
       required: true
       schema:
         type: integer
-        format: int32
+        format: int64
   requestBody:
     description: The request body for revoking permissions of a saved query from users
     required: true
@@ -121,7 +121,7 @@ put:
       required: true
       schema:
         type: integer
-        format: int32
+        format: int64
   requestBody:
     description: The request body for sharing a saved query or making it public
     required: true
