@@ -14,22 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
-import { typeFormat } from '../utils';
 
-const General: FC<EdgeInfoProps> = ({ sourceName, targetName, targetType }) => {
+const WindowsAbuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                The GPO {sourceName} is linked to the {typeFormat(targetType)} {targetName}.
+                From a domain-joined compromised Windows machine, the WriteGPLink permission may be abused through
+                Powermad, PowerView and native Windows functionalities. For a detailed outline of exploit requirements
+                and implementation, you can refer to{' '}
+                <Link target='_blank' rel='noopener' href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
+                    this article
+                </Link>
+                .
             </Typography>
+
             <Typography variant='body2'>
-                A linked GPO applies its settings to objects in the linked container.
+                Be mindful of the number of users and computers that are in the given domain as they all will attempt to
+                fetch and apply the malicious GPO.
             </Typography>
         </>
     );
 };
 
-export default General;
+export default WindowsAbuse;
