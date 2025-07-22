@@ -19468,7 +19468,8 @@
               "environment_id",
               "impact_percentage",
               "impact_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -19503,6 +19504,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           },
@@ -19522,7 +19526,8 @@
               "impact_count",
               "exposure_percentage",
               "exposure_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -19581,6 +19586,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           }
