@@ -20,7 +20,7 @@ on:
   pull_request:
     branches:
       - main
-      - 'stage/**'
+      - "stage/**"
     types:
       - opened
       - synchronize
@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node
         uses: actions/setup-node@v4

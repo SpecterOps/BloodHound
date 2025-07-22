@@ -1784,11 +1784,11 @@ func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(ctx any) *gomock.Call {
 }
 
 // HasCollectedGraphDataDeletionRequest mocks base method.
-func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (bool, model.AnalysisRequest) {
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", ctx)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(model.AnalysisRequest)
+	ret0, _ := ret[0].(model.AnalysisRequest)
+	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
@@ -2035,17 +2035,17 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(ctx, configuration
 }
 
 // SetDatapipeStatus mocks base method.
-func (m *MockDatabase) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
+func (m *MockDatabase) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetDatapipeStatus", ctx, status, updateAnalysisTime)
+	ret := m.ctrl.Call(m, "SetDatapipeStatus", ctx, status)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetDatapipeStatus indicates an expected call of SetDatapipeStatus.
-func (mr *MockDatabaseMockRecorder) SetDatapipeStatus(ctx, status, updateAnalysisTime any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetDatapipeStatus(ctx, status any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeStatus), ctx, status, updateAnalysisTime)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeStatus), ctx, status)
 }
 
 // SetFlag mocks base method.
@@ -2228,6 +2228,20 @@ func (m *MockDatabase) UpdateIngestJob(ctx context.Context, job model.IngestJob)
 func (mr *MockDatabaseMockRecorder) UpdateIngestJob(ctx, job any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIngestJob", reflect.TypeOf((*MockDatabase)(nil).UpdateIngestJob), ctx, job)
+}
+
+// UpdateLastAnalysisCompleteTime mocks base method.
+func (m *MockDatabase) UpdateLastAnalysisCompleteTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLastAnalysisCompleteTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateLastAnalysisCompleteTime indicates an expected call of UpdateLastAnalysisCompleteTime.
+func (mr *MockDatabaseMockRecorder) UpdateLastAnalysisCompleteTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastAnalysisCompleteTime", reflect.TypeOf((*MockDatabase)(nil).UpdateLastAnalysisCompleteTime), ctx)
 }
 
 // UpdateOIDCProvider mocks base method.

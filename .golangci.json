@@ -53,6 +53,10 @@
           "text": "SA4000:"
         },
         {
+          "path": "database/types/null/time\\.go",
+          "text": "QF1009: probably want to use time.Time.Equal instead"
+        },
+        {
           "linters": [
             "unused"
           ],

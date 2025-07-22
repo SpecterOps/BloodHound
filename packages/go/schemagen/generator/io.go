@@ -67,7 +67,7 @@ func FindGolangWorkspaceRoot() (string, error) {
 				return "", err
 			} else {
 				for _, fileInfo := range fileList {
-					if fileInfo.Name() == "go.work" {
+					if fileInfo.Name() == "go.mod" {
 						return cursor, nil
 					}
 				}
