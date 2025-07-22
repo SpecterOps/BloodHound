@@ -20,12 +20,12 @@ import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
-import { OWNED_ID, TIER_ZERO_ID } from '../utils';
+import { ZoneManagementContext } from '../ZoneManagementContext';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
-import { ZoneManagementContext } from '../ZoneManagementContext';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -54,16 +54,18 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const { SalesMessage } = useContext(ZoneManagementContext);
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
 
     return (
-        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
+        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]' data-testid='zone-management_tag-details-card'>
             <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}
                 </div>
                 {data.position !== null && (
                     <div className='mt-4'>
-                        <DetailField label='Tier' value={data.position.toString()} />
+                        <DetailField label='Position' value={data.position.toString()} />
                     </div>
                 )}
                 <div className='mt-4'>
@@ -80,7 +82,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
-            {tagId !== TIER_ZERO_ID && tagId !== OWNED_ID && SalesMessage && <SalesMessage />}
+            {tagId !== topTagId?.toString() && tagId !== ownedId?.toString() && SalesMessage && <SalesMessage />}
             <ObjectCountPanel tagId={data.id.toString()} />
         </div>
     );
@@ -91,7 +93,9 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     const seedType = getSelectorSeedType(data);
 
     return (
-        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
+        <div
+            className='max-h-full flex flex-col gap-8 max-w-[32rem]'
+            data-testid='zone-management_selector-details-card'>
             <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}
