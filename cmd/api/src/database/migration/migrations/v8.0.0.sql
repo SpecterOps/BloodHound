@@ -40,3 +40,6 @@ WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Power User')
 
 -- Add name index to asset_group_tag_selectors table for search
 CREATE INDEX IF NOT EXISTS idx_asset_group_tag_selectors_name ON asset_group_tag_selectors USING btree (name);
+
+-- enable explore_table_view feature flag
+UPDATE feature_flags SET enabled = true WHERE key = 'explore_table_view';
