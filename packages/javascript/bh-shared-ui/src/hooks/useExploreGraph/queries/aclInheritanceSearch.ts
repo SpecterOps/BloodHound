@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { apiClient } from '../../../utils/api';
 import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
@@ -25,10 +24,10 @@ import {
     sharedGraphQueryOptions,
 } from './utils';
 
-const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
+const aclInheritanceSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryItemId, searchType } = paramOptions;
 
-    if (searchType !== 'composition' || !relationshipQueryItemId) {
+    if (searchType !== 'aclinheritance' || !relationshipQueryItemId) {
         return {
             enabled: false,
         };
@@ -53,7 +52,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
         queryFn: ({ signal }) =>
-            apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
+            apiClient.getACLInheritance(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
                 const data = res.data;
                 if (!data.data.nodes) {
                     throw new Error('empty result set');
@@ -65,11 +64,11 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
     };
 };
 
-const getCompositionErrorMessage = (): ExploreGraphQueryError => {
-    return { message: 'Query failed. Please try again.', key: 'edgeCompositionGraphQuery' };
+const getACLInheritanceErrorMessage = (): ExploreGraphQueryError => {
+    return { message: 'Query failed. Please try again.', key: 'edgeACLInheritanceGraphQuery' };
 };
 
-export const compositionSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: compositionSearchGraphQuery,
-    getErrorMessage: getCompositionErrorMessage,
+export const aclInheritanceSearchQuery: ExploreGraphQuery = {
+    getQueryConfig: aclInheritanceSearchGraphQuery,
+    getErrorMessage: getACLInheritanceErrorMessage,
 };
