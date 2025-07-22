@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
-import InfiniteScrollingTable from '../../../components/InfiniteScrollingTable';
-import { NODE_GRAPH_RENDER_LIMIT } from '../../../constants';
-import { useExploreParams } from '../../../hooks';
-import { SelectedNode } from '../../../types';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../../utils';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
+import { useExploreParams } from '../../hooks';
+import { SelectedNode } from '../../types';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
+import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
+import InfiniteScrollingTable from '../InfiniteScrollingTable';
 
-const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
+export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     id,
     label,
     queryType,
@@ -138,14 +138,13 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             )}
             {sections &&
                 sections.map((nestedSection: EntityInfoDataTableProps, nestedIndex: number) => (
-                    <EntityInfoDataTable
+                    <EntityInfoDataTableGraphed
+                        {...nestedSection}
+                        data-testid='entity-info-data-table-graphed'
                         key={nestedIndex}
                         parentLabels={[...(parentLabels as string[]), label]}
-                        {...nestedSection}
                     />
                 ))}
         </EntityInfoCollapsibleSection>
     );
 };
-
-export default EntityInfoDataTable;
