@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/specterops/dawgs/cypher/models"
 	"github.com/specterops/dawgs/cypher/models/pgsql"
 	"github.com/specterops/dawgs/cypher/models/pgsql/format"
 
@@ -195,10 +196,12 @@ func filterValueAsPGLiteral(valueStr string, isNullValue bool) (pgsql.Literal, e
 
 // BuildSQLFilter builds a PGSQL syntax-correct SQLFilter result from the given Filters struct. This function
 // uses the PGSQL AST to ensure formatted SQL correctness.
-func BuildSQLFilter(filters Filters) (SQLFilter, error) {
+func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFilter, error) {
 	var whereClauseFragment pgsql.Expression
 
 	for name, filterOperations := range filters {
+		formattedName := strings.TrimSpace(strings.ToLower(name))
+
 		for _, filter := range filterOperations {
 			var (
 				operator    pgsql.Operator
@@ -244,8 +247,16 @@ func BuildSQLFilter(filters Filters) (SQLFilter, error) {
 			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue); err != nil {
 				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
 			} else {
+				var columnReference pgsql.Expression
+
+				if tableAlias.Set {
+					columnReference = pgsql.Identifier(formattedName)
+				} else {
+					columnReference = pgsql.AsCompoundIdentifier(tableAlias.Value, formattedName)
+				}
+
 				whereClauseFragment = pgsql.OptionalAnd(whereClauseFragment, pgsql.NewBinaryExpression(
-					pgsql.Identifier(name),
+					columnReference,
 					operator,
 					literalValue,
 				))
@@ -269,7 +280,7 @@ func BuildSQLFilter(filters Filters) (SQLFilter, error) {
 }
 
 func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
-	return BuildSQLFilter(s.ToFiltersModel())
+	return BuildSQLFilter(s.ToFiltersModel(), models.EmptyOptional[string]())
 }
 
 func guessFilterValueType(raw string) any {
