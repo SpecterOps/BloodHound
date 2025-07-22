@@ -48,6 +48,10 @@ const tableOptions: DataTableProps['tableOptions'] = {
     getRowId: (row) => row.id,
 };
 
+const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
+    estimateSize: () => 79,
+};
+
 const ExploreTable = ({
     data,
     selectedNode,
@@ -118,6 +122,7 @@ const ExploreTable = ({
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}
+                    virtualizationOptions={virtualizationOptions}
                 />
             </div>
         </div>
