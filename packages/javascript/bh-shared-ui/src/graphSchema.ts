@@ -469,6 +469,7 @@ export enum ActiveDirectoryKindProperties {
     LDAPSAvailable = 'ldapsavailable',
     LDAPSEPA = 'ldapsepa',
     IsDC = 'isdc',
+    IsReadOnlyDC = 'isreadonlydc',
     HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
     HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
@@ -724,6 +725,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'LDAPS EPA';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
+        case ActiveDirectoryKindProperties.IsReadOnlyDC:
+            return 'Read-Only DC';
         case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
             return 'HTTP Enrollment Endpoints';
         case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
