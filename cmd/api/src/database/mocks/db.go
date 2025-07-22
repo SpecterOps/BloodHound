@@ -1085,6 +1085,21 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(ctx, assetGroupID, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupCollections), ctx, assetGroupID, order, filter)
 }
 
+// GetAssetGroupHistoryRecord mocks base method.
+func (m *MockDatabase) GetAssetGroupHistoryRecord(ctx context.Context, id int) (model.AssetGroupHistory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecord", ctx, id)
+	ret0, _ := ret[0].(model.AssetGroupHistory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupHistoryRecord indicates an expected call of GetAssetGroupHistoryRecord.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecord(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecord), ctx, id)
+}
+
 // GetAssetGroupHistoryRecords mocks base method.
 func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error) {
 	m.ctrl.T.Helper()
@@ -2141,6 +2156,21 @@ func (m *MockDatabase) UpdateAssetGroup(ctx context.Context, assetGroup model.As
 func (mr *MockDatabaseMockRecorder) UpdateAssetGroup(ctx, assetGroup any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroup", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroup), ctx, assetGroup)
+}
+
+// UpdateAssetGroupHistoryRecord mocks base method.
+func (m *MockDatabase) UpdateAssetGroupHistoryRecord(ctx context.Context, historyRecord model.AssetGroupHistory) (model.AssetGroupHistory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAssetGroupHistoryRecord", ctx, historyRecord)
+	ret0, _ := ret[0].(model.AssetGroupHistory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAssetGroupHistoryRecord indicates an expected call of UpdateAssetGroupHistoryRecord.
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroupHistoryRecord(ctx, historyRecord any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupHistoryRecord), ctx, historyRecord)
 }
 
 // UpdateAssetGroupSelectors mocks base method.

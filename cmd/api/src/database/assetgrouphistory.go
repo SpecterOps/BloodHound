@@ -29,6 +29,8 @@ import (
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
 	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error)
+	GetAssetGroupHistoryRecord(ctx context.Context, id int) (model.AssetGroupHistory, error)
+	UpdateAssetGroupHistoryRecord(ctx context.Context, historyRecord model.AssetGroupHistory) (model.AssetGroupHistory, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -92,4 +94,36 @@ func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilte
 	}
 
 	return historyRecs, rowCount, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupHistoryRecord(ctx context.Context, id int) (model.AssetGroupHistory, error) {
+	var (
+		historyRecord model.AssetGroupHistory
+	)
+
+	sqlStr := fmt.Sprintf(
+		"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s WHERE id = ?",
+		(model.AssetGroupHistory{}).TableName())
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, id).Scan(&historyRecord); result.Error != nil {
+		return model.AssetGroupHistory{}, CheckError(result)
+	}
+
+	return historyRecord, nil
+}
+
+func (s *BloodhoundDB) UpdateAssetGroupHistoryRecord(ctx context.Context, historyRecord model.AssetGroupHistory) (model.AssetGroupHistory, error) {
+	if historyRecord.Note.Valid {
+		sqlStr := fmt.Sprintf(
+			"UPDATE %s SET note = ? WHERE id = ?",
+			(model.AssetGroupHistory{}).TableName(),
+		)
+
+		if result := s.db.WithContext(ctx).Exec(sqlStr, historyRecord.Note, historyRecord.ID); result.Error != nil {
+			return model.AssetGroupHistory{}, CheckError(result)
+		} else {
+			return historyRecord, nil
+		}
+	}
+	return model.AssetGroupHistory{}, fmt.Errorf("Note field cannot be null")
 }
