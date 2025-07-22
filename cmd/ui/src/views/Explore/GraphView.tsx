@@ -34,6 +34,7 @@ import {
     makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
     useCustomNodeKinds,
+    useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useFeatureFlag,
@@ -66,6 +67,7 @@ const GraphView: FC = () => {
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
     const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
+    const { searchType } = useExploreParams();
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
 
@@ -85,7 +87,8 @@ const GraphView: FC = () => {
     }
 
     const graphQuery = useSigmaExploreGraph();
-    const displayTable = !!(isExploreTableSelected && graphQuery.data?.nodes) || autoDisplayTable;
+    // TODO: incorporate into larger hook with auto display table logic
+    const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});

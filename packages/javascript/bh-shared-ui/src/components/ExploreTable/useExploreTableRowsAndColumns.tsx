@@ -221,6 +221,10 @@ const useExploreTableRowsAndColumns = ({
         });
 
         if (columnDefs[columnDefs.length - 1]) {
+            // Tanstack table requires size to be a number.
+            // However, we, not Tanstack, are responsible for passing the size param to the element in DataTable.
+            // We want the last column to fill all available space, so a hard coded number is unhelpful.
+            // https://github.com/TanStack/table/discussions/4179#discussioncomment-7142606
             columnDefs[columnDefs.length - 1].size = 'auto' as unknown as number;
         }
 

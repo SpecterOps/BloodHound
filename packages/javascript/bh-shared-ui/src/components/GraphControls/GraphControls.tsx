@@ -28,6 +28,7 @@ import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
+import { useExploreParams } from '../../hooks';
 import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
@@ -65,7 +66,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         currentNodes,
     } = props;
     const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
-
+    const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
@@ -133,13 +134,14 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 <GraphMenu label='Layout'>
                     {layoutOptions
                         .filter((layout) => {
-                            if (!tableViewFeatureFlag?.enabled) {
+                            if (!tableViewFeatureFlag?.enabled || searchType !== 'cypher') {
                                 return layout !== 'table';
                             }
                             return true;
                         })
                         .map((buttonLabel) => {
-                            const tableViewIsSelected = tableViewFeatureFlag?.enabled && isExploreTableSelected;
+                            const tableViewIsSelected =
+                                tableViewFeatureFlag?.enabled && isExploreTableSelected && searchType === 'cypher';
                             const isSelected = tableViewIsSelected
                                 ? buttonLabel === 'table'
                                 : buttonLabel === selectedLayout;

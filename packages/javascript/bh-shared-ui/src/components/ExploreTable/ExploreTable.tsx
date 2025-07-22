@@ -28,9 +28,8 @@ type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
     // TODO: uncomment these when DoodleUI change goes
-    // className: 'table-fixed',
-    className: 'w-full',
-    // disableDefaultOverflowAuto: true,
+    className: 'table-fixed',
+    disableDefaultOverflowAuto: true,
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
@@ -58,7 +57,7 @@ const ExploreTable = ({
     onKebabMenuClick,
     onManageColumnsChange,
     allColumnKeys,
-    selectedColumns,
+    selectedColumns = requiredColumns,
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
@@ -90,7 +89,7 @@ const ExploreTable = ({
     return (
         <div
             data-testid='explore-table-container-wrapper'
-            className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2', {
+            className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2', {
                 'h-1/2': !isExpanded,
                 'h-[calc(100%-72px)]': isExpanded,
                 'w-[calc(100%-450px)]': selectedNode,
@@ -98,7 +97,7 @@ const ExploreTable = ({
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
-                    selectedColumns={selectedColumns || requiredColumns}
+                    selectedColumns={selectedColumns}
                     pinnedColumns={requiredColumns}
                     onDownloadClick={onDownloadClick}
                     onExpandClick={toggleIsExpanded}
