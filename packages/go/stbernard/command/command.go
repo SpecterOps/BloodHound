@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/license"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/show"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tag"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -77,11 +78,11 @@ type usageFunc func()
 // their flags.
 func ParseCLI(env environment.Environment) (CommandRunner, error) {
 	var (
-		verboseEnabled *bool
-		debugEnabled   *bool
-		cmdStartIdx    int
-		currentCmd     command
-		helpRequested  bool
+		debugEnabled  bool
+		quietEnabled  bool
+		cmdStartIdx   int
+		currentCmd    command
+		helpRequested bool
 
 		commands = []command{
 			envdump.Create(env),
@@ -95,13 +96,15 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 			cover.Create(env),
 			goimports.Create(env),
 			license.Create(env),
+			tag.Create(env),
 		}
 	)
 
 	mainCmd := flag.NewFlagSet("main", flag.ExitOnError)
 
-	verboseEnabled = mainCmd.Bool("v", false, "Verbose output")
-	debugEnabled = mainCmd.Bool("vv", false, "Debug output")
+	mainCmd.BoolVar(&debugEnabled, "v", false, "Verbose output")
+	mainCmd.BoolVar(&debugEnabled, "vv", false, "Debug output (Deprecated in favor of -v)")
+	mainCmd.BoolVar(&quietEnabled, "quiet", false, "Quiet mode (set log level to warn, internal commands only log on failure)")
 
 	for idx, arg := range os.Args {
 		if idx == 0 {
@@ -143,12 +146,10 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 		return nil, ErrNoCmd
 	}
 
-	if *verboseEnabled {
-		level.SetGlobalLevel(slog.LevelInfo)
-	}
-
-	if *debugEnabled {
+	if debugEnabled {
 		level.SetGlobalLevel(slog.LevelDebug)
+	} else if quietEnabled {
+		level.SetGlobalLevel(slog.LevelError)
 	}
 
 	return currentCmd, currentCmd.Parse(cmdStartIdx)

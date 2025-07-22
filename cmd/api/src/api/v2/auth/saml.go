@@ -417,7 +417,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 				response.Header().Add(headers.ContentType.String(), mediatypes.TextHtml.String())
 				response.WriteHeader(http.StatusOK)
 
-				if _, err := response.Write([]byte(fmt.Sprintf(authInitiationContentBodyFormat, authReq.Post("")))); err != nil {
+				if _, err := fmt.Fprintf(response, authInitiationContentBodyFormat, authReq.Post("")); err != nil {
 					slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to write response with HTTP POST binding: %v", err))
 					// Technical issues scenario
 					api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")

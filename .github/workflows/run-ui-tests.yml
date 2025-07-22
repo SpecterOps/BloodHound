@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-name: Build UI
+name: Run UI Tests
 
 on:
   pull_request:
@@ -26,30 +25,22 @@ on:
       - synchronize
 
 jobs:
-  build-ui:
+  run-tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code for this repository
         uses: actions/checkout@v4
 
-      - name: Install Node
-        uses: actions/setup-node@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
         with:
-          node-version: 22
+          go-version: "~1.24.4"
+          cache: true
 
-      - name: Install Yarn
+      # Telling yarn that CI is false because of flap
+      - name: Run Tests
         run: |
-          npm install --global yarn
-
-      - name: Install Deps
-        run: |
-          cd cmd/ui && yarn
-
-      - name: Format js-client-library with Prettier
-        run: |
-          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
-
-      - name: Run Build
-        run: |
-          cd cmd/ui && yarn build
+          export CI=false
+          go tool stbernard deps
+          go tool stbernard test -y
