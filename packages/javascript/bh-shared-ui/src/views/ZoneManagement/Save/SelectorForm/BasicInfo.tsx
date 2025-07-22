@@ -221,7 +221,7 @@ const BasicInfo: FC<{
                     </div>
                 </CardContent>
             </Card>
-            <div className={cn('flex md:justify-between min-lg:justify-end gap-2 mt-6 w-full')}>
+            <div className={cn('flex justify-end min-lg:justify-end gap-2 mt-6 w-full')}>
                 <DeleteSelectorButton
                     selectorId={selectorId}
                     selectorData={selectorQuery.data}
@@ -239,7 +239,7 @@ const BasicInfo: FC<{
                     data-testid='zone-management_save_selector-form_save-button'
                     variant={'primary'}
                     onClick={handleSubmit(onSubmit)}>
-                    Save
+                    Save Edits
                 </Button>
             </div>
             <DeleteConfirmationDialog

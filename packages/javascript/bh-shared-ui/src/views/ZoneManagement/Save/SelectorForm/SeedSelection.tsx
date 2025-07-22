@@ -78,7 +78,7 @@ const SeedSelection: FC<{}> = () => {
             <div className='grow'>
                 <div className='flex justify-center w-full'>
                     <div
-                        className={cn('w-full max-w-[60rem] grow', {
+                        className={cn('w-full max-w-[32rem] grow', {
                             'max-md:w-96 max-lg:w-[28rem] max-xl:w-[36rem] min-xl:w-full grow':
                                 selectorType === SeedTypeObjectId,
                         })}>
