@@ -84,8 +84,8 @@ const GraphView: FC = () => {
         isExploreTableSelected = false;
     }
 
-    const displayTable = autoDisplayTable || !!isExploreTableSelected;
     const graphQuery = useSigmaExploreGraph();
+    const displayTable = !!(isExploreTableSelected && graphQuery.data?.nodes) || autoDisplayTable;
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
