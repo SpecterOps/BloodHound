@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
     Button,
@@ -66,6 +66,27 @@ const SaveQueryDialog: React.FC<{
     const [isNew, setIsNew] = useState(true);
     const [localCypherQuery, setLocalCypherQuery] = useState('');
     const { cypherQuery } = cypherSearchState;
+
+    const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
+        apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
+    );
+
+    function idMap() {
+        return listUsersQuery.data?.map((x: any) => {
+            return {
+                name: x.principal_name,
+                id: x.id,
+            };
+        });
+    }
+
+    const usersList = useMemo(() => idMap(), [listUsersQuery.data]);
+    console.log(usersList);
+
+    const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
+
+    console.log('getSelf');
+    console.log(getSelf.data.principal_name, getSelf.data.id);
 
     useEffect(() => {
         if (selectedQuery) {
