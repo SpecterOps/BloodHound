@@ -1827,7 +1827,6 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			request := tt.args.buildRequest()
 			s.GetSavedQueryPermissions(response, request)
 			statusCode, header, body := test.ProcessResponse(t, response)
-			fmt.Println(body)
 			assert.Equal(t, tt.expect.responseCode, statusCode)
 			assert.Equal(t, tt.expect.responseHeader, header)
 			assert.JSONEq(t, tt.expect.responseBody, body)
