@@ -22,13 +22,22 @@ import { render } from '../../test-utils';
 import exploreTableTestProps from './explore-table-test-props';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
 
-const SELECTED_ROW_INDICATOR_CLASS = 'border-primary';
+const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primary)]';
 
 const downloadCallbackSpy = vi.fn();
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
 
 const getFirstCellOfType = (type: string) => screen.getAllByTestId(`table-cell-${type}`)[0];
+
+beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        value: 800,
+    });
+});
 
 const WrappedExploreTable = () => {
     const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
@@ -71,6 +80,7 @@ describe('ExploreTable', async () => {
         expect(screen.getByText('Object ID')).toBeInTheDocument();
         expect(screen.getByText('Nodetype')).toBeInTheDocument();
         expect(screen.getByText('Name')).toBeInTheDocument();
+        await new Promise((res) => setTimeout(res, 10000));
         expect(screen.getByText('CERTMAN@PHANTOM.CORP')).toBeInTheDocument();
         expect(screen.getByText('S-1-5-21-2697957641-2271029196-387917394-2201')).toBeInTheDocument();
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
