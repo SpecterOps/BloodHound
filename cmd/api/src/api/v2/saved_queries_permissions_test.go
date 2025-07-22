@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -1552,8 +1553,6 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 
 	// Setup
 	var (
-		mockCtrl        = gomock.NewController(t)
-		mockDB          = mocks.NewMockDatabase(mockCtrl)
 		testSavedQuery1 = model.SavedQuery{
 			UserID:      user1Id.String(),
 			Name:        "Test Query 1",
@@ -1590,32 +1589,24 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 				},
 			},
 		}
-		expectedSavedQuery1Permissions = v2.SavedQueryPermissionResponse{
-			QueryID:         1,
-			Public:          false,
-			SharedToUserIDs: []uuid.UUID{user2Id},
-		}
-		expectedSavedQuery2Permissions = v2.SavedQueryPermissionResponse{
-			QueryID:         2,
-			Public:          true,
-			SharedToUserIDs: make([]uuid.UUID, 0),
-		}
 	)
 
-	defer mockCtrl.Finish()
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 
 	type expected struct {
-		responseCode        int
-		responsePermissions v2.SavedQueryPermissionResponse
-		responseError       string
+		responseCode   int
+		responseBody   string
+		responseHeader http.Header
 	}
 
 	type fields struct {
-		setupMocks func(t *testing.T, mock *mocks.MockDatabase)
+		setupMocks func(t *testing.T, mock *mock)
 	}
 
 	type args struct {
-		buildRequest func() (*http.Request, error)
+		buildRequest func() *http.Request
 	}
 
 	tests := []struct {
@@ -1627,213 +1618,219 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 		{
 			name: "fail - not a user",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {},
+				// required otherwise the build mocks func will panic
+				setupMocks: func(t *testing.T, mock *mock) {},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
-					return http.NewRequest(http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
+				buildRequest: func() *http.Request {
+					req, err := http.NewRequest(http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
+					require.Nil(t, err)
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:  http.StatusBadRequest,
-				responseError: "Code: 400 - errors: No associated user found",
-			},
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"no associated user found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
 			name: "fail - saved query URI parameter not an int",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {},
+				// required otherwise the build mocks func will panic
+				setupMocks: func(t *testing.T, mock *mock) {},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/not-an-int/permissions", nil)
-					require.NoError(t, err)
-					return req, err
+					require.Nil(t, err)
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:  http.StatusBadRequest,
-				responseError: "Code: 400 - errors: id is malformed.",
-			},
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
 			name: "fail - error retrieving saved query permissions",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, fmt.Errorf("error returning saved query"))
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, fmt.Errorf("error returning saved query"))
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:  http.StatusInternalServerError,
-				responseError: "Code: 500 - errors: an internal error has occurred that is preventing the service from servicing this request",
-			},
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
 			name: "fail - query does not have shared permissions",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, nil)
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, nil)
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:  http.StatusNotFound,
-				responseError: "Code: 404 - errors: no query permissions exist for saved query",
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"no query permissions exist for saved query"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "fail - error asserting if user owns query",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQuery{}, fmt.Errorf("error returning saved query"))
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
+					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQuery{}, fmt.Errorf("error returning saved query"))
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:  http.StatusInternalServerError,
-				responseError: "Code: 500 - errors: an internal error has occurred that is preventing the service from servicing this request",
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "fail - user cannot access saved query permissions",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
+					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:  http.StatusNotFound,
-				responseError: "Code: 404 - errors: no query permissions exist for saved query",
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"no query permissions exist for saved query"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "success - user owns query",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mockDB.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
+					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:        http.StatusOK,
-				responsePermissions: expectedSavedQuery1Permissions,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"]}}`, user2Id),
 			},
 		},
 		{
 			name: "success - admin access query",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:        http.StatusOK,
-				responsePermissions: expectedSavedQuery1Permissions,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"]}}`, user2Id),
 			},
 		},
 		{
 			name: "success - public query",
 			fields: fields{
-				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
-					mockDB.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(2)).Return([]model.SavedQueriesPermissions{testSavedQuery2Permissions}, nil)
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(2)).Return([]model.SavedQueriesPermissions{testSavedQuery2Permissions}, nil)
 				},
 			},
 			args: args{
-				buildRequest: func() (*http.Request, error) {
+				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user2Id), http.MethodGet, "/api/v2/saved-queries/2/permissions", nil)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
 					require.NoError(t, err)
-					return req, err
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
+					return req
 				},
 			},
 			expect: expected{
-				responseCode:        http.StatusOK,
-				responsePermissions: expectedSavedQuery2Permissions,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[]}}`,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.fields.setupMocks(t, mockDB)
+			// t.Parallel()
+			mockCtrl := gomock.NewController(t)
+			databaseMock := &mock{
+				mockDatabase: mocks.NewMockDatabase(mockCtrl),
+			}
 
+			defer mockCtrl.Finish()
+
+			tt.fields.setupMocks(t, databaseMock)
 			s := v2.Resources{
-				DB: mockDB,
+				DB: databaseMock.mockDatabase,
 			}
 
 			response := httptest.NewRecorder()
-			if request, err := tt.args.buildRequest(); err != nil {
-				require.NoError(t, err, "unexpected build request error")
-			} else {
-				s.GetSavedQueryPermissions(response, request)
-			}
-
-			assert.Equal(t, tt.expect.responseCode, response.Code)
-			if tt.expect.responseCode != http.StatusOK {
-				var errWrapper api.ErrorWrapper
-				err = json.Unmarshal(response.Body.Bytes(), &errWrapper)
-				require.NoError(t, err)
-				assert.Equal(t, tt.expect.responseError, errWrapper.Error())
-			} else {
-				var (
-					actualSavedQueryPermissions v2.SavedQueryPermissionResponse
-					basicResponse               api.BasicResponse
-				)
-				err = json.Unmarshal(response.Body.Bytes(), &basicResponse)
-				require.NoError(t, err)
-				basicResponseDataJson, err := basicResponse.Data.MarshalJSON()
-				require.NoError(t, err)
-				err = json.Unmarshal(basicResponseDataJson, &actualSavedQueryPermissions)
-				require.NoError(t, err)
-				assert.Equal(t, tt.expect.responsePermissions, actualSavedQueryPermissions)
-			}
+			request := tt.args.buildRequest()
+			s.GetSavedQueryPermissions(response, request)
+			statusCode, header, body := test.ProcessResponse(t, response)
+			fmt.Println(body)
+			assert.Equal(t, tt.expect.responseCode, statusCode)
+			assert.Equal(t, tt.expect.responseHeader, header)
+			assert.JSONEq(t, tt.expect.responseBody, body)
 		})
 	}
 }

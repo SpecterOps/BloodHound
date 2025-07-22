@@ -85,7 +85,7 @@ type SavedQueryPermissionResponse struct {
 	SharedToUserIDs []uuid.UUID `json:"shared_to_user_ids"`
 }
 
-func (s *SavedQueryPermissionResponse) AppendUserId(userId uuid.NullUUID) {
+func (s *SavedQueryPermissionResponse) appendUserId(userId uuid.NullUUID) {
 	if s.SharedToUserIDs == nil {
 		s.SharedToUserIDs = make([]uuid.UUID, 0)
 	}
@@ -96,11 +96,12 @@ func (s *SavedQueryPermissionResponse) AppendUserId(userId uuid.NullUUID) {
 
 // GetSavedQueryPermissions - returns the query permissions for users who own the query or admins.
 // Public queries will return for any user with no attached user ids.
+// QueryPermissions indicate if the query is public or private, and if private, who the query is shared with.
 func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, request *http.Request) {
 	var rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if savedQueryPermissions, err := s.DB.GetSavedQueryPermissions(request.Context(), savedQueryID); err != nil {
@@ -119,7 +120,7 @@ func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, reques
 		}
 		if !savedQueryPermissionResponse.Public {
 			for _, savedQueryPermission := range savedQueryPermissions {
-				savedQueryPermissionResponse.AppendUserId(savedQueryPermission.SharedToUserID)
+				savedQueryPermissionResponse.appendUserId(savedQueryPermission.SharedToUserID)
 			}
 		}
 		api.WriteBasicResponse(request.Context(), savedQueryPermissionResponse, http.StatusOK, response)
