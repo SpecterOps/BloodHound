@@ -67,8 +67,6 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.CoerceAndRelayNTLMToSMB,
 		ad.CoerceAndRelayNTLMToLDAP,
 		ad.CoerceAndRelayNTLMToLDAPS,
-		ad.GPOAppliesTo,
-		ad.CanApplyGPO,
 		ad.HasTrustKeys,
 	}
 }
