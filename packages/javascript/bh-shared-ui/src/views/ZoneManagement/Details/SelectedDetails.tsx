@@ -66,16 +66,18 @@ export const SelectedDetails: FC = () => {
             type: memberQuery.data.primary_kind as EntityKinds,
         };
         return (
-            <EntityInfoPanel
-                DataTable={EntityInfoDataTable}
-                selectedNode={selectedNode}
-                additionalTables={[
-                    {
-                        sectionProps: { label: 'Selectors', id: memberQuery.data.object_id },
-                        TableComponent: EntitySelectorsInformation,
-                    },
-                ]}
-            />
+            <div className='w-[400px] max-w-[400px]'>
+                <EntityInfoPanel
+                    DataTable={EntityInfoDataTable}
+                    selectedNode={selectedNode}
+                    additionalTables={[
+                        {
+                            sectionProps: { label: 'Selectors', id: memberQuery.data.object_id },
+                            TableComponent: EntitySelectorsInformation,
+                        },
+                    ]}
+                />
+            </div>
         );
     } else if (selectorId !== undefined) {
         return <DynamicDetails queryResult={selectorQuery} />;
