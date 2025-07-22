@@ -118,8 +118,8 @@ const BasicInfo: FC<{
     if (isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
-        <div className={'min-w-[27rem] grow pt-0 h-[30rem]'}>
-            <Card>
+        <div className={'w-full min-w-80 sm:w-80 md:w-96 lg:w-lg h-[30rem] grow'}>
+            <Card className={'p-3'}>
                 <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
                 <CardContent>
                     {selectorId === '' ? null : (
@@ -221,7 +221,7 @@ const BasicInfo: FC<{
                     </div>
                 </CardContent>
             </Card>
-            <div className={cn('flex justify-center gap-2 mt-6 w-full')}>
+            <div className={cn('flex md:justify-between min-lg:justify-end gap-2 mt-6 w-full')}>
                 <DeleteSelectorButton
                     selectorId={selectorId}
                     selectorData={selectorQuery.data}

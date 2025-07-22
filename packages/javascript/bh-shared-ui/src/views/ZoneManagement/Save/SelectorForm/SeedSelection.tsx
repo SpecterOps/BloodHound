@@ -17,12 +17,11 @@
 import { Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useContext, useEffect, useState } from 'react';
-import { SubmitHandler, useFormContext } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useDebouncedValue } from '../../../../hooks';
-import { apiClient, cn, useAppNavigate } from '../../../../utils';
+import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
@@ -35,12 +34,10 @@ const getListScalar = (windowHeight: number) => {
     return 8;
 };
 
-const SeedSelection: FC<{
-    onSubmit: SubmitHandler<SelectorFormInputs>;
-}> = () => {
-    const navigate = useAppNavigate();
-    const { tierId = '', labelId, selectorId = '' } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+const SeedSelection: FC<{}> = () => {
+    // const navigate = useAppNavigate();
+    //const { tierId = '', labelId, selectorId = '' } = useParams();
+    //const tagId = labelId === undefined ? tierId : labelId;
 
     //const { addNotification } = useNotifications();
 
@@ -62,32 +59,6 @@ const SeedSelection: FC<{
         enabled: seeds.length > 0,
     });
 
-    /*
-
-        const deleteSelectorMutation = useDeleteSelector();
-
-    const handleDeleteSelector = useCallback(async () => {
-        try {
-            if (!tagId || !selectorId)
-                throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
-
-            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
-
-            addNotification('Selector was deleted successfully!', undefined, {
-                anchorOrigin: { vertical: 'top', horizontal: 'right' },
-            });
-
-            setDeleteDialogOpen(false);
-
-            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
-        } catch (error) {
-            handleError(error, 'deleting', 'selector', addNotification);
-        }
-    }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
-
-    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
-    */
-
     const [heightScalar, setHeightScalar] = useState(getListScalar(window.innerHeight));
 
     const updateHeightScalar = useDebouncedValue(() => setHeightScalar(getListScalar(window.innerHeight)), 100);
@@ -105,10 +76,11 @@ const SeedSelection: FC<{
     return (
         <>
             <div className='grow'>
-                <div className='flex justify-center'>
+                <div className='flex justify-center w-full'>
                     <div
-                        className={cn('w-full max-w-[64rem]', {
-                            grow: selectorType === SeedTypeObjectId,
+                        className={cn('w-full max-w-[60rem] grow', {
+                            'max-md:w-96 max-lg:w-[28rem] max-xl:w-[36rem] min-xl:w-full grow':
+                                selectorType === SeedTypeObjectId,
                         })}>
                         <Input {...register('seeds', { value: Array.from(seeds) })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
@@ -116,33 +88,10 @@ const SeedSelection: FC<{
                         ) : (
                             <Cypher preview={false} initialInput={firstSeed?.value} />
                         )}
-                        {/*
-                        <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
-                            <DeleteSelectorButton
-                                selectorId={selectorId}
-                                selectorData={selectorQuery.data}
-                                onClick={() => {
-                                    setDeleteDialogOpen(true);
-                                }}
-                            />  
-                            <Button
-                                data-testid='zone-management_save_selector-form_cancel-button'
-                                variant={'secondary'}
-                                onClick={() => navigate(-1)}>
-                                Cancel
-                            </Button>
-                            <Button
-                                data-testid='zone-management_save_selector-form_save-button'
-                                variant={'primary'}
-                                onClick={handleSubmit(onSubmit)}>
-                                Save
-                            </Button>
-                        </div>
-                        */}
                     </div>
                 </div>
             </div>
-            <Card className='max-h-full grow min-w-[27rem]'>
+            <Card className='max-h-full min-w-[27rem] m:w-80 md:w-96 lg:w-lg grow'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
                 <CardContent className='pl-4'>
                     <div className='font-bold pl-2 mb-2'>
