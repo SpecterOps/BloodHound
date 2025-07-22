@@ -27,7 +27,6 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
-    // TODO: uncomment these when DoodleUI change goes
     className: 'table-fixed',
     disableDefaultOverflowAuto: true,
 };
