@@ -55,11 +55,7 @@ export const useExploreGraph = (enabled = true) => {
 
     const query = exploreGraphQueryFactory(params);
 
-    const includeProperties = true;
-    const queryConfig =
-        params?.searchType === 'cypher'
-            ? query.getQueryConfig(params, includeProperties)
-            : query.getQueryConfig(params);
+    const queryConfig = query.getQueryConfig(params);
 
     const shouldFetch = Boolean(enabled && queryConfig?.enabled);
 

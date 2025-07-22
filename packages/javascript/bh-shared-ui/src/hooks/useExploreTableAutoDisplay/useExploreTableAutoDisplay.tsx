@@ -39,6 +39,7 @@ export const useExploreTableAutoDisplay = (enabled: boolean) => {
         graphData && // type check the response for type safety
         isGraphResponse(graphData)
     );
+
     // Resets the trigger on every fetch of a query, even fetches from the cache.
     useEffect(() => {
         if (enabled && isFetching) {
