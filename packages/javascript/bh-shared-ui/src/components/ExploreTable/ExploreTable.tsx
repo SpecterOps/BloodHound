@@ -27,7 +27,7 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
 const tableProps: DataTableProps['TableProps'] = {
-    className: 'table-fixed',
+    className: 'w-[calc(100% + 250px)] table-fixed',
     disableDefaultOverflowAuto: true,
 };
 
@@ -122,6 +122,7 @@ const ExploreTable = ({
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}
                     virtualizationOptions={virtualizationOptions}
+                    growLastColumn
                 />
             </div>
         </div>
