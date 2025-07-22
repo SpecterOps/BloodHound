@@ -42,11 +42,7 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
 
     const stringyKey = columnKey?.toString();
 
-    return (
-        format({ keyprop: stringyKey, value, label: stringyKey }) || (
-            <div className='w-full text-center'>{FALLBACK_STRING}</div>
-        )
-    );
+    return format({ keyprop: stringyKey, value, label: stringyKey }) || FALLBACK_STRING;
 };
 
 export default ExploreTableDataCell;
