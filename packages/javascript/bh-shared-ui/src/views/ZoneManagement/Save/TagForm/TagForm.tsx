@@ -71,13 +71,7 @@ const diffValues = (
     if (data === undefined) return formValues;
 
     const workingCopy = { ...formValues };
-
     const diffed: UpdateAssetGroupTagRequest = {};
-
-    // 'on' means the switch hasn't been touched yet which means default to current analysis_enabled state
-    if (workingCopy.analysis_enabled === 'on') {
-        workingCopy.analysis_enabled = data.analysis_enabled;
-    }
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
@@ -101,7 +95,7 @@ export const TagForm: FC = () => {
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
-    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled);
+    const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(tagQuery.data?.analysis_enabled || undefined);
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
 
@@ -234,6 +228,8 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
+        }
+        if (tagQuery.data?.analysis_enabled) {
             setToggleEnabled(tagQuery.data.analysis_enabled);
         }
     }, [tagQuery.data]);
@@ -298,7 +294,8 @@ export const TagForm: FC = () => {
                                         <div className='flex gap-3'>
                                             <Switch
                                                 id='analysis'
-                                                checked={toggleEnabled || undefined}
+                                                checked={toggleEnabled}
+                                                value={toggleEnabled?.toString()}
                                                 {...register('analysis_enabled')}
                                                 data-testid='zone-management_save_tag-form_analysis-enabled-switch'
                                                 onCheckedChange={(checked: boolean) => {
