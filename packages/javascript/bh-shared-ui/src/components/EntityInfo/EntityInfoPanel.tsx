@@ -15,20 +15,23 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Paper, SxProps, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../utils';
-import { usePaneStyles } from '../InfoStyles';
-import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
-
-import { SelectedNode } from '../../../types';
+import { SelectedNode } from '../../types';
+import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
+import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views/Explore';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
+    DataTable: React.FC<EntityInfoDataTableProps>;
+    selectedNode?: SelectedNode | null;
     sx?: SxProps;
+    additionalTables?: {
+        sectionProps: EntityInfoDataTableProps;
+        TableComponent: React.FC<EntityInfoDataTableProps>;
+    }[];
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
@@ -52,9 +55,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                 }}>
                 {selectedNode ? (
                     <EntityInfoContent
+                        DataTable={DataTable}
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        additionalTables={additionalTables}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>

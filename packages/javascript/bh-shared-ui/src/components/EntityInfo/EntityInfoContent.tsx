@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,27 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Box } from '@mui/material';
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { EntityInfoContentProps } from '../../utils/content';
+import EntityInfoDataTableList from './EntityInfoDataTableList';
 import EntityObjectInformation from './EntityObjectInformation';
-import SelectorList from './SelectorList';
-
-export interface EntityInfoContentProps {
-    id: number;
-    nodeType: string;
-    properties: Record<string, any>;
-}
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
-    const { tierId, labelId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
-
     return (
         <Box>
             <EntityObjectInformation {...props} />
-            {tagId !== undefined && memberId !== undefined && <SelectorList tagId={tagId} memberId={memberId} />}
+            <EntityInfoDataTableList {...props} />
         </Box>
     );
 };

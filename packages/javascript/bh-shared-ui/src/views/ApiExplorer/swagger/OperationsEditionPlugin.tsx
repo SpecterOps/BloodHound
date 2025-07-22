@@ -19,7 +19,8 @@ import toString from 'lodash/toString';
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 import ImPropTypes from 'react-immutable-proptypes';
-import { CommunityIcon, EnterpriseIcon } from '../../../components';
+import CommunityIcon from '../../../components/CommunityIcon';
+import EnterpriseIcon from '../../../components/EnterpriseIcon';
 
 export const OperationsEditionPlugin = function () {
     return {
