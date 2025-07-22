@@ -46,31 +46,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
-// GetSavedQuery - Returns the saved query for users who own the query, are admins or have the query shared with them.
-func (s Resources) GetSavedQuery(response http.ResponseWriter, request *http.Request) {
-	var (
-		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
-	)
-
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
-	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query not found", request), response)
-		} else {
-			api.HandleDatabaseError(request, response, err)
-		}
-	} else if isAccessibleToUser, err := s.canUserAccessQuery(request.Context(), savedQuery, user); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if !isAccessibleToUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query not found", request), response)
-	} else {
-		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
-	}
-}
-
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string

@@ -7001,63 +7001,6 @@
           }
         }
       ],
-      "get": {
-        "operationId": "GetSavedQuery",
-        "summary": "Return a saved query",
-        "description": "Returns an existing saved query by ID",
-        "tags": [
-          "Cypher",
-          "Community",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "name": "saved_query_id",
-            "description": "ID of the saved query",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/model.saved-query"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      },
       "delete": {
         "operationId": "DeleteSavedQuery",
         "summary": "Delete a saved query",
