@@ -16,9 +16,9 @@
 
 import userEvent from '@testing-library/user-event';
 import { AssetGroupTagTypeTier, ConfigurationKey } from 'js-client-library';
-import { longWait, render, screen, within } from '../../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { longWait, render, screen, within } from '../../../test-utils';
 import SummaryCard from './SummaryCard';
 
 // Mock icons
@@ -87,7 +87,7 @@ describe('SummaryCard', () => {
 
         await longWait(() => {
             expect(mockNavigate).toHaveBeenCalledWith('/zone-management/details/tier/99');
-        })
+        });
     });
 
     it('does not navigate when clicking other parts of the card', async () => {
@@ -110,10 +110,10 @@ describe('SummaryCard', () => {
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configRes));
-            }),
+            })
         );
 
-        render(<SummaryCard {...props} />)
+        render(<SummaryCard {...props} />);
 
         const listItem = await screen.findByTestId('zone-management_summary_test_tier-list_item-99');
         expect(listItem).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe('SummaryCard', () => {
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configResponse));
-            }),
+            })
         );
 
         render(<SummaryCard {...props} />);
@@ -151,7 +151,7 @@ describe('SummaryCard', () => {
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configResponse));
-            }),
+            })
         );
 
         render(<SummaryCard {...props} />);

@@ -39,6 +39,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
+import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 import {
     useAssetGroupTags,
     useHighestPrivilegeTagId,
@@ -50,7 +51,6 @@ import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -95,15 +95,16 @@ export const TagForm: FC = () => {
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
-    const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(tagQuery.data?.analysis_enabled || undefined);
+    const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(
+        tagQuery.data?.analysis_enabled || undefined
+    );
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
 
     const topTagId = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 
-    const showAnalysisToggle =
-        privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
+    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
