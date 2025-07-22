@@ -41,9 +41,10 @@ func findRelevantAuditLogs(auditLogs model.AuditLogs, expectedAction model.Audit
 			if !matchingData {
 				continue
 			}
-			if al.Status == model.AuditLogStatusIntent {
+			switch al.Status {
+			case model.AuditLogStatusIntent:
 				intentAuditLog = al
-			} else if al.Status == expectedResultStatus {
+			case expectedResultStatus:
 				resultAuditLog = al
 			}
 		}

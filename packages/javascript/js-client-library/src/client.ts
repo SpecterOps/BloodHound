@@ -152,6 +152,12 @@ class BHEAPIClient {
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 
+    getSourceKinds = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string }[] }>>(
+            '/api/v2/graphs/source-kinds',
+            options
+        );
+
     clearDatabase = (payload: ClearDatabaseRequest, options?: RequestOptions) => {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
@@ -2297,6 +2303,21 @@ class BHEAPIClient {
     getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: RequestOptions) =>
         this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/relay-targets',
+            Object.assign(
+                {
+                    params: {
+                        source_node: sourceNode,
+                        target_node: targetNode,
+                        edge_type: edgeType,
+                    },
+                },
+                options
+            )
+        );
+
+    getACLInheritance = (sourceNode: number, targetNode: number, edgeType: string, options?: RequestOptions) =>
+        this.baseClient.get<GraphResponse>(
+            '/api/v2/graphs/acl-inheritance',
             Object.assign(
                 {
                     params: {
