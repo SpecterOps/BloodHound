@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,14 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
-import { useCollapsibleSectionStyles } from '../../../Explore/InfoStyles';
-import { SubHeader } from '../../../Explore/fragments';
-import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
+import { SubHeader } from '../../views/Explore';
+import { useCollapsibleSectionStyles } from '../../views/Explore/InfoStyles';
 
 const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) => {
     //TODO: Once azure backend changes for counts param are in, utilize response error details
@@ -46,29 +44,36 @@ export const EntityInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
         label?: string;
         count?: number;
-        onChange?: (label: string, isOpen: boolean) => void;
+        onChange?: (isOpen: boolean) => void;
         isLoading?: boolean;
         isError?: boolean;
         error?: any;
+        isExpanded: boolean;
     }>
-> = ({ children, label = '', count, onChange = () => {}, isLoading = false, isError = false, error = null }) => {
+> = ({
+    children,
+    label = '',
+    count,
+    onChange = () => {},
+    isLoading = false,
+    isError = false,
+    error = null,
+    isExpanded,
+}) => {
     const styles = useCollapsibleSectionStyles();
-    const entityInfoPanelContext = useEntityInfoPanelContext();
-    const expanded = !!entityInfoPanelContext.expandedSections[label];
     const disabled = isLoading || (count === 0 && !isError);
 
     return (
         <Accordion
-            expanded={expanded}
-            onChange={(e, expanded) => {
-                entityInfoPanelContext.toggleSection(label);
-                onChange(label, expanded);
+            expanded={isExpanded}
+            onChange={(_e, expanded) => {
+                onChange(expanded);
             }}
             disabled={disabled}
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary
-                expandIcon={<FontAwesomeIcon icon={expanded ? faMinus : faPlus} />}
+                expandIcon={<FontAwesomeIcon icon={isExpanded ? faMinus : faPlus} />}
                 className={'accordion-summary'}
                 classes={{
                     root: styles.accordionSummary,
