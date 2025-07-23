@@ -76,7 +76,7 @@ delete:
       required: true
       schema:
         type: integer
-        format: int32
+        format: int64
   responses:
     204:
       $ref: './../responses/no-content.yaml'
@@ -107,7 +107,7 @@ put:
       required: true
       schema:
         type: integer
-        format: int32
+        format: int64
   requestBody:
     description: The request body for updating a saved query
     required: true
