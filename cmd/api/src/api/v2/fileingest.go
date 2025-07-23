@@ -19,9 +19,11 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"mime"
 	"net/http"
+	"net/textproto"
 	"slices"
 	"strconv"
 	"strings"
@@ -130,6 +132,59 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		validator   = upload.NewIngestValidator(s.IngestSchema)
 	)
 
+	if strings.HasPrefix(request.Header.Get("Content-Type"), "multipart/form-data") {
+		slog.Info("MULTIPART DATA BABY")
+		if reader, err := request.MultipartReader(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "failed to open multipart form data", request), response)
+			return
+		} else if jobID, err := strconv.Atoi(jobIdString); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			paramsToCommit := make([]upload.IngestTaskParams, 0)
+
+			for {
+				if part, err := reader.NextPart(); err == io.EOF {
+					break
+				} else if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "failed to read multipart part", request), response)
+					return
+				} else if !IsValidContentTypeForUploadMultipart(part.Header) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
+				} else if ingestTaskParams, err := upload.SaveMultipartIngestFile(s.Config.TempDirectory(), part, validator); errors.Is(err, upload.ErrInvalidJSON) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+				} else if report, ok := err.(upload.ValidationReport); ok {
+					var (
+						msgs       = report.BuildAPIError()
+						errDetails = []api.ErrorDetails{}
+					)
+
+					for _, msg := range msgs {
+						errDetails = append(errDetails, api.ErrorDetails{Message: msg})
+					}
+
+					e := &api.ErrorWrapper{
+						HTTPStatus: http.StatusBadRequest,
+						Timestamp:  time.Now(),
+						RequestID:  ctx.FromRequest(request).RequestID,
+						Errors:     errDetails,
+					}
+
+					api.WriteErrorResponse(request.Context(), e, response)
+				} else if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+				} else {
+					paramsToCommit = append(paramsToCommit, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: part.FileName(), FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)})
+				}
+			}
+
+			slog.Info("ingestJob", "ingestJob", ingestJob)
+			slog.Info("params", "params", paramsToCommit)
+		}
+		return
+	}
+
 	if request.Body != nil {
 		defer request.Body.Close()
 	}
@@ -194,6 +249,17 @@ func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, req
 }
 
 func IsValidContentTypeForUpload(header http.Header) bool {
+	rawValue := header.Get(headers.ContentType.String())
+	if rawValue == "" {
+		return false
+	} else if parsed, _, err := mime.ParseMediaType(rawValue); err != nil {
+		return false
+	} else {
+		return slices.Contains(ingestModel.AllowedFileUploadTypes, parsed)
+	}
+}
+
+func IsValidContentTypeForUploadMultipart(header textproto.MIMEHeader) bool {
 	rawValue := header.Get(headers.ContentType.String())
 	if rawValue == "" {
 		return false
