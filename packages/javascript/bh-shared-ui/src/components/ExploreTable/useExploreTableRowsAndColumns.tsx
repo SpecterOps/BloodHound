@@ -144,7 +144,7 @@ const useExploreTableRowsAndColumns = ({
                 id: key?.toString(),
             });
         },
-        [handleSort, sortOrder, sortBy, rows]
+        [handleSort, sortOrder, sortBy, firstTenRows]
     );
 
     const kebabColumDefinition = useMemo(
