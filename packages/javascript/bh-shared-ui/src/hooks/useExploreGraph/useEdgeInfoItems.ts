@@ -54,6 +54,10 @@ const queryConfig = {
     },
 };
 
+// These incoming ids can be strings sometimes, despite the parameter type (see composition dropdown). This helper function
+// provides more flexible validation
+const validateId = (id: any) => (typeof id === 'number' ? Number.isInteger(id) : !!id);
+
 export const useEdgeInfoItems = (
     { sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps,
     opts?: EdgeInfoItemOpts
@@ -62,14 +66,12 @@ export const useEdgeInfoItems = (
     const { data, isLoading, isError } = useQuery(
         [type, sourceDBId, targetDBId, edgeName],
         () => queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName }),
-        { enabled: !!(Number.isInteger(sourceDBId) && Number.isInteger(targetDBId) && edgeName) }
+        { enabled: validateId(sourceDBId) && validateId(targetDBId) && !!edgeName }
     );
 
-    const handleNodeClick = (item: number) => {
-        const node = nodesArray[item];
-
+    const handleNodeClick = (objectId: string) => {
         setExploreParams({
-            primarySearch: node.objectId,
+            primarySearch: objectId,
             searchType: 'node',
             exploreSearchTab: 'node',
         });
@@ -81,7 +83,8 @@ export const useEdgeInfoItems = (
         graphId,
         kind: node.kind,
         ...(opts?.withProperties && { properties: node.properties }),
-        onClick: handleNodeClick,
+        onClick: () => handleNodeClick(node.objectId),
     }));
+
     return { isLoading, isError, nodesArray };
 };
