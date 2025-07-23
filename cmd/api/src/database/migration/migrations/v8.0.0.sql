@@ -41,5 +41,17 @@ WHERE role_id = (SELECT id FROM roles WHERE roles.name = 'Power User')
 -- Add name index to asset_group_tag_selectors table for search
 CREATE INDEX IF NOT EXISTS idx_asset_group_tag_selectors_name ON asset_group_tag_selectors USING btree (name);
 
+-- if the explore_table_view flag doesnt exist, create explore_table_view feature flag, disable it, and make it non user-updatable.
+-- this same query exists in 7.5.0, however it was merged after the release was cut so any tenants created before 7.5.0 will be missing this flag.
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'explore_table_view',
+        'Explore Table View',
+        'Adds a layout option to the Explore page that will display all nodes in a table view. It also will automatically display the table when a cypher query returned only nodes.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
 -- enable explore_table_view feature flag
 UPDATE feature_flags SET enabled = true WHERE key = 'explore_table_view';
