@@ -118,8 +118,6 @@ describe('GraphView', () => {
 
         render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
 
-        await new Promise((res) => setTimeout(res, 2000));
-
         const sigma = await screen.findByTestId('sigma-container-wrapper');
         const table = screen.queryByRole('table');
 

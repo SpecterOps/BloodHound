@@ -80,7 +80,6 @@ describe('ExploreTable', async () => {
         expect(screen.getByText('Object ID')).toBeInTheDocument();
         expect(screen.getByText('Nodetype')).toBeInTheDocument();
         expect(screen.getByText('Name')).toBeInTheDocument();
-        await new Promise((res) => setTimeout(res, 10000));
         expect(screen.getByText('CERTMAN@PHANTOM.CORP')).toBeInTheDocument();
         expect(screen.getByText('S-1-5-21-2697957641-2271029196-387917394-2201')).toBeInTheDocument();
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
