@@ -36,6 +36,8 @@ export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_
 export const compareForExploreTableSort = (a: any, b: any) => {
     if (typeof a === 'number' || typeof b === 'number') {
         if (typeof a === 'number' && typeof b === 'number') {
+            if (a === b) return 0;
+
             return a > b ? 1 : -1;
         }
         if (!b) return 1;
@@ -43,7 +45,7 @@ export const compareForExploreTableSort = (a: any, b: any) => {
     }
 
     if (typeof a === 'boolean' || typeof b === 'boolean') {
-        if (a === true && b === true) return 0;
+        if (a === b) return 0;
         if (a === true && !b) return 1;
         if (b === true && !a) return -1;
     }

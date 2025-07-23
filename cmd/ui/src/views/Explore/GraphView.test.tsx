@@ -16,17 +16,22 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { createFeatureFlags } from 'src/mocks/factories/featureFlags';
 import { render, screen, waitFor } from 'src/test-utils';
 import GraphView from './GraphView';
-import { cypherResponse, featureFlagsResponse } from './graph-view-test-data';
+import { cypherResponse } from './graph-view-test-data';
 
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherResponse));
     }),
     rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(ctx.json(featureFlagsResponse));
+        return res(
+            ctx.status(200),
+            ctx.json({ data: createFeatureFlags([{ key: 'explore_table_view', enabled: true }]) })
+        );
     }),
+
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
