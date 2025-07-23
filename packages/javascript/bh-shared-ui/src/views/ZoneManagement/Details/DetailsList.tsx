@@ -27,6 +27,7 @@ import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
+import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
 
@@ -136,6 +137,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
 
                                 return (
                                     <li
+                                        data-testid={`zone-management_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                         key={listItem.id}
                                         className={cn(
                                             'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
@@ -152,6 +154,9 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
+                                                {isTag(listItem) && !listItem?.analysis_enabled && (
+                                                    <ZoneAnalysisIcon size={18} />
+                                                )}
                                                 <div
                                                     className={cn(
                                                         'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
