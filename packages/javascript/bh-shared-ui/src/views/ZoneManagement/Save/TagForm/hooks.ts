@@ -44,6 +44,7 @@ export const useCreateAssetGroupTag = () => {
     return useMutation(createAssetGroupTag, {
         onSettled: async () => {
             await queryClient.invalidateQueries(['zone-management', 'tags']);
+            await queryClient.invalidateQueries(['asset-group-tags']);
         },
     });
 };
@@ -61,6 +62,7 @@ export const usePatchAssetGroupTag = (tagId: string | number) => {
     return useMutation(patchAssetGroupTag, {
         onSettled: async () => {
             await queryClient.invalidateQueries(['zone-management', 'tags', tagId]);
+            await queryClient.invalidateQueries(['asset-group-tags']);
         },
     });
 };
@@ -71,8 +73,9 @@ const deleteAssetGroupTag = async (tagId: string | number, options?: RequestOpti
 export const useDeleteAssetGroupTag = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteAssetGroupTag, {
-        onSettled: (_data, _error, tagId) => {
+        onSettled: async (_data, _error, tagId) => {
             queryClient.invalidateQueries(['zone-management', 'tags', tagId]);
+            await queryClient.invalidateQueries(['asset-group-tags']);
         },
     });
 };

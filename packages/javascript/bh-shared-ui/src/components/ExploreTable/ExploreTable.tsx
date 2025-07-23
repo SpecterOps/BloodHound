@@ -14,31 +14,99 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import React from 'react';
-import useToggle from '../../hooks/useToggle';
-import { cn } from '../../utils/theme';
-import ManageColumns from './ManageColumns';
+import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { useToggle } from '../../hooks';
+import { cn } from '../../utils';
+import TableControls from './TableControls';
+import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
-interface ExploreTableProps {
-    open: boolean;
-    onClose: () => void;
-}
+const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
-const ExploreTable: React.FC<ExploreTableProps> = (props) => {
-    const { open, onClose } = props;
+type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
-    const [openManageColumns, toggleOpenManageColumns] = useToggle(false);
+const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+    className: 'sticky top-0 z-10',
+};
 
-    if (!open) return null;
+const tableHeadProps: DataTableProps['TableHeadProps'] = {
+    className: 'pr-4',
+};
+
+const ExploreTable = ({
+    data,
+    selectedNode,
+    open,
+    onClose,
+    onRowClick,
+    onDownloadClick,
+    onKebabMenuClick,
+    onManageColumnsChange,
+    allColumnKeys,
+    selectedColumns,
+}: ExploreTableProps) => {
+    const [searchInput, setSearchInput] = useState('');
+    const [isExpanded, toggleIsExpanded] = useToggle(false);
+
+    const handleSearchInputChange = useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
+        []
+    );
+
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        allColumnKeys,
+        selectedColumns,
+        data,
+    });
+
+    const searchInputProps = useMemo(
+        () => ({
+            onChange: handleSearchInputChange,
+            value: searchInput,
+            placeholder: 'Search',
+        }),
+        [handleSearchInputChange, searchInput]
+    );
+
+    if (!open || !data) return null;
 
     return (
-        <div className='absolute bottom-4 left-4 right-4 h-1/2 bg-pink-300 flex justify-center items-center'>
-            <div className={cn({ hidden: openManageColumns })}>
-                <Button onClick={toggleOpenManageColumns}>Manage Columns</Button>
-                <Button onClick={onClose}>CLOSE</Button>
+        <div
+            className={cn(
+                'dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2',
+                {
+                    'h-1/2': !isExpanded,
+                    'h-[calc(100%-72px)]': isExpanded,
+                    'w-[calc(100%-450px)]': selectedNode,
+                }
+            )}>
+            <div className='explore-table-container w-full h-full'>
+                <TableControls
+                    className='h-[72px]'
+                    columns={columnOptionsForDropdown}
+                    selectedColumns={selectedColumns || requiredColumns}
+                    pinnedColumns={requiredColumns}
+                    onDownloadClick={onDownloadClick}
+                    onExpandClick={toggleIsExpanded}
+                    onManageColumnsChange={onManageColumnsChange}
+                    onCloseClick={onClose}
+                    tableName='Results'
+                    resultsCount={sortedFilteredRows?.length}
+                    SearchInputProps={searchInputProps}
+                />
+                <MemoDataTable
+                    className='h-full *:h-[calc(100%-72px)]'
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    onRowClick={onRowClick}
+                    selectedRow={selectedNode || undefined}
+                    data={sortedFilteredRows}
+                    columns={tableColumns as DataTableProps['columns']}
+                />
             </div>
-            <ManageColumns open={openManageColumns} onClose={toggleOpenManageColumns} />
         </div>
     );
 };

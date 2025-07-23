@@ -34,17 +34,22 @@ var schemaFiles embed.FS
 type IngestSchema struct {
 	NodeSchema *jsonschema.Schema
 	EdgeSchema *jsonschema.Schema
+	MetaSchema *jsonschema.Schema
 }
 
+// LoadIngestSchema constructs the JSON schema for OpenGraph ingest payloads
 func LoadIngestSchema() (IngestSchema, error) {
 	var schema IngestSchema
 	if nodeSchema, err := loadSchema("node.json"); err != nil {
 		return schema, err
 	} else if edgeSchema, err := loadSchema("edge.json"); err != nil {
 		return schema, err
+	} else if metaSchema, err := loadSchema("metadata.json"); err != nil {
+		return schema, err
 	} else {
 		schema.NodeSchema = nodeSchema
 		schema.EdgeSchema = edgeSchema
+		schema.MetaSchema = metaSchema
 		return schema, nil
 	}
 }

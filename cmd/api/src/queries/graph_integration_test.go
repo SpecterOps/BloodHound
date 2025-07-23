@@ -23,17 +23,17 @@ import (
 	"context"
 	"testing"
 
-	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 
-	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
-	"github.com/specterops/bloodhound/src/queries"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
@@ -316,8 +316,8 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 		groupBObjectID := harness.AssetGroupComboNodeHarness.GroupB.ID.String()
 		groupAObjectID := harness.AssetGroupComboNodeHarness.GroupA.ID.String()
 
-		groupACategory := comboNode[groupAObjectID].(bloodhoundgraph.BloodHoundGraphNode).BloodHoundGraphItem.Data["category"]
-		groupBCategory := comboNode[groupBObjectID].(bloodhoundgraph.BloodHoundGraphNode).BloodHoundGraphItem.Data["category"]
+		groupACategory := comboNode[groupAObjectID].(bloodhoundgraph.BloodHoundGraphNode).Data["category"]
+		groupBCategory := comboNode[groupBObjectID].(bloodhoundgraph.BloodHoundGraphNode).Data["category"]
 
 		// ensure that nodes from within T0 as well as from other domains all have the category tagged
 		require.Equal(t, "Asset Groups", groupACategory)

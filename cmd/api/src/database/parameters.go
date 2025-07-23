@@ -19,8 +19,8 @@ package database
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

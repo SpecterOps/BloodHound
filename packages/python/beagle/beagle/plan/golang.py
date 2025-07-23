@@ -67,15 +67,15 @@ def golang_ldflags(project_ctx: ProjectContext) -> str:
     """
     repo_version = project_ctx.env.version
     ldflags = [
-        f"-X 'github.com/specterops/bloodhound/src/version.majorVersion={repo_version.major}'",
-        f"-X 'github.com/specterops/bloodhound/src/version.minorVersion={repo_version.minor}'",
-        f"-X 'github.com/specterops/bloodhound/src/version.patchVersion={repo_version.patch}'",
+        f"-X 'github.com/specterops/bloodhound/cmd/api/src/version.majorVersion={repo_version.major}'",
+        f"-X 'github.com/specterops/bloodhound/cmd/api/src/version.minorVersion={repo_version.minor}'",
+        f"-X 'github.com/specterops/bloodhound/cmd/api/src/version.patchVersion={repo_version.patch}'",
     ]
 
     # If there's no prerelease like '-rc1' then don't bother setting the ldflag for it
     if repo_version.prerelease is not None:
         ldflags.append(
-            f"-X 'github.com/specterops/bloodhound/src/version.prereleaseVersion={repo_version.prerelease}'"
+            f"-X 'github.com/specterops/bloodhound/cmd/api/src/version.prereleaseVersion={repo_version.prerelease}'"
         )
 
     return " ".join(ldflags)

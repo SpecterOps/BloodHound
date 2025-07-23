@@ -17,7 +17,7 @@
 package model
 
 import (
-	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
 )
 
 type GraphMigration struct {

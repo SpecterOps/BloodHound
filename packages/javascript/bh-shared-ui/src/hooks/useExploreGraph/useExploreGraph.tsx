@@ -18,6 +18,7 @@ import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
+    CypherExploreGraphQuery,
     ExploreGraphQuery,
     compositionSearchQuery,
     cypherSearchQuery,
@@ -27,37 +28,57 @@ import {
     relationshipSearchQuery,
 } from './queries';
 
-export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
+type UseExploreGraphParams = {
+    includeProperties?: boolean;
+    enabled?: boolean;
+};
+
+export function exploreGraphQueryFactory(
+    paramOptions: Partial<ExploreQueryParams>
+): ExploreGraphQuery | CypherExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
             return nodeSearchQuery;
         case 'pathfinding':
             return pathfindingSearchQuery;
-        case 'cypher':
-            return cypherSearchQuery;
         case 'relationship':
             return relationshipSearchQuery;
         case 'composition':
             return compositionSearchQuery;
+        case 'cypher':
+            return cypherSearchQuery;
         default:
             return fallbackQuery;
     }
 }
 
+const DEFAULT_USE_EXPLORE_GRAPH_PARAMS = { includeProperties: false, enabled: true };
+
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = () => {
+export const useExploreGraph = ({
+    includeProperties = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.includeProperties,
+    enabled = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.enabled,
+}: UseExploreGraphParams = DEFAULT_USE_EXPLORE_GRAPH_PARAMS) => {
     const params = useExploreParams();
+
     const { addNotification } = useNotifications();
 
     const query = exploreGraphQueryFactory(params);
 
+    const queryConfig =
+        params?.searchType === 'cypher'
+            ? query.getQueryConfig(params, includeProperties)
+            : query.getQueryConfig(params);
+
+    const shouldFetch = Boolean(enabled && queryConfig?.queryFn);
     return useQuery({
-        ...query.getQueryConfig(params),
+        ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
             addNotification(message, key, {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
+        enabled: shouldFetch,
     });
 };

@@ -23,13 +23,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/bootstrap"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/services"
-	"github.com/specterops/bloodhound/src/test/integration/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/services"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/dawgs/graph"
 )
 

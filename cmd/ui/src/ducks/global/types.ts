@@ -30,6 +30,7 @@ const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
 const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
 const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
 const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
+const GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -45,6 +46,7 @@ export {
     GLOBAL_SET_EXPANDED,
     GLOBAL_SET_EXPLORE_LAYOUT,
     GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
+    GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
 };
 
 export interface GlobalViewState {
@@ -54,6 +56,7 @@ export interface GlobalViewState {
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
+    selectedExploreTableColumns?: Record<string, boolean>;
 }
 
 export interface GlobalOptionsState {
@@ -104,6 +107,7 @@ export type GlobalViewActionTypes =
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
     | SetAutoRunQueriesAction;
+    | SetSelectedExploreTableColumns;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -130,6 +134,11 @@ export interface SetAssetGroupEditAction {
 export interface SetIsExploreTableSelectedAction {
     type: typeof GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED;
     isExploreTableSelected: boolean;
+}
+
+export interface SetSelectedExploreTableColumns {
+    type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
+    selectedExploreTableColumns: Record<string, boolean>;
 }
 
 export type GlobalOptionsActionTypes =

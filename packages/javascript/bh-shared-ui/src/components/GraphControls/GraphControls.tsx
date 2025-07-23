@@ -14,6 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+    TooltipContent,
+    TooltipPortal,
+    TooltipProvider,
+    TooltipRoot,
+    TooltipTrigger,
+} from '@bloodhoundenterprise/doodleui';
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Popper } from '@mui/material';
@@ -76,18 +83,50 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
 
     return (
         <>
-            <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
-                <GraphButton
-                    onClick={onReset}
-                    displayText={<FontAwesomeIcon aria-label='reset graph view' icon={faCropAlt} />}
-                />
+            <div
+                data-testid='explore_graph-controls'
+                className='flex gap-1 pointer-events-auto'
+                ref={currentSearchAnchorElement}>
+                <TooltipProvider>
+                    <TooltipRoot>
+                        <TooltipTrigger className='pointer-events-auto'>
+                            {/* tooltip won't show without this wrapper div for some reason */}
+                            <div>
+                                <GraphButton
+                                    aria-label='Reset Graph'
+                                    onClick={onReset}
+                                    displayText={<FontAwesomeIcon aria-label='reset graph view' icon={faCropAlt} />}
+                                    data-testid='explore_graph-controls_reset-button'
+                                />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipPortal>
+                            <TooltipContent className='dark:bg-neutral-dark-5 border-0'>
+                                <span>Reset Graph</span>
+                            </TooltipContent>
+                        </TooltipPortal>
+                    </TooltipRoot>
+                </TooltipProvider>
 
                 <GraphMenu label={'Hide Labels'}>
-                    <MenuItem onClick={handleToggleAllLabels}>
+                    <MenuItem
+                        aria-label='All Labels Toggle'
+                        data-testid='explore_graph-controls_all-labels-toggle'
+                        onClick={handleToggleAllLabels}>
                         {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
-                    <MenuItem onClick={onToggleNodeLabels}>{showNodeLabels ? 'Hide' : 'Show'} Node Labels</MenuItem>
-                    <MenuItem onClick={onToggleEdgeLabels}>{showEdgeLabels ? 'Hide' : 'Show'} Edge Labels</MenuItem>
+                    <MenuItem
+                        aria-label='Node Labels Toggle'
+                        data-testid='explore_graph-controls_node-labels-toggle'
+                        onClick={onToggleNodeLabels}>
+                        {showNodeLabels ? 'Hide' : 'Show'} Node Labels
+                    </MenuItem>
+                    <MenuItem
+                        aria-label='Edge Labels Toggle'
+                        data-testid='explore_graph-controls_edge-labels-toggle'
+                        onClick={onToggleEdgeLabels}>
+                        {showEdgeLabels ? 'Hide' : 'Show'} Edge Labels
+                    </MenuItem>
                 </GraphMenu>
 
                 <GraphMenu label='Layout'>
@@ -100,6 +139,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         })
                         .map((layout) => (
                             <MenuItem
+                                data-testid={`explore_graph-controls_${layout}-layout`}
                                 key={layout}
                                 selected={featureFlag?.enabled ? selectedLayout === layout : undefined}
                                 onClick={() => onLayoutChange(layout)}>
@@ -115,9 +155,11 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphButton
+                    aria-label='Search Current Results'
                     onClick={() => setIsCurrentSearchOpen(true)}
                     displayText={'Search Current Results'}
                     disabled={isCurrentSearchOpen}
+                    data-testid='explore_graph-controls_search-current-results'
                 />
             </div>
             <Popper
@@ -126,7 +168,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 placement='top'
                 disablePortal
                 className='w-[90%] z-[1]'>
-                <div className='pointer-events-auto' data-testid='explore_graph-controls'>
+                <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
                     <SearchCurrentNodes
                         sx={{
                             padding: 1,

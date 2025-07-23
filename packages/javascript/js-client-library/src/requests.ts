@@ -23,7 +23,7 @@ import {
 } from './types';
 import { ConfigurationPayload } from './utils';
 
-export type RequestOptions = AxiosRequestConfig;
+export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
 export interface LoginRequest {
     login_method: string;
@@ -40,7 +40,9 @@ export type CreateAssetGroupTagRequest = {
     requireCertify?: boolean;
 };
 
-export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
+export type UpdateAssetGroupTagRequest = Partial<
+    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: string | boolean | undefined }
+>;
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 
@@ -48,10 +50,13 @@ export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
 
-export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
+export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
+    Partial<Pick<AssetGroupTagSelector, 'description' | 'auto_certify'>> & {
+        seeds: SelectorSeedRequest[];
+    };
 
 export type UpdateSelectorRequest = Partial<
-    Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
+    Omit<CreateSelectorRequest, 'id' | 'disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
 >;
 
 export interface CreateAssetGroupRequest {
@@ -206,10 +211,11 @@ export interface UpdateUserQueryRequest {
 }
 
 export interface ClearDatabaseRequest {
-    deleteCollectedGraphData: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
     deleteAssetGroupSelectors: number[];
+    deleteCollectedGraphData: boolean;
+    deleteDataQualityHistory: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteSourceKinds: number[];
 }
 
 export interface UpdateUserRequest {

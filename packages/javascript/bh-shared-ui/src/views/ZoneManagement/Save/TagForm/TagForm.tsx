@@ -23,6 +23,7 @@ import {
     Input,
     Label,
     Skeleton,
+    Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -30,7 +31,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
-    AssetGroupTagTypes,
+    CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
@@ -38,20 +39,18 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
+import { usePrivilegeZoneAnalysis } from '../../../../hooks';
+import {
+    useAssetGroupTags,
+    useHighestPrivilegeTagId,
+    useOwnedTagId,
+} from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { useAssetGroupTags } from '../../hooks';
-import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
+import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-
-type TagFormInputs = {
-    name: string;
-    description: string;
-    position: number | null;
-    type: AssetGroupTagTypes;
-};
 
 const MAX_NAME_LENGTH = 250;
 
@@ -65,23 +64,19 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
     return 'Tag Details';
 };
 
-const showDeleteButton = (labelId: string | undefined, tierId: string) => {
-    if (tierId === '' && !labelId) return false;
-    if (labelId === OWNED_ID) return false;
-    if (tierId === TIER_ZERO_ID) return false;
-    return true;
-};
-
-const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs): UpdateAssetGroupTagRequest => {
+const diffValues = (
+    data: AssetGroupTag | undefined,
+    formValues: UpdateAssetGroupTagRequest
+): UpdateAssetGroupTagRequest => {
     if (data === undefined) return formValues;
 
     const workingCopy = { ...formValues };
-
     const diffed: UpdateAssetGroupTagRequest = {};
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
     if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+    if (data.analysis_enabled !== workingCopy.analysis_enabled) diffed.analysis_enabled = workingCopy.analysis_enabled;
 
     return diffed;
 };
@@ -91,28 +86,46 @@ export const TagForm: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();
     const location = useLocation();
+    const isEditPage = location.pathname.includes('save/tier');
+
+    const tagsQuery = useAssetGroupTags();
+    const tagQuery = useAssetGroupTagInfo(tagId);
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
+    const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(
+        tagQuery.data?.analysis_enabled || undefined
+    );
 
-    const { TierList } = useContext(ZoneManagementContext);
+    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
+
+    const topTagId = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
+
+    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<TagFormInputs>();
-
-    const tagsQuery = useAssetGroupTags();
-    const tagQuery = useAssetGroupTagInfo(tagId);
+        setValue,
+    } = useForm<UpdateAssetGroupTagRequest>();
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
 
+    const showDeleteButton = (labelId: string | undefined, tierId: string) => {
+        if (tierId === '' && !labelId) return false;
+        if (labelId === ownedId?.toString()) return false;
+        if (tierId === topTagId?.toString()) return false;
+        return true;
+    };
+
     const handleCreateTag = useCallback(
-        async (formData: TagFormInputs) => {
+        async (formData: CreateAssetGroupTagRequest) => {
             try {
                 const response = await createTagMutation.mutateAsync({
                     values: {
@@ -145,7 +158,7 @@ export const TagForm: FC = () => {
     );
 
     const handleUpdateTag = useCallback(
-        async (formData: TagFormInputs) => {
+        async (formData: UpdateAssetGroupTagRequest) => {
             try {
                 const diffedValues = diffValues(tagQuery.data, formData);
 
@@ -194,16 +207,16 @@ export const TagForm: FC = () => {
             const tagValue = getTagUrlValue(labelId);
 
             setDeleteDialogOpen(false);
-            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
+            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
-    }, [labelId, tagId, deleteTagMutation, addNotification, navigate]);
+    }, [labelId, tagId, deleteTagMutation, addNotification, navigate, ownedId, topTagId]);
 
-    const onSubmit: SubmitHandler<TagFormInputs> = useCallback(
+    const onSubmit: SubmitHandler<UpdateAssetGroupTagRequest | CreateAssetGroupTagRequest> = useCallback(
         (formData) => {
             if (tagId === '') {
-                handleCreateTag(formData);
+                handleCreateTag(formData as CreateAssetGroupTagRequest);
             } else {
                 handleUpdateTag(formData);
             }
@@ -217,6 +230,9 @@ export const TagForm: FC = () => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
         }
+        if (tagQuery.data?.analysis_enabled) {
+            setToggleEnabled(tagQuery.data.analysis_enabled);
+        }
     }, [tagQuery.data]);
 
     if (tagQuery.isLoading) return <Skeleton />;
@@ -225,8 +241,8 @@ export const TagForm: FC = () => {
     return (
         <>
             <form className='flex gap-x-6 mt-6'>
-                <div className='flex flex-col justify-between'>
-                    <Card className='min-w-96 w-[672px] p-3'>
+                <div className='flex flex-col justify-between min-w-96 w-[672px]'>
+                    <Card className='p-3 mb-4'>
                         <CardHeader>
                             <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
                         </CardHeader>
@@ -238,9 +254,10 @@ export const TagForm: FC = () => {
                                 <div>
                                     <Label htmlFor='name'>Name</Label>
                                     <Input
+                                        data-testid='zone-management_save_tag-form_name-input'
                                         id='name'
                                         type='text'
-                                        disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
+                                        disabled={tagId === topTagId?.toString() || tagId === ownedId?.toString()}
                                         {...register('name', {
                                             required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
                                             value: tagQuery.data?.name,
@@ -263,6 +280,7 @@ export const TagForm: FC = () => {
                                     <Label htmlFor='description'>Description</Label>
                                     <textarea
                                         id='description'
+                                        data-testid='zone-management_save_tag-form_description-input'
                                         {...register('description', { value: tagQuery.data?.description })}
                                         placeholder='Description Input'
                                         rows={3}
@@ -271,16 +289,43 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
+                                {isEditPage && showAnalysisToggle && (
+                                    <div>
+                                        <Label htmlFor='analysis'>Enable Analysis</Label>
+                                        <div className='flex gap-3'>
+                                            <Switch
+                                                id='analysis'
+                                                checked={toggleEnabled}
+                                                value={toggleEnabled?.toString()}
+                                                {...register('analysis_enabled')}
+                                                data-testid='zone-management_save_tag-form_analysis-enabled-switch'
+                                                onCheckedChange={(checked: boolean) => {
+                                                    setToggleEnabled(checked);
+                                                    setValue('analysis_enabled', checked);
+                                                }}
+                                            />
+                                            <p className='text-xs'>Include this tier when running analysis</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
-                                    <Input id='position' type='number' {...register('position', { value: position })} />
+                                    <Input
+                                        data-testid='zone-management_save_tag-form_position-input'
+                                        id='position'
+                                        type='number'
+                                        {...register('position', { value: position })}
+                                    />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
-                    <div className='flex justify-end gap-6 mt-6 w-[672px]'>
+                    {isEditPage && SalesMessage && <SalesMessage />}
+                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
+                                data-testid='zone-management_save_tag-form_delete-button'
                                 variant={'text'}
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
@@ -292,13 +337,17 @@ export const TagForm: FC = () => {
                             </Button>
                         )}
                         <Button
+                            data-testid='zone-management_save_tag-form_cancel-button'
                             variant={'secondary'}
                             onClick={() => {
                                 navigate(-1);
                             }}>
                             Cancel
                         </Button>
-                        <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                        <Button
+                            data-testid='zone-management_save_tag-form_save-button'
+                            variant={'primary'}
+                            onClick={handleSubmit(onSubmit)}>
                             {tagId === '' ? 'Define Selector' : 'Save Edits'}
                         </Button>
                     </div>

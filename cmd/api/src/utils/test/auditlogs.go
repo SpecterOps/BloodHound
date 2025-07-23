@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func findRelevantAuditLogs(auditLogs model.AuditLogs, expectedAction model.AuditLogAction, expectedResultStatus model.AuditLogEntryStatus, expectedData model.AuditData) (intentAuditLog, resultAuditLog model.AuditLog) {
@@ -41,9 +41,10 @@ func findRelevantAuditLogs(auditLogs model.AuditLogs, expectedAction model.Audit
 			if !matchingData {
 				continue
 			}
-			if al.Status == model.AuditLogStatusIntent {
+			switch al.Status {
+			case model.AuditLogStatusIntent:
 				intentAuditLog = al
-			} else if al.Status == expectedResultStatus {
+			case expectedResultStatus:
 				resultAuditLog = al
 			}
 		}

@@ -20,7 +20,7 @@ package upload
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // The UploadData interface is designed to manage the lifecycle of uploading and creating tasks for graphify

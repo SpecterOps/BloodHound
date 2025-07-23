@@ -24,10 +24,10 @@ import (
 
 	"github.com/specterops/dawgs/util/channels"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -78,47 +78,22 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 							}
 							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the Owns edge
 							if !enforced {
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-
-								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.Owns,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								})
+								result := createPostRelFromRaw(rel, ad.Owns)
+								channels.Submit(ctx, outC, result)
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err != nil {
 								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 								continue
 							} else if (isComputerDerived && adminGroupIds != nil && adminGroupIds.Contains(rel.StartID.Uint64())) || !isComputerDerived {
 								// If the target node is a computer or derived object, add the Owns edge if the owning principal is a member of DA/EA (or is either group's SID)
 								// If the target node is NOT a computer or derived object, add the Owns edge
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.Owns,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								})
+								result := createPostRelFromRaw(rel, ad.Owns)
+								channels.Submit(ctx, outC, result)
 							}
 						}
 					} else {
 						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the Owns relationship
-						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.Owns,
-							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-						})
+						result := createPostRelFromRaw(rel, ad.Owns)
+						channels.Submit(ctx, outC, result)
 					}
 				}
 			}
@@ -161,46 +136,21 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 							// If THIS domain does NOT enforce BlockOwnerImplicitRights, add the WriteOwner edge
 							if !enforced {
-								isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-								if err != nil {
-									isInherited = false
-								}
-								channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-									FromID:        rel.StartID,
-									ToID:          rel.EndID,
-									Kind:          ad.WriteOwner,
-									RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-								})
-
+								result := createPostRelFromRaw(rel, ad.WriteOwner)
+								channels.Submit(ctx, outC, result)
 							} else if isComputerDerived, err := isTargetNodeComputerDerived(targetNode); err == nil {
 								// If no abusable permissions are granted to OWNER RIGHTS, check if the target node is a computer or derived object (MSA or GMSA)
 								if !isComputerDerived {
-									isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-									if err != nil {
-										isInherited = false
-									}
 									// If the target node is NOT a computer or derived object, add the WriteOwner edge
-									channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-										FromID:        rel.StartID,
-										ToID:          rel.EndID,
-										Kind:          ad.WriteOwner,
-										RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-									})
+									result := createPostRelFromRaw(rel, ad.WriteOwner)
+									channels.Submit(ctx, outC, result)
 								}
 							}
 						}
 					} else {
 						// If no domain enforces BlockOwnerImplicitRights (dSHeuristics[28] == 1) or we can't fetch the attribute, we can skip this analysis and just add the WriteOwner relationship
-						isInherited, err := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-						if err != nil {
-							isInherited = false
-						}
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID:        rel.StartID,
-							ToID:          rel.EndID,
-							Kind:          ad.WriteOwner,
-							RelProperties: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): isInherited},
-						})
+						result := createPostRelFromRaw(rel, ad.WriteOwner)
+						channels.Submit(ctx, outC, result)
 					}
 				}
 			}
@@ -210,6 +160,22 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 		}
 	}
 	return &operation.Stats, operation.Done()
+}
+
+func createPostRelFromRaw(rel *graph.Relationship, kind graph.Kind) analysis.CreatePostRelationshipJob {
+	isInherited, _ := rel.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+	inheritanceHash, _ := rel.Properties.GetOrDefault(ad.InheritanceHash.String(), "").String()
+
+	return analysis.CreatePostRelationshipJob{
+		FromID: rel.StartID,
+		ToID:   rel.EndID,
+		Kind:   kind,
+		RelProperties: map[string]any{
+			ad.IsACL.String():           true,
+			common.IsInherited.String(): isInherited,
+			ad.InheritanceHash.String(): inheritanceHash,
+		},
+	}
 }
 
 func isTargetNodeComputerDerived(node *graph.Node) (bool, error) {

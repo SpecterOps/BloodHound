@@ -24,7 +24,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/specterops/bloodhound/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 )
 
 type AuditLogEntryStatus string
@@ -76,6 +76,7 @@ const (
 
 	AuditLogActionExportRelationshipRisks AuditLogAction = "ExportRelationshipRisks"
 	AuditLogActionExportListRisks         AuditLogAction = "ExportListRisks"
+	AuditLogActionExportAllRisks          AuditLogAction = "ExportAllRisks"
 
 	AuditLogActionDeleteBloodhoundData AuditLogAction = "DeleteBloodhoundData"
 

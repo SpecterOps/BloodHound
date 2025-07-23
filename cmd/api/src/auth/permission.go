@@ -17,7 +17,7 @@
 package auth
 
 import (
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type PermissionSet struct {

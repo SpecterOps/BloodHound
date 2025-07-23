@@ -18,10 +18,10 @@ package graphify
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -31,6 +31,8 @@ type GraphifyData interface {
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
 	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
+
+	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
 }
 
 type GraphifyService struct {

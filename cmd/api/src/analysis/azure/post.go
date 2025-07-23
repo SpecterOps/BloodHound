@@ -20,11 +20,11 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/analysis"
-	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/analysis/hybrid"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -43,12 +43,15 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
+	} else if pimRolesStats, err := azureAnalysis.CreateAZRoleApproverEdge(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(userRoleStats)
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
 		aggregateStats.Merge(hybridStats)
+		aggregateStats.Merge(pimRolesStats)
 		return &aggregateStats, nil
 	}
 }

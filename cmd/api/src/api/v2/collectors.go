@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
 const (

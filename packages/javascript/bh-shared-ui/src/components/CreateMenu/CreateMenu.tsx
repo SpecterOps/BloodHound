@@ -18,16 +18,16 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
-import React from 'react';
+import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
 type MenuItems = { title: string; onClick: () => void }[];
 
-const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean }> = ({
-    menuTitle,
-    menuItems,
-    disabled,
-}) => {
+const MenuWithDropdown: React.FC<{
+    menuTitle: string;
+    menuItems: MenuItems;
+    disabled: boolean;
+}> = ({ menuTitle, menuItems, disabled }) => {
     const buttonRef = React.useRef(null);
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -68,11 +68,11 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disa
     );
 };
 
-const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean }> = ({
-    menuTitle,
-    menuItems,
-    disabled,
-}) => {
+const MenuOrButton: React.FC<{
+    menuTitle: string;
+    menuItems: MenuItems;
+    disabled: boolean;
+}> = ({ menuTitle, menuItems, disabled }) => {
     if (menuItems.length > 1) {
         return <MenuWithDropdown menuItems={menuItems} menuTitle={menuTitle} disabled={disabled} />;
     } else if (menuItems.length === 1) {
@@ -92,6 +92,9 @@ const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled
 const CreateMenu: React.FC<{
     createMenuTitle: string;
     menuItems: MenuItems;
+    CustomIcon?: FC<{ className: string }>;
+    customStyles?: string;
+    variant?: ComponentPropsWithoutRef<typeof Button>['variant'];
     disabled?: boolean;
     featureFlag?: string;
     featureFlagEnabledMenuItems?: MenuItems;

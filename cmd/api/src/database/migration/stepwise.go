@@ -21,8 +21,8 @@ import (
 	"io/fs"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"gorm.io/gorm"
 )
 

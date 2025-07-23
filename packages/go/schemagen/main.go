@@ -23,9 +23,9 @@ import (
 	"path/filepath"
 
 	"cuelang.org/go/cue/errors"
-	"github.com/specterops/bloodhound/schemagen/generator"
-	"github.com/specterops/bloodhound/schemagen/model"
-	"github.com/specterops/bloodhound/schemagen/tsgen"
+	"github.com/specterops/bloodhound/packages/go/schemagen/generator"
+	"github.com/specterops/bloodhound/packages/go/schemagen/model"
+	"github.com/specterops/bloodhound/packages/go/schemagen/tsgen"
 )
 
 type Schema struct {

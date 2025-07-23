@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
-func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
+func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
 	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
 
 	node := ein.IngestibleNode{
@@ -54,13 +54,15 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 
 	// the first element in node.Labels determines which icon the UI renders for the node.
 	// it is critical to specify this information because a node can have up to 3 kinds.
-	node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+	if len(node.Labels) > 0 {
+		node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+	}
 
 	converted.NodeProps = append(converted.NodeProps, node)
 	return nil
 }
 
-func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
+func ConvertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
 			Value:   strings.ToUpper(entity.Start.Value),
@@ -145,7 +147,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime
 }
 
 func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(domain.IngestBase, ad.Domain, ingestTime)
+	baseNodeProp := ein.ConvertDomainToNode(domain, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, domain.Aces, domain.ObjectIdentifier, ad.Domain)...)
 	if len(domain.ChildObjects) > 0 {
@@ -172,7 +174,7 @@ func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time)
 }
 
 func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(ou.IngestBase, ad.OU, ingestTime)
+	baseNodeProp := ein.ConvertOUToNode(ou, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ou.Aces, ou.ObjectIdentifier, ad.OU)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseObjectContainer(ou.IngestBase, ad.OU, baseNodeProp)...)
@@ -198,7 +200,7 @@ func CreateConvertedSessionData(count int) ConvertedSessionData {
 }
 
 func convertContainerData(container ein.Container, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(container.IngestBase, ad.Container, ingestTime)
+	baseNodeProp := ein.ConvertContainerToNode(container, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, container.Aces, container.ObjectIdentifier, ad.Container)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseObjectContainer(container.IngestBase, ad.Container, baseNodeProp)...)

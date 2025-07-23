@@ -14,17 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
-import { ZoneManagementContext } from '../ZoneManagementContext';
-import { SelectedDetails } from '../Details/SelectedDetails';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
-import SummaryList from './SummaryList';
 import { getSavePath } from '../Details/Details';
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { SelectedDetails } from '../Details/SelectedDetails';
+import { ZoneManagementContext } from '../ZoneManagementContext';
+import { getTagUrlValue } from '../utils';
+import SummaryList from './SummaryList';
 
 export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
     return (
@@ -36,7 +37,8 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);
@@ -73,7 +75,11 @@ const Summary: FC = () => {
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
+                            <Link
+                                data-testid='zone-management_edit-button'
+                                to={getSavePath(tierId, labelId, selectorId)}>
+                                Edit
+                            </Link>
                         </Button>
                     )}
                 </div>
@@ -83,7 +89,7 @@ const Summary: FC = () => {
                     <SummaryList
                         title={labelId ? 'Labels' : 'Tiers'}
                         listQuery={tagsQuery}
-                        selected={tagId}
+                        selected={tagId as string}
                         onSelect={(id) => {
                             navigate(
                                 `/zone-management/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`

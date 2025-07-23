@@ -32,7 +32,7 @@ describe('CopyMenuItem', () => {
         return screen;
     };
 
-    it('handles copying a display name', async () => {
+    it('handles copying the name', async () => {
         const screen = setup();
 
         const user = userEvent.setup();
@@ -43,9 +43,9 @@ describe('CopyMenuItem', () => {
         const tooltip = await screen.findByRole('tooltip');
         expect(tooltip).toBeInTheDocument();
 
-        // the tooltip container and the menu item for `display name` have the same accesible name, so return the second element here (which is the menu item)
-        const displayNameOption = screen.getAllByRole('menuitem', { name: /display name/i })[1];
-        await user.click(displayNameOption);
+        // the tooltip container and the menu item for `name` have the same accessible name, so return the second element here (which is the menu item)
+        const nameOption = screen.getAllByRole('menuitem', { name: /name/i })[1];
+        await user.click(nameOption);
 
         const clipboardText = await navigator.clipboard.readText();
         expect(clipboardText).toBe(selectedNode.label);

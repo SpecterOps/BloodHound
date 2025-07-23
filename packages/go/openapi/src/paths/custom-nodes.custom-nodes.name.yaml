@@ -43,9 +43,10 @@ get:
             id: 1
             kindName: "KindA"
             config:
-              type: "font-awesome"
-              name: "house"
-              color: "#FFFFFF"
+              icon:
+                type: "font-awesome"
+                name: "house"
+                color: "#FFFFFF"
     401:
       $ref: './../responses/unauthorized.yaml'
     404:

@@ -129,13 +129,16 @@ func Run(env environment.Environment) error {
 		if ext == "" {
 			ext = filepath.Base(path)
 		}
-		if !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
+
+		// Ensure that we're not attempting to scan symbolic links
+		if info.Mode()&os.ModeSymlink != os.ModeSymlink && !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
 			pathChan <- path
 		}
+
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error walking the path: %w", err)
+		errs = append(errs, fmt.Errorf("error walking the path: %w", err))
 	}
 
 	// close path channel to signal we're done sending values

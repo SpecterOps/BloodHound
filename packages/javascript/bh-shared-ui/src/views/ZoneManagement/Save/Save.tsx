@@ -24,8 +24,9 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { OWNED_ID, TIER_ZERO_ID } from '../utils';
+import { useLocation, useParams } from 'react-router-dom';
+import { AppLink } from '../../../components/Navigation';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -37,17 +38,19 @@ const Save: FC = () => {
     const tagValue = location.pathname.includes('label') ? 'label' : 'tier';
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
-
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
     return (
         <div>
             <Breadcrumb className='my-6'>
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
-                            <Link
-                                to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`}>
+                            <AppLink
+                                data-testid='zone-management_save_details-breadcrumb'
+                                to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`}>
                                 {captitalizedPluralTagValue}
-                            </Link>
+                            </AppLink>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
@@ -55,9 +58,11 @@ const Save: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link to={`/zone-management/save/${tagValue}/${tagId}`}>
+                                    <AppLink
+                                        data-testid='zone-management_save_tag-breadcrumb'
+                                        to={`/zone-management/save/${tagValue}/${tagId}`}>
                                         {`${capitalizedTagValue} Details`}
-                                    </Link>
+                                    </AppLink>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator />

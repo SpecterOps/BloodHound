@@ -27,11 +27,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/api/v2/integration"
-	"github.com/specterops/bloodhound/src/services/upload"
-	"github.com/specterops/bloodhound/src/test/fixtures/fixtures"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/test/fixtures/fixtures"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/assert"
 )
 

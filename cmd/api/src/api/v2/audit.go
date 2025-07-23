@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // AuditLogsResponse holds the data returned to an Audit logs request

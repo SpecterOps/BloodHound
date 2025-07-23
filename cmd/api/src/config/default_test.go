@@ -19,7 +19,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/stretchr/testify/require"
 )
 

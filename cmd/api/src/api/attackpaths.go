@@ -21,25 +21,35 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-func ParseTierIdWithTierZeroFallback(ctx context.Context, db database.Database, maybeTierIdParam []string) (int, error) {
-	if len(maybeTierIdParam) != 0 {
-		if tierIdParam, err := strconv.Atoi(maybeTierIdParam[0]); err != nil {
-			return 0, err
+func ParseAssetGroupTagIdWithFallback(ctx context.Context, db database.Database, maybeAssetGroupTagId string) ([]int, error) {
+	var tagIds []int
+
+	if maybeAssetGroupTagId != "" {
+		if tierIdParam, err := strconv.Atoi(maybeAssetGroupTagId); err != nil {
+			return tagIds, err
+		} else if tierIdParam == 0 {
+			// This is a workaround to supply tiering agnostic findings
+			tagIds = append(tagIds, model.AssetGroupTierHygienePlaceholderId)
+			return tagIds, nil
 		} else if _, err = db.GetAssetGroupTag(ctx, tierIdParam); err != nil {
-			return 0, err
+			return tagIds, err
 		} else {
-			return tierIdParam, nil
+			tagIds = append(tagIds, tierIdParam)
+			return tagIds, nil
 		}
 	}
+	// Fallback to tier zero and hygiene if not supplied
 	if agt, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ? AND position = ?", Params: []any{model.AssetGroupTagTypeTier, model.AssetGroupTierZeroPosition}}); err != nil {
-		return 0, err
+		return tagIds, err
 	} else if len(agt) == 0 {
-		return 0, fmt.Errorf("no asset group tag found for tier zero")
+		return tagIds, fmt.Errorf("no asset group tag found for tier zero")
 	} else {
-		return agt[0].ID, nil
+		// We need both 0 for hygiene findings and tier zero asset group tag id
+		tagIds = append(tagIds, model.AssetGroupTierHygienePlaceholderId, agt[0].ID)
+		return tagIds, nil
 	}
 }

@@ -17,16 +17,16 @@
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../hooks';
 import {
-    DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS,
+    ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_SUMMARY,
     ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS,
-    ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS,
@@ -34,9 +34,8 @@ import {
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
+import DetailsRoot from './DetailsRoot';
 import { ZoneManagementContext } from './ZoneManagementContext';
-import { OWNED_ID, TIER_ZERO_ID } from './utils';
-
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
@@ -61,6 +60,8 @@ const summaryPaths = [
 const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
+    const ownedId = useOwnedTagId();
+    const { tagId } = useHighestPrivilegeTagId();
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -86,9 +87,9 @@ const ZoneManagement: FC = () => {
                 <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
                 <p className='mt-6'>
                     Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    <br />
                     {SupportLink && <SupportLink />}
                 </p>
-
                 <div className='flex flex-col'>
                     <Tabs
                         defaultValue='tier'
@@ -97,12 +98,16 @@ const ZoneManagement: FC = () => {
                         onValueChange={(value) => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? TIER_ZERO_ID : OWNED_ID;
+                            const id = value === 'tier' ? tagId : ownedId;
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value='tier'>Tiers</TabsTrigger>
-                            <TabsTrigger value='label'>Labels</TabsTrigger>
+                            <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>
+                                Tiers
+                            </TabsTrigger>
+                            <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
+                                Labels
+                            </TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <Suspense
@@ -115,7 +120,7 @@ const ZoneManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<Navigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
+                            <Route path='*' element={<DetailsRoot />} />
                         </Routes>
                     </Suspense>
                 </div>

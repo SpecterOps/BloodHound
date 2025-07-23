@@ -22,7 +22,7 @@ import (
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
-	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 )
 
 const (

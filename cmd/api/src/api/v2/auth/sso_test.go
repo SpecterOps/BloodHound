@@ -30,19 +30,19 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pkg/errors"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/v2/apitest"
-	"github.com/specterops/bloodhound/src/api/v2/auth"
-	bhceauth "github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database/mocks"
-	samlmocks "github.com/specterops/bloodhound/src/services/saml/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
+	bhceauth "github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -185,8 +185,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	t.Run("successfully list auth providers with filtering", func(t *testing.T) {
 		// filtering by name
 		mockDB.EXPECT().GetAllSSOProviders(gomock.Any(), "created_at", model.SQLFilter{
-			SQLString: "name = ?",
-			Params:    []interface{}{"OIDC Provider 1"},
+			SQLString: "name = 'OIDC Provider 1'",
 		}).Return([]model.SSOProvider{ssoProviders[0]}, nil)
 		const reqUrl = endpoint + "?name=eq:OIDC Provider 1"
 

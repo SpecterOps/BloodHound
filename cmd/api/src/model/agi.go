@@ -19,7 +19,7 @@ package model
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 )
 
 type AssetGroupSelector struct {

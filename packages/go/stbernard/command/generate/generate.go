@@ -79,7 +79,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	} else if err := workspace.GenerateSchema(paths.Root, s.env); err != nil {
 		return fmt.Errorf("generating schema for workspace: %w", err)
-	} else if err := golang.WorkspaceGenerate(paths.GoModules, s.env); err != nil {
+	} else if err := golang.WorkspaceGenerate(paths.GoModule, s.env); err != nil {
 		return fmt.Errorf("generating code for workspace: %w", err)
 	} else if err := golang.RunGoImports(s.env); err != nil {
 		return fmt.Errorf("running goimports cmd: %w", err)

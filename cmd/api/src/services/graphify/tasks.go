@@ -27,9 +27,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util"
 )
@@ -126,16 +126,9 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 	}
 }
 
-// processIngestFile reads the files at the path supplied, and returns the total number of files in the
+// ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) processIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
-	adcsEnabled := false
-	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
-	} else {
-		adcsEnabled = adcsFlag.Enabled
-	}
-
+func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
 	if paths, failedExtracting, err := s.extractIngestFiles(task.FileName, task.FileType); err != nil {
 		return 0, failedExtracting, err
@@ -148,7 +141,10 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
 			for _, filePath := range paths {
-				readOpts := ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}
+				readOpts := ReadOptions{
+					IngestSchema:       s.schema,
+					FileType:           task.FileType,
+					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx)}
 
 				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
 					failedIngestion++
@@ -163,6 +159,8 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 }
 
 func processSingleFile(ctx context.Context, filePath string, batch *TimestampedBatch, readOpts ReadOptions) error {
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", filePath))()
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", filePath, err))
@@ -207,7 +205,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
 			return
 		}
-		total, failed, err := s.processIngestFile(s.ctx, task, time.Now().UTC())
+		total, failed, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
 
 		if errors.Is(err, fs.ErrNotExist) {
 			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))

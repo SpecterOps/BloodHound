@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -35,7 +35,7 @@ func FilterEntityPIMAssignments() graph.Criteria {
 }
 
 func FilterRoleApprovers() graph.Criteria {
-	return query.KindIn(query.Relationship(), azure.AZRoleApprover)
+	return query.KindIn(query.Relationship(), azure.AZRoleApprover, azure.MemberOf)
 }
 
 func FilterExecutionPrivileges() graph.Criteria {

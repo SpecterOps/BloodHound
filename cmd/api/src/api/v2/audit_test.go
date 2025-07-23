@@ -23,18 +23,18 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/database/mocks"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func TestResources_ListAuditLogs_SortingError(t *testing.T) {
@@ -221,7 +221,7 @@ func TestResources_ListAuditLogs_Filtered(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "", model.SQLFilter{SQLString: "actor_name = ?", Params: []any{"foo"}}).Return(model.AuditLogs{}, 1000, nil)
+	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "", model.SQLFilter{SQLString: "actor_name = 'foo'"}).Return(model.AuditLogs{}, 1000, nil)
 	endpoint := "/api/v2/audit"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {

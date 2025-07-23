@@ -17,8 +17,8 @@
 package harnesses
 
 import (
-	"github.com/specterops/bloodhound/lab"
-	"github.com/specterops/bloodhound/src/api/v2/apiclient"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apiclient"
+	"github.com/specterops/bloodhound/packages/go/lab"
 )
 
 func NewIntegrationTestHarness(clientFixture *lab.Fixture[apiclient.Client]) *lab.Harness {

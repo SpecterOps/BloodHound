@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/stretchr/testify/require"
 )
 

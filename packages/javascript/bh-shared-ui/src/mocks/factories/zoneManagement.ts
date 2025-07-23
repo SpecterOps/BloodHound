@@ -41,6 +41,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         deleted_at: faker.date.past().toISOString(),
         deleted_by: faker.internet.email(),
         requireCertify: faker.datatype.boolean(),
+        analysis_enabled: faker.datatype.boolean(),
     };
 };
 

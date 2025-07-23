@@ -22,11 +22,11 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/RoaringBitmap/roaring/roaring64"
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/RoaringBitmap/roaring/v2/roaring64"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -181,6 +181,19 @@ func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.
 		)
 	}), func(_ *graph.Relationship, node *graph.Node) error {
 		// This subscription contains a critical attack path root. Track it as a critical attack path root
+		attackPathRoots.Add(node)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	// Any group or user that has an AZRoleEligible edge
+	if err := ops.ForEachStartNode(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Start(), azure.User, azure.Group),
+			query.Kind(query.Relationship(), azure.AZRoleEligible),
+		)
+	}), func(_ *graph.Relationship, node *graph.Node) error {
 		attackPathRoots.Add(node)
 		return nil
 	}); err != nil {
@@ -410,6 +423,15 @@ func FetchRoleApprovers(tx graph.Transaction, node *graph.Node, skip, limit int)
 		Skip:        skip,
 		Limit:       limit,
 		BranchQuery: FilterRoleApprovers,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 0 && segment.Edge.Kind.Is(azure.MemberOf) {
+				return false
+			} else if segment.Depth() > 2 {
+				return false
+			} else {
+				return true
+			}
+		},
 	})
 }
 
@@ -418,6 +440,15 @@ func FetchRoleApproverPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 		Root:        node,
 		Direction:   graph.DirectionInbound,
 		BranchQuery: FilterRoleApprovers,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 0 && segment.Edge.Kind.Is(azure.MemberOf) {
+				return false
+			} else if segment.Depth() > 2 {
+				return false
+			} else {
+				return true
+			}
+		},
 	})
 }
 

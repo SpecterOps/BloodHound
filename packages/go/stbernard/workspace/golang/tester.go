@@ -17,19 +17,17 @@
 package golang
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
 
@@ -53,9 +51,9 @@ var (
 )
 
 // TestWorkspace runs all Go tests for a given workspace. Setting integration to true will run integration tests, otherwise we only run unit tests
-func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool) error {
+func TestWorkspace(cwd string, modPath string, profileDir string, env environment.Environment, integration bool, tags string) error {
 	var (
-		manifest = make(map[string]string, len(modPaths))
+		manifest = make(map[string]string, len(modPath))
 		command  = "go"
 		args     = []string{"test"}
 	)
@@ -67,27 +65,25 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, integrationConfigPath)
 		}
 
-		args = append(args, []string{"-p", "1", "-tags", "integration serial_integration"}...)
+		args = append(args, []string{"-p", "1", "-tags", tags}...)
 	}
 
-	for _, modPath := range modPaths {
-		modName, err := getModuleName(modPath)
-		if err != nil {
-			return err
-		}
+	modName, err := getModuleName(modPath)
+	if err != nil {
+		return err
+	}
 
-		fileUUID, err := uuid.NewV4()
-		if err != nil {
-			return fmt.Errorf("create uuid for coverfile: %w", err)
-		}
+	fileUUID, err := uuid.NewV4()
+	if err != nil {
+		return fmt.Errorf("create uuid for coverfile: %w", err)
+	}
 
-		coverFile := filepath.Join(profileDir, fileUUID.String()+".coverage")
-		manifest[modName] = coverFile
-		testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
+	coverFile := filepath.Join(profileDir, fileUUID.String()+".coverage")
+	manifest[modName] = coverFile
+	testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
 
-		if err := cmdrunner.Run(command, testArgs, modPath, env); err != nil {
-			return fmt.Errorf("go test at %v: %w", modPath, err)
-		}
+	if _, err := cmdrunner.Run(command, testArgs, modPath, env); err != nil {
+		return fmt.Errorf("go test at %v: %w", modPath, err)
 	}
 
 	if manifestFile, err := os.Create(filepath.Join(profileDir, CoverageManifest)); err != nil {
@@ -105,23 +101,20 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 	}
 }
 
+var (
+	combinedCoverageRegex = regexp.MustCompile(`total:\s+\(.*?\)\s+(\d+(?:.\d+)?%)`)
+)
+
 // GetCombinedCoverage takes a coverage file and returns a string representation of percentage of statements covered
 func GetCombinedCoverage(coverFile string, env environment.Environment) (string, error) {
 	var (
-		output bytes.Buffer
-
-		args       = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
-		channelOut = func(c *exec.Cmd) {
-			c.Stdout = &output
-		}
+		args = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
 	)
 
-	if err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env, channelOut); err != nil {
+	if result, err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env); err != nil {
 		return "", fmt.Errorf("combined coverage: %w", err)
-	} else if re, err := regexp.Compile(`total:\s+\(.*?\)\s+(\d+(?:.\d+)?%)`); err != nil {
-		return "", fmt.Errorf("regex failed to compile: %w", err)
 	} else {
-		matches := re.FindStringSubmatch(output.String())
+		matches := combinedCoverageRegex.FindStringSubmatch(result.StandardOutput.String())
 
 		// This regex has only one capture group, so we expect the percentage to be in the capture group portion of the matches
 		// There should be two matches since the first match result is the full string that was matched, and the second is the result of our capture group
