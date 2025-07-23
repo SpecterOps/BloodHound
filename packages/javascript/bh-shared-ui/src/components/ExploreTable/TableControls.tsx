@@ -61,6 +61,7 @@ const TableControls = <TData, TValue>({
         [columns, pinnedColumns]
     );
 
+    const resultsArePresent = !!resultsCount;
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
@@ -68,7 +69,7 @@ const TableControls = <TData, TValue>({
                 {typeof resultsCount === 'number' && <div className='text-sm'>{resultsCount} results</div>}
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
-                {SearchInputProps && (
+                {resultsArePresent && SearchInputProps && (
                     <div className='flex justify-center items-center relative'>
                         <Input
                             data-testid='explore-table-search'
@@ -78,7 +79,7 @@ const TableControls = <TData, TValue>({
                         <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
                     </div>
                 )}
-                {onDownloadClick && (
+                {resultsArePresent && onDownloadClick && (
                     <div onClick={onDownloadClick} data-testid='download-button'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
                     </div>
@@ -88,7 +89,7 @@ const TableControls = <TData, TValue>({
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
-                {onManageColumnsChange && (
+                {resultsArePresent && onManageColumnsChange && (
                     <ManageColumnsComboBox
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
