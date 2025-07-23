@@ -18,7 +18,7 @@ import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import { StyledGraphEdge } from 'js-client-library';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
 import {
     compareForExploreTableSort,
