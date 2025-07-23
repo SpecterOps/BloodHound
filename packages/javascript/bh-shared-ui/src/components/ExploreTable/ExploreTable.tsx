@@ -26,35 +26,53 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
+const tableProps: DataTableProps['TableProps'] = {
+    className: 'w-[calc(100% + 250px)] table-fixed',
+    disableDefaultOverflowAuto: true,
+};
+
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10',
+    className: 'sticky top-0 z-10 shadow-sm',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'pr-4',
+    className: 'pr-2 text-center',
+};
+
+const tableCellProps: DataTableProps['TableCellProps'] = {
+    className: 'truncate',
+};
+
+const tableOptions: DataTableProps['tableOptions'] = {
+    getRowId: (row) => row.id,
+};
+
+const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
+    estimateSize: () => 79,
 };
 
 const ExploreTable = ({
     data,
     selectedNode,
-    open,
     onClose,
     onRowClick,
     onDownloadClick,
     onKebabMenuClick,
     onManageColumnsChange,
     allColumnKeys,
-    selectedColumns,
+    selectedColumns = requiredColumns,
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
     const handleSearchInputChange = useCallback(
-        (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
-        []
+        (e: ChangeEvent<HTMLInputElement>) => {
+            setSearchInput(e.target.value);
+        },
+        [setSearchInput]
     );
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns } = useExploreTableRowsAndColumns({
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
         searchInput,
         allColumnKeys,
@@ -71,40 +89,40 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
-    if (!open || !data) return null;
-
     return (
         <div
-            className={cn(
-                'dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2',
-                {
-                    'h-1/2': !isExpanded,
-                    'h-[calc(100%-72px)]': isExpanded,
-                    'w-[calc(100%-450px)]': selectedNode,
-                }
-            )}>
-            <div className='explore-table-container w-full h-full'>
+            data-testid='explore-table-container-wrapper'
+            className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2', {
+                'h-1/2': !isExpanded,
+                'h-[calc(100%-72px)]': isExpanded,
+                'w-[calc(100%-450px)]': selectedNode,
+            })}>
+            <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
-                    className='h-[72px]'
                     columns={columnOptionsForDropdown}
-                    selectedColumns={selectedColumns || requiredColumns}
+                    selectedColumns={selectedColumns}
                     pinnedColumns={requiredColumns}
                     onDownloadClick={onDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
-                    resultsCount={sortedFilteredRows?.length}
+                    resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable
-                    className='h-full *:h-[calc(100%-72px)]'
+                    className='overflow-auto'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
                     onRowClick={onRowClick}
                     selectedRow={selectedNode || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
+                    tableOptions={tableOptions}
+                    virtualizationOptions={virtualizationOptions}
+                    growLastColumn
                 />
             </div>
         </div>

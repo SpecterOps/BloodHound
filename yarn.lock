@@ -361,9 +361,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.20":
-  version: 1.0.0-alpha.20
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.20"
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.22":
+  version: 1.0.0-alpha.22
+  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.22"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
@@ -377,6 +377,7 @@ __metadata:
     "@radix-ui/react-tooltip": ^1.1.3
     "@radix-ui/react-visually-hidden": ^1.1.0
     "@tanstack/react-table": ^8.17.3
+    "@tanstack/react-virtual": ^3.13.12
     class-variance-authority: ^0.7.0
     clsx: ^2.1.1
     date-fns: ^3.0.0
@@ -391,7 +392,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: 3ed6507c340c0d670fb100c14fabddb0a9e05f01d1c68b6eb867e778b782f76b0a6214d76c68a3eeeba326aa88f047dcabb16b8df42b2b75fb324c1a30c9d235
+  checksum: 0c4bbbc0bc91548ba4522a8ad7eb354e716a5a089679bed988e980a3bc1ed6b4e48a390e16307d8ab97a49acd3379758c85da6b02ce5921aa7367e4c9f3af0dd
   languageName: node
   linkType: hard
 
@@ -3684,10 +3685,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/react-virtual@npm:^3.13.12":
+  version: 3.13.12
+  resolution: "@tanstack/react-virtual@npm:3.13.12"
+  dependencies:
+    "@tanstack/virtual-core": 3.13.12
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 7b64c728ae3666c22f6a1727d464f877c04ae02347480eab482c7a002c2a340167ded856e3dd52b19de34f965aeb01a1e223acdab44d646251c0aa89c3d69539
+  languageName: node
+  linkType: hard
+
 "@tanstack/table-core@npm:8.20.5":
   version: 8.20.5
   resolution: "@tanstack/table-core@npm:8.20.5"
   checksum: f8b175f11eb9ee1e029bb5e91c1038527714382de4bd14750377f43c25e69b687b21bfb181ee07131637d3432618964a4b7a898608fc8411ca50da1e7e8ed4c5
+  languageName: node
+  linkType: hard
+
+"@tanstack/virtual-core@npm:3.13.12":
+  version: 3.13.12
+  resolution: "@tanstack/virtual-core@npm:3.13.12"
+  checksum: bef2c3138543a2088fff7d4fa46624d07403b18d92ec5a7271e187457851535031a79bc78ac655355a221d5549ef3b5674a3b249d2531f4c17c93107498c8438
   languageName: node
   linkType: hard
 
@@ -4939,7 +4959,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.20
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.22
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
     "@faker-js/faker": ^7.3.0
@@ -5056,7 +5076,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.20
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.22
     "@date-io/luxon": ^1.3.13
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4

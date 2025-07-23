@@ -29,11 +29,6 @@ import {
     relationshipSearchQuery,
 } from './queries';
 
-type UseExploreGraphParams = {
-    includeProperties?: boolean;
-    enabled?: boolean;
-};
-
 export function exploreGraphQueryFactory(
     paramOptions: Partial<ExploreQueryParams>
 ): ExploreGraphQuery | CypherExploreGraphQuery {
@@ -55,25 +50,18 @@ export function exploreGraphQueryFactory(
     }
 }
 
-const DEFAULT_USE_EXPLORE_GRAPH_PARAMS = { includeProperties: false, enabled: true };
-
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = ({
-    includeProperties = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.includeProperties,
-    enabled = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.enabled,
-}: UseExploreGraphParams = DEFAULT_USE_EXPLORE_GRAPH_PARAMS) => {
+export const useExploreGraph = (enabled = true) => {
     const params = useExploreParams();
 
     const { addNotification } = useNotifications();
 
     const query = exploreGraphQueryFactory(params);
 
-    const queryConfig =
-        params?.searchType === 'cypher'
-            ? query.getQueryConfig(params, includeProperties)
-            : query.getQueryConfig(params);
+    const queryConfig = query.getQueryConfig(params);
 
-    const shouldFetch = Boolean(enabled && queryConfig?.queryFn);
+    const shouldFetch = Boolean(enabled && queryConfig?.enabled);
+
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {

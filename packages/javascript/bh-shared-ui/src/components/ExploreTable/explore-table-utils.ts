@@ -29,10 +29,44 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
+export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'isTierZero', 'name', 'objectid'];
 
 export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
 
+export const compareForExploreTableSort = (a: any, b: any) => {
+    if (typeof a === 'number' || typeof b === 'number') {
+        if (typeof a === 'number' && typeof b === 'number') {
+            if (a === b) return 0;
+
+            return a > b ? 1 : -1;
+        }
+        if (!b) return 1;
+        if (!a) return -1;
+    }
+
+    if (typeof a === 'boolean' || typeof b === 'boolean') {
+        if (a === b) return 0;
+        if (a === true && !b) return 1;
+        if (b === true && !a) return -1;
+    }
+
+    if (typeof a === 'undefined' || typeof b === 'undefined') {
+        if (a === undefined && b === undefined) return 0;
+        if (b === undefined) return 1;
+        if (a === undefined) return -1;
+    }
+
+    if ((typeof a === 'object' && Object.is(a, null)) || (typeof b === 'object' && Object.is(b, null))) {
+        if (a === null && b === null) return 0;
+        if (b === null) return 1;
+        if (a === null) return -1;
+    }
+
+    return a.toString().localeCompare(b.toString(), undefined, { numeric: true });
+};
+
+export const isSmallColumn = (key: string, type: string) =>
+    key === 'nodetype' || key === 'isTierZero' || type === 'boolean';
 export interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;

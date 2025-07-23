@@ -283,7 +283,7 @@ export type GraphNode = {
     properties?: GraphNodeProperties;
 };
 
-export type GraphNodeSpreadWithProperties = Omit<GraphNode, 'properties'> & GraphNodeProperties;
+export type GraphNodeSpreadWithProperties = Partial<Omit<GraphNode, 'properties'> & GraphNodeProperties>;
 
 export type GraphNodes = Record<string, GraphNode>;
 
