@@ -108,11 +108,12 @@ const useExploreTableRowsAndColumns = ({
         [onKebabMenuClick]
     );
 
+    const firstTenRows = useMemo(() => rows?.slice(0, 10), [rows]);
     const makeColumnDef = useCallback(
         (rawKey: keyof MungedTableRowWithId) => {
             const key = rawKey?.toString();
-            const firstTruthyValueInFirst10Rows = rows?.slice(0, 10).find((row) => !!row?.[key]);
-            const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows?.[key];
+            const firstTruthyValueInFirst10Rows = firstTenRows.find((row) => !!row?.[key])?.[key];
+            const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
 
             return columnHelper.accessor(String(key), {
                 header: () => {
