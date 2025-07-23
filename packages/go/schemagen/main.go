@@ -68,6 +68,10 @@ func GenerateSharedTypeScript(projectRoot string, rootSchema Schema) error {
 	return root.Write(os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 }
 
+func GenerateCSharp(projectRoot string, rootSchema Schema) error {
+	return generator.GenerateCSharpBindings(projectRoot, rootSchema.Common, rootSchema.ActiveDirectory)
+}
+
 func main() {
 	cfgBuilder := generator.NewConfigBuilder("/schemas")
 
@@ -101,6 +105,11 @@ func main() {
 			}
 
 			if err := GenerateSharedTypeScript(projectRoot, bhModels); err != nil {
+				slog.Error(fmt.Sprintf("Error %v", err))
+				os.Exit(1)
+			}
+
+			if err := GenerateCSharp(projectRoot, bhModels); err != nil {
 				slog.Error(fmt.Sprintf("Error %v", err))
 				os.Exit(1)
 			}
