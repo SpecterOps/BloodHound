@@ -21,10 +21,11 @@ import (
 )
 
 type IngestTask struct {
-	FileName    string     `json:"file_name"`
-	RequestGUID string     `json:"request_guid"`
-	JobId       null.Int64 `json:"task_id" gorm:"column:task_id"`
-	FileType    FileType   `json:"file_type"`
+	FileName         string     `json:"file_name"`
+	ProvidedFileName string     `json:"provided_file_name"`
+	RequestGUID      string     `json:"request_guid"`
+	JobId            null.Int64 `json:"task_id" gorm:"column:task_id"`
+	FileType         FileType   `json:"file_type"`
 
 	BigSerial
 }

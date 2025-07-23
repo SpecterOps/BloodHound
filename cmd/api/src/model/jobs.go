@@ -17,6 +17,9 @@
 package model
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -36,7 +39,34 @@ type IngestJob struct {
 	LastIngest       time.Time   `json:"last_ingest"`
 	TotalFiles       int         `json:"total_files"`
 	FailedFiles      int         `json:"failed_files"`
+	TaskInfo         TaskInfo    `json:"task_info"`
+
 	BigSerial
+}
+type CompletedTask struct {
+	FileName   string   `json:"file_name"`
+	ParentFile string   `json:"parent_file"`
+	Status     []string `json:"status"`
+}
+
+type TaskInfo struct {
+	CompletedTasks []CompletedTask `json:"completed_tasks"`
+}
+
+func (s *TaskInfo) Scan(value interface{}) error {
+	if value == nil {
+		*s = TaskInfo{}
+	}
+
+	if bytes, ok := value.([]byte); !ok {
+		return errors.New("type assertion to []byte failed for CompletedTask")
+	} else {
+		return json.Unmarshal(bytes, &s)
+	}
+}
+
+func (s TaskInfo) Value() (driver.Value, error) {
+	return json.Marshal(s)
 }
 
 type IngestJobs []IngestJob
