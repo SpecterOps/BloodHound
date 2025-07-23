@@ -20,7 +20,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -29,6 +28,9 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -38,8 +40,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
