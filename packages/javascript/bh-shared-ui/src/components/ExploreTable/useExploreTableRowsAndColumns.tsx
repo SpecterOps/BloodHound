@@ -126,7 +126,7 @@ const useExploreTableRowsAndColumns = ({
                         />
                     );
                 },
-                size: isSmallColumn(key, firstTruthyValueInFirst10Rows) ? 100 : 250,
+                size: isSmallColumn(key, bestGuessAtDataType) ? 100 : 250,
                 cell: (info) => {
                     const value = info.getValue();
 
