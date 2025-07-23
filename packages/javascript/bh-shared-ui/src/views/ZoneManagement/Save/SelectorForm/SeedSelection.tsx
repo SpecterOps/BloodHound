@@ -35,16 +35,7 @@ const getListScalar = (windowHeight: number) => {
 };
 
 const SeedSelection: FC<{}> = () => {
-    // const navigate = useAppNavigate();
-    //const { tierId = '', labelId, selectorId = '' } = useParams();
-    //const tagId = labelId === undefined ? tierId : labelId;
-
-    //const { addNotification } = useNotifications();
-
-    //const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
-    //const { handleSubmit, register } = useFormContext<SelectorFormInputs>();
     const { register } = useFormContext<SelectorFormInputs>();
 
     const previewQuery = useQuery({
@@ -75,23 +66,18 @@ const SeedSelection: FC<{}> = () => {
 
     return (
         <>
-            <div className='grow'>
-                <div className='flex justify-center w-full'>
-                    <div
-                        className={cn('w-full max-w-[32rem] grow', {
-                            'max-md:w-96 max-lg:w-[28rem] max-xl:w-[36rem] min-xl:w-full grow':
-                                selectorType === SeedTypeObjectId,
-                        })}>
-                        <Input {...register('seeds', { value: Array.from(seeds) })} className='hidden w-0' />
-                        {selectorType === SeedTypeObjectId ? (
-                            <ObjectSelect />
-                        ) : (
-                            <Cypher preview={false} initialInput={firstSeed?.value} />
-                        )}
-                    </div>
-                </div>
-            </div>
-            <Card className='max-h-full min-w-[27rem] m:w-80 md:w-96 lg:w-lg grow'>
+            <div
+                className={cn('w-full max-w-[60rem] grow', {
+                    'max-md:w-96 max-lg:w-[28rem] max-xl:w-[36rem]': selectorType === SeedTypeObjectId,
+                })}>
+                <Input {...register('seeds', { value: Array.from(seeds) })} className='hidden w-0' />
+                {selectorType === SeedTypeObjectId ? (
+                    <ObjectSelect />
+                ) : (
+                    <Cypher preview={false} initialInput={firstSeed?.value} />
+                )}
+            </div>{' '}
+            <Card className='max-h-full min-w-96 sm:w-96 md:w-96 lg:w-lg grow'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
                 <CardContent className='pl-4'>
                     <div className='font-bold pl-2 mb-2'>

@@ -118,7 +118,7 @@ const BasicInfo: FC<{
     if (isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
-        <div className={'w-full min-w-80 sm:w-80 md:w-96 lg:w-lg h-[30rem] grow'}>
+        <div className={'w-full min-w-96 sm:w-96 md:w-96 lg:w-lg h-[30rem] grow'}>
             <Card className={'p-3'}>
                 <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
                 <CardContent>
@@ -221,7 +221,7 @@ const BasicInfo: FC<{
                     </div>
                 </CardContent>
             </Card>
-            <div className={cn('flex justify-end min-lg:justify-end gap-2 mt-6 w-full')}>
+            <div className={cn('flex justify-end gap-2 mt-6 ')}>
                 <DeleteSelectorButton
                     selectorId={selectorId}
                     selectorData={selectorQuery.data}
@@ -239,7 +239,7 @@ const BasicInfo: FC<{
                     data-testid='zone-management_save_selector-form_save-button'
                     variant={'primary'}
                     onClick={handleSubmit(onSubmit)}>
-                    Save Edits
+                    {selectorId === '' ? 'Save' : 'Save Edits'}
                 </Button>
             </div>
             <DeleteConfirmationDialog
