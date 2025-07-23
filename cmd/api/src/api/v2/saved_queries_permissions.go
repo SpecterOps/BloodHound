@@ -18,7 +18,6 @@ package v2
 
 import (
 	"encoding/json"
-
 	"errors"
 	"net/http"
 	"slices"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"

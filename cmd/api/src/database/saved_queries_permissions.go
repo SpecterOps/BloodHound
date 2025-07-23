@@ -60,7 +60,7 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, q
 	return permission, err
 }
 
-// CreateSavedQueryPermissionsBatch attempts to save the given saved query permissions in batches of 100 in a transaction
+// CreateSavedQueryPermissionsToUsers - attempts to save the given saved query permissions in batches of 100 in a transaction
 func (s *BloodhoundDB) CreateSavedQueryPermissionsToUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) ([]model.SavedQueriesPermissions, error) {
 	var newPermissions []model.SavedQueriesPermissions
 	for _, sharedUserID := range userIDs {
