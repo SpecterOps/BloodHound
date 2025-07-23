@@ -34,7 +34,7 @@ const getListScalar = (windowHeight: number) => {
     return 8;
 };
 
-const SeedSelection: FC<{}> = () => {
+const SeedSelection: FC = () => {
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
     const { register } = useFormContext<SelectorFormInputs>();
 
