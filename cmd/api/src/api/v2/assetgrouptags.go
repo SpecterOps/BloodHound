@@ -392,7 +392,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 
 	if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
-	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 100); err != nil {
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 99999); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if paramIncludeCounts, err := api.ParseOptionalBool(queryParams.Get(api.QueryParameterIncludeCounts), false); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
