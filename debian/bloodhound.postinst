@@ -1,0 +1,44 @@
+#!/bin/bash
+# Copyright, 2025 Specter Ops, LLC.  All rights reserved.
+
+BH_USER="bloodhound"
+
+# Ensure postgresql is running
+service postgresql@17-main start
+ATTEMPTS=0
+until $(su postgres -c "psql -l &> /dev/null") || test $ATTEMPTS -ge 15; do
+	echo "Waiting for Postgres..."
+	sleep 2
+	let "ATTEMPTS=ATTEMPTS+1"
+done
+
+if ! getent group $BH_USER >/dev/null; then
+    addgroup --quiet --system $BH_USER
+fi
+if ! getent passwd $BH_USER >/dev/null; then
+	adduser --quiet --system --ingroup $BH_USER --home /var/lib/bloodhound --no-create-home $BH_USER
+fi
+
+# Create PostgreSQL role and database
+if ! su postgres -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='$BH_USER'\"" | grep -q 1; then
+    su postgres -c "psql -c \"CREATE ROLE $BH_USER WITH LOGIN CREATEDB;\""
+fi
+if ! su postgres -c "psql -lqt" | cut -d \| -f 1 | grep -qw bloodhound; then
+    su postgres -c "createdb -O $BH_USER bloodhound"
+fi
+
+# Update our admin password
+ADMIN_PASSWORD="$(openssl rand -hex 32)"
+jq ".default_admin.password = \"$ADMIN_PASSWORD\"" /etc/bloodhound/bhapi.json.default > /etc/bloodhound/bhapi.json
+
+chown -R $BH_USER:$BH_USER /var/lib/bloodhound
+chown -R $BH_USER:$BH_USER /var/log/bloodhound
+chown -R $BH_USER:$BH_USER /etc/bloodhound/*
+chmod 600 /etc/bloodhound/bhapi.json.default
+chmod 600 /etc/bloodhound/bhapi.json
+
+service bloodhound start
+
+echo "============ BloodHound Community Edition has been configured."
+echo "  The initial admin password is '$ADMIN_PASSWORD'"
+echo "  It can be accessed at http://localhost:8080"
