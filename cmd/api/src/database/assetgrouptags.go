@@ -67,6 +67,7 @@ type AssetGroupTagSelectorNodeData interface {
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
+	GetSelectorNodesByNodeIds(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNode, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -732,6 +733,14 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 		return nodes, nil
 	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
+}
+
+func (s *BloodhoundDB) GetSelectorNodesByNodeIds(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNode, error) {
+	var nodes []model.AssetGroupSelectorNode
+	if len(nodeIds) == 0 {
+		return nodes, nil
+	}
+	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE node_id IN ?", model.AssetGroupSelectorNode{}.TableName()), nodeIds).Find(&nodes))
 }
 
 func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {
