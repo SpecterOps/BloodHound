@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import ZoneManagement from './ZoneManagement';
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-export * from './ZoneAnalysisIcon';
-export * from './ZoneManagementContext';
-export * from './utils';
-export default ZoneManagement;
+const Opsec: FC = () => {
+    return <Typography variant='body2'>No OPSEC considerations are available for this edge.</Typography>;
+};
+
+export default Opsec;

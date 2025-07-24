@@ -14,9 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import ZoneManagement from './ZoneManagement';
+import Abuse from './Abuse';
+import General from './General';
+import Opsec from './Opsec';
+import References from './References';
 
-export * from './ZoneAnalysisIcon';
-export * from './ZoneManagementContext';
-export * from './utils';
-export default ZoneManagement;
+const ClaimSpecialIdentity = {
+    general: General,
+    abuse: Abuse,
+    opsec: Opsec,
+    references: References,
+};
+
+export default ClaimSpecialIdentity;
