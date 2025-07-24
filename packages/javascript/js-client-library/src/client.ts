@@ -174,6 +174,9 @@ class BHEAPIClient {
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
+    searchAssetGroupTags = (body: { query: string; tag_type: number }, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/asset-group-tags/search`, body, options);
+
     getAssetGroupTag = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
 

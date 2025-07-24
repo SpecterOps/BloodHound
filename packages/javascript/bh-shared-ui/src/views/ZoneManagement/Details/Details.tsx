@@ -35,6 +35,7 @@ import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
+import SearchBar from './SearchBar';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -98,9 +99,12 @@ const Details: FC = () => {
 
     return (
         <div>
-            <div className='flex mt-6 gap-8'>
-                {InfoHeader && <InfoHeader />}
-                <div className='basis-1/3'>
+            <div className='flex mt-6'>
+                <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
+                <div className='w-1/6'>
+                    <SearchBar selected={tagId} />
+                </div>
+                <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
                             <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
