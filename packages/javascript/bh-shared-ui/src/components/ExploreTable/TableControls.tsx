@@ -61,7 +61,7 @@ const TableControls = <TData, TValue>({
         [columns, pinnedColumns]
     );
 
-    const DISABLED_CLASSNAME = 'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400';
+    const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
     const noResults = !resultsCount;
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
