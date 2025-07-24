@@ -28,6 +28,7 @@ import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
+import { useExploreParams } from '../../hooks';
 import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
@@ -40,6 +41,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     onToggleNodeLabels: () => void;
     onToggleEdgeLabels: () => void;
     onSearchedNodeClick: (node: FlatNode) => void;
+    isExploreTableSelected?: boolean;
     layoutOptions: T;
     selectedLayout: T[number];
     showNodeLabels: boolean;
@@ -55,6 +57,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onToggleNodeLabels,
         onToggleEdgeLabels,
         onSearchedNodeClick,
+        isExploreTableSelected,
         layoutOptions,
         selectedLayout,
         showNodeLabels,
@@ -62,9 +65,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         jsonData,
         currentNodes,
     } = props;
-
-    const { data: featureFlag } = useFeatureFlag('explore_table_view');
-
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
+    const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
@@ -132,20 +134,28 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 <GraphMenu label='Layout'>
                     {layoutOptions
                         .filter((layout) => {
-                            if (!featureFlag?.enabled) {
+                            if (!tableViewFeatureFlag?.enabled || searchType !== 'cypher') {
                                 return layout !== 'table';
                             }
                             return true;
                         })
-                        .map((layout) => (
-                            <MenuItem
-                                data-testid={`explore_graph-controls_${layout}-layout`}
-                                key={layout}
-                                selected={featureFlag?.enabled ? selectedLayout === layout : undefined}
-                                onClick={() => onLayoutChange(layout)}>
-                                {capitalize(layout)}
-                            </MenuItem>
-                        ))}
+                        .map((buttonLabel) => {
+                            const tableViewIsSelected =
+                                tableViewFeatureFlag?.enabled && isExploreTableSelected && searchType === 'cypher';
+                            const isSelected = tableViewIsSelected
+                                ? buttonLabel === 'table'
+                                : buttonLabel === selectedLayout;
+
+                            return (
+                                <MenuItem
+                                    data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
+                                    key={buttonLabel}
+                                    selected={isSelected}
+                                    onClick={() => onLayoutChange(buttonLabel)}>
+                                    {capitalize(buttonLabel)}
+                                </MenuItem>
+                            );
+                        })}
                 </GraphMenu>
 
                 <GraphMenu label='Export'>

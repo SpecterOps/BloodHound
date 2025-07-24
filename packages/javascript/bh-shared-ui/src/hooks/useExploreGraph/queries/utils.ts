@@ -138,6 +138,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
             },
         };
     }
+
     return result;
 };
 

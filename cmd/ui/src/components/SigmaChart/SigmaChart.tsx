@@ -61,6 +61,7 @@ const SigmaChart = forwardRef(function SigmaChart(
 
     return (
         <div
+            data-testid='sigma-container-wrapper'
             // prevent browser's default right-click behavior
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaContainer

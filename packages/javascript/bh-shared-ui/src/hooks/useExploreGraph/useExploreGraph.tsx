@@ -20,6 +20,7 @@ import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
     CypherExploreGraphQuery,
     ExploreGraphQuery,
+    aclInheritanceSearchQuery,
     compositionSearchQuery,
     cypherSearchQuery,
     fallbackQuery,
@@ -27,11 +28,6 @@ import {
     pathfindingSearchQuery,
     relationshipSearchQuery,
 } from './queries';
-
-type UseExploreGraphParams = {
-    includeProperties?: boolean;
-    enabled?: boolean;
-};
 
 export function exploreGraphQueryFactory(
     paramOptions: Partial<ExploreQueryParams>
@@ -47,30 +43,23 @@ export function exploreGraphQueryFactory(
             return compositionSearchQuery;
         case 'cypher':
             return cypherSearchQuery;
+        case 'aclinheritance':
+            return aclInheritanceSearchQuery;
         default:
             return fallbackQuery;
     }
 }
 
-const DEFAULT_USE_EXPLORE_GRAPH_PARAMS = { includeProperties: false, enabled: true };
-
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = ({
-    includeProperties = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.includeProperties,
-    enabled = DEFAULT_USE_EXPLORE_GRAPH_PARAMS.enabled,
-}: UseExploreGraphParams = DEFAULT_USE_EXPLORE_GRAPH_PARAMS) => {
+export const useExploreGraph = () => {
     const params = useExploreParams();
 
     const { addNotification } = useNotifications();
 
     const query = exploreGraphQueryFactory(params);
 
-    const queryConfig =
-        params?.searchType === 'cypher'
-            ? query.getQueryConfig(params, includeProperties)
-            : query.getQueryConfig(params);
+    const queryConfig = query.getQueryConfig(params);
 
-    const shouldFetch = Boolean(enabled && queryConfig?.queryFn);
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {
@@ -79,6 +68,5 @@ export const useExploreGraph = ({
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
-        enabled: shouldFetch,
     });
 };
