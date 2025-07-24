@@ -51,9 +51,9 @@ var (
 )
 
 // TestWorkspace runs all Go tests for a given workspace. Setting integration to true will run integration tests, otherwise we only run unit tests
-func TestWorkspace(cwd string, modPaths []string, profileDir string, env environment.Environment, integration bool) error {
+func TestWorkspace(cwd string, modPath string, profileDir string, env environment.Environment, integration bool, tags string) error {
 	var (
-		manifest = make(map[string]string, len(modPaths))
+		manifest = make(map[string]string, len(modPath))
 		command  = "go"
 		args     = []string{"test"}
 	)
@@ -65,27 +65,25 @@ func TestWorkspace(cwd string, modPaths []string, profileDir string, env environ
 			env["INTEGRATION_CONFIG_PATH"] = filepath.Join(cwd, integrationConfigPath)
 		}
 
-		args = append(args, []string{"-p", "1", "-tags", "integration serial_integration"}...)
+		args = append(args, []string{"-p", "1", "-tags", tags}...)
 	}
 
-	for _, modPath := range modPaths {
-		modName, err := getModuleName(modPath)
-		if err != nil {
-			return err
-		}
+	modName, err := getModuleName(modPath)
+	if err != nil {
+		return err
+	}
 
-		fileUUID, err := uuid.NewV4()
-		if err != nil {
-			return fmt.Errorf("create uuid for coverfile: %w", err)
-		}
+	fileUUID, err := uuid.NewV4()
+	if err != nil {
+		return fmt.Errorf("create uuid for coverfile: %w", err)
+	}
 
-		coverFile := filepath.Join(profileDir, fileUUID.String()+".coverage")
-		manifest[modName] = coverFile
-		testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
+	coverFile := filepath.Join(profileDir, fileUUID.String()+".coverage")
+	manifest[modName] = coverFile
+	testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
 
-		if _, err := cmdrunner.RunInteractive(command, testArgs, modPath, env); err != nil {
-			return fmt.Errorf("go test at %v: %w", modPath, err)
-		}
+	if _, err := cmdrunner.Run(command, testArgs, modPath, env); err != nil {
+		return fmt.Errorf("go test at %v: %w", modPath, err)
 	}
 
 	if manifestFile, err := os.Create(filepath.Join(profileDir, CoverageManifest)); err != nil {

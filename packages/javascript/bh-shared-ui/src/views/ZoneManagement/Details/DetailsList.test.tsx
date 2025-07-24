@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTag, AssetGroupTagTypeTier } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagTypeTier, ConfigurationKey } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
-import { render, screen } from '../../../test-utils';
+import { render, screen, within } from '../../../test-utils';
 import { DetailsList } from './DetailsList';
 
 const testQuery = {
@@ -36,6 +38,7 @@ const testQuery = {
             created: '',
             updated: '',
             deleted: false,
+            analysis_enabled: true,
         },
         {
             name: 'b',
@@ -49,6 +52,7 @@ const testQuery = {
             created: '',
             updated: '',
             deleted: false,
+            analysis_enabled: false,
         },
         {
             name: 'c',
@@ -62,9 +66,25 @@ const testQuery = {
             created: '',
             updated: '',
             deleted: false,
+            analysis_enabled: false,
         },
     ],
 } as unknown as UseQueryResult<AssetGroupTag[]>;
+
+const configTrueResponse = {
+    data: [
+        {
+            key: ConfigurationKey.Tiering,
+            value: { multi_tier_analysis_enabled: true, tier_limit: 3, label_limit: 10 },
+        },
+    ],
+};
+
+const server = setupServer();
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
@@ -97,6 +117,65 @@ describe('List', async () => {
 
         expect(await screen.findByTestId('zone-management_details_tiers-list_static-order')).toBeInTheDocument();
         expect(screen.queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
+    });
+
+    it('does not render tier icon tooltip when multi tier analysis is disabled', async () => {
+        const configFalseResponse = {
+            data: [
+                {
+                    key: ConfigurationKey.Tiering,
+                    value: { multi_tier_analysis_enabled: false, tier_limit: 3, label_limit: 10 },
+                },
+            ],
+        };
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configFalseResponse));
+            })
+        );
+
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+
+        const listItem = await screen.findByTestId('zone-management_details_tiers-list_item-2');
+        expect(listItem).toBeInTheDocument();
+
+        const icon = within(listItem).queryByTestId('analysis_disabled_icon');
+        expect(icon).not.toBeInTheDocument();
+    });
+
+    it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configTrueResponse));
+            })
+        );
+
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+
+        const listItem = screen.getByTestId('zone-management_details_tiers-list_item-2');
+        expect(listItem).toBeInTheDocument();
+
+        const icon = await within(listItem).findByTestId('analysis_disabled_icon');
+        expect(icon).toBeInTheDocument();
+    });
+
+    it('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configTrueResponse));
+            })
+        );
+
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+
+        const listItem1 = screen.getByTestId('zone-management_details_tiers-list_item-1');
+        expect(listItem1).toBeInTheDocument();
+        expect(await within(listItem1).queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+
+        const listItem2 = screen.getByTestId('zone-management_details_tiers-list_item-2');
+        expect(listItem2).toBeInTheDocument();
+        expect(await within(listItem2).findByTestId('analysis_disabled_icon')).toBeInTheDocument();
     });
 
     it('handles rendering a selected item', async () => {
