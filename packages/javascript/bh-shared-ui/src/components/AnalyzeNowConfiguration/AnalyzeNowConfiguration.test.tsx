@@ -49,7 +49,9 @@ describe('AnalyzeNowConfiguration', () => {
     afterAll(() => server.close());
 
     it('renders', () => {
-        render(<AnalyzeNowConfiguration />);
+        render(
+            <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
+        );
 
         const title = screen.getByText(/Run Analysis Now/i);
         const button = screen.getByRole('button', { name: /Analyze Now/i });
@@ -70,7 +72,9 @@ describe('AnalyzeNowConfiguration', () => {
                 );
             })
         );
-        render(<AnalyzeNowConfiguration />);
+        render(
+            <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
+        );
 
         const button = screen.getByRole('button', { name: /Analyze Now/i });
 
@@ -86,7 +90,9 @@ describe('AnalyzeNowConfiguration', () => {
                 return res(ctx.status(202));
             })
         );
-        render(<AnalyzeNowConfiguration />);
+        render(
+            <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: /Analyze Now/i });
@@ -114,7 +120,9 @@ describe('AnalyzeNowConfiguration', () => {
             })
         );
         console.error = vi.fn();
-        render(<AnalyzeNowConfiguration />);
+        render(
+            <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: /Analyze Now/i });
@@ -143,7 +151,9 @@ describe('AnalyzeNowConfiguration', () => {
             })
         );
         console.error = vi.fn();
-        render(<AnalyzeNowConfiguration />);
+        render(
+            <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: /Analyze Now/i });
