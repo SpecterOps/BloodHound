@@ -92,7 +92,6 @@ const InnerCommonSearches = ({
             },
         });
     };
-
     if (userQueries.isLoading) {
         return (
             <Box mt={2}>
@@ -100,7 +99,6 @@ const InnerCommonSearches = ({
             </Box>
         );
     }
-
     const handleFilter = (searchTerm: string, platform: string, categories: string[]) => {
         setSearchTerm(searchTerm);
         setPlatform(platform);

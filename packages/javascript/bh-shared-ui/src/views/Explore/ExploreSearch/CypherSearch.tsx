@@ -82,7 +82,6 @@ const CypherSearch = ({
         }
     };
     const handleSavedSearch = (query: any) => {
-        console.log('handleSavedSearch');
         if (autoRun) {
             performSearch(query);
         }

@@ -20,6 +20,7 @@ import { apiClient } from '../utils/api';
 
 export const savedQueryKeys = {
     all: ['savedQueries'] as const,
+    permissions: ['savedQueries'] as const,
 };
 
 export const getSavedQueries = (options?: RequestOptions): Promise<SavedQuery[]> => {
@@ -50,6 +51,10 @@ export const deleteSavedQuery = (id: number): Promise<void> => {
     return apiClient.deleteUserQuery(id).then((response) => response.data);
 };
 
+export const getQueryPermissions = (id: number, options?: RequestOptions): Promise<any> => {
+    return apiClient.getUserQueryPermissions(id, options).then((response: any) => response);
+};
+
 export const useSavedQueries = () => useQuery(savedQueryKeys.all, ({ signal }) => getSavedQueries({ signal }));
 
 export const useCreateSavedQuery = () => {
@@ -58,6 +63,17 @@ export const useCreateSavedQuery = () => {
     return useMutation(createSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
+        },
+    });
+};
+
+export const useQueryPermissions = (id: number) => {
+    const queryClient = useQueryClient();
+
+    return useMutation(() => getQueryPermissions(id), {
+        onSuccess: (data) => {
+            queryClient.invalidateQueries(savedQueryKeys.permissions);
+            return data;
         },
     });
 };

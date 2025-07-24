@@ -102,6 +102,8 @@ const SaveQueryDialog: React.FC<{
     const usersList = useMemo(() => idMap(), [listUsersQuery.data]);
     const allUserIds = useMemo(() => usersList?.map((x) => x.id), [listUsersQuery.data]);
 
+    // console.log(usersList);
+
     useEffect(() => {
         if (selectedQuery) {
             //The prebuilt queries do not have a name property.  Returns undefined and throws an error surrounding controlled/uncontrolled components.  Need unified data shape for saved queries.
@@ -120,6 +122,20 @@ const SaveQueryDialog: React.FC<{
     useEffect(() => {
         setLocalCypherQuery(cypherQuery);
     }, [cypherQuery]);
+
+    // const {
+    //     data: permissionsData,
+    //     isLoading: permissionsLoading,
+    //     error: permissionsError,
+    //     refetch: fetchPermissions,
+    // } = useQuery({
+    //     queryKey: ['savedQueryKeys.permissions'],
+    //     queryFn: () => getQueryPermissions(selectedQuery.id),
+    //     enabled: false,
+    //     refetchOnWindowFocus: false,
+    // });
+
+    // const getPermissions = useQueryPermissions();
 
     const saveDisabled = name?.trim() === '';
 
@@ -329,6 +345,16 @@ const SaveQueryDialog: React.FC<{
                                             />
                                         </>
                                     )}
+                                    {/* 
+                                    {!!permissionsError && <div>{permissionsError.toString()}</div>}
+                                    {permissionsData && (
+                                        <>
+                                            <div>{permissionsData.data.data.query_id}</div>
+                                            <div>
+                                                {permissionsData.data.data.query_id.shared_to_user_ids.toString()}
+                                            </div>
+                                        </>
+                                    )} */}
                                 </CardContent>
                             </Card>
                         </div>

@@ -239,6 +239,15 @@ export type SavedQuery = {
     user_id: string;
 };
 
+export type SavedQueryPermissionsItem = {
+    id: string;
+};
+export type SavedQueryPermissionsResponse = {
+    shared_to_user_ids: SavedQueryPermissionsItem[];
+    query_id: number;
+    public: boolean;
+};
+
 export type FileIngestJob = TimestampFields & {
     user_id: string;
     user_email_address: string;

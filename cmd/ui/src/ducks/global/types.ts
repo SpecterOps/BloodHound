@@ -106,7 +106,7 @@ export type GlobalViewActionTypes =
     | SetDarkModeAction
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
-    | SetAutoRunQueriesAction;
+    | SetAutoRunQueriesAction
     | SetSelectedExploreTableColumns;
 
 export interface SetDomainAction {

@@ -78,6 +78,7 @@ import {
     PostureResponse,
     PreviewSelectorsResponse,
     SavedQuery,
+    SavedQueryPermissionsResponse,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
@@ -185,6 +186,13 @@ class BHEAPIClient {
             '/api/v2/saved-queries/import',
             payload,
             Object.assign({ headers })
+        );
+    };
+
+    getUserQueryPermissions = (queryId: number, options?: RequestOptions) => {
+        return this.baseClient.get<BasicResponse<SavedQueryPermissionsResponse>>(
+            `/api/v2/saved-queries/${queryId}/permissions`,
+            options
         );
     };
 
