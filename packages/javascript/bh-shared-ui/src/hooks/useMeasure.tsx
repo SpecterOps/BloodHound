@@ -16,7 +16,7 @@
 
 import { RefObject, useEffect, useState } from 'react';
 
-export function useMeasure(ref: RefObject<HTMLElement>) {
+export const useMeasure = (ref: RefObject<HTMLElement>) => {
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
 
@@ -38,4 +38,4 @@ export function useMeasure(ref: RefObject<HTMLElement>) {
     }, [ref]);
 
     return [width, height];
-}
+};

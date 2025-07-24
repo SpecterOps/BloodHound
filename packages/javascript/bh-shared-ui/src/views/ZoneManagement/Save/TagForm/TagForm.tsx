@@ -41,6 +41,12 @@ import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 import {
+    useAssetGroupTagInfo,
+    useCreateAssetGroupTag,
+    useDeleteAssetGroupTag,
+    usePatchAssetGroupTag,
+} from '../../../../hooks/useAssetGroupTags';
+import {
     useAssetGroupTags,
     useHighestPrivilegeTagId,
     useOwnedTagId,
@@ -48,12 +54,6 @@ import {
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import {
-    useAssetGroupTagInfo,
-    useCreateAssetGroupTag,
-    useDeleteAssetGroupTag,
-    usePatchAssetGroupTag,
-} from '../../hooks';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 

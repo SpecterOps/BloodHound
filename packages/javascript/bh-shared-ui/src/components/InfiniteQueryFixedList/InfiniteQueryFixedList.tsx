@@ -57,11 +57,13 @@ export const InfiniteQueryFixedList = <T,>({
 
     const Row = useCallback(
         ({ index, style, data: itemData, isScrolling }: ListChildComponentProps<T[]>) => {
-            if (!isItemLoaded(index)) {
-                if (renderLoadingRow) return renderLoadingRow(index, style);
-                return <div style={style}>Loading {index}...</div>;
+            if (isItemLoaded(index)) {
+                return renderRow(itemData[index], index, style, isScrolling);
             }
-            return renderRow(itemData[index], index, style, isScrolling);
+            if (renderLoadingRow) {
+                return renderLoadingRow(index, style);
+            }
+            return <div style={style}>Loading {index}...</div>;
         },
         [isItemLoaded, renderRow, renderLoadingRow]
     );

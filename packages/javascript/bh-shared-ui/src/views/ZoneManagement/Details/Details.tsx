@@ -21,15 +21,15 @@ import { UseQueryResult } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId } from '../../../hooks';
-import { SortOrder } from '../../../types';
-import { useAppNavigate } from '../../../utils';
-import { ZoneManagementContext } from '../ZoneManagementContext';
 import {
     useSelectorMembersInfiniteQuery,
     useSelectorsInfiniteQuery,
     useTagMembersInfiniteQuery,
     useTagsQuery,
-} from '../hooks';
+} from '../../../hooks/useAssetGroupTags';
+import { SortOrder } from '../../../types';
+import { useAppNavigate } from '../../../utils';
+import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';

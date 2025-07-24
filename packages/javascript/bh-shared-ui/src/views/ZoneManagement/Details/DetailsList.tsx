@@ -25,16 +25,6 @@ import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
 
-const getCountElement = (listItem: AssetGroupTag): React.ReactNode => {
-    if (listItem.counts === undefined) {
-        return null;
-    } else if (isTag(listItem)) {
-        return <span className='text-base ml-4'>{listItem.counts.selectors.toLocaleString()}</span>;
-    } else {
-        return null;
-    }
-};
-
 type DetailsListProps = {
     title: 'Tiers' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
@@ -139,7 +129,11 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                     {listItem.name}
                                                 </div>
                                             </div>
-                                            {getCountElement(listItem)}
+                                            {listItem.counts && (
+                                                <span className='text-base ml-4'>
+                                                    {listItem.counts.selectors.toLocaleString()}
+                                                </span>
+                                            )}
                                         </Button>
                                     </li>
                                 );

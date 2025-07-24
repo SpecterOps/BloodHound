@@ -22,14 +22,6 @@ import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../co
 import { cn } from '../../../utils';
 import { SelectedHighlight, getListHeight } from './utils';
 
-const getCountElement = (listItem: AssetGroupTagSelector): React.ReactNode => {
-    if (listItem.counts === undefined) {
-        return null;
-    } else {
-        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
-    }
-};
-
 const LoadingRow = (index: number, style: React.CSSProperties) => (
     <div
         data-testid={`zone-management_selectors-list_loading-skeleton`}
@@ -122,7 +114,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
                             {item.name}
                         </div>
                     </div>
-                    {getCountElement(item)}
+                    {item.counts && <span className='text-base'>{item.counts.members.toLocaleString()}</span>}
                 </Button>
             </div>
         );
