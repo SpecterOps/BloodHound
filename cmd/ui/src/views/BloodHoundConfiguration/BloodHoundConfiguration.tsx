@@ -31,7 +31,7 @@ const BloodHoundConfiguration = () => {
                 </Typography>
             }>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <AnalyzeNowConfiguration />
+                <AnalyzeNowConfiguration description='This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a result of complex configurations.' />
                 <CitrixRDPConfiguration />
             </Box>
         </PageWithTitle>
