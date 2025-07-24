@@ -61,7 +61,8 @@ const TableControls = <TData, TValue>({
         [columns, pinnedColumns]
     );
 
-    const resultsArePresent = !!resultsCount;
+    const DISABLED_CLASSNAME = 'pointer-events-none disabled color-grey';
+    const noResults = !resultsCount;
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
@@ -69,28 +70,45 @@ const TableControls = <TData, TValue>({
                 {typeof resultsCount === 'number' && <div className='text-sm'>{resultsCount} results</div>}
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
-                {resultsArePresent && SearchInputProps && (
+                {SearchInputProps && (
                     <div className='flex justify-center items-center relative'>
                         <Input
                             data-testid='explore-table-search'
-                            className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
+                            disabled={noResults}
+                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
+                                'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400 border-neutral-400':
+                                    noResults,
+                            })}
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                        <FontAwesomeIcon
+                            className={cn('absolute right-2', {
+                                'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400':
+                                    noResults,
+                            })}
+                            icon={faSearch}
+                        />
                     </div>
                 )}
-                {resultsArePresent && onDownloadClick && (
-                    <div onClick={onDownloadClick} data-testid='download-button'>
+                {onDownloadClick && (
+                    <button
+                        aria-disabled={noResults}
+                        onClick={onDownloadClick}
+                        data-testid='download-button'
+                        className={cn({
+                            'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400': noResults,
+                        })}>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
-                    </div>
+                    </button>
                 )}
                 {onExpandClick && (
                     <div onClick={onExpandClick} data-testid='expand-button'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
-                {resultsArePresent && onManageColumnsChange && (
+                {onManageColumnsChange && (
                     <ManageColumnsComboBox
+                        disabled={noResults}
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
