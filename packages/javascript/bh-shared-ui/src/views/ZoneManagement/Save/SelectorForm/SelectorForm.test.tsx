@@ -153,17 +153,14 @@ describe('Selector Form', () => {
         longWait(() => {
             expect(screen.getByText('Cypher Search')).toBeInTheDocument();
         });
-        // The delete button should render because this selector exists and can be deleted
+
         longWait(() => {
+            // The delete button should render because this selector exists and can be deleted
             expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
-        });
-        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        // The save button should not render when editing an existing selector
-        longWait(() => {
+            expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+            // The save button should not render when editing an existing selector
             expect(screen.queryByRole('button', { name: /Save/ })).not.toBeInTheDocument();
-        });
-        // The save edits button should render because this selector exists and can be deleted
-        longWait(() => {
+            // The save edits button should render because this selector exists and can be deleted
             expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
         });
 
