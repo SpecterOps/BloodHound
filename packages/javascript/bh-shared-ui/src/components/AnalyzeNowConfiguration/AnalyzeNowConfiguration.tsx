@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { RequestOptions } from 'js-client-library';
-import { FC, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
@@ -34,15 +34,18 @@ const useRequestAnalysis = () => {
     });
 };
 
-const AnalyzeNowConfiguration: FC = () => {
+type AnalyzeNowProps = {
+    description: string;
+};
+
+const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description }) => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
     const requestAnalysis = useRequestAnalysis();
 
     const { addNotification } = useNotifications();
 
-    const showDialog = () => {
-        setIsOpenDialog((prev) => !prev);
-    };
+    const showDialog = () => setIsOpenDialog(true);
+    const hideDialog = () => setIsOpenDialog(false);
 
     const { data, isLoading, isError } = useQuery(
         'datapipe-status',
@@ -52,12 +55,13 @@ const AnalyzeNowConfiguration: FC = () => {
     const buttonDisabled = isLoading || isError || data !== 'idle';
 
     const handleConfirm = () => {
-        showDialog();
         requestAnalysis.mutate(undefined, {
             onError: () => {
+                hideDialog();
                 addNotification('There was an error requesting analysis.');
             },
             onSuccess: () => {
+                hideDialog();
                 addNotification('Analysis requested successfully.');
             },
         });
@@ -65,22 +69,19 @@ const AnalyzeNowConfiguration: FC = () => {
 
     return (
         <>
-            <Card>
-                <CardHeader>
-                    <div className='flex justify-between'>
-                        <CardTitle className='font-medium'>Run Analysis Now</CardTitle>
-                        <Button disabled={buttonDisabled} onClick={showDialog}>
-                            Analyze Now
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent className='grid gap-4'>
-                    This will re-run analysis in the BloodHound environment, recreating all Attack Paths that exist as a
-                    result of complex configurations.
-                </CardContent>
-            </Card>
+            <div className=' flex p-4 justify-between'>
+                <div>
+                    <h4 className='font-medium text-xl mb-4'>Run Analysis Now</h4>
+                    <p>{description}</p>
+                </div>
+                <div className='flex items-center'>
+                    <Button disabled={buttonDisabled} onClick={showDialog}>
+                        Analyze Now
+                    </Button>
+                </div>
+            </div>
 
-            <AnalyzeNowConfirmDialog open={isOpenDialog} onCancel={showDialog} onConfirm={handleConfirm} />
+            <AnalyzeNowConfirmDialog open={isOpenDialog} onCancel={hideDialog} onConfirm={handleConfirm} />
         </>
     );
 };

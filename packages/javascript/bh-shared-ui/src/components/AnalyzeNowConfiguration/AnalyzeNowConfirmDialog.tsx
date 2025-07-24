@@ -14,7 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 
 type AnalyzeNowConfirmDialogProps = {
@@ -31,12 +38,14 @@ const AnalyzeNowConfirmDialog: FC<AnalyzeNowConfirmDialogProps> = ({ open, onCan
                 <DialogDescription>
                     Analysis may take some time, during which your data will be in flux. Proceed with analysis?
                 </DialogDescription>
-                <Button onClick={onCancel} variant={'secondary'}>
-                    Cancel
-                </Button>
-                <Button onClick={onConfirm} variant={'primary'}>
-                    Confirm
-                </Button>
+                <DialogActions>
+                    <Button onClick={onCancel} variant={'secondary'}>
+                        Cancel
+                    </Button>
+                    <Button onClick={onConfirm} variant={'primary'}>
+                        Confirm
+                    </Button>
+                </DialogActions>
             </DialogContent>
         </Dialog>
     );

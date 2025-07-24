@@ -405,7 +405,7 @@ class BHEAPIClient {
             options
         );
 
-    requestAnalysisBHE = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+    requestAttackPaths = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
 
     requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/analysis', options);
 
