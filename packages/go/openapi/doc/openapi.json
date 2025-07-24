@@ -15063,7 +15063,7 @@
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
-      "put": {
+      "get": {
         "operationId": "GetAllAttackPathFindings",
         "summary": "Get all attack path findings",
         "description": "Fetches all attack path findings and their associated details, including documentation.",

@@ -266,18 +266,10 @@ func stringToInt(itemProps map[string]any, keyName string) {
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp IngestibleNode) []IngestibleRelationship {
-	isConfigurationNC := false
-	if itemType.Is(ad.Container) {
-		if dn, ok := baseNodeProp.PropertyMap[ad.DistinguishedName.String()].(string); ok {
-			isConfigurationNC = strings.HasPrefix(dn, "CN=CONFIGURATION,DC=")
-		}
-	}
-
-	rels := make([]IngestibleRelationship, 0)
+func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelationship {
 	containingPrincipal := item.ContainedBy
 	if containingPrincipal.ObjectIdentifier != "" {
-		rels = append(rels, NewIngestibleRelationship(
+		return NewIngestibleRelationship(
 			IngestibleEndpoint{
 				Value: containingPrincipal.ObjectIdentifier,
 				Kind:  containingPrincipal.Kind(),
@@ -290,27 +282,11 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp Ing
 				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
-		))
-
-		if !item.IsACLProtected && !isConfigurationNC { // The Configuration NC is it's own partition and does not inherit ACEs
-			rels = append(rels, NewIngestibleRelationship(
-				IngestibleEndpoint{
-					Value: containingPrincipal.ObjectIdentifier,
-					Kind:  containingPrincipal.Kind(),
-				},
-				IngestibleEndpoint{
-					Value: item.ObjectIdentifier,
-					Kind:  itemType,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): false},
-					RelType:  ad.PropagatesACEsTo,
-				},
-			))
-		}
+		)
 	}
 
-	return rels
+	// TODO: Decide if we even want empty rels in the first place
+	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
 func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid string) IngestibleRelationship {
@@ -335,25 +311,28 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
-func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID string) IngestibleRelationship {
-	if domainSID == "" {
-		return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+// ParseGroupMiscData parses HasSIDHistory
+func ParseGroupMiscData(group Group) []IngestibleRelationship {
+	data := make([]IngestibleRelationship, 0)
+
+	for _, target := range group.HasSIDHistory {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: group.ObjectIdentifier,
+				Kind:  ad.Group,
+			},
+			IngestibleEndpoint{
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.HasSIDHistory,
+			},
+		))
 	}
 
-	return NewIngestibleRelationship(
-		IngestibleEndpoint{
-			Value: domainSID,
-			Kind:  ad.Domain,
-		},
-		IngestibleEndpoint{
-			Value: item.ObjectIdentifier,
-			Kind:  itemType,
-		},
-		IngestibleRel{
-			RelProps: map[string]any{ad.IsACL.String(): false},
-			RelType:  ad.ContainsIdentity,
-		},
-	)
+	return data
 }
 
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
