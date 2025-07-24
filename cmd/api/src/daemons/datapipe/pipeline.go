@@ -84,30 +84,57 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 		return fmt.Errorf("cancelling jobs during data deletion: %v", err)
 	} else if err := s.db.DeleteAllIngestTasks(ctx); err != nil {
 		return fmt.Errorf("deleting ingest tasks during data deletion: %v", err)
-	} else if sourceKinds, err := s.db.GetSourceKinds(ctx); err != nil {
-		return fmt.Errorf("getting source kinds during data deletion: %v", err)
-	} else {
-		var (
-			kinds         graph.Kinds
-			filteredKinds graph.Kinds
-		)
-		for _, k := range sourceKinds {
-			kinds = append(kinds, k.Name)
-		}
-		// Filter out reserved kinds before removing records from source_kinds table
-		for _, kind := range kinds {
-			if !kind.Is(ad.Entity) && !kind.Is(azure.Entity) {
-				filteredKinds = append(filteredKinds, kind)
-			}
-		}
+	} else if err := PurgeGraphData(ctx, deleteRequest, s.graphdb, s.db); err != nil {
+		return fmt.Errorf("purging graph data failed: %w", err)
+	}
 
-		if err := DeleteCollectedGraphData(ctx, s.graphdb, deleteRequest, kinds); err != nil {
-			return fmt.Errorf("deleting graph data: %v", err)
-		} else if err := s.db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
-			return fmt.Errorf("deleting source kinds: %v", err)
+	return nil
+}
+
+func PurgeGraphData(
+	ctx context.Context,
+	deleteRequest model.AnalysisRequest,
+	graphdb graph.Database,
+	db database.SourceKindsData,
+) error {
+	sourceKinds, err := db.GetSourceKinds(ctx)
+	if err != nil {
+		return fmt.Errorf("getting source kinds: %w", err)
+	}
+
+	allSourceKinds := extractKindNames(sourceKinds)
+	filteredKinds := filterDeletableKinds(deleteRequest.DeleteSourceKinds)
+
+	if err := DeleteCollectedGraphData(ctx, graphdb, deleteRequest, allSourceKinds); err != nil {
+		return fmt.Errorf("deleting graph data: %w", err)
+	}
+
+	if err := db.DeleteSourceKindsByName(ctx, filteredKinds); err != nil {
+		return fmt.Errorf("deleting source kinds: %w", err)
+	}
+
+	return nil
+}
+
+func extractKindNames(sourceKinds []database.SourceKind) graph.Kinds {
+	var kinds graph.Kinds
+	for _, k := range sourceKinds {
+		kinds = append(kinds, k.Name)
+	}
+	return kinds
+}
+
+// if the delete request specifies any source_kinds for deletion we want to remove them from the source_kinds table.
+// we want to remove 3rd party source_kinds when requested(e.g. GithubBase, HelloBase), but this ensures that we never remove Base and AZBase.
+func filterDeletableKinds(kindsToDelete []string) graph.Kinds {
+	var filtered graph.Kinds
+	for _, kind := range kindsToDelete {
+		k := graph.StringKind(kind)
+		if !k.Is(ad.Entity) && !k.Is(azure.Entity) {
+			filtered = append(filtered, k)
 		}
 	}
-	return nil
+	return filtered
 }
 
 // This is called on Daemon start. We get a list of all filenames we know/expect and delete any

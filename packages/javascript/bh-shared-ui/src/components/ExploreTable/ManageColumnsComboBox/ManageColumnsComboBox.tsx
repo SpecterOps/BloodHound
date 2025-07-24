@@ -26,12 +26,14 @@ export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?
 
 type ManageColumnsComboBoxProps = {
     allColumns: ManageColumnsComboBoxOption[];
+    disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
     selectedColumns: Record<string, boolean>;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
+    disabled,
     selectedColumns: selectedColumnsProp,
 }: ManageColumnsComboBoxProps) => {
     const ref = useRef<HTMLDivElement>(null);
@@ -127,6 +129,7 @@ export const ManageColumnsComboBox = ({
         <>
             <div className='mb-1'>
                 <Button
+                    disabled={disabled}
                     onClick={handleManageColumnsClick}
                     className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'>
                     Manage Columns
