@@ -33,8 +33,6 @@ import (
 )
 
 func Test_ResolveRelationships(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	var (
 		NAME_NOT_EXISTS        = "bippity boppity"       // simulates a name that does not exist
 		NAME_MULTIPLE_MATCH    = "same name"             // simulates a name that will be matched by multiple nodes
@@ -42,6 +40,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	)
 
 	t.Run("Exact match (happy path). Source and target node names both resolve unambiguously to nodes with objectids.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -79,6 +78,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Only source matches. Target node is unmatched by name - update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -106,6 +106,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Only target matches.	Source node is unmatched by name - update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -133,6 +134,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Neither matches. No node resolves to source or target — update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -160,6 +162,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Multiple matches for source — ambiguity, update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -187,6 +190,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Multiple matches for target — ambiguity, update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -214,6 +218,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Kind filters for endpoints are nil. Resolved by name only", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -251,6 +256,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Mixed resolution strategy. Source uses MatchByName, Target uses MatchByID.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -287,6 +293,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Mixed resolution strategy. Target uses MatchByName, Source uses MatchByID.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -322,6 +329,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Source name matches 2 nodes with the same name but different kinds. Resolution should honor optional kind filter.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -357,6 +365,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Both nodes match but with mismatched kinds. Filtered out due to kind mismatch — update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -384,6 +393,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Empty or null Source or Target values — update should be skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -411,6 +421,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("ID match fallback. Both source/target use MatchByID.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -446,6 +457,7 @@ func Test_ResolveRelationships(t *testing.T) {
 	})
 
 	t.Run("Batch input, multiple updates returned.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -521,8 +533,6 @@ func Test_ResolveRelationships(t *testing.T) {
 }
 
 func Test_ResolveAllEndpointsByName(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	generateKey := func(name, kind string) endpointKey {
 		return endpointKey{
 			Name: name,
@@ -530,6 +540,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 		}
 	}
 	t.Run("Single match. One node with name and kind found, and valid objectid returned.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.ResolveEndpointsByName.Setup(testContext)
 			return nil
@@ -560,6 +571,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 	})
 
 	t.Run("No match. Lookup requests name/kind that do not exist in DB.	Empty result map returned.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.ResolveEndpointsByName.Setup(testContext)
 			return nil
@@ -586,6 +598,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 	})
 
 	t.Run("Ambiguous match.	Two nodes with same name + kind. Skipped from result map.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.ResolveEndpointsByName.Setup(testContext)
 			return nil
@@ -612,6 +625,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 	})
 
 	t.Run("Multiple distinct matches for Alice n Bob. Both returned", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.ResolveEndpointsByName.Setup(testContext)
 			return nil
@@ -646,6 +660,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 	})
 
 	t.Run("Empty input.	Empty result map returned.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.ResolveEndpointsByName.Setup(testContext)
 			return nil

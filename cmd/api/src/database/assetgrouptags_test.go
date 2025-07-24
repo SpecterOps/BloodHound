@@ -37,6 +37,7 @@ import (
 )
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
