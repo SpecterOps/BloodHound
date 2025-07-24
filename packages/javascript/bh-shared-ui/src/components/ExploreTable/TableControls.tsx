@@ -61,6 +61,8 @@ const TableControls = <TData, TValue>({
         [columns, pinnedColumns]
     );
 
+    const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
+    const noResults = !resultsCount;
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
@@ -72,16 +74,27 @@ const TableControls = <TData, TValue>({
                     <div className='flex justify-center items-center relative'>
                         <Input
                             data-testid='explore-table-search'
-                            className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
+                            disabled={noResults}
+                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
+                                [DISABLED_CLASSNAME]: noResults,
+                                'border-neutral-400': noResults,
+                            })}
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                        <FontAwesomeIcon
+                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
+                            icon={faSearch}
+                        />
                     </div>
                 )}
                 {onDownloadClick && (
-                    <div onClick={onDownloadClick} data-testid='download-button'>
+                    <button
+                        aria-disabled={noResults}
+                        onClick={onDownloadClick}
+                        data-testid='download-button'
+                        className={cn({ [DISABLED_CLASSNAME]: noResults })}>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
-                    </div>
+                    </button>
                 )}
                 {onExpandClick && (
                     <div onClick={onExpandClick} data-testid='expand-button'>
@@ -90,6 +103,7 @@ const TableControls = <TData, TValue>({
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
+                        disabled={noResults}
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
