@@ -27,6 +27,7 @@ import { getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
+import SearchBar from './SearchBar';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -109,9 +110,12 @@ const Details: FC = () => {
 
     return (
         <div>
-            <div className='flex mt-6 gap-8'>
-                {InfoHeader && <InfoHeader />}
-                <div className='basis-1/3'>
+            <div className='flex mt-6'>
+                <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
+                <div className='w-1/6'>
+                    <SearchBar selected={tagId} labelId={labelId} selectorId={selectorId} />
+                </div>
+                <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
                             <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
@@ -120,7 +124,7 @@ const Details: FC = () => {
                 </div>
             </div>
             <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+                <div className='flex basis-1/2 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
                     <DetailsList
                         title={location.pathname.includes('label') ? 'Labels' : 'Tiers'}
                         listQuery={tagsQuery}
