@@ -24,7 +24,7 @@ import { useFeatureFlag } from '../useFeatureFlags';
 // Auto display when current search is cypher and returned data contains nodes but not edges.
 // And dont auto display if the auto display has been closed.
 export const useExploreTableAutoDisplay = (enabled: boolean) => {
-    const { data: graphData, isFetching } = useExploreGraph(enabled);
+    const { data: graphData, isFetching } = useExploreGraph();
     const { searchType } = useExploreParams();
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
