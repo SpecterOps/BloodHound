@@ -61,7 +61,7 @@ const TableControls = <TData, TValue>({
         [columns, pinnedColumns]
     );
 
-    const DISABLED_CLASSNAME = 'pointer-events-none disabled color-grey';
+    const DISABLED_CLASSNAME = 'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400';
     const noResults = !resultsCount;
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
@@ -76,16 +76,13 @@ const TableControls = <TData, TValue>({
                             data-testid='explore-table-search'
                             disabled={noResults}
                             className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
-                                'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400 border-neutral-400':
-                                    noResults,
+                                [DISABLED_CLASSNAME]: noResults,
+                                'border-neutral-400': noResults,
                             })}
                             {...SearchInputProps}
                         />
                         <FontAwesomeIcon
-                            className={cn('absolute right-2', {
-                                'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400':
-                                    noResults,
-                            })}
+                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
                             icon={faSearch}
                         />
                     </div>
@@ -95,9 +92,7 @@ const TableControls = <TData, TValue>({
                         aria-disabled={noResults}
                         onClick={onDownloadClick}
                         data-testid='download-button'
-                        className={cn({
-                            'pointer-events-none *:cursor-help *:dark:text-neutral-500 *:text-neutral-400': noResults,
-                        })}>
+                        className={cn({ [DISABLED_CLASSNAME]: noResults })}>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
                     </button>
                 )}
