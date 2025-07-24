@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AppLink, TIER_ZERO_ID, getTagUrlValue } from 'bh-shared-ui';
+import { AppLink, getTagUrlValue, useHighestPrivilegeTagId } from 'bh-shared-ui';
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
 const InfoHeader: FC = () => {
-    const { tierId = TIER_ZERO_ID, labelId } = useParams();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tierId = topTagId?.toString(), labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     return (
@@ -27,7 +28,9 @@ const InfoHeader: FC = () => {
             <div className='flex justify-start gap-4 items-center basis-2/3'>
                 <div className='flex items-center align-middle'>
                     <Button variant='primary' disabled={!tagId} asChild>
-                        <AppLink to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                        <AppLink
+                            data-testid='zone-management_create-selector-link'
+                            to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
                             Create Selector
                         </AppLink>
                     </Button>

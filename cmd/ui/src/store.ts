@@ -68,6 +68,7 @@ type PersistedState = {
             darkMode: GlobalViewState['darkMode'];
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
+            selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
         };
     };
 };
@@ -113,6 +114,7 @@ store.subscribe(
                     darkMode: state.global.view.darkMode,
                     notifications: [],
                     exploreLayout: state.global.view.exploreLayout,
+                    selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
                 },
             },
         });

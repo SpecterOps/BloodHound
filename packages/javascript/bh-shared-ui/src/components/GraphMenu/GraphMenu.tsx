@@ -18,7 +18,7 @@ import { Menu } from '@mui/material';
 import { Children, FC, ReactNode, useState } from 'react';
 import GraphButton from '../GraphButton';
 
-const GraphMenu: FC<{ label: ReactNode; children: ReactNode }> = ({ children, label }) => {
+const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const open = Boolean(anchorEl);
@@ -28,6 +28,8 @@ const GraphMenu: FC<{ label: ReactNode; children: ReactNode }> = ({ children, la
     return (
         <>
             <GraphButton
+                aria-label={label}
+                data-testid={`explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`}
                 onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
                     setAnchorEl(event.currentTarget);
                 }}

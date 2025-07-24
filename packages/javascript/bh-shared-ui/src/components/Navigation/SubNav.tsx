@@ -62,7 +62,9 @@ interface SubNavProps {
 
 const SubNav: React.FC<SubNavProps> = ({ sections }) => {
     return (
-        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'>
+        <nav
+            className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'
+            data-testid='administration-nav'>
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex}>
                     <SubNavListTitle>

@@ -90,32 +90,51 @@ const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
         type: item.label || item.kind || '',
     };
 
-    return (
-        <ListItem
-            button
-            className={itemClass}
-            onClick={() => {
-                onClick(normalizedItem);
-            }}
-            style={{
-                ...style,
-                padding: '0 8px',
-            }}
-            data-testid='entity-row'>
-            <NodeIcon nodeType={normalizedItem.type} />
-            <Tooltip title={normalizedItem.name}>
-                <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {normalizedItem.name}
-                </div>
-            </Tooltip>
-        </ListItem>
-    );
+    if (onClick) {
+        return (
+            <ListItem
+                button
+                className={itemClass}
+                onClick={() => {
+                    onClick(normalizedItem);
+                }}
+                style={{
+                    ...style,
+                    padding: '0 8px',
+                }}
+                data-testid='entity-row'>
+                <NodeIcon nodeType={normalizedItem.type} />
+                <Tooltip title={normalizedItem.name}>
+                    <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {normalizedItem.name}
+                    </div>
+                </Tooltip>
+            </ListItem>
+        );
+    } else {
+        return (
+            <ListItem
+                className={itemClass}
+                style={{
+                    ...style,
+                    padding: '0 8px',
+                }}
+                data-testid='entity-row'>
+                <NodeIcon nodeType={normalizedItem.type} />
+                <Tooltip title={normalizedItem.name}>
+                    <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {normalizedItem.name}
+                    </div>
+                </Tooltip>
+            </ListItem>
+        );
+    }
 }, areEqual);
 
 const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
     fetchDataCallback,
     itemCount = 1000,
-    onClick = () => {},
+    onClick,
 }) => {
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, any>>({});

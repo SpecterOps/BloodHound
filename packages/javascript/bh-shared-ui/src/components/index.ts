@@ -79,6 +79,13 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 export * from './EnterpriseIcon';
 export { default as EnterpriseIcon } from './EnterpriseIcon';
 
+export * from './EntityInfo';
+export { default as EntityInfoPanel } from './EntityInfo';
+
+export * from './EntityInfoDataTable';
+
+export * from './EntityInfoDataTableGraphed';
+
 export * from './ExploreSearchCombobox';
 export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';
 
@@ -164,6 +171,8 @@ export { default as SearchCurrentNodes } from './SearchCurrentNodes';
 
 export * from './SearchResultItem';
 export { default as SearchResultItem } from './SearchResultItem';
+
+export * from './SourceKindsCheckboxes';
 
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';

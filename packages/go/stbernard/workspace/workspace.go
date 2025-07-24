@@ -41,7 +41,7 @@ type WorkspacePaths struct {
 	Assets         string
 	Submodules     []string
 	YarnWorkspaces []string
-	GoModules      []string
+	GoModule       string
 }
 
 // FindPaths will attempt to crawl up the path until it finds a go.work file, then calculate all WorkspacePaths
@@ -51,25 +51,18 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		return WorkspacePaths{}, fmt.Errorf("getting current working directory: %w", err)
 	}
 
-	var found bool
-
-	for !found {
-		found, err = projectDirExists(cwd)
-		if err != nil {
+	for {
+		if found, err := projectDirExists(cwd); err != nil {
 			return WorkspacePaths{}, fmt.Errorf("finding project root: %w", err)
-		}
-
-		if found {
+		} else if found {
 			break
 		}
 
-		prevCwd := cwd
-
 		// Go up a directory before retrying
-		cwd = filepath.Dir(cwd)
-
-		if cwd == prevCwd {
+		if parentDir := filepath.Dir(cwd); cwd == parentDir {
 			return WorkspacePaths{}, ErrNoWorkspaceFound
+		} else {
+			cwd = parentDir
 		}
 	}
 
@@ -93,19 +86,13 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		return WorkspacePaths{}, fmt.Errorf("parsing yarn workspace: %w", err)
 	}
 
-	// Build Go modules paths
-	goModules, err := golang.ParseModulesAbsPaths(cwd)
-	if err != nil {
-		return WorkspacePaths{}, fmt.Errorf("parsing go module paths: %w", err)
-	}
-
 	return WorkspacePaths{
 		Root:           cwd,
 		Coverage:       path,
 		Submodules:     subPaths,
 		Assets:         yarnWorkspaces.AssetsDir,
 		YarnWorkspaces: yarnWorkspaces.Workspaces,
-		GoModules:      goModules,
+		GoModule:       cwd,
 	}, nil
 }
 
@@ -124,7 +111,7 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
 	}
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("running schemagen: %w", err)
 	} else {
 		return nil

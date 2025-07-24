@@ -14,109 +14,97 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
-import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import capitalize from 'lodash/capitalize';
-import { useMemo, useState } from 'react';
-import { makeFormattedObjectInfoFieldsMap } from '../../utils';
-import NodeIcon from '../NodeIcon';
-import { TableControls } from './TableControls';
+import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { useToggle } from '../../hooks';
+import { cn } from '../../utils';
+import TableControls from './TableControls';
+import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
-type HasData = { data?: object };
+const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
-interface ExploreTableProps<TData extends HasData> {
-    open?: boolean;
-    onClose?: () => void;
-    data?: Record<string, TData>;
-}
+type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
-const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTableProps<TData>) => {
+const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+    className: 'sticky top-0 z-10',
+};
+
+const tableHeadProps: DataTableProps['TableHeadProps'] = {
+    className: 'pr-4',
+};
+
+const ExploreTable = ({
+    data,
+    selectedNode,
+    open,
+    onClose,
+    onRowClick,
+    onDownloadClick,
+    onKebabMenuClick,
+    onManageColumnsChange,
+    allColumnKeys,
+    selectedColumns,
+}: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
-    const mungedData = useMemo(
-        () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
-        [data]
+    const [isExpanded, toggleIsExpanded] = useToggle(false);
+
+    const handleSearchInputChange = useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
+        []
     );
 
-    const firstItem = mungedData?.[0];
+    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        allColumnKeys,
+        selectedColumns,
+        data,
+    });
 
-    const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
-
-    const initialColumns: ColumnDef<any, any>[] = [
-        {
-            accessorKey: '',
-            id: 'action-menu',
-            cell: () => (
-                <button className='pl-4'>
-                    <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
-                </button>
-            ),
-        },
-        {
-            accessorKey: 'nonTierZeroPrincipal',
-            header: () => {
-                return <span className='dark:text-neutral-light-1'>Non Tier Zero Principal</span>;
-            },
-            cell: ({ row }) => {
-                return (
-                    <div className='flex justify-center items-center relative'>
-                        <NodeIcon nodeType={row?.original?.nodetype || 'N/A'} />
-                    </div>
-                );
-            },
-        },
-    ];
-
-    const columns: ColumnDef<any, any>[] = useMemo(
-        () =>
-            firstItem
-                ? // If column order exists in redux/localStorage, use that
-                  Object.keys(firstItem).map((key: any) => {
-                      return {
-                          accessorKey: key,
-                          header: labelsMap?.[key]?.label || capitalize(key),
-                          cell: (info: any) => String(info.getValue()),
-                          id: key,
-                          size: 150,
-                      } as ColumnDef<any, any>;
-                  })
-                : [],
-        [labelsMap, firstItem]
+    const searchInputProps = useMemo(
+        () => ({
+            onChange: handleSearchInputChange,
+            value: searchInput,
+            placeholder: 'Search',
+        }),
+        [handleSearchInputChange, searchInput]
     );
 
     if (!open || !data) return null;
 
-    const finalColumns = [...initialColumns, ...columns];
     return (
         <div
-            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 max-h-1/2 h-[475px] bg-neutral-light-2`}>
+            className={cn(
+                'dark:bg-neutral-dark-5 border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2',
+                {
+                    'h-1/2': !isExpanded,
+                    'h-[calc(100%-72px)]': isExpanded,
+                    'w-[calc(100%-450px)]': selectedNode,
+                }
+            )}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
-                    onDownloadClick={() => console.log('download icon clicked')}
-                    onExpandClick={() => console.log('expand icon clicked')}
-                    onManageColumnsClick={() => console.log('manage columns button clicked')}
+                    className='h-[72px]'
+                    columns={columnOptionsForDropdown}
+                    selectedColumns={selectedColumns || requiredColumns}
+                    pinnedColumns={requiredColumns}
+                    onDownloadClick={onDownloadClick}
+                    onExpandClick={toggleIsExpanded}
+                    onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
-                    resultsCount={mungedData?.length}
-                    SearchInputProps={{
-                        onChange: (e) => setSearchInput(e.target.value),
-                        value: searchInput,
-                        placeholder: 'Search',
-                    }}
+                    resultsCount={sortedFilteredRows?.length}
+                    SearchInputProps={searchInputProps}
                 />
-                <DataTable
+                <MemoDataTable
                     className='h-full *:h-[calc(100%-72px)]'
-                    // TableProps={{
-                    //     containerClassName: 'h-full',
-                    // }}
-                    TableHeaderProps={{
-                        className: 'sticky top-0 z-10',
-                    }}
-                    tableOptions={{
-                        getRowId: (row) => row?.id,
-                    }}
-                    data={mungedData}
-                    columns={finalColumns}
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    onRowClick={onRowClick}
+                    selectedRow={selectedNode || undefined}
+                    data={sortedFilteredRows}
+                    columns={tableColumns as DataTableProps['columns']}
                 />
             </div>
         </div>

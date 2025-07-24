@@ -224,12 +224,12 @@ describe('GraphControls', () => {
         it('shows Popper when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
 
             const searchResultsMenu = screen.getByText('Search Current Results');
             await user.click(searchResultsMenu);
 
-            expect(screen.getByTestId('explore_graph-controls')).toBeInTheDocument();
+            expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
         });
 
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
@@ -249,7 +249,8 @@ describe('GraphControls', () => {
             });
 
             expect(onSearchedNodeClickFn).toBeCalled();
-            expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();
+
+            expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
         });
     });
 });

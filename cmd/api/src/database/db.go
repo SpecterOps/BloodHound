@@ -171,6 +171,9 @@ type Database interface {
 
 	// Custom Node Kinds
 	CustomNodeKindData
+
+	// Source Kinds
+	SourceKindsData
 }
 
 type BloodhoundDB struct {
