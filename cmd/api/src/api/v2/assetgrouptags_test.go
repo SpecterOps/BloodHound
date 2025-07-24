@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -49,6 +51,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -2810,4 +2813,146 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestResources_UpdateAssetGroupHistory(t *testing.T) {
+
+	var (
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
+		resources   = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+		user     = setupUser()
+		userCtx  = setupUserCtx(user)
+		handler  = http.HandlerFunc(resources.UpdateAssetGroupTagHistory)
+		endpoint = "/api/v2/asset-group-tags/history/1"
+	)
+
+	type WrappedResponse struct {
+		Data model.AssetGroupHistory `json:"data"`
+	}
+
+	defer mockCtrl.Finish()
+
+	t.Run("cannot decode request body error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+			Return(model.AssetGroupHistory{}, nil).Times(1)
+
+		reqBody := `{"name":["BadRequest"]`
+		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1"})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponsePayloadUnmarshalError)
+	})
+
+	t.Run("Missing history URL id error", func(t *testing.T) {
+		reqBody := `{"note": "Test note"}`
+		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
+	})
+
+	t.Run("Invalid history URL id error", func(t *testing.T) {
+		reqBody := `{"note": "Test note"}`
+		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "non-numeric"})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
+	})
+
+	t.Run("Non existent history URL id error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+			Return(model.AssetGroupHistory{}, database.ErrNotFound).Times(1)
+
+		reqBody := `{"note": "Test note"}`
+		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1234"})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusNotFound, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsResourceNotFound)
+	})
+
+	t.Run("Database error", func(t *testing.T) {
+		mockDB.EXPECT().UpdateAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+			Return(model.AssetGroupHistory{}, errors.New("failure")).Times(1)
+		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+			Return(model.AssetGroupHistory{}, nil).Times(1)
+
+		reqBody := `{"note": "Test note"}`
+		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1"})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		mockHistoryRec := model.AssetGroupHistory{
+			ID:     1,
+			Action: "CreateTag",
+			Email:  null.StringFrom("johndoe@gmail.com"),
+			Note:   null.StringFrom("Existing note text\n\n"),
+		}
+
+		mockDB.EXPECT().UpdateAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, historyRec model.AssetGroupHistory) (model.AssetGroupHistory, error) {
+				assert.True(t, historyRec.Note.Valid)
+				// matching a string such as: Existing note text\n\n2025-07-28T06:14:41Z - johndoe@gmail.com\nTest note\n\n
+				notePattern := `Existing note text\n\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z - johndoe@gmail\.com\nTest note\n\n`
+				matched, err := regexp.MatchString(notePattern, historyRec.Note.String)
+				assert.NoError(t, err)
+				assert.True(t, matched, "Note.String does not match expected pattern")
+				assert.Equal(t, model.AssetGroupHistoryAction("CreateTag"), historyRec.Action)
+				return mockHistoryRec, nil
+			}).
+			Times(1)
+		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+			Return(mockHistoryRec, nil).Times(1)
+
+		reqBody := `{"note": "Test note"}`
+		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1"})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		// verify return code
+		require.Equal(t, http.StatusOK, response.Code)
+
+		// verify returned body
+		expected := WrappedResponse{
+			mockHistoryRec,
+		}
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+	})
 }
