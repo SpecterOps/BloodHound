@@ -189,12 +189,11 @@ class BHEAPIClient {
         );
     };
 
-    getUserQueryPermissions = (queryId: number, options?: RequestOptions) => {
-        return this.baseClient.get<BasicResponse<SavedQueryPermissionsResponse>>(
+    getUserQueryPermissions = (queryId: number, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<SavedQueryPermissionsResponse>>(
             `/api/v2/saved-queries/${queryId}/permissions`,
             options
         );
-    };
 
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
