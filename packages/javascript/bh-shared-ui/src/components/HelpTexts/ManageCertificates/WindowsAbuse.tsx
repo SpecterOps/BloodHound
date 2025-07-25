@@ -19,11 +19,21 @@ import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <Typography variant='body2'>
-            This relationship alone is not enough to perform a privilege escalation or impersonation primitive. This
-            relationship may contribute to other relationships and attributes, from which an escalation opportunity may
-            emerge.
-        </Typography>
+        <>
+            <Typography variant='body2'>
+                An attacker can identify ADCS escalation opportunities where manager approval on the certificate
+                template prevents direct abuse, but leverage the Certificate Manager role to approve the pending
+                certificate request.
+            </Typography>
+            <Typography variant='body2'>Certificate requests can be approved with certutil:</Typography>
+            <Typography component={'pre'}>
+                {'certutil -config "caserver.fabricam.com\\Fabricam Issuing CA" -resubmit 12345'}
+            </Typography>
+            <Typography variant='body2'>Approved certificate can be downloaded using Certify:</Typography>
+            <Typography component={'pre'}>
+                {'Certify.exe download /ca:"caserver.fabricam.com\\Fabricam Issuing CA" /id:ReqID'}
+            </Typography>
+        </>
     );
 };
 
