@@ -613,3 +613,105 @@ func fetchNTLMPrereqs(db graph.Database) (expansions impact.PathAggregator, comp
 		return expansions, computers, domains, cache, nil
 	}
 }
+
+func TestPostNTLMRelayADCSRPC(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCSRPC")
+		expansions, _, _, _, err := fetchNTLMPrereqs(db)
+		require.NoError(t, err)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions)
+		require.NoError(t, err)
+
+		cache := ad2.NewADCSCache()
+		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+		require.NoError(t, err)
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.NoError(t, err)
+		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+		require.NoError(t, err)
+
+		err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
+		require.NoError(t, err)
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCSRPC)
+			})); err != nil {
+				t.Fatalf("error fetching ntlm to adcs rpc edges in integration test; %v", err)
+			} else {
+
+				require.Len(t, results, 1)
+				rel := results[0]
+
+				start, end, err := ops.FetchRelationshipNodes(tx, rel)
+				require.NoError(t, err)
+
+				require.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup.ID)
+				require.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer.ID)
+			}
+			return nil
+		})
+	})
+}
+
+func TestNTLMRelayToADCSRPCComposition(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCSRPC")
+		expansions, _, _, _, err := fetchNTLMPrereqs(db)
+		require.NoError(t, err)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions)
+		require.NoError(t, err)
+
+		cache := ad2.NewADCSCache()
+		enterpriseCertAuthorities, err := ad2.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
+		require.NoError(t, err)
+		certTemplates, err := ad2.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
+		require.NoError(t, err)
+		err = cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
+		require.NoError(t, err)
+
+		err = ad2.PostCoerceAndRelayNTLMToADCS(cache, operation, ntlmCache)
+		require.NoError(t, err)
+
+		operation.Done()
+
+		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCSRPC),
+				)
+			})); err != nil {
+				t.Fatalf("error fetching ntlm to adcs rpc edges in integration test; %v", err)
+			} else {
+				require.Len(t, results, 1)
+				edge := results[0]
+
+				composition, err := ad2.GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(context.Background(), db, edge)
+				require.NoError(t, err)
+
+				nodes := composition.AllNodes()
+				require.Len(t, nodes, 7)
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.CertTemplate1))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.RootCA))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.Domain))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.NTAuthStore))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup))
+			}
+			return nil
+		})
+	})
+}

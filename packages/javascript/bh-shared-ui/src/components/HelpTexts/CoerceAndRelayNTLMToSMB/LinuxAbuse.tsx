@@ -20,13 +20,15 @@ import { FC } from 'react';
 const LinuxAbuse: FC = () => {
     return (
         <>
+            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
             <Typography variant={'body2'}>
-                1. Start the Relay Server The NTLM relay can be executed with{' '}
+                The NTLM relay can be executed with{' '}
                 <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>.
             </Typography>
 
+            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
             <Typography variant={'body2'}>
-                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+                Several coercion methods are documented here:{' '}
                 <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
                     Windows Coerced Authentication Methods
                 </a>

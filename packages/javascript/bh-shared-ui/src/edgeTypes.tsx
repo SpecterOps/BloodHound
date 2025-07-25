@@ -133,6 +133,7 @@ export const AllEdgeTypes: Category[] = [
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
                 ],
