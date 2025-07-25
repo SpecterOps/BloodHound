@@ -22,6 +22,7 @@ import (
 	"io"
 	"log/slog"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"slices"
@@ -132,59 +133,6 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		validator   = upload.NewIngestValidator(s.IngestSchema)
 	)
 
-	if strings.HasPrefix(request.Header.Get("Content-Type"), "multipart/form-data") {
-		slog.Info("MULTIPART DATA BABY")
-		if reader, err := request.MultipartReader(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "failed to open multipart form data", request), response)
-			return
-		} else if jobID, err := strconv.Atoi(jobIdString); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-		} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			paramsToCommit := make([]upload.IngestTaskParams, 0)
-
-			for {
-				if part, err := reader.NextPart(); err == io.EOF {
-					break
-				} else if err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "failed to read multipart part", request), response)
-					return
-				} else if !IsValidContentTypeForUploadMultipart(part.Header) {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
-				} else if ingestTaskParams, err := upload.SaveMultipartIngestFile(s.Config.TempDirectory(), part, validator); errors.Is(err, upload.ErrInvalidJSON) {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-				} else if report, ok := err.(upload.ValidationReport); ok {
-					var (
-						msgs       = report.BuildAPIError()
-						errDetails = []api.ErrorDetails{}
-					)
-
-					for _, msg := range msgs {
-						errDetails = append(errDetails, api.ErrorDetails{Message: msg})
-					}
-
-					e := &api.ErrorWrapper{
-						HTTPStatus: http.StatusBadRequest,
-						Timestamp:  time.Now(),
-						RequestID:  ctx.FromRequest(request).RequestID,
-						Errors:     errDetails,
-					}
-
-					api.WriteErrorResponse(request.Context(), e, response)
-				} else if err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-				} else {
-					paramsToCommit = append(paramsToCommit, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: part.FileName(), FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)})
-				}
-			}
-
-			slog.Info("ingestJob", "ingestJob", ingestJob)
-			slog.Info("params", "params", paramsToCommit)
-		}
-		return
-	}
-
 	if request.Body != nil {
 		defer request.Body.Close()
 	}
@@ -195,6 +143,8 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if ingestJob.Status != model.JobStatusRunning {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
 	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, upload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if report, ok := err.(upload.ValidationReport); ok {
@@ -224,6 +174,141 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	} else {
 		response.WriteHeader(http.StatusAccepted)
 	}
+}
+
+type ProcessMultipartIngestTaskResponse struct {
+	TotalParts  int                              `json:"total_parts"`
+	FailedParts int                              `json:"failed_parts"`
+	PartsData   map[string]MultipartPartResponse `json:"parts_data"`
+}
+
+type MultipartPartResponse struct {
+	PartName string
+	FileName string
+	Errors   []string
+}
+
+func (s Resources) ProcessMultipartIngestTask(response http.ResponseWriter, request *http.Request) {
+	var (
+		requestId   = ctx.FromRequest(request).RequestID
+		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+		validator   = upload.NewIngestValidator(s.IngestSchema)
+	)
+
+	if !strings.HasPrefix(request.Header.Get("Content-Type"), "multipart/form-data") {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content-Type must be multipart/form-data", request), response)
+	} else if reader, err := request.MultipartReader(); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "failed to open multipart form data", request), response)
+		return
+	} else if jobID, err := strconv.Atoi(jobIdString); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if ingestJob.Status != model.JobStatusRunning {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
+	} else {
+		var (
+			results = s.processMultipart(validator, reader)
+
+			total         = len(results)
+			failed        = 0
+			partsResponse = make(map[string]MultipartPartResponse)
+		)
+
+		for _, result := range results {
+			fileResponse := MultipartPartResponse{
+				PartName: result.PartName,
+				FileName: result.ProvidedFileName,
+				Errors:   result.Errors,
+			}
+
+			if len(result.Errors) > 0 {
+				failed += 1
+			} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: result.GeneratedFileName, ProvidedFileName: result.ProvidedFileName, FileType: result.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
+				fileResponse.Errors = append(fileResponse.Errors, fmt.Sprintf("Error creating ingest task: %v", err))
+			} else if err = job.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
+				fileResponse.Errors = append(fileResponse.Errors, fmt.Sprintf("Error updating ingest job: %v", err))
+			}
+
+			partsResponse[result.PartName] = fileResponse
+		}
+
+		api.WriteBasicResponse(request.Context(), ProcessMultipartIngestTaskResponse{TotalParts: total, FailedParts: failed, PartsData: partsResponse}, http.StatusOK, response)
+	}
+}
+
+type multipartResult struct {
+	PartName          string
+	ProvidedFileName  string
+	GeneratedFileName string
+	FileType          model.FileType
+	Errors            []string
+}
+
+func (s Resources) processMultipart(validator upload.IngestValidator, reader *multipart.Reader) []multipartResult {
+	var (
+		results     = make([]multipartResult, 0)
+		unknownPart = 0
+	)
+
+	for {
+		if part, err := reader.NextPart(); err == io.EOF {
+			break
+		} else if err != nil {
+			results = append(results, multipartResult{
+				PartName: fmt.Sprintf("Unknown Part %d", unknownPart),
+				Errors:   []string{fmt.Sprintf("failed to read multipart part: %v", err)},
+			})
+			unknownPart += 1
+		} else if part.FormName() == "" {
+			results = append(results, multipartResult{
+				PartName: fmt.Sprintf("Unknown Part %d", unknownPart),
+				Errors:   []string{fmt.Sprintf("All parts specify a name")},
+			})
+			unknownPart += 1
+		} else if part.FileName() == "" {
+			results = append(results, multipartResult{
+				PartName: part.FormName(),
+				Errors:   []string{fmt.Sprintf("Must be a file")},
+			})
+		} else if !IsValidContentTypeForUploadMultipart(part.Header) {
+			results = append(results, multipartResult{
+				PartName:         part.FormName(),
+				ProvidedFileName: part.FileName(),
+				Errors:           []string{fmt.Sprintf("Content type must be application/json or application/zip")},
+			})
+		} else if ingestTaskParams, err := upload.SaveMultipartIngestFile(s.Config.TempDirectory(), part, validator); errors.Is(err, upload.ErrInvalidJSON) {
+			results = append(results, multipartResult{
+				PartName:         part.FormName(),
+				ProvidedFileName: part.FileName(),
+				Errors:           []string{fmt.Sprintf("Error saving ingest file: %v", err)},
+			})
+		} else if report, ok := err.(upload.ValidationReport); ok {
+			msgs := report.BuildAPIError()
+
+			results = append(results, multipartResult{
+				PartName:         part.FormName(),
+				ProvidedFileName: part.FileName(),
+				Errors:           msgs,
+			})
+		} else if err != nil {
+			results = append(results, multipartResult{
+				PartName:         part.FormName(),
+				ProvidedFileName: part.FileName(),
+				Errors:           []string{fmt.Sprintf("Error saving ingest file: %v", err)},
+			})
+		} else {
+			results = append(results, multipartResult{
+				PartName:          part.FormName(),
+				ProvidedFileName:  part.FileName(),
+				GeneratedFileName: ingestTaskParams.Filename,
+				FileType:          ingestTaskParams.FileType,
+				Errors:            []string{},
+			})
+		}
+	}
+
+	return results
 }
 
 func (s Resources) EndIngestJob(response http.ResponseWriter, request *http.Request) {
