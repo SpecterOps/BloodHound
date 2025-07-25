@@ -189,10 +189,10 @@
     {
       "id": "n9",
       "position": {
-        "x": 482.94623164792375,
-        "y": 657.1984889145978
+        "x": 654.085839099432,
+        "y": 633.957307655751
       },
-      "caption": "Group6",
+      "caption": "Group7",
       "labels": [],
       "properties": {},
       "style": {
@@ -264,6 +264,19 @@
       "style": {
         "node-color": "#fcdc00"
       }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 495.7801848291077,
+        "y": 652.6385696871592
+      },
+      "caption": "Group6",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {}
     }
   ],
   "relationships": [
@@ -408,11 +421,11 @@
     },
     {
       "id": "n16",
-      "fromId": "n12",
-      "toId": "n6",
-      "type": "WriteOwner",
+      "type": "Owns",
+      "style": {},
       "properties": {},
-      "style": {}
+      "fromId": "n12",
+      "toId": "n6"
     },
     {
       "id": "n17",
@@ -461,6 +474,22 @@
       "type": "Enroll",
       "properties": {},
       "style": {}
+    },
+    {
+      "id": "n23",
+      "type": "ADCSESC10a",
+      "fromId": "n15",
+      "toId": "n0",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n24",
+      "type": "Owns",
+      "fromId": "n15",
+      "toId": "n6",
+      "style": {},
+      "properties": {}
     }
   ]
 }
