@@ -28,6 +28,7 @@ import {
     CreateSharpHoundEventRequest,
     CreateUserQueryRequest,
     CreateUserRequest,
+    DeleteUserQueryPermissionsRequest,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
@@ -43,6 +44,7 @@ import {
     UpdateSelectorRequest,
     UpdateSharpHoundClientRequest,
     UpdateSharpHoundEventRequest,
+    UpdateUserQueryPermissionsRequest,
     UpdateUserQueryRequest,
     UpdateUserRequest,
 } from './requests';
@@ -193,6 +195,27 @@ class BHEAPIClient {
         this.baseClient.get<BasicResponse<SavedQueryPermissionsResponse>>(
             `/api/v2/saved-queries/${queryId}/permissions`,
             options
+        );
+
+    updateUserQueryPermissions = (
+        queryId: number,
+        queryPermissionsPayload: UpdateUserQueryPermissionsRequest,
+        options?: RequestOptions
+    ) => this.baseClient.put(`/api/v2/saved-queries/${queryId}/permissions`, queryPermissionsPayload, options);
+
+    deleteUserQueryPermissions = (
+        queryId: number,
+        queryPermissionsPayload: DeleteUserQueryPermissionsRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.delete(
+            `/api/v2/saved-queries/${queryId}/permissions`,
+            Object.assign(
+                {
+                    data: queryPermissionsPayload,
+                },
+                options
+            )
         );
 
     getKinds = (options?: RequestOptions) =>

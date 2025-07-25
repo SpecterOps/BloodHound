@@ -2,7 +2,8 @@ import { CheckedState } from '@radix-ui/react-checkbox';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
-import { getQueryPermissions } from '../../../hooks';
+import { useDeleteQueryPermissions, useQueryPermissions, useUpdateQueryPermissions } from '../../../hooks';
+
 import { apiClient } from '../../../utils';
 
 import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
@@ -17,18 +18,24 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
 
+    const updateQueryPermissionsMutation = useUpdateQueryPermissions();
+
     const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
-    const { data, error, isLoading } = useQuery<any, any>({
-        queryFn: () => getQueryPermissions(queryId),
-        // enabled: false,
-        refetchOnWindowFocus: false,
-        retry: false,
-    });
+    // const { data, error, isLoading } = useQuery<any, any>({
+    //     queryFn: () => getQueryPermissions(queryId),
+    //     // enabled: false,
+    //     refetchOnWindowFocus: false,
+    //     retry: false,
+    // });
+
+    const { data, error, isLoading } = useQueryPermissions(queryId);
+
+    const deletePermissionsMutation = useDeleteQueryPermissions();
 
     function idMap() {
         return listUsersQuery.data
@@ -47,13 +54,14 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     useEffect(() => {
         if (error) {
             console.log('error');
-            console.log(error.response.data.errors);
-            // console.log(error);
-            console.log(
-                error.response.data.errors.some((item: any) =>
-                    item.message.includes('no query permissions exist for saved query')
-                )
-            );
+            // console.log(error.response.data.errors);
+            // // console.log(error);
+            // console.log(
+            //     error.response.data.errors.some((item: any) =>
+            //         item.message.includes('no query permissions exist for saved query')
+            //     )
+            // );
+            setSharedIds([]);
         }
     }, [error]);
 
@@ -61,6 +69,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         if (data) {
             console.log('data');
             console.log(data);
+            // console.log(data.data.shared_to_user_ids);
+            setSharedIds(data.data.shared_to_user_ids);
         }
     }, [data]);
 
@@ -74,11 +84,25 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         }
     };
 
-    const handleCheckChange = (id: string) => {
-        if (sharedIds.includes(id)) {
-            setSharedIds((prevArray) => prevArray.filter((item) => item !== id));
+    const handleCheckChange = (sharedUserId: string) => {
+        if (sharedIds.includes(sharedUserId)) {
+            //delete
+
+            deletePermissionsMutation.mutate({
+                id: queryId,
+                payload: {
+                    user_ids: [sharedUserId],
+                },
+            });
         } else {
-            setSharedIds((prevArray) => [...prevArray, id]);
+            //add
+            updateQueryPermissionsMutation.mutate({
+                id: queryId,
+                payload: {
+                    user_ids: [...sharedIds, sharedUserId],
+                    public: false,
+                },
+            });
         }
     };
 
@@ -136,11 +160,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     }, [searchTerm]);
 
     return (
-        <div className='border border-lime-500'>
-            {/* <div>Saved Query Permissions Table</div>
-            <div>QueryId: {queryId}</div> */}
+        <div>
             {isLoading && <div>Loading ...</div>}
-            {data && <div>{Object.keys(data.data).toString()}</div>}
+            {/* {data && <div>{Object.keys(data.data).toString()}</div>} */}
 
             {usersList && (
                 <>

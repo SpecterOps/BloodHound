@@ -239,11 +239,8 @@ export type SavedQuery = {
     user_id: string;
 };
 
-export type SavedQueryPermissionsItem = {
-    id: string;
-};
 export type SavedQueryPermissionsResponse = {
-    shared_to_user_ids: SavedQueryPermissionsItem[];
+    shared_to_user_ids: string[];
     query_id: number;
     public: boolean;
 };

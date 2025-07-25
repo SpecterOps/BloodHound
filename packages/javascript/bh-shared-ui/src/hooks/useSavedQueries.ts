@@ -14,13 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CreateUserQueryRequest, RequestOptions, SavedQuery, UpdateUserQueryRequest } from 'js-client-library';
+import {
+    CreateUserQueryRequest,
+    DeleteUserQueryPermissionsRequest,
+    RequestOptions,
+    SavedQuery,
+    UpdateUserQueryPermissionsRequest,
+    UpdateUserQueryRequest,
+} from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
 
 export const savedQueryKeys = {
     all: ['savedQueries'] as const,
-    permissions: ['savedQueries'] as const,
+    permissions: ['permissions'] as const,
 };
 
 export const getSavedQueries = (options?: RequestOptions): Promise<SavedQuery[]> => {
@@ -52,7 +59,39 @@ export const deleteSavedQuery = (id: number): Promise<void> => {
 };
 
 export const getQueryPermissions = (id: number, options?: RequestOptions): Promise<any> => {
-    return apiClient.getUserQueryPermissions(id, options).then((response: any) => response.data);
+    return apiClient.getUserQueryPermissions(id, options).then((response) => response.data);
+};
+
+export const useQueryPermissions = (id: number) =>
+    useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id, { signal }));
+
+export const updateQueryPermissions = (
+    { id, payload }: { id: number; payload: UpdateUserQueryPermissionsRequest },
+    options?: RequestOptions
+) => apiClient.updateUserQueryPermissions(id, payload, options).then((res) => res.data);
+
+export const useUpdateQueryPermissions = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(updateQueryPermissions, {
+        onSuccess: () => {
+            queryClient.invalidateQueries(savedQueryKeys.permissions);
+        },
+    });
+};
+
+export const deleteQueryPermissions = (
+    { id, payload }: { id: number; payload: DeleteUserQueryPermissionsRequest },
+    options?: RequestOptions
+) => apiClient.deleteUserQueryPermissions(id, payload, options).then((res) => res.data);
+
+export const useDeleteQueryPermissions = () => {
+    const queryClient = useQueryClient();
+    return useMutation(deleteQueryPermissions, {
+        onSuccess: () => {
+            queryClient.invalidateQueries(savedQueryKeys.permissions);
+        },
+    });
 };
 
 export const useSavedQueries = () => useQuery(savedQueryKeys.all, ({ signal }) => getSavedQueries({ signal }));
@@ -63,17 +102,6 @@ export const useCreateSavedQuery = () => {
     return useMutation(createSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
-        },
-    });
-};
-
-export const useQueryPermissions = (id: number) => {
-    const queryClient = useQueryClient();
-
-    return useMutation(() => getQueryPermissions(id), {
-        onSuccess: (data) => {
-            queryClient.invalidateQueries(savedQueryKeys.permissions);
-            return data;
         },
     });
 };

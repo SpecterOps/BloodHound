@@ -209,6 +209,14 @@ export interface UpdateUserQueryRequest {
     description: string;
     query: string;
 }
+export interface UpdateUserQueryPermissionsRequest {
+    user_ids: string[];
+    public: boolean;
+}
+
+export interface DeleteUserQueryPermissionsRequest {
+    user_ids: string[];
+}
 
 export interface ClearDatabaseRequest {
     deleteAssetGroupSelectors: number[];
