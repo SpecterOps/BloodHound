@@ -37,7 +37,7 @@ import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { useNotifications } from '../../../../providers';
-import { apiClient, cn, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
+import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
@@ -221,7 +221,7 @@ const BasicInfo: FC<{
                     </div>
                 </CardContent>
             </Card>
-            <div className={cn('flex justify-end gap-2 mt-6 ')}>
+            <div className='flex justify-end gap-2 mt-6'>
                 <DeleteSelectorButton
                     selectorId={selectorId}
                     selectorData={selectorQuery.data}
