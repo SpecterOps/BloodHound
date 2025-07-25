@@ -15063,7 +15063,7 @@
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
-      "put": {
+      "get": {
         "operationId": "GetAllAttackPathFindings",
         "summary": "Get all attack path findings",
         "description": "Fetches all attack path findings and their associated details, including documentation.",
@@ -15820,7 +15820,7 @@
             "name": "from",
             "deprecated": true,
             "x-go-name": "fromDeprecated",
-            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
+            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15831,7 +15831,7 @@
             "name": "to",
             "deprecated": true,
             "x-go-name": "toDeprecated",
-            "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
+            "description": "Upper bound for created_at; to return posture stats upto a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15847,6 +15847,13 @@
           },
           {
             "name": "exposure_index",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
@@ -15871,6 +15878,30 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "deleted_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
             }
           },
           {

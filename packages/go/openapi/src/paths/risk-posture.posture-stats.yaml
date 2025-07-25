@@ -34,7 +34,7 @@ get:
       deprecated: true
       x-go-name: "fromDeprecated"
       description: Lower bound for created_at; to return posture stats starting at
-        a specific date/time
+        a specific date/time. This filter has been deprecated, please use created_at instead.
       in: query
       schema:
         type: string
@@ -43,7 +43,7 @@ get:
       deprecated: true
       x-go-name: "toDeprecated"
       description: Upper bound for created_at; to return posture stats upto a specific
-        date/time
+        date/time. This filter has been deprecated, please use created_at instead.
       in: query
       schema:
         type: string
@@ -53,6 +53,10 @@ get:
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: exposure_index
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: asset_group_tag_id
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.integer.yaml'
@@ -68,6 +72,21 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: created_at
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: updated_at
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: deleted_at
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
     - $ref: './../parameters/query.asset-group-tag-id.yaml'
   responses:
     200:
