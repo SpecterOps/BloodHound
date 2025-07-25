@@ -16,8 +16,8 @@
 
 import { Typography } from '@mui/material';
 import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
 import { AdcsEsc14ScenarioAWindows } from '../AdcsEsc14ScenarioA';
+import { EdgeInfoProps } from '../index';
 
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
