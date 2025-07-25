@@ -36,9 +36,10 @@ const useRequestAnalysis = () => {
 
 type AnalyzeNowProps = {
     description: string;
+    note?: string;
 };
 
-const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description }) => {
+const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note }) => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
     const requestAnalysis = useRequestAnalysis();
 
@@ -70,14 +71,15 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description }) => 
     return (
         <>
             <div>
-                <div className=' flex justify-between items-center'>
+                <div className='flex justify-between items-center'>
                     <h4 className='font-medium text-xl '>Run Analysis Now</h4>
                     <Button disabled={buttonDisabled} onClick={showDialog}>
                         Analyze Now
                     </Button>
                 </div>
-                <div className='flex items-center'>
+                <div className='w-[677px] flex flex-col items-start gap-2 shrink-0'>
                     <p>{description}</p>
+                    {note && <p className='text-xs italic'>{note}</p>}
                 </div>
             </div>
 
