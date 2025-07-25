@@ -271,10 +271,6 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
     ProtectAdminGroups: ProtectAdminGroups,
-    ContainsIdentity: ContainsIdentity,
-    PropagatesACEsTo: PropagatesACEsTo,
-    CanApplyGPO: CanApplyGPO,
-    GPOAppliesTo: GPOAppliesTo,
     HasTrustKeys: HasTrustKeys,
 };
 
