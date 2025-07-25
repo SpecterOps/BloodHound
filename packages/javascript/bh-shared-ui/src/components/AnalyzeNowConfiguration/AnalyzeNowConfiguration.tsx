@@ -50,7 +50,7 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description }) => 
     const { data, isLoading, isError } = useQuery(
         'datapipe-status',
         ({ signal }) => apiClient.getDatapipeStatus({ signal }).then((res) => res.data?.data.status),
-        { refetchInterval: 5000 }
+        { refetchInterval: 2000 }
     );
     const buttonDisabled = isLoading || isError || data !== 'idle';
 
@@ -69,15 +69,15 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description }) => 
 
     return (
         <>
-            <div className=' flex p-4 justify-between'>
-                <div>
-                    <h4 className='font-medium text-xl mb-4'>Run Analysis Now</h4>
-                    <p>{description}</p>
-                </div>
-                <div className='flex items-center'>
+            <div>
+                <div className=' flex justify-between items-center'>
+                    <h4 className='font-medium text-xl '>Run Analysis Now</h4>
                     <Button disabled={buttonDisabled} onClick={showDialog}>
                         Analyze Now
                     </Button>
+                </div>
+                <div className='flex items-center'>
+                    <p>{description}</p>
                 </div>
             </div>
 
