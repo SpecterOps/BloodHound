@@ -59,7 +59,7 @@ export const deleteSavedQuery = (id: number): Promise<void> => {
 };
 
 export const getQueryPermissions = (id: number, options?: RequestOptions): Promise<any> => {
-    return apiClient.getUserQueryPermissions(id, options).then((response) => response.data);
+    return apiClient.getUserQueryPermissions(id, options).then((response) => response.data.data);
 };
 
 export const useQueryPermissions = (id: number) =>

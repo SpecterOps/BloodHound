@@ -13,7 +13,7 @@ type SavedQueryPermissionsProps = {
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
     const { queryId } = props;
-    const [sharedIds, setSharedIds] = useState<string[]>([]);
+    // const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [shareAll, setShareAll] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
@@ -34,6 +34,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     // });
 
     const { data, error, isLoading } = useQueryPermissions(queryId);
+    const { shared_to_user_ids: sharedIds } = data || [];
 
     const deletePermissionsMutation = useDeleteQueryPermissions();
 
@@ -61,7 +62,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             //         item.message.includes('no query permissions exist for saved query')
             //     )
             // );
-            setSharedIds([]);
+            // setSharedIds([]);
         }
     }, [error]);
 
@@ -70,22 +71,31 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             console.log('data');
             console.log(data);
             // console.log(data.data.shared_to_user_ids);
-            setSharedIds(data.data.shared_to_user_ids);
+            // setSharedIds(data.shared_to_user_ids);
         }
     }, [data]);
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
         if (checkedState) {
-            setShareAll(true);
-            setSharedIds(allUserIds as string[]);
+            updateQueryPermissionsMutation.mutate({
+                id: queryId,
+                payload: {
+                    user_ids: allUserIds as string[],
+                    public: false,
+                },
+            });
         } else {
-            setShareAll(false);
-            setSharedIds([]);
+            deletePermissionsMutation.mutate({
+                id: queryId,
+                payload: {
+                    user_ids: allUserIds as string[],
+                },
+            });
         }
     };
 
     const handleCheckChange = (sharedUserId: string) => {
-        if (sharedIds.includes(sharedUserId)) {
+        if (sharedIds?.includes(sharedUserId)) {
             //delete
 
             deletePermissionsMutation.mutate({
@@ -122,7 +132,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         <div className='min-w-12 max-w-12'>
                             <Checkbox
                                 className='ml-4'
-                                checked={sharedIds.includes(row.getValue('id'))}
+                                checked={sharedIds?.includes(row.getValue('id'))}
                                 onCheckedChange={() => handleCheckChange(row.getValue('id'))}
                             />
                         </div>
@@ -162,8 +172,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     return (
         <div>
             {isLoading && <div>Loading ...</div>}
-            {/* {data && <div>{Object.keys(data.data).toString()}</div>} */}
-
             {usersList && (
                 <>
                     <div className='flex-grow relative mb-2'>
