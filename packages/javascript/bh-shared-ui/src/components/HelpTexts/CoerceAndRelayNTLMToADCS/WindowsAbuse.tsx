@@ -21,11 +21,17 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body2'>
-                1: Start the Relay Server The NTLM relay can be executed with Inveigh.
+            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
+            <Typography variant={'body2'}>
+                The NTLM relay can be executed with{' '}
+                <Link target='_blank' rel='noopener' href='https://github.com/Kevin-Robertson/Inveigh'>
+                    Inveigh
+                </Link>
+                , targeting the HTTP(S) endpoint of the enterprise CA server.
             </Typography>
+            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
             <Typography variant='body2'>
-                2: Coerce the Target Computer Several coercion methods are documented here:{' '}
+                Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
                     rel='noopener'
