@@ -46,7 +46,7 @@ type IngestJob struct {
 type CompletedTask struct {
 	FileName   string   `json:"file_name"`
 	ParentFile string   `json:"parent_file"`
-	Status     []string `json:"status"`
+	Errors     []string `json:"errors"`
 }
 
 type TaskInfo struct {
