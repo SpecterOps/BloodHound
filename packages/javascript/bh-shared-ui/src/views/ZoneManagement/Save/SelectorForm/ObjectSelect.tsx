@@ -24,6 +24,7 @@ import {
     TableBody,
     TableCell,
     TableRow,
+    Tooltip,
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -85,7 +86,13 @@ const ObjectSelect: FC = () => {
                                     <TableCell className='text-center w-[84px]'>
                                         <NodeIcon nodeType={node.type || ''} />
                                     </TableCell>
-                                    <TableCell className='mr-4 truncate'>{node.name || node.objectid}</TableCell>
+                                    <TableCell className='mr-4 truncate'>
+                                        <Tooltip
+                                            tooltip={node.name || node.objectid}
+                                            contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
+                                            <div className='truncate ml-2'>{node.name || node.objectid}</div>
+                                        </Tooltip>
+                                    </TableCell>
                                     {node.memberCount && (
                                         <TableCell className='text-center px-2 w-[116px]'>
                                             {node.memberCount} Members
