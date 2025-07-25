@@ -91,6 +91,9 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
+    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString();
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -100,11 +103,6 @@ export const TagForm: FC = () => {
     );
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
-
-    const topTagId = useHighestPrivilegeTagId();
-    const ownedId = useOwnedTagId();
-
-    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
