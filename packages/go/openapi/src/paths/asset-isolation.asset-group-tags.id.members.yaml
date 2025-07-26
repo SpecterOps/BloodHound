@@ -33,6 +33,13 @@ get:
     - Community
     - Enterprise
   parameters:
+    - name: environments
+      description: Environment IDs
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
     - name: sort_by
@@ -64,6 +71,8 @@ get:
                             type: integer
                             format: int64
                           object_id:
+                            type: string
+                          environment_id:
                             type: string
                           primary_kind:
                             type: string
