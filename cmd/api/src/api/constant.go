@@ -46,6 +46,7 @@ const (
 	QueryParameterScope           = "scope"
 	QueryParameterFindingType     = "finding"
 	QueryParameterAssetGroupTagId = "asset_group_tag_id"
+	QueryParameterEnvironments    = "environments"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
