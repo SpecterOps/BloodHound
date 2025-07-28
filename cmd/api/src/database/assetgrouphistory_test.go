@@ -115,3 +115,49 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, records[0].Action)
 	})
 }
+
+func TestDatabase_GetAndUpdateAssetGroupHistoryRecord(t *testing.T) {
+	var (
+		dbInst    = integration.SetupDB(t)
+		testCtx   = context.Background()
+		testActor = model.User{
+			EmailAddress: null.StringFrom("user@example.com"),
+			Unique:       model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")},
+		}
+		testTarget        = "test target"
+		testAssetGroupTag = 1
+	)
+
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionCreateSelector, testAssetGroupTag, null.String{}, null.String{})
+	require.NoError(t, err)
+
+	t.Run("Verify GetAssetGroupHistoryRecord() returns the expected result", func(t *testing.T) {
+		record, err := dbInst.GetAssetGroupHistoryRecord(testCtx, 1)
+		require.NoError(t, err)
+		require.Equal(t, model.AssetGroupHistoryActionCreateSelector, record.Action)
+		require.Equal(t, testActor.ID.String(), record.Actor)
+		require.Equal(t, testActor.EmailAddress, record.Email)
+		require.Equal(t, testTarget, record.Target)
+		require.Equal(t, testAssetGroupTag, record.AssetGroupTagId)
+		require.Equal(t, null.String{}, record.EnvironmentId)
+		require.Equal(t, null.String{}, record.Note)
+		require.False(t, record.CreatedAt.IsZero())
+	})
+
+	t.Run("Verify UpdateAssetGroupHistoryRecord() returns the expected result", func(t *testing.T) {
+		record, err := dbInst.GetAssetGroupHistoryRecord(testCtx, 1)
+		require.NoError(t, err)
+
+		record.Action = model.AssetGroupHistoryActionDeleteSelector
+		record.Note = null.StringFrom("Test note")
+
+		record, err = dbInst.UpdateAssetGroupHistoryRecord(testCtx, record)
+
+		// read the record back in from the database
+		record, err = dbInst.GetAssetGroupHistoryRecord(testCtx, 1)
+
+		// verify note was added
+		require.Equal(t, null.StringFrom("Test note"), record.Note)
+		require.False(t, record.CreatedAt.IsZero())
+	})
+}
