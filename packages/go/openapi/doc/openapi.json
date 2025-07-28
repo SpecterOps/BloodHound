@@ -6202,7 +6202,7 @@
         }
       }
     },
-    "/api/v2/asset-group-tags/history": {
+    "/api/v2/asset-group-tags-history": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
