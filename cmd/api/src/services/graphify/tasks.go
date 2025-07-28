@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 )
 
 // UpdateJobFunc is passed to the graphify service to let it tell us about the tasks as they are processed
@@ -57,7 +56,7 @@ func (s *GraphifyService) extractIngestFiles(path string, fileType model.FileTyp
 		return []string{}, 0, err
 	} else {
 		var (
-			errs      = util.NewErrorCollector()
+			errs      = newGraphifyErrorBuilder()
 			failed    = 0
 			filePaths = make([]string, 0, len(archive.File))
 		)
@@ -86,7 +85,7 @@ func (s *GraphifyService) extractIngestFiles(path string, fileType model.FileTyp
 			}
 		}
 
-		return filePaths, failed, errs.Combined()
+		return filePaths, failed, errs.Build()
 	}
 }
 
@@ -136,7 +135,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 
 		failedIngestion := 0
 
-		errs := util.NewErrorCollector()
+		errs := newGraphifyErrorBuilder()
 		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
@@ -148,12 +147,12 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 
 				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
 					failedIngestion++
-					errs.Add(err) // util.NewErrorCollector at fn scope
+					errs.Add(err) // graphifyErrorBuilder at fn scope
 					continue      // keep ingesting the rest
 				}
 			}
 
-			return errs.Combined()
+			return errs.Build()
 		})
 	}
 }

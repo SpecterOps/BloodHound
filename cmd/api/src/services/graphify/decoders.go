@@ -26,7 +26,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 )
 
 type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)
@@ -41,7 +40,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = util.NewErrorCollector()
+		errs          = newGraphifyErrorBuilder()
 	)
 
 	for decoder.More() {
@@ -74,14 +73,14 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = util.NewErrorCollector()
+		errs          = newGraphifyErrorBuilder()
 	)
 
 	for decoder.More() {
@@ -116,7 +115,7 @@ func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, so
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
@@ -124,7 +123,7 @@ func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedGroupData{}
 		count         = 0
-		errs          = util.NewErrorCollector()
+		errs          = newGraphifyErrorBuilder()
 	)
 
 	for decoder.More() {
@@ -155,14 +154,14 @@ func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
-		errs          = util.NewErrorCollector()
+		errs          = newGraphifyErrorBuilder()
 	)
 
 	for decoder.More() {
@@ -192,14 +191,14 @@ func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func decodeAzureData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
-		errs          = util.NewErrorCollector()
+		errs          = newGraphifyErrorBuilder()
 	)
 
 	for decoder.More() {
@@ -230,5 +229,5 @@ func decodeAzureData(batch *TimestampedBatch, decoder *json.Decoder) error {
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
