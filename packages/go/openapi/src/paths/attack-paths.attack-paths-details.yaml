@@ -25,7 +25,11 @@ get:
     - Enterprise
   responses:
     200:
-      $ref: './../schemas/api.response.all-findings.yaml'
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ./../schemas/api.response.all-findings.yaml
     400:
       $ref: './../responses/bad-request.yaml'
     401:
