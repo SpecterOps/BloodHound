@@ -5089,6 +5089,14 @@
                   },
                   {
                     "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      }
+                    },
                     "required": [
                       "name",
                       "type"
@@ -5774,6 +5782,14 @@
                   },
                   {
                     "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "seeds": {
+                        "type": "array"
+                      }
+                    },
                     "required": [
                       "name",
                       "seeds"
@@ -14911,7 +14927,14 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/api.response.all-findings"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.response.all-findings"
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -19068,6 +19091,159 @@
           ""
         ]
       },
+      "model.unified-finding": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "target_id",
+              "target_kind",
+              "target_properties",
+              "finding_name",
+              "environment_id",
+              "impact_percentage",
+              "impact_count",
+              "accepted_until"
+            ],
+            "properties": {
+              "target_id": {
+                "type": "string"
+              },
+              "target_kind": {
+                "type": "string"
+              },
+              "target_properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "finding_name": {
+                "type": "string"
+              },
+              "environment_id": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "impact_percentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "impact_count": {
+                "type": "number",
+                "format": "double"
+              },
+              "accepted_until": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "target_id",
+              "target_kind",
+              "target_properties",
+              "source_id",
+              "source_kind",
+              "source_properties",
+              "attack_path_edge_id",
+              "finding_name",
+              "environment_id",
+              "impact_percentage",
+              "impact_count",
+              "exposure_percentage",
+              "exposure_count",
+              "accepted_until"
+            ],
+            "properties": {
+              "target_id": {
+                "type": "string"
+              },
+              "target_kind": {
+                "type": "string"
+              },
+              "target_properties": {
+                "type": "string",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "source_id": {
+                "type": "string"
+              },
+              "source_kind": {
+                "type": "string"
+              },
+              "source_properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "attack_path_edge_id": {
+                "type": "number",
+                "format": "int64"
+              },
+              "finding_name": {
+                "type": "string"
+              },
+              "environment_id": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "impact_percentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "impact_count": {
+                "type": "number",
+                "format": "int64"
+              },
+              "exposure_percentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "exposure_count": {
+                "type": "number",
+                "format": "int64"
+              },
+              "accepted_until": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ]
+      },
+      "api.response.all-findings": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "description": "List of unified findings.",
+            "items": {
+              "$ref": "#/components/schemas/model.unified-finding"
+            }
+          },
+          "finding_assets": {
+            "type": "object",
+            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name.",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "findings",
+          "finding_assets"
+        ]
+      },
       "model.relationship-finding": {
         "allOf": [
           {
@@ -19466,7 +19642,7 @@
         }
       },
       "entity-info-query-results": {
-        "description": "**OK**\n\nThis response is polymorphic and depends on the the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
+        "description": "**OK**\n\nThis response is polymorphic and depends on the type of entity being queried and whether\nthe `count` param is true or not. All node types will return a `props` field with the graph node\nproperties. If `count=true` the response will also include additional fields with integer counts.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -19536,29 +19712,6 @@
             "example": "header1,header2,header3\ncell1,cell2,cell3\ncell4,cell5,cell6\n...\n"
           }
         }
-      },
-      "api.response.all-findings": {
-        "type": "object",
-        "properties": {
-          "findings": {
-            "type": "array",
-            "description": "List of unified findings.",
-            "items": {
-              "$ref": "./../schemas/model.unified-finding.yaml"
-            }
-          },
-          "finding_assets": {
-            "type": "object",
-            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name.",
-            "additionalProperties": {
-              "type": "object"
-            }
-          }
-        },
-        "required": [
-          "findings",
-          "finding_assets"
-        ]
       }
     }
   },
