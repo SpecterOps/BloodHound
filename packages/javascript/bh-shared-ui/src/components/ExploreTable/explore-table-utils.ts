@@ -13,7 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { FlatGraphResponse, GraphNodeSpreadWithProperties } from 'js-client-library';
+import { FlatGraphResponse, GraphNodeSpreadWithProperties, GraphResponse } from 'js-client-library';
+import { isGraphResponse } from '../../hooks/useExploreGraph/queries/utils';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboBoxOption[]) =>
@@ -29,9 +30,23 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'isTierZero', 'name', 'objectid'];
+export const KNOWN_NODE_KEYS = ['kind', 'objectId', 'label', 'isTierZero'];
 
-export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse | undefined) => {
+    if (!graphData || !isGraphResponse(graphData)) return;
+
+    const nodes = graphData.data.nodes;
+    const unknownNodeKeys = graphData.data.node_keys;
+
+    const completeNodeKeys = unknownNodeKeys?.concat(KNOWN_NODE_KEYS);
+
+    return {
+        nodes,
+        node_keys: completeNodeKeys,
+    };
+};
+
+export const requiredColumns = Object.fromEntries(KNOWN_NODE_KEYS.map((key) => [key, true]));
 
 export const compareForExploreTableSort = (a: any, b: any) => {
     if (typeof a === 'number' || typeof b === 'number') {
@@ -67,15 +82,11 @@ export const compareForExploreTableSort = (a: any, b: any) => {
 
 export const isSmallColumn = (key: string, type: string) =>
     key === 'nodetype' || key === 'isTierZero' || type === 'boolean';
+
 export interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
-    data?: FlatGraphResponse;
     selectedColumns?: Record<string, boolean>;
-    onRowClick?: (row: MungedTableRowWithId) => void;
-    allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    selectedNode: string | null;
-    onDownloadClick: () => void;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }

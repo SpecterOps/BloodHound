@@ -46,7 +46,6 @@ const WrappedExploreTable = () => {
         name: true,
         objectid: true,
     });
-    const [selectedNode, setSelectedNode] = useState<string>();
 
     return (
         <ExploreTable
@@ -56,11 +55,8 @@ const WrappedExploreTable = () => {
                 const newColumns = makeStoreMapFromColumnOptions(columns);
                 setSelectedColumns(newColumns);
             }}
-            onDownloadClick={downloadCallbackSpy}
             onClose={closeCallbackSpy}
-            selectedNode={selectedNode || null}
             onKebabMenuClick={kebabCallbackSpy}
-            onRowClick={(row) => setSelectedNode(row.id)}
         />
     );
 };

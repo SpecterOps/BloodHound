@@ -17,13 +17,14 @@ import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
-import { StyledGraphEdge } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
+import { useExploreGraph } from '../..';
 import {
     compareForExploreTableSort,
+    getExploreTableData,
     isSmallColumn,
-    REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
+    KNOWN_NODE_KEYS,
     requiredColumns,
     type ExploreTableProps,
     type MungedTableRowWithId,
@@ -37,44 +38,36 @@ type DataTableProps = React.ComponentProps<typeof DataTable>;
 
 const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
 
-type UseExploreTableRowsAndColumnsProps = Pick<
-    ExploreTableProps,
-    'onKebabMenuClick' | 'allColumnKeys' | 'selectedColumns' | 'data'
-> & { searchInput: string };
+type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuClick' | 'selectedColumns'> & {
+    searchInput: string;
+};
 
 const useExploreTableRowsAndColumns = ({
     onKebabMenuClick,
     searchInput,
-    allColumnKeys,
     selectedColumns,
-    data,
 }: UseExploreTableRowsAndColumnsProps) => {
+    const { data: graphData } = useExploreGraph();
+
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 
+    const exploreTableData = getExploreTableData(graphData);
+
     const rows = useMemo(
         () =>
-            (data &&
-                Object.entries(data).reduce((acc: MungedTableRowWithId[], curr) => {
-                    const [key, value] = curr;
-
-                    const valueAsPotentialEdge = value as StyledGraphEdge;
-
-                    if (!!valueAsPotentialEdge.id1 || !!valueAsPotentialEdge.id2) {
-                        return acc;
-                    }
-
-                    const nextRow = Object.assign({}, value.data);
-
-                    nextRow.id = key;
-                    nextRow.displayname = value?.label?.text;
-
-                    acc.push(nextRow as MungedTableRowWithId);
-
-                    return acc;
-                }, [])) ||
-            [],
-        [data]
+            ((exploreTableData?.nodes &&
+                Object.entries(exploreTableData?.nodes).map(([key, value]) => {
+                    const { properties, ...rest } = value;
+                    return {
+                        ...rest,
+                        ...properties,
+                        id: key,
+                        displayname: value?.label,
+                    };
+                })) ||
+                []) as MungedTableRowWithId[],
+        [exploreTableData?.nodes]
     );
 
     const handleSort = useCallback(
@@ -134,7 +127,7 @@ const useExploreTableRowsAndColumns = ({
                     return (
                         <Tooltip
                             title={<p>{info.getValue()}</p>}
-                            disableHoverListener={key === 'nodetype' || isEmpty(value)}>
+                            disableHoverListener={key === 'kind' || isEmpty(value)}>
                             <div data-testid={`table-cell-${key}`} className='truncate'>
                                 <ExploreTableDataCell value={value} columnKey={key?.toString()} />
                             </div>
@@ -195,7 +188,10 @@ const useExploreTableRowsAndColumns = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
+    const allColumnDefintions = useMemo(
+        () => exploreTableData?.node_keys?.map(makeColumnDef) || [],
+        [exploreTableData?.node_keys, makeColumnDef]
+    );
 
     const selectedColumnDefinitions = useMemo(
         () => allColumnDefintions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
@@ -210,10 +206,7 @@ const useExploreTableRowsAndColumns = ({
             const bIsRequired = requiredColumns[idB];
             if (aIsRequired) {
                 if (bIsRequired) {
-                    return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
-                        REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
-                        ? 1
-                        : -1;
+                    return KNOWN_NODE_KEYS.indexOf(idA) > KNOWN_NODE_KEYS.indexOf(idB) ? 1 : -1;
                 }
                 return -1;
             }

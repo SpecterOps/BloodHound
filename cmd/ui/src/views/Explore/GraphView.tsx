@@ -23,12 +23,10 @@ import {
     GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
-    MungedTableRowWithId,
     NodeClickInfo,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
-    exportToJson,
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
@@ -102,7 +100,7 @@ const GraphView: FC = () => {
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
-        let items: any = graphQuery.data?.nodes;
+        let items: any = graphQuery.data;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
@@ -118,7 +116,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -138,15 +136,6 @@ const GraphView: FC = () => {
         [setSelectedItem]
     );
 
-    const handleRowClick = useCallback(
-        (row: MungedTableRowWithId) => {
-            if (row.id !== selectedItem) {
-                setSelectedItem(row.id);
-            }
-        },
-        [setSelectedItem, selectedItem]
-    );
-
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
             selectItem(event.node);
@@ -163,12 +152,6 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
-
-    const handleDownloadClick = useCallback(() => {
-        if (graphQuery.data) {
-            exportToJson({ nodes: graphQuery.data.rawNodes });
-        }
-    }, [graphQuery.data]);
 
     if (isLoading) {
         return (
@@ -271,14 +254,9 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && displayTable && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes}
-                    allColumnKeys={graphQuery.data.node_keys}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
-                    onDownloadClick={handleDownloadClick}
-                    onRowClick={handleRowClick}
-                    selectedNode={selectedItem}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));
