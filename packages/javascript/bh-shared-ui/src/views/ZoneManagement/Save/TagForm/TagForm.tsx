@@ -84,6 +84,8 @@ const diffValues = (
 export const TagForm: FC = () => {
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
     const navigate = useAppNavigate();
     const location = useLocation();
     const isEditPage = location.pathname.includes('save/tier');
@@ -98,13 +100,9 @@ export const TagForm: FC = () => {
     const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(
         tagQuery.data?.analysis_enabled || undefined
     );
+    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString();
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
-
-    const topTagId = useHighestPrivilegeTagId();
-    const ownedId = useOwnedTagId();
-
-    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
