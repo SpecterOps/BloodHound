@@ -2828,7 +2828,7 @@ func TestResources_UpdateAssetGroupHistory(t *testing.T) {
 		user     = setupUser()
 		userCtx  = setupUserCtx(user)
 		handler  = http.HandlerFunc(resources.UpdateAssetGroupTagHistory)
-		endpoint = "/api/v2/asset-group-tags/history/1"
+		endpoint = "/api/v2/asset-group-tags-history/1"
 	)
 
 	type WrappedResponse struct {
