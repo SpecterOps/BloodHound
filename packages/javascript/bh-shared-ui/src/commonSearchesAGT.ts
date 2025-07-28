@@ -52,10 +52,6 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Map OU structure',
                 cypher: `MATCH p = (:Domain)-[:Contains*1..]->(:OU)\nRETURN p\nLIMIT 1000`,
             },
-            {
-                description: 'AdminSDHolder Protection',
-                cypher: '// Standard Layout Recommended\nMATCH (n:Base)\nWHERE n.adminsdholderprotected = True\nAND (\n   n.objectid ENDS WITH "-548" //Account Operators\nOR n.objectid ENDS WITH "-500" //Administrator\nOR n.objectid ENDS WITH "-544" //Administrators\nOR n.objectid ENDS WITH "-551" //Backup Operators\nOR n.objectid ENDS WITH "-512" //Domain Admins\nOR n.objectid ENDS WITH "-516" //Domain Controllers\nOR n.objectid ENDS WITH "-519" //Enterprise Admins\nOR n.objectid ENDS WITH "-527" //Enterprise Key Admins\nOR n.objectid ENDS WITH "-526" //Key Admins\nOR n.objectid ENDS WITH "-502" //KRBTGT\nOR n.objectid ENDS WITH "-550" //Print Operators\nOR n.objectid ENDS WITH "-521" //Read-Only Domain Controllers\nOR n.objectid ENDS WITH "-552" //Replicators\nOR n.objectid ENDS WITH "-518" //Schema Admins\nOR n.objectid ENDS WITH "-549" //Server Operators\n)\nMATCH p = ()-[:MemberOf*0..]->(n)<-[:ProtectAdminGroups]-(m:Container)\nWHERE m.distinguishedname STARTS WITH "CN=ADMINSDHOLDER,CN=SYSTEM,"\nRETURN p\nLIMIT 1000'
-            },
         ],
     },
     {
@@ -274,6 +270,10 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'Tier Zero / High Value users with non-expiring passwords',
                 cypher: `MATCH (u:User)\nWHERE (u:${TAG_TIER_ZERO_AGT}) AND u.enabled = true\nAND u.pwdneverexpires = true\nRETURN u\nLIMIT 100`,
+            },
+            {
+                description: 'Tier Zero principals without AdminSDHolder protection',
+                cypher: `MATCH (n:Base)\nWHERE (n:Tag_Tier_Zero)\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
             },
         ],
     },
