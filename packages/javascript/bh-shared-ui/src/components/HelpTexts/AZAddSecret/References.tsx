@@ -37,6 +37,12 @@ const References: FC = () => {
                 href='https://docs.microsoft.com/en-us/azure/active-directory/roles/assign-roles-different-scopes'>
                 Assign Azure AD roles at different scopes
             </Link>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/entra/identity-platform/howto-configure-app-instance-property-locks'>
+                Protect Service Principals using App Instance Property Lock
+            </Link>
         </Box>
     );
 };
