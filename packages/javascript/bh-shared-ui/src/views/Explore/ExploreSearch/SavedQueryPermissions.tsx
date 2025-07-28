@@ -1,19 +1,20 @@
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDeleteQueryPermissions, useQueryPermissions, useUpdateQueryPermissions } from '../../../hooks';
 
 import { apiClient } from '../../../utils';
 
 import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
+
+import {} from 'react-query';
 type SavedQueryPermissionsProps = {
     queryId: number;
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
     const { queryId } = props;
-    const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [shareAll, setShareAll] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
@@ -26,7 +27,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
-    const { data, isLoading } = useQueryPermissions(queryId);
+    const { data, isLoading, error, isError } = useQueryPermissions(queryId);
 
     const deletePermissionsMutation = useDeleteQueryPermissions();
 
@@ -44,22 +45,23 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const usersList = useMemo(() => idMap(), [listUsersQuery.data]);
     const allUserIds = useMemo(() => usersList?.map((x) => x.id), [listUsersQuery.data]);
 
-    useEffect(() => {
-        // console.log('DATA - useEffect');
-        // console.log('data');
-        // console.log(data);
-        if (data) {
-            setSharedIds(data.shared_to_user_ids);
-        }
-    }, [data]);
+    const queryClient = useQueryClient();
 
     useEffect(() => {
-        if (sharedIds.length === allUserIds?.length) {
+        queryClient.setQueryData(['permissions'], (oldData: any) => {
+            // Return the new data based on oldData
+            console.log(oldData);
+            return { ...oldData, shared_to_user_ids: [] };
+        });
+    }, [error, isError]);
+
+    useEffect(() => {
+        if (data?.shared_to_user_ids.length === allUserIds?.length) {
             setShareAll(true);
         } else {
             setShareAll(false);
         }
-    }, [sharedIds, allUserIds]);
+    }, [data, allUserIds]);
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
         setShareAll(checkedState as boolean);
@@ -71,7 +73,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     public: false,
                 },
             });
-            setSharedIds(allUserIds as string[]);
         } else {
             deletePermissionsMutation.mutate({
                 id: queryId,
@@ -79,12 +80,11 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     user_ids: allUserIds as string[],
                 },
             });
-            setSharedIds([]);
         }
     };
 
     const handleCheckChange = (sharedUserId: string) => {
-        if (sharedIds?.includes(sharedUserId)) {
+        if (data.shared_to_user_ids?.includes(sharedUserId)) {
             //delete
             deletePermissionsMutation.mutate({
                 id: queryId,
@@ -97,7 +97,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             updateQueryPermissionsMutation.mutate({
                 id: queryId,
                 payload: {
-                    user_ids: [...sharedIds, sharedUserId],
+                    user_ids: [...data.shared_to_user_ids, sharedUserId],
                     public: false,
                 },
             });
@@ -112,7 +112,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     return (
                         <div className='min-w-12 max-w-12'>
                             <Checkbox className='ml-4' checked={shareAll} onCheckedChange={handleCheckAllChange} />
-                            {/* {shareAll.toString()} */}
                         </div>
                     );
                 },
@@ -121,7 +120,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         <div className='min-w-12 max-w-12'>
                             <Checkbox
                                 className='ml-4'
-                                checked={sharedIds?.includes(row.getValue('id'))}
+                                checked={data?.shared_to_user_ids?.includes(row.getValue('id'))}
                                 onCheckedChange={() => handleCheckChange(row.getValue('id'))}
                             />
                         </div>
