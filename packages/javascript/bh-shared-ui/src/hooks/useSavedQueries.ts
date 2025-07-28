@@ -63,7 +63,9 @@ export const getQueryPermissions = (id: number, options?: RequestOptions): Promi
 };
 
 export const useQueryPermissions = (id: number) =>
-    useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id, { signal }));
+    useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id, { signal }), {
+        retry: false,
+    });
 
 export const updateQueryPermissions = (
     { id, payload }: { id: number; payload: UpdateUserQueryPermissionsRequest },
@@ -120,7 +122,7 @@ export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
 
     return useMutation(deleteSavedQuery, {
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries(savedQueryKeys.all);
         },
     });
