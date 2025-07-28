@@ -14,22 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { RequestOptions } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
 import AnalyzeNowConfirmDialog from './AnalyzeNowConfirmDialog';
 
-const requestAnalysis = (options?: RequestOptions) => {
-    return apiClient.requestAnalysis(options).then((res) => res.data);
-};
-
-const useRequestAnalysis = () => {
+const useRequestAnalysis = (hideDialog: () => void) => {
     const queryClient = useQueryClient();
-    return useMutation(requestAnalysis, {
+    const { addNotification } = useNotifications();
+    return useMutation(() => apiClient.requestAnalysis().then((res) => res.data), {
         onSuccess: () => {
             queryClient.invalidateQueries('datapipe-status');
+            addNotification('Analysis requested successfully.');
+            hideDialog();
+        },
+        onError: () => {
+            addNotification('There was an error requesting analysis.');
+            hideDialog();
         },
     });
 };
@@ -40,13 +42,11 @@ type AnalyzeNowProps = {
 };
 
 const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note }) => {
-    const [isOpenDialog, setIsOpenDialog] = useState(false);
-    const requestAnalysis = useRequestAnalysis();
-
-    const { addNotification } = useNotifications();
-
     const showDialog = () => setIsOpenDialog(true);
     const hideDialog = () => setIsOpenDialog(false);
+    const { mutate: requestAnalysis } = useRequestAnalysis(hideDialog);
+
+    const [isOpenDialog, setIsOpenDialog] = useState(false);
 
     const { data, isLoading, isError } = useQuery(
         'datapipe-status',
@@ -56,16 +56,7 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note 
     const buttonDisabled = isLoading || isError || data !== 'idle';
 
     const handleConfirm = () => {
-        requestAnalysis.mutate(undefined, {
-            onError: () => {
-                hideDialog();
-                addNotification('There was an error requesting analysis.');
-            },
-            onSuccess: () => {
-                hideDialog();
-                addNotification('Analysis requested successfully.');
-            },
-        });
+        requestAnalysis();
     };
 
     return (
