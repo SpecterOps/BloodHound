@@ -33,14 +33,13 @@ import {
     AssetGroupTagTypeTier,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
-    parseTieringConfiguration,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
-import { useGetConfiguration } from '../../../../hooks';
+import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 import {
     useAssetGroupTags,
     useHighestPrivilegeTagId,
@@ -72,13 +71,7 @@ const diffValues = (
     if (data === undefined) return formValues;
 
     const workingCopy = { ...formValues };
-
     const diffed: UpdateAssetGroupTagRequest = {};
-
-    // 'on' means the switch hasn't been touched yet which means default to current analysis_enabled state
-    if (workingCopy.analysis_enabled === 'on') {
-        workingCopy.analysis_enabled = data.analysis_enabled;
-    }
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
@@ -91,28 +84,25 @@ const diffValues = (
 export const TagForm: FC = () => {
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
     const navigate = useAppNavigate();
     const location = useLocation();
     const isEditPage = location.pathname.includes('save/tier');
 
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
-    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled);
+    const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(
+        tagQuery.data?.analysis_enabled || undefined
+    );
+    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString();
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
-
-    const { data } = useGetConfiguration();
-    const tieringConfig = parseTieringConfiguration(data);
-
-    const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const ownedId = useOwnedTagId();
-
-    const showAnalysisToggle =
-        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
@@ -237,6 +227,8 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
+        }
+        if (tagQuery.data?.analysis_enabled) {
             setToggleEnabled(tagQuery.data.analysis_enabled);
         }
     }, [tagQuery.data]);
@@ -295,13 +287,14 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
-                                {isEditPage && showAnalysisToggle ? (
+                                {isEditPage && showAnalysisToggle && (
                                     <div>
                                         <Label htmlFor='analysis'>Enable Analysis</Label>
                                         <div className='flex gap-3'>
                                             <Switch
                                                 id='analysis'
                                                 checked={toggleEnabled}
+                                                value={toggleEnabled?.toString()}
                                                 {...register('analysis_enabled')}
                                                 data-testid='zone-management_save_tag-form_analysis-enabled-switch'
                                                 onCheckedChange={(checked: boolean) => {
@@ -312,7 +305,7 @@ export const TagForm: FC = () => {
                                             <p className='text-xs'>Include this tier when running analysis</p>
                                         </div>
                                     </div>
-                                ) : null}
+                                )}
 
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
