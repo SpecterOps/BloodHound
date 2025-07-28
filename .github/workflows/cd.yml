@@ -20,7 +20,6 @@ on:
   push:
     branches:
       - main
-      - Demo
     tags:
       - v[0-9]+.[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
@@ -50,13 +49,3 @@ jobs:
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-
-  # docker-content-trust-sign-image:
-  #   needs: bloodhound-container-image
-  #   name: Sign Docker Image using Docker Content Trust
-  #   uses: ./.github/workflows/reusable.docker-content-trust.yml
-  #   with:
-  #     dockerhub_image_reference: ${{ needs.bloodhound-container-image.outputs.image_reference }}
-  #   secrets:
-  #     dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
-  #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
