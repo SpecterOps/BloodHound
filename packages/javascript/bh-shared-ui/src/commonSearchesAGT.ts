@@ -194,6 +194,11 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
             },
             {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with vulnerable RPC endpoint (ESC11)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.rpcencryptionenforced = False\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 description: 'Domain controllers with weak certificate binding enabled',
                 cypher: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
             },
@@ -421,11 +426,15 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All coerce and NTLM relay edges',
-                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
+                cypher: 'MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToADCSRPC|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500',
             },
             {
                 description: 'ESC8-vulnerable Enterprise CAs',
                 cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.hasvulnerableendpoint=true\nRETURN n',
+            },
+            {
+                description: 'ESC11-vulnerable Enterprise CAs',
+                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.rpcencryptionenforced = False\nRETURN n',
             },
             {
                 description: 'Computers with the outgoing NTLM setting set to Deny all',
