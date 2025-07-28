@@ -26,7 +26,7 @@ const LoadingRow = (index: number, style: React.CSSProperties) => (
     <div
         data-testid={`zone-management_selectors-list_loading-skeleton`}
         style={style}
-        className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
         <Skeleton className={`h-full`} />
     </div>
 );

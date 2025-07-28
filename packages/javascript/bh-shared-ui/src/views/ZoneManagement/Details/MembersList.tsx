@@ -38,7 +38,7 @@ const LoadingRow = (index: number, style: React.CSSProperties) => (
     <div
         data-testid={`zone-management_members-list_loading-skeleton`}
         style={style}
-        className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
         <Skeleton className={`h-full`} />
     </div>
 );
@@ -62,7 +62,7 @@ export const MembersList: React.FC<MembersListProps> = ({
             <div
                 key={index}
                 role='listitem'
-                className={cn('border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative', {
+                className={cn('border-y border-neutral-light-3 dark:border-neutral-dark-3 relative', {
                     'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === item.id.toString(),
                 })}
                 style={style}>
