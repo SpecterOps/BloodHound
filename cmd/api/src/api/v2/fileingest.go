@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -25,6 +26,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -167,7 +169,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), e, response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: "UnknownFileName", FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
+	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: "", FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err = job.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -206,10 +208,10 @@ func (s Resources) ProcessMultipartIngestTask(response http.ResponseWriter, requ
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
+	} else if results, err := s.processMultipart(request.Context(), validator, reader); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("failed to process multipart data: %v", err), request), response)
 	} else {
 		var (
-			results = s.processMultipart(validator, reader)
-
 			total         = len(results)
 			failed        = 0
 			partsResponse = make(map[string]MultipartPartResponse)
@@ -245,27 +247,21 @@ type multipartResult struct {
 	Errors            []string
 }
 
-func (s Resources) processMultipart(validator upload.IngestValidator, reader *multipart.Reader) []multipartResult {
+func (s Resources) processMultipart(ctx context.Context, validator upload.IngestValidator, reader *multipart.Reader) ([]multipartResult, error) {
 	var (
-		results     = make([]multipartResult, 0)
-		unknownPart = 0
+		results         = make([]multipartResult, 0)
+		processingError error
 	)
 
 	for {
 		if part, err := reader.NextPart(); err == io.EOF {
 			break
 		} else if err != nil {
-			results = append(results, multipartResult{
-				PartName: fmt.Sprintf("Unknown Part %d", unknownPart),
-				Errors:   []string{fmt.Sprintf("failed to read multipart part: %v", err)},
-			})
-			unknownPart += 1
+			processingError = fmt.Errorf("failed to read multipart part")
+			break
 		} else if part.FormName() == "" {
-			results = append(results, multipartResult{
-				PartName: fmt.Sprintf("Unknown Part %d", unknownPart),
-				Errors:   []string{fmt.Sprintf("All parts specify a name")},
-			})
-			unknownPart += 1
+			processingError = fmt.Errorf("all form parts must specify a name")
+			break
 		} else if part.FileName() == "" {
 			results = append(results, multipartResult{
 				PartName: part.FormName(),
@@ -308,7 +304,19 @@ func (s Resources) processMultipart(validator upload.IngestValidator, reader *mu
 		}
 	}
 
-	return results
+	if processingError != nil {
+		for _, result := range results {
+			if result.GeneratedFileName != "" {
+				if err := os.Remove(result.GeneratedFileName); err != nil {
+					slog.WarnContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", result.GeneratedFileName, err))
+				}
+			}
+		}
+
+		return []multipartResult{}, processingError
+	}
+
+	return results, nil
 }
 
 func (s Resources) EndIngestJob(response http.ResponseWriter, request *http.Request) {
