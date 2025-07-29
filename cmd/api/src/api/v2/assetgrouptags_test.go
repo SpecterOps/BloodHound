@@ -1348,7 +1348,7 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 		})
 }
 
-func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
+func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -1614,13 +1614,10 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
-					params := url.Values{}
-					params.Add("sort_by", "invalidColumn")
-					_, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
-					require.ErrorIs(t, err, api.ErrResponseDetailsCriteriaNotSortable)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsColumnNotFilterable)
 				},
 			},
 			{
