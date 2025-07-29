@@ -984,6 +984,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+DisabledExtensions: types.#StringEnum & {
+	symbol: 		"DisabledExtensions"
+	schema: 		"ad"
+	name:           "Disabled Extensions"
+	representation: "disabledextensions"
+}
+
+DisabledExtensionsCollected: types.#StringEnum & {
+	symbol: 		"DisabledExtensionsCollected"
+	schema: 		"ad"
+	name:           "Disabled Extensions Collected"
+	representation: "disabledextensionscollected"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1118,6 +1132,8 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	DisabledExtensions,
+	DisabledExtensionsCollected,
 ]
 
 // Kinds
@@ -1524,11 +1540,6 @@ ExtendedByPolicy: types.#Kind & {
 	schema: "active_directory"
 }
 
-ExtendedByPolicy: types.#Kind & {
-	symbol: "ExtendedByPolicy"
-	schema: "active_directory"
-}
-
 ADCSESC1: types.#Kind & {
 	symbol: "ADCSESC1"
 	schema: "active_directory"
@@ -1576,6 +1587,11 @@ ADCSESC10b: types.#Kind & {
 
 ADCSESC13: types.#Kind & {
 	symbol: "ADCSESC13"
+	schema: "active_directory"
+}
+
+ADCSESC16: types.#Kind & {
+	symbol: "ADCSESC16"
 	schema: "active_directory"
 }
 
@@ -1727,6 +1743,7 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
@@ -1819,6 +1836,7 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
@@ -1855,6 +1873,7 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,

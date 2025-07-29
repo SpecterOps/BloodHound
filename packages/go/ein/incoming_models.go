@@ -137,11 +137,17 @@ type RoleSeparationEnabled struct {
 	Value bool
 }
 
+type DisabledExtensions struct {
+	APIResult
+	Data []string
+}
+
 type CARegistryData struct {
 	CASecurity                  CASecurity
 	EnrollmentAgentRestrictions EnrollmentAgentRestrictions
 	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
 	RoleSeparationEnabled       RoleSeparationEnabled
+	DisabledExtensions          DisabledExtensions
 }
 
 type DCRegistryData struct {
