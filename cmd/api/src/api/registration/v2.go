@@ -191,7 +191,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// history
 		routerInst.GET("/api/v2/asset-group-tags-history", resources.GetAssetGroupTagHistory).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
-		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-tags-history/{%s}", api.URIPathVariableAssetGroupHistoryID), resources.UpdateAssetGroupTagHistory).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
+		routerInst.POST(fmt.Sprintf("/api/v2/asset-group-tags-history/{%s}", api.URIPathVariableAssetGroupHistoryID), resources.UpdateAssetGroupTagHistory).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 
 		// QA API
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
