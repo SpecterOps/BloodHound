@@ -500,13 +500,13 @@ func ConvertAzureInteractionToRels(data models.UsersInteractions) ([]IngestibleR
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
-					Source:     strings.ToUpper(data.UserId),
-					SourceType: azure.User,
+				IngestibleEndpoint{
+					Value: strings.ToUpper(data.UserId),
+					Kind:  azure.User,
 				},
-				IngestibleTarget{
-					TargetType: userType,
-					Target:     strings.ToUpper(user.Id),
+				IngestibleEndpoint{
+					Kind:  userType,
+					Value: strings.ToUpper(user.Id),
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},
@@ -523,7 +523,7 @@ func ConvertAzureInteractionToRels(data models.UsersInteractions) ([]IngestibleR
 				PropertyMap: map[string]any{
 					azure.UserDepartment.String(): department,
 				},
-				Label: azure.User,
+				Labels: []graph.Kind{azure.User},
 			})
 		}
 	}
@@ -531,7 +531,7 @@ func ConvertAzureInteractionToRels(data models.UsersInteractions) ([]IngestibleR
 	return relationships, updateNodes
 }
 
-func ConvertAzureGroup365ToNode(data models.Group365) IngestibleNode {
+func ConvertAzureGroup365ToNode(data models.Group365, ingestTime time.Time) IngestibleNode {
 
 	return IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
@@ -548,8 +548,9 @@ func ConvertAzureGroup365ToNode(data models.Group365) IngestibleNode {
 			azure.Visibility.String():         data.Visibility,
 			azure.TenantID.String():           strings.ToUpper(data.TenantId),
 			azure.Mail.String():               data.Mail,
+			common.LastCollected.String():     ingestTime,
 		},
-		Label: azure.Group365,
+		Labels: []graph.Kind{azure.Group365},
 	}
 }
 
@@ -607,129 +608,6 @@ func ConvertAzureGroup365MembersToRels(data models.Group365Members) []Ingestible
 	return relationships
 }
 
-func ConvertAzureInteractionToRels(data models.UsersInteractions) ([]IngestibleRelationship, []IngestibleNode) {
-	relationships := make([]IngestibleRelationship, 0)
-	updateNodes := make([]IngestibleNode, 0)
-
-	for _, raw := range data.Users {
-		var (
-			user azure2.DirectoryObject
-		)
-		if err := json.Unmarshal(raw.User, &user); err != nil {
-			slog.Error(fmt.Sprintf(SerialError, "azure user interaction", err))
-		} else if userType, err := ExtractTypeFromDirectoryObject(user); errors.Is(err, ErrInvalidType) {
-			slog.Warn(fmt.Sprintf(ExtractError, err))
-		} else if err != nil {
-			slog.Error(fmt.Sprintf(ExtractError, err))
-		} else {
-			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
-					Source:     strings.ToUpper(data.UserId),
-					SourceType: azure.User,
-				},
-				IngestibleTarget{
-					TargetType: userType,
-					Target:     strings.ToUpper(user.Id),
-				},
-				IngestibleRel{
-					RelProps: map[string]any{},
-					RelType:  azure.WorkWith,
-				},
-			))
-			var userMap map[string]any
-			var department any
-			if err := json.Unmarshal(raw.User, &userMap); err == nil {
-				department = userMap["department"]
-			}
-			updateNodes = append(updateNodes, IngestibleNode{
-				ObjectID: strings.ToUpper(user.Id),
-				PropertyMap: map[string]any{
-					azure.UserDepartment.String(): department,
-				},
-				Label: azure.User,
-			})
-		}
-	}
-
-	return relationships, updateNodes
-}
-
-func ConvertAzureGroup365ToNode(data models.Group365) IngestibleNode {
-
-	return IngestibleNode{
-		ObjectID: strings.ToUpper(data.Id),
-		PropertyMap: map[string]any{
-			common.Name.String():              strings.ToUpper(fmt.Sprintf("%s@%s", data.DisplayName, data.TenantName)),
-			common.WhenCreated.String():       ParseISO8601(data.CreatedDateTime),
-			common.Description.String():       data.Description,
-			common.DisplayName.String():       data.DisplayName,
-			azure.IsAssignableToRole.String(): data.IsAssignableToRole,
-			azure.OnPremID.String():           data.OnPremisesSecurityIdentifier,
-			azure.OnPremSyncEnabled.String():  data.OnPremisesSyncEnabled,
-			azure.SecurityEnabled.String():    data.SecurityEnabled,
-			azure.SecurityIdentifier.String(): data.SecurityIdentifier,
-			azure.Visibility.String():         data.Visibility,
-			azure.TenantID.String():           strings.ToUpper(data.TenantId),
-			azure.Mail.String():               data.Mail,
-		},
-		Label: azure.Group365,
-	}
-}
-
-func ConvertAzureGroup365ToRel(data models.Group365) IngestibleRelationship {
-
-	return NewIngestibleRelationship(
-		IngestibleSource{
-			Source:     strings.ToUpper(data.TenantId),
-			SourceType: azure.Tenant,
-		},
-
-		IngestibleTarget{
-			TargetType: azure.Group365,
-			Target:     strings.ToUpper(data.Id),
-		},
-
-		IngestibleRel{
-			RelProps: map[string]any{},
-			RelType:  azure.Contains,
-		},
-	)
-
-}
-
-func ConvertAzureGroup365MembersToRels(data models.Group365Members) []IngestibleRelationship {
-	relationships := make([]IngestibleRelationship, 0)
-
-	for _, raw := range data.Members {
-		var (
-			member azure2.DirectoryObject
-		)
-		if err := json.Unmarshal(raw.Member, &member); err != nil {
-			slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 365 group member", err))
-		} else if memberType, err := ExtractTypeFromDirectoryObject(member); errors.Is(err, ErrInvalidType) {
-			slog.Warn(fmt.Sprintf(ExtractError, err))
-		} else if err != nil {
-			slog.Error(fmt.Sprintf(ExtractError, err))
-		} else {
-			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
-					Source:     strings.ToUpper(member.Id),
-					SourceType: memberType,
-				},
-				IngestibleTarget{
-					TargetType: azure.Group365,
-					Target:     strings.ToUpper(data.GroupId),
-				},
-				IngestibleRel{
-					RelProps: map[string]any{},
-					RelType:  azure.MemberOf,
-				},
-			))
-		}
-	}
-	return relationships
-}
-
 func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 
@@ -752,40 +630,6 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 				IngestibleEndpoint{
 					Kind:  azure.Group,
 					Value: strings.ToUpper(data.GroupId),
-				},
-				IngestibleRel{
-					RelProps: map[string]any{},
-					RelType:  azure.Owns,
-				},
-			))
-		}
-	}
-
-	return relationships
-}
-
-func ConvertAzureGroup365OwnerToRels(data models.Group365Owners) []IngestibleRelationship {
-	relationships := make([]IngestibleRelationship, 0)
-
-	for _, raw := range data.Owners {
-		var (
-			owner azure2.DirectoryObject
-		)
-		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
-			slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 365 group owner", err))
-		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
-			slog.Warn(fmt.Sprintf(ExtractError, err))
-		} else if err != nil {
-			slog.Error(fmt.Sprintf(ExtractError, err))
-		} else {
-			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
-					Source:     strings.ToUpper(owner.Id),
-					SourceType: ownerType,
-				},
-				IngestibleTarget{
-					TargetType: azure.Group365,
-					Target:     strings.ToUpper(data.GroupId),
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},

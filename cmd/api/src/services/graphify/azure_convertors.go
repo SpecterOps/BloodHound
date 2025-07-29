@@ -295,7 +295,7 @@ func convertAzureGroup(raw json.RawMessage, converted *ConvertedAzureData, inges
 	}
 }
 
-func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData) {
+func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 
 	var data models.Group365
 
@@ -305,25 +305,7 @@ func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData) {
 
 	} else {
 
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroup365ToNode(data))
-
-		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365ToRel(data))
-
-	}
-
-}
-
-func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData) {
-
-	var data models.Group365
-
-	if err := json.Unmarshal(raw, &data); err != nil {
-
-		slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 36 group", err))
-
-	} else {
-
-		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroup365ToNode(data))
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroup365ToNode(data, ingestTime))
 
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365ToRel(data))
 
@@ -343,7 +325,7 @@ func convertAzureGroupMember(raw json.RawMessage, converted *ConvertedAzureData,
 	}
 }
 
-func convertAzureUserInteractions(raw json.RawMessage, converted *ConvertedAzureData) {
+func convertAzureUserInteractions(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var (
 		data models.UsersInteractions
 	)
@@ -357,7 +339,7 @@ func convertAzureUserInteractions(raw json.RawMessage, converted *ConvertedAzure
 	}
 }
 
-func convertAzureGroup365Member(raw json.RawMessage, converted *ConvertedAzureData) {
+func convertAzureGroup365Member(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var (
 		data models.Group365Members
 	)

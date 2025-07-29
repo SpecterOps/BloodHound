@@ -22,7 +22,7 @@ ALTER TABLE IF EXISTS azure_data_quality_aggregations
 
 -- Add `groups365` column to `azure_data_quality_stats` table
 ALTER TABLE IF EXISTS azure_data_quality_stats
-    ADD COLUMN groups365 bigint;-- Copyright 2025 Specter Ops, Inc.
+    ADD COLUMN groups365 bigint;
 
 ALTER TABLE asset_group_history
 	ADD COLUMN IF NOT EXISTS email VARCHAR(330) DEFAULT NULL;

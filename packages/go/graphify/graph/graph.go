@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -42,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/cmd/api/src/auth"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"

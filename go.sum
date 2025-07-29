@@ -69,8 +69,6 @@ github.com/bkielbasa/cyclop v1.2.3 h1:faIVMIGDIANuGPWH031CZJTi2ymOQBULs9H21HSMa5
 github.com/bkielbasa/cyclop v1.2.3/go.mod h1:kHTwA9Q0uZqOADdupvcFJQtp/ksSnytRMe8ztxG8Fuo=
 github.com/blizzy78/varnamelen v0.8.0 h1:oqSblyuQvFsW1hbBHh1zfwrKe3kcSj0rnXkKzsQ089M=
 github.com/blizzy78/varnamelen v0.8.0/go.mod h1:V9TzQZ4fLJ1DSrjVDfl89H7aMnTvKkApdHeyESmyR7k=
-github.com/bloodhoundad/azurehound/v2 v2.6.0 h1:WrrfhD/TnU82rvF5U8niIiB8G/9Kc9bqF4D8XiBNvO8=
-github.com/bloodhoundad/azurehound/v2 v2.6.0/go.mod h1:wlBfwHfOQiAfPuH9xPK02qAnjC/dL+IoJ7unPicFzGM=
 github.com/bombsimon/wsl/v4 v4.7.0 h1:1Ilm9JBPRczjyUs6hvOPKvd7VL1Q++PL8M0SXBDf+jQ=
 github.com/bombsimon/wsl/v4 v4.7.0/go.mod h1:uV/+6BkffuzSAVYD+yGyld1AChO7/EuLrCF/8xTiapg=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
@@ -87,6 +85,8 @@ github.com/catenacyber/perfsprint v0.9.1 h1:5LlTp4RwTooQjJCvGEFV6XksZvWE7wCOUvjD
 github.com/catenacyber/perfsprint v0.9.1/go.mod h1:q//VWC2fWbcdSLEY1R3l8n0zQCDPdE4IjZwyY1HMunM=
 github.com/ccojocar/zxcvbn-go v1.0.2 h1:na/czXU8RrhXO4EZme6eQJLR4PzcGsahsBOAwU6I3Vg=
 github.com/ccojocar/zxcvbn-go v1.0.2/go.mod h1:g1qkXtUSvHP8lhHp5GrSmTz6uWALGRMQdw6Qnz/hi60=
+github.com/certmichelin/azurehound/v2 v2.6.1 h1:pSXYZeyy7KVIlD2WA5B26OpI2aYWNmjlS4W6AWx8rss=
+github.com/certmichelin/azurehound/v2 v2.6.1/go.mod h1:wlBfwHfOQiAfPuH9xPK02qAnjC/dL+IoJ7unPicFzGM=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61 h1:o64h9XF42kVEUuhuer2ehqrlX8rZmvQSU0+Vpj1rF6Q=

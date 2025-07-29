@@ -290,3 +290,5 @@ tool (
 	github.com/specterops/bloodhound/packages/go/stbernard
 	golang.org/x/tools/cmd/goimports
 )
+
+replace github.com/bloodhoundad/azurehound/v2 => github.com/certmichelin/azurehound/v2 v2.6.1
