@@ -149,10 +149,14 @@ func sortJSONArrays(v any) {
 			sortJSONArrays(elem)
 		}
 		sort.SliceStable(val, func(i, j int) bool {
-			bi, _ := json.Marshal(val[i])
-			bj, _ := json.Marshal(val[j])
-			return string(bi) < string(bj)
-		})
+			bi, err1 := json.Marshal(val[i])
+			bj, err2 := json.Marshal(val[j])
+			if err1 != nil || err2 != nil {
+				// Fallback to some consistent ordering when marshal fails
+				return fmt.Sprintf("%v", val[i]) < fmt.Sprintf("%v", val[j])
+			}
+ 			return string(bi) < string(bj)
+ 		})
 	case map[string]any:
 		for _, vv := range val {
 			sortJSONArrays(vv)
