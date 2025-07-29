@@ -152,6 +152,12 @@ class BHEAPIClient {
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 
+    getSourceKinds = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ kinds: { id: number; name: string }[] }>>(
+            '/api/v2/graphs/source-kinds',
+            options
+        );
+
     clearDatabase = (payload: ClearDatabaseRequest, options?: RequestOptions) => {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
@@ -399,7 +405,9 @@ class BHEAPIClient {
             options
         );
 
-    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+    requestAttackPaths = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+
+    requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/analysis', options);
 
     /**
      * getAvailableFindingTypes returns a list of findings that were discovered through the most recent analysis for a given environment

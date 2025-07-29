@@ -1,3 +1,18 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -115,7 +130,7 @@ export const ManageColumnsComboBox = ({
             </div>
 
             <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-3`} ref={ref}>
-                <div className='w-[400px] shadow-md border-1 bg-white' {...getComboboxProps()}>
+                <div className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-5' {...getComboboxProps()}>
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input
@@ -134,7 +149,7 @@ export const ManageColumnsComboBox = ({
                             <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
                         </button>
                     </div>
-                    <ul className={`w-inherit mt-1 max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
+                    <ul className={`w-inherit max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
                         {isOpen && [
                             ...pinnedColumns.map((column, index) => (
                                 <ManageColumnsListItem

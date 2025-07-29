@@ -147,6 +147,7 @@ export enum ActiveDirectoryRelationshipKind {
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
     OwnsRaw = 'OwnsRaw',
+    ClaimSpecialIdentity = 'ClaimSpecialIdentity',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
     ContainsIdentity = 'ContainsIdentity',
@@ -311,6 +312,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'OwnsLimitedRights';
         case ActiveDirectoryRelationshipKind.OwnsRaw:
             return 'OwnsRaw';
+        case ActiveDirectoryRelationshipKind.ClaimSpecialIdentity:
+            return 'ClaimSpecialIdentity';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
@@ -375,6 +378,8 @@ export enum ActiveDirectoryKindProperties {
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
+    InheritanceHash = 'inheritancehash',
+    InheritanceHashes = 'inheritancehashes',
     IsDeleted = 'isdeleted',
     Enforced = 'enforced',
     Department = 'department',
@@ -534,6 +539,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
+        case ActiveDirectoryKindProperties.InheritanceHash:
+            return 'ACL Inheritance Hash';
+        case ActiveDirectoryKindProperties.InheritanceHashes:
+            return 'ACL Inheritance Hashes';
         case ActiveDirectoryKindProperties.IsDeleted:
             return 'Is Deleted';
         case ActiveDirectoryKindProperties.Enforced:
@@ -798,6 +807,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.ContainsIdentity,

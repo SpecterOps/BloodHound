@@ -4847,34 +4847,22 @@
                       "type": "object",
                       "properties": {
                         "member": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "integer"
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/model.asset-group-tags-member"
                             },
-                            "object_id": {
-                              "type": "string"
-                            },
-                            "primary_kind": {
-                              "type": "string"
-                            },
-                            "name": {
-                              "type": "string"
-                            },
-                            "properties": {
+                            {
                               "type": "object",
-                              "additionalProperties": true
-                            },
-                            "source": {
-                              "type": "integer"
-                            },
-                            "selectors": {
-                              "type": "array",
-                              "items": {
-                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              "properties": {
+                                "selectors": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                                  }
+                                }
                               }
                             }
-                          }
+                          ]
                         }
                       }
                     }
@@ -5362,25 +5350,7 @@
                             "members": {
                               "type": "array",
                               "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "object_id": {
-                                    "type": "string"
-                                  },
-                                  "primary_kind": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "source": {
-                                    "type": "integer"
-                                  }
-                                }
+                                "$ref": "#/components/schemas/model.asset-group-tags-member"
                               }
                             }
                           }
@@ -5553,25 +5523,7 @@
                             "members": {
                               "type": "array",
                               "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "object_id": {
-                                    "type": "string"
-                                  },
-                                  "primary_kind": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "source": {
-                                    "type": "integer"
-                                  }
-                                }
+                                "$ref": "#/components/schemas/model.asset-group-tags-member"
                               }
                             }
                           }
@@ -6144,6 +6096,224 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/search": {
+      "post": {
+        "operationId": "AssetGroupTagSearch",
+        "summary": "Search Asset Group Tags",
+        "description": "Supports searching by name on asset group tags and selectors, and by name or object ID on members.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "requestBody": {
+          "description": "The request body for searching asset group tags.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "tag_type": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "query",
+                  "tag_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tag"
+                          }
+                        },
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                          }
+                        },
+                        "members": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-member"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/history": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTagHistory",
+        "summary": "Get history records",
+        "description": "Retrieves history records for actions on asset group tags",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `created_at`.",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "description": "For example, you can filter a date range of records by doing `created_at=gt:2025-07-08T17:00:00Z&created_at=lt:2025-07-30T17:00:00Z`",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-history"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
@@ -6579,6 +6749,86 @@
         }
       }
     },
+    "/api/v2/graphs/acl-inheritance": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetACLInheritancePath",
+        "summary": "Get ACL inheritance path",
+        "description": "Returns a graph representing the path that an ACE is inherited through for a given edge.",
+        "tags": [
+          "Graph",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "source_node",
+            "description": "The ID of the starting node.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "target_node",
+            "description": "The ID of the ending node.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "edge_type",
+            "description": "The type of edge the ACL inheritance path is being fetched for.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns graph data that contains a collection of nodes and edges that make up the ACL inheritance path.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.unified-graph.graph"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -6751,6 +7001,63 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetSavedQuery",
+        "summary": "Return a saved query",
+        "description": "Returns an existing saved query by ID",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saved-query"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSavedQuery",
         "summary": "Delete a saved query",
@@ -6759,6 +7066,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "responses": {
           "204": {
@@ -6792,6 +7111,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for updating a saved query",
@@ -6857,6 +7188,63 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetSavedQueryPermissions",
+        "summary": "Retrieves saved query permissions for provided query id",
+        "description": "Retrieves saved query permissions for provided query id",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saved-queries-permissions.response"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSavedQueryPermissions",
         "summary": "Revokes permission of a saved query from users",
@@ -6865,6 +7253,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for revoking permissions of a saved query from users",
@@ -6919,6 +7319,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for sharing a saved query or making it public",
@@ -14651,7 +15063,7 @@
           "$ref": "#/components/parameters/header.prefer"
         }
       ],
-      "put": {
+      "get": {
         "operationId": "GetAllAttackPathFindings",
         "summary": "Get all attack path findings",
         "description": "Fetches all attack path findings and their associated details, including documentation.",
@@ -15408,7 +15820,7 @@
             "name": "from",
             "deprecated": true,
             "x-go-name": "fromDeprecated",
-            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
+            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15419,7 +15831,7 @@
             "name": "to",
             "deprecated": true,
             "x-go-name": "toDeprecated",
-            "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
+            "description": "Upper bound for created_at; to return posture stats upto a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15435,6 +15847,13 @@
           },
           {
             "name": "exposure_index",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
@@ -15462,7 +15881,28 @@
             }
           },
           {
-            "$ref": "#/components/parameters/query.asset-group-tag-id"
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "deleted_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
           }
         ],
         "responses": {
@@ -17533,6 +17973,30 @@
           }
         }
       },
+      "model.asset-group-tags-member": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "primary_kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "source": {
+            "type": "integer"
+          }
+        }
+      },
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
@@ -17737,6 +18201,65 @@
             }
           }
         ]
+      },
+      "model.asset-group-tags-history": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "records": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "actor": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "$ref": "#/components/schemas/null.string"
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "target": {
+                        "type": "string"
+                      },
+                      "asset_group_tag_id": {
+                        "type": "integer"
+                      },
+                      "environment_id": {
+                        "$ref": "#/components/schemas/null.string"
+                      },
+                      "note": {
+                        "$ref": "#/components/schemas/null.string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",
@@ -18109,6 +18632,24 @@
             }
           }
         ]
+      },
+      "model.saved-queries-permissions.response": {
+        "type": "object",
+        "properties": {
+          "shared_to_user_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.components.uuid"
+            }
+          },
+          "query_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "public": {
+            "type": "boolean"
+          }
+        }
       },
       "model.saved-queries-permissions": {
         "allOf": [

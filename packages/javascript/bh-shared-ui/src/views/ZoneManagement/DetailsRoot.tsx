@@ -19,9 +19,9 @@ import { AppNavigate } from '../../components';
 import { useHighestPrivilegeTagId } from '../../hooks';
 import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
 const DetailsRoot: FC = () => {
-    const topTagId = useHighestPrivilegeTagId();
-    if (topTagId) {
-        return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + topTagId} replace />;
+    const { tagId } = useHighestPrivilegeTagId();
+    if (tagId) {
+        return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + tagId} replace />;
     } else {
         return <Skeleton className='h-24' />;
     }

@@ -28,6 +28,7 @@ import (
 
 // SavedQueriesPermissionsData methods representing the database interactions pertaining to the saved_queries_permissions model
 type SavedQueriesPermissionsData interface {
+	GetSavedQueryPermissions(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error)
 	CreateSavedQueryPermissionToPublic(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
 	CreateSavedQueryPermissionsToUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) ([]model.SavedQueriesPermissions, error)
 	DeleteSavedQueryPermissionsForUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) error
@@ -39,6 +40,13 @@ type SavedQueriesPermissionsData interface {
 
 // SavedQueryScopeMap holds the information of a saved query's scope [IE: owned, shared, public]
 type SavedQueryScopeMap map[model.SavedQueryScope]bool
+
+// GetSavedQueryPermissions - returns permission data if the user owns the query or the query is public
+func (s *BloodhoundDB) GetSavedQueryPermissions(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error) {
+	var rows []model.SavedQueriesPermissions
+	result := s.db.WithContext(ctx).Select("*").Table("saved_queries_permissions sqp").Where("sqp.query_id = ?", queryID).Find(&rows)
+	return rows, CheckError(result)
+}
 
 // CreateSavedQueryPermissionToPublic creates a new entry to the SavedQueriesPermissions table granting public read permissions to all users
 func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error) {
@@ -60,7 +68,7 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, q
 	return permission, err
 }
 
-// CreateSavedQueryPermissionsBatch attempts to save the given saved query permissions in batches of 100 in a transaction
+// CreateSavedQueryPermissionsToUsers - attempts to save the given saved query permissions in batches of 100 in a transaction
 func (s *BloodhoundDB) CreateSavedQueryPermissionsToUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) ([]model.SavedQueriesPermissions, error) {
 	var newPermissions []model.SavedQueriesPermissions
 	for _, sharedUserID := range userIDs {

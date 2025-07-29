@@ -82,7 +82,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     requireCertify: boolean | null;
     description: string;
     counts?: AssetGroupTagCounts;
-    analysis_enabled?: boolean;
+    analysis_enabled: boolean | null;
 }
 
 export const SeedTypeObjectId = 1 as const;

@@ -24,11 +24,17 @@ import (
 )
 
 type DatapipeStatusData interface {
-	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error
+	UpdateLastAnalysisCompleteTime(ctx context.Context) error
+	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 }
 
-func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
+func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error {
+	now := time.Now().UTC()
+	return s.db.WithContext(ctx).Exec("UPDATE datapipe_status SET updated_at = ?, last_complete_analysis_at = ?", now, now).Error
+}
+
+func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
 	now := time.Now().UTC()
 	// All queries will update the status and table update time
 	updateSql := "UPDATE datapipe_status SET status = ?, updated_at = ?"
@@ -36,10 +42,6 @@ func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.Datap
 	if status == model.DatapipeStatusAnalyzing {
 		// Updates last run anytime we start analysis
 		updateSql += ", last_analysis_run_at = ?;"
-		return s.db.WithContext(ctx).Exec(updateSql, status, now, now).Error
-	} else if updateAnalysisTime {
-		// Updates last completed when analysis is set to complete
-		updateSql += ", last_complete_analysis_at = ?;"
 		return s.db.WithContext(ctx).Exec(updateSql, status, now, now).Error
 	} else {
 		// Otherwise, only update status and last update to the table

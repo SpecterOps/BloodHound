@@ -194,6 +194,20 @@ IsACLProtected: types.#StringEnum & {
 	representation: "isaclprotected"
 }
 
+InheritanceHashes: types.#StringEnum & {
+	symbol:         "InheritanceHashes"
+	schema:         "ad"
+	name:           "ACL Inheritance Hashes"
+	representation: "inheritancehashes"
+}
+
+InheritanceHash: types.#StringEnum & {
+	symbol:         "InheritanceHash"
+	schema:         "ad"
+	name:           "ACL Inheritance Hash"
+	representation: "inheritancehash"
+}
+
 IsDeleted: types.#StringEnum & {
 	symbol:         "IsDeleted"
 	schema:         "ad"
@@ -996,6 +1010,8 @@ Properties: [
 	BlocksInheritance,
 	IsACL,
 	IsACLProtected,
+	InheritanceHash,
+	InheritanceHashes,
 	IsDeleted,
 	Enforced,
 	Department,
@@ -1608,8 +1624,14 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
+	schema: "active_directory"
+}
+
+ClaimSpecialIdentity: types.#Kind & {
+	symbol: "ClaimSpecialIdentity"
 	schema: "active_directory"
 }
 
@@ -1712,6 +1734,7 @@ RelationshipKinds: [
 	WriteOwnerRaw,
 	OwnsLimitedRights,
 	OwnsRaw,
+	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	ContainsIdentity,
@@ -1801,6 +1824,7 @@ SharedRelationshipKinds: [
 	CoerceAndRelayNTLMToADCS,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	ContainsIdentity,

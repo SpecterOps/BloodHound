@@ -46,6 +46,31 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
+// GetSavedQuery - Returns the saved query for users who own the query, are admins or have the query shared with them.
+func (s Resources) GetSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query not found", request), response)
+		} else {
+			api.HandleDatabaseError(request, response, err)
+		}
+	} else if isAccessibleToUser, err := s.canUserAccessQuery(request.Context(), savedQuery, user); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if !isAccessibleToUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query not found", request), response)
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+	}
+}
+
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
@@ -200,7 +225,7 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
-	} else if isAccessibleToUser, err = s.canUserAccessQuery(request.Context(), savedQuery, user.ID); err != nil {
+	} else if isAccessibleToUser, err = s.canUserAccessQuery(request.Context(), savedQuery, user); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
 	} else if !isAccessibleToUser {
@@ -216,11 +241,12 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
-func (s Resources) canUserAccessQuery(ctx context.Context, query model.SavedQuery, userId uuid.UUID) (bool, error) {
-	if userId.String() == query.UserID {
+// canUserAccessQuery - Users can access a query if they own it, are an admin, the query is shared to them or is a public query.
+func (s Resources) canUserAccessQuery(ctx context.Context, query model.SavedQuery, user model.User) (bool, error) {
+	if user.ID.String() == query.UserID || user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 		return true, nil
 	}
-	return s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, userId)
+	return s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, user.ID)
 }
 
 // ExportSavedQueries - Exports one or more saved queries in a ZIP file. The scope query parameter determines which queries are exported.

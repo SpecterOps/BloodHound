@@ -66,24 +66,24 @@ func TestAzurePIMRolesAZRoleApprover(t *testing.T) {
 				endName, err := endNode.Properties.Get(common.Name.String()).String()
 				require.NoError(t, err)
 
-				switch {
-				case startName == "AZBase n5":
+				switch startName {
+				case "AZBase n5":
 					assert.Equal(t, "PIMTestRole", endName)
-				case startName == "AZBase n7":
+				case "AZBase n7":
 					assert.True(t, endName == "PIMTestRole" || endName == "PIMTestRole3", fmt.Sprintf("expected: %s", endName))
-				case startName == "AZBase n10":
+				case "AZBase n10":
 					assert.Equal(t, "PIMTestRole3", endName)
-				case startName == "AZBase n12":
+				case "AZBase n12":
 					assert.Equal(t, "PIMTestRole2", endName)
-				case startName == "AZBase n13":
+				case "AZBase n13":
 					assert.Equal(t, "PIMTestRole2", endName)
-				case startName == "AZBase n15":
+				case "AZBase n15":
 					assert.Equal(t, "PIMTestRole", endName)
-				case startName == "AZBase n16":
+				case "AZBase n16":
 					assert.Equal(t, "PIMTestRole", endName)
-				case startName == "Privileged Role Administrator":
+				case "Privileged Role Administrator":
 					assert.Equal(t, "PIMTestRole4", endName)
-				case startName == "Global Administrator":
+				case "Global Administrator":
 					assert.Equal(t, "PIMTestRole4", endName)
 				}
 			}

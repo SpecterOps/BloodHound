@@ -19,8 +19,8 @@ import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
 const InfoHeader: FC = () => {
-    const topTagId = useHighestPrivilegeTagId();
-    const { tierId = topTagId, labelId } = useParams();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tierId = topTagId?.toString(), labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     return (

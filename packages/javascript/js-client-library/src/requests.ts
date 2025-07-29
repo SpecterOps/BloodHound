@@ -38,10 +38,11 @@ export type CreateAssetGroupTagRequest = {
     position: number | null;
     type: AssetGroupTagTypes;
     requireCertify?: boolean;
-    analysis_enabled?: boolean;
 };
 
-export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
+export type UpdateAssetGroupTagRequest = Partial<
+    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: string | boolean | undefined }
+>;
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 
@@ -202,10 +203,11 @@ export interface CreateUserQueryRequest {
 }
 
 export interface ClearDatabaseRequest {
-    deleteCollectedGraphData: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
     deleteAssetGroupSelectors: number[];
+    deleteCollectedGraphData: boolean;
+    deleteDataQualityHistory: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteSourceKinds: number[];
 }
 
 export interface UpdateUserRequest {

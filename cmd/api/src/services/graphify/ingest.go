@@ -43,10 +43,14 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
+// registrationFn persists a kind encountered in the ingest payload, if it hasn't already been registered in the source_kinds table.
+// (e.g., "Base", "AZBase", "GithubBase")
+type registrationFn func(kind graph.Kind) error
+
 type ReadOptions struct {
-	FileType     model.FileType // JSON or ZIP
-	IngestSchema upload.IngestSchema
-	ADCSEnabled  bool
+	FileType           model.FileType // JSON or ZIP
+	IngestSchema       upload.IngestSchema
+	RegisterSourceKind registrationFn
 }
 
 type TimestampedBatch struct {
@@ -95,7 +99,7 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 		if _, err := reader.Seek(0, io.SeekStart); err != nil {
 			return fmt.Errorf("rewind failed: %w", err)
 		}
-		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
+		return IngestWrapper(batch, reader, meta, options)
 	}
 }
 
@@ -120,14 +124,14 @@ func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 // graph.EmptyKind to the node and relationship ingestion functions. This indicates that no
 // base kind should be applied uniformly to all ingested entities, and instead the kind(s)
 // defined directly on each node or edge (if any) are used as-is.
-func IngestGenericData(batch *TimestampedBatch, converted ConvertedData) error {
+func IngestGenericData(batch *TimestampedBatch, sourceKind graph.Kind, converted ConvertedData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, graph.EmptyKind, converted.NodeProps); err != nil {
+	if err := IngestNodes(batch, sourceKind, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, graph.EmptyKind, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, sourceKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -172,17 +176,32 @@ func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) erro
 }
 
 // IngestWrapper dispatches the ingest process based on the metadata's type.
-func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
-	if handler, ok := ingestHandlers[meta.Type]; !ok {
-		return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
-	} else {
+func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, readOpts ReadOptions) error {
+	// Source-kind-aware handler
+	if handler, ok := sourceKindHandlers[meta.Type]; ok {
+		if readOpts.RegisterSourceKind == nil {
+			return fmt.Errorf("missing source kind registration function for data type: %v", meta.Type)
+		}
+		return handler(batch, reader, meta, readOpts.RegisterSourceKind)
+	}
+
+	// Basic handler
+	if handler, ok := basicHandlers[meta.Type]; ok {
 		return handler(batch, reader, meta)
 	}
+
+	return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
 }
 
-type ingestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error
+// basicIngestHandler defines the function signature for all ingest paths except for the OpenGraph
+type basicIngestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error
 
-func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) ingestHandler {
+// sourceKindIngestHandler defines the function signature for ingest handlers that require
+// additional logic — specifically, registration of a sourceKind before decoding data.
+// This is only used for ingest payloads within OpenGraph, which may specify new source kinds that we want to track (e.g. Base, AZBase, GithubBase).
+type sourceKindIngestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, register registrationFn) error
+
+func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicIngestHandler {
 	return func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		decoder, err := getDefaultDecoder(reader)
 		if err != nil {
@@ -192,32 +211,7 @@ func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) ingest
 	}
 }
 
-var ingestHandlers = map[ingest.DataType]ingestHandler{
-	ingest.DataTypeGeneric: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
-		// decode nodes, if present
-		decoder, err := CreateIngestDecoder(reader, "nodes", 2)
-		if errors.Is(err, ingest.ErrDataTagNotFound) {
-			slog.Debug("no nodes found in generic ingest payload; continuing to edges")
-		} else if err != nil {
-			return err
-		} else {
-			if err = decodeGenericData(batch, decoder, convertGenericNode); err != nil {
-				return err
-			}
-		}
-
-		// decode edges, if present
-		decoder, err = CreateIngestDecoder(reader, "edges", 2)
-		if errors.Is(err, ingest.ErrDataTagNotFound) {
-			slog.Debug("no edges found in generic ingest payload")
-		} else if err != nil {
-			return err
-		} else {
-			return decodeGenericData(batch, decoder, convertGenericEdge)
-		}
-
-		return nil
-	},
+var basicHandlers = map[ingest.DataType]basicIngestHandler{
 	ingest.DataTypeComputer: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
@@ -259,6 +253,52 @@ var ingestHandlers = map[ingest.DataType]ingestHandler{
 	ingest.DataTypeNTAuthStore:    defaultBasicHandler(convertNTAuthStoreData),
 	ingest.DataTypeCertTemplate:   defaultBasicHandler(convertCertTemplateData),
 	ingest.DataTypeIssuancePolicy: defaultBasicHandler(convertIssuancePolicy),
+}
+
+var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
+	ingest.DataTypeOpenGraph: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, registerSourceKind registrationFn) error {
+		sourceKind := graph.EmptyKind
+
+		// decode metadata, if present
+		if decoder, err := CreateIngestDecoder(reader, "metadata", 1); err != nil {
+			if !errors.Is(err, ingest.ErrDataTagNotFound) {
+				return err
+			}
+			slog.Debug("no metadata found in opengraph payload; continuing to nodes")
+		} else {
+			var meta ein.GenericMetadata
+			if err := decoder.Decode(&meta); err != nil {
+				return fmt.Errorf("failed to parse opengraph metadata tag: %w", err)
+			}
+
+			sourceKind = graph.StringKind(meta.SourceKind)
+			if err := registerSourceKind(sourceKind); err != nil {
+				return fmt.Errorf("failed to register sourceKind: %w", err)
+			}
+		}
+
+		// decode nodes, if present
+		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
+			if !errors.Is(err, ingest.ErrDataTagNotFound) {
+				return err
+			}
+			slog.Debug("no nodes found in opengraph payload; continuing to edges")
+		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
+			return err
+		}
+
+		// decode edges, if present
+		if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
+			if !errors.Is(err, ingest.ErrDataTagNotFound) {
+				return err
+			}
+			slog.Debug("no edges found in opengraph payload")
+		} else {
+			return DecodeGenericData(batch, decoder, sourceKind, ConvertGenericEdge)
+		}
+
+		return nil
+	},
 }
 
 func getDefaultDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
@@ -303,7 +343,7 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, inge
 
 func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
 	var (
-		nodeKinds            = mergeBaseKind(baseKind, nextNode.Labels...)
+		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
 		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
 		nodeUpdate           = graph.NodeUpdate{
 			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
@@ -314,7 +354,22 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 		}
 	)
 
-	return batch.Batch.UpdateNodeBy(nodeUpdate)
+	if len(nodeKinds) == 0 {
+		slog.Warn("skipping node with no kinds",
+			slog.String("objectid", nextNode.ObjectID),
+			slog.Int("num_kinds", 0),
+		)
+		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", nextNode.ObjectID)
+	} else if len(nodeKinds) > 3 {
+		slog.Warn("skipping node with too many kinds",
+			slog.String("objectid", nextNode.ObjectID),
+			slog.Int("num_kinds", len(nodeKinds)),
+			slog.String("kinds", strings.Join(graph.Kinds(nodeKinds).Strings(), ", ")),
+		)
+		return fmt.Errorf("node %s has too many kinds (%d); max allowed is 3", nextNode.ObjectID, len(nodeKinds))
+	} else {
+		return batch.Batch.UpdateNodeBy(nodeUpdate)
+	}
 }
 
 func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {

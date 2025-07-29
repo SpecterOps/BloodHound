@@ -38,7 +38,7 @@ const Save: FC = () => {
     const tagValue = location.pathname.includes('label') ? 'label' : 'tier';
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
-    const topTagId = useHighestPrivilegeTagId();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
     return (
         <div>
