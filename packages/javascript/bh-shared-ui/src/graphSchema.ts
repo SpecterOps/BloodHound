@@ -147,6 +147,7 @@ export enum ActiveDirectoryRelationshipKind {
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
     OwnsRaw = 'OwnsRaw',
+    ClaimSpecialIdentity = 'ClaimSpecialIdentity',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
     ContainsIdentity = 'ContainsIdentity',
@@ -311,6 +312,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'OwnsLimitedRights';
         case ActiveDirectoryRelationshipKind.OwnsRaw:
             return 'OwnsRaw';
+        case ActiveDirectoryRelationshipKind.ClaimSpecialIdentity:
+            return 'ClaimSpecialIdentity';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
@@ -807,6 +810,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.ContainsIdentity,

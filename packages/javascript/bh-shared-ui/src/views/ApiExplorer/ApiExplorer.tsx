@@ -16,7 +16,7 @@
 
 import React, { Suspense } from 'react';
 import 'swagger-ui-react/swagger-ui.css';
-import { GraphProgress } from '../../components';
+import GraphProgress from '../../components/GraphProgress';
 import { HideEditionTagsPlugin } from './swagger/HideEditionTagsPlugin';
 import { OperationsEditionPlugin } from './swagger/OperationsEditionPlugin';
 import { OperationsFilterPlugin } from './swagger/OperationsFilterPlugin';

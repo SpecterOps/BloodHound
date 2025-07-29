@@ -88,26 +88,21 @@ afterAll(() => server.close());
 
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
-        const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
+        const testQuery = { isLoading: true, isError: false, data: undefined } as unknown as UseQueryResult<
+            AssetGroupTag[]
+        >;
 
-        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<DetailsList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(screen.getAllByTestId('zone-management_selectors-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('zone-management_labels-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('handles data fetching errors', async () => {
         const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<DetailsList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
-    });
-
-    it('renders a sortable list for Selectors', async () => {
-        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
-
-        expect(await screen.findByText('app-icon-sort-asc')).toBeInTheDocument();
-        expect(screen.queryByTestId('zone-management_details_selectors-list_static-order')).not.toBeInTheDocument();
     });
 
     it('renders a sortable list for Labels', async () => {
@@ -140,7 +135,7 @@ describe('List', async () => {
             })
         );
 
-        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         const listItem = await screen.findByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem).toBeInTheDocument();
@@ -156,7 +151,7 @@ describe('List', async () => {
             })
         );
 
-        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         const listItem = screen.getByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem).toBeInTheDocument();
@@ -172,7 +167,7 @@ describe('List', async () => {
             })
         );
 
-        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         const listItem1 = screen.getByTestId('zone-management_details_tiers-list_item-1');
         expect(listItem1).toBeInTheDocument();

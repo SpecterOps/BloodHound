@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+export { default as AnalyzeNowConfiguration } from './AnalyzeNowConfiguration';
 
 export * from './AppNotifications';
 export { default as AppNotifications } from './AppNotifications';
@@ -78,6 +79,13 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 
 export * from './EnterpriseIcon';
 export { default as EnterpriseIcon } from './EnterpriseIcon';
+
+export * from './EntityInfo';
+export { default as EntityInfoPanel } from './EntityInfo';
+
+export * from './EntityInfoDataTable';
+
+export * from './EntityInfoDataTableGraphed';
 
 export * from './ExploreSearchCombobox';
 export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';

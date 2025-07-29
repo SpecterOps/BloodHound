@@ -22,6 +22,7 @@ import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
+import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
@@ -29,7 +30,6 @@ import { handleError } from '../utils';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
-import { useCreateSelector, usePatchSelector, useSelectorInfo } from './hooks';
 import { SelectorFormInputs } from './types';
 
 const diffValues = (
