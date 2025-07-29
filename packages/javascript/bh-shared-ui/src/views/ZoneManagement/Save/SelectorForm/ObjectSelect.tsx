@@ -49,7 +49,7 @@ const ObjectSelect: FC = () => {
 
     return (
         <div>
-            <Card className='rounded-lg'>
+            <Card className='rounded-lg h-[36rem]'>
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                     <div className='flex justify-between'>
                         <span>Object Selector</span>
@@ -58,9 +58,9 @@ const ObjectSelect: FC = () => {
                         Use the input field to add objects to the list
                     </CardDescription>
                 </CardHeader>
-                <CardContent className='pl-6'>
+                <CardContent className='px-6'>
                     <div className='flex content-center mt-3'>
-                        <div className='w-2xs mt-3'>
+                        <div className='w-full my-2'>
                             <ExploreSearchCombobox
                                 labelText='Search Objects To Add'
                                 inputValue={searchTerm}
@@ -83,7 +83,7 @@ const ObjectSelect: FC = () => {
                                             <FontAwesomeIcon icon={faTrashCan} />
                                         </Button>
                                     </TableCell>
-                                    <TableCell className='text-center w-[84px]'>
+                                    <TableCell className='text-center w-[60px]'>
                                         <NodeIcon nodeType={node.type || ''} />
                                     </TableCell>
                                     <TableCell className='mr-4 truncate'>

@@ -243,7 +243,7 @@ const SelectorForm: FC = () => {
             <FormProvider {...formMethods}>
                 <form
                     onSubmit={formMethods.handleSubmit(onSubmit)}
-                    className='flex gap-6 mt-6 w-full max-w-[120rem] justify-between pointer-events-auto'>
+                    className='flex max-xl:flex-wrap gap-6 mt-6 max-w-[120rem] justify-between pointer-events-auto'>
                     <BasicInfo onSubmit={onSubmit} />
                     <SeedSelection />
                 </form>
