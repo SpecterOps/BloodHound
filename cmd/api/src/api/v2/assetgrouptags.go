@@ -514,6 +514,7 @@ type GetAssetGroupTagMemberCountsResponse struct {
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
 	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
+
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
@@ -526,19 +527,20 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
 			))
 		}
-		if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...); err != nil {
+
+		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
+		if err != nil {
 			api.HandleDatabaseError(request, response, err)
-		} else {
-			data := GetAssetGroupTagMemberCountsResponse{
-				Counts: primaryNodeKindsCounts,
-			}
-
-			for _, count := range primaryNodeKindsCounts {
-				data.TotalCount += count
-			}
-
-			api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 		}
+
+		data := GetAssetGroupTagMemberCountsResponse{
+			Counts: primaryNodeKindsCounts,
+		}
+		for _, count := range primaryNodeKindsCounts {
+			data.TotalCount += count
+		}
+
+		api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 	}
 }
 
