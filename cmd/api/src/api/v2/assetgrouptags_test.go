@@ -2345,7 +2345,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 		})
 }
 
-func TestDatabase_SearchAssetGroupTags(t *testing.T) {
+func TestResources_SearchAssetGroupTags(t *testing.T) {
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -2812,4 +2812,193 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestResources_CertifyMembers(t *testing.T) {
+	var (
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
+		resources   = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+		handler         = http.HandlerFunc(resources.CertifyMembers)
+		endpoint        = "/api/v2/asset-group-tags/%s/members/certification"
+		assetGroupTagId = "1"
+	)
+
+	type WrappedResponse struct {
+		Data v2.CertifedMembersResponse `json:"data"`
+	}
+
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", fmt.Sprintf(endpoint, assetGroupTagId), nil)
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+	require.Nil(t, err)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	t.Run("cannot decode request body error", func(t *testing.T) {
+
+		reqBody := `{"member_ids":`
+
+		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("no user error", func(t *testing.T) {
+
+		reqBody := `{"member_ids": [1,2,3], "action": 5}`
+
+		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+	})
+
+	t.Run("invalid certification type", func(t *testing.T) {
+
+		reqBody := `{"member_ids": [1,2,3], "action": 5}`
+
+		req := httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("get asset group tags db error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{}, errors.New("db error"))
+
+		reqBody := `{"member_ids": [1,2,3], "action": 1}`
+
+		req := httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+	})
+
+	t.Run("get asset group tag selector nodes db error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{ID: 1}, nil)
+		mockDB.EXPECT().GetSelectorNodesByNodeIds(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{}, errors.New("db error"))
+
+		reqBody := `{"member_ids": [1,2,3], "action": 1}`
+
+		req := httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+	})
+
+	t.Run("success - manual cert action", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{ID: 1}, nil)
+		mockDB.EXPECT().GetSelectorNodesByNodeIds(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{
+			{NodeId: 1, Certified: model.AssetGroupCertificationNone}}, nil)
+		mockDB.EXPECT().UpdateSelectorNodesByNodeId(gomock.Any(), gomock.Any(), model.AssetGroupCertificationManual, gomock.Any(), gomock.Any())
+
+		reqBody := `{"member_ids": [1], "action": 1}`
+
+		req := httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.CertifedMembersResponse{
+			Members: []model.AssetGroupSelectorNode{
+				{NodeId: 1, Certified: model.AssetGroupCertificationManual},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("success - revoke cert on auto certified node", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{ID: 1}, nil)
+		mockDB.EXPECT().GetSelectorNodesByNodeIds(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{
+			{NodeId: 1, Certified: model.AssetGroupCertificationAuto}}, nil)
+		mockDB.EXPECT().UpdateSelectorNodesByNodeId(gomock.Any(), gomock.Any(), model.AssetGroupCertificationAuto, gomock.Any(), gomock.Any())
+
+		reqBody := `{"member_ids": [1], "action": -1}`
+
+		req := httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.CertifedMembersResponse{
+			Members: []model.AssetGroupSelectorNode{
+				{NodeId: 1, Certified: model.AssetGroupCertificationAuto},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("success - revoke cert on manual certified node", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{ID: 1}, nil)
+		mockDB.EXPECT().GetSelectorNodesByNodeIds(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{
+			{NodeId: 1, Certified: model.AssetGroupCertificationManual}}, nil)
+		mockDB.EXPECT().UpdateSelectorNodesByNodeId(gomock.Any(), gomock.Any(), model.AssetGroupCertificationRevoked, gomock.Any(), gomock.Any())
+
+		reqBody := `{"member_ids": [1], "action": -1}`
+
+		req := httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, fmt.Sprintf(endpoint, assetGroupTagId), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.CertifedMembersResponse{
+			Members: []model.AssetGroupSelectorNode{
+				{NodeId: 1, Certified: model.AssetGroupCertificationRevoked},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
 }

@@ -914,8 +914,15 @@ type CertifyMembersRequest struct {
 	Note      string                        `json:"note,omitempty"`
 }
 
+type CertifedMembersResponse struct {
+	Members model.AssetGroupSelectorNodes `json:"members"`
+}
+
 func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
-	var reqBody CertifyMembersRequest
+	var (
+		reqBody CertifyMembersRequest
+		members model.AssetGroupSelectorNodes
+	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Certify Members")()
 
 	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
@@ -925,19 +932,17 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if !validateCertType(reqBody.Action) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if nodes, err := s.DB.GetSelectorNodesByNodeIds(request.Context(), reqBody.MemberIDs...); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-
-		// Apply a manual certification tag for the specific Zone(tag) that each object is aligned to
-		// A change in an object’s Zone(tag) should be apparent so that a certification can be automatically revoked
-		// Certify:  Change any Pending to Certify (multiple lines will exist in table if object in multiple selectors)
-		// Revocation should remove certifications that were manually applied (i.e. not automatically applied by a Selector) where present in the list of objects for processing
-		// Revocation should NOT remove certifications that were automatically applied by Selectors
+		// A change in an object’s Zone should be apparent so that a certification can be automatically revoked
+		// add field for note to DB
 		for _, node := range nodes {
-			// if reqBody.Action == model.AssetGroupCertificationRevoked
+
 			if reqBody.Action == 1 && node.Certified == model.AssetGroupCertificationNone {
 				node.Certified = model.AssetGroupCertificationManual
 			}
@@ -954,7 +959,17 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 				api.HandleDatabaseError(request, response, err)
 			}
 
+			members = append(members, node)
 		}
 	}
+	api.WriteBasicResponse(request.Context(), CertifedMembersResponse{Members: members}, http.StatusOK, response)
+}
 
+func validateCertType(certType model.AssetGroupCertification) bool {
+	switch certType {
+	case model.AssetGroupCertificationManual, model.AssetGroupCertificationNone, model.AssetGroupCertificationRevoked, model.AssetGroupCertificationAuto:
+		return true
+	default:
+		return false
+	}
 }
