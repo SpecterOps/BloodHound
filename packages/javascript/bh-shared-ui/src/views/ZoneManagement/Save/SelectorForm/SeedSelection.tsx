@@ -67,7 +67,7 @@ const SeedSelection: FC = () => {
     return (
         <>
             <div
-                className={cn('w-full grow', {
+                className={cn('w-full grow min-h-[36rem]', {
                     'md:w-60 xl:max-w-[36rem] 2xl:max-w-full': selectorType === SeedTypeObjectId,
                 })}>
                 <Input {...register('seeds', { value: Array.from(seeds) })} className='hidden w-0' />
@@ -77,7 +77,7 @@ const SeedSelection: FC = () => {
                     <Cypher preview={false} initialInput={firstSeed?.value} />
                 )}
             </div>{' '}
-            <Card className='max-h-full xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full'>
+            <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem] h-fit'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
                 <CardContent className='pl-4'>
                     <div className='font-bold pl-2 mb-2'>

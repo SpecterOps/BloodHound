@@ -49,7 +49,7 @@ const ObjectSelect: FC = () => {
 
     return (
         <div>
-            <Card className='rounded-lg h-[36rem]'>
+            <Card className='rounded-lg min-h-[36rem]'>
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                     <div className='flex justify-between'>
                         <span>Object Selector</span>
