@@ -60,7 +60,20 @@ const SaveQueryDialog: React.FC<{
     error?: any;
     cypherSearchState: CypherSearchState;
     selectedQuery: any;
-}> = ({ open, onClose, onSave, onUpdate, isLoading = false, error = undefined, cypherSearchState, selectedQuery }) => {
+    sharedIds: string[];
+    setSharedIds: (ids: string[]) => void;
+}> = ({
+    open,
+    onClose,
+    onSave,
+    onUpdate,
+    isLoading = false,
+    error = undefined,
+    cypherSearchState,
+    selectedQuery,
+    sharedIds,
+    setSharedIds,
+}) => {
     const theme = useTheme();
 
     const lgDown = useMediaQuery(theme.breakpoints.down('lg'));
@@ -203,9 +216,15 @@ const SaveQueryDialog: React.FC<{
                                     <CardTitle>Manage Shared Queries</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    {selectedQuery && selectedQuery.id && (
+                                    {/* {selectedQuery && selectedQuery.id && (
                                         <SavedQueryPermissions queryId={selectedQuery.id} />
-                                    )}
+                                    )} */}
+
+                                    <SavedQueryPermissions
+                                        queryId={selectedQuery?.id}
+                                        sharedIds={sharedIds}
+                                        setSharedIds={setSharedIds}
+                                    />
                                 </CardContent>
                             </Card>
                         </div>

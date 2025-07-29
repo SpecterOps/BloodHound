@@ -10,14 +10,17 @@ import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doo
 
 import {} from 'react-query';
 type SavedQueryPermissionsProps = {
-    queryId: number;
+    queryId?: number;
+    sharedIds: string[];
+    setSharedIds: (ids: string[]) => void;
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
-    const { queryId } = props;
+    const { queryId, sharedIds, setSharedIds } = props;
     const [shareAll, setShareAll] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+    // const [sharedIds, setSharedIds] = useState<string[]>([]);
 
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
 
@@ -27,7 +30,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
-    const { data, isLoading, error, isError } = useQueryPermissions(queryId);
+    const { data, isLoading, error, isError } = useQueryPermissions(queryId as number);
 
     const deletePermissionsMutation = useDeleteQueryPermissions();
 
@@ -48,9 +51,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const queryClient = useQueryClient();
 
     useEffect(() => {
+        // manually setting data on error.
+        // api returns error for empty state.
         queryClient.setQueryData(['permissions'], (oldData: any) => {
-            // Return the new data based on oldData
-            console.log(oldData);
             return { ...oldData, shared_to_user_ids: [] };
         });
     }, [error, isError]);
@@ -65,42 +68,70 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
         setShareAll(checkedState as boolean);
-        if (checkedState) {
-            updateQueryPermissionsMutation.mutate({
-                id: queryId,
-                payload: {
-                    user_ids: allUserIds as string[],
-                    public: false,
-                },
-            });
+        if (!!queryId) {
+            if (checkedState) {
+                updateQueryPermissionsMutation.mutate({
+                    id: queryId,
+                    payload: {
+                        user_ids: allUserIds as string[],
+                        public: false,
+                    },
+                });
+            } else {
+                deletePermissionsMutation.mutate({
+                    id: queryId,
+                    payload: {
+                        user_ids: allUserIds as string[],
+                    },
+                });
+            }
         } else {
-            deletePermissionsMutation.mutate({
-                id: queryId,
-                payload: {
-                    user_ids: allUserIds as string[],
-                },
-            });
+            if (checkedState) {
+                setSharedIds(allUserIds as string[]);
+            } else {
+                setSharedIds([]);
+            }
         }
     };
 
     const handleCheckChange = (sharedUserId: string) => {
-        if (data.shared_to_user_ids?.includes(sharedUserId)) {
-            //delete
-            deletePermissionsMutation.mutate({
-                id: queryId,
-                payload: {
-                    user_ids: [sharedUserId],
-                },
-            });
+        if (!!queryId) {
+            //Not a new query
+            if (data.shared_to_user_ids?.includes(sharedUserId)) {
+                //delete
+                deletePermissionsMutation.mutate({
+                    id: queryId,
+                    payload: {
+                        user_ids: [sharedUserId],
+                    },
+                });
+            } else {
+                //add
+                updateQueryPermissionsMutation.mutate({
+                    id: queryId,
+                    payload: {
+                        user_ids: [...data.shared_to_user_ids, sharedUserId],
+                        public: false,
+                    },
+                });
+            }
         } else {
-            //add
-            updateQueryPermissionsMutation.mutate({
-                id: queryId,
-                payload: {
-                    user_ids: [...data.shared_to_user_ids, sharedUserId],
-                    public: false,
-                },
-            });
+            //New query - no queryId present
+            if (sharedIds.includes(sharedUserId)) {
+                //delete
+                setSharedIds(sharedIds.filter((item) => item !== sharedUserId));
+            } else {
+                // add
+                setSharedIds([...sharedIds, sharedUserId]);
+            }
+        }
+    };
+
+    const isCheckboxChecked = (id: any) => {
+        if (!!queryId) {
+            return data?.shared_to_user_ids?.includes(id);
+        } else {
+            return sharedIds.includes(id);
         }
     };
 
@@ -116,15 +147,13 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     );
                 },
                 cell: ({ row }) => (
-                    <>
-                        <div className='min-w-12 max-w-12'>
-                            <Checkbox
-                                className='ml-4'
-                                checked={data?.shared_to_user_ids?.includes(row.getValue('id'))}
-                                onCheckedChange={() => handleCheckChange(row.getValue('id'))}
-                            />
-                        </div>
-                    </>
+                    <div className='min-w-12 max-w-12'>
+                        <Checkbox
+                            className='ml-4'
+                            checked={isCheckboxChecked(row.getValue('id'))}
+                            onCheckedChange={() => handleCheckChange(row.getValue('id'))}
+                        />
+                    </div>
                 ),
             },
             {

@@ -21,13 +21,19 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
-import { useCreateSavedQuery, useGetSelectedQuery, useUpdateSavedQuery } from '../../../hooks';
+import {
+    useCreateSavedQuery,
+    useGetSelectedQuery,
+    useUpdateQueryPermissions,
+    useUpdateSavedQuery,
+} from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
+
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
@@ -66,7 +72,11 @@ const CypherSearch = ({
         message: '',
     });
 
+    const [sharedIds, setSharedIds] = useState<string[]>([]);
+
     const cypherEditorRef = useRef<CypherEditor | null>(null);
+
+    const updateQueryPermissionsMutation = useUpdateQueryPermissions();
 
     const kindsQuery = useQuery({
         queryKey: ['graph-kinds'],
@@ -105,6 +115,25 @@ const CypherSearch = ({
         setShowCommonQueries((v) => !v);
     };
 
+    const updateQueryPermissions = (id: number) => {
+        if (!sharedIds.length) return;
+
+        updateQueryPermissionsMutation.mutate(
+            {
+                id: id,
+                payload: {
+                    user_ids: sharedIds,
+                    public: false,
+                },
+            },
+            {
+                onSuccess: () => {
+                    setSharedIds([]);
+                },
+            }
+        );
+    };
+
     const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
         return createSavedQueryMutation.mutate(
             { name: data.name, description: data.description, query: data.localCypherQuery },
@@ -114,6 +143,7 @@ const CypherSearch = ({
                     addNotification(`${data.name} saved!`, 'userSavedQuery');
                     performSearch(data.localCypherQuery);
                     setSelected({ query: data.localCypherQuery, id: res.id });
+                    updateQueryPermissions(res.id);
                 },
             }
         );
@@ -176,6 +206,7 @@ const CypherSearch = ({
     const handleCloseSaveQueryDialog = () => {
         setShowSaveQueryDialog(false);
         createSavedQueryMutation.reset();
+        setSharedIds([]);
     };
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
@@ -295,6 +326,8 @@ const CypherSearch = ({
                 error={createSavedQueryMutation.error}
                 cypherSearchState={cypherSearchState}
                 selectedQuery={selectedQuery}
+                sharedIds={sharedIds}
+                setSharedIds={setSharedIds}
             />
         </>
     );
