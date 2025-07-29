@@ -36,13 +36,13 @@ import { SubmitHandler, useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
+import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
-import { useDeleteSelector } from './hooks';
 import { SelectorFormInputs } from './types';
 
 /**
