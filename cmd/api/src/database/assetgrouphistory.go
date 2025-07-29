@@ -113,17 +113,19 @@ func (s *BloodhoundDB) GetAssetGroupHistoryRecord(ctx context.Context, id int) (
 }
 
 func (s *BloodhoundDB) UpdateAssetGroupHistoryRecord(ctx context.Context, historyRecord model.AssetGroupHistory) (model.AssetGroupHistory, error) {
-	if historyRecord.Note.Valid {
-		sqlStr := fmt.Sprintf(
-			"UPDATE %s SET note = ? WHERE id = ?",
-			(model.AssetGroupHistory{}).TableName(),
-		)
-
-		if result := s.db.WithContext(ctx).Exec(sqlStr, historyRecord.Note, historyRecord.ID); result.Error != nil {
-			return model.AssetGroupHistory{}, CheckError(result)
-		} else {
-			return historyRecord, nil
-		}
+	if historyRecord.ID <= 0 {
+		return model.AssetGroupHistory{}, fmt.Errorf("invalid history record ID: %d", historyRecord.ID)
 	}
-	return model.AssetGroupHistory{}, fmt.Errorf("Note field cannot be null")
+
+	if !historyRecord.Note.Valid {
+		return model.AssetGroupHistory{}, fmt.Errorf("note field is required for update")
+	}
+
+	sqlStr := fmt.Sprintf("UPDATE %s SET note = ? WHERE id = ?", (model.AssetGroupHistory{}).TableName())
+
+	if result := s.db.WithContext(ctx).Exec(sqlStr, historyRecord.Note, historyRecord.ID); result.Error != nil {
+		return model.AssetGroupHistory{}, CheckError(result)
+	}
+
+	return historyRecord, nil
 }

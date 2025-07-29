@@ -148,16 +148,21 @@ func TestDatabase_GetAndUpdateAssetGroupHistoryRecord(t *testing.T) {
 		record, err := dbInst.GetAssetGroupHistoryRecord(testCtx, 1)
 		require.NoError(t, err)
 
+		// change some stuff
 		record.Action = model.AssetGroupHistoryActionDeleteSelector
 		record.Note = null.StringFrom("Test note")
 
+		// update the database
 		record, err = dbInst.UpdateAssetGroupHistoryRecord(testCtx, record)
+		require.NoError(t, err)
 
 		// read the record back in from the database
 		record, err = dbInst.GetAssetGroupHistoryRecord(testCtx, 1)
+		require.NoError(t, err)
 
 		// verify note was added
 		require.Equal(t, null.StringFrom("Test note"), record.Note)
-		require.False(t, record.CreatedAt.IsZero())
+		// verify action is unchanged
+		require.Equal(t, model.AssetGroupHistoryActionCreateSelector, record.Action)
 	})
 }
