@@ -79,6 +79,7 @@ const (
 	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
 	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided tier position is out of range"
 	ErrorResponseDetailsQueryTooShort               = "search query must be at least 3 characters long"
+	ErrorResponseAssetGroupCertTypeInvalid          = "valid certification action is required"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
