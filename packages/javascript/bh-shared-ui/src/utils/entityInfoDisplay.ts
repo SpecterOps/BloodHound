@@ -100,21 +100,30 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
-// The intent is to standardize keys and their display label in the UI
-// Some keys come from the API UnifiedType and are deduped with their property bag counterpart.
-// Other keys are introduced on the UI as props via the EntityInfoContentProps type.
+/**
+ * Entries without a comment come from the UnifiedType on the API. See PropertyLabelOverridesToDisplay for intent.
+ */
 export enum PropertyLabelOverrides {
+    /**
+     * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
+     * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
+     */
     NodeType = 'nodeType',
     Kind = 'kind',
     IsTierZero = 'isTierZero',
+    /**
+     * TODO: Fill in story about isOwned
+     */
     IsOwned = 'isOwned',
     IsOwnedObject = 'isOwnedObject',
     Label = 'label',
-    DisplayName = 'displayname',
     ObjectId = 'objectId',
-    Objectid = 'objectid',
     LastSeen = 'lastSeen',
 }
+/**
+ * The intent is to standardize keys and their display label in the UI.
+ * The keys above are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
+ */
 export function PropertyLabelOverridesToDisplay(value: PropertyLabelOverrides): string | undefined {
     switch (value) {
         case PropertyLabelOverrides.NodeType:
@@ -126,11 +135,8 @@ export function PropertyLabelOverridesToDisplay(value: PropertyLabelOverrides): 
         case PropertyLabelOverrides.IsOwnedObject:
             return 'Is Owned';
         case PropertyLabelOverrides.Label:
-            return 'Label';
-        case PropertyLabelOverrides.DisplayName:
-            return CommonKindPropertiesToDisplay(CommonKindProperties.DisplayName);
+            return CommonKindPropertiesToDisplay(CommonKindProperties.Name);
         case PropertyLabelOverrides.ObjectId:
-        case PropertyLabelOverrides.Objectid:
             return CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID);
         case PropertyLabelOverrides.LastSeen:
             return CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen);

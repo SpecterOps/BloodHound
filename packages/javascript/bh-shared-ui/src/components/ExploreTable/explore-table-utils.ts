@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { FlatGraphResponse, GraphNodeSpreadWithProperties, GraphResponse } from 'js-client-library';
+import { CommonKindProperties } from '../..';
 import { isGraphResponse } from '../../hooks/useExploreGraph/queries/utils';
 import { PropertyLabelOverrides } from '../../utils/entityInfoDisplay';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
@@ -33,8 +34,8 @@ export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string 
 
 export const REQUIRED_KEYS = [
     PropertyLabelOverrides.Kind,
-    PropertyLabelOverrides.ObjectId,
     PropertyLabelOverrides.Label,
+    PropertyLabelOverrides.ObjectId,
     PropertyLabelOverrides.IsTierZero,
 ];
 export const KNOWN_NODE_KEYS = [
@@ -42,6 +43,7 @@ export const KNOWN_NODE_KEYS = [
     PropertyLabelOverrides.IsOwnedObject,
     PropertyLabelOverrides.LastSeen,
 ];
+export const DUPLICATED_KNOWN_KEYS: string[] = [CommonKindProperties.ObjectID, CommonKindProperties.Name];
 
 export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse | undefined) => {
     if (!graphData || !isGraphResponse(graphData)) return;
@@ -49,7 +51,9 @@ export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse
     const nodes = graphData.data.nodes;
     const unknownNodeKeys = graphData.data.node_keys ?? [];
 
-    const completeNodeKeys = unknownNodeKeys.concat(KNOWN_NODE_KEYS);
+    const completeNodeKeys = unknownNodeKeys
+        .filter((key) => !DUPLICATED_KNOWN_KEYS.includes(key)) // remove property bag duplicates of the known keys
+        .concat(KNOWN_NODE_KEYS); // add known keys
 
     return {
         nodes,

@@ -16,7 +16,7 @@
 
 import { Box } from '@mui/material';
 import NodeIcon from '../../components/NodeIcon';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
+import { ActiveDirectoryNodeKind, AzureNodeKind, CommonKindProperties } from '../../graphSchema';
 import { EntityKinds, PropertyLabelOverrides, formatPotentiallyUnknownLabel } from '../../utils';
 import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
@@ -66,9 +66,9 @@ const basicObjectFields = [
     PropertyLabelOverrides.NodeType,
     PropertyLabelOverrides.IsTierZero,
     PropertyLabelOverrides.IsOwned,
-    PropertyLabelOverrides.DisplayName,
-    PropertyLabelOverrides.Objectid,
-] satisfies PropertyLabelOverrides[];
+    CommonKindProperties.DisplayName,
+    CommonKindProperties.ObjectID,
+] satisfies (PropertyLabelOverrides | CommonKindProperties)[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
     return (
