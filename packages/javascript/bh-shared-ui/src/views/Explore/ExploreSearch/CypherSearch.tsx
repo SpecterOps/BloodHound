@@ -86,7 +86,6 @@ const CypherSearch = ({
     const { addNotification } = useNotifications();
 
     const handleCypherSearch = () => {
-        console.log('handleCypher');
         if (cypherQuery) {
             performSearch();
         }
@@ -116,8 +115,6 @@ const CypherSearch = ({
     };
 
     const updateQueryPermissions = (id: number) => {
-        if (!sharedIds.length) return;
-
         updateQueryPermissionsMutation.mutate(
             {
                 id: id,
@@ -158,11 +155,12 @@ const CypherSearch = ({
         return updateSavedQueryMutation.mutate(
             { name: data.name, description: data.description, id: data.id as number, query: data.localCypherQuery },
             {
-                onSuccess: () => {
+                onSuccess: (res) => {
                     setShowSaveQueryDialog(false);
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
                     performSearch(data.localCypherQuery);
                     setSelected({ query: data.localCypherQuery, id: data.id });
+                    updateQueryPermissions(res.id);
                 },
             }
         );

@@ -1,12 +1,10 @@
+import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
-import { useDeleteQueryPermissions, useQueryPermissions, useUpdateQueryPermissions } from '../../../hooks';
-
+import { useQueryPermissions } from '../../../hooks';
 import { apiClient } from '../../../utils';
-
-import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 
 import {} from 'react-query';
 type SavedQueryPermissionsProps = {
@@ -20,9 +18,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const [shareAll, setShareAll] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-    // const [sharedIds, setSharedIds] = useState<string[]>([]);
-
-    const updateQueryPermissionsMutation = useUpdateQueryPermissions();
 
     const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
 
@@ -31,8 +26,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     );
 
     const { data, isLoading, error, isError } = useQueryPermissions(queryId as number);
-
-    const deletePermissionsMutation = useDeleteQueryPermissions();
 
     function idMap() {
         return listUsersQuery.data
@@ -59,6 +52,11 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     }, [error, isError]);
 
     useEffect(() => {
+        if (data?.shared_to_user_ids.length) {
+            setSharedIds(data?.shared_to_user_ids);
+        } else {
+            setSharedIds([]);
+        }
         if (data?.shared_to_user_ids.length === allUserIds?.length) {
             setShareAll(true);
         } else {
@@ -68,71 +66,26 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
         setShareAll(checkedState as boolean);
-        if (!!queryId) {
-            if (checkedState) {
-                updateQueryPermissionsMutation.mutate({
-                    id: queryId,
-                    payload: {
-                        user_ids: allUserIds as string[],
-                        public: false,
-                    },
-                });
-            } else {
-                deletePermissionsMutation.mutate({
-                    id: queryId,
-                    payload: {
-                        user_ids: allUserIds as string[],
-                    },
-                });
-            }
+        if (checkedState) {
+            setSharedIds(allUserIds as string[]);
         } else {
-            if (checkedState) {
-                setSharedIds(allUserIds as string[]);
-            } else {
-                setSharedIds([]);
-            }
+            setSharedIds([]);
         }
     };
 
     const handleCheckChange = (sharedUserId: string) => {
-        if (!!queryId) {
-            //Not a new query
-            if (data.shared_to_user_ids?.includes(sharedUserId)) {
-                //delete
-                deletePermissionsMutation.mutate({
-                    id: queryId,
-                    payload: {
-                        user_ids: [sharedUserId],
-                    },
-                });
-            } else {
-                //add
-                updateQueryPermissionsMutation.mutate({
-                    id: queryId,
-                    payload: {
-                        user_ids: [...data.shared_to_user_ids, sharedUserId],
-                        public: false,
-                    },
-                });
-            }
+        //New query - no queryId present
+        if (sharedIds.includes(sharedUserId)) {
+            //delete
+            setSharedIds(sharedIds.filter((item) => item !== sharedUserId));
         } else {
-            //New query - no queryId present
-            if (sharedIds.includes(sharedUserId)) {
-                //delete
-                setSharedIds(sharedIds.filter((item) => item !== sharedUserId));
-            } else {
-                // add
-                setSharedIds([...sharedIds, sharedUserId]);
-            }
+            // add
+            setSharedIds([...sharedIds, sharedUserId]);
         }
     };
 
     const isCheckboxChecked = (id: any) => {
-        if (!!queryId) {
-            return data?.shared_to_user_ids?.includes(id);
-        } else {
-            return sharedIds.includes(id);
-        }
+        return sharedIds.includes(id);
     };
 
     const getColumns = () => {

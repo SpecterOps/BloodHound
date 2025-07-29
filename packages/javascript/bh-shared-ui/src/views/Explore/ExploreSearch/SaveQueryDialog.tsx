@@ -86,8 +86,6 @@ const SaveQueryDialog: React.FC<{
 
     const { cypherQuery } = cypherSearchState;
 
-    // console.log(usersList);
-
     useEffect(() => {
         if (selectedQuery) {
             //The prebuilt queries do not have a name property.  Returns undefined and throws an error surrounding controlled/uncontrolled components.  Need unified data shape for saved queries.
@@ -216,10 +214,6 @@ const SaveQueryDialog: React.FC<{
                                     <CardTitle>Manage Shared Queries</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    {/* {selectedQuery && selectedQuery.id && (
-                                        <SavedQueryPermissions queryId={selectedQuery.id} />
-                                    )} */}
-
                                     <SavedQueryPermissions
                                         queryId={selectedQuery?.id}
                                         sharedIds={sharedIds}
