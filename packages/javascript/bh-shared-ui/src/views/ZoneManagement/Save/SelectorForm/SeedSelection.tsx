@@ -23,6 +23,7 @@ import { useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useDebouncedValue } from '../../../../hooks';
+import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
@@ -31,7 +32,6 @@ import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
-import { useDeleteSelector } from './hooks';
 import { SelectorFormInputs } from './types';
 
 const getListScalar = (windowHeight: number) => {

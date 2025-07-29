@@ -76,10 +76,6 @@ describe('GraphView', () => {
     });
 
     it('renders a table if the query has NO node edges', async () => {
-        const urlSearchParams = new URLSearchParams();
-        urlSearchParams.append('searchType', 'cypher');
-        urlSearchParams.append('cypherSearch', 'encodedquery');
-
         render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
 
         const table = await screen.findByRole('table');
@@ -93,10 +89,6 @@ describe('GraphView', () => {
     });
 
     it('renders a graph if the query has any node edges', async () => {
-        const urlSearchParams = new URLSearchParams();
-        urlSearchParams.append('searchType', 'cypher');
-        urlSearchParams.append('cypherSearch', 'encodedquery');
-
         const clonedCypherResponse = Object.assign({}, cypherResponse);
 
         clonedCypherResponse.data.edges.push({

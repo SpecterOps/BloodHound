@@ -41,6 +41,12 @@ import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { usePrivilegeZoneAnalysis } from '../../../../hooks';
 import {
+    useAssetGroupTagInfo,
+    useCreateAssetGroupTag,
+    useDeleteAssetGroupTag,
+    usePatchAssetGroupTag,
+} from '../../../../hooks/useAssetGroupTags';
+import {
     useAssetGroupTags,
     useHighestPrivilegeTagId,
     useOwnedTagId,
@@ -50,7 +56,6 @@ import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
-import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -100,9 +105,9 @@ export const TagForm: FC = () => {
     const [toggleEnabled, setToggleEnabled] = useState<boolean | undefined>(
         tagQuery.data?.analysis_enabled || undefined
     );
-    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString();
 
     const { TierList, SalesMessage } = useContext(ZoneManagementContext);
+    const showAnalysisToggle = privilegeZoneAnalysisEnabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,

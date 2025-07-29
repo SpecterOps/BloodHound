@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { FlatGraphResponse, GraphNodeSpreadWithProperties, GraphResponse } from 'js-client-library';
-import { CommonKindProperties } from '../..';
+import { CommonKindProperties } from '../../graphSchema';
 import { isGraphResponse } from '../../hooks/useExploreGraph/queries/utils';
 import { PropertyLabelOverrides } from '../../utils/entityInfoDisplay';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';

@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
-import { useExploreGraph } from '../..';
+import { useExploreGraph } from '../../hooks/useExploreGraph';
 import {
     compareForExploreTableSort,
     getExploreTableData,
