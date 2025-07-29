@@ -30,6 +30,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
+                href='https://github.com/GhostPack/Certify/wiki/4-%E2%80%90-Escalation-Techniques#managecertificates'>
+                Certify wiki - Escalation Techniques - ManageCertificates
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
                 href='https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc7-dangerous-permissions-on-ca'>
                 ESC7: Dangerous Permissions on CA
             </Link>

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
@@ -24,6 +24,18 @@ const Abuse: FC = () => {
                 An attacker can identify ADCS escalation opportunities where manager approval on the certificate
                 template prevents direct abuse, but leverage the Certificate Manager role to approve the pending
                 certificate request.
+            </Typography>
+            <Typography variant='body2'>
+                Alternatively, an attacker can abuse the Certificate Manager role to add an extension to pending
+                certificates, which can be abused to add a group-linked issuance policy in environments using
+                Authentication Mechanism Assurance (AMA). See{' '}
+                <Link
+                    target='_blank'
+                    rel='noopener'
+                    href='https://github.com/GhostPack/Certify/wiki/4-%E2%80%90-Escalation-Techniques#managecertificates'>
+                    Certify wiki - Escalation Techniques - ManageCertificates
+                </Link>{' '}
+                for details.
             </Typography>
             <Typography variant='body2'>
                 Certificate managers can approve pending certificate requests using Certipy:
