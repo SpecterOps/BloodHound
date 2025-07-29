@@ -23,9 +23,9 @@ import { useExploreGraph } from '../..';
 import {
     compareForExploreTableSort,
     getExploreTableData,
+    isRequiredColumn,
     isSmallColumn,
-    KNOWN_NODE_KEYS,
-    requiredColumns,
+    REQUIRED_KEYS,
     type ExploreTableProps,
     type MungedTableRowWithId,
 } from './explore-table-utils';
@@ -202,11 +202,11 @@ const useExploreTableRowsAndColumns = ({
         const columnDefs = selectedColumnDefinitions.sort((a, b) => {
             const idA = a?.id || '';
             const idB = b?.id || '';
-            const aIsRequired = requiredColumns[idA];
-            const bIsRequired = requiredColumns[idB];
+            const aIsRequired = isRequiredColumn(idA);
+            const bIsRequired = isRequiredColumn(idB);
             if (aIsRequired) {
                 if (bIsRequired) {
-                    return KNOWN_NODE_KEYS.indexOf(idA) > KNOWN_NODE_KEYS.indexOf(idB) ? 1 : -1;
+                    return REQUIRED_KEYS.indexOf(idA) > REQUIRED_KEYS.indexOf(idB) ? 1 : -1;
                 }
                 return -1;
             }

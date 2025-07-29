@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FlatGraphResponse, GraphNodeSpreadWithProperties, GraphResponse } from 'js-client-library';
 import { isGraphResponse } from '../../hooks/useExploreGraph/queries/utils';
+import { PropertyLabelOverrides } from '../../utils/entityInfoDisplay';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboBoxOption[]) =>
@@ -30,15 +31,25 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-export const KNOWN_NODE_KEYS = ['kind', 'objectId', 'label', 'isTierZero'];
+export const REQUIRED_KEYS = [
+    PropertyLabelOverrides.Kind,
+    PropertyLabelOverrides.ObjectId,
+    PropertyLabelOverrides.Label,
+    PropertyLabelOverrides.IsTierZero,
+];
+export const KNOWN_NODE_KEYS = [
+    ...REQUIRED_KEYS,
+    PropertyLabelOverrides.IsOwnedObject,
+    PropertyLabelOverrides.LastSeen,
+];
 
 export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse | undefined) => {
     if (!graphData || !isGraphResponse(graphData)) return;
 
     const nodes = graphData.data.nodes;
-    const unknownNodeKeys = graphData.data.node_keys;
+    const unknownNodeKeys = graphData.data.node_keys ?? [];
 
-    const completeNodeKeys = unknownNodeKeys?.concat(KNOWN_NODE_KEYS);
+    const completeNodeKeys = unknownNodeKeys.concat(KNOWN_NODE_KEYS);
 
     return {
         nodes,
@@ -46,7 +57,10 @@ export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse
     };
 };
 
-export const requiredColumns = Object.fromEntries(KNOWN_NODE_KEYS.map((key) => [key, true]));
+export const requiredColumns = Object.fromEntries(REQUIRED_KEYS.map((key) => [key, true]));
+export const isRequiredColumn = (value: string): value is (typeof REQUIRED_KEYS)[number] => {
+    return requiredColumns[value as PropertyLabelOverrides];
+};
 
 export const compareForExploreTableSort = (a: any, b: any) => {
     if (typeof a === 'number' || typeof b === 'number') {
@@ -81,7 +95,7 @@ export const compareForExploreTableSort = (a: any, b: any) => {
 };
 
 export const isSmallColumn = (key: string, type: string) =>
-    key === 'nodetype' || key === 'isTierZero' || type === 'boolean';
+    key === 'kind' || key === 'isTierZero' || type === 'boolean';
 
 export interface ExploreTableProps {
     open?: boolean;

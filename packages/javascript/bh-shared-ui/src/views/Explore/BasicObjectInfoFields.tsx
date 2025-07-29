@@ -17,7 +17,7 @@
 import { Box } from '@mui/material';
 import NodeIcon from '../../components/NodeIcon';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { EntityKinds } from '../../utils';
+import { EntityKinds, PropertyLabelOverrides, formatPotentiallyUnknownLabel } from '../../utils';
 import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
 
@@ -62,14 +62,23 @@ const RelatedKindField = (
     );
 };
 
+const basicObjectFields = [
+    PropertyLabelOverrides.NodeType,
+    PropertyLabelOverrides.IsTierZero,
+    PropertyLabelOverrides.IsOwned,
+    PropertyLabelOverrides.DisplayName,
+    PropertyLabelOverrides.Objectid,
+] satisfies PropertyLabelOverrides[];
+
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
     return (
         <>
-            {props.nodeType && <Field label='Node Type' value={props.nodeType} />}
-            {props.isTierZero && <Field label='Tier Zero:' value={true} />}
-            {props.isOwned && <Field label='Owned Object:' value={true} />}
-            {props.displayname && <Field label='Display Name:' value={props.displayname} />}
-            <Field label='Object ID:' value={props.objectid} />
+            {basicObjectFields.map((field) => {
+                const value = props[field];
+                if (value === undefined) return null; // <Field /> doesnt support undefined values
+
+                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
+            })}
             {props.handleSourceNodeSelected && (
                 <>
                     {props.service_principal_id &&

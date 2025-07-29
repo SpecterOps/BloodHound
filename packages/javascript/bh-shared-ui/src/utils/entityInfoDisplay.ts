@@ -100,6 +100,49 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
+// The intent is to standardize keys and their display label in the UI
+// Some keys come from the API UnifiedType and are deduped with their property bag counterpart.
+// Other keys are introduced on the UI as props via the EntityInfoContentProps type.
+export enum PropertyLabelOverrides {
+    NodeType = 'nodeType',
+    Kind = 'kind',
+    IsTierZero = 'isTierZero',
+    IsOwned = 'isOwned',
+    IsOwnedObject = 'isOwnedObject',
+    Label = 'label',
+    DisplayName = 'displayname',
+    ObjectId = 'objectId',
+    Objectid = 'objectid',
+    LastSeen = 'lastSeen',
+}
+export function PropertyLabelOverridesToDisplay(value: PropertyLabelOverrides): string | undefined {
+    switch (value) {
+        case PropertyLabelOverrides.NodeType:
+        case PropertyLabelOverrides.Kind:
+            return 'Node Type';
+        case PropertyLabelOverrides.IsTierZero:
+            return 'Tier Zero';
+        case PropertyLabelOverrides.IsOwned:
+        case PropertyLabelOverrides.IsOwnedObject:
+            return 'Is Owned';
+        case PropertyLabelOverrides.Label:
+            return 'Label';
+        case PropertyLabelOverrides.DisplayName:
+            return CommonKindPropertiesToDisplay(CommonKindProperties.DisplayName);
+        case PropertyLabelOverrides.ObjectId:
+        case PropertyLabelOverrides.Objectid:
+            return CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID);
+        case PropertyLabelOverrides.LastSeen:
+            return CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen);
+        default:
+            return undefined;
+    }
+}
+
+const isPropertyLabelOverride = (enumValue: PropertyLabelOverrides): enumValue is PropertyLabelOverrides => {
+    return Object.values(PropertyLabelOverrides).includes(enumValue);
+};
+
 export type ValidatedProperty = {
     isKnownProperty: boolean;
     kind: EntityPropertyKind;
@@ -110,30 +153,32 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
         return { isKnownProperty: true, kind: 'ad' };
     if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
     if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
+    if (isPropertyLabelOverride(enumValue as PropertyLabelOverrides)) return { isKnownProperty: true, kind: 'ov' };
     return { isKnownProperty: false, kind: null };
 };
 
-const getFieldLabel = (kind: string, key: string): string => {
-    let label: string;
+const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
+    let label;
 
     switch (kind) {
         case 'ad':
-            label = ActiveDirectoryKindPropertiesToDisplay(key as ActiveDirectoryKindProperties)!;
+            label = ActiveDirectoryKindPropertiesToDisplay(key as ActiveDirectoryKindProperties);
             break;
         case 'az':
-            label = AzureKindPropertiesToDisplay(key as AzureKindProperties)!;
+            label = AzureKindPropertiesToDisplay(key as AzureKindProperties);
             break;
         case 'cm':
-            label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
+            label = CommonKindPropertiesToDisplay(key as CommonKindProperties);
             break;
-        default:
-            label = key;
+        case 'ov':
+            label = PropertyLabelOverridesToDisplay(key as PropertyLabelOverrides);
+            break;
     }
 
-    return label;
+    return label ?? key;
 };
 
-export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;
+export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
 
 export type EntityField = {
     label: string | JSX.Element;
@@ -257,7 +302,7 @@ export const formatList = (field: EntityField) => {
     const list = field.value as any[];
     const fields: string[] = [];
     list.forEach((value) => {
-        fields.push(formatPrimitive(value, field.kind, field.keyprop));
+        if (value) fields.push(formatPrimitive(value, field.kind, field.keyprop));
     });
     return fields;
 };
