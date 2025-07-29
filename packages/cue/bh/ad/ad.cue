@@ -1655,6 +1655,16 @@ CanApplyGPO: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteAltSecurityIdentities: types.#Kind & {
+	symbol: "WriteAltSecurityIdentities"
+	schema: "active_directory"
+}
+
+WritePublicInformation: types.#Kind & {
+	symbol: "WritePublicInformation"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1742,6 +1752,8 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 // ACL Relationships
@@ -1774,6 +1786,8 @@ ACLRelationships: [
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 // these edges are common to inbound/outbound/pathfinding
@@ -1832,6 +1846,8 @@ SharedRelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 // Edges that are used during inbound traversal

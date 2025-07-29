@@ -16,6 +16,7 @@
 
 import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
+import { AdcsEsc14ScenarioAWindows } from '../AdcsEsc14ScenarioA';
 import CodeController from '../CodeController/CodeController';
 import { EdgeInfoProps } from '../index';
 
@@ -141,6 +142,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
 
                     <Typography variant='body2'>
+                        The permission also grants write access to the "altSecurityIdentities" attribute, which enables
+                        an ADCS ESC14 Scenario A attack.
+                    </Typography>
+
+                    <Typography variant='body2'>
                         Alternatively, GenericAll enables {sourceName} to set a ServicePrincipalName (SPN) on the
                         targeted user, which may be abused in a Targeted Kerberoast attack.
                     </Typography>
@@ -214,6 +220,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body2'>
                         For other optional parameters, view the Whisker documentation.
                     </Typography>
+
+                    <AdcsEsc14ScenarioAWindows />
 
                     <Typography variant='body1'> Targeted Kerberoast attack </Typography>
 
@@ -296,6 +304,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         <Typography variant='body2'>
                             Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
                             Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body2'>
+                            The permission also grants write access to the "altSecurityIdentities" attribute, which
+                            enables an ADCS ESC14 Scenario A attack.
                         </Typography>
 
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
@@ -432,6 +445,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
                         </Typography>
+
+                        <AdcsEsc14ScenarioAWindows />
                     </>
                 );
             } else {
@@ -469,6 +484,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         <Typography variant='body2'>
                             Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
                             Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body2'>
+                            The permission also grants write access to the "altSecurityIdentities" attribute, which
+                            enables an ADCS ESC14 Scenario A attack.
                         </Typography>
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
@@ -555,6 +575,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
                         </Typography>
+
+                        <AdcsEsc14ScenarioAWindows />
                     </>
                 );
             }
