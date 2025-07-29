@@ -18,11 +18,13 @@ package test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sort"
 	"strings"
 	"testing"
 
@@ -125,4 +127,35 @@ func OverwriteQueryParamIfHeaderAndParamExist(headers http.Header, headerKey, pa
 	// Rebuild query string, preserve leading "?"
 	headers.Set(headerKey, "?"+q.Encode())
 	return headers
+}
+
+// NormalizeJSON parses JSON and sorts arrays inside so order doesn't matter.
+// Returns raw string if input is not valid JSON.
+func NormalizeJSON(t *testing.T, raw string) any {
+	var data any
+	err := json.Unmarshal([]byte(raw), &data)
+	if err != nil {
+		return raw
+	}
+
+	sortJSONArrays(data)
+	return data
+}
+
+func sortJSONArrays(v any) {
+	switch val := v.(type) {
+	case []any:
+		for _, elem := range val {
+			sortJSONArrays(elem)
+		}
+		sort.SliceStable(val, func(i, j int) bool {
+			bi, _ := json.Marshal(val[i])
+			bj, _ := json.Marshal(val[j])
+			return string(bi) < string(bj)
+		})
+	case map[string]any:
+		for _, vv := range val {
+			sortJSONArrays(vv)
+		}
+	}
 }
