@@ -22,6 +22,7 @@ export enum GraphNodeTypes {
     AZDevice = 'AZDevice',
     AZFunctionApp = 'AZFunctionApp',
     AZGroup = 'AZGroup',
+    AZGroup365 = 'AZGroup365',
     AZKeyVault = 'AZKeyVault',
     AZManagementGroup = 'AZManagementGroup',
     AZResourceGroup = 'AZResourceGroup',

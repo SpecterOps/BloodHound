@@ -99,6 +99,10 @@ func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityS
 									stat.Groups = int(count)
 									aggregation.Groups += int(count)
 
+								case azure.Group365:
+									stat.Groups365 = int(count)
+									aggregation.Groups365 += int(count)
+
 								case azure.App:
 									stat.Apps = int(count)
 									aggregation.Apps += int(count)

@@ -216,6 +216,12 @@ export const AllEdgeTypes: Category[] = [
                 name: 'Cross Platform',
                 edgeTypes: [AzureRelationshipKind.SyncedToADUser],
             },
+            {
+                name: 'Social Engineering',
+                edgeTypes: [
+                    AzureRelationshipKind.WorkWith,
+                ],
+            },
         ],
     },
 ];

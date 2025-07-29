@@ -156,6 +156,13 @@ UserPrincipalName: types.#StringEnum & {
 	representation: "userprincipalname"
 }
 
+UserDepartment: types.#StringEnum & {
+	symbol:         "UserDepartment"
+	schema:         "azure"
+	name:           "User Department"
+	representation: "userdepartment"
+}
+
 IsAssignableToRole: types.#StringEnum & {
 	symbol:         "IsAssignableToRole"
 	schema:         "azure"
@@ -254,6 +261,21 @@ TenantID: types.#StringEnum & {
 	representation: "tenantid"
 }
 
+Visibility: types.#StringEnum & {
+	symbol:         "Visibility"
+	schema:         "azure"
+	name:           "Visibility"
+	representation: "visibility"
+}
+
+M365GroupMail: types.#StringEnum & {
+	symbol:         "Mail"
+	schema:         "azure"
+	name:           "M365 Group Mail"
+	representation: "mail"
+}
+
+
 RoleDefinitionId: types.#StringEnum & {
 	symbol:         "RoleDefinitionId"
 	schema:         "azure"
@@ -340,10 +362,13 @@ Properties: [
 	LoginURL,
 	MFAEnforced,
 	UserPrincipalName,
+	UserDepartment,
 	IsAssignableToRole,
 	PublisherDomain,
 	SignInAudience,
 	RoleTemplateID,
+	Visibility,
+	M365GroupMail,
 	RoleDefinitionId,
 	EndUserAssignmentRequiresApproval,
 	EndUserAssignmentRequiresCAPAuthenticationContext,
@@ -395,6 +420,12 @@ Group: types.#Kind & {
 	symbol:         "Group"
 	schema:         "azure"
 	representation: "AZGroup"
+}
+
+Group365: types.#Kind & {
+	symbol:         "Group365"
+	schema:         "azure"
+	representation: "AZGroup365"
 }
 
 KeyVault: types.#Kind & {
@@ -483,6 +514,7 @@ NodeKinds: [
 	Device,
 	FunctionApp,
 	Group,
+	Group365,
 	KeyVault,
 	ManagementGroup,
 	ResourceGroup,
@@ -792,6 +824,12 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
+WorkWith: types.#Kind & {
+	symbol:			"WorkWith"
+	schema:			"azure"
+	representation:	"AZUserInteraction"
+}
+
 AZRoleEligible: types.#Kind & {
 	symbol: "AZRoleEligible"
 	schema: "azure"
@@ -852,6 +890,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	WorkWith,
 	AZRoleEligible,
 	AZRoleApprover,
 ]
@@ -954,6 +993,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	WorkWith,
 	AZRoleEligible,
 	AZRoleApprover
 ]

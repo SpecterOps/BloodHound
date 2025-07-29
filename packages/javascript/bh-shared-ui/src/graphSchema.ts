@@ -829,6 +829,7 @@ export enum AzureNodeKind {
     Device = 'AZDevice',
     FunctionApp = 'AZFunctionApp',
     Group = 'AZGroup',
+    Group365 = 'AZGroup365',
     KeyVault = 'AZKeyVault',
     ManagementGroup = 'AZManagementGroup',
     ResourceGroup = 'AZResourceGroup',
@@ -859,6 +860,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'FunctionApp';
         case AzureNodeKind.Group:
             return 'Group';
+        case AzureNodeKind.Group365:
+            return 'Group365';
         case AzureNodeKind.KeyVault:
             return 'KeyVault';
         case AzureNodeKind.ManagementGroup:
@@ -937,6 +940,7 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    WorkWith = 'AZUserInteraction',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
 }
@@ -1036,6 +1040,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.WorkWith: 
+            return 'WorkWith';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
@@ -1074,10 +1080,13 @@ export enum AzureKindProperties {
     LoginURL = 'loginurl',
     MFAEnforced = 'mfaenforced',
     UserPrincipalName = 'userprincipalname',
+    UserDepartment = 'userdepartment',
     IsAssignableToRole = 'isassignabletorole',
     PublisherDomain = 'publisherdomain',
     SignInAudience = 'signinaudience',
     RoleTemplateID = 'templateid',
+    Visibility = 'visibility',
+    Mail = 'mail',
     RoleDefinitionId = 'roledefinitionid',
     EndUserAssignmentRequiresApproval = 'enduserassignmentrequiresapproval',
     EndUserAssignmentRequiresCAPAuthenticationContext = 'enduserassignmentrequirescapauthenticationcontext',
@@ -1145,6 +1154,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'MFA Enforced';
         case AzureKindProperties.UserPrincipalName:
             return 'User Principal Name';
+        case AzureKindProperties.UserDepartment:
+            return 'User Department';
         case AzureKindProperties.IsAssignableToRole:
             return 'Is Role Assignable';
         case AzureKindProperties.PublisherDomain:
@@ -1153,6 +1164,10 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Sign In Audience';
         case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
+        case AzureKindProperties.Visibility:
+            return 'Visibility';
+        case AzureKindProperties.Mail:
+            return 'M365 Group Mail';
         case AzureKindProperties.RoleDefinitionId:
             return 'Role Definition Id';
         case AzureKindProperties.EndUserAssignmentRequiresApproval:
@@ -1213,6 +1228,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.WorkWith,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,

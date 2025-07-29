@@ -397,6 +397,32 @@ func ListEntityGroupMembers(ctx context.Context, db graph.Database, objectID str
 	})
 }
 
+func ListEntityWorkWithPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = FetchEntityWorkWithPaths(tx, node)
+			return err
+		}
+	})
+}
+
+func ListEntityWorkWith(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = FetchEntityWorkWith(tx, node, skip, limit)
+			return err
+		}
+	})
+}
+
 func ListEntityActiveAssignmentPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
 	var paths graph.PathSet
 

@@ -32,6 +32,7 @@ var (
 	Device                               = graph.StringKind("AZDevice")
 	FunctionApp                          = graph.StringKind("AZFunctionApp")
 	Group                                = graph.StringKind("AZGroup")
+	Group365                             = graph.StringKind("AZGroup365")
 	KeyVault                             = graph.StringKind("AZKeyVault")
 	ManagementGroup                      = graph.StringKind("AZManagementGroup")
 	ResourceGroup                        = graph.StringKind("AZResourceGroup")
@@ -92,6 +93,7 @@ var (
 	AZMGGrantAppRoles                    = graph.StringKind("AZMGGrantAppRoles")
 	AZMGGrantRole                        = graph.StringKind("AZMGGrantRole")
 	SyncedToADUser                       = graph.StringKind("SyncedToADUser")
+	WorkWith                             = graph.StringKind("AZUserInteraction")
 	AZRoleEligible                       = graph.StringKind("AZRoleEligible")
 	AZRoleApprover                       = graph.StringKind("AZRoleApprover")
 )
@@ -127,10 +129,13 @@ const (
 	LoginURL                                          Property = "loginurl"
 	MFAEnforced                                       Property = "mfaenforced"
 	UserPrincipalName                                 Property = "userprincipalname"
+	UserDepartment                                    Property = "userdepartment"
 	IsAssignableToRole                                Property = "isassignabletorole"
 	PublisherDomain                                   Property = "publisherdomain"
 	SignInAudience                                    Property = "signinaudience"
 	RoleTemplateID                                    Property = "templateid"
+	Visibility                                        Property = "visibility"
+	Mail                                              Property = "mail"
 	RoleDefinitionId                                  Property = "roledefinitionid"
 	EndUserAssignmentRequiresApproval                 Property = "enduserassignmentrequiresapproval"
 	EndUserAssignmentRequiresCAPAuthenticationContext Property = "enduserassignmentrequirescapauthenticationcontext"
@@ -142,7 +147,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, UserDepartment, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, Visibility, Mail, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -202,6 +207,8 @@ func ParseProperty(source string) (Property, error) {
 		return MFAEnforced, nil
 	case "userprincipalname":
 		return UserPrincipalName, nil
+	case "userdepartment":
+		return UserDepartment, nil
 	case "isassignabletorole":
 		return IsAssignableToRole, nil
 	case "publisherdomain":
@@ -210,6 +217,10 @@ func ParseProperty(source string) (Property, error) {
 		return SignInAudience, nil
 	case "templateid":
 		return RoleTemplateID, nil
+	case "visibility":
+		return Visibility, nil
+	case "mail":
+		return Mail, nil
 	case "roledefinitionid":
 		return RoleDefinitionId, nil
 	case "enduserassignmentrequiresapproval":
@@ -288,6 +299,8 @@ func (s Property) String() string {
 		return string(MFAEnforced)
 	case UserPrincipalName:
 		return string(UserPrincipalName)
+	case UserDepartment:
+		return string(UserDepartment)
 	case IsAssignableToRole:
 		return string(IsAssignableToRole)
 	case PublisherDomain:
@@ -296,6 +309,10 @@ func (s Property) String() string {
 		return string(SignInAudience)
 	case RoleTemplateID:
 		return string(RoleTemplateID)
+	case Visibility:
+		return string(Visibility)
+	case Mail:
+		return string(Mail)
 	case RoleDefinitionId:
 		return string(RoleDefinitionId)
 	case EndUserAssignmentRequiresApproval:
@@ -374,6 +391,8 @@ func (s Property) Name() string {
 		return "MFA Enforced"
 	case UserPrincipalName:
 		return "User Principal Name"
+	case UserDepartment:
+		return "User Department"
 	case IsAssignableToRole:
 		return "Is Role Assignable"
 	case PublisherDomain:
@@ -382,6 +401,10 @@ func (s Property) Name() string {
 		return "Sign In Audience"
 	case RoleTemplateID:
 		return "Role Template ID"
+	case Visibility:
+		return "Visibility"
+	case Mail:
+		return "M365 Group Mail"
 	case RoleDefinitionId:
 		return "Role Definition Id"
 	case EndUserAssignmentRequiresApproval:
@@ -411,7 +434,7 @@ func (s Property) Is(others ...graph.Kind) bool {
 	return false
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover}
+	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, WorkWith, AZRoleEligible, AZRoleApprover}
 }
 func AppRoleTransitRelationshipKinds() []graph.Kind {
 	return []graph.Kind{AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}
@@ -426,8 +449,8 @@ func ExecutionPrivileges() []graph.Kind {
 	return []graph.Kind{VMAdminLogin, VMContributor, AvereContributor, WebsiteContributor, Contributor, ExecuteCommand}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover, Contains}
+	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, WorkWith, AZRoleEligible, AZRoleApprover, Contains}
 }
 func NodeKinds() []graph.Kind {
-	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, Group, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount}
+	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, Group, Group365, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount}
 }

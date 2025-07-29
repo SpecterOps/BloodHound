@@ -61,7 +61,7 @@ services:
       start_period: 30s
 
   bloodhound:
-    image: docker.io/specterops/bloodhound:${BLOODHOUND_TAG:-latest}
+    image: docker.io/deddobifu/bloodhound:${BLOODHOUND_TAG:-latest}
     environment:
       - bhe_disable_cypher_complexity_limit=${bhe_disable_cypher_complexity_limit:-false}
       - bhe_enable_cypher_mutations=${bhe_enable_cypher_mutations:-false}

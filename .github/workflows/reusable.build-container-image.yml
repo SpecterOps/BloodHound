@@ -167,12 +167,6 @@ on:
         required: true
       dockerhub_token:
         required: true
-      ghcr_account:
-        required: true
-      ghcr_token:
-        required: true
-      gh_access_token:
-        required: true
     outputs:
       image_reference:
         value: ${{ jobs.build-container-image.outputs.image_reference }}
@@ -190,22 +184,13 @@ jobs:
       - name: Checkout Source Code Repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          fetch-tags: true
           submodules: recursive
 
       # TODO: don't pull actions but instead reference them from the source repo
       # May need to adjust repo actions permissions to allow access from other org repos
       # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-access-to-components-in-a-private-repository
-      - if: ${{ github.repository != 'SpecterOps/BloodHound' }}
-        name: Checkout Reusable Workflows and Composite Actions
-        uses: actions/checkout@v4
-        with:
-          clean: false
-          repository: SpecterOps/BloodHound
-          ref: main
-          token: ${{ secrets.gh_access_token }}
-          sparse-checkout-cone-mode: false
-          sparse-checkout: .github/actions
-
       - id: container-image-metadata
         uses: ./.github/actions/container-image-metadata
         with:
@@ -221,8 +206,8 @@ jobs:
         with:
           dockerhub_account: ${{ secrets.dockerhub_account }}
           dockerhub_token: ${{ secrets.dockerhub_token }}
-          ghcr_account: ${{ secrets.ghcr_account }}
-          ghcr_token: ${{ secrets.ghcr_token }}
+          ghcr_account: ""
+          ghcr_token: ""
           build_args: |
             BUILDTIME=${{ fromJSON(steps.container-image-metadata.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ steps.container-image-metadata.outputs.version }}

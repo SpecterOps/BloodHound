@@ -14,6 +14,16 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Migration to add `Microsoft 365 groups` column to relevant tables
+
+-- Add `groups365` column to `azure_data_quality_aggregations` table
+ALTER TABLE IF EXISTS azure_data_quality_aggregations
+    ADD COLUMN groups365 bigint;
+
+-- Add `groups365` column to `azure_data_quality_stats` table
+ALTER TABLE IF EXISTS azure_data_quality_stats
+    ADD COLUMN groups365 bigint;-- Copyright 2025 Specter Ops, Inc.
+
 ALTER TABLE asset_group_history
 	ADD COLUMN IF NOT EXISTS email VARCHAR(330) DEFAULT NULL;
 

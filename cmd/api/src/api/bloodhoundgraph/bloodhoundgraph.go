@@ -150,6 +150,10 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: "fa-users",
 		}
+	case "AZGroup365":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fa-users",
+		}
 	case "AZKeyVault":
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: "fa-lock",
@@ -319,6 +323,8 @@ func (s *BloodHoundGraphNode) SetBackground(nType string) {
 		s.Color = "#17E625"
 	case "Group":
 		s.Color = "#DBE617"
+	case "AZGroup365":
+		s.Color = "#34D2EB"
 	case "Computer":
 		s.Color = "#E67873"
 	case "Container":

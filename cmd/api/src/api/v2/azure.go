@@ -45,6 +45,7 @@ const (
 	entityTypeBase                = "az-base"
 	entityTypeUsers               = "users"
 	entityTypeGroups              = "groups"
+	entityTypeGroups365           = "groups365"
 	entityTypeTenants             = "tenants"
 	entityTypeManagementGroups    = "management-groups"
 	entityTypeSubscriptions       = "subscriptions"
@@ -150,6 +151,12 @@ func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, 
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(executionPrivileges), executionPrivileges.Len(), nil
 		}
+	case azure.RelatedEntityTypeWorkWith:
+		if workWith, err := azure.ListEntityWorkWithPaths(ctx, db, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(workWith), workWith.Len(), nil
+		}
 
 	case azure.RelatedEntityTypeOutboundAbusableAppRoleAssignments:
 		if objectControl, err := azure.ListEntityAbusableAppRoleAssignmentsPaths(ctx, db, objectID, graph.DirectionOutbound); err != nil {
@@ -242,6 +249,12 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 		if nodeSet, err = azure.ListEntityGroupMembership(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
+
+	case azure.RelatedEntityTypeWorkWith:
+		if nodeSet, err = azure.ListEntityWorkWith(ctx, db, objectID, 0, 0); err != nil {
+			return nil, 0, err
+		}
+
 	case azure.RelatedEntityTypeRoles:
 		if nodeSet, err = azure.ListEntityRoles(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
@@ -347,6 +360,9 @@ func GetAZEntityInformation(ctx context.Context, db graph.Database, entityType, 
 
 	case entityTypeGroups:
 		return azure.GroupEntityDetails(db, objectID, hydrateCounts)
+
+	case entityTypeGroups365:
+		return azure.Group365EntityDetails(db, objectID, hydrateCounts)
 
 	case entityTypeTenants:
 		return azure.TenantEntityDetails(db, objectID, hydrateCounts)

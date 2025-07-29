@@ -212,6 +212,11 @@ type Group struct {
 	Members []TypedPrincipal
 }
 
+type Group365 struct {
+	IngestBase
+	Members []TypedPrincipal
+}
+
 type User struct {
 	IngestBase
 	AllowedToDelegate       []TypedPrincipal
