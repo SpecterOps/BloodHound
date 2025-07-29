@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { AssetGroupMember } from './responses';
+
 export interface Serial {
     id: number;
     created_at: string;
@@ -114,6 +116,12 @@ export interface AssetGroupTagSelectorSeed {
     selector_id: number;
     type: SeedTypes;
     value: string;
+}
+
+export interface AssetGroupSearch {
+    tags: AssetGroupTag[];
+    selectors: AssetGroupTagSelector[];
+    members: AssetGroupMember[];
 }
 
 export const AssetGroupTagCertifiedMap = {
