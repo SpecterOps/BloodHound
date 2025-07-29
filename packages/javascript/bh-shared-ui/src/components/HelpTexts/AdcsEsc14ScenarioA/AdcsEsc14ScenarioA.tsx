@@ -160,7 +160,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {
-                    'Certify.exe request --ca:ca01.forestroot.com\\Forestroot-CA01-CA --template:Machine --machine --output-pem'
+                    'Certify.exe request --ca ca01.forestroot.com\\Forestroot-CA01-CA --template Machine --machine --output-pem'
                 }
             </Typography>
             <Typography variant='body2'>
