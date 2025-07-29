@@ -1,5 +1,12 @@
 import { Button, Input } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeTier } from 'js-client-library';
+import {
+    AssetGroupTagTypeLabel,
+    AssetGroupTagTypeTier,
+    AssetGroupSearch,
+    AssetGroupTag,
+    AssetGroupTagSelector,
+    AssetGroupMember,
+} from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
@@ -13,14 +20,11 @@ type SearchBarProps = {
     labelId: string;
 };
 
-type Item = {
-    id: number;
-    name: string;
-};
-
 type SectorKey = 'tags' | 'selectors' | 'members';
 
 type Sector = 'Tiers' | 'Selectors' | 'Objects';
+
+type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupMember;
 
 const sectorMap: Record<Sector, SectorKey> = {
     Tiers: 'tags',
@@ -31,7 +35,11 @@ const sectorMap: Record<Sector, SectorKey> = {
 const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
-    const [results, setResults] = useState<Record<SectorKey, Item[]>>({ tags: [], selectors: [], members: [] });
+    const [results, setResults] = useState<AssetGroupSearch>({
+        tags: [],
+        selectors: [],
+        members: [],
+    });
     const navigate = useAppNavigate();
     const { tierId, labelId } = useParams();
     const inputRef = React.useRef<HTMLDivElement>(null);
@@ -76,21 +84,24 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleClick = (sector: Sector, item: Item) => {
+    const handleClick = (sector: Sector, item: SearchItem) => {
         setOpen(false);
         setQuery('');
         let url = '';
         const base = getTagUrlValue(labelId);
 
         if (sector === 'Tiers') {
-            url = `/zone-management/details/${base}/${item.asset_group_tag_id}`;
+            const tag = item as AssetGroupTag;
+            url = `/zone-management/details/${base}/${tag.id}`;
         } else if (sector === 'Selectors') {
-            url = `/zone-management/details/${base}/${item.asset_group_tag_id}/selector/${item.id}`;
+            const selector = item as AssetGroupTagSelector;
+                url = `/zone-management/details/${base}/${selector.asset_group_tag_id}/selector/${selector.id}`;
         } else if (sector === 'Objects') {
+            const member = item as AssetGroupMember;
             if (selectorId) {
-                url = `/zone-management/details/${base}/${labelId}/selector/${selectorId}/member/${item.id}`;
+                url = `/zone-management/details/${base}/${labelId}/selector/${selectorId}/member/${member.object_id}`;
             } else {
-                url = `/zone-management/details/${base}/${item.asset_group_tag_id}/member/${item.id}`;
+                url = `/zone-management/details/${base}/${member.tag_id}/member/${member.object_id}`;
             }
         }
         navigate(url);
@@ -113,20 +124,20 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
                 />
             </div>
             {open && (
-                <div className='absolute min-w-lg bg-neutral-light-2 dark:bg-neutral-dark-2 border border-neutral-light-5 dark:border-neutral-dark-5 z-10'>
+                <div className='absolute w-[512px] bg-neutral-light-2 dark:bg-neutral-dark-2 border border-neutral-light-5 dark:border-neutral-dark-5 z-10'>
                     {(['Tiers', 'Selectors', 'Objects'] as Sector[]).map((sector) => (
                         <div key={sector}>
                             <p className='font-bold'>{sector}</p>
                             {results[sectorMap[sector]].length > 0 ? (
                                 <ul>
-                                    {results[sectorMap[sector]].map((item, index: number) => (
+                                    {results[sectorMap[sector]].map((item: SearchItem, index: number) => (
                                         <li
-                                            className={cn('flex overflow-hidden max-w-lg', {
+                                            className={cn('flex max-w-lg min-w-0', {
                                                 'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
                                             })}
-                                            key={item.id}>
+                                            key={index}>
                                             <Button
-                                                className='max-w-full overflow-hidden'
+                                                className='overflow-hidden'
                                                 variant={'text'}
                                                 onClick={() => handleClick(sector, item)}>
                                                 <span className='truncate'>{item.name}</span>

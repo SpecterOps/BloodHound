@@ -19,6 +19,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import EntityObjectInformation from './EntityObjectInformation';
 import SelectorList from './SelectorList';
+import LabelList from './LabelList';
 
 export interface EntityInfoContentProps {
     id: number;
@@ -33,7 +34,12 @@ const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (
         <Box>
             <EntityObjectInformation {...props} />
-            {tagId !== undefined && memberId !== undefined && <SelectorList tagId={tagId} memberId={memberId} />}
+            {tagId !== undefined && memberId !== undefined && (
+                <>
+                    <SelectorList tagId={tagId} memberId={memberId} />
+                    <LabelList tagId={tagId} memberId={memberId} />
+                </>
+            )}
         </Box>
     );
 };
