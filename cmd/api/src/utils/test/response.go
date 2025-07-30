@@ -160,7 +160,7 @@ func sortJSONArrays(v any) {
 				// Check if sa comes before sb in order
 				if sa < sb {
 					return -1
-				// Check if sa comes after sb in order
+					// Check if sa comes after sb in order
 				} else if sa > sb {
 					return 1
 				}
@@ -183,4 +183,3 @@ func sortJSONArrays(v any) {
 		}
 	}
 }
-
