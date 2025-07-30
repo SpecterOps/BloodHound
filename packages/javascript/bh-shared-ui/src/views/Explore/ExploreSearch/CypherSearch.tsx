@@ -30,6 +30,7 @@ import {
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
+import ConfirmUpdateQueryDialog from './ConfirmSaveQueryDialog';
 import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
@@ -71,6 +72,7 @@ const CypherSearch = ({
         showMessage: false,
         message: '',
     });
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     const [sharedIds, setSharedIds] = useState<string[]>([]);
 
@@ -218,6 +220,13 @@ const CypherSearch = ({
         setShowSaveQueryDialog(true);
     };
 
+    const handleConfirm = () => {
+        console.log('handleConfirm');
+    };
+    const handleCancelConfirm = () => {
+        console.log('handleCancelConfirm');
+    };
+
     return (
         <>
             <div className='flex flex-col h-full'>
@@ -326,6 +335,12 @@ const CypherSearch = ({
                 selectedQuery={selectedQuery}
                 sharedIds={sharedIds}
                 setSharedIds={setSharedIds}
+            />
+            <ConfirmUpdateQueryDialog
+                handleCancel={handleCancelConfirm}
+                handleApply={handleConfirm}
+                open={isConfirmOpen}
+                dialogContent={'Are you sure you want to update this query?'}
             />
         </>
     );
