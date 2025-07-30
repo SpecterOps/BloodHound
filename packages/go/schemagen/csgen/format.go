@@ -93,7 +93,7 @@ func formatValue(builder *OutputBuilder, value any) error {
 		builder.Write(strconv.FormatBool(typedValue))
 
 	case float32:
-		builder.Write(strconv.FormatFloat(float64(typedValue), 'f', -1, 64))
+		builder.Write(strconv.FormatFloat(float64(typedValue), 'f', -1, 32))
 
 	case float64:
 		builder.Write(strconv.FormatFloat(typedValue, 'f', -1, 64))
