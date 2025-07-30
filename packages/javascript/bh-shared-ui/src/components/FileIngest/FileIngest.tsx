@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import { FC, useState } from 'react';
-import { useMountEffect, usePermissions } from '../../hooks';
+import { useExecuteOnFileDrag, useMountEffect, usePermissions } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
@@ -50,6 +50,11 @@ const FileIngest: FC = () => {
     };
 
     useMountEffect(effect);
+
+    // Open the file upload dialog when a processable file is dragged into the browser client
+    useExecuteOnFileDrag(() => setFileUploadDialogOpen(true), {
+        acceptedTypes: ['application/json', 'application/zip'],
+    });
 
     const toggleFileUploadDialog = () => setFileUploadDialogOpen((prev) => !prev);
 

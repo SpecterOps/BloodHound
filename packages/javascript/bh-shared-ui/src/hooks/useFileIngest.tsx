@@ -17,6 +17,8 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
 
+export type AcceptedIngestType = 'application/json' | 'application/zip';
+
 export const listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
     apiClient.listFileIngestJobs(skip, limit, sortBy).then((res) => res.data);
 
