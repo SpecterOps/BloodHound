@@ -16,15 +16,16 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, useExecuteOnFileDrag } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
+import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles({
@@ -41,6 +42,8 @@ const Content: React.FC = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -48,6 +51,18 @@ const Content: React.FC = () => {
             dispatch(ListAssetGroups());
         }
     }, [authState, isFullyAuthenticated, dispatch]);
+
+    const isAtIngestRoute = () => location.pathname !== ROUTE_ADMINISTRATION_FILE_INGEST;
+
+    const navigateToIngest = () => {
+        navigate(ROUTE_ADMINISTRATION_FILE_INGEST);
+    };
+
+    // Redirect to file ingest when a processable file is dragged into the browser client
+    useExecuteOnFileDrag(navigateToIngest, {
+        acceptedTypes: ['application/json', 'application/zip'],
+        condition: isAtIngestRoute,
+    });
 
     return (
         <Box className={classes.content}>
