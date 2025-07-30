@@ -19,7 +19,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
-import { useExploreGraph } from '../../hooks/useExploreGraph';
 import {
     compareForExploreTableSort,
     getExploreTableData,
@@ -40,19 +39,17 @@ const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
 
 type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuClick' | 'selectedColumns'> & {
     searchInput: string;
+    exploreTableData: ReturnType<typeof getExploreTableData>;
 };
 
 const useExploreTableRowsAndColumns = ({
     onKebabMenuClick,
     searchInput,
     selectedColumns,
+    exploreTableData,
 }: UseExploreTableRowsAndColumnsProps) => {
-    const { data: graphData } = useExploreGraph();
-
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
-
-    const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
 
     const rows = useMemo(
         () =>

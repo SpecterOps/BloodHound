@@ -16,10 +16,10 @@
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { isGraphResponse, useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
+import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn, exportToJson } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import { ExploreTableProps, MungedTableRowWithId, getExploreTableData, requiredColumns } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -70,10 +70,12 @@ const ExploreTable = ({
         [setSearchInput]
     );
 
+    const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
         searchInput,
         selectedColumns,
+        exploreTableData,
     });
 
     const searchInputProps = useMemo(
@@ -86,10 +88,10 @@ const ExploreTable = ({
     );
 
     const handleDownloadClick = useCallback(() => {
-        if (graphData && isGraphResponse(graphData)) {
-            exportToJson({ nodes: graphData.data.nodes });
+        if (exploreTableData?.nodes) {
+            exportToJson({ nodes: exploreTableData?.nodes });
         }
-    }, [graphData]);
+    }, [exploreTableData?.nodes]);
 
     const handleRowClick = useCallback(
         (row: MungedTableRowWithId) => {

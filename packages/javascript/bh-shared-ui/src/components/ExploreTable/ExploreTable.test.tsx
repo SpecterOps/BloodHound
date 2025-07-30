@@ -20,7 +20,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
-import { cypherResponse } from '../../mocks';
+import { cypherTestResponse } from '../../mocks';
 import { render } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
@@ -36,7 +36,7 @@ const getFirstCellOfType = (type: string) => screen.getAllByTestId(`table-cell-$
 
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.json(cypherResponse));
+        return res(ctx.json(cypherTestResponse));
     }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200), ctx.json({ data: [{ key: 'explore_table_view', enabled: true }] }));
@@ -178,7 +178,7 @@ describe('ExploreTable', async () => {
 
         await user.click(downloadButton);
 
-        expect(exportToJsonSpy).toBeCalledWith({ nodes: cypherResponse.data.nodes });
+        expect(exportToJsonSpy).toBeCalledWith({ nodes: cypherTestResponse.data.nodes });
     });
 
     it('Close button click causes the callback function to be called', async () => {

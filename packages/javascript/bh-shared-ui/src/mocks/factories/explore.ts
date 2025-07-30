@@ -1,6 +1,6 @@
 import { GraphData } from 'js-client-library';
 
-export const cypherResponse: { data: GraphData } = {
+export const cypherTestResponse: { data: GraphData } = {
     data: {
         node_keys: [
             'admincount',
