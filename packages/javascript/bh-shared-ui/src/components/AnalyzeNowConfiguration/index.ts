@@ -14,28 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build serial_integration
-// +build serial_integration
+import AnalyzeNowConfiguration from './AnalyzeNowConfiguration';
 
-package v2
-
-import (
-	"context"
-	"testing"
-
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/stretchr/testify/require"
-)
-
-func Test_ListKinds(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		graphDB = integration.OpenGraphDB(t, graphschema.DefaultGraphSchema())
-	)
-	defer graphDB.Close(testCtx)
-
-	kinds, err := graphDB.FetchKinds(testCtx)
-	require.NoError(t, err)
-	require.True(t, len(kinds) > 0)
-}
+export default AnalyzeNowConfiguration;

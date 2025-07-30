@@ -15,8 +15,8 @@ set positional-arguments
 
 # generate generic graph files
 [no-cd]
-bh-graphify path="" outpath="":
-  @go run github.com/specterops/bloodhound/packages/go/graphify --path={{path}} --outpath={{outpath}}
+bh-graphify path="":
+  @go run github.com/specterops/bloodhound/packages/go/graphify --path={{path}}
 
 # run st bernard directly
 stbernard *ARGS:

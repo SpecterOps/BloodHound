@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package apiclient
-
-import (
-	"net/http"
-
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-)
-
-func (s Client) Version() (map[string]any, error) {
-	version := make(map[string]any)
-	if response, err := s.Request(http.MethodGet, "api/version", nil, nil); err != nil {
-		return version, err
-	} else {
-		defer response.Body.Close()
-
-		if api.IsErrorResponse(response) {
-			return version, ReadAPIError(response)
-		}
-
-		return version, api.ReadAPIV2ResponsePayload(&version, response)
-	}
-}
+export * from './InfiniteQueryFixedList';

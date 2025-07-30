@@ -95,13 +95,7 @@ func IsErrorResponse(response *http.Response) bool {
 	return response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices
 }
 
-// ErrorResponse is the V1 response
-type ErrorResponse struct {
-	HTTPStatus int
-	Error      any
-}
-
-// ErrorWrapper is the V2 response
+// ErrorWrapper is the standard API response structure
 type ErrorWrapper struct {
 	HTTPStatus int            `json:"http_status"`
 	Timestamp  time.Time      `json:"timestamp"`

@@ -5325,6 +5325,17 @@
         ],
         "parameters": [
           {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
@@ -5415,6 +5426,19 @@
           "Asset Isolation",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -6202,7 +6226,7 @@
         }
       }
     },
-    "/api/v2/asset-group-tags/history": {
+    "/api/v2/asset-group-tags-history": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -15843,7 +15867,7 @@
             "name": "from",
             "deprecated": true,
             "x-go-name": "fromDeprecated",
-            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
+            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15854,7 +15878,7 @@
             "name": "to",
             "deprecated": true,
             "x-go-name": "toDeprecated",
-            "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
+            "description": "Upper bound for created_at; to return posture stats upto a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15870,6 +15894,13 @@
           },
           {
             "name": "exposure_index",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
@@ -15897,7 +15928,28 @@
             }
           },
           {
-            "$ref": "#/components/parameters/query.asset-group-tag-id"
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "deleted_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
           }
         ],
         "responses": {
@@ -17975,6 +18027,9 @@
             "type": "integer"
           },
           "object_id": {
+            "type": "string"
+          },
+          "environment_id": {
             "type": "string"
           },
           "primary_kind": {

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package integration
+import Abuse from './Abuse';
+import General from './General';
+import Opsec from './Opsec';
+import References from './References';
 
-import (
-	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apiclient"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
-)
+const ClaimSpecialIdentity = {
+    general: General,
+    abuse: Abuse,
+    opsec: Opsec,
+    references: References,
+};
 
-func (s *Context) NewAPIClientWithToken(token model.AuthToken) apiclient.Client {
-	return s.NewAPIClient(&apiclient.TokenCredentialsHandler{
-		TokenID:  token.ID.String(),
-		TokenKey: token.Key,
-	})
-}
+export default ClaimSpecialIdentity;
