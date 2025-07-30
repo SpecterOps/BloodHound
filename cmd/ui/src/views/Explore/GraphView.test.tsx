@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { cypherTestResponse } from 'bh-shared-ui';
+import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createFeatureFlags } from 'src/mocks/factories/featureFlags';
@@ -89,7 +90,14 @@ describe('GraphView', () => {
     });
 
     it('renders a graph if the query has any node edges', async () => {
-        const clonedCypherResponse = Object.assign({}, cypherTestResponse);
+        const tempEdges: Array<GraphEdge> = [];
+        const clonedCypherResponse = {
+            ...cypherTestResponse,
+            data: {
+                ...cypherTestResponse.data,
+                edges: tempEdges,
+            },
+        };
 
         clonedCypherResponse.data.edges.push({
             source: '108',
