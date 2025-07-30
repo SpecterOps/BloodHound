@@ -38,7 +38,7 @@ const (
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
 type AssetGroupTagData interface {
-	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
+	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error)
 	UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error)
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
@@ -214,7 +214,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user mod
 
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	var tag model.AssetGroupTag
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
 		return model.AssetGroupTag{}, CheckError(result)
 	} else {
 		return tag, nil
@@ -225,7 +225,7 @@ func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]mode
 	var tags model.AssetGroupTags
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
 			model.AssetGroupTag{}.TableName(),
 		), model.AssetGroupTagTypeTier,
 	).Find(&tags); result.Error != nil {
@@ -243,7 +243,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE deleted_at IS NULL%s ORDER BY name ASC",
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE deleted_at IS NULL%s ORDER BY name ASC",
 			model.AssetGroupTag{}.TableName(),
 			sqlFilter.SQLString,
 		),
@@ -282,7 +282,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagId
 	return counts, nil
 }
 
-func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
+func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error) {
 	var (
 		userIdStr = user.ID.String()
 		tag       = model.AssetGroupTag{
@@ -293,6 +293,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			Description:    description,
 			Position:       position,
 			RequireCertify: requireCertify,
+			Glyph:          glyph,
 		}
 
 		auditEntry = model.AuditEntry{
@@ -339,9 +340,9 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			WITH inserted_kind AS (
 				INSERT INTO %s (name) VALUES (?) RETURNING id
 			)
-			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled)
-			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?)
-			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled
+			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph)
+			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?, ?)
+			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph
 			`, kindTable, tag.TableName())
 
 		if result := tx.Raw(query,
@@ -354,6 +355,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			tag.Position,
 			requireCertify,
 			tag.AnalysisEnabled,
+			tag.Glyph,
 		).Scan(&tag); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"kind_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateKindName, result.Error)
@@ -427,6 +429,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 					position = ?,
 					require_certify = ?,
 					analysis_enabled = ?,
+					glyph = ?,
 					updated_at = NOW(),
 					updated_by = ?
 				WHERE id = ?`,
@@ -437,6 +440,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			newPosition, // this is the same as tag.Position for non-tiers
 			tag.RequireCertify,
 			tag.AnalysisEnabled,
+			tag.Glyph,
 			user.ID.String(),
 			tag.ID,
 		); result.Error != nil {
