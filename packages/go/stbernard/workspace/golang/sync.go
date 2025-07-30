@@ -29,7 +29,7 @@ import (
 // TidyModules runs go mod tidy for all module paths passed
 func TidyModules(modPath string, env environment.Environment) error {
 	var (
-		command = "go"
+		command = environment.GoCommand()
 		args    = []string{"mod", "tidy"}
 	)
 
@@ -44,7 +44,7 @@ func TidyModules(modPath string, env environment.Environment) error {
 // variables
 func SyncWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "go"
+		command = environment.GoCommand()
 		args    = []string{"work", "sync"}
 	)
 

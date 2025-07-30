@@ -29,7 +29,7 @@ func RunGoImports(env environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	cmd := "go"
+	cmd := environment.GoCommand()
 	args := []string{"tool", "goimports", "-w", rootDir}
 
 	if _, err := cmdrunner.Run(cmd, args, rootDir, env); err != nil {

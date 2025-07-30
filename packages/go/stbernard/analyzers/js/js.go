@@ -69,7 +69,7 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 		esLintEntries []esLintEntry
 		output        *bytes.Buffer
 
-		command = "yarn"
+		command = environment.YarnCommand()
 		args    = []string{"run", "lint", "--quiet", "--format", "json"}
 	)
 

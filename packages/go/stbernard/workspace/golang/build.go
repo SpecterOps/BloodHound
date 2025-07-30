@@ -62,7 +62,7 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 		errs []error
 		mu   sync.Mutex
 
-		command             = "go"
+		command             = environment.GoCommand()
 		majorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.majorVersion=%d'", version.Major())
 		minorString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.minorVersion=%d'", version.Minor())
 		patchString         = fmt.Sprintf("-X 'github.com/specterops/bloodhound/cmd/api/src/version.patchVersion=%d'", version.Patch())

@@ -61,7 +61,8 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 }
 
 func moduleListPackages(modPath string) ([]GoPackage, error) {
-	if result, err := cmdrunner.Run("go", []string{"list", "-json", "./..."}, modPath, environment.NewEnvironment()); err != nil {
+	if result, err := cmdrunner.Run(environment.GoCommand(),
+			[]string{"list", "-json", "./..."}, modPath, environment.NewEnvironment()); err != nil {
 		return nil, fmt.Errorf("running go mod list: %w", err)
 	} else {
 		var (
