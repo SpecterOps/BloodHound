@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Run Tests
+name: Run Slow Go Tests
 
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
         run: |
           export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
           go tool stbernard deps
-          go tool stbernard test -i -tags integration,serial_integration,slow_integration
+          go tool stbernard test -g -i -tags integration,serial_integration,slow_integration
 
       - name: Neo4j Debug Logs
         if: failure()
