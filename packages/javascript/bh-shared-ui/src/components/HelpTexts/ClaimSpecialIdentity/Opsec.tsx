@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectorSeedRequest } from 'js-client-library';
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-export interface SelectorFormInputs {
-    name: string;
-    description: string;
-    seeds: SelectorSeedRequest[];
-    disabled?: boolean | string;
-}
+const Opsec: FC = () => {
+    return <Typography variant='body2'>No OPSEC considerations are available for this edge.</Typography>;
+};
+
+export default Opsec;

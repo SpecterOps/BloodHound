@@ -44,6 +44,7 @@ import (
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -1349,7 +1350,7 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 		})
 }
 
-func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
+func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -1404,6 +1405,33 @@ func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
+				Name: "Success with environments",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "environments", "testenv")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any(), []graph.Criteria{
+							query.Or(
+								query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+								query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+							),
+						}).
+						Return(map[string]int{ad.Domain.String(): 2}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					result := v2.GetAssetGroupTagMemberCountsResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, 2, result.TotalCount)
+					require.Equal(t, 2, result.Counts[ad.Domain.String()])
 				},
 			},
 			{
@@ -1615,13 +1643,49 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
-					params := url.Values{}
-					params.Add("sort_by", "invalidColumn")
-					_, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
-					require.ErrorIs(t, err, api.ErrResponseDetailsCriteriaNotSortable)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsColumnNotFilterable)
+				},
+			},
+			{
+				Name: "Fail with graph list results failure",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, fmt.Errorf("graph err"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "Error getting members")
+				},
+			},
+			{
+				Name: "Fail with graph total count failure",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), fmt.Errorf("graph err"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "Error getting member count")
 				},
 			},
 			{
@@ -1644,7 +1708,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1671,7 +1735,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1698,7 +1762,35 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with environments",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "environments", "testenv")
+				},
+				Setup: func() {
+					nodeFilter := query.And(
+						query.KindIn(query.Node(), assetGroupTag.ToKind()),
+						query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+						),
+					)
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), nodeFilter, gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), nodeFilter).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1719,7 +1811,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(5)).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1740,7 +1832,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Eq(100), gomock.Any()).
 						Return([]*graph.Node{}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(0), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1775,7 +1867,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 								})},
 						}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any()).
+						CountFilteredNodes(gomock.Any(), gomock.Any()).
 						Return(int64(2), nil)
 				},
 				Test: func(output apitest.Output) {

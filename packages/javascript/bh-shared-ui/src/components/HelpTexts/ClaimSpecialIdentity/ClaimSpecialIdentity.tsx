@@ -14,11 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectorSeedRequest } from 'js-client-library';
+import Abuse from './Abuse';
+import General from './General';
+import Opsec from './Opsec';
+import References from './References';
 
-export interface SelectorFormInputs {
-    name: string;
-    description: string;
-    seeds: SelectorSeedRequest[];
-    disabled?: boolean | string;
-}
+const ClaimSpecialIdentity = {
+    general: General,
+    abuse: Abuse,
+    opsec: Opsec,
+    references: References,
+};
+
+export default ClaimSpecialIdentity;

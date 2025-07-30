@@ -32,6 +32,16 @@ get:
     - Asset Isolation
     - Community
     - Enterprise
+
+  parameters:
+    - name: environments
+      description: Environment IDs
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+
   responses:
     200:
       description: OK

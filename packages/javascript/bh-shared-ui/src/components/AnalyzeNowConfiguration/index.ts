@@ -14,11 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectorSeedRequest } from 'js-client-library';
+import AnalyzeNowConfiguration from './AnalyzeNowConfiguration';
 
-export interface SelectorFormInputs {
-    name: string;
-    description: string;
-    seeds: SelectorSeedRequest[];
-    disabled?: boolean | string;
-}
+export default AnalyzeNowConfiguration;

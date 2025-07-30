@@ -186,7 +186,7 @@ export interface AssetGroupTagMemberInfo extends AssetGroupTagNode {
 export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
 export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTag[] }>;
 export type AssetGroupTagSelectorResponse = BasicResponse<{ selector: AssetGroupTagSelector }>;
-export type AssetGroupTagSelectorsResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
+export type AssetGroupTagSelectorsResponse = PaginatedResponse<{ selectors: AssetGroupTagSelector[] }>;
 export type AssetGroupTagMembersResponse = PaginatedResponse<{ members: AssetGroupTagMemberListItem[] }>;
 export type AssetGroupTagMemberInfoResponse = BasicResponse<{
     member: AssetGroupTagMemberInfo;
