@@ -16,7 +16,7 @@
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
+import { isGraphResponse, useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn, exportToJson } from '../../utils';
 import TableControls from './TableControls';
 import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
@@ -86,8 +86,8 @@ const ExploreTable = ({
     );
 
     const handleDownloadClick = useCallback(() => {
-        if (graphData) {
-            exportToJson({ nodes: graphData });
+        if (graphData && isGraphResponse(graphData)) {
+            exportToJson({ nodes: graphData.data.nodes });
         }
     }, [graphData]);
 

@@ -308,7 +308,7 @@ export const formatList = (field: EntityField) => {
     const list = field.value as any[];
     const fields: string[] = [];
     list.forEach((value) => {
-        if (value) fields.push(formatPrimitive(value, field.kind, field.keyprop));
+        fields.push(formatPrimitive(value, field.kind, field.keyprop));
     });
     return fields;
 };
