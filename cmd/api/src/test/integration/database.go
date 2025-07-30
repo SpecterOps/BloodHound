@@ -14,35 +14,92 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
 package integration
 
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 	"testing"
 
+	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/cache"
-	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-	"gorm.io/driver/postgres"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"gorm.io/gorm"
 )
 
+// OpenDatabase opens a new database connection and returns a BHCE database interface
+//
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
 func OpenDatabase(t *testing.T) database.Database {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		t.Fatalf("Failed loading integration test config: %v", err)
-	} else if db, err := database.OpenDatabase(cfg.Database.PostgreSQLConnectionString()); err != nil {
-		t.Fatalf("Failed to open database: %v", err)
+	} else if db, err := setupPGTestDB(t, cfg); err != nil {
+		t.Fatalf("Failed to setup pgtestdb: %v", err)
 	} else {
 		return database.NewBloodhoundDB(db, auth.NewIdentityResolver())
 	}
 
 	return nil
+}
+
+func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, error) {
+	t.Helper()
+
+	var (
+		connConf = pgtestdb.Custom(t, GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
+	)
+
+	return database.OpenDatabase(connConf.URL())
+}
+
+// GetPostgresConfig reads key/value pairs from the default integration
+// config file and creates a pgtestdb configuration object.
+//
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
+func GetPostgresConfig(cfg config.Configuration) pgtestdb.Config {
+	environmentMap := make(map[string]string)
+	for _, entry := range strings.Fields(cfg.Database.Connection) {
+		if parts := strings.SplitN(entry, "=", 2); len(parts) == 2 {
+			environmentMap[parts[0]] = parts[1]
+		}
+	}
+
+	if strings.HasPrefix(environmentMap["host"], "/") {
+		return pgtestdb.Config{
+			DriverName: "pgx",
+			User:       environmentMap["user"],
+			Password:   environmentMap["password"],
+			Database:   environmentMap["dbname"],
+			Options:    fmt.Sprintf("host=%s", url.PathEscape(environmentMap["host"])),
+			TestRole: &pgtestdb.Role{
+				Username:     environmentMap["user"],
+				Password:     environmentMap["password"],
+				Capabilities: "NOSUPERUSER NOCREATEROLE",
+			},
+		}
+	}
+
+	return pgtestdb.Config{
+		DriverName:                "pgx",
+		Host:                      environmentMap["host"],
+		Port:                      environmentMap["port"],
+		User:                      environmentMap["user"],
+		Password:                  environmentMap["password"],
+		Database:                  environmentMap["dbname"],
+		Options:                   "sslmode=disable",
+		ForceTerminateConnections: true,
+	}
 }
 
 func OpenCache(t *testing.T) cache.Cache {
@@ -54,6 +111,10 @@ func OpenCache(t *testing.T) cache.Cache {
 	return cache.Cache{}
 }
 
+// SetupDB sets up a new database connection and prepares the DB with migrations
+//
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
 func SetupDB(t *testing.T) database.Database {
 	dbInst := OpenDatabase(t)
 	if err := Prepare(context.Background(), dbInst); err != nil {
@@ -72,43 +133,20 @@ func Prepare(ctx context.Context, db database.Database) error {
 	return nil
 }
 
-func bootstrapGraphDb(ctx context.Context, cfg config.Configuration) error {
-	if graphDB, err := bootstrap.ConnectGraph(ctx, cfg); err != nil {
-		return fmt.Errorf("failed to connect graph database: %v", err)
-	} else {
-		defer graphDB.Close(ctx)
-		return bootstrap.MigrateGraph(ctx, graphDB, schema.DefaultGraphSchema())
-	}
-}
-
-func SetupTestMigrator(sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
+// SetupTestMigrator opens a database connection and returns a migrator for testing
+//
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
+func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		return nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
-	} else if db, err := gorm.Open(postgres.Open(cfg.Database.PostgreSQLConnectionString())); err != nil {
-		return nil, nil, fmt.Errorf("failed to open postgres connection: %w", err)
-	} else if err = wipeGormDB(db); err != nil {
-		return nil, nil, fmt.Errorf("failed to wipe database: %w", err)
-	} else if err := bootstrapGraphDb(context.Background(), cfg); err != nil {
-		return nil, nil, fmt.Errorf("failed to bootstrap graph db database: %w", err)
+	} else if db, err := setupPGTestDB(t, cfg); err != nil {
+		return nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
 	} else {
+		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
 		return db, &migration.Migrator{
 			Sources: sources,
 			DB:      db,
 		}, nil
 	}
-}
-
-func wipeGormDB(db *gorm.DB) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		sql := `
-				do $$ declare
-					r record;
-				begin
-					for r in (select tablename from pg_tables where schemaname = 'public') loop
-						execute 'drop table if exists ' || quote_ident(r.tablename) || ' cascade';
-					end loop;
-				end $$;
-			`
-		return tx.Exec(sql).Error
-	})
 }
