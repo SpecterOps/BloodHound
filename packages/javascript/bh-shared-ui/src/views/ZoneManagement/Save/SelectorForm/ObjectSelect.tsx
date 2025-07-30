@@ -48,29 +48,29 @@ const ObjectSelect: FC = () => {
     };
 
     return (
-        <div>
-            <Card className='rounded-lg min-h-[36rem]'>
-                <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
-                    <div className='flex justify-between'>
-                        <span>Object Selector</span>
+        <Card className='rounded-lg min-h-[36rem] h-[36rem]'>
+            <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
+                <div className='flex justify-between'>
+                    <span>Object Selector</span>
+                </div>
+                <CardDescription className='pt-3 font-normal'>
+                    Use the input field to add objects to the list
+                </CardDescription>
+            </CardHeader>
+            <CardContent className='px-6'>
+                <div className='flex content-center mt-3'>
+                    <div className='w-full my-2'>
+                        <ExploreSearchCombobox
+                            labelText='Search Objects To Add'
+                            inputValue={searchTerm}
+                            selectedItem={null}
+                            handleNodeEdited={setSearchTerm}
+                            handleNodeSelected={handleSelectedNode}
+                            variant='standard'
+                        />
                     </div>
-                    <CardDescription className='pt-3 font-normal'>
-                        Use the input field to add objects to the list
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className='px-6'>
-                    <div className='flex content-center mt-3'>
-                        <div className='w-full my-2'>
-                            <ExploreSearchCombobox
-                                labelText='Search Objects To Add'
-                                inputValue={searchTerm}
-                                selectedItem={null}
-                                handleNodeEdited={setSearchTerm}
-                                handleNodeSelected={handleSelectedNode}
-                                variant='standard'
-                            />
-                        </div>
-                    </div>
+                </div>
+                <div className='overflow-auto h-[400px]'>
                     <Table className='mt-5 w-full table-fixed' role='table' aria-label='Selected Objects'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
                             {selectedObjects.map((node, index) => (
@@ -102,9 +102,9 @@ const ObjectSelect: FC = () => {
                             ))}
                         </TableBody>
                     </Table>
-                </CardContent>
-            </Card>
-        </div>
+                </div>
+            </CardContent>
+        </Card>
     );
 };
 
