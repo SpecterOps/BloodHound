@@ -487,6 +487,7 @@ export enum ActiveDirectoryKindProperties {
     Transitive = 'transitive',
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
+    AdminSDHolderProtected = 'adminsdholderprotected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -758,6 +759,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Scope';
         case ActiveDirectoryKindProperties.NetBIOS:
             return 'NetBIOS';
+        case ActiveDirectoryKindProperties.AdminSDHolderProtected:
+            return 'AdminSDHolder Protected';
         default:
             return undefined;
     }
