@@ -164,24 +164,26 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
 };
 
 const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
-    let label;
+    let label: string;
 
     switch (kind) {
         case 'ad':
-            label = ActiveDirectoryKindPropertiesToDisplay(key as ActiveDirectoryKindProperties);
+            label = ActiveDirectoryKindPropertiesToDisplay(key as ActiveDirectoryKindProperties)!;
             break;
         case 'az':
-            label = AzureKindPropertiesToDisplay(key as AzureKindProperties);
+            label = AzureKindPropertiesToDisplay(key as AzureKindProperties)!;
             break;
         case 'cm':
-            label = CommonKindPropertiesToDisplay(key as CommonKindProperties);
+            label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
             break;
         case 'ov':
-            label = PropertyLabelOverridesToDisplay(key as PropertyLabelOverrides);
+            label = PropertyLabelOverridesToDisplay(key as PropertyLabelOverrides)!;
             break;
+        default:
+            label = key;
     }
 
-    return label ?? key;
+    return label;
 };
 
 export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
