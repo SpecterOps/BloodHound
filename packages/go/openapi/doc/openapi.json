@@ -5325,6 +5325,17 @@
         ],
         "parameters": [
           {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
@@ -5415,6 +5426,19 @@
           "Asset Isolation",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -18003,6 +18027,9 @@
             "type": "integer"
           },
           "object_id": {
+            "type": "string"
+          },
+          "environment_id": {
             "type": "string"
           },
           "primary_kind": {
