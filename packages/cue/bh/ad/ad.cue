@@ -887,6 +887,13 @@ IsDC: types.#StringEnum & {
 	representation: "isdc"
 }
 
+IsReadOnlyDC: types.#StringEnum & {
+	symbol: "IsReadOnlyDC"
+	schema: "ad"
+	name: "Read-Only DC"
+	representation: "isreadonlydc"
+}
+
 HTTPEnrollmentEndpoints: types.#StringEnum & {
 	symbol: "HTTPEnrollmentEndpoints"
 	schema: "ad"
@@ -1104,6 +1111,7 @@ Properties: [
 	LDAPSAvailable,
 	LDAPSEPA,
 	IsDC,
+	IsReadOnlyDC,
 	HTTPEnrollmentEndpoints,
 	HTTPSEnrollmentEndpoints,
 	HasVulnerableEndpoint,

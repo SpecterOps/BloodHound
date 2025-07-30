@@ -34,6 +34,7 @@ import {
     makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
     useCustomNodeKinds,
+    useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useFeatureFlag,
@@ -66,6 +67,7 @@ const GraphView: FC = () => {
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
     const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
+    const { searchType } = useExploreParams();
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
 
@@ -77,17 +79,16 @@ const GraphView: FC = () => {
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
-    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-        enabled: !exploreLayout,
-    });
+    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;
     }
 
-    const displayTable = autoDisplayTable || !!isExploreTableSelected;
-    const includeProperties = displayTable;
-    const graphQuery = useSigmaExploreGraph(includeProperties);
+    const graphQuery = useSigmaExploreGraph();
+    // TODO: incorporate into larger hook with auto display table logic
+    const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -232,6 +233,7 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
+                    isExploreTableSelected={isExploreTableSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
@@ -267,11 +269,10 @@ const GraphView: FC = () => {
 
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            {tableViewFeatureFlag?.enabled && (
+            {tableViewFeatureFlag?.enabled && displayTable && (
                 <ExploreTable
                     data={graphQuery.data?.nodes}
                     allColumnKeys={graphQuery.data.node_keys}
-                    open={displayTable}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
