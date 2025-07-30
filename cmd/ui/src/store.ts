@@ -23,6 +23,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import * as reducers from 'src/ducks';
 import rootSaga from 'src/rootSaga';
+import { GlobalViewState } from './ducks/global/types';
 
 enableMapSet();
 
@@ -43,7 +44,6 @@ export const rootReducer = (state: any, action: any): RootState => {
         state = { auth, global };
         return appReducer(state, action);
     }
-
     // Otherwise, return the current state
     return appReducer(state, action);
 };
@@ -63,7 +63,15 @@ const loadState = (): PreloadedState<RootState> => {
 
 type PersistedState = {
     auth: { sessionToken: string | null };
-    global: { view: { darkMode: boolean; notifications: string[] } };
+    global: {
+        view: {
+            darkMode: GlobalViewState['darkMode'];
+            notifications: GlobalViewState['notifications'];
+            exploreLayout: GlobalViewState['exploreLayout'];
+            selectedExploreTableColumns: GlobalViewState['selectedExploreTableColumns'];
+            isExploreTableSelected: GlobalViewState['isExploreTableSelected'];
+        };
+    };
 };
 
 const saveState = (state: PersistedState) => {
@@ -106,6 +114,9 @@ store.subscribe(
                 view: {
                     darkMode: state.global.view.darkMode,
                     notifications: [],
+                    exploreLayout: state.global.view.exploreLayout,
+                    selectedExploreTableColumns: state.global.view.selectedExploreTableColumns,
+                    isExploreTableSelected: state.global.view.isExploreTableSelected,
                 },
             },
         });

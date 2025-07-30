@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 const (
@@ -72,6 +72,13 @@ const (
 	ErrorResponseUserDuplicateEmail                 = "email must be unique"
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
+	ErrorResponseAssetGroupTagExceededNameLimit     = "asset group tag name is limited to 250 characters"
+	ErrorResponseAssetGroupTagDuplicateKindName     = "asset group tag name must be unique"
+	ErrorResponseAssetGroupTagInvalid               = "valid tag_type is required"
+	ErrorResponseAssetGroupTagExceededTagLimit      = "tag limit has been exceeded"
+	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
+	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided tier position is out of range"
+	ErrorResponseDetailsQueryTooShort               = "search query must be at least 3 characters long"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
@@ -88,13 +95,7 @@ func IsErrorResponse(response *http.Response) bool {
 	return response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices
 }
 
-// ErrorResponse is the V1 response
-type ErrorResponse struct {
-	HTTPStatus int
-	Error      any
-}
-
-// ErrorWrapper is the V2 response
+// ErrorWrapper is the standard API response structure
 type ErrorWrapper struct {
 	HTTPStatus int            `json:"http_status"`
 	Timestamp  time.Time      `json:"timestamp"`

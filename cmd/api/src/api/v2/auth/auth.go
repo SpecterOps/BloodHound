@@ -30,18 +30,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
-	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/utils/validation"
+
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
+	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
 const (
@@ -58,6 +61,8 @@ type ManagementResource struct {
 	QueryParameterFilterParser model.QueryParameterFilterParser
 	authorizer                 auth.Authorizer   // Used for Permissions
 	authenticator              api.Authenticator // Used for secrets
+	OIDC                       oidc.Service
+	SAML                       saml.Service
 }
 
 func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
@@ -68,6 +73,8 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
 		authenticator:              authenticator,
+		OIDC:                       &oidc.Client{},
+		SAML:                       &saml.Client{},
 	}
 }
 

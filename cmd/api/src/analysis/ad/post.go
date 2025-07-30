@@ -19,11 +19,11 @@ package ad
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/analysis"
-	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 )
 
 func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
@@ -36,6 +36,8 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 		return &aggregateStats, err
 	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
+	} else if hasTrustKeyStats, err := adAnalysis.PostHasTrustKeys(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
 		return &aggregateStats, err
 	} else if adcsStats, adcsCache, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
@@ -47,6 +49,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(syncLAPSStats)
+		aggregateStats.Merge(hasTrustKeyStats)
 		aggregateStats.Merge(dcSyncStats)
 		aggregateStats.Merge(localGroupStats)
 		aggregateStats.Merge(adcsStats)

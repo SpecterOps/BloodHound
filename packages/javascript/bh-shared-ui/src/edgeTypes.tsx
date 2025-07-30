@@ -42,6 +42,7 @@ export const AllEdgeTypes: Category[] = [
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.Contains,
                     ActiveDirectoryRelationshipKind.GPLink,
+                    ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
                     ActiveDirectoryRelationshipKind.SameForestTrust,
@@ -69,6 +70,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ReadGMSAPassword,
                     ActiveDirectoryRelationshipKind.ReadLAPSPassword,
                     ActiveDirectoryRelationshipKind.SyncLAPSPassword,
+                    ActiveDirectoryRelationshipKind.HasTrustKeys,
                 ],
             },
             {
@@ -152,6 +154,8 @@ export const AllEdgeTypes: Category[] = [
                     AzureRelationshipKind.PrivilegedAuthAdmin,
                     AzureRelationshipKind.PrivilegedRoleAdmin,
                     AzureRelationshipKind.RunsAs,
+                    AzureRelationshipKind.AZRoleEligible,
+                    AzureRelationshipKind.AZRoleApprover,
                 ],
             },
             {

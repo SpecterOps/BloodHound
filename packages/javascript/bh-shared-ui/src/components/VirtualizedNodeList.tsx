@@ -26,6 +26,7 @@ export type NormalizedNodeItem = {
     kind: string;
     onClick?: (index: number) => void;
     graphId?: string;
+    properties?: Record<string, any>;
 };
 
 const isGraphNode = (node: unknown): node is GraphNode => {

@@ -19,7 +19,7 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 )
 
 func NewVMEntityDetails(node *graph.Node) VMDetails {

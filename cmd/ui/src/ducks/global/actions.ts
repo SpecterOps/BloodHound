@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { SNACKBAR_DURATION } from 'bh-shared-ui';
+import { BaseGraphLayoutOptions, SNACKBAR_DURATION } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
 import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
@@ -58,6 +58,28 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
     };
 };
 
+export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_EXPLORE_LAYOUT,
+        exploreLayout,
+    };
+};
+
+export const setIsExploreTableSelected = (isExploreTableSelected: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
+        isExploreTableSelected,
+    };
+};
+
+export const setSelectedExploreTableColumns = (
+    selectedExploreTableColumns: Record<string, boolean>
+): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
+        selectedExploreTableColumns,
+    };
+};
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

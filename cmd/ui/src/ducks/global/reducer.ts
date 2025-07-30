@@ -22,6 +22,9 @@ import * as types from './types';
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
+    exploreLayout: undefined,
+    isExploreTableSelected: false,
+    selectedExploreTableColumns: undefined,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
@@ -38,6 +41,12 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
         } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
             draft.darkMode = action.darkMode;
+        } else if (action.type === types.GLOBAL_SET_EXPLORE_LAYOUT) {
+            draft.exploreLayout = action.exploreLayout;
+        } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
+            draft.isExploreTableSelected = action.isExploreTableSelected;
+        } else if (action.type === types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS) {
+            draft.selectedExploreTableColumns = action.selectedExploreTableColumns;
         }
     });
 };

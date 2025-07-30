@@ -23,10 +23,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	schema "github.com/specterops/bloodhound/graphschema"
-	azure2 "github.com/specterops/bloodhound/src/analysis/azure"
-	"github.com/specterops/bloodhound/src/test/integration"
+	azure2 "github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

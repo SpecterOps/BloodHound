@@ -24,16 +24,17 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/specterops/bloodhound/dawgs/traversal"
+	"github.com/specterops/dawgs/traversal"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
+	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 type NTLMCache struct {
@@ -809,7 +810,7 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 	err := tx.Nodes().Filter(
 		query.And(
 			query.Kind(query.Node(), ad.Group),
-			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix)),
+			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String())),
 	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for authenticatedUser := range cursor.Chan() {
 			if domain, err := authenticatedUser.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -834,7 +835,7 @@ func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, 
 		return tx.Nodes().Filter(
 			query.And(
 				query.Kind(query.Node(), ad.Group),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), ProtectedUsersSuffix)),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.ProtectedUsersSIDSuffix.String())),
 		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for protectedUserGroup := range cursor.Chan() {
 				if domain, err := protectedUserGroup.Properties.Get(ad.DomainSID.String()).String(); err != nil {

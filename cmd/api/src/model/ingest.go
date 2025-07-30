@@ -17,13 +17,13 @@
 package model
 
 import (
-	"github.com/specterops/bloodhound/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
 type IngestTask struct {
 	FileName    string     `json:"file_name"`
 	RequestGUID string     `json:"request_guid"`
-	TaskID      null.Int64 `json:"task_id"`
+	JobId       null.Int64 `json:"task_id" gorm:"column:task_id"`
 	FileType    FileType   `json:"file_type"`
 
 	BigSerial

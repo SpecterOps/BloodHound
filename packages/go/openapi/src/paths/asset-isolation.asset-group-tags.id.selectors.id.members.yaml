@@ -65,19 +65,7 @@ get:
                     members: 
                       type: array
                       items:
-                        type: object
-                        properties:
-                          id: 
-                            type: integer
-                            format: int64
-                          object_id:
-                            type: string
-                          primary_kind:
-                            type: string
-                          name:
-                            type: string
-                          source:
-                            type: integer
+                        $ref: './../schemas/model.asset-group-tags-member.yaml'
     400:
       $ref: './../responses/bad-request.yaml'     
     401:

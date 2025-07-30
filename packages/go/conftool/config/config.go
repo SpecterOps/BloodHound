@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/crypto"
+	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
 type Argon2Configuration struct {

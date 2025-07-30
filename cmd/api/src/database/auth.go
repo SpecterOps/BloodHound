@@ -28,10 +28,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/database/types"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"gorm.io/gorm"
 )
 
@@ -257,7 +257,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 		updatedUser.AuthSecret.UserID = newID
 	} else {
 		// Ensure lowercase emails
-		updatedUser.EmailAddress = null.StringFrom(strings.ToLower(updatedUser.EmailAddress.String))
+		updatedUser.EmailAddress = null.StringFrom(strings.ToLower(updatedUser.EmailAddress.ValueOrZero()))
 		updatedUser.ID = newID
 	}
 
@@ -284,7 +284,7 @@ func (s *BloodhoundDB) CreateUser(ctx context.Context, user model.User) (model.U
 // UPDATE users SET roles = ....
 func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 	// Ensure lowercase emails
-	user.EmailAddress = null.StringFrom(strings.ToLower(user.EmailAddress.String))
+	user.EmailAddress = null.StringFrom(strings.ToLower(user.EmailAddress.ValueOrZero()))
 
 	auditEntry := model.AuditEntry{
 		Action: model.AuditLogActionUpdateUser,

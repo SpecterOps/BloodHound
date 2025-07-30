@@ -35,14 +35,15 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/crypto"
+	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
 var (
@@ -401,7 +402,7 @@ func (s authenticator) CreateSSOSession(request *http.Request, response http.Res
 			locationURL := URLJoinPath(hostURL, UserInterfacePath)
 
 			// Set the token cookie, httpOnly must be false for the UI to pick up and store token
-			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(s.cfg.AuthSessionTTL()), false, 0)
+			SetSecureBrowserCookie(request, response, AuthTokenCookieName, sessionJWT, time.Now().UTC().Add(appcfg.GetSessionTTLHours(request.Context(), s.db)), false, 0)
 
 			// Redirect back to the UI landing page
 			response.Header().Add(headers.Location.String(), locationURL.String())
@@ -420,7 +421,7 @@ func (s authenticator) CreateSession(ctx context.Context, user model.User, authP
 	userSession := model.UserSession{
 		User:      user,
 		UserID:    user.ID,
-		ExpiresAt: time.Now().UTC().Add(s.cfg.AuthSessionTTL()),
+		ExpiresAt: time.Now().UTC().Add(appcfg.GetSessionTTLHours(ctx, s.db)),
 	}
 
 	switch typedAuthProvider := authProvider.(type) {

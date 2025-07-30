@@ -21,14 +21,14 @@ import (
 	"fmt"
 	"net/http"
 
-	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 )
 
 // handleAdRelatedEntityQuery is for retrieving entities related to a specific entity.

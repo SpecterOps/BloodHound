@@ -16,7 +16,7 @@
 
 package model
 
-import "github.com/specterops/bloodhound/dawgs/graph"
+import "github.com/specterops/dawgs/graph"
 
 // OUCacheEntry is used to store necessary OU properties for hydration
 type OUCacheEntry struct {

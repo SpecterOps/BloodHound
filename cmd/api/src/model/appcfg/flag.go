@@ -20,7 +20,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // AvailableFlags has been removed and the db feature_flags table is the source of truth. Feature flag defaults should be added via migration *.sql files.
@@ -31,7 +31,6 @@ const (
 	FeatureAzureSupport               = "azure_support"
 	FeatureEntityPanelCaching         = "entity_panel_cache"
 	FeatureAdcs                       = "adcs"
-	FeaturePGMigrationDualIngest      = "pg_migration_dual_ingest"
 	FeatureClearGraphData             = "clear_graph_data"
 	FeatureRiskExposureNewCalculation = "risk_exposure_new_calculation"
 	FeatureFedRAMPEULA                = "fedramp_eula"
@@ -96,5 +95,13 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 		return false
 	} else {
 		return tierFlag.Enabled
+	}
+}
+
+func (s FeatureFlag) AuditData() model.AuditData {
+	return model.AuditData{
+		"name":    s.Name,
+		"key":     s.Key,
+		"enabled": s.Enabled,
 	}
 }

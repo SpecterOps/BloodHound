@@ -19,73 +19,25 @@ package golang
 import (
 	"errors"
 	"fmt"
-	"sync"
+	"os"
+	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // TidyModules runs go mod tidy for all module paths passed
-// Do not use currently, since go mod tidy is not compatible with go workspaces out of the box
-func TidyModules(modPaths []string, env environment.Environment) error {
+func TidyModules(modPath string, env environment.Environment) error {
 	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
+		command = "go"
+		args    = []string{"mod", "tidy"}
 	)
 
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(modPath string) {
-			defer wg.Done()
-
-			var (
-				command = "go"
-				args    = []string{"mod", "tidy"}
-			)
-
-			if err := cmdrunner.Run(command, args, modPath, env); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("go mod tidy in %s: %w", modPath, err))
-				mu.Unlock()
-			}
-		}(modPath)
+	if _, err := cmdrunner.Run(command, args, modPath, env); err != nil {
+		return fmt.Errorf("go mod tidy in %s: %w", modPath, err)
 	}
 
-	wg.Wait()
-
-	return errors.Join(errs...)
-}
-
-// DownloadModules runs go mod download for all module paths passed
-func DownloadModules(modPaths []string, env environment.Environment) error {
-	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
-	)
-
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(modPath string) {
-			defer wg.Done()
-
-			var (
-				command = "go"
-				args    = []string{"mod", "download"}
-			)
-
-			if err := cmdrunner.Run(command, args, modPath, env); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("go mod download in %s: %w", modPath, err))
-				mu.Unlock()
-			}
-		}(modPath)
-	}
-
-	wg.Wait()
-
-	return errors.Join(errs...)
+	return nil
 }
 
 // SyncWorkspace runs go work sync in the given directory with a given set of environment
@@ -96,7 +48,12 @@ func SyncWorkspace(cwd string, env environment.Environment) error {
 		args    = []string{"work", "sync"}
 	)
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	// Skip this if go.work doesn't exist
+	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("go work sync: %w", err)
 	} else {
 		return nil

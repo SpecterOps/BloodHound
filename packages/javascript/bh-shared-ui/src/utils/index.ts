@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './abbreviatedNumber';
 export * from './api';
 export * from './colors';
 export * from './compatibility';
@@ -23,11 +24,11 @@ export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './exportGraphData';
 export * from './icons';
-export * from './mocks';
 export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';
 export * from './queries';
 export * from './searchParams';
+export * from './testHelpers';
 export * from './theme';
 export * from './user';

@@ -40,3 +40,5 @@ properties:
     $ref: './null.int32.yaml'
   require_certify:
     $ref: './null.boolean.yaml'
+  analysis_enabled:
+      $ref: './null.boolean.yaml'

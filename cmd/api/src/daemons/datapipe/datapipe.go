@@ -18,186 +18,85 @@ package datapipe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/src/bootstrap"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 const (
 	pruningInterval = time.Hour * 24
 )
 
+// Pipeline defines instance methods that operate on pipeline state.
+// These methods require a fully initialized Pipeline instance including
+// graph and db connections. Whatever is needed by the pipe to do the work
+type Pipeline interface {
+	// Start provides an entrypoint into the pipeline
+	Start(context.Context) error
+	// IsPrimary provides a way to detect if the current instance of the pipeline is in control
+	IsPrimary(context.Context, model.DatapipeStatus) (bool, context.Context)
+	// PruneData provides a way to remove outdated/invalid ingest files
+	PruneData(context.Context) error
+	// DeleteData provides a way to handle requests for database table/graph deletion
+	DeleteData(context.Context) error
+	// IngestTasks provides a way to ingest previously uploaded files
+	IngestTasks(context.Context) error
+	// Analyze provides a way to analyze and enhance graph data, including post processing
+	Analyze(context.Context) error
+}
+
 type Daemon struct {
-	db                  database.Database
-	graphdb             graph.Database
-	cache               cache.Cache
-	cfg                 config.Configuration
-	tickInterval        time.Duration
-	ctx                 context.Context
-	orphanedFileSweeper *OrphanFileSweeper
-	ingestSchema        ingest.IngestSchema
+	startDelay   time.Duration
+	tickInterval time.Duration
+	pipeline     Pipeline
+	db           database.Database
 }
 
 func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
+func NewDaemon(pipeline Pipeline, startDelay time.Duration, tickInterval time.Duration, db database.Database) *Daemon {
 	return &Daemon{
-		db:                  connections.RDMS,
-		graphdb:             connections.Graph,
-		cache:               cache,
-		cfg:                 cfg,
-		ctx:                 ctx,
-		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
-		tickInterval:        tickInterval,
-		ingestSchema:        ingestSchema,
-	}
-}
-
-func (s *Daemon) analyze() {
-	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
-	// function so that any re-analysis requests are caught while analysis is in-progress.
-	if err := s.db.DeleteAnalysisRequest(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting analysis request: %v", err))
-		return
-	}
-
-	if s.cfg.DisableAnalysis {
-		return
-	}
-
-	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusAnalyzing, false); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-		return
-	}
-
-	defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
-
-	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
-		if errors.Is(err, ErrAnalysisFailed) {
-			FailAnalyzedIngestJobs(s.ctx, s.db)
-			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-				return
-			}
-
-		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
-			PartialCompleteIngestJobs(s.ctx, s.db)
-			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-				return
-			}
-		}
-	} else {
-		CompleteAnalyzedIngestJobs(s.ctx, s.db)
-
-		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
-		} else {
-			resetCache(s.cache, entityPanelCachingFlag.Enabled)
-		}
-
-		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-			return
-		}
-	}
-}
-
-func resetCache(cacher cache.Cache, _ bool) {
-	if err := cacher.Reset(); err != nil {
-		slog.Error(fmt.Sprintf("Error while resetting the cache: %v", err))
-	} else {
-		slog.Info("Cache successfully reset by datapipe daemon")
-	}
-}
-
-func (s *Daemon) ingestAvailableTasks() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
-	} else {
-		s.processIngestTasks(s.ctx, ingestTasks)
+		db:           db,
+		tickInterval: tickInterval,
+		pipeline:     pipeline,
+		startDelay:   startDelay,
 	}
 }
 
 func (s *Daemon) Start(ctx context.Context) {
 	var (
-		datapipeLoopTimer = time.NewTimer(s.tickInterval)
+		datapipeLoopTimer = time.NewTimer(s.startDelay)
 		pruningTicker     = time.NewTicker(pruningInterval)
 	)
 
 	defer datapipeLoopTimer.Stop()
 	defer pruningTicker.Stop()
 
-	s.clearOrphanedData()
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusStarting, s.pipeline.Start)
 
 	for {
 		select {
 		case <-pruningTicker.C:
-			s.clearOrphanedData()
+
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusPruning, s.pipeline.PruneData)
 
 		case <-datapipeLoopTimer.C:
-			if s.db.HasCollectedGraphDataDeletionRequest(s.ctx) {
-				s.deleteData()
-			}
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusPurging, s.pipeline.DeleteData)
 
-			// Ingest all available ingest tasks
-			s.ingestAvailableTasks()
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusIngesting, s.pipeline.IngestTasks)
 
-			// Manage time-out state progression for ingest jobs
-			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
-
-			// Manage nominal state transitions for ingest jobs
-			ProcessFinishedIngestJobs(s.ctx, s.db)
-
-			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
-			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
-				s.analyze()
-			}
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusAnalyzing, s.pipeline.Analyze)
 
 			datapipeLoopTimer.Reset(s.tickInterval)
 
-		case <-s.ctx.Done():
+		case <-ctx.Done():
 			return
 		}
-	}
-}
-
-func (s *Daemon) deleteData() {
-	defer func() {
-		_ = s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
-		_ = s.db.DeleteAnalysisRequest(s.ctx)
-		_ = s.db.RequestAnalysis(s.ctx, "datapie")
-	}()
-	defer measure.Measure(slog.LevelInfo, "Purge Graph Data Completed")()
-
-	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusPurging, false); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-		return
-	}
-
-	slog.Info("Begin Purge Graph Data")
-
-	if err := s.db.CancelAllIngestJobs(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
-	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
-	} else if err := DeleteCollectedGraphData(s.ctx, s.graphdb); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting graph data: %v", err))
 	}
 }
 
@@ -205,16 +104,27 @@ func (s *Daemon) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *Daemon) clearOrphanedData() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
-	} else {
-		expectedFiles := make([]string, len(ingestTasks))
+// Any function can be wrapped with a datapipe lock, giving it the status. If everything locks
+// the datapipe through this same wrapper, it should always defer the idle status after.
+func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeStatus, action func(context.Context) error) {
 
-		for idx, ingestTask := range ingestTasks {
-			expectedFiles[idx] = ingestTask.FileName
+	active, pipelineContext := s.pipeline.IsPrimary(ctx, status)
+	if !active {
+		return
+	}
+
+	defer func() {
+		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle); err != nil {
+			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", slog.String("err", err.Error()))
 		}
+	}()
 
-		go s.orphanedFileSweeper.Clear(s.ctx, expectedFiles)
+	if err := s.db.SetDatapipeStatus(pipelineContext, status); err != nil {
+		slog.ErrorContext(pipelineContext, fmt.Sprintf("Error setting datapipe status: %v", err))
+		return
+	}
+
+	if err := action(pipelineContext); err != nil {
+		slog.ErrorContext(pipelineContext, "Datapipe action failed", slog.String("err", err.Error()))
 	}
 }

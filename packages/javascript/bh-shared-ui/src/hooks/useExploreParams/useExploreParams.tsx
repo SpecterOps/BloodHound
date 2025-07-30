@@ -21,7 +21,7 @@ import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../..
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
-type SearchType = ExploreSearchTab | 'relationship' | 'composition';
+type SearchType = ExploreSearchTab | 'relationship' | 'composition' | 'aclinheritance';
 
 export type ExploreQueryParams = {
     exploreSearchTab: ExploreSearchTab | null;
@@ -53,6 +53,7 @@ export const acceptedSearchTypes = {
     ...acceptedExploreSearchTabs,
     relationship: 'relationship',
     composition: 'composition',
+    aclinheritance: 'aclinheritance',
 } satisfies MappedStringLiteral<SearchType, SearchType>;
 
 export const parseSearchType = (paramValue: string | null): SearchType | null => {

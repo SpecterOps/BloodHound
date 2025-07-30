@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as tierHandlers } from './tierHandlers';
+export { default as zoneHandlers } from './zoneHandlers';

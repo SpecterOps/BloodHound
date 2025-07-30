@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/src/analysis/ad"
-	"github.com/specterops/bloodhound/src/analysis/azure"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/analysis/ad"
+	"github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/dawgs/graph"
 )
 
 type DataQualityData interface {

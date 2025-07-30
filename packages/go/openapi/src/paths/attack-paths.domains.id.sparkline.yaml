@@ -22,6 +22,7 @@ parameters:
     required: true
     schema:
       type: string
+  - $ref: './../parameters/query.asset-group-tag-id.yaml'
 get:
   operationId: ListAttackPathSparklineValues
   summary: List attack path sparkline values

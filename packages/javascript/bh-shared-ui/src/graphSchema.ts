@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
@@ -148,8 +147,14 @@ export enum ActiveDirectoryRelationshipKind {
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
     OwnsRaw = 'OwnsRaw',
+    ClaimSpecialIdentity = 'ClaimSpecialIdentity',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
+    ContainsIdentity = 'ContainsIdentity',
+    PropagatesACEsTo = 'PropagatesACEsTo',
+    GPOAppliesTo = 'GPOAppliesTo',
+    CanApplyGPO = 'CanApplyGPO',
+    HasTrustKeys = 'HasTrustKeys',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -307,10 +312,22 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'OwnsLimitedRights';
         case ActiveDirectoryRelationshipKind.OwnsRaw:
             return 'OwnsRaw';
+        case ActiveDirectoryRelationshipKind.ClaimSpecialIdentity:
+            return 'ClaimSpecialIdentity';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
             return 'CoerceAndRelayNTLMToLDAPS';
+        case ActiveDirectoryRelationshipKind.ContainsIdentity:
+            return 'ContainsIdentity';
+        case ActiveDirectoryRelationshipKind.PropagatesACEsTo:
+            return 'PropagatesACEsTo';
+        case ActiveDirectoryRelationshipKind.GPOAppliesTo:
+            return 'GPOAppliesTo';
+        case ActiveDirectoryRelationshipKind.CanApplyGPO:
+            return 'CanApplyGPO';
+        case ActiveDirectoryRelationshipKind.HasTrustKeys:
+            return 'HasTrustKeys';
         default:
             return undefined;
     }
@@ -332,6 +349,8 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
+    'GPOAppliesTo',
+    'CanApplyGPO',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -359,6 +378,8 @@ export enum ActiveDirectoryKindProperties {
     BlocksInheritance = 'blocksinheritance',
     IsACL = 'isacl',
     IsACLProtected = 'isaclprotected',
+    InheritanceHash = 'inheritancehash',
+    InheritanceHashes = 'inheritancehashes',
     IsDeleted = 'isdeleted',
     Enforced = 'enforced',
     Department = 'department',
@@ -451,6 +472,7 @@ export enum ActiveDirectoryKindProperties {
     LDAPSAvailable = 'ldapsavailable',
     LDAPSEPA = 'ldapsepa',
     IsDC = 'isdc',
+    IsReadOnlyDC = 'isreadonlydc',
     HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
     HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
@@ -464,6 +486,7 @@ export enum ActiveDirectoryKindProperties {
     ClientAllowedNTLMServers = 'clientallowedntlmservers',
     Transitive = 'transitive',
     GroupScope = 'groupscope',
+    NetBIOS = 'netbios',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -517,6 +540,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Is ACL';
         case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
+        case ActiveDirectoryKindProperties.InheritanceHash:
+            return 'ACL Inheritance Hash';
+        case ActiveDirectoryKindProperties.InheritanceHashes:
+            return 'ACL Inheritance Hashes';
         case ActiveDirectoryKindProperties.IsDeleted:
             return 'Is Deleted';
         case ActiveDirectoryKindProperties.Enforced:
@@ -701,6 +728,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'LDAPS EPA';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
+        case ActiveDirectoryKindProperties.IsReadOnlyDC:
+            return 'Read-Only DC';
         case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
             return 'HTTP Enrollment Endpoints';
         case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
@@ -727,6 +756,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Transitive';
         case ActiveDirectoryKindProperties.GroupScope:
             return 'Group Scope';
+        case ActiveDirectoryKindProperties.NetBIOS:
+            return 'NetBIOS';
         default:
             return undefined;
     }
@@ -743,7 +774,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
-        ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
         ActiveDirectoryRelationshipKind.AllowedToAct,
@@ -780,9 +810,14 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
-        ActiveDirectoryRelationshipKind.Contains,
+        ActiveDirectoryRelationshipKind.ContainsIdentity,
+        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
+        ActiveDirectoryRelationshipKind.GPOAppliesTo,
+        ActiveDirectoryRelationshipKind.CanApplyGPO,
+        ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
@@ -1126,7 +1161,7 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.EndUserAssignmentRequiresApproval:
             return 'End User Assignment Requires Approval';
         case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
-            return 'End User Assignment Requires CAP AuthenticationContext';
+            return 'End User Assignment Requires CAP Authentication Context';
         case AzureKindProperties.EndUserAssignmentUserApprovers:
             return 'End User Assignment User Approvers';
         case AzureKindProperties.EndUserAssignmentGroupApprovers:
@@ -1182,6 +1217,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
         AzureRelationshipKind.AZRoleEligible,
+        AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
     ];
 }

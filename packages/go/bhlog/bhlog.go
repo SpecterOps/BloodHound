@@ -22,8 +22,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/specterops/bloodhound/bhlog/level"
-	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 )
 
 const (

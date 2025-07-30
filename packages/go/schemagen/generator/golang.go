@@ -21,14 +21,14 @@ import (
 	"path/filepath"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/specterops/bloodhound/schemagen/model"
+	"github.com/specterops/bloodhound/packages/go/schemagen/model"
 )
 
 const (
-	GraphPackageName       = "github.com/specterops/bloodhound/dawgs/graph"
-	SchemaPackageName      = "github.com/specterops/bloodhound/graphschema"
-	ADSchemaPackageName    = "github.com/specterops/bloodhound/graphschema/ad"
-	AzureSchemaPackageName = "github.com/specterops/bloodhound/graphschema/azure"
+	GraphPackageName       = "github.com/specterops/dawgs/graph"
+	SchemaPackageName      = "github.com/specterops/bloodhound/packages/go/graphschema"
+	ADSchemaPackageName    = "github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	AzureSchemaPackageName = "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	SchemaSourceName       = "github.com/specterops/bloodhound/-/tree/main/packages/cue/schemas"
 )
 
@@ -314,9 +314,10 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, relKind := range graphSchema.InboundRelationshipKinds {
-					if relKind.Schema == "active_directory" {
+					switch relKind.Schema {
+					case "active_directory":
 						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
-					} else if relKind.Schema == "azure" {
+					case "azure":
 						group.Qual(AzureSchemaPackageName, "").Id(relKind.Symbol)
 					}
 				}
@@ -328,9 +329,10 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, relKind := range graphSchema.OutboundRelationshipKinds {
-					if relKind.Schema == "active_directory" {
+					switch relKind.Schema {
+					case "active_directory":
 						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
-					} else if relKind.Schema == "azure" {
+					case "azure":
 						group.Qual(AzureSchemaPackageName, "").Id(relKind.Symbol)
 					}
 				}

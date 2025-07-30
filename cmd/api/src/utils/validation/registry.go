@@ -51,5 +51,6 @@ func init() {
 		"required": NewRequiredValidator,
 		"duration": NewDurationValidator,
 		"url":      NewUrlValidator,
+		"rrule":    NewRRuleValidator,
 	}}
 }

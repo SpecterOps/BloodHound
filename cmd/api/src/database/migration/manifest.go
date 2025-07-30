@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
 )
 
 // Manifest is a collection of available migrations. VersionTable is used to order and store

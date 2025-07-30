@@ -33,6 +33,8 @@ get:
     - Enterprise
     - Community
   parameters:
+  - $ref: './../parameters/query.skip.yaml'
+  - $ref: './../parameters/query.limit.yaml'
   - name: auto_certify
     in: query
     required: false
@@ -151,6 +153,11 @@ post:
           allOf:
             - $ref: './../schemas/model.asset-group-tags-selector-create.yaml'
             - type: object
+              properties:
+                name:
+                  type: "string"
+                seeds:
+                  type: "array"
               required:
                 - name
                 - seeds

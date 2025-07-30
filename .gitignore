@@ -455,3 +455,7 @@ local-harnesses/*
 .act*
 
 !.actrc
+
+go.work*
+
+!go.work.template

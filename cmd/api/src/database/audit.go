@@ -24,10 +24,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database/types"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"gorm.io/gorm"
 )
 

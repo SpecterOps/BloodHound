@@ -36,6 +36,16 @@ export interface EntityInfoDataTableProps {
     parentLabels?: string[];
     queryType?: EntityRelationshipQueryTypes;
 }
+export interface EntityInfoContentProps {
+    DataTable: React.FC<EntityInfoDataTableProps>;
+    id: string;
+    nodeType: EntityKinds | string;
+    databaseId?: string;
+    additionalTables?: {
+        sectionProps: EntityInfoDataTableProps;
+        TableComponent: React.FC<EntityInfoDataTableProps>;
+    }[];
+}
 
 let controller = new AbortController();
 
@@ -397,6 +407,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Active Assignments',
             queryType: 'azrole-active_assignments',
+        },
+        {
+            id,
+            label: 'Approvers',
+            queryType: 'azrole-approvers',
         },
     ],
     [AzureNodeKind.ServicePrincipal]: (id: string) => {
@@ -1285,6 +1300,12 @@ export const entityRelationshipEndpoints = {
     'azrole-active_assignments': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('roles', id, 'active-assignments', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
+    'azrole-approvers': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('roles', id, 'role-approvers', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),

@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { FC, ReactNode } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { AdministrationSection } from '../..';
-import { cn, persistSearchParams } from '../../utils';
+import { useLocation } from 'react-router-dom';
+import { AdministrationSection } from '../../types';
+import { cn } from '../../utils';
+import { AppLink } from './AppLink';
 
 const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
     return (
@@ -42,23 +43,18 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
     );
 };
 
-const SubNavListItemLink: FC<{ route: string; supportedSearchParams?: string[]; children: ReactNode }> = ({
-    route,
-    children,
-    supportedSearchParams,
-}) => {
-    const search = supportedSearchParams ? persistSearchParams(supportedSearchParams).toString() : undefined;
+const SubNavListItemLink: FC<{ route: string; children: ReactNode }> = ({ route, children }) => {
     return (
-        <RouterLink
-            to={{ pathname: route, search }}
+        <AppLink
+            to={{ pathname: route }}
             className={`h-7 min-h-7 w-full flex items-center gap-x-2 text-sm whitespace-nowrap`}>
             {children}
-        </RouterLink>
+        </AppLink>
     );
 };
 
 type SubNavSections = Omit<AdministrationSection, 'order' | 'items'> & {
-    items: Pick<AdministrationSection['items'][number], 'label' | 'path' | 'supportedSearchParams'>[];
+    items: Pick<AdministrationSection['items'][number], 'label' | 'path'>[];
 };
 interface SubNavProps {
     sections: SubNavSections[];
@@ -66,7 +62,9 @@ interface SubNavProps {
 
 const SubNav: React.FC<SubNavProps> = ({ sections }) => {
     return (
-        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'>
+        <nav
+            className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'
+            data-testid='administration-nav'>
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex}>
                     <SubNavListTitle>
@@ -74,7 +72,7 @@ const SubNav: React.FC<SubNavProps> = ({ sections }) => {
                     </SubNavListTitle>
                     {section.items.map((item, itemIndex) => (
                         <SubNavListItem key={itemIndex} route={item.path}>
-                            <SubNavListItemLink route={item.path} supportedSearchParams={item.supportedSearchParams}>
+                            <SubNavListItemLink route={item.path}>
                                 <span>{item.label}</span>
                             </SubNavListItemLink>
                         </SubNavListItem>

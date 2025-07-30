@@ -23,6 +23,40 @@ export const GROUP_SPREAD = 0.06;
 export const MIN_CAMERA_RATIO = 0.5;
 export const MAX_CAMERA_RATIO = 15;
 
+/** Node drags shorter than this distance are considered accidental and handled as clicks */
+export const DRAG_THRESHOLD = 8;
+
+/**
+ * Value of primary mouse button click events
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
+ */
+export const MOUSE_BUTTON_PRIMARY = 0;
+
+/**
+ * Return distance between two coordinates
+ *
+ * @param start start coordinate
+ * @param end end coordinate
+ * @returns distance between the two corrdinates
+ */
+export const getDistanceBetween = (start: Coordinates, end: Coordinates) => {
+    const a = end.x - start.x;
+    const b = end.y - start.y;
+    return Math.sqrt(a * a + b * b);
+};
+
+/**
+ * Return coordinates representing the offset between a node's location and a position.
+ *
+ * @param node A node on a graph
+ * @param position A position on a graph
+ * @returns x and y offset from node to position
+ */
+export const getNodeOffset = (node: Attributes, position: Coordinates): Coordinates => ({
+    x: position.x - node.x,
+    y: position.y - node.y,
+});
+
 export const getEdgeDataFromKey = (edgeKey: string): null | { source: string; target: string; label: string } => {
     const keyChunks = edgeKey.split('_');
     const source = keyChunks.shift();

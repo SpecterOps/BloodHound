@@ -23,15 +23,15 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/traversal"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, eca *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {

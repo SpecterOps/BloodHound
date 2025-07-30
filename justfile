@@ -9,12 +9,18 @@ export GOOS := env_var_or_default("GOOS", host_os)
 export GOARCH := env_var_or_default("GOARCH", host_arch)
 export INTEGRATION_CONFIG_PATH := env_var_or_default("INTEGRATION_CONFIG_PATH", absolute_path("./local-harnesses/integration.config.json"))
 export SB_LOG_LEVEL := env_var_or_default("SB_LOG_LEVEL", "info")
+export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432")
 
 set positional-arguments
 
+# generate generic graph files
+[no-cd]
+bh-graphify path="":
+  @go run github.com/specterops/bloodhound/packages/go/graphify --path={{path}}
+
 # run st bernard directly
 stbernard *ARGS:
-  @go run github.com/specterops/bloodhound/packages/go/stbernard {{ARGS}}
+  @go tool stbernard {{ARGS}}
 
 # ensure dependencies are up to date
 ensure-deps *FLAGS:
@@ -33,9 +39,9 @@ generate *FLAGS:
 show *FLAGS:
   @just stbernard show {{FLAGS}}
 
-# Run all analyzers (requires jq to be installed locally)
-analyze:
-  just stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
+# Run all analyzers
+analyze *FLAGS:
+  @just stbernard analysis {{FLAGS}}
 
 # Run tests
 test *FLAGS:
@@ -45,23 +51,17 @@ test *FLAGS:
 build *FLAGS:
   @just stbernard build {{FLAGS}}
 
-# prepare for code review (requires jq)
+# prepare for code review
 prepare-for-codereview:
-  @(test -e tmp && rm -r tmp) || echo "skip rm tmp"
-  @mkdir -p tmp
-  -@just _prep-steps
-  @ echo "For more details, see output files in {{absolute_path('./tmp')}}"
-
-_prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
-  @just show > tmp/repo-status.txt
-  @just analyze > tmp/analysis-report.txt
+  @just analyze
+  @just show
 
 # check license is applied to source files
-check-license:
-  python3 license_check.py
+check-license *ARGS:
+  @just stbernard license {{ARGS}}
 
 # run go commands in the context of the api project
 go *ARGS:
@@ -169,11 +169,19 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
   @just build-bhce-container {{platform}} {{tag}} {{version}} {{ARGS}}
   @cd examples/docker-compose && BLOODHOUND_TAG={{tag}} docker compose up
 
+# remove all node modules forcefully
+reset-node-modules:
+  @cd packages/javascript/js-client-library && rm -r node_modules
+  @cd packages/javascript/bh-shared-ui && rm -r node_modules
+  @cd cmd/ui && rm -r node_modules
+  @rm -r node_modules
+  @just ensure-deps
 
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":
   #!/usr/bin/env bash
   echo "Init BloodHound CE"
+
   echo "Make local copies of configuration files"
     if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"
@@ -221,6 +229,17 @@ init wipe="":
     echo "Backing up existing environment file"
     mv ./.env ./.env.bak
   fi
+
+  if [[ -f "./go.work" ]]; then
+    echo "Backing up existing go.work file"
+    mv ./go.work ./go.work.bak
+  fi
+
+  echo "Removing go.work.sum file"
+  rm -f ./go.work.sum
+
+  echo "Copying go.work template"
+  cp ./go.work.template ./go.work
 
   echo "Run modsync to ensure workspace is up to date"
   just modsync

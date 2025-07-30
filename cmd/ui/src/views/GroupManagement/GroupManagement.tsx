@@ -17,6 +17,8 @@
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
+    EntityInfoDataTable,
+    EntityInfoPanel,
     EntityKinds,
     ExploreQueryParams,
     GroupManagementContent,
@@ -34,7 +36,6 @@ import {
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
@@ -92,7 +93,7 @@ const GroupManagement = () => {
             tierZeroLabel={HIGH_VALUE_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
-            entityPanelComponent={<EntityInfoPanel selectedNode={openNode} />}
+            entityPanelComponent={<EntityInfoPanel selectedNode={openNode} DataTable={EntityInfoDataTable} />}
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}

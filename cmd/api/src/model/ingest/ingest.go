@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 )
 
 var AllowedZipFileUploadTypes = []string{
@@ -103,7 +103,7 @@ const (
 	DataTypeCertTemplate   DataType = "certtemplates"
 	DataTypeAzure          DataType = "azure"
 	DataTypeIssuancePolicy DataType = "issuancepolicies"
-	DataTypeGeneric        DataType = "generic"
+	DataTypeOpenGraph      DataType = "opengraph"
 )
 
 func AllIngestDataTypes() []DataType {
@@ -223,4 +223,6 @@ var (
 	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
 	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
+
+	ErrOpenGraphMetaTagValidation = errors.New("metadata tag is invalid")
 )

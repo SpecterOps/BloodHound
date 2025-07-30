@@ -25,11 +25,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 func TestWriteErrorResponse_InvalidFormat(t *testing.T) {
@@ -37,16 +37,6 @@ func TestWriteErrorResponse_InvalidFormat(t *testing.T) {
 	api.WriteErrorResponse(context.Background(), fmt.Errorf("foo"), response)
 	require.Equal(t, response.Code, http.StatusInternalServerError)
 	require.Contains(t, response.Body.String(), "internal error")
-}
-
-func TestWriteErrorResponse_V1(t *testing.T) {
-	response := httptest.NewRecorder()
-	api.WriteErrorResponse(context.Background(), &api.ErrorResponse{
-		HTTPStatus: http.StatusTeapot,
-		Error:      json.RawMessage(`{"foo":"bar"}`),
-	}, response)
-	require.Equal(t, response.Code, http.StatusTeapot)
-	require.Contains(t, response.Body.String(), "foo")
 }
 
 func TestWriteErrorResponse_V2(t *testing.T) {

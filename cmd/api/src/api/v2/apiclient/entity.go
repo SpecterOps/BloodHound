@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 func (s Client) GetUserSessionsList(objectID string) ([]string, error) {

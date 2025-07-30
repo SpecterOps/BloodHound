@@ -23,9 +23,10 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 	dsig "github.com/russellhaering/goxmldsig"
-	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/model"
+
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
 func getIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType string) (saml.IDPSSODescriptor, error) {

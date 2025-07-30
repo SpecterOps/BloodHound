@@ -16,7 +16,7 @@
 
 package ein
 
-import "github.com/specterops/bloodhound/dawgs/graph"
+import "github.com/specterops/dawgs/graph"
 
 // Initialize IngestibleRelationship to ensure the RelProps map can't be nil
 func NewIngestibleRelationship(source IngestibleEndpoint, target IngestibleEndpoint, rel IngestibleRel) IngestibleRelationship {

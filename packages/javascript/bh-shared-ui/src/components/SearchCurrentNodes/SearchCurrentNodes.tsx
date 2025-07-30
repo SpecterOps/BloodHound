@@ -16,7 +16,7 @@
 
 import { Box, List, ListItem, Paper, SxProps, TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
 import { useOnClickOutside } from '../../hooks';
 import SearchResultItem from '../SearchResultItem';
@@ -29,25 +29,19 @@ const LIST_ITEM_HEIGHT = 38;
 const MAX_CONTAINER_HEIGHT = 350;
 
 const SearchCurrentNodes: FC<{
-    sx?: SxProps;
     currentNodes: GraphNodes;
     onSelect: (node: FlatNode) => void;
-    onClose?: () => void;
+    onClose: () => void;
+    sx?: SxProps;
 }> = ({ sx, currentNodes, onSelect, onClose }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
 
     const [items, setItems] = useState<FlatNode[]>([]);
-    const [selectedNode, setSelectedNode] = useState<FlatNode | null | undefined>(null);
 
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
     const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
         return { id: key, ...value };
     });
-
-    useEffect(() => inputRef.current?.focus(), []);
-
-    if (selectedNode) onSelect(selectedNode);
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
@@ -56,7 +50,7 @@ const SearchCurrentNodes: FC<{
         virtualizationHeight = MAX_CONTAINER_HEIGHT - 10;
     }
 
-    useOnClickOutside(containerRef, () => onClose && onClose());
+    useOnClickOutside(containerRef, onClose);
 
     const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue } = useCombobox({
         items,
@@ -75,7 +69,9 @@ const SearchCurrentNodes: FC<{
             const { changes, type } = actionAndChanges;
             switch (type) {
                 case useCombobox.stateChangeTypes.ItemClick:
-                    if (changes.selectedItem) setSelectedNode(changes.selectedItem);
+                    if (changes.selectedItem) {
+                        onSelect(changes.selectedItem);
+                    }
                     return { ...changes, inputValue: '' };
                 default:
                     return changes;
@@ -125,7 +121,7 @@ const SearchCurrentNodes: FC<{
                     </List>
                 </Box>
                 <TextField
-                    inputRef={inputRef}
+                    autoFocus
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'
                     size='small'

@@ -18,7 +18,9 @@ import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
+    CypherExploreGraphQuery,
     ExploreGraphQuery,
+    aclInheritanceSearchQuery,
     compositionSearchQuery,
     cypherSearchQuery,
     fallbackQuery,
@@ -27,18 +29,22 @@ import {
     relationshipSearchQuery,
 } from './queries';
 
-export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
+export function exploreGraphQueryFactory(
+    paramOptions: Partial<ExploreQueryParams>
+): ExploreGraphQuery | CypherExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
             return nodeSearchQuery;
         case 'pathfinding':
             return pathfindingSearchQuery;
-        case 'cypher':
-            return cypherSearchQuery;
         case 'relationship':
             return relationshipSearchQuery;
         case 'composition':
             return compositionSearchQuery;
+        case 'cypher':
+            return cypherSearchQuery;
+        case 'aclinheritance':
+            return aclInheritanceSearchQuery;
         default:
             return fallbackQuery;
     }
@@ -47,12 +53,15 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
 // Hook for maintaining the top level graph query powering the explore page
 export const useExploreGraph = () => {
     const params = useExploreParams();
+
     const { addNotification } = useNotifications();
 
     const query = exploreGraphQueryFactory(params);
 
+    const queryConfig = query.getQueryConfig(params);
+
     return useQuery({
-        ...query.getQueryConfig(params),
+        ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
             addNotification(message, key, {

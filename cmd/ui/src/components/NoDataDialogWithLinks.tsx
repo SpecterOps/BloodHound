@@ -39,16 +39,16 @@ const sampleCollectionLinkProps = {
     className: linkStyles,
     target: '_blank',
     rel: 'noreferrer',
-    href: 'https://github.com/SpecterOps/BloodHound/wiki/Example-Data',
+    href: 'https://bloodhound.specterops.io/get-started/quickstart/ce-ingest-sample-data',
 };
 
 export const NoDataDialogWithLinks: React.FC<NoDataDialogWithLinksProps> = ({ open }) => {
     return (
         <NoDataDialog open={open}>
-            To explore your environment, <Link {...fileIngestLinkProps}>start by uploading your data</Link> on the file
-            ingest page.
+            To explore your environment, start by uploading your data on the{' '}
+            <Link {...fileIngestLinkProps}>file ingest</Link> page.
             <br className='mb-4' />
-            Need help? Check out the <a {...gettingStartedLinkProps}>Getting Started guide</a> for instructions.
+            Need help? Check out the <a {...gettingStartedLinkProps}>Getting Started</a> guide for instructions.
             <br className='mb-4' />
             If you want to test BloodHound with sample data, you may download some from our{' '}
             <a {...sampleCollectionLinkProps}>Sample Collection</a> GitHub page.

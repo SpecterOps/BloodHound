@@ -15,10 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AxiosRequestConfig } from 'axios';
-import { AssetGroupTagSelector, AssetGroupTagSelectorSeed, SSOProviderConfiguration } from './types';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorSeed,
+    AssetGroupTagTypes,
+    SSOProviderConfiguration,
+} from './types';
 import { ConfigurationPayload } from './utils';
 
-export type RequestOptions = AxiosRequestConfig;
+export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
 export interface LoginRequest {
     login_method: string;
@@ -27,16 +32,31 @@ export interface LoginRequest {
     otp?: string;
 }
 
+export type CreateAssetGroupTagRequest = {
+    name: string;
+    description: string;
+    position: number | null;
+    type: AssetGroupTagTypes;
+    requireCertify?: boolean;
+};
+
+export type UpdateAssetGroupTagRequest = Partial<
+    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: string | boolean | undefined }
+>;
+
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 
 // This type makes it so that `selector_id` is optional in the selector seed request shape.
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
 
-export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
+export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
+    Partial<Pick<AssetGroupTagSelector, 'description' | 'auto_certify'>> & {
+        seeds: SelectorSeedRequest[];
+    };
 
 export type UpdateSelectorRequest = Partial<
-    Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
+    Omit<CreateSelectorRequest, 'id' | 'disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
 >;
 
 export interface CreateAssetGroupRequest {
@@ -183,10 +203,11 @@ export interface CreateUserQueryRequest {
 }
 
 export interface ClearDatabaseRequest {
-    deleteCollectedGraphData: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
     deleteAssetGroupSelectors: number[];
+    deleteCollectedGraphData: boolean;
+    deleteDataQualityHistory: boolean;
+    deleteFileIngestHistory: boolean;
+    deleteSourceKinds: number[];
 }
 
 export interface UpdateUserRequest {

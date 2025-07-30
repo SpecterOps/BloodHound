@@ -17,23 +17,51 @@
 package tiering
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
-func SearchTierZeroNodes(tieringEnabled bool) graph.Criteria {
+type SearchTierNodesCtx struct {
+	IsTierZero                bool
+	PrimaryTierKind           graph.Kind
+	SearchTierNodes           graph.Criteria
+	SearchTierNodesRel        graph.Criteria
+	SearchPrimaryTierNodes    graph.Criteria
+	SearchPrimaryTierNodesRel graph.Criteria
+}
+
+func NewSearchTierNodesCtx(tieringEnabled bool, isTierZero bool, primaryKind graph.Kind, tierKinds ...graph.Kind) SearchTierNodesCtx {
+	return SearchTierNodesCtx{
+		IsTierZero:                isTierZero,
+		PrimaryTierKind:           primaryKind,
+		SearchTierNodesRel:        searchTierNodesRel(tieringEnabled, tierKinds...),
+		SearchTierNodes:           SearchTierNodes(tieringEnabled, tierKinds...),
+		SearchPrimaryTierNodes:    SearchTierNodes(tieringEnabled, primaryKind),
+		SearchPrimaryTierNodesRel: searchTierNodesRel(tieringEnabled, primaryKind),
+	}
+}
+
+func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Node(), KindTagTierZero)
+		// Default to tier zero in the event no tierKinds are supplied
+		if len(tierKinds) == 0 {
+			tierKinds = append(tierKinds, KindTagTierZero)
+		}
+		return query.KindIn(query.Node(), tierKinds...)
 	} else {
 		return query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
 }
 
-func SearchTierZeroNodesRel(tieringEnabled bool) graph.Criteria {
+func searchTierNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Start(), KindTagTierZero)
+		// Default to tier zero in the event no tierKinds are supplied
+		if len(tierKinds) == 0 {
+			tierKinds = append(tierKinds, KindTagTierZero)
+		}
+		return query.KindIn(query.Start(), tierKinds...)
 	} else {
 		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}

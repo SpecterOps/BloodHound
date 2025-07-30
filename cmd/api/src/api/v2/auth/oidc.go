@@ -31,16 +31,16 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils"
-	"github.com/specterops/bloodhound/src/utils/validation"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"golang.org/x/oauth2"
 )
 
@@ -165,7 +165,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to generate state: %v", err))
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
-	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
+	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario
@@ -228,7 +228,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// State mismatch
 		slog.WarnContext(request.Context(), "[OIDC] state does not match")
 		api.RedirectToLoginURL(response, request, "Invalid: `state` do not match")
-	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
+	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		// SSO misconfiguration scenario
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")

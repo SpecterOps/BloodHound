@@ -19,11 +19,19 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/tiering"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
+
+// UnifiedGraphWPropertyKeys
+type UnifiedGraphWPropertyKeys struct {
+	NodeKeys []string               `json:"node_keys,omitempty"`
+	EdgeKeys []string               `json:"edge_keys,omitempty"`
+	Edges    []UnifiedEdge          `json:"edges"`
+	Nodes    map[string]UnifiedNode `json:"nodes"`
+}
 
 // UnifiedGraph represents a single, generic and minimalistic graph
 type UnifiedGraph struct {

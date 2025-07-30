@@ -20,30 +20,34 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
+
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
-	baseItem := ein.IngestBase{
-		ObjectIdentifier: "ABC123",
-		Properties: map[string]any{
-			ad.MachineAccountQuota.String():                    "1",
-			ad.MinPwdLength.String():                           "1",
-			ad.PwdProperties.String():                          "1",
-			ad.PwdHistoryLength.String():                       "1",
-			ad.LockoutThreshold.String():                       "1",
-			ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): "false",
+func TestConvertDomainToNode_DomainInvalidProperties(t *testing.T) {
+	baseItem := ein.Domain{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "ABC123",
+			Properties: map[string]any{
+				ad.MachineAccountQuota.String():                    "1",
+				ad.MinPwdLength.String():                           "1",
+				ad.PwdProperties.String():                          "1",
+				ad.PwdHistoryLength.String():                       "1",
+				ad.LockoutThreshold.String():                       "1",
+				ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): "false",
+			},
+			Aces:           nil,
+			IsDeleted:      false,
+			IsACLProtected: false,
+			ContainedBy:    ein.TypedPrincipal{},
 		},
-		Aces:           nil,
-		IsDeleted:      false,
-		IsACLProtected: false,
-		ContainedBy:    ein.TypedPrincipal{},
 	}
 
-	result := ein.ConvertObjectToNode(baseItem, ad.Domain, time.Now().UTC())
+	result := ein.ConvertDomainToNode(baseItem, time.Now().UTC())
 	props := result.PropertyMap
 	assert.Contains(t, props, ad.MachineAccountQuota.String())
 	assert.Contains(t, props, ad.MinPwdLength.String())
@@ -58,23 +62,25 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 	assert.Equal(t, 1, props[ad.LockoutThreshold.String()])
 	assert.Equal(t, false, props[ad.ExpirePasswordsOnSmartCardOnlyAccounts.String()])
 
-	baseItem = ein.IngestBase{
-		ObjectIdentifier: "ABC123",
-		Properties: map[string]any{
-			ad.MachineAccountQuota.String():                    1,
-			ad.MinPwdLength.String():                           1,
-			ad.PwdProperties.String():                          1,
-			ad.PwdHistoryLength.String():                       1,
-			ad.LockoutThreshold.String():                       1,
-			ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): false,
+	baseItem = ein.Domain{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "ABC123",
+			Properties: map[string]any{
+				ad.MachineAccountQuota.String():                    1,
+				ad.MinPwdLength.String():                           1,
+				ad.PwdProperties.String():                          1,
+				ad.PwdHistoryLength.String():                       1,
+				ad.LockoutThreshold.String():                       1,
+				ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): false,
+			},
+			Aces:           nil,
+			IsDeleted:      false,
+			IsACLProtected: false,
+			ContainedBy:    ein.TypedPrincipal{},
 		},
-		Aces:           nil,
-		IsDeleted:      false,
-		IsACLProtected: false,
-		ContainedBy:    ein.TypedPrincipal{},
 	}
 
-	result = ein.ConvertObjectToNode(baseItem, ad.Domain, time.Now().UTC())
+	result = ein.ConvertDomainToNode(baseItem, time.Now().UTC())
 	props = result.PropertyMap
 	assert.Contains(t, props, ad.MachineAccountQuota.String())
 	assert.Contains(t, props, ad.MinPwdLength.String())
@@ -88,6 +94,39 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 	assert.Equal(t, 1, props[ad.PwdHistoryLength.String()])
 	assert.Equal(t, 1, props[ad.LockoutThreshold.String()])
 	assert.Equal(t, false, props[ad.ExpirePasswordsOnSmartCardOnlyAccounts.String()])
+}
+
+func TestConvertDomainToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	domainObject := ein.Domain{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertDomainToNode(domainObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestConvertOUToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	ouObject := ein.OU{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertOUToNode(ouObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestConvertContainerToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	containerObject := ein.Container{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertContainerToNode(containerObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
 }
 
 func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
@@ -245,4 +284,71 @@ func TestConvertComputerToNode(t *testing.T) {
 	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
+}
+
+func TestParseGroupMiscData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		group ein.Group
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected []ein.IngestibleRelationship
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGroupMiscData without SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: make([]ein.TypedPrincipal, 0),
+				},
+			},
+			expected: make([]ein.IngestibleRelationship, 0),
+		},
+		{
+			name: "ParseGroupMiscData with SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: []ein.TypedPrincipal{
+						{
+							ObjectIdentifier: "historySID",
+							ObjectType:       ad.User.String(),
+						},
+					},
+				},
+			},
+			expected: []ein.IngestibleRelationship{
+				{
+					Source: ein.IngestibleEndpoint{
+						Value:   "groupBase",
+						MatchBy: "",
+						Kind:    graph.StringKind(ad.Group.String()),
+					},
+					Target: ein.IngestibleEndpoint{
+						Value: "historySID",
+						Kind:  graph.StringKind(ad.User.String()),
+					},
+					RelType:  ad.HasSIDHistory,
+					RelProps: map[string]any{"isacl": false},
+				},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGroupMiscData(testCase.args.group)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
 }

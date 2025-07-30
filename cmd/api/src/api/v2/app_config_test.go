@@ -25,12 +25,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/test/must"
-	"github.com/specterops/bloodhound/src/utils/test"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/test/must"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"go.uber.org/mock/gomock"
 )
 
@@ -136,8 +136,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
 
-		appConfigRequest = v2.AppConfigUpdateRequest{
-			Key: appcfg.PasswordExpirationWindow,
+		appConfigRequest = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.PasswordExpirationWindow),
 			Value: map[string]any{
 				"setting": "setting",
 			},
@@ -159,7 +159,7 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Invalid Parameters", func(t *testing.T) {
-		invalidRequest := v2.AppConfigUpdateRequest{
+		invalidRequest := appcfg.AppConfigUpdateRequest{
 			Key: "invalidKey",
 			Value: map[string]any{
 				"someKey": "someValue",
@@ -179,8 +179,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Error from DB", func(t *testing.T) {
-		appConfigRequest = v2.AppConfigUpdateRequest{
-			Key: appcfg.ReconciliationKey,
+		appConfigRequest = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.ReconciliationKey),
 			Value: map[string]any{
 				"enabled": true,
 			},
@@ -203,8 +203,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Success", func(t *testing.T) {
-		appConfigRequest = v2.AppConfigUpdateRequest{
-			Key: appcfg.ReconciliationKey,
+		appConfigRequest = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.ReconciliationKey),
 			Value: map[string]any{
 				"enabled": true,
 			},

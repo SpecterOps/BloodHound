@@ -15,9 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SxProps, useTheme } from '@mui/material';
-import { EntityKinds, isEdge, isNode, useExploreSelectedItem } from 'bh-shared-ui';
-import EdgeInfoPane from './EdgeInfo/EdgeInfoPane';
-import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
+import {
+    EdgeInfoPane,
+    EntityInfoDataTable,
+    EntityInfoDataTableGraphed,
+    EntityInfoPanel,
+    EntityKinds,
+    isEdge,
+    isNode,
+    useExploreSelectedItem,
+} from 'bh-shared-ui';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
@@ -36,12 +43,13 @@ const GraphItemInformationPanel = () => {
     };
 
     if (!selectedItem || selectedItemQuery.isLoading) {
-        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} />;
+        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;
     }
 
     if (selectedItemQuery.isError) {
         return (
             <EntityInfoPanel
+                DataTable={EntityInfoDataTableGraphed}
                 sx={infoPaneStyles}
                 selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
             />
@@ -76,7 +84,9 @@ const GraphItemInformationPanel = () => {
             name: selectedItemQuery.data.label,
             type: selectedItemQuery.data.kind as EntityKinds,
         };
-        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} />;
+        return (
+            <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} DataTable={EntityInfoDataTableGraphed} />
+        );
     }
 };
 

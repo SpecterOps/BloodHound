@@ -23,11 +23,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
+	"github.com/specterops/dawgs/graph"
 )
 
 type LocalGroup struct {
@@ -44,33 +44,58 @@ func ConvertSessionObject(session Session) IngestibleSession {
 }
 
 func ConvertObjectToNode(item IngestBase, itemType graph.Kind, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-	itemProps[common.LastCollected.String()] = ingestTime
-
-	if itemType == ad.Domain {
-		convertInvalidDomainProperties(itemProps)
-	}
-
-	convertOwnsEdgeToProperty(item, itemProps)
-
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
-		PropertyMap: itemProps,
+		PropertyMap: getBaseProperties(item, ingestTime),
 		Labels:      []graph.Kind{itemType},
 	}
 }
 
-func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-	itemProps[common.LastCollected.String()] = ingestTime
+func ConvertDomainToNode(item Domain, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+	convertInvalidDomainProperties(itemProps)
 
-	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Domain},
+	}
+}
+
+func ConvertOUToNode(item OU, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.OU},
+	}
+}
+
+func ConvertContainerToNode(item Container, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Container},
+	}
+}
+
+func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
 	if item.IsWebClientRunning.Collected {
 		itemProps[ad.WebClientRunning.String()] = item.IsWebClientRunning.Result
@@ -117,12 +142,7 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 }
 
 func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-
-	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
 	var (
 		httpEndpoints    = make([]string, 0)
@@ -166,6 +186,19 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) Ingestib
 		PropertyMap: itemProps,
 		Labels:      []graph.Kind{ad.EnterpriseCA},
 	}
+}
+
+func getBaseProperties(item IngestBase, ingestTime time.Time) map[string]any {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	itemProps[common.LastCollected.String()] = ingestTime
+
+	convertOwnsEdgeToProperty(item, itemProps)
+
+	return itemProps
 }
 
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
@@ -278,6 +311,30 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
+// ParseGroupMiscData parses HasSIDHistory
+func ParseGroupMiscData(group Group) []IngestibleRelationship {
+	data := make([]IngestibleRelationship, 0)
+
+	for _, target := range group.HasSIDHistory {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: group.ObjectIdentifier,
+				Kind:  ad.Group,
+			},
+			IngestibleEndpoint{
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.HasSIDHistory,
+			},
+		))
+	}
+
+	return data
+}
+
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 	result := ParsedGroupMembershipData{}
 	for _, member := range group.Members {
@@ -318,8 +375,9 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 }
 
 type WriteOwnerLimitedPrincipal struct {
-	SourceData  IngestibleEndpoint
-	IsInherited bool
+	SourceData      IngestibleEndpoint
+	IsInherited     bool
+	InheritanceHash string
 }
 
 // getFromPropertyMap attempts to look up a given key in the given properties map. If the value does not exist this
@@ -393,8 +451,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					Kind:  targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
-					RelType:  rightKind,
+					RelProps: map[string]any{
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): ace.IsInherited,
+						ad.InheritanceHash.String(): ace.InheritanceHash,
+					},
+					RelType: rightKind,
 				},
 			))
 		}
@@ -434,8 +496,13 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
-						RelType:  ad.WriteOwnerLimitedRights,
+						RelProps: map[string]any{
+							ad.IsACL.String():           true,
+							common.IsInherited.String(): limitedPrincipal.IsInherited,
+							ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+							"privileges":                writeOwnerLimitedPrivs,
+						},
+						RelType: ad.WriteOwnerLimitedRights,
 					},
 				))
 			}
@@ -461,8 +528,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 						Kind:  targetType,
 					},
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-						RelType:  ad.WriteOwnerRaw,
+						RelProps: map[string]any{
+							ad.IsACL.String():           true,
+							common.IsInherited.String(): limitedPrincipal.IsInherited,
+							ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+						},
+						RelType: ad.WriteOwnerRaw,
 					},
 				))
 			}
@@ -488,8 +559,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 							Kind:  targetType,
 						},
 						IngestibleRel{
-							RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-							RelType:  ad.WriteOwnerRaw,
+							RelProps: map[string]any{
+								ad.IsACL.String():           true,
+								common.IsInherited.String(): limitedPrincipal.IsInherited,
+								ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+							},
+							RelType: ad.WriteOwnerRaw,
 						},
 					))
 				}
@@ -528,8 +603,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					Kind:  targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-					RelType:  ad.WriteOwnerRaw,
+					RelProps: map[string]any{
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): limitedPrincipal.IsInherited,
+						ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+					},
+					RelType: ad.WriteOwnerRaw,
 				},
 			))
 		}
@@ -672,12 +751,9 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 			groupID := computer.ObjectIdentifier + "-" + group.RID
 			if len(group.Members) > 0 {
 				parsedData.Nodes = append(parsedData.Nodes, IngestibleNode{
-					ObjectID: groupID,
-					// TODO: look up computer name?
-					PropertyMap: map[string]any{
-						"name": groupID,
-					},
-					Labels: []graph.Kind{ad.LocalGroup},
+					ObjectID:    groupID,
+					PropertyMap: map[string]any{},
+					Labels:      []graph.Kind{ad.LocalGroup},
 				})
 
 				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(

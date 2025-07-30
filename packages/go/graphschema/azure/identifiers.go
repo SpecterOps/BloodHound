@@ -16,7 +16,7 @@
 
 package azure
 
-import "github.com/specterops/bloodhound/dawgs/graph"
+import "github.com/specterops/dawgs/graph"
 
 const (
 	MSGraphAppUniversalID                  = "00000003-0000-0000-c000-000000000000"

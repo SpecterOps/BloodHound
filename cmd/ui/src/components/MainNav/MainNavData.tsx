@@ -66,10 +66,10 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: 'global_nav-explore',
         },
         {
-            label: tierFlag?.enabled ? 'Tier Management' : 'Group Management',
+            label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: tierFlag?.enabled ? routes.ROUTE_TIER_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
-            testId: tierFlag?.enabled ? 'global_nav-tier-management' : 'global_nav-group-management',
+            route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
+            testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
         },
     ];
 
@@ -108,7 +108,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
-            route: routes.DEFAULT_ADMINISTRATION_ROUTE,
+            route: routes.ROUTE_ADMINISTRATION_ROOT,
             testId: 'global_nav-administration',
         },
         {

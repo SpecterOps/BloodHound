@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
 )
 
 var (

@@ -81,6 +81,8 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     position: number | null;
     requireCertify: boolean | null;
     description: string;
+    counts?: AssetGroupTagCounts;
+    analysis_enabled: boolean | null;
 }
 
 export const SeedTypeObjectId = 1 as const;
@@ -93,7 +95,7 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
-export interface AssetGroupTagSelectorsCounts {
+export interface AssetGroupTagSelectorCounts {
     members: number;
 }
 export interface AssetGroupTagSelector extends Created, Updated, Disabled {
@@ -105,6 +107,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     allow_disable: boolean;
     auto_certify: boolean;
     seeds: AssetGroupTagSelectorSeed[];
+    counts?: AssetGroupTagSelectorCounts;
 }
 
 export interface AssetGroupTagSelectorSeed {
@@ -260,6 +263,16 @@ interface CollectorAsset {
     arch: string;
 }
 
+export interface GraphNodeProperties {
+    nodetype?: string;
+    displayname?: string;
+    enabled?: boolean;
+    pwdlastset?: number;
+    lastlogontimestamp?: number;
+    descendent_count?: number | null;
+    [key: string]: any;
+}
+
 export type GraphNode = {
     label: string;
     kind: string;
@@ -267,8 +280,10 @@ export type GraphNode = {
     lastSeen: string;
     isTierZero: boolean;
     isOwnedObject: boolean;
-    descendent_count?: number | null;
+    properties?: GraphNodeProperties;
 };
+
+export type GraphNodeSpreadWithProperties = Partial<Omit<GraphNode, 'properties'> & GraphNodeProperties>;
 
 export type GraphNodes = Record<string, GraphNode>;
 
@@ -285,11 +300,11 @@ export type GraphEdge = {
 
 export type GraphEdges = GraphEdge[];
 
-export type GraphData = { nodes: GraphNodes; edges: GraphEdges };
+export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: string[] };
 
 export type StyledGraphNode = {
     color: string;
-    data: Record<string, any>;
+    data: GraphNodeSpreadWithProperties;
     border: {
         color: string;
     };

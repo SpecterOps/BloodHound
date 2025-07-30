@@ -47,6 +47,7 @@ get:
       schema:
         type: string
         format: date-time
+    - $ref: './../parameters/query.asset-group-tag-id.yaml'
   responses:
     200:
       description: OK

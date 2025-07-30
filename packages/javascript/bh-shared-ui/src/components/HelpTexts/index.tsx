@@ -62,6 +62,8 @@ import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
 import AZResetPassword from './AZResetPassword/AZResetPassword';
+import AZRoleApprover from './AZRoleApprover/AZRoleApprover';
+import AZRoleEligible from './AZRoleEligible/AZRoleEligible';
 import AZRunsAs from './AZRunsAs/AZRunsAs';
 import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessAdministrator';
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
@@ -78,6 +80,7 @@ import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
+import ClaimSpecialIdentity from './ClaimSpecialIdentity/ClaimSpecialIdentity';
 import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRelayNTLMToLDAPS';
@@ -103,6 +106,7 @@ import GetChangesAll from './GetChangesAll/GetChangesAll';
 import GoldenCert from './GoldenCert/GoldenCert';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
+import HasTrustKeys from './HasTrustKeys/HasTrustKeys';
 import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import ManageCA from './ManageCA/ManageCA';
@@ -230,6 +234,8 @@ const EdgeInfoComponents = {
     AZKeyVaultKVContributor: AZKeyVaultKVContributor,
     AZLogicAppContributor: AZLogicAppContributor,
     AZNodeResourceGroup: AZNodeResourceGroup,
+    AZRoleApprover: AZRoleApprover,
+    AZRoleEligible: AZRoleEligible,
     Enroll: Enroll,
     EnterpriseCAFor: EnterpriseCAFor,
     RootCAFor: RootCAFor,
@@ -264,6 +270,8 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
+    ClaimSpecialIdentity: ClaimSpecialIdentity,
+    HasTrustKeys: HasTrustKeys,
 };
 
 export default EdgeInfoComponents;

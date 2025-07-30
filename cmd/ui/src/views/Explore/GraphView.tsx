@@ -14,77 +14,161 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popper, useTheme } from '@mui/material';
+import { useTheme } from '@mui/material';
 import {
+    BaseExploreLayoutOptions,
+    ExploreTable,
+    FeatureFlag,
+    GraphControls,
     GraphProgress,
-    SearchCurrentNodes,
+    GraphViewErrorAlert,
+    ManageColumnsComboBoxOption,
+    MungedTableRowWithId,
+    NodeClickInfo,
     WebGLDisabledAlert,
+    baseGraphLayouts,
+    defaultGraphLayout,
     exportToJson,
+    isNode,
     isWebGLEnabled,
+    makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
-    useAvailableEnvironments,
     useCustomNodeKinds,
+    useExploreParams,
     useExploreSelectedItem,
+    useExploreTableAutoDisplay,
+    useFeatureFlag,
+    useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
+
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes } from 'js-client-library';
-import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { type GraphNodes } from 'js-client-library';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
+import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ContextMenuZoneManagementEnabled from './ContextMenu/ContextMenuZoneManagementEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
+    const dispatch = useAppDispatch();
+
     const theme = useTheme();
 
-    const graphQuery = useSigmaExploreGraph();
-    const { data, isLoading, isError } = useAvailableEnvironments();
-    const { setSelectedItem } = useExploreSelectedItem();
+    const { data: graphHasData, isLoading, isError } = useGraphHasData();
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
+    const { searchType } = useExploreParams();
+
+    const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
+
+    const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
+    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+
+    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
+
+    if (!tableViewFeatureFlag?.enabled) {
+        isExploreTableSelected = false;
+    }
+
+    const graphQuery = useSigmaExploreGraph();
+    // TODO: incorporate into larger hook with auto display table logic
+    const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
+    const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
     const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
-    const currentSearchAnchorElement = useRef(null);
 
-    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+    const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
-        let items: any = graphQuery.data;
+        let items: any = graphQuery.data?.nodes;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
-        // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode, customIcons.data ?? {});
+        const hideNodes = displayTable;
+        if (!hideNodes) initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
+    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+
+    // Changes highlighted item when browser back/forward is used
+    useEffect(() => {
+        if (selectedItem && selectedItem !== highlightedItem) {
+            setHighlightedItem(selectedItem);
+        }
+        // NOTE: Do not include `highlightedItem` as it will override ability to unselect highlights
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedItem]);
+
+    /* useCallback Event Handlers must appear before return statement */
+    const selectItem = useCallback(
+        (id: string) => {
+            setSelectedItem(id);
+            setHighlightedItem(id);
+        },
+        [setSelectedItem]
+    );
+
+    const handleRowClick = useCallback(
+        (row: MungedTableRowWithId) => {
+            if (row.id !== selectedItem) {
+                setSelectedItem(row.id);
+            }
+        },
+        [setSelectedItem, selectedItem]
+    );
+
+    const handleContextMenu = useCallback(
+        (event: SigmaNodeEventPayload) => {
+            selectItem(event.node);
+            setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        },
+        [contextMenu, selectItem, setContextMenu]
+    );
+
+    /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
+    const handleKebabMenuClick = useCallback(
+        (nodeInfo: NodeClickInfo) => {
+            if (!nodeInfo.id) return;
+            handleContextMenu({ event: { x: nodeInfo.x, y: nodeInfo.y }, node: nodeInfo.id } as SigmaNodeEventPayload);
+        },
+        [handleContextMenu]
+    );
+
+    const handleDownloadClick = useCallback(() => {
+        if (graphQuery.data) {
+            exportToJson({ nodes: graphQuery.data.rawNodes });
+        }
+    }, [graphQuery.data]);
 
     if (isLoading) {
         return (
@@ -94,24 +178,39 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError) throw new Error();
+    if (isError) return <GraphViewErrorAlert />;
 
-    if (!isWebGLEnabled()) {
-        return <WebGLDisabledAlert />;
-    }
+    if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
     /* Event Handlers */
-    const handleClickNode = (id: string) => {
-        setSelectedItem(id);
-    };
-
-    const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        setSelectedItem(event.node);
+    const cancelHighlight = () => {
+        setHighlightedItem(null);
     };
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
+    };
+
+    const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
+        const newItems = makeStoreMapFromColumnOptions(columnOptions);
+
+        dispatch(setSelectedExploreTableColumns(newItems));
+    };
+
+    const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
+        if (layout === 'table') {
+            dispatch(setIsExploreTableSelected(true));
+            return;
+        }
+
+        dispatch(setExploreLayout(layout));
+        dispatch(setIsExploreTableSelected(false));
+
+        if (layout === 'standard') {
+            sigmaChartRef.current?.runStandardLayout();
+        } else if (layout === 'sequential') {
+            sigmaChartRef.current?.runSequentialLayout();
+        }
     };
 
     return (
@@ -121,7 +220,10 @@ const GraphView: FC = () => {
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
                 graph={graphologyGraph}
-                onClickNode={handleClickNode}
+                highlightedItem={highlightedItem}
+                onClickEdge={selectItem}
+                onClickNode={selectItem}
+                onClickStage={cancelHighlight}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
@@ -130,67 +232,59 @@ const GraphView: FC = () => {
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
-                    <GraphButtons
-                        onExportJson={() => {
-                            exportToJson(exportJsonData);
-                        }}
-                        onReset={() => {
-                            sigmaChartRef.current?.resetCamera();
-                        }}
-                        onRunSequentialLayout={() => {
-                            sigmaChartRef.current?.runSequentialLayout();
-                        }}
-                        onRunStandardLayout={() => {
-                            sigmaChartRef.current?.runStandardLayout();
-                        }}
-                        onSearchCurrentResults={() => {
-                            toggleCurrentSearch();
-                        }}
-                        onToggleAllLabels={() => {
-                            if (!showNodeLabels || !showEdgeLabels) {
-                                setShowNodeLabels(true);
-                                setShowEdgeLabels(true);
-                            } else {
-                                setShowNodeLabels(false);
-                                setShowEdgeLabels(false);
-                            }
-                        }}
-                        onToggleNodeLabels={() => {
-                            setShowNodeLabels((prev) => !prev);
-                        }}
-                        onToggleEdgeLabels={() => {
-                            setShowEdgeLabels((prev) => !prev);
-                        }}
-                        showNodeLabels={showNodeLabels}
-                        showEdgeLabels={showEdgeLabels}
-                        isCurrentSearchOpen={false}
-                        isJsonExportDisabled={isEmpty(exportJsonData)}
-                    />
-                </div>
-                <Popper
-                    open={currentSearchOpen}
-                    anchorEl={currentSearchAnchorElement.current}
-                    placement='top'
-                    disablePortal
-                    className='w-[90%] z-[1]'>
-                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
-                        <SearchCurrentNodes
-                            sx={{ padding: 1, marginBottom: 1 }}
-                            currentNodes={currentNodes || {}}
-                            onSelect={(node) => {
-                                handleClickNode?.(node.id);
-                                toggleCurrentSearch?.();
-                            }}
-                            onClose={toggleCurrentSearch}
-                        />
-                    </div>
-                </Popper>
+                <GraphControls
+                    isExploreTableSelected={isExploreTableSelected}
+                    layoutOptions={baseGraphLayouts}
+                    selectedLayout={exploreLayout ?? defaultGraphLayout}
+                    onLayoutChange={handleLayoutChange}
+                    showNodeLabels={showNodeLabels}
+                    onToggleNodeLabels={toggleShowNodeLabels}
+                    showEdgeLabels={showEdgeLabels}
+                    onToggleEdgeLabels={toggleShowEdgeLabels}
+                    jsonData={exportJsonData}
+                    onReset={() => sigmaChartRef.current?.resetCamera()}
+                    currentNodes={currentNodes}
+                    onSearchedNodeClick={(node) => {
+                        selectItem(node.id);
+                        sigmaChartRef?.current?.zoomTo(node.id);
+                    }}
+                />
             </div>
             <GraphItemInformationPanel />
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <FeatureFlag
+                flagKey='tier_management_engine'
+                enabled={
+                    <ContextMenuZoneManagementEnabled
+                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        onClose={handleCloseContextMenu}
+                    />
+                }
+                disabled={
+                    <ContextMenu
+                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        handleClose={handleCloseContextMenu}
+                    />
+                }
+            />
+
             <GraphProgress loading={graphQuery.isLoading} />
-            <NoDataDialogWithLinks open={!data?.length} />
+            <NoDataDialogWithLinks open={!graphHasData} />
+            {tableViewFeatureFlag?.enabled && displayTable && (
+                <ExploreTable
+                    data={graphQuery.data?.nodes}
+                    allColumnKeys={graphQuery.data.node_keys}
+                    selectedColumns={selectedColumns}
+                    onManageColumnsChange={handleManageColumnsChange}
+                    onKebabMenuClick={handleKebabMenuClick}
+                    onDownloadClick={handleDownloadClick}
+                    onRowClick={handleRowClick}
+                    selectedNode={selectedItem}
+                    onClose={() => {
+                        setAutoDisplayTable(false);
+                        dispatch(setIsExploreTableSelected(false));
+                    }}
+                />
+            )}
         </div>
     );
 };

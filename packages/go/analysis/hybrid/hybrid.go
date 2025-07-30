@@ -22,15 +22,15 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
-	adSchema "github.com/specterops/bloodhound/graphschema/ad"
-	azureSchema "github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	azureSchema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {

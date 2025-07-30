@@ -196,8 +196,6 @@ const FileUploadDialog: React.FC<{
 
     const handleSubmit = () => {
         if (fileUploadStep === FileUploadStep.ADD_FILES) {
-            setFileUploadStep(FileUploadStep.CONFIRMATION);
-        } else if (fileUploadStep === FileUploadStep.CONFIRMATION) {
             setFileUploadStep(FileUploadStep.UPLOAD);
             handleUploadAllFiles();
         }
@@ -223,10 +221,9 @@ const FileUploadDialog: React.FC<{
                             accept={listFileTypesForIngest.data?.data}
                         />
                     )}
-                    {(fileUploadStep === FileUploadStep.CONFIRMATION || fileUploadStep === FileUploadStep.UPLOAD) && (
+                    {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
                         <Box fontSize={20} marginBottom={5}>
-                            {uploadMessage ||
-                                'The following files will be uploaded and ingested into BloodHound. This cannot be undone.'}
+                            {uploadMessage}
                         </Box>
                     )}
 
@@ -252,16 +249,10 @@ const FileUploadDialog: React.FC<{
                             })}
                         </Box>
                     )}
-
-                    {fileUploadStep === FileUploadStep.CONFIRMATION && (
-                        <Box fontSize={20} marginTop={3}>
-                            Press "Upload" to continue.
-                        </Box>
-                    )}
                 </>
             </DialogContent>
             <DialogActions>
-                {(fileUploadStep === FileUploadStep.ADD_FILES || fileUploadStep === FileUploadStep.CONFIRMATION) && (
+                {fileUploadStep === FileUploadStep.ADD_FILES && (
                     <>
                         <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
                             Cancel
