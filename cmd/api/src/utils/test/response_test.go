@@ -185,7 +185,7 @@ func TestOverwriteQueryParamIfHeaderAndParamExist(t *testing.T) {
 	}
 }
 
-func TestNormalizeJSON(t *testing.T) {
+func TestSortJSONArrayElements(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -230,7 +230,7 @@ func TestNormalizeJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := NormalizeJSON(t, tt.input)
+			result := SortJSONArrayElements(t, tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

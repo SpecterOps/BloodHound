@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 
@@ -129,12 +129,13 @@ func OverwriteQueryParamIfHeaderAndParamExist(headers http.Header, headerKey, pa
 	return headers
 }
 
-// NormalizeJSON parses JSON and sorts arrays inside so order doesn't matter.
-// Returns raw string if input is not valid JSON.
-func NormalizeJSON(t *testing.T, raw string) any {
+// SortJSONArrayElements parses JSON and recursively sorts all arrays so their order doesn't affect equality.
+// Returns the raw string if the input is not valid JSON.
+//
+// Use this to normalize JSON bodies in tests where slice order is nondeterministic.
+func SortJSONArrayElements(t *testing.T, raw string) any {
 	var data any
-	err := json.Unmarshal([]byte(raw), &data)
-	if err != nil {
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return raw
 	}
 
@@ -146,20 +147,40 @@ func sortJSONArrays(v any) {
 	switch val := v.(type) {
 	case []any:
 		for _, elem := range val {
-			sortJSONArrays(elem)
+			sortJSONArrays(elem) // Recursively sort nested arrays
 		}
-		sort.SliceStable(val, func(i, j int) bool {
-			bi, err1 := json.Marshal(val[i])
-			bj, err2 := json.Marshal(val[j])
+		slices.SortStableFunc(val, func(a, b any) int {
+			ba, err1 := json.Marshal(a)
+			bb, err2 := json.Marshal(b)
 			if err1 != nil || err2 != nil {
-				// Fallback to some consistent ordering when marshal fails
-				return fmt.Sprintf("%v", val[i]) < fmt.Sprintf("%v", val[j])
+				// Fallback to string representation if marshaling fails
+				sa := fmt.Sprintf("%#v", a)
+				sb := fmt.Sprintf("%#v", b)
+
+				// Check if sa comes before sb in order
+				if sa < sb {
+					return -1
+				// Check if sa comes after sb in order
+				} else if sa > sb {
+					return 1
+				}
+				// sa and sb are equal
+				return 0
 			}
- 			return string(bi) < string(bj)
- 		})
+
+			// Compare JSON-encoded strings in order
+			sa, sb := string(ba), string(bb)
+			if sa < sb {
+				return -1
+			} else if sa > sb {
+				return 1
+			}
+			return 0
+		})
 	case map[string]any:
 		for _, vv := range val {
-			sortJSONArrays(vv)
+			sortJSONArrays(vv) // Recursively sort nested arrays
 		}
 	}
 }
+
