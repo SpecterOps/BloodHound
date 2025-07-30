@@ -74,7 +74,6 @@ export const updateQueryPermissions = (
 
 export const useUpdateQueryPermissions = () => {
     const queryClient = useQueryClient();
-
     return useMutation(updateQueryPermissions, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.permissions);
@@ -100,7 +99,6 @@ export const useSavedQueries = () => useQuery(savedQueryKeys.all, ({ signal }) =
 
 export const useCreateSavedQuery = () => {
     const queryClient = useQueryClient();
-
     return useMutation(createSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
@@ -110,7 +108,6 @@ export const useCreateSavedQuery = () => {
 
 export const useUpdateSavedQuery = () => {
     const queryClient = useQueryClient();
-
     return useMutation(updateSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
@@ -120,7 +117,6 @@ export const useUpdateSavedQuery = () => {
 
 export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
-
     return useMutation(deleteSavedQuery, {
         onSuccess: (data) => {
             queryClient.invalidateQueries(savedQueryKeys.all);
@@ -130,7 +126,6 @@ export const useDeleteSavedQuery = () => {
 
 export const useImportSavedQuery = () => {
     const queryClient = useQueryClient();
-
     return useMutation(importSavedQuery, {
         onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);

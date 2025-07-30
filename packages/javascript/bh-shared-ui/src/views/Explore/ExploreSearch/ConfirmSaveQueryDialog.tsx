@@ -3,6 +3,7 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
+    DialogDescription,
     DialogPortal,
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
@@ -17,15 +18,14 @@ const ConfirmUpdateQueryDialog: FC<{
     return (
         <Dialog open={open}>
             <DialogPortal>
-                <DialogTitle>Update Query</DialogTitle>
                 <DialogContent>
-                    <div>{dialogContent}</div>
-
+                    <DialogTitle>Update Query</DialogTitle>
+                    <DialogDescription>{dialogContent}</DialogDescription>
                     <DialogActions>
-                        <Button variant='secondary' onClick={handleCancel}>
+                        <Button variant='text' onClick={handleCancel}>
                             Cancel
                         </Button>
-                        <Button variant='primary' onClick={handleApply}>
+                        <Button variant='text' onClick={handleApply}>
                             Ok
                         </Button>
                     </DialogActions>

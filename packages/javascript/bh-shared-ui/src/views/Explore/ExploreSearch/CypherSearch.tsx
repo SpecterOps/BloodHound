@@ -17,6 +17,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
@@ -30,7 +31,6 @@ import {
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
-import ConfirmUpdateQueryDialog from './ConfirmSaveQueryDialog';
 import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
@@ -72,7 +72,6 @@ const CypherSearch = ({
         showMessage: false,
         message: '',
     });
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     const [sharedIds, setSharedIds] = useState<string[]>([]);
 
@@ -148,20 +147,15 @@ const CypherSearch = ({
         );
     };
 
-    const handleUpdateQuery = async (data: {
-        name: string;
-        description: string;
-        id: number | undefined;
-        localCypherQuery: string;
-    }) => {
+    const handleUpdateQuery = async (data: UpdateUserQueryRequest) => {
         return updateSavedQueryMutation.mutate(
-            { name: data.name, description: data.description, id: data.id as number, query: data.localCypherQuery },
+            { name: data.name, description: data.description, id: data.id, query: data.query },
             {
                 onSuccess: (res) => {
                     setShowSaveQueryDialog(false);
+                    setSelected({ query: data.query, id: data.id });
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
-                    performSearch(data.localCypherQuery);
-                    setSelected({ query: data.localCypherQuery, id: data.id });
+                    performSearch(data.query);
                     updateQueryPermissions(res.id);
                 },
             }
@@ -218,13 +212,6 @@ const CypherSearch = ({
     const handleSaveAs = () => {
         setSelected({ query: '' });
         setShowSaveQueryDialog(true);
-    };
-
-    const handleConfirm = () => {
-        console.log('handleConfirm');
-    };
-    const handleCancelConfirm = () => {
-        console.log('handleCancelConfirm');
     };
 
     return (
@@ -292,7 +279,6 @@ const CypherSearch = ({
                         <Button
                             variant='secondary'
                             onClick={() => {
-                                // setShowSaveQueryDialog(true);
                                 handleClickSave();
                             }}
                             size={'small'}
@@ -329,18 +315,12 @@ const CypherSearch = ({
                 onClose={handleCloseSaveQueryDialog}
                 onSave={handleSaveQuery}
                 onUpdate={handleUpdateQuery}
-                isLoading={createSavedQueryMutation.isLoading}
+                isLoading={updateSavedQueryMutation.isLoading}
                 error={createSavedQueryMutation.error}
                 cypherSearchState={cypherSearchState}
                 selectedQuery={selectedQuery}
                 sharedIds={sharedIds}
                 setSharedIds={setSharedIds}
-            />
-            <ConfirmUpdateQueryDialog
-                handleCancel={handleCancelConfirm}
-                handleApply={handleConfirm}
-                open={isConfirmOpen}
-                dialogContent={'Are you sure you want to update this query?'}
             />
         </>
     );

@@ -35,9 +35,11 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../../constants';
 import { apiClient, cn } from '../../../utils';
+import ConfirmUpdateQueryDialog from './ConfirmSaveQueryDialog';
 import SavedQueryPermissions from './SavedQueryPermissions';
 
 type CypherSearchState = {
@@ -50,12 +52,7 @@ const SaveQueryDialog: React.FC<{
     open: boolean;
     onClose: () => void;
     onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<any>;
-    onUpdate: (data: {
-        name: string;
-        description: string;
-        id: number | undefined;
-        localCypherQuery: string;
-    }) => Promise<any>;
+    onUpdate: (data: UpdateUserQueryRequest) => Promise<any>;
     isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
@@ -83,23 +80,27 @@ const SaveQueryDialog: React.FC<{
     const [id, setId] = useState(undefined);
     const [isNew, setIsNew] = useState(true);
     const [localCypherQuery, setLocalCypherQuery] = useState('');
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     const { cypherQuery } = cypherSearchState;
 
     useEffect(() => {
         if (selectedQuery) {
-            //The prebuilt queries do not have a name property.  Returns undefined and throws an error surrounding controlled/uncontrolled components.  Need unified data shape for saved queries.
-            setName(selectedQuery.name ? selectedQuery.name : '');
-            setDescription(selectedQuery.description);
             setId(selectedQuery.id);
             setIsNew(false);
         } else {
-            setName('');
-            setDescription('');
             setId(undefined);
             setIsNew(true);
         }
     }, [selectedQuery]);
+
+    useEffect(() => {
+        setName(selectedQuery && selectedQuery.name ? selectedQuery.name : '');
+    }, [selectedQuery?.name]);
+
+    useEffect(() => {
+        setDescription(selectedQuery && selectedQuery.description ? selectedQuery.description : '');
+    }, [selectedQuery?.description]);
 
     useEffect(() => {
         setLocalCypherQuery(cypherQuery);
@@ -111,7 +112,7 @@ const SaveQueryDialog: React.FC<{
         if (isNew) {
             onSave({ name, description, localCypherQuery });
         } else {
-            onUpdate({ name, description, id, localCypherQuery });
+            setIsConfirmOpen(true);
         }
     };
     const cypherEditorRef = useRef<CypherEditor | null>(null);
@@ -119,6 +120,17 @@ const SaveQueryDialog: React.FC<{
         queryKey: ['graph-kinds'],
         queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
     });
+
+    const handleConfirmUpdate = () => {
+        if (id) {
+            onUpdate({ name, description, id, query: localCypherQuery });
+            setIsConfirmOpen(false);
+        }
+    };
+
+    const handleCancelConfirm = () => {
+        setIsConfirmOpen(false);
+    };
 
     return (
         <>
@@ -151,6 +163,7 @@ const SaveQueryDialog: React.FC<{
                                                 setName(e.target.value);
                                             }}
                                         />
+                                        <div>{isLoading.toString()}</div>
                                     </div>
 
                                     <div className='mb-2'>
@@ -225,6 +238,12 @@ const SaveQueryDialog: React.FC<{
                     </DialogContent>
                 </DialogPortal>
             </Dialog>
+            <ConfirmUpdateQueryDialog
+                handleCancel={handleCancelConfirm}
+                handleApply={handleConfirmUpdate}
+                open={isConfirmOpen}
+                dialogContent={'Are you sure you want to update this query?'}
+            />
         </>
     );
 };
