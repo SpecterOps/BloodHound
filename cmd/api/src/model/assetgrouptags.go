@@ -92,6 +92,7 @@ type AssetGroupTag struct {
 	Position        null.Int32        `json:"position"`
 	RequireCertify  null.Bool         `json:"require_certify"`
 	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
+	Glyph           null.String       `json:"glyph"`
 }
 
 type AssetGroupTags []AssetGroupTag
