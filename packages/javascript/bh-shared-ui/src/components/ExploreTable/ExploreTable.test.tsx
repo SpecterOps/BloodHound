@@ -24,7 +24,6 @@ import { makeStoreMapFromColumnOptions } from './explore-table-utils';
 
 const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primary)]';
 
-const downloadCallbackSpy = vi.fn();
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
 
@@ -56,7 +55,6 @@ const WrappedExploreTable = () => {
                 const newColumns = makeStoreMapFromColumnOptions(columns);
                 setSelectedColumns(newColumns);
             }}
-            onDownloadClick={downloadCallbackSpy}
             onClose={closeCallbackSpy}
             selectedNode={selectedNode || null}
             onKebabMenuClick={kebabCallbackSpy}
@@ -147,17 +145,6 @@ describe('ExploreTable', async () => {
         await user.click(expandButton);
 
         expect(container.className).toContain('h-[calc(100%');
-    });
-
-    it('Download button causes the callback function to be called', async () => {
-        const { user } = await setup();
-
-        expect(downloadCallbackSpy).not.toBeCalled();
-        const downloadButton = screen.getByTestId('download-button');
-
-        await user.click(downloadButton);
-
-        expect(downloadCallbackSpy).toBeCalled();
     });
 
     it('Close button click causes the callback function to be called', async () => {

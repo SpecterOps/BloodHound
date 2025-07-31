@@ -30,5 +30,8 @@
     "cross-spawn": "^7.0.5",
     "tar-fs": "^2.1.2",
     "form-data": "^4.0.4"
+  },
+  "dependencies": {
+    "json-2-csv": "^5.5.9"
   }
 }

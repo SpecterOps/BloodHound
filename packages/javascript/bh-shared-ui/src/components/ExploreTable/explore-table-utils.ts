@@ -76,6 +76,5 @@ export interface ExploreTableProps {
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
     selectedNode: string | null;
-    onDownloadClick: () => void;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }
