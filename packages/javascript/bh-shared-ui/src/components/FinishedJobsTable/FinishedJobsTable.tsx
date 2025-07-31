@@ -1,116 +1,63 @@
-import { ColumnDef, DataTable, Pagination, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
+import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 import { toCollected, toFormatted, toMins, useFinishedJobsQuery } from './finishedJobs';
 
-const COLUMNS_BASE: ColumnDef<ScheduledJobDisplay>[] = [
-    {
-        header: () => <span className='pl-4'>ID / Client / Status</span>,
-        id: 'id',
-        size: 160,
-    },
-    {
-        header: 'Message',
-        id: 'status',
-        size: 170,
-    },
-    {
-        header: 'Start Time',
-        id: 'start',
-        size: 100,
-    },
-    {
-        header: 'Duration',
-        id: 'duration',
-        size: 75,
-    },
-    {
-        header: 'Data Collected',
-        id: 'collected',
-        size: 210,
-    },
-];
+const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'Data Collected'];
 
-const LOADING_CELLS = [
-    () => (
-        <>
-            <Skeleton className='ml-4 mb-1 h-4' />
-            <Skeleton className='ml-4 mb-1 h-4' />
-            <Skeleton className='ml-4 h-4' />
-        </>
-    ),
-    () => <Skeleton className='h-4' />,
-    () => <Skeleton className='h-4' />,
-    () => <Skeleton className='h-4' />,
-    () => (
-        <>
-            <Skeleton className='h-4 mb-1' />
-            <Skeleton className='h-4 mb-1' />
-            <Skeleton className='h-4' />
-        </>
-    ),
-];
+const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verticalAlign: 'baseline' }));
 
-const FINISHED_JOB_CELLS = [
-    ({ row: { original: job } }) => (
-        <div className='pl-4'>
+const getRows = (job: ScheduledJobDisplay) => {
+    const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
+    return [
+        <div className='w-[120px]' key={`status-${job.id}`}>
             <div>ID {job.id}</div>
             <div>{job.client_name}</div>
             <div className='flex items-center'>
                 <StatusIndicator status={job.status} type='job' />
             </div>
-        </div>
-    ),
-    ({ row: { original: job } }) => job.status_message,
-    ({ row: { original: job } }) => {
-        const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
-        return (
-            <>
-                <div>{date}</div>
-                <div>
-                    {time} {tz}
-                </div>
-            </>
-        );
-    },
-    ({ row: { original: job } }) => toMins(job.start_time, job.end_time),
-    ({ row: { original: job } }) => toCollected(job),
-] as ColumnDef<ScheduledJobDisplay>['cell'][];
-
-/** Return columns with either loading state or success state */
-const getColumns = (isLoading: boolean) =>
-    COLUMNS_BASE.map((item, index) => ({
-        ...item,
-        cell: isLoading ? LOADING_CELLS[index] : FINISHED_JOB_CELLS[index],
-    }));
+        </div>,
+        <div className='w-[180px]' key={`message-${job.id}`}>
+            {job.status_message}
+        </div>,
+        <div className='w-[80px]' key={`start-${job.id}`}>
+            <div>{date}</div>
+            <div>
+                {time} {tz}
+            </div>
+        </div>,
+        <div className='w-[55px]' key={`duration-${job.id}`}>
+            {toMins(job.start_time, job.end_time)}
+        </div>,
+        <div className='w-[200px]' key={`collected-${job.id}`}>
+            {toCollected(job)}
+        </div>,
+    ];
+};
 
 export const FinishedJobsLogTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const { data, isFetching } = useFinishedJobsQuery({ page, rowsPerPage });
+    const { data, isLoading } = useFinishedJobsQuery({ page, rowsPerPage });
 
     const finishedJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
     return (
-        <>
-            <DataTable
-                columns={getColumns(isFetching)}
-                data={finishedJobs}
-                TableProps={{ className: 'table-fixed' }}
-                TableCellProps={{ className: 'align-baseline max-w-[240px]' }}
-            />
-
-            {/* TO FIX: Why does the DataTable cover this up? */}
-            <Pagination
-                count={count}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={setPage}
-                onRowsPerPageChange={setRowsPerPage}
-            />
-        </>
+        <DataTable
+            data={finishedJobs.map(getRows)}
+            headers={getHeaders(HEADERS)}
+            isLoading={isLoading}
+            paginationProps={{
+                page,
+                rowsPerPage,
+                count,
+                onPageChange: (_event, page) => setPage(page),
+                onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+            }}
+            showPaginationControls
+        />
     );
 };
