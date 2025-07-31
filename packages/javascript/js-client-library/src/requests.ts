@@ -197,6 +197,12 @@ export type RiskDetailsRequest = {
     Accepted?: string;
 };
 
+export enum QueryScope {
+    PREBUILT = 'prebuilt',
+    OWNED = 'owned',
+    SHARED = 'shared',
+}
+
 export interface CreateUserQueryRequest {
     name: string;
     description: string;

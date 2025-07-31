@@ -17,6 +17,7 @@
 import {
     CreateUserQueryRequest,
     DeleteUserQueryPermissionsRequest,
+    QueryScope,
     RequestOptions,
     SavedQuery,
     UpdateUserQueryPermissionsRequest,
@@ -24,14 +25,13 @@ import {
 } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
-
 export const savedQueryKeys = {
     all: ['savedQueries'] as const,
     permissions: ['permissions'] as const,
 };
 
-export const getSavedQueries = (options?: RequestOptions): Promise<SavedQuery[]> => {
-    return apiClient.getUserSavedQueries(options).then((response) => response.data.data);
+export const getSavedQueries = (scope: QueryScope, options?: RequestOptions): Promise<SavedQuery[]> => {
+    return apiClient.getUserSavedQueries(scope, options).then((response) => response.data.data);
 };
 
 export const getExportQueries = (): Promise<any> => {
@@ -95,7 +95,9 @@ export const useDeleteQueryPermissions = () => {
     });
 };
 
-export const useSavedQueries = () => useQuery(savedQueryKeys.all, ({ signal }) => getSavedQueries({ signal }));
+export const useSavedQueries = (scope: QueryScope = QueryScope.OWNED) => {
+    return useQuery(savedQueryKeys.all, ({ signal }) => getSavedQueries(scope, { signal }));
+};
 
 export const useCreateSavedQuery = () => {
     const queryClient = useQueryClient();

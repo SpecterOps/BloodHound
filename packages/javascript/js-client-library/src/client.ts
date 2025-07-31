@@ -33,6 +33,7 @@ import {
     PostureRequest,
     PreviewSelectorsRequest,
     PutUserAuthSecretRequest,
+    QueryScope,
     RequestOptions,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
@@ -131,13 +132,14 @@ class BHEAPIClient {
         );
     };
 
-    getUserSavedQueries = (options?: RequestOptions) => {
+    getUserSavedQueries = (scope: QueryScope, options?: RequestOptions) => {
         return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
             '/api/v2/saved-queries',
             Object.assign(
                 {
                     params: {
                         sort_by: 'name',
+                        scope: scope,
                     },
                 },
                 options
