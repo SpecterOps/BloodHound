@@ -1,0 +1,120 @@
+# Copyright 2025 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+get:
+  operationId: GetAssetGroupTagCertifications
+  summary: Get Asset Group Tag Certifications
+  description: Get a list of objects by asset group tag certification status.
+  tags:
+    - Asset Isolation
+    - Community
+    - Enterprise
+  parameters:
+    - $ref: './../parameters/query.skip.yaml'
+    - $ref: './../parameters/query.limit.yaml'
+    - name: environments
+      in: query
+      required: false
+      description: Environment IDs
+      schema:
+        type: array
+        items:
+          type: string
+    - name: asset_group_tag_id
+      in: query
+      required: false
+      schema:
+          $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: type
+      in: query
+      required: false
+      description: |
+        Node type.
+        Some AD examples: `Base`, `User`, `Computer`, `Group`, `Container`.
+        Some Azure examples: `AZBase`, `AZApp`, `AZDevice`.
+      schema:
+        type: array
+        items:
+           $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: certification
+      in: query 
+      required: false 
+      schema: 
+          type: string
+          enum: ["REVOKED", "NONE", "MANUAL", "AUTO"]
+    - name: start
+      in: query
+      required: false
+      description: Starting date where objects were first seen
+      schema: 
+        type: string
+        format: date-time
+    - name: end
+      in: query
+      required: false
+      description: Ending date where objects were first seen
+      schema: 
+        type: string
+        format: date-time
+    - name: query
+      in: query
+      description: Search parameter to fuzzy search object list
+      required: false
+      schema: 
+        type: string
+            
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.pagination.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      members:
+                        type: array
+                        items:
+                          allOf: 
+                            - $ref: './../schemas/model.asset-group-member.yaml'
+                            - type: object 
+                              properties: 
+                                first_seen:
+                                  type: string
+                                  format: date-time
+                                certification:
+                                  type: string
+                                  enum: ["REVOKED", "NONE", "MANUAL", "AUTO"]
+                                certified_by:
+                                  type: string 
+
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

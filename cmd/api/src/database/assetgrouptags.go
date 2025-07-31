@@ -67,6 +67,7 @@ type AssetGroupTagSelectorNodeData interface {
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
+	GetSelectorNodes(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupSelectorNode, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -704,6 +705,22 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 		return nodes, nil
 	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
+}
+
+func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupSelectorNode, error) {
+	var nodes []model.AssetGroupSelectorNode
+
+	// TODO (or not) -- this needs to be updated to account for the de-duping logic.
+	// Not sure this logic can be done in SQL correctly
+	// if requiring a specific date range, grab all rows where the nodeId matches a nodeId within the date range
+
+	// if requiring a specific `certified` value, must grab ALL nodes related to the selector
+	baseQuery := fmt.Sprintf(`SELECT n.* FROM %s n 
+	INNER JOIN %s s ON n.selector_id = s.id
+	INNER JOIN %s t ON s.asset_group_tag_id = t.id
+	WHERE t.type = %d %s ORDER BY n.node_id ASC;"`)
+
+	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(baseQuery, model.AssetGroupSelectorNode{}.TableName(), model.AssetGroupTagSelector{}.TableName(), model.AssetGroupTag{}.TableName(), model.AssetGroupTagTypeTier, sqlFilter)).Find(&nodes))
 }
 
 func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {

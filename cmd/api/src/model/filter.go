@@ -405,16 +405,20 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilter(name, value string
 	return QueryParameterFilter{}, ErrNotFiltered
 }
 
+// TODO tac on a variadic arg to the end to add to ignoreFilters
 func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Request) (QueryParameterFilterMap, error) {
 	filters := make(QueryParameterFilterMap)
 
 	for name, values := range request.URL.Query() {
 		// ignore pagination query params
+		// update this to be a switch
+
+		// TODO put these checks into a helper function and change it in the other duplicated spots
 		if slices.Contains(AllPaginationQueryParameters(), name) {
 			continue
 		}
 
-		if slices.Contains(IgnoreFilters(), name) {
+		if IgnoreFilters(name) {
 			continue
 		}
 

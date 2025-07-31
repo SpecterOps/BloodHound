@@ -897,3 +897,314 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 		}
 	}
 }
+
+type AssetGroupMemberWithCertification struct {
+	AssetGroupMember
+	FirstSeen     time.Time                     `json:"first_seen"`
+	CertifiedBy   string                        `json:"certified_by"`
+	Certification model.AssetGroupCertification `json:"certification"`
+}
+
+func (AssetGroupMemberWithCertification) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"environments": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"asset_group_tag_id":        {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"type":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"query":     {},
+		"certified": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"certified_by":     {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		// "start": {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		// "end":   {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+	}
+}
+
+type FilteringConditional func(t AssetGroupMemberWithCertification) bool
+
+func (s AssetGroupMemberWithCertification) CreateFilteringConditionals(filterMap QueryParameterFilterMap) ([]FilteringConditional, error) {
+	conditionals := []FilteringConditional{}
+	for column, filters := range filterMap {
+		for _, filter := range filters {
+			if conditional, err := s.BuildServerSideFilteringConditional(column, filter.Operator, filter.Value); err != nil {
+				return conditionals, err
+			} else {
+				conditionals = append(conditionals, conditional)
+			}
+		}
+	}
+	return conditionals, nil
+}
+
+func (s AssetGroupMemberWithCertification) MeetsFilterRequirements(conditionals []FilteringConditional) bool {
+	for _, conditional := range conditionals {
+		if !conditional(s) {
+			return false
+		}
+	}
+	return true
+}
+
+// TODO do this for server-side processing conditionals AGSNs
+// TODO there may be a better way to do this
+// Maybe don't do this, might just need to make something bespoke
+func (s AssetGroupMemberWithCertification) BuildServerSideFilteringConditional(column string, operator FilterOperator, value string) (FilteringConditional, error) {
+	switch column {
+	case "certified":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.Certified == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.Certified != value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	case "certified_by":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.CertifiedBy == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.CertifiedBy != value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	case "start":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.FirstSeen.String() == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind != value }, nil
+		} else if operator == GreaterThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind > value }, nil
+		} else if operator == GreaterThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind >= value }, nil
+		} else if operator == LessThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind < value }, nil
+		} else if operator == LessThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind <= value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	case "end":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind != value }, nil
+		} else if operator == GreaterThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind > value }, nil
+		} else if operator == GreaterThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind >= value }, nil
+		} else if operator == LessThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind < value }, nil
+		} else if operator == LessThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind <= value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	default:
+		return nil, errors.New(ErrorResponseDetailsColumnNotFilterable)
+	}
+}
+
+func (s AssetGroupMemberWithCertification) CreateGraphDbFilterCriteria(filterMap QueryParameterFilterMap) ([]graph.Criteria, error) {
+	criteria := []graph.Criteria{}
+	for column, filters := range filterMap {
+		for _, filter := range filters {
+			if conditional, err := s.BuildGraphDbFilterCriteria(column, filter.Operator, filter.Value); err != nil {
+				return criteria, err
+			} else {
+				criteria = append(criteria, conditional)
+			}
+		}
+	}
+	return criteria, nil
+}
+
+// move this
+func (s AssetGroupMemberWithCertification) BuildGraphDbFilterCriteria(column string, operator FilterOperator, value string) (graph.Criteria, error) {
+	switch column {
+	case "certified":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.Certified == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.Certified != value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	case "first_seen_start":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind != value }, nil
+		} else if operator == GreaterThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind > value }, nil
+		} else if operator == GreaterThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind >= value }, nil
+		} else if operator == LessThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind < value }, nil
+		} else if operator == LessThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind <= value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	case "first_seen_end":
+		if operator == Equals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind == value }, nil
+		} else if operator == NotEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind != value }, nil
+		} else if operator == GreaterThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind > value }, nil
+		} else if operator == GreaterThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind >= value }, nil
+		} else if operator == LessThan {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind < value }, nil
+		} else if operator == LessThanOrEquals {
+			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind <= value }, nil
+		} else {
+			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
+		}
+	default:
+		return nil, errors.New(ErrorResponseDetailsColumnNotFilterable)
+	}
+}
+
+type GetAssetGroupMembersWithCertificationResponse struct {
+	Members []AssetGroupMemberWithCertification `json:"members"`
+}
+
+func nodeToAssetGroupMemberWithCertification(node *graph.Node, selectorNode model.AssetGroupSelectorNode, includeProperties bool) AssetGroupMemberWithCertification {
+	member := nodeToAssetGroupMember(node, includeProperties)
+	// TODO: add selectorNode fields to the member
+	return member
+}
+
+func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter, request *http.Request) {
+	var (
+		requestContext         = request.Context()
+		defaultSkip            = 0
+		defaultLimit           = 100
+		defaultStartTime = time.Now()
+		defaultEndTime = time.Time()
+		assetGroupMemberWithCertification = AssetGroupMemberWithCertification{}
+		firstSeenStartQueryParam = "start"
+		firstSeenEndQueryParam = "end"
+		queryParams            = request.URL.Query()
+	)
+	// Parse Query Parameters
+	if skip, err := ParseSkipQueryParameter(queryParams, defaultSkip); err != nil {
+		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, defaultLimit); err != nil {
+		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+	} else if firstSeenStartTime, err := ParseTimeQueryParameter(queryParams, firstSeenStartQueryParam, defaultStartTime); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
+	} else if firstSeenEndTime, err := ParseTimeQueryParameter(queryParams, firstSeenEndQueryParam, defaultStartTime); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else {
+		// TODO maybe -- this is repeated in other places, good opportunity to DRY
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(assetGroupMemberWithCertification, name); err != nil {
+				api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for _, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+				}
+			}
+
+		}
+
+		// TODO split filters out -- some for dawgs, some for sql, and some for server-side filtering
+
+		// SQL Filters for zoneId only
+		sqlFilter := model.SQLFilter{
+			SQLString: "",
+		}
+
+		if assetGroupTagId := request.URL.Query().Get(api.QueryParameterAssetGroupTagId); assetGroupTagId != "" {
+			sqlFilter.SQLString = fmt.Sprintf(" AND s.asset_group_tag_id = %s ", assetGroupTagId)
+		}
+
+		// DB call: AGT selector node table returns an array of AssetGroupSelectorNode
+		if selectorNodes, err := s.DB.GetSelectorNodes(requestContext, sqlFilter); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// de-dupe the results based on highest certification status / earliest last seen date
+			selectorNodeMap := make(map[graph.ID]model.AssetGroupSelectorNode)
+			for _, selectorNode := range selectorNodes {
+				if mapNode, nodeExists := selectorNodeMap[selectorNode.NodeId]; nodeExists {
+					// set the date to be the earliest first seen
+					if selectorNode.CreatedAt.Before(mapNode.CreatedAt) {
+						mapNode.CreatedAt = selectorNode.CreatedAt
+					}
+					// set the certification to the highest value of the two
+					if selectorNode.Certified > mapNode.Certified {
+						mapNode.Certified = selectorNode.Certified
+						mapNode.CertifiedBy = selectorNode.CertifiedBy
+					}
+				} else {
+					selectorNodeMap[selectorNode.NodeId] = selectorNode
+				}
+			}
+
+			// post-processing to get only the nodes that match the certification status, first seen query params (if present)
+
+			// TODO create filterMap -- make sure if no certification_status param, default to 0 (uncertified)
+			// also add start and end date times to the queryFilters 
+			if queryFilters["certification_status"]
+			conditionals, err := assetGroupMemberWithCertification.CreateFilteringConditionals(queryFilters)
+
+			var nodeIds []graph.ID
+			for _, node := range selectorNodeMap {
+				if node.MeetsFilterRequirements(conditionals) {
+					nodeIds = append(nodeIds, node.NodeId)
+				}
+			}
+			// Call DAWGS to further filter using the nodeIds from the DB
+			// TODO -- add fuzzy search (name or objectId), env_id (this will be an OR), and kind filtering
+
+			// this is how you query DAWGS for env ID
+			//  query.Or(
+			// 	query.Equals(query.NodeProperty(ad.DomainSID.String()), envID),
+			// 	query.Equals(query.NodeProperty(azure.TenantID.String()), envID),
+			// ))
+
+			//return query.And(
+						// query.Kind(query.Node(), kind),
+						// query.Or(
+						// 	query.StringStartsWith(query.NodeProperty(common.Name.String()), strings.ToUpper(searchValue)),
+						// 	query.StringStartsWith(query.NodeProperty(common.ObjectID.String()), strings.ToUpper(searchValue)),
+						// ),
+
+			dawgsFilterCriteria, err := assetGroupMemberWithCertification.CreateGraphDBFilterCriteria(queryFilters)
+
+			if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(
+				// put these in a variable and then dynamically create filters and spread
+				// then you can add filters dynamically
+				query.KindIn(query.Node(), assetGroupTag.ToKind()),
+				query.InIDs(query.NodeID(), nodeIds...), ...dawgsFilterCriteria), skip, limit); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
+			} else if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), dawgsFilterCriteria); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+			} else {
+				// return paginated AssetGroupMemberWithCertification of matches and also a count
+				var members []api.AssetGroupMemberWithCertification
+				for _, node := range nodes {
+					// TODO: nodeToAssetGroupMember does not incude all fields required for return type, create new similar function that takes in the DB response and the DAWGS response and combines them into an  AssetGroupMemberWithCertification
+					members = append(members, nodeToAssetGroupMemberWithCertification(node, selectorNodeMap[node.ID], excludeProperties))
+				}
+				api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersWithCertificationResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
+			}
+
+		}
+
+		// fields in array of response matches:
+		// 	Object Type (node type) <- nodeToAssetGroupMember helper function
+		// 	Object Name (node name) <- nodeToAssetGroupMember helper function
+		// 	Environment (DAWGS)
+		// 	Zone (asset group tag ID in the AGT table)
+		// 	First Seen (AGT selector node table -- server side )
+		// 	Certified enum (AGT selector node table)
+		// 	Certified by (AGT selector node table) <- probably not going to do this
+	}
+
+}

@@ -356,6 +356,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.search.yaml'
   /api/v2/asset-group-tags-history:
     $ref: './paths/asset-isolation.asset-group-tags-history.yaml'
+  /api/v2/asset-group-tags/certifications:
+    $ref: './paths/asset-isolation.asset-group-tags.certifications.yaml'
 
   # graph
   /api/v2/graphs/kinds:

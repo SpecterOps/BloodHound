@@ -59,10 +59,14 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func IgnoreFilters() []string {
-	return []string{
-		"scope",
+func IgnoreFilters(filterName string) bool {
+	switch filterName {
+	case "scope", "start", "end":
+		return true
+	default:
+		return false
 	}
+
 }
 
 func (s SavedQueries) GetFilterableColumns() []string {
