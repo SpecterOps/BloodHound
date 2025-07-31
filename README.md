@@ -20,7 +20,8 @@ Please refer to the [Quickstart Guide for BloodHound Community Edition](https://
 
 - [BloodHound Documentation](https://bloodhound.specterops.io/)
 - [BloodHound Community Edition Quickstart Guide](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart)
-- [BloodHound Slack](https://ghst.ly/BHSlack)
+- [BloodHound Slack](https://slack.specterops.io)
+- [OpenGraph Documentation](https://bloodhound.specterops.io/opengraph/overview)
 - [Wiki](https://github.com/SpecterOps/BloodHound/wiki)
 - [Docker Compose Example](./examples/docker-compose/README.md)
 - [Developer Quick Start Guide](https://github.com/SpecterOps/BloodHound/wiki/Development)
