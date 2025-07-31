@@ -28,32 +28,20 @@ export const usePrebuiltQueries = () => {
     return queryList;
 };
 
-//TODO - DRY this out
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
     const queryList = usePrebuiltQueries();
-    if (id) {
-        for (const item of queryList) {
-            let result = null;
-            result = item.queries.find((query) => {
-                if (query.id === id) {
-                    return query;
-                }
-            });
-            if (result) {
-                return result;
+
+    for (const item of queryList) {
+        let result = null;
+        result = item.queries.find((query) => {
+            if (id && query.id === id) {
+                return query;
+            } else if (query.query === cypherQuery) {
+                return query;
             }
-        }
-    } else {
-        for (const item of queryList) {
-            let result = null;
-            result = item.queries.find((query) => {
-                if (query.query === cypherQuery) {
-                    return query;
-                }
-            });
-            if (result) {
-                return result;
-            }
+        });
+        if (result) {
+            return result;
         }
     }
 };
