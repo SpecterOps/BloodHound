@@ -273,7 +273,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Tier Zero principals without AdminSDHolder protection',
-                cypher: `MATCH (n:Base)\nWHERE ((n:Tag_Tier_Zero) OR COALESCE(n.system_tags, '') CONTAINS 'admin_tier_0')\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+                cypher: `MATCH (n:Base)\nWHERE (n:${TAG_TIER_ZERO_AGT})\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
             },
         ],
     },
