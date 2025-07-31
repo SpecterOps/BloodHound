@@ -2761,6 +2761,15 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				},
 			},
 			{
+				Name: "Parse sort parameters error",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "sort_by", "invalid_column")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
 				Name: "Success with sort",
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, "sort_by", "created_at")
@@ -2810,4 +2819,94 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestDatabase_SearchAssetGroupTagHistory(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks_db.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{
+			DB: mockDB,
+		}
+		handler  = http.HandlerFunc(resources.SearchAssetGroupTagHistory)
+		endpoint = "/api/v2/asset-group-tags-history"
+	)
+
+	type WrappedResponse struct {
+		Record v2.AssetGroupHistoryResp `json:"records"`
+	}
+
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, nil)
+	require.Nil(t, err)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	t.Run("cannot decode request body error", func(t *testing.T) {
+		reqBody := `{"query":`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("query less than 3 characters error", func(t *testing.T) {
+
+		reqBody := `{"query": ""}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "search query must be at least 3 characters long")
+	})
+
+	t.Run("get asset group history records db error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupHistory{}, 0, errors.New("entity not found"))
+
+		reqBody := `{"query": "test"}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+		require.Equal(t, database.ErrNotFound, errors.New("entity not found"))
+	})
+
+	/*t.Run("success - query by actor", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expected, 8, nil)
+
+		reqBody := `{"query": "UpdateTag"}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		// verify skip, limit and count
+		//require.Equal(t, 0, wrapper.Skip)
+		//require.Equal(t, 100, wrapper.Limit)
+		//require.Equal(t, len(expectedHistoryRecs), wrapper.Count)
+
+		// verify the records are as expected
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})*/
 }
