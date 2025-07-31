@@ -102,6 +102,8 @@ export { default as FileUploadDialog } from './FileUploadDialog';
 export * from './FinishedIngestLog';
 export { default as FinishedIngestLog } from './FinishedIngestLog';
 
+export * from './FinishedJobsTable';
+
 export * from './GenericErrorBoundaryFallback';
 export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryFallback';
 
@@ -183,6 +185,8 @@ export { default as TextWithFallback } from './TextWithFallback';
 
 export * from './UpdateUserDialog';
 export { default as UpdateUserDialog } from './UpdateUserDialog';
+
+export * from './StatusIndicator';
 
 export * from './UpdateUserForm';
 export { default as UpdateUserForm } from './UpdateUserForm';
