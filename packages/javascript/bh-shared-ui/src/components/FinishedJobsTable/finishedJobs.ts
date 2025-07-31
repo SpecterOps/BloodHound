@@ -58,10 +58,11 @@ export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) =
     }, [addNotification, dismissNotification, hasPermission]);
 
     return useQuery<GetScheduledJobDisplayResponse>({
+        enabled: hasPermission,
+        keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
         queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),
         queryKey: ['finished-jobs', { page, rowsPerPage }],
-        enabled: hasPermission,
     });
 };
 
