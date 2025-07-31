@@ -25,7 +25,7 @@ interface BasicObjectInfoFieldsProps {
     displayname?: string;
     grouplinkid?: string;
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
-    isOwned?: boolean;
+    isOwnedObject?: boolean;
     isTierZero?: boolean;
     name?: string;
     noderesourcegroupid?: string;
@@ -63,9 +63,9 @@ const RelatedKindField = (
 };
 
 const basicObjectFields = [
-    PropertyLabelOverrides.NodeType,
-    PropertyLabelOverrides.IsTierZero,
-    PropertyLabelOverrides.IsOwned,
+    'nodeType',
+    'isTierZero',
+    'isOwnedObject',
     CommonKindProperties.DisplayName,
     CommonKindProperties.ObjectID,
 ] satisfies (PropertyLabelOverrides | CommonKindProperties)[];

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { GraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
@@ -27,6 +28,7 @@ import {
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
+import { MappedStringLiteral } from '../types';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -100,54 +102,24 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
-/**
- * Entries without a comment come from the UnifiedType on the API. See PropertyLabelOverridesToDisplay for intent.
- */
-export enum PropertyLabelOverrides {
-    /**
-     * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
-     * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
-     */
-    NodeType = 'nodeType',
-    Kind = 'kind',
-    IsTierZero = 'isTierZero',
-    /**
-     * TODO: Fill in story about isOwned
-     */
-    IsOwned = 'isOwned',
-    IsOwnedObject = 'isOwnedObject',
-    Label = 'label',
-    ObjectId = 'objectId',
-    LastSeen = 'lastSeen',
-}
+export type PropertyLabelOverrides = keyof Omit<GraphNode, 'properties'> | 'nodeType';
 /**
  * The intent is to standardize keys and their display label in the UI.
  * The keys above are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
  */
-export function PropertyLabelOverridesToDisplay(value: PropertyLabelOverrides): string | undefined {
-    switch (value) {
-        case PropertyLabelOverrides.NodeType:
-        case PropertyLabelOverrides.Kind:
-            return 'Node Type';
-        case PropertyLabelOverrides.IsTierZero:
-            return 'Tier Zero';
-        case PropertyLabelOverrides.IsOwned:
-        case PropertyLabelOverrides.IsOwnedObject:
-            return 'Is Owned';
-        case PropertyLabelOverrides.Label:
-            return CommonKindPropertiesToDisplay(CommonKindProperties.Name);
-        case PropertyLabelOverrides.ObjectId:
-            return CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID);
-        case PropertyLabelOverrides.LastSeen:
-            return CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen);
-        default:
-            return undefined;
-    }
-}
-
-const isPropertyLabelOverride = (enumValue: PropertyLabelOverrides): enumValue is PropertyLabelOverrides => {
-    return Object.values(PropertyLabelOverrides).includes(enumValue);
-};
+export const PropertyLabelOverridesToDisplay = {
+    /**
+     * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
+     * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
+     */
+    nodeType: 'Node Type',
+    kind: 'Node Type',
+    isTierZero: 'Tier Zero',
+    isOwnedObject: 'Is Owned',
+    label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,
+    objectId: CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID)!,
+    lastSeen: CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen)!,
+} as const satisfies MappedStringLiteral<PropertyLabelOverrides, string>;
 
 export type ValidatedProperty = {
     isKnownProperty: boolean;
@@ -159,7 +131,7 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
         return { isKnownProperty: true, kind: 'ad' };
     if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
     if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
-    if (isPropertyLabelOverride(enumValue as PropertyLabelOverrides)) return { isKnownProperty: true, kind: 'ov' };
+    if (enumValue in PropertyLabelOverridesToDisplay) return { isKnownProperty: true, kind: 'ov' };
     return { isKnownProperty: false, kind: null };
 };
 
@@ -177,7 +149,7 @@ const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
             label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
             break;
         case 'ov':
-            label = PropertyLabelOverridesToDisplay(key as PropertyLabelOverrides)!;
+            label = PropertyLabelOverridesToDisplay[key as PropertyLabelOverrides]!;
             break;
         default:
             label = key;

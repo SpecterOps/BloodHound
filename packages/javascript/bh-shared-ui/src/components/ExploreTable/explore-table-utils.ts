@@ -32,18 +32,16 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-export const REQUIRED_KEYS = [
-    PropertyLabelOverrides.Kind,
-    PropertyLabelOverrides.Label,
-    PropertyLabelOverrides.ObjectId,
-    PropertyLabelOverrides.IsTierZero,
+export const REQUIRED_KEYS = ['kind', 'label', 'objectId', 'isTierZero'] satisfies PropertyLabelOverrides[];
+export const KNOWN_NODE_KEYS = [...REQUIRED_KEYS, 'isOwnedObject', 'lastSeen'] satisfies PropertyLabelOverrides[];
+/**
+ * Keys that can be found in a nodes property bag that are lifted into the UnifiedNode type
+ */
+export const DUPLICATED_KNOWN_KEYS: string[] = [
+    CommonKindProperties.ObjectID,
+    CommonKindProperties.Name,
+    CommonKindProperties.LastSeen,
 ];
-export const KNOWN_NODE_KEYS = [
-    ...REQUIRED_KEYS,
-    PropertyLabelOverrides.IsOwnedObject,
-    PropertyLabelOverrides.LastSeen,
-];
-export const DUPLICATED_KNOWN_KEYS: string[] = [CommonKindProperties.ObjectID, CommonKindProperties.Name];
 
 export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse | undefined) => {
     if (!graphData || !isGraphResponse(graphData)) return;
