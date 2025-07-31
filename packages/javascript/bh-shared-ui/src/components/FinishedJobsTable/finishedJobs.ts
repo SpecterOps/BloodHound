@@ -43,6 +43,7 @@ export const NO_PERMISSION_KEY = 'finished-jobs-permission';
 export const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
 export const FETCH_ERROR_KEY = 'finished-jobs-error';
 
+/** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
 export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) => {
     const { checkPermission } = usePermissions();
     const hasPermission = checkPermission(Permission.CLIENTS_MANAGE);
@@ -66,13 +67,16 @@ export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) =
     });
 };
 
+/** Returns the duration, in mins, between 2 given ISO datetime strings */
 export const toMins = (start: string, end: string) =>
     Math.floor(Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end)).length('minutes')) + ' Min';
 
+/** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: ScheduledJobDisplay) =>
     Object.entries(job)
         .filter(([key, value]) => COLLECTION_MAP.has(key) && value)
         .map(([key]) => COLLECTION_MAP.get(key))
         .join(', ');
 
+/** Returns the given ISO datetime string formatted with the the timezone */
 export const toFormatted = (dateStr: string) => DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);
