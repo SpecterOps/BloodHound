@@ -28,7 +28,8 @@ import { makeStoreMapFromColumnOptions } from './explore-table-utils';
 const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primary)]';
 
 const exportToJsonSpy = vi.spyOn(exportUtils, 'exportToJson');
-exportToJsonSpy.mockImplementationOnce(() => undefined);
+exportToJsonSpy.mockImplementation(() => undefined);
+
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
 
