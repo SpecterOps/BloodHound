@@ -41,4 +41,6 @@ properties:
   require_certify:
     $ref: './null.boolean.yaml'
   analysis_enabled:
-      $ref: './null.boolean.yaml'
+    $ref: './null.boolean.yaml'
+  glyph:
+    $ref: './null.string.yaml'
