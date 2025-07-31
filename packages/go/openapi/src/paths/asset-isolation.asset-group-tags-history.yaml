@@ -95,3 +95,84 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+post:
+  operationId: SearchAssetGroupTagHistory
+  summary: Search history records
+  description: Retrieves history records via search string input and filtering by action, asset_group_tag_id, email, and actor
+  tags:
+    - Asset Isolation
+    - Enterprise
+    - Community
+  requestBody: 
+    description: The request body for searching asset group tag history records 
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            query:
+              type: string
+          required:
+            - query    
+  parameters:
+    - $ref: './../parameters/query.skip.yaml'
+    - $ref: './../parameters/query.limit.yaml'
+    - name: sort_by
+      in: query
+      description:
+        Sortable columns are `created_at`.
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: created_at
+      in: query
+      description:
+        For example, you can filter a date range of records by doing `created_at=gt:2025-07-08T17:00:00Z&created_at=lt:2025-07-30T17:00:00Z`
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: actor
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: email
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: action
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: target
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: asset_group_tag_id
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/model.asset-group-tags-history.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
