@@ -9,13 +9,14 @@ import { useState } from 'react';
 import { AppIcon } from '../../../components';
 import ImportQueryDialog from './ImportQueryDialog';
 interface QuerySearchProps {
-    queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
+    queryFilterHandler: (searchTerm: string, platform: string, categories: string[], source: string) => void;
     exportHandler: () => void;
     deleteHandler: (id: number) => void;
     categories: string[];
     searchTerm: string;
     platform: string;
     categoryFilter: string[];
+    source: string;
     selectedQuery: any;
 }
 
@@ -29,8 +30,11 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         platform,
         categoryFilter,
         selectedQuery,
+        source,
     } = props;
     const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
+    const [sourcesOpen, setSourcesOpen] = useState<boolean>(false);
+
     const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
     const handleInput = (val: string) => {
@@ -38,10 +42,10 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const doFuzzySearch = (term: string) => {
-        queryFilterHandler(term, platform, categoryFilter);
+        queryFilterHandler(term, platform, categoryFilter, source);
     };
     const handlePlatformFilter = (val: string) => {
-        queryFilterHandler(searchTerm, val, categoryFilter);
+        queryFilterHandler(searchTerm, val, categoryFilter, source);
     };
 
     const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
@@ -51,14 +55,19 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
 
         // clear filter
         if (value.includes('')) {
-            queryFilterHandler(searchTerm, platform, []);
+            queryFilterHandler(searchTerm, platform, [], source);
             setCategoriesOpen(false);
             return;
         }
 
         // On autofill we get a stringified value.
         const newVal = typeof value === 'string' ? value.split(',') : value;
-        queryFilterHandler(searchTerm, platform, newVal);
+        queryFilterHandler(searchTerm, platform, newVal, source);
+    };
+
+    const handleSourceFilter = (val: string) => {
+        console.log(val);
+        queryFilterHandler(searchTerm, platform, categoryFilter, val);
     };
 
     const exportEnabled = selectedQuery?.id ? true : false;
@@ -139,6 +148,24 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                                     {category}
                                 </MenuItem>
                             ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl size='small' className='w-full ml-2'>
+                        <InputLabel id='category-filter-label'>Source</InputLabel>
+
+                        <Select
+                            labelId='source-filter-label'
+                            id='source-filter'
+                            value={source || ''}
+                            label='sources'
+                            open={sourcesOpen}
+                            onOpen={() => setSourcesOpen(true)}
+                            onClose={() => setSourcesOpen(false)}
+                            onChange={(e) => handleSourceFilter(e.target.value)}>
+                            <MenuItem value=''>All Sources</MenuItem>
+                            <MenuItem value='prebuilt'>Prebuilt</MenuItem>
+                            <MenuItem value='owned'>Owned</MenuItem>
+                            <MenuItem value='shared'>Shared</MenuItem>
                         </Select>
                     </FormControl>
                 </div>

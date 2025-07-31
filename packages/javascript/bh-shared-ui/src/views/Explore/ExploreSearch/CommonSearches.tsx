@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
@@ -27,7 +28,7 @@ import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
 import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../types';
-import { cn } from '../../../utils';
+import { apiClient, cn } from '../../../utils';
 import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
@@ -56,6 +57,8 @@ const InnerCommonSearches = ({
     const { addNotification } = useNotifications();
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
+    const [source, setSource] = useState('');
+
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
     //master list of pre-made queries
@@ -65,6 +68,11 @@ const InnerCommonSearches = ({
     const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
 
     const [filteredList, setFilteredList] = useState<QueryListSection[]>([]);
+
+    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
+        apiClient.getSelf({ signal }).then((res) => res.data.data)
+    );
+    console.log(getSelfQuery.data);
 
     useEffect(() => {
         setFilteredList(queryList);
@@ -99,11 +107,11 @@ const InnerCommonSearches = ({
             </Box>
         );
     }
-    const handleFilter = (searchTerm: string, platform: string, categories: string[]) => {
+    const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
         setSearchTerm(searchTerm);
         setPlatform(platform);
         setCategoryFilter(categories);
-
+        setSource(source);
         //local array variable
         let filteredData: QuerySearchType[] = queryList;
 
@@ -125,11 +133,27 @@ const InnerCommonSearches = ({
                 .filter((item: QuerySearchType) => categories.includes(item.subheader))
                 .filter((x) => x.queries.length);
         }
+        if (source && source === 'prebuilt') {
+            filteredData = filteredData
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter((item: QueryLineItem) => !item.id),
+                }))
+                .filter((x) => x.queries.length);
+        } else if (source && source === 'owned') {
+            filteredData = filteredData
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter((item: QueryLineItem) => item.user_id === getSelfQuery.data?.id),
+                }))
+                .filter((x) => x.queries.length);
+        }
+
         setFilteredList(filteredData);
     };
 
     const handleClearFilters = () => {
-        handleFilter('', '', []);
+        handleFilter('', '', [], '');
     };
 
     const handleExport = () => {
@@ -161,6 +185,7 @@ const InnerCommonSearches = ({
                     searchTerm={searchTerm}
                     platform={platform}
                     categoryFilter={categoryFilter}
+                    source={source}
                     selectedQuery={selectedQuery}></QuerySearchFilter>
             </div>
 

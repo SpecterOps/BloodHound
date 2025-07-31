@@ -25,6 +25,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
+    console.log('sharedIds');
+    console.log(sharedIds);
+
     const { data, isLoading, error, isError } = useQueryPermissions(queryId as number);
 
     function idMap() {

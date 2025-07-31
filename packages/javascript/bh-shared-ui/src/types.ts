@@ -64,6 +64,15 @@ export type CommonSearchType = {
     }[];
 };
 
+export type QueryLineItem = {
+    id?: number;
+    name: string;
+    description: string;
+    query: string;
+    canEdit?: boolean;
+    user_id?: string;
+};
+
 export type QuerySearchType = {
     subheader: string;
     category: string;
@@ -72,6 +81,7 @@ export type QuerySearchType = {
         description: string;
         query: string;
         id?: number;
+        user_id?: string;
     }[];
 };
 
@@ -79,14 +89,6 @@ export type QueryListSection = {
     category?: string;
     subheader: string;
     queries: QueryLineItem[];
-};
-
-export type QueryLineItem = {
-    id?: number;
-    name: string;
-    description: string;
-    query: string;
-    canEdit?: boolean;
 };
 
 export type SelectedNode = {
