@@ -65,7 +65,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     };
 
     const groupedQueries = groupBy(listSections, 'category');
-
     const handleDelete = (id: number) => {
         setQueryId(id);
         setOpen(true);
@@ -93,7 +92,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                 <div>
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
                         <div key={category} className='relative'>
-                            <div className={`${styles.subheader} sticky top-0 z-[1] py-2`}>{category}</div>
+                            {!!queryData[0].queries.length && (
+                                <div className={`${styles.subheader} sticky top-0 z-[1] py-2`}>{category}</div>
+                            )}
                             {queryData.map((queryItem, i) => {
                                 const { subheader, queries } = queryItem;
                                 return (

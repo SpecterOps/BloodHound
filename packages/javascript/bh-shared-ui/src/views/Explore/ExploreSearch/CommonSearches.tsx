@@ -72,7 +72,6 @@ const InnerCommonSearches = ({
     const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
         apiClient.getSelf({ signal }).then((res) => res.data.data)
     );
-    console.log(getSelfQuery.data);
 
     useEffect(() => {
         setFilteredList(queryList);
