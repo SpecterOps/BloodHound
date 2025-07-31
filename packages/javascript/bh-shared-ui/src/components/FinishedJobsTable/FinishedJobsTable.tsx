@@ -36,7 +36,7 @@ const getRows = (job: ScheduledJobDisplay) => {
     ];
 };
 
-export const FinishedJobsLogTable: FC = () => {
+export const FinishedJobsTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
