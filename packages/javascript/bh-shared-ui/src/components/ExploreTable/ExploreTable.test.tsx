@@ -106,6 +106,9 @@ describe('ExploreTable', async () => {
     it('Manage Columns allow user to change columns', async () => {
         const { user } = await setup();
 
+        // await for results to return
+        await screen.findByText('10 results');
+
         const manageColumnsButton = screen.getByRole('button', { name: 'Manage Columns' });
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
         expect(screen.queryByText('Admin Count')).not.toBeInTheDocument();
