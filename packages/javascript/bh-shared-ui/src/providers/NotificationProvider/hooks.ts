@@ -14,25 +14,41 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { OptionsObject } from 'notistack';
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { NotificationsContext, NotificationsDispatchContext } from './NotificationsProvider';
-import { addNotification, dismissNotification, removeNotification } from './actions';
+import {
+    addNotification as addNotificationAction,
+    dismissNotification as dismissNotificationAction,
+    removeNotification as removeNotificationAction,
+    type NotificationAction,
+} from './actions';
+
+/** Make method that wraps an action creator with dispatch */
+const curryWithDispatch = (dispatch: React.Dispatch<NotificationAction> | null) => {
+    return <T extends (...args: any[]) => any>(actionCreator: T) => {
+        return (...args: Parameters<T>) => {
+            if (dispatch) {
+                dispatch(actionCreator(...args));
+            }
+        };
+    };
+};
 
 export const useNotifications = () => {
     const notifications = useContext(NotificationsContext);
     const dispatch = useContext(NotificationsDispatchContext);
 
+    const actions = useMemo(() => {
+        const withDispatch = curryWithDispatch(dispatch);
+        return {
+            addNotification: withDispatch(addNotificationAction),
+            dismissNotification: withDispatch(dismissNotificationAction),
+            removeNotification: withDispatch(removeNotificationAction),
+        };
+    }, [dispatch]);
+
     return {
         notifications,
-        addNotification: (notification: string, key?: string, options: OptionsObject = {}) => {
-            if (dispatch) dispatch(addNotification(notification, key, options));
-        },
-        dismissNotification: (key?: string) => {
-            dispatch && dispatch(dismissNotification(key));
-        },
-        removeNotification: (key?: string) => {
-            dispatch && dispatch(removeNotification(key));
-        },
+        ...actions,
     };
 };
