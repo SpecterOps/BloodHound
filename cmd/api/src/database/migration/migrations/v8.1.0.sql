@@ -13,6 +13,7 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
+
 -- Targeted Access Control Feature Flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,
@@ -23,3 +24,8 @@ VALUES (current_timestamp,
         false,
         false)
 ON CONFLICT DO NOTHING;
+
+-- Targeted Access Control users_roles column additions and defaults
+ALTER TABLE users_roles 
+        ADD COLUMN IF NOT EXISTS access_control_list text[] default array ['all_environments'],
+        ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
