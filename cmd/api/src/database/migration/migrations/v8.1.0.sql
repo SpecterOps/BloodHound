@@ -52,4 +52,4 @@ CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_object_id ON asset_group_tag_s
 CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_name ON asset_group_tag_selector_nodes USING btree (node_name);
 
 ALTER TABLE asset_group_tags
-        ADD COLUMN glyph TEXT UNIQUE;
+        ADD COLUMN IF NOT EXISTS glyph TEXT UNIQUE;
