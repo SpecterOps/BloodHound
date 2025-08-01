@@ -180,13 +180,13 @@ export * from './SourceKindsCheckboxes';
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
 
+export * from './StatusIndicator';
+
 export * from './TextWithFallback';
 export { default as TextWithFallback } from './TextWithFallback';
 
 export * from './UpdateUserDialog';
 export { default as UpdateUserDialog } from './UpdateUserDialog';
-
-export * from './StatusIndicator';
 
 export * from './UpdateUserForm';
 export { default as UpdateUserForm } from './UpdateUserForm';
@@ -204,6 +204,7 @@ export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './AppIcon';
+
 export * from './Navigation';
 
 export * from './ExploreTable';

@@ -1,15 +1,32 @@
 import type { GetScheduledJobDisplayResponse, ScheduledJobDisplay } from 'js-client-library';
 import { DateTime, Interval } from 'luxon';
+import type { OptionsObject } from 'notistack';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { usePermissions } from '../../hooks';
-import { useNotifications } from '../../providers';
-import { LuxonFormat, Permission, apiClient } from '../../utils';
+import type { StatusType } from '../components';
+import { usePermissions } from '../hooks';
+import { useNotifications } from '../providers';
+import { apiClient } from './api';
+import { LuxonFormat } from './datetime';
+import { Permission } from './permissions';
 
 export interface FinishedJobParams {
     page: number;
     rowsPerPage: number;
 }
+
+export const JOB_STATUS_MAP: Record<number, { label: string; type: StatusType; pulse?: boolean }> = {
+    [-1]: { label: 'Invalid', type: 'bad' },
+    0: { label: 'Ready', type: 'good' },
+    1: { label: 'Running', type: 'pending', pulse: true },
+    2: { label: 'Complete', type: 'good' },
+    3: { label: 'Canceled', type: 'bad' },
+    4: { label: 'Timed Out', type: 'bad' },
+    5: { label: 'Failed', type: 'bad' },
+    6: { label: 'Ingesting', type: 'pending', pulse: true },
+    7: { label: 'Analyzing', type: 'pending' },
+    8: { label: 'Partially Completed', type: 'pending' },
+};
 
 export const FINISHED_JOBS_LOG_HEADERS = [
     { label: 'ID / Client / Status', width: '240px' },
@@ -31,10 +48,10 @@ export const COLLECTION_MAP = new Map(
     })
 );
 
-export const PERSIST_NOTIFICATION = {
+export const PERSIST_NOTIFICATION: OptionsObject = {
     persist: true,
     anchorOrigin: { vertical: 'top', horizontal: 'right' },
-} as any; // anchorOrigin is not on type but works to position notification
+};
 
 export const NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the finished jobs details. Please
     contact your administrator for details.`;
