@@ -34,6 +34,7 @@ import CommonSearches from './CommonSearches';
 import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
+import TagToZoneLabel from './TagToZoneLabel';
 
 type CypherSearchState = {
     cypherQuery: string;
@@ -276,6 +277,8 @@ const CypherSearch = ({
                         </div>
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
+                        <TagToZoneLabel></TagToZoneLabel>
+
                         <Button
                             variant='secondary'
                             onClick={() => {

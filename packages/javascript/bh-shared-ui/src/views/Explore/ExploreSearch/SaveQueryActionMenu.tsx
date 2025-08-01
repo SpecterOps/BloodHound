@@ -25,7 +25,7 @@ const SaveQueryActionMenu: FC<SaveQueryActionMenuProps> = ({ saveAs }) => {
                 <PopoverTrigger
                     className='inline-flex items-center justify-center whitespace-nowrap rounded-3xl text-sm ring-offset-background transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:no-underline bg-neutral-light-5 text-neutral-dark-0 shadow-outer-1 hover:bg-secondary hover:text-white h-9 px-4 py-1 text-xs rounded-l-none pl-2 -ml-1 '
                     onClick={(event) => event.stopPropagation()}>
-                    <AppIcon.CaretDown size={10} />{' '}
+                    <AppIcon.CaretDown size={10} />
                 </PopoverTrigger>
                 <PopoverContent className='p-0 w-28'>
                     <div className={listItemStyles} onClick={handleSaveAs}>

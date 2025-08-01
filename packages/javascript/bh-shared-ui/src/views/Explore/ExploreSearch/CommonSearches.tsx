@@ -81,12 +81,10 @@ const InnerCommonSearches = ({
         if (selected.query === query && selected.id === id) {
             //deselect
             onSetSelected('', undefined);
-            // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
             onSetCypherQuery('');
             onPerformCypherSearch('');
         } else {
             onSetSelected(query, id);
-            // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
             onSetCypherQuery(query);
             onPerformCypherSearch(query);
         }
@@ -147,6 +145,8 @@ const InnerCommonSearches = ({
                 }))
                 .filter((x) => x.queries.length);
         }
+        //TO DO - add shared when api ready
+        // ...
 
         setFilteredList(filteredData);
     };
