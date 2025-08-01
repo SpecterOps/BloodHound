@@ -16,7 +16,7 @@
 import { FlatGraphResponse, GraphNodeSpreadWithProperties, GraphResponse } from 'js-client-library';
 import { CommonKindProperties } from '../../graphSchema';
 import { isGraphResponse } from '../../hooks/useExploreGraph/queries/utils';
-import { PropertyLabelOverrides } from '../../utils/entityInfoDisplay';
+import { KnownNodeProperties } from '../../utils/entityInfoDisplay';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboBoxOption[]) =>
@@ -37,12 +37,12 @@ export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = [
     'label',
     'objectId',
     'isTierZero',
-] satisfies PropertyLabelOverrides[];
+] satisfies KnownNodeProperties[];
 export const KNOWN_NODE_KEYS = [
     ...REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
     'isOwnedObject',
     'lastSeen',
-] satisfies PropertyLabelOverrides[];
+] satisfies KnownNodeProperties[];
 /**
  * Keys that can be found in a nodes property bag that are lifted into the UnifiedNode type
  */

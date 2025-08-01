@@ -102,12 +102,12 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
-export type PropertyLabelOverrides = keyof Omit<GraphNode, 'properties'> | 'nodeType';
+export type KnownNodeProperties = keyof Omit<GraphNode, 'properties'> | 'nodeType';
 /**
  * The intent is to standardize keys and their display label in the UI.
- * The keys above are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
+ * The keys below are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
  */
-export const PropertyLabelOverridesToDisplay = {
+export const KnownNodePropertiesToDisplay = {
     /**
      * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
      * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
@@ -119,7 +119,7 @@ export const PropertyLabelOverridesToDisplay = {
     label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,
     objectId: CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID)!,
     lastSeen: CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen)!,
-} as const satisfies MappedStringLiteral<PropertyLabelOverrides, string>;
+} as const satisfies MappedStringLiteral<KnownNodeProperties, string>;
 
 export type ValidatedProperty = {
     isKnownProperty: boolean;
@@ -131,7 +131,7 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
         return { isKnownProperty: true, kind: 'ad' };
     if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
     if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
-    if (enumValue in PropertyLabelOverridesToDisplay) return { isKnownProperty: true, kind: 'ov' };
+    if (enumValue in KnownNodePropertiesToDisplay) return { isKnownProperty: true, kind: 'ov' };
     return { isKnownProperty: false, kind: null };
 };
 
@@ -149,7 +149,7 @@ const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
             label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
             break;
         case 'ov':
-            label = PropertyLabelOverridesToDisplay[key as PropertyLabelOverrides]!;
+            label = KnownNodePropertiesToDisplay[key as KnownNodeProperties]!;
             break;
         default:
             label = key;
