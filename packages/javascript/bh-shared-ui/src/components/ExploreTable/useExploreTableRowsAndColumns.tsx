@@ -35,7 +35,7 @@ const columnHelper = createColumnHelper<MungedTableRowWithId>();
 
 type DataTableProps = React.ComponentProps<typeof DataTable>;
 
-const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
+const filterKeys: (keyof MungedTableRowWithId)[] = ['label', 'objectid'];
 
 type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuClick' | 'selectedColumns'> & {
     searchInput: string;
