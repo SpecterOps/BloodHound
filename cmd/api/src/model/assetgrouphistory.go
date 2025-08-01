@@ -35,7 +35,24 @@ const (
 	AssetGroupHistoryActionCreateSelector AssetGroupHistoryAction = "CreateSelector"
 	AssetGroupHistoryActionUpdateSelector AssetGroupHistoryAction = "UpdateSelector"
 	AssetGroupHistoryActionDeleteSelector AssetGroupHistoryAction = "DeleteSelector"
+
+	AssetGroupHistoryActionCertifyNodeAuto    AssetGroupHistoryAction = "CertifyNodeAuto"
+	AssetGroupHistoryActionCertifyNodeManual  AssetGroupHistoryAction = "CertifyNodeManual"
+	AssetGroupHistoryActionCertifyNodeRevoked AssetGroupHistoryAction = "CertifyNodeRevoked"
 )
+
+func ToAssetGroupHistoryActionFromAssetGroupCertification(certifyValue AssetGroupCertification) AssetGroupHistoryAction {
+	switch certifyValue {
+	case AssetGroupCertificationRevoked:
+		return AssetGroupHistoryActionCertifyNodeRevoked
+	case AssetGroupCertificationManual:
+		return AssetGroupHistoryActionCertifyNodeManual
+	case AssetGroupCertificationAuto:
+		return AssetGroupHistoryActionCertifyNodeAuto
+	default:
+		return "UnknownHistoryAction"
+	}
+}
 
 // AssetGroupHistory is the record of CRUD changes associated with v2 of the asset groups feature
 type AssetGroupHistory struct {

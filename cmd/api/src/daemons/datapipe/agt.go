@@ -436,7 +436,8 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		for id, node := range nodesWithSrcSet {
 			// Missing, insert the record
 			if oldCert, ok := oldSelectedNodesByNodeId[id]; !ok {
-				if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy, node.Source); err != nil {
+				displayName, _ := node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, displayName); err != nil {
 					return err
 				}
 				countInserted++
@@ -452,7 +453,8 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		// Update the selected nodes that need updating
 		if len(nodeIdsToUpdate) > 0 {
 			for _, nodeId := range nodeIdsToUpdate {
-				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.ID, certified, certifiedBy, nodeId); err != nil {
+				displayName, _ := nodesWithSrcSet[nodeId].Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, certified, certifiedBy, nodeId, displayName); err != nil {
 					return err
 				}
 			}
