@@ -17,7 +17,9 @@
 package v2_test
 
 import (
+	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,7 +38,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -44,6 +49,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -2816,143 +2822,290 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroupHistory(t *testing.T) {
-
-	var (
-		mockCtrl    = gomock.NewController(t)
-		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
-		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
-		resources   = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-		}
-		user     = setupUser()
-		userCtx  = setupUserCtx(user)
-		handler  = http.HandlerFunc(resources.UpdateAssetGroupTagHistory)
-		endpoint = "/api/v2/asset-group-tags-history/1"
-	)
-
-	type WrappedResponse struct {
-		Data model.AssetGroupHistory `json:"data"`
+	t.Parallel()
+	type mock struct {
+		mockDatabase *dbMocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
-	defer mockCtrl.Finish()
+	testUser := model.User{
+		FirstName:     null.String{NullString: sql.NullString{String: "John", Valid: true}},
+		LastName:      null.String{NullString: sql.NullString{String: "Doe", Valid: true}},
+		EmailAddress:  null.String{NullString: sql.NullString{String: "johndoe@gmail.com", Valid: true}},
+		PrincipalName: "John",
+		AuthTokens:    model.AuthTokens{},
+	}
 
-	t.Run("cannot decode request body error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
-			Return(model.AssetGroupHistory{}, nil).Times(1)
+	tt := []testData{
+		{
+			name: "Error: cannot decode request body error - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history/1",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+				requestCtx := ctx.Context{
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
 
-		reqBody := `{"name":["BadRequest"]`
-		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1"})
+				reqBody := `{"name":["BadRequest"]`
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader([]byte(reqBody)))
 
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+					Return(model.AssetGroupHistory{}, nil).Times(1)
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"error unmarshalling JSON payload"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: Missing history URL id error - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history/non-numeric",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+				requestCtx := ctx.Context{
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
 
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponsePayloadUnmarshalError)
-	})
+				payload := &v2.AssetGroupHistoryUpdateReq{
+					Note: null.StringFrom("test-note"),
+				}
 
-	t.Run("Missing history URL id error", func(t *testing.T) {
-		reqBody := `{"note": "Test note"}`
-		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
 
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
-	})
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: Non existent history URL id error - Not found",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history/1234",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+				requestCtx := ctx.Context{
+					AuthCtx: auth.Context{
+						Owner:   testUser,
+						Session: model.UserSession{},
+					},
+				}
 
-	t.Run("Invalid history URL id error", func(t *testing.T) {
-		reqBody := `{"note": "Test note"}`
-		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "non-numeric"})
+				payload := &v2.AssetGroupHistoryUpdateReq{
+					Note: null.StringFrom("test-note"),
+				}
 
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
 
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
-	})
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
-	t.Run("Non existent history URL id error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
-			Return(model.AssetGroupHistory{}, database.ErrNotFound).Times(1)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+					Return(model.AssetGroupHistory{}, database.ErrNotFound).Times(1)
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: Database error - Internal server error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history/1",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+				requestCtx := ctx.Context{
+					AuthCtx: auth.Context{
+						Owner:   testUser,
+						Session: model.UserSession{},
+					},
+				}
 
-		reqBody := `{"note": "Test note"}`
-		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1234"})
+				payload := &v2.AssetGroupHistoryUpdateReq{
+					Note: null.StringFrom("test-note"),
+				}
 
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
 
-		require.Equal(t, http.StatusNotFound, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsResourceNotFound)
-	})
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
-	t.Run("Database error", func(t *testing.T) {
-		mockDB.EXPECT().UpdateAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
-			Return(model.AssetGroupHistory{}, errors.New("failure")).Times(1)
-		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
-			Return(model.AssetGroupHistory{}, nil).Times(1)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+					Return(model.AssetGroupHistory{}, nil).Times(1)
+				mock.mockDatabase.EXPECT().UpdateAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+					Return(model.AssetGroupHistory{}, errors.New("failure")).Times(1)
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success - Ok",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history/1",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+				requestCtx := ctx.Context{
+					AuthCtx: auth.Context{
+						Owner:   testUser,
+						Session: model.UserSession{},
+					},
+				}
 
-		reqBody := `{"note": "Test note"}`
-		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1"})
+				payload := &v2.AssetGroupHistoryUpdateReq{
+					Note: null.StringFrom("Test note"),
+				}
 
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
 
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-	})
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
-	t.Run("Success", func(t *testing.T) {
-		mockHistoryRec := model.AssetGroupHistory{
-			ID:     1,
-			Action: "CreateTag",
-			Email:  null.StringFrom("johndoe@gmail.com"),
-			Note:   null.StringFrom("Existing note text\n\n"),
-		}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mockHistoryRec := model.AssetGroupHistory{
+					ID:     1,
+					Action: "CreateTag",
+					Email:  null.StringFrom("johndoe@gmail.com"),
+					Note:   null.StringFrom("Existing note text\n\n"),
+				}
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+					Return(mockHistoryRec, nil).Times(1)
+				mock.mockDatabase.EXPECT().UpdateAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, historyRec model.AssetGroupHistory) (model.AssetGroupHistory, error) {
+						assert.True(t, historyRec.Note.Valid)
+						// matching a string such as: Existing note text\n\n2025-07-28T06:14:41Z - johndoe@gmail.com\nTest note\n\n
+						notePattern := `Existing note text\n\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z - johndoe@gmail\.com\nTest note\n\n`
+						matched, err := regexp.MatchString(notePattern, historyRec.Note.String)
+						assert.NoError(t, err)
+						assert.True(t, matched, "Note.String does not match expected pattern")
+						assert.Equal(t, model.AssetGroupHistoryAction("CreateTag"), historyRec.Action)
+						return mockHistoryRec, nil
+					}).
+					Times(1)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `{
+									"data": {
+										"action": "CreateTag",
+										"actor": "",
+										"asset_group_tag_id": 0,
+										"created_at": "0001-01-01T00:00:00Z",
+										"email": "johndoe@gmail.com",
+										"environment_id": null,
+										"id": 1,
+										"note": "Existing note text\n\n",
+										"target": ""
+									}
+								}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+	}
 
-		mockDB.EXPECT().UpdateAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, historyRec model.AssetGroupHistory) (model.AssetGroupHistory, error) {
-				assert.True(t, historyRec.Note.Valid)
-				// matching a string such as: Existing note text\n\n2025-07-28T06:14:41Z - johndoe@gmail.com\nTest note\n\n
-				notePattern := `Existing note text\n\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z - johndoe@gmail\.com\nTest note\n\n`
-				matched, err := regexp.MatchString(notePattern, historyRec.Note.String)
-				assert.NoError(t, err)
-				assert.True(t, matched, "Note.String does not match expected pattern")
-				assert.Equal(t, model.AssetGroupHistoryAction("CreateTag"), historyRec.Action)
-				return mockHistoryRec, nil
-			}).
-			Times(1)
-		mockDB.EXPECT().GetAssetGroupHistoryRecord(gomock.Any(), gomock.Any()).
-			Return(mockHistoryRec, nil).Times(1)
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			mocks := &mock{
+				mockDatabase: dbMocks.NewMockDatabase(ctrl),
+			}
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+			resources := v2.Resources{
+				DB: mocks.mockDatabase,
+			}
+			response := httptest.NewRecorder()
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/asset-group-tags-history/{%s}", api.URIPathVariableAssetGroupHistoryID), resources.UpdateAssetGroupTagHistory).Methods(request.Method)
+			router.ServeHTTP(response, request)
+			status, header, body := test.ProcessResponse(t, response)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
+		})
 
-		reqBody := `{"note": "Test note"}`
-		req := httptest.NewRequestWithContext(userCtx, http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupHistoryID: "1"})
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		// verify return code
-		require.Equal(t, http.StatusOK, response.Code)
-
-		// verify returned body
-		expected := WrappedResponse{
-			mockHistoryRec,
-		}
-		wrappedResp := WrappedResponse{}
-		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
-		require.NoError(t, err)
-		require.Equal(t, expected, wrappedResp)
-	})
+	}
 }

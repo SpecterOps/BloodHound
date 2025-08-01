@@ -915,13 +915,13 @@ func (s *Resources) UpdateAssetGroupTagHistory(response http.ResponseWriter, req
 		api.HandleDatabaseError(request, response, err)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.WarnContext(request.Context(), "encountered update asset group tag history for unknown user, this shouldn't happen")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&updateReq, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if !updateReq.Note.Valid {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "string cannot be null", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "note cannot be null", request), response)
 	} else {
-		historyRec.Note.String += fmt.Sprintf("%s - %s\n%s\n\n", time.Now().UTC().Format(time.RFC3339), actor.EmailAddress.String, updateReq.Note.String)
+		historyRec.Note.String = fmt.Sprintf("%s%s - %s\n%s\n\n", historyRec.Note.String, time.Now().UTC().Format(time.RFC3339), actor.EmailAddress.String, updateReq.Note.String)
 		historyRec.Note.Valid = true
 
 		if historyRec, err := s.DB.UpdateAssetGroupHistoryRecord(request.Context(), historyRec); err != nil {
