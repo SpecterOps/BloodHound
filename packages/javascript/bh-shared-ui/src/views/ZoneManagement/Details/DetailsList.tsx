@@ -119,7 +119,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             }}>
                                             <div className='flex items-center'>
                                                 {isTag(listItem) && !listItem?.analysis_enabled && (
-                                                    <ZoneAnalysisIcon size={18} />
+                                                    <ZoneAnalysisIcon size={18} tooltip />
                                                 )}
                                                 <div
                                                     className={cn(

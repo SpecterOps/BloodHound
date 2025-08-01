@@ -40,29 +40,53 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
         'data-testid': 'analysis_disabled_icon',
         'aria-label': 'Analysis disabled for this tier',
         role: 'img',
-        className: clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]'),
+        className: clsx(
+            iconClasses,
+            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-[#ED8537]',
+            privilegeZoneAnalysisEnabled && 'text-[#8E8C95]',
+            'mr-2'
+        ),
     };
 
-    if (!privilegeZoneAnalysisEnabled) {
-        return null;
+    if (privilegeZoneAnalysisEnabled === false) {
+        return tooltip ? (
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <div className={clsx(wrapperClasses)}>
+                            <AppIcon.DataAlert {...iconProps} />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                            Upgrade Available
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
+        ) : (
+            <AppIcon.DataAlert {...iconProps} />
+        )
     }
 
-    return tooltip ? (
-        <TooltipProvider>
-            <TooltipRoot>
-                <TooltipTrigger>
-                    <div className={clsx(wrapperClasses)}>
-                        <AppIcon.DataAlert {...iconProps} />
-                    </div>
-                </TooltipTrigger>
-                <TooltipPortal>
-                    <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                        Analysis disabled
-                    </TooltipContent>
-                </TooltipPortal>
-            </TooltipRoot>
-        </TooltipProvider>
-    ) : (
-        <AppIcon.DataAlert {...iconProps} />
-    );
+    if (privilegeZoneAnalysisEnabled) {
+        return tooltip ? (
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <div className={clsx(wrapperClasses)}>
+                            <AppIcon.Disabled {...iconProps} />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                            Analysis disabled
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
+        ) : (
+            <AppIcon.Disabled {...iconProps} />
+        );
+    }
 };
