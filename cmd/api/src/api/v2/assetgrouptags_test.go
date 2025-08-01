@@ -2833,7 +2833,10 @@ func TestDatabase_SearchAssetGroupTagHistory(t *testing.T) {
 	)
 
 	type WrappedResponse struct {
-		Record v2.AssetGroupHistoryResp `json:"records"`
+		Count int                      `json:"count"`
+		Limit int                      `json:"limit"`
+		Skip  int                      `json:"skip"`
+		Data  v2.AssetGroupHistoryResp `json:"data"`
 	}
 
 	defer mockCtrl.Finish()
@@ -2886,8 +2889,13 @@ func TestDatabase_SearchAssetGroupTagHistory(t *testing.T) {
 		require.Equal(t, database.ErrNotFound, errors.New("entity not found"))
 	})
 
-	/*t.Run("success - query by actor", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(expected, 8, nil)
+	t.Run("success - query by action", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+			[]model.AssetGroupHistory{
+				{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag, AssetGroupTagId: 1},
+			},
+			1,
+			nil)
 
 		reqBody := `{"query": "UpdateTag"}`
 
@@ -2897,10 +2905,26 @@ func TestDatabase_SearchAssetGroupTagHistory(t *testing.T) {
 		response := httptest.NewRecorder()
 		handler.ServeHTTP(response, req)
 
-		// verify skip, limit and count
-		//require.Equal(t, 0, wrapper.Skip)
-		//require.Equal(t, 100, wrapper.Limit)
-		//require.Equal(t, len(expectedHistoryRecs), wrapper.Count)
+		expected := WrappedResponse{
+			Count: 1,
+			Limit: 100,
+			Skip:  0,
+			Data: v2.AssetGroupHistoryResp{
+				Records: []model.AssetGroupHistory{
+					{
+						ID:              2,
+						CreatedAt:       time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC),
+						Actor:           "UUID2",
+						Email:           null.StringFrom("user2@domain.com"),
+						Action:          model.AssetGroupHistoryActionUpdateTag,
+						Target:          "",
+						AssetGroupTagId: 1,
+						EnvironmentId:   null.String{},
+						Note:            null.String{},
+					},
+				},
+			},
+		}
 
 		// verify the records are as expected
 		wrappedResp := WrappedResponse{}
@@ -2908,5 +2932,56 @@ func TestDatabase_SearchAssetGroupTagHistory(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expected, wrappedResp)
 		require.Equal(t, http.StatusOK, response.Code)
-	})*/
+
+		// verify count, limit, skip
+		require.Equal(t, expected.Count, wrappedResp.Count)
+		require.Equal(t, expected.Limit, wrappedResp.Limit)
+		require.Equal(t, expected.Skip, wrappedResp.Skip)
+	})
+
+	t.Run("success - query by email sort by created_at", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, gomock.Any(), gomock.Any()).Return(
+			[]model.AssetGroupHistory{
+				{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
+				{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
+				{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
+				{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
+			},
+			4,
+			nil)
+
+		reqBody := `{"query": "user1@domain.com"}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{
+			Count: 4,
+			Limit: 100,
+			Skip:  0,
+			Data: v2.AssetGroupHistoryResp{
+				Records: []model.AssetGroupHistory{
+					{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
+					{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
+					{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
+					{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
+				},
+			},
+		}
+
+		// verify the records are as expected
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+
+		// verify count, limit, skip
+		require.Equal(t, expected.Count, wrappedResp.Count)
+		require.Equal(t, expected.Limit, wrappedResp.Limit)
+		require.Equal(t, expected.Skip, wrappedResp.Skip)
+	})
 }
