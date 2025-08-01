@@ -29,3 +29,14 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE users_roles 
         ADD COLUMN IF NOT EXISTS access_control_list text[] default array ['all_environments'],
         ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
+
+-- Add FinishedJobsLog rework feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'finished_jobs_log_update',
+        'Finished Jobs Log Update',
+        'An updated Finished Jobs Log with filtering and more info.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
