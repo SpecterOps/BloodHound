@@ -54,7 +54,7 @@ var (
 func TestWorkspace(cwd string, modPath string, profileDir string, env environment.Environment, integration bool, tags string) error {
 	var (
 		manifest = make(map[string]string, len(modPath))
-		command  = "go"
+		command  = environment.GoCommand()
 		args     = []string{"test"}
 	)
 
@@ -111,7 +111,7 @@ func GetCombinedCoverage(coverFile string, env environment.Environment) (string,
 		args = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
 	)
 
-	if result, err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env); err != nil {
+	if result, err := cmdrunner.Run(environment.GoCommand(), args, filepath.Dir(coverFile), env); err != nil {
 		return "", fmt.Errorf("combined coverage: %w", err)
 	} else {
 		matches := combinedCoverageRegex.FindStringSubmatch(result.StandardOutput.String())

@@ -99,7 +99,7 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 // GenerateSchema runs schemagen for the current workspace
 func GenerateSchema(cwd string, env environment.Environment) error {
 	var (
-		command = "go"
+		command = environment.GoCommand()
 		args    = []string{"run"}
 	)
 

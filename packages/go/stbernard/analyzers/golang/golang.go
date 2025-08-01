@@ -35,7 +35,7 @@ func Run(cwd string, modPath string, env environment.Environment) (codeclimate.S
 	var (
 		lintEntries []codeclimate.Entry
 		output      *bytes.Buffer
-		command     = "go"
+		command     = environment.GoCommand()
 		args        = []string{"tool", "golangci-lint", "run", "--fix", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
