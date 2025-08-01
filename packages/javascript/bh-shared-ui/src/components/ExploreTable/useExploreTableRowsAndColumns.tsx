@@ -24,7 +24,7 @@ import {
     getExploreTableData,
     isRequiredColumn,
     isSmallColumn,
-    REQUIRED_KEYS,
+    REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
     type ExploreTableProps,
     type MungedTableRowWithId,
 } from './explore-table-utils';
@@ -203,7 +203,10 @@ const useExploreTableRowsAndColumns = ({
             const bIsRequired = isRequiredColumn(idB);
             if (aIsRequired) {
                 if (bIsRequired) {
-                    return REQUIRED_KEYS.indexOf(idA) > REQUIRED_KEYS.indexOf(idB) ? 1 : -1;
+                    return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
+                        REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
+                        ? 1
+                        : -1;
                 }
                 return -1;
             }

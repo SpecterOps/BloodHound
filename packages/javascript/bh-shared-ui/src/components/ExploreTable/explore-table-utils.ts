@@ -32,8 +32,17 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-export const REQUIRED_KEYS = ['kind', 'label', 'objectId', 'isTierZero'] satisfies PropertyLabelOverrides[];
-export const KNOWN_NODE_KEYS = [...REQUIRED_KEYS, 'isOwnedObject', 'lastSeen'] satisfies PropertyLabelOverrides[];
+export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = [
+    'kind',
+    'label',
+    'objectId',
+    'isTierZero',
+] satisfies PropertyLabelOverrides[];
+export const KNOWN_NODE_KEYS = [
+    ...REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
+    'isOwnedObject',
+    'lastSeen',
+] satisfies PropertyLabelOverrides[];
 /**
  * Keys that can be found in a nodes property bag that are lifted into the UnifiedNode type
  */
@@ -59,9 +68,9 @@ export const getExploreTableData = (graphData: GraphResponse | FlatGraphResponse
     };
 };
 
-export const requiredColumns = Object.fromEntries(REQUIRED_KEYS.map((key) => [key, true]));
-export const isRequiredColumn = (value: string): value is (typeof REQUIRED_KEYS)[number] => {
-    return requiredColumns[value as PropertyLabelOverrides];
+export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+export const isRequiredColumn = (value: string): value is (typeof REQUIRED_EXPLORE_TABLE_COLUMN_KEYS)[number] => {
+    return requiredColumns[value];
 };
 
 export const compareForExploreTableSort = (a: any, b: any) => {
