@@ -29,16 +29,7 @@ const getCypherAPIMock = (results: Record<string, any>) => {
         );
     });
 };
-const server = setupServer(
-    getCypherAPIMock(tableShapedResponse),
-    rest.get('/api/v2/features', (_, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [{ id: 1, key: 'explore_table_view', enabled: true }],
-            })
-        );
-    })
-);
+const server = setupServer(getCypherAPIMock(tableShapedResponse));
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());

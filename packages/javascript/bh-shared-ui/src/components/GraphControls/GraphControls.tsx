@@ -29,7 +29,6 @@ import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
 import { useExploreParams } from '../../hooks';
-import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -65,7 +64,6 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         jsonData,
         currentNodes,
     } = props;
-    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
@@ -132,30 +130,22 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphMenu label='Layout'>
-                    {layoutOptions
-                        .filter((layout) => {
-                            if (!tableViewFeatureFlag?.enabled || searchType !== 'cypher') {
-                                return layout !== 'table';
-                            }
-                            return true;
-                        })
-                        .map((buttonLabel) => {
-                            const tableViewIsSelected =
-                                tableViewFeatureFlag?.enabled && isExploreTableSelected && searchType === 'cypher';
-                            const isSelected = tableViewIsSelected
-                                ? buttonLabel === 'table'
-                                : buttonLabel === selectedLayout;
+                    {layoutOptions.map((buttonLabel) => {
+                        const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
+                        const isSelected = tableViewIsSelected
+                            ? buttonLabel === 'table'
+                            : buttonLabel === selectedLayout;
 
-                            return (
-                                <MenuItem
-                                    data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
-                                    key={buttonLabel}
-                                    selected={isSelected}
-                                    onClick={() => onLayoutChange(buttonLabel)}>
-                                    {capitalize(buttonLabel)}
-                                </MenuItem>
-                            );
-                        })}
+                        return (
+                            <MenuItem
+                                data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
+                                key={buttonLabel}
+                                selected={isSelected}
+                                onClick={() => onLayoutChange(buttonLabel)}>
+                                {capitalize(buttonLabel)}
+                            </MenuItem>
+                        );
+                    })}
                 </GraphMenu>
 
                 <GraphMenu label='Export'>

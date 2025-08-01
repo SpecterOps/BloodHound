@@ -15,11 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import fileDownload from 'js-file-download';
+import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import { MungedTableRowWithId, requiredColumns, type ExploreTableProps } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -56,7 +58,6 @@ const ExploreTable = ({
     selectedNode,
     onClose,
     onRowClick,
-    onDownloadClick,
     onKebabMenuClick,
     onManageColumnsChange,
     allColumnKeys,
@@ -89,6 +90,15 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
+    const handleDownloadClick = useCallback(() => {
+        if (data) {
+            const nodeValues = Object.values(data)?.map((node) => node.data);
+            const csv = json2csv(nodeValues, { keys: allColumnKeys });
+
+            fileDownload(csv, 'nodes.csv');
+        }
+    }, [data, allColumnKeys]);
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -102,7 +112,7 @@ const ExploreTable = ({
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns}
                     pinnedColumns={requiredColumns}
-                    onDownloadClick={onDownloadClick}
+                    onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
