@@ -170,6 +170,9 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, ProvidedFileName: "", FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
+		if removeErr := os.Remove(ingestTaskParams.Filename); removeErr != nil {
+			slog.WarnContext(request.Context(), fmt.Sprintf("Failed to clean up file after task creation error: %v", removeErr))
+		}
 		api.HandleDatabaseError(request, response, err)
 	} else if err = job.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -227,6 +230,9 @@ func (s Resources) ProcessMultipartIngestTask(response http.ResponseWriter, requ
 			if len(result.Errors) > 0 {
 				failed += 1
 			} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: result.GeneratedFileName, ProvidedFileName: result.ProvidedFileName, FileType: result.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
+				if removeErr := os.Remove(result.GeneratedFileName); removeErr != nil {
+					slog.WarnContext(request.Context(), fmt.Sprintf("Failed to clean up file after task creation error: %v", removeErr))
+				}
 				fileResponse.Errors = append(fileResponse.Errors, fmt.Sprintf("Error creating ingest task: %v", err))
 			} else if err = job.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
 				fileResponse.Errors = append(fileResponse.Errors, fmt.Sprintf("Error updating ingest job: %v", err))

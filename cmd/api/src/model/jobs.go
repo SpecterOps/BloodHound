@@ -56,10 +56,11 @@ type TaskInfo struct {
 func (s *TaskInfo) Scan(value interface{}) error {
 	if value == nil {
 		*s = TaskInfo{}
+		return nil
 	}
 
 	if bytes, ok := value.([]byte); !ok {
-		return errors.New("type assertion to []byte failed for CompletedTask")
+		return errors.New("type assertion to []byte failed for TaskInfo")
 	} else {
 		return json.Unmarshal(bytes, &s)
 	}
