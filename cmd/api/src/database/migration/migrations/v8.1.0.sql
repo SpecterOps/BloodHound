@@ -26,6 +26,10 @@ VALUES (current_timestamp,
 ON CONFLICT DO NOTHING;
 
 -- Targeted Access Control users_roles column additions and defaults
-ALTER TABLE users_roles 
+ALTER TABLE users_roles
         ADD COLUMN IF NOT EXISTS access_control_list text[] default array ['all_environments'],
         ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
+
+-- File Ingest Details
+ALTER TABLE ingest_jobs ADD COLUMN IF NOT EXISTS task_info jsonb NOT NULL DEFAULT '{"completed_tasks": []}'::jsonb;
+ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS provided_file_name text NOT NULL DEFAULT '';

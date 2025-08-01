@@ -24,18 +24,20 @@ import (
 )
 
 type IngestTaskParams struct {
-	Filename  string
-	FileType  model.FileType
-	RequestID string
-	JobID     int64
+	Filename         string
+	ProvidedFileName string
+	FileType         model.FileType
+	RequestID        string
+	JobID            int64
 }
 
 func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
-		FileName:    params.Filename,
-		RequestGUID: params.RequestID,
-		JobId:       null.Int64From(params.JobID),
-		FileType:    params.FileType,
+		FileName:         params.Filename,
+		ProvidedFileName: params.ProvidedFileName,
+		RequestGUID:      params.RequestID,
+		JobId:            null.Int64From(params.JobID),
+		FileType:         params.FileType,
 	}
 
 	return db.CreateIngestTask(ctx, newIngestTask)
