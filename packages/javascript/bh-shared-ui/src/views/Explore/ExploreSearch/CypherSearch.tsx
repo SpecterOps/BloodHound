@@ -277,7 +277,7 @@ const CypherSearch = ({
                         </div>
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        <TagToZoneLabel></TagToZoneLabel>
+                        <TagToZoneLabel selectedQuery={selectedQuery}></TagToZoneLabel>
 
                         <Button
                             variant='secondary'

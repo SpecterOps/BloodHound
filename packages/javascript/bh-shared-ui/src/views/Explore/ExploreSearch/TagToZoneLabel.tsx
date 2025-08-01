@@ -2,7 +2,14 @@ import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundente
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../components';
 import TagToZoneDialog from './TagToZoneDialog';
-const TagToZoneLabel: FC = () => {
+
+type TagToZoneLabelProps = {
+    selectedQuery: any;
+};
+
+const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
+    const { selectedQuery } = props;
+    console.log(selectedQuery);
     const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
     const [tagToZoneOpen, setTagToZoneOpen] = useState(false);
@@ -14,7 +21,7 @@ const TagToZoneLabel: FC = () => {
     return (
         <>
             <Popover>
-                <PopoverTrigger>
+                <PopoverTrigger disabled={!selectedQuery}>
                     <Button variant='secondary' asChild size='small'>
                         <div>
                             <span className='mr-2 text-base'>Tag</span>
@@ -31,7 +38,7 @@ const TagToZoneLabel: FC = () => {
                     </div>
                 </PopoverContent>
             </Popover>
-            <TagToZoneDialog dialogOpen={tagToZoneOpen} setDialogOpen={handleSetOpen} />
+            <TagToZoneDialog dialogOpen={tagToZoneOpen} setDialogOpen={handleSetOpen} selectedQuery={selectedQuery} />
         </>
     );
 };

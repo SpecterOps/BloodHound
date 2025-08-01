@@ -112,6 +112,12 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 
 const SelectorForm: FC = () => {
     const location = useLocation();
+
+    const receivedData = location.state;
+
+    console.log('receivedData');
+    console.log(receivedData);
+
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();

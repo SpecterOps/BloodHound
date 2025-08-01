@@ -16,15 +16,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
+import { useNavigate } from 'react-router-dom';
 import { useTagsQuery } from '../../../hooks';
-
 type TagToZoneDialogProps = {
     dialogOpen: boolean;
+    selectedQuery: any;
     setDialogOpen: (isOpen: boolean) => void;
 };
 
 const TagToZoneDialog = (props: TagToZoneDialogProps) => {
-    const { dialogOpen, setDialogOpen } = props;
+    const { dialogOpen, selectedQuery, setDialogOpen } = props;
+    const navigate = useNavigate();
 
     const AssetGroupTagTypeTier = 1 as const;
     // export const AssetGroupTagTypeLabel = 2 as const;
@@ -32,14 +34,17 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
 
     const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
     const zones = tiersQuery.data;
-    console.log(zones);
+    // console.log(zones);
 
     const [zone, setZone] = useState('');
 
     const handleValueChange = (val: any) => {
         console.log(`select value = ${val}`);
-        // console.log(parseInt(val));
         setZone(val);
+    };
+
+    const onContinue = () => {
+        navigate(`/zone-management/save/tier/${zone}/selector`, { state: selectedQuery });
     };
 
     return (
@@ -79,7 +84,9 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
                             <Button variant='secondary'>Cancel</Button>
                         </DialogClose>
 
-                        <Button disabled={!zone}>Continue</Button>
+                        <Button disabled={!zone} onClick={onContinue}>
+                            Continue
+                        </Button>
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>
