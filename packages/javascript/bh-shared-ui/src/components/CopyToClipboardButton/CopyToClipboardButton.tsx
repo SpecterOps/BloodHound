@@ -34,12 +34,14 @@ export const CopyToClipboardButton = ({
             <button
                 onClick={handleCopyToClipBoard}
                 onAnimationStart={(animationEvent) => {
+                    console.log('.......start');
                     const element = animationEvent.target as HTMLElement;
                     if (element?.tagName === 'BUTTON') {
                         onAnimationStart(animationEvent);
                     }
                 }}
                 onAnimationEnd={(animationEvent) => {
+                    console.log('.......end');
                     const element = animationEvent.target as HTMLElement;
                     if (element?.tagName === 'BUTTON') {
                         setDisplayCopyCheckmark(false);

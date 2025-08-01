@@ -47,6 +47,7 @@ const WrappedExploreTable = () => {
     });
     const [selectedNode, setSelectedNode] = useState<string>();
 
+    console.log({ selectedNode });
     return (
         <ExploreTable
             {...exploreTableTestProps}
@@ -224,12 +225,15 @@ describe('ExploreTable', async () => {
 
         await user.click(kebabButton);
 
+        console.log(screen.debug());
         expect(kebabCallbackSpy).toBeCalledWith({
             id: '112',
             x: 0,
             y: 0,
         });
 
-        expect(jdPhantomRow.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
+        const jdPhantomRowAfter = screen.getByRole('row', { name: /JD@PHANTOM.CORP/ });
+
+        expect(jdPhantomRowAfter.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
     });
 });
