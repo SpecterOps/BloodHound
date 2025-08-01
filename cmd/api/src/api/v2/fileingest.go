@@ -263,7 +263,7 @@ func (s Resources) processMultipart(ctx context.Context, validator upload.Ingest
 		if part, err := reader.NextPart(); err == io.EOF {
 			break
 		} else if err != nil {
-			processingError = fmt.Errorf("failed to read multipart part")
+			processingError = fmt.Errorf("failed to read multipart part: %w", err)
 			break
 		} else if part.FormName() == "" {
 			processingError = fmt.Errorf("all form parts must specify a name")
