@@ -13,7 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { compareForExploreTableSort } from './explore-table-utils';
+import { cypherTestResponse } from '../../mocks';
+import {
+    compareForExploreTableSort,
+    DUPLICATED_KNOWN_KEYS,
+    getExploreTableData,
+    KNOWN_NODE_KEYS,
+} from './explore-table-utils';
 
 describe('Compare function for explore table sort', () => {
     test('function should return 1 when first param is larger, no matter the data type', () => {
@@ -56,5 +62,29 @@ describe('Compare function for explore table sort', () => {
         expect(compareForExploreTableSort(false, false)).toBe(VALUES_ARE_EQUAL);
         expect(compareForExploreTableSort(null, null)).toBe(VALUES_ARE_EQUAL);
         expect(compareForExploreTableSort(undefined, undefined)).toBe(VALUES_ARE_EQUAL);
+    });
+});
+
+describe('getExploreTableData', () => {
+    it.each([undefined, null, [], {}])('returns undefined if graphData is %s or not a GraphResponse', (graphData) => {
+        const expected = undefined;
+        const actual = getExploreTableData(graphData as any);
+        expect(actual).toBe(expected);
+    });
+    it('returns the same nodes from the graphData', () => {
+        const expected = cypherTestResponse.data.nodes;
+        const actual = getExploreTableData(cypherTestResponse);
+
+        expect(actual?.nodes).toEqual(expected);
+    });
+    it('returns the node_keys from the graphData with duplicate keys removed and known keys added', () => {
+        const expected = cypherTestResponse.data.node_keys;
+        const actual = getExploreTableData(cypherTestResponse);
+
+        expect(actual?.node_keys).not.toEqual(expect.arrayContaining(DUPLICATED_KNOWN_KEYS));
+        expect(actual?.node_keys).toEqual(expect.arrayContaining(KNOWN_NODE_KEYS));
+        expect(actual?.node_keys).toEqual(
+            expect.arrayContaining(expected.filter((key) => !DUPLICATED_KNOWN_KEYS.includes(key)))
+        );
     });
 });

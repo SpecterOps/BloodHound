@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { GraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
@@ -27,6 +28,7 @@ import {
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
+import { MappedStringLiteral } from '../types';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -100,6 +102,25 @@ const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return Object.values(CommonKindProperties).includes(enumValue);
 };
 
+export type KnownNodeProperties = keyof Omit<GraphNode, 'properties'> | 'nodeType';
+/**
+ * The intent is to standardize keys and their display label in the UI.
+ * The keys below are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
+ */
+export const KnownNodePropertiesToDisplay = {
+    /**
+     * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
+     * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
+     */
+    nodeType: 'Node Type',
+    kind: 'Node Type',
+    isTierZero: 'Tier Zero',
+    isOwnedObject: 'Is Owned',
+    label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,
+    objectId: CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID)!,
+    lastSeen: CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen)!,
+} as const satisfies MappedStringLiteral<KnownNodeProperties, string>;
+
 export type ValidatedProperty = {
     isKnownProperty: boolean;
     kind: EntityPropertyKind;
@@ -110,10 +131,11 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
         return { isKnownProperty: true, kind: 'ad' };
     if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
     if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
+    if (enumValue in KnownNodePropertiesToDisplay) return { isKnownProperty: true, kind: 'ov' };
     return { isKnownProperty: false, kind: null };
 };
 
-const getFieldLabel = (kind: string, key: string): string => {
+const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
     let label: string;
 
     switch (kind) {
@@ -126,6 +148,9 @@ const getFieldLabel = (kind: string, key: string): string => {
         case 'cm':
             label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
             break;
+        case 'ov':
+            label = KnownNodePropertiesToDisplay[key as KnownNodeProperties]!;
+            break;
         default:
             label = key;
     }
@@ -133,7 +158,7 @@ const getFieldLabel = (kind: string, key: string): string => {
     return label;
 };
 
-export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;
+export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
 
 export type EntityField = {
     label: string | JSX.Element;

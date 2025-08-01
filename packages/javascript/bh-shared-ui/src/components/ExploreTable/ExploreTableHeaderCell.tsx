@@ -19,7 +19,7 @@ import { Tooltip } from '@mui/material';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { MungedTableRowWithId } from './explore-table-utils';
 
-const KEYS_TO_RENDER_AS_ICON = ['nodetype'];
+const KEYS_TO_RENDER_AS_ICON = ['kind'];
 
 const ExploreTableHeaderCell = ({
     headerKey,

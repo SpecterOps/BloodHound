@@ -37,7 +37,7 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
             e.stopPropagation();
             onClick(item);
         }}>
-        <button className="w-full text-left flex justify-between items-center'">
+        <div className="w-full text-left flex justify-between items-center'">
             <div>
                 <Checkbox className={cn('mr-2', { '*:bg-blue-800': isSelected })} checked={isSelected} />
                 <span>{item.value}</span>
@@ -49,7 +49,7 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
                     icon={faThumbTack}
                 />
             )}
-        </button>
+        </div>
     </li>
 );
 
