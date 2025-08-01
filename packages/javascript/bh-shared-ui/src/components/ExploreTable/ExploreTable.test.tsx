@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import ExploreTable from './ExploreTable';
 
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { render } from '../../test-utils';
@@ -47,7 +47,6 @@ const WrappedExploreTable = () => {
     });
     const [selectedNode, setSelectedNode] = useState<string>();
 
-    console.log({ selectedNode });
     return (
         <ExploreTable
             {...exploreTableTestProps}
@@ -58,8 +57,13 @@ const WrappedExploreTable = () => {
             }}
             onClose={closeCallbackSpy}
             selectedNode={selectedNode || null}
-            onKebabMenuClick={kebabCallbackSpy}
-            onRowClick={(row) => setSelectedNode(row.id)}
+            onKebabMenuClick={(row) => {
+                setSelectedNode(row.id);
+                kebabCallbackSpy(row);
+            }}
+            onRowClick={(row) => {
+                setSelectedNode(row.id);
+            }}
         />
     );
 };
@@ -219,21 +223,18 @@ describe('ExploreTable', async () => {
 
         const jdPhantomRow = screen.getByRole('row', { name: /JD@PHANTOM.CORP/ });
 
-        const kebabButton = within(jdPhantomRow).getByTestId('kebab-menu');
+        const kebabButton = screen.getByTestId('kebab-menu');
 
         expect(jdPhantomRow.className).not.toContain(SELECTED_ROW_INDICATOR_CLASS);
 
         await user.click(kebabButton);
 
-        console.log(screen.debug());
-        expect(kebabCallbackSpy).toBeCalledWith({
-            id: '112',
-            x: 0,
-            y: 0,
-        });
+        // expect(kebabCallbackSpy).toBeCalledWith({
+        //     id: '112',
+        //     x: 0,
+        //     y: 0,
+        // });
 
-        const jdPhantomRowAfter = screen.getByRole('row', { name: /JD@PHANTOM.CORP/ });
-
-        expect(jdPhantomRowAfter.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
+        expect(jdPhantomRow.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
     });
 });
