@@ -106,6 +106,7 @@ func (s AssetGroupTag) AuditData() AuditData {
 		"position":         s.Position,
 		"require_certify":  s.RequireCertify,
 		"analysis_enabled": s.AnalysisEnabled,
+		"glyph":            s.Glyph,
 	}
 }
 
@@ -118,7 +119,7 @@ func (s AssetGroupTag) KindName() string {
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
-	return filter == "name" || filter == "description"
+	return filter == "name" || filter == "description" || filter == "glyph"
 }
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
@@ -134,6 +135,7 @@ func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 		"deleted_by":       {Equals, NotEquals},
 		"require_certify":  {Equals, NotEquals},
 		"analysis_enabled": {Equals, NotEquals},
+		"glyph":            {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
