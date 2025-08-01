@@ -1,7 +1,8 @@
 import { type ScheduledJobDisplay } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { renderHook, waitFor } from '../../test-utils';
+
+import { renderHook, waitFor } from '../test-utils';
 import {
     FETCH_ERROR_KEY,
     FETCH_ERROR_MESSAGE,
@@ -39,7 +40,7 @@ vi.mock('../../hooks', async () => {
     };
 });
 
-export const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
+const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     id: 22,
     client_id: '718c9b04-9394-42c0-9d53-c87b689e2d92',
     client_name: 'GOAD',
@@ -62,21 +63,12 @@ export const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     domain_results: [],
 };
 
-const randBoolean = () => Math.random() > 0.5;
-
 export const MOCK_FINISHED_JOBS_RESPONSE = {
     count: 20,
     data: new Array(10).fill(MOCK_FINISHED_JOB).map((item, index) => ({
         ...item,
         id: index,
         status: (index % 10) - 1,
-        session_collection: randBoolean(),
-        local_group_collection: randBoolean(),
-        ad_structure_collection: randBoolean(),
-        cert_services_collection: randBoolean(),
-        ca_registry_collection: randBoolean(),
-        dc_registry_collection: randBoolean(),
-        all_trusted_domains: randBoolean(),
     })),
     limit: 10,
     skip: 10,
@@ -98,7 +90,7 @@ describe('toCollected', () => {
     });
 
     it('shows some collection methods for the given job', () => {
-        const PARTIAL_JOB = {
+        const NO_COLLECTIONS_JOB = {
             ...MOCK_FINISHED_JOB,
             session_collection: false,
             local_group_collection: false,
@@ -108,24 +100,27 @@ describe('toCollected', () => {
             dc_registry_collection: false,
             all_trusted_domains: false,
         };
-        expect(toCollected(PARTIAL_JOB)).toBe('');
+        expect(toCollected(NO_COLLECTIONS_JOB)).toBe('');
     });
 
     it('shows no collection methods for the given job', () => {
-        const PARTIAL_JOB = {
+        const SOME_COLLECTIONS_JOB = {
             ...MOCK_FINISHED_JOB,
             session_collection: false,
             local_group_collection: false,
             ad_structure_collection: false,
             cert_services_collection: false,
         };
-        expect(toCollected(PARTIAL_JOB)).toBe('CA Registry, DC Registry, All Trusted Domains');
+        expect(toCollected(SOME_COLLECTIONS_JOB)).toBe('CA Registry, DC Registry, All Trusted Domains');
     });
 });
 
 describe('toFormatted', () => {
     it('formats the date string', () => {
-        expect(toFormatted('2024-01-01T15:30:00.500Z')).toBe('2024-01-01 09:30 CST');
+        const result = toFormatted('2024-01-01T15:30:00.500Z');
+        // Server TZ might not match local dev TZ
+        // Match format like '2024-01-01 09:30 CST'
+        expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{3,4}$/);
     });
 });
 
