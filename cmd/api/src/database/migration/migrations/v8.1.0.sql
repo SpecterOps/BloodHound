@@ -31,4 +31,4 @@ ALTER TABLE users_roles
         ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
 
 ALTER TABLE asset_group_tags
-        ADD COLUMN glyph TEXT UNIQUE;
+        ADD COLUMN IF NOT EXISTS glyph TEXT UNIQUE;
