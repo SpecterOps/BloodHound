@@ -18,3 +18,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Used in CopyToClipboardButton as a trigger to reset the clipboard icon */
+@keyframes null-clipboard-animation {
+}

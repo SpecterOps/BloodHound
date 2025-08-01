@@ -2,7 +2,6 @@ import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AnimationEvent, useState } from 'react';
 import { cn, copyToClipboard } from '../../utils';
-import './null-animation.css';
 
 type CopyToClipboardButtonProps = {
     onAnimationStart?: (e: AnimationEvent<HTMLButtonElement>) => void;
@@ -51,7 +50,7 @@ export const CopyToClipboardButton = ({
                     'absolute top-1/2 left-2 -translate-x-1/2 -translate-y-1/2 opacity-0 pr-1 group-hover:opacity-100 transition-opacity ease-in',
                     transitionDelay,
                     {
-                        'animate-[null-animation_1s]': displayCopyCheckmark,
+                        'animate-[null-clipboard-animation_1s]': displayCopyCheckmark,
                     }
                 )}>
                 {displayCopyCheckmark && <FontAwesomeIcon icon={faCheck} className='animate-in fade-in duration-300' />}
