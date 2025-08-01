@@ -51,19 +51,25 @@ const useExploreTableRowsAndColumns = ({
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 
-    const rows = useMemo(
+    const rows: MungedTableRowWithId[] = useMemo(
         () =>
-            ((exploreTableData?.nodes &&
-                Object.entries(exploreTableData?.nodes).map(([key, value]) => {
-                    const { properties, ...rest } = value;
-                    return {
-                        ...rest,
-                        ...properties,
-                        id: key,
-                        displayname: value?.label,
-                    };
-                })) ||
-                []) as MungedTableRowWithId[],
+            exploreTableData?.nodes
+                ? Object.entries(exploreTableData?.nodes).map(([key, node]) => {
+                      // To avoid extra enumerations for spread operators, the known properties are manually set
+                      const flattenedNode = {
+                          id: key,
+                          label: node.label,
+                          kind: node.kind,
+                          objectId: node.objectId,
+                          lastSeen: node.lastSeen,
+                          isTierZero: node.isTierZero,
+                          isOwnedObject: node.isOwnedObject,
+                          ...node.properties,
+                      } satisfies MungedTableRowWithId;
+
+                      return flattenedNode;
+                  })
+                : [],
         [exploreTableData?.nodes]
     );
 
