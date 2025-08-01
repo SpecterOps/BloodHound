@@ -361,9 +361,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.22":
+"@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bh-shared-ui%40workspace%3Apackages%2Fjavascript%2Fbh-shared-ui":
   version: 1.0.0-alpha.22
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.22"
+  resolution: "@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bh-shared-ui%40workspace%3Apackages%2Fjavascript%2Fbh-shared-ui"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
@@ -392,7 +392,42 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: 0c4bbbc0bc91548ba4522a8ad7eb354e716a5a089679bed988e980a3bc1ed6b4e48a390e16307d8ab97a49acd3379758c85da6b02ce5921aa7367e4c9f3af0dd
+  checksum: ac1ad03b055fd6eb75ecac4b296852ae8d1d4a3dee29333fc37a4ef8df0ff000928456aac1e5221780be0a0e63648785685d5576c63c5efad8f0d3500a4b9c7e
+  languageName: node
+  linkType: hard
+
+"@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bloodhound-ui%40workspace%3Acmd%2Fui":
+  version: 1.0.0-alpha.22
+  resolution: "@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bloodhound-ui%40workspace%3Acmd%2Fui"
+  dependencies:
+    "@radix-ui/react-accordion": ^1.1.2
+    "@radix-ui/react-checkbox": ^1.1.2
+    "@radix-ui/react-dialog": ^1.1.2
+    "@radix-ui/react-label": ^2.1.0
+    "@radix-ui/react-popover": ^1.1.2
+    "@radix-ui/react-select": ^2.1.1
+    "@radix-ui/react-slot": ^1.1.0
+    "@radix-ui/react-switch": ^1.0.2
+    "@radix-ui/react-tabs": ^1.1.8
+    "@radix-ui/react-tooltip": ^1.1.3
+    "@radix-ui/react-visually-hidden": ^1.1.0
+    "@tanstack/react-table": ^8.17.3
+    "@tanstack/react-virtual": ^3.13.12
+    class-variance-authority: ^0.7.0
+    clsx: ^2.1.1
+    date-fns: ^3.0.0
+    embla-carousel: ^8.3.0
+    embla-carousel-autoplay: ^8.3.0
+    embla-carousel-react: ^8.3.0
+    lucide-react: ^0.436.0
+    react-day-picker: 8.10.1
+    tailwind-merge: ^2.3.0
+    tailwindcss-animate: ^1.0.7
+  peerDependencies:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    tailwindcss: ^3.4.3
+  checksum: ac1ad03b055fd6eb75ecac4b296852ae8d1d4a3dee29333fc37a4ef8df0ff000928456aac1e5221780be0a0e63648785685d5576c63c5efad8f0d3500a4b9c7e
   languageName: node
   linkType: hard
 
@@ -4959,7 +4994,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.22
+    "@bloodhoundenterprise/doodleui": /Users/dpcairns/coding/something_30040/package.tgz
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
     "@faker-js/faker": ^7.3.0
@@ -5078,7 +5113,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.22
+    "@bloodhoundenterprise/doodleui": /Users/dpcairns/coding/something_30040/package.tgz
     "@date-io/luxon": ^1.3.13
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4

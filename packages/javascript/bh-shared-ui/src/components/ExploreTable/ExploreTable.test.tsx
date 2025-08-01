@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import ExploreTable from './ExploreTable';
 
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { render } from '../../test-utils';
@@ -223,17 +223,17 @@ describe('ExploreTable', async () => {
 
         const jdPhantomRow = screen.getByRole('row', { name: /JD@PHANTOM.CORP/ });
 
-        const kebabButton = screen.getByTestId('kebab-menu');
+        const kebabButton = within(jdPhantomRow).getByTestId('kebab-menu');
 
         expect(jdPhantomRow.className).not.toContain(SELECTED_ROW_INDICATOR_CLASS);
 
         await user.click(kebabButton);
 
-        // expect(kebabCallbackSpy).toBeCalledWith({
-        //     id: '112',
-        //     x: 0,
-        //     y: 0,
-        // });
+        expect(kebabCallbackSpy).toBeCalledWith({
+            id: '112',
+            x: 0,
+            y: 0,
+        });
 
         expect(jdPhantomRow.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
     });

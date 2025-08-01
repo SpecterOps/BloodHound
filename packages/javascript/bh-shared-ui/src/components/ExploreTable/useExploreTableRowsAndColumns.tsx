@@ -103,7 +103,6 @@ const useExploreTableRowsAndColumns = ({
 
     const handleKebabMenuClick = useCallback(
         (e: React.MouseEvent, id: string) => {
-            e.preventDefault();
             e.stopPropagation();
 
             if (onKebabMenuClick) onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
