@@ -1479,6 +1479,21 @@ func (mr *MockDatabaseMockRecorder) GetOrderedAssetGroupTagTiers(ctx any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderedAssetGroupTagTiers", reflect.TypeOf((*MockDatabase)(nil).GetOrderedAssetGroupTagTiers), ctx)
 }
 
+// GetOwnedSavedQueriesByUser mocks base method.
+func (m *MockDatabase) GetOwnedSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOwnedSavedQueriesByUser", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOwnedSavedQueriesByUser indicates an expected call of GetOwnedSavedQueriesByUser.
+func (mr *MockDatabaseMockRecorder) GetOwnedSavedQueriesByUser(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnedSavedQueriesByUser", reflect.TypeOf((*MockDatabase)(nil).GetOwnedSavedQueriesByUser), ctx, userID)
+}
+
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	m.ctrl.T.Helper()
@@ -1919,19 +1934,19 @@ func (mr *MockDatabaseMockRecorder) ListAuditLogs(ctx, before, after, offset, li
 }
 
 // ListSavedQueries mocks base method.
-func (m *MockDatabase) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
+func (m *MockDatabase) ListSavedQueries(ctx context.Context, scope string, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) ([]model.ScopedSavedQuery, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSavedQueries", ctx, userID, order, filter, skip, limit)
-	ret0, _ := ret[0].(model.SavedQueries)
+	ret := m.ctrl.Call(m, "ListSavedQueries", ctx, scope, userID, order, filter, skip, limit)
+	ret0, _ := ret[0].([]model.ScopedSavedQuery)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
 // ListSavedQueries indicates an expected call of ListSavedQueries.
-func (mr *MockDatabaseMockRecorder) ListSavedQueries(ctx, userID, order, filter, skip, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(ctx, scope, userID, order, filter, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), ctx, userID, order, filter, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), ctx, scope, userID, order, filter, skip, limit)
 }
 
 // LookupActiveSessionsByUser mocks base method.
