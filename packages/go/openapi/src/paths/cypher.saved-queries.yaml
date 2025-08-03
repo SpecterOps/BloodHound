@@ -48,7 +48,9 @@ get:
     - name: scope
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.contains.yaml'
+        type: string
+        enum: ["all", "owned", "shared", "public"]
+        default: "owned"
   responses:
     200:
       description: OK

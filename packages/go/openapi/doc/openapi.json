@@ -6924,7 +6924,14 @@
             "name": "scope",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+              "type": "string",
+              "enum": [
+                "all",
+                "owned",
+                "shared",
+                "public"
+              ],
+              "default": "owned"
             }
           }
         ],
