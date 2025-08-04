@@ -37,7 +37,7 @@ export const Cypher: FC<{
 
     const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
     const location = useLocation();
-    const receivedQuery = location.state.query;
+    const receivedQuery = location.state?.query;
 
     useEffect(() => {
         setCypherQuery(receivedQuery);
