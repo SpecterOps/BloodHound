@@ -25,9 +25,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
-    console.log('sharedIds');
-    console.log(sharedIds);
-
     const { data, isLoading, error, isError } = useQueryPermissions(queryId as number);
 
     function idMap() {
@@ -60,7 +57,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         } else {
             setSharedIds([]);
         }
-        if (data?.shared_to_user_ids.length === allUserIds?.length) {
+        console.log(data?.shared_to_user_ids.length);
+        if (data?.shared_to_user_ids.length && data?.shared_to_user_ids.length === allUserIds?.length) {
             setShareAll(true);
         } else {
             setShareAll(false);
