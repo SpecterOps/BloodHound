@@ -31,7 +31,7 @@ import {
     Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
