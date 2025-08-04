@@ -3492,7 +3492,7 @@ func ConvertAzureOAuth2PermissionGrantToRels(data OAuth2PermissionGrant) []Inges
 					Kind:  azure.Tenant,
 				},
 				IngestibleEndpoint{
-					Value: strings.ToUpper(data.TenantId),
+					Value: strings.ToUpper(data.ClientId),
 					Kind:  azure.ServicePrincipal,
 				},
 				IngestibleRel{

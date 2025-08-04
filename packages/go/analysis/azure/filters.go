@@ -59,7 +59,7 @@ func FilterControlsRelationships() graph.Criteria {
 }
 
 func FilterPermissionGrantRelationships() graph.Criteria {
-	return query.KindIn(query.Relationship(), azure.Grant)
+	return query.KindIn(query.Relationship(), azure.AbusablePermissionGrantRelationshipKinds()...)
 }
 
 func FilterAppRoleAssignmentTransitRelationships() graph.Criteria {

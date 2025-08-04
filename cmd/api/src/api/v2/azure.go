@@ -178,6 +178,7 @@ func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, 
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(objectControl), objectControl.Len(), nil
 		}
+
 	case azure.RelatedEntityTypeGrants:
 		if grants, err := azure.ListEntityGrantsPaths(ctx, db, objectID); err != nil {
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
