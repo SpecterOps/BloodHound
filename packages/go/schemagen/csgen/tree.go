@@ -35,6 +35,9 @@ func WalkSyntaxTree(node SyntaxNode, builder *OutputBuilder) error {
 			case Namespace:
 				builder.Write(typedNode.Enter())
 			case Class:
+				for _, annotation := range typedNode.Annotations {
+					builder.Write(annotation.String())
+				}
 				builder.Write(typedNode.Enter())
 			}
 		}
@@ -81,6 +84,8 @@ func WalkSyntaxTree(node SyntaxNode, builder *OutputBuilder) error {
 				if err := formatLiteral(builder, typedNode); err != nil {
 					return err
 				}
+			case Annotation:
+				builder.Write(typedNode.String())
 			}
 
 		} else {
