@@ -64,7 +64,12 @@ get:
                   data:
                     type: array
                     items:
-                      $ref: './../schemas/model.saved-query.yaml'
+                      allOf:
+                        - type: object
+                          properties:
+                            scope:
+                              type: string
+                        - $ref: './../schemas/model.saved-query.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
