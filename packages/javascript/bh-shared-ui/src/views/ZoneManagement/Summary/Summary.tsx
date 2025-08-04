@@ -16,11 +16,11 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
-import { UseQueryResult, useQuery } from 'react-query';
+import { UseQueryResult } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
-import { useHighestPrivilegeTagId } from '../../../hooks';
+import { useHighestPrivilegeTagId, useTagsQuery } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
-import { apiClient, useAppNavigate } from '../../../utils';
+import { useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
 import { SelectedDetails } from '../Details/SelectedDetails';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -38,7 +38,7 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 const Summary: FC = () => {
     const navigate = useAppNavigate();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const { tierId = topTagId?.toString(), labelId, selectorId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);
@@ -47,54 +47,31 @@ const Summary: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tagsQuery = useQuery({
-        queryKey: ['zone-management', 'tags'],
-        queryFn: async () => {
-            return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
-                return res.data.data['tags'];
-            });
-        },
-    });
-
-    const selectorsQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId, 'selectors'],
-        queryFn: async () => {
-            if (!tagId) return [];
-            return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
-                return res.data.data['selectors'];
-            });
-        },
-    });
-
-    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
+    const tagsQuery = useTagsQuery();
 
     return (
         <div>
             <div className='flex mt-6 gap-8'>
                 <InfoHeader />
                 <div className='basis-1/3'>
-                    {showEditButton && (
-                        <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link
-                                data-testid='zone-management_edit-button'
-                                to={getSavePath(tierId, labelId, selectorId)}>
-                                Edit
-                            </Link>
-                        </Button>
-                    )}
+                    <Button asChild variant={'secondary'}>
+                        <Link data-testid='zone-management_edit-button' to={getSavePath(tierId, labelId, selectorId)}>
+                            Edit
+                        </Link>
+                    </Button>
                 </div>
             </div>
-            <div className='flex gap-8 mt-6 w-full'>
-                <div className='flex-1'>
+            <div className='flex gap-8 mt-4 w-full'>
+                <div className='basis-2/3'>
                     <SummaryList
                         title={labelId ? 'Labels' : 'Tiers'}
                         listQuery={tagsQuery}
                         selected={tagId as string}
-                        onSelect={(id) => {
+                        onSelect={(id) =>
                             navigate(
                                 `/zone-management/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
-                            );
-                        }}
+                            )
+                        }
                     />
                 </div>
                 <div className='basis-1/3'>

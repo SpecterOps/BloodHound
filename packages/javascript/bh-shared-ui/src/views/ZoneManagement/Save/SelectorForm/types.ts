@@ -20,5 +20,5 @@ export interface SelectorFormInputs {
     name: string;
     description: string;
     seeds: SelectorSeedRequest[];
-    disabled?: boolean | string;
+    disabled?: boolean;
 }

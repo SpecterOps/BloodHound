@@ -103,8 +103,6 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        screen.debug(undefined, Infinity);
-
         const selectorsInfoSectionTitle = await screen.findByText(/selectors/i);
         expect(selectorsInfoSectionTitle).toBeInTheDocument();
     });

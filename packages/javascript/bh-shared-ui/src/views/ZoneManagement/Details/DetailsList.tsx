@@ -121,13 +121,13 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 {isTag(listItem) && !listItem?.analysis_enabled && (
                                                     <ZoneAnalysisIcon size={18} />
                                                 )}
-                                                <div
+                                                <span
                                                     className={cn(
                                                         'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]'
                                                     )}
                                                     title={listItem.name}>
                                                     {listItem.name}
-                                                </div>
+                                                </span>
                                             </div>
                                             {listItem.counts && (
                                                 <span className='text-base ml-4'>

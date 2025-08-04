@@ -203,11 +203,11 @@ export const patchSelector = async (params: PatchSelectorParams, options?: Reque
     return res.data.data;
 };
 
-export const usePatchSelector = (tagId: string | number | undefined) => {
+export const usePatchSelector = (tagId: string | number) => {
     const queryClient = useQueryClient();
     return useMutation(patchSelector, {
         onSettled: async () => {
-            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId!));
+            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId));
         },
     });
 };
@@ -219,7 +219,8 @@ export const useDeleteSelector = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteSelector, {
         onSettled: async (_data, _error, variables) => {
-            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(variables.tagId));
+            queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(variables.tagId));
+            queryClient.invalidateQueries(zoneManagementKeys.selectorDetail(variables.tagId, variables.selectorId));
         },
     });
 };
@@ -276,8 +277,8 @@ export const useDeleteAssetGroupTag = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteAssetGroupTag, {
         onSettled: async (_data, _error, tagId) => {
-            await queryClient.invalidateQueries(zoneManagementKeys.tags());
-            await queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
+            queryClient.invalidateQueries(zoneManagementKeys.tags());
+            queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
         },
     });
 };
@@ -299,10 +300,7 @@ export const useAssetGroupTags = () => {
 
     return useQuery({
         queryKey: zoneManagementKeys.tags(),
-        queryFn: async ({ signal }) => {
-            const response = await apiClient.getAssetGroupTags({ signal });
-            return response.data.data.tags;
-        },
+        queryFn: getAssetGroupTags,
         enabled: queryEnabled,
     });
 };
