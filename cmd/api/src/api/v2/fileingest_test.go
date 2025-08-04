@@ -26,6 +26,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"net/url"
 	"os"
 	"testing"
@@ -210,11 +211,14 @@ func TestResources_StartIngestJob(t *testing.T) {
 					LastIngest:    time.Time{},
 					TotalFiles:    0,
 					FailedFiles:   0,
+					TaskInfo: model.TaskInfo{
+						CompletedTasks: []model.CompletedTask{},
+					},
 				}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "end_time":"0001-01-01T00:00:00Z", "failed_files":0, "id":0, "last_ingest":"0001-01-01T00:00:00Z", "start_time":"0001-01-01T00:00:00Z", "status":1, "status_message":"", "total_files":0, "task_info":{"completed_tasks": []}, "updated_at":"0001-01-01T00:00:00Z", "user_email_address": "email@notreal.com", "user_id":"00000000-0000-0000-0000-000000000000"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -547,7 +551,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -571,7 +575,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
@@ -600,7 +604,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -624,7 +628,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, errors.New("error"))
 			},
 			expected: expected{
@@ -649,7 +653,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
@@ -675,7 +679,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
 			},
@@ -768,6 +772,197 @@ func TestIsValidContentTypeForUpload(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			got := v2.IsValidContentTypeForUpload(testCase.header)
+			require.Equal(t, testCase.want, got)
+		})
+	}
+}
+
+func TestResources_ProcessMultipartIngestTask(t *testing.T) {
+	type mock struct {
+		mockDatabase *dbmocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: missing content_type request header - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1/multipart",
+					},
+					Method: http.MethodPost,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Content-Type must be multipart/form-data"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: invalid file_upload_job_id parameter - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/id/multipart",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: GetFileUploadJobByID database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1/multipart",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success: file uploaded - Accepted",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1",
+					},
+					Method: http.MethodPost,
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))),
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: dbmocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				DB:     mocks.mockDatabase,
+				Config: config.Configuration{},
+			}
+
+			err := os.Mkdir(resources.Config.TempDirectory(), 0755)
+			if err != nil {
+				if !errors.Is(err, os.ErrExist) {
+					t.Fatalf("error creating directory required for test, %v", err)
+				}
+
+			}
+
+			defer os.RemoveAll(resources.Config.TempDirectory())
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessIngestTask).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
+		})
+	}
+}
+
+func TestIsValidContentTypeForUploadMultipart(t *testing.T) {
+	tests := []struct {
+		name   string
+		header textproto.MIMEHeader
+		want   bool
+	}{
+		{
+			name: "Empty Content-Type",
+			header: textproto.MIMEHeader{
+				"nope": []string{""},
+			},
+			want: false,
+		},
+		{
+			name: "Invalid Content-Type",
+			header: textproto.MIMEHeader{
+				"Content-Type": []string{"invalid"},
+			},
+			want: false,
+		},
+		{
+			name: "Invalid Content Type - invalid media type",
+			header: textproto.MIMEHeader{
+				"Content-Type": []string{";", ""},
+			},
+			want: false,
+		},
+		{
+			name: "Valid Content-Type",
+			header: textproto.MIMEHeader{
+				"Content-Type": []string{"application/json"},
+			},
+			want: true,
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := v2.IsValidContentTypeForUploadMultipart(testCase.header)
 			require.Equal(t, testCase.want, got)
 		})
 	}
