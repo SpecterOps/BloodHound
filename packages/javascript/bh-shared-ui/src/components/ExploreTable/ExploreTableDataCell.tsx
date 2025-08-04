@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faCancel, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { EntityField, format } from '../../utils';
 import NodeIcon from '../NodeIcon';
@@ -32,7 +32,7 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
         return (
             <div className='flex justify-center items-center pb-1 pt-1'>
                 <FontAwesomeIcon
-                    icon={value ? faCheck : faCancel}
+                    icon={value ? faCheck : faXmark}
                     color={value ? 'green' : 'lightgray'}
                     className='scale-125'
                 />

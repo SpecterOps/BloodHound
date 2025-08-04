@@ -80,6 +80,10 @@ const ExploreTable = ({
         data,
     });
 
+    const [columnPinning, setColumnPinning] = useState<DataTableProps['columnPinning']>({
+        left: ['action-menu', 'nodetype', 'name'],
+    });
+
     const searchInputProps = useMemo(
         () => ({
             onChange: handleSearchInputChange,
@@ -118,6 +122,8 @@ const ExploreTable = ({
                     TableCellProps={tableCellProps}
                     onRowClick={onRowClick}
                     selectedRow={selectedNode || undefined}
+                    columnPinning={columnPinning}
+                    onColumnPinningChange={setColumnPinning}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}

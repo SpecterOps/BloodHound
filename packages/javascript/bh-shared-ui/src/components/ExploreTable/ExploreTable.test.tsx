@@ -84,10 +84,10 @@ describe('ExploreTable', async () => {
         expect(screen.getByText('S-1-5-21-2697957641-2271029196-387917394-2201')).toBeInTheDocument();
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
     });
-    it('Manage Columns allow user to change columns', async () => {
+    it('"Columns" button allows user to edit column settings', async () => {
         const { user } = await setup();
 
-        const manageColumnsButton = screen.getByRole('button', { name: 'Manage Columns' });
+        const manageColumnsButton = screen.getByRole('button', { name: 'Columns' });
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
         expect(screen.queryByText('Admin Count')).not.toBeInTheDocument();
 
