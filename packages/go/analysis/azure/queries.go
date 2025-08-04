@@ -278,6 +278,16 @@ func FetchAbusableAppRoleAssignmentsPaths(tx graph.Transaction, root *graph.Node
 	})
 }
 
+func FetchOutboundAbusablePermissionGrants(tx graph.Transaction, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        root,
+		Direction:   graph.DirectionOutbound,
+		Skip:        skip,
+		Limit:       limit,
+		BranchQuery: FilterAbusablePermissionGrantRelationships,
+	})
+}
+
 func FetchAppRoleAssignmentsTransitList(tx graph.Transaction, root *graph.Node, direction graph.Direction, skip, limit int) (graph.NodeSet, error) {
 	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 		Root:        root,
@@ -352,6 +362,14 @@ func FetchInboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node
 		Direction:     graph.DirectionInbound,
 		BranchQuery:   FilterControlsRelationships,
 		DescentFilter: InboundControlDescentFilter,
+	})
+}
+
+func FetchEntityGrantsPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionInbound,
+		BranchQuery: FilterPermissionGrantRelationships,
 	})
 }
 

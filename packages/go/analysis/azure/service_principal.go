@@ -102,5 +102,11 @@ func servicePrincipalEntityDetails(tx graph.Transaction, node *graph.Node, detai
 		details.OutboundAbusableAppRoleAssignments = outboundAbusableAppRoleAssignments.Len()
 	}
 
+	if outboundAbusablePermissionGrants, err := FetchOutboundAbusablePermissionGrants(tx, node, 0, 0); err != nil {
+		return details, err
+	} else {
+		details.OutboundAbusablePermissionGrants = outboundAbusablePermissionGrants.Len()
+	}
+
 	return details, nil
 }

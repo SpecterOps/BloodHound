@@ -25,75 +25,747 @@ import (
 )
 
 var (
-	Entity                               = graph.StringKind("AZBase")
-	VMScaleSet                           = graph.StringKind("AZVMScaleSet")
-	App                                  = graph.StringKind("AZApp")
-	Role                                 = graph.StringKind("AZRole")
-	Device                               = graph.StringKind("AZDevice")
-	FunctionApp                          = graph.StringKind("AZFunctionApp")
-	Group                                = graph.StringKind("AZGroup")
-	KeyVault                             = graph.StringKind("AZKeyVault")
-	ManagementGroup                      = graph.StringKind("AZManagementGroup")
-	ResourceGroup                        = graph.StringKind("AZResourceGroup")
-	ServicePrincipal                     = graph.StringKind("AZServicePrincipal")
-	Subscription                         = graph.StringKind("AZSubscription")
-	Tenant                               = graph.StringKind("AZTenant")
-	User                                 = graph.StringKind("AZUser")
-	VM                                   = graph.StringKind("AZVM")
-	ManagedCluster                       = graph.StringKind("AZManagedCluster")
-	ContainerRegistry                    = graph.StringKind("AZContainerRegistry")
-	WebApp                               = graph.StringKind("AZWebApp")
-	LogicApp                             = graph.StringKind("AZLogicApp")
-	AutomationAccount                    = graph.StringKind("AZAutomationAccount")
-	AvereContributor                     = graph.StringKind("AZAvereContributor")
-	Contains                             = graph.StringKind("AZContains")
-	Contributor                          = graph.StringKind("AZContributor")
-	GetCertificates                      = graph.StringKind("AZGetCertificates")
-	GetKeys                              = graph.StringKind("AZGetKeys")
-	GetSecrets                           = graph.StringKind("AZGetSecrets")
-	HasRole                              = graph.StringKind("AZHasRole")
-	MemberOf                             = graph.StringKind("AZMemberOf")
-	Owner                                = graph.StringKind("AZOwner")
-	RunsAs                               = graph.StringKind("AZRunsAs")
-	VMContributor                        = graph.StringKind("AZVMContributor")
-	AutomationContributor                = graph.StringKind("AZAutomationContributor")
-	KeyVaultContributor                  = graph.StringKind("AZKeyVaultContributor")
-	VMAdminLogin                         = graph.StringKind("AZVMAdminLogin")
-	AddMembers                           = graph.StringKind("AZAddMembers")
-	AddSecret                            = graph.StringKind("AZAddSecret")
-	ExecuteCommand                       = graph.StringKind("AZExecuteCommand")
-	GlobalAdmin                          = graph.StringKind("AZGlobalAdmin")
-	PrivilegedAuthAdmin                  = graph.StringKind("AZPrivilegedAuthAdmin")
-	Grant                                = graph.StringKind("AZGrant")
-	GrantSelf                            = graph.StringKind("AZGrantSelf")
-	PrivilegedRoleAdmin                  = graph.StringKind("AZPrivilegedRoleAdmin")
-	ResetPassword                        = graph.StringKind("AZResetPassword")
-	UserAccessAdministrator              = graph.StringKind("AZUserAccessAdministrator")
-	Owns                                 = graph.StringKind("AZOwns")
-	ScopedTo                             = graph.StringKind("AZScopedTo")
-	CloudAppAdmin                        = graph.StringKind("AZCloudAppAdmin")
-	AppAdmin                             = graph.StringKind("AZAppAdmin")
-	AddOwner                             = graph.StringKind("AZAddOwner")
-	ManagedIdentity                      = graph.StringKind("AZManagedIdentity")
-	ApplicationReadWriteAll              = graph.StringKind("AZMGApplication_ReadWrite_All")
-	AppRoleAssignmentReadWriteAll        = graph.StringKind("AZMGAppRoleAssignment_ReadWrite_All")
-	DirectoryReadWriteAll                = graph.StringKind("AZMGDirectory_ReadWrite_All")
-	GroupReadWriteAll                    = graph.StringKind("AZMGGroup_ReadWrite_All")
-	GroupMemberReadWriteAll              = graph.StringKind("AZMGGroupMember_ReadWrite_All")
-	RoleManagementReadWriteDirectory     = graph.StringKind("AZMGRoleManagement_ReadWrite_Directory")
-	ServicePrincipalEndpointReadWriteAll = graph.StringKind("AZMGServicePrincipalEndpoint_ReadWrite_All")
-	AKSContributor                       = graph.StringKind("AZAKSContributor")
-	NodeResourceGroup                    = graph.StringKind("AZNodeResourceGroup")
-	WebsiteContributor                   = graph.StringKind("AZWebsiteContributor")
-	LogicAppContributor                  = graph.StringKind("AZLogicAppContributor")
-	AZMGAddMember                        = graph.StringKind("AZMGAddMember")
-	AZMGAddOwner                         = graph.StringKind("AZMGAddOwner")
-	AZMGAddSecret                        = graph.StringKind("AZMGAddSecret")
-	AZMGGrantAppRoles                    = graph.StringKind("AZMGGrantAppRoles")
-	AZMGGrantRole                        = graph.StringKind("AZMGGrantRole")
-	SyncedToADUser                       = graph.StringKind("SyncedToADUser")
-	AZRoleEligible                       = graph.StringKind("AZRoleEligible")
-	AZRoleApprover                       = graph.StringKind("AZRoleApprover")
+	Entity                  = graph.StringKind("AZBase")
+	VMScaleSet              = graph.StringKind("AZVMScaleSet")
+	App                     = graph.StringKind("AZApp")
+	Role                    = graph.StringKind("AZRole")
+	Device                  = graph.StringKind("AZDevice")
+	FunctionApp             = graph.StringKind("AZFunctionApp")
+	Group                   = graph.StringKind("AZGroup")
+	KeyVault                = graph.StringKind("AZKeyVault")
+	ManagementGroup         = graph.StringKind("AZManagementGroup")
+	ResourceGroup           = graph.StringKind("AZResourceGroup")
+	ServicePrincipal        = graph.StringKind("AZServicePrincipal")
+	Subscription            = graph.StringKind("AZSubscription")
+	Tenant                  = graph.StringKind("AZTenant")
+	User                    = graph.StringKind("AZUser")
+	VM                      = graph.StringKind("AZVM")
+	ManagedCluster          = graph.StringKind("AZManagedCluster")
+	ContainerRegistry       = graph.StringKind("AZContainerRegistry")
+	WebApp                  = graph.StringKind("AZWebApp")
+	LogicApp                = graph.StringKind("AZLogicApp")
+	AutomationAccount       = graph.StringKind("AZAutomationAccount")
+	AvereContributor        = graph.StringKind("AZAvereContributor")
+	Contains                = graph.StringKind("AZContains")
+	Contributor             = graph.StringKind("AZContributor")
+	GetCertificates         = graph.StringKind("AZGetCertificates")
+	GetKeys                 = graph.StringKind("AZGetKeys")
+	GetSecrets              = graph.StringKind("AZGetSecrets")
+	HasRole                 = graph.StringKind("AZHasRole")
+	MemberOf                = graph.StringKind("AZMemberOf")
+	Owner                   = graph.StringKind("AZOwner")
+	RunsAs                  = graph.StringKind("AZRunsAs")
+	VMContributor           = graph.StringKind("AZVMContributor")
+	AutomationContributor   = graph.StringKind("AZAutomationContributor")
+	KeyVaultContributor     = graph.StringKind("AZKeyVaultContributor")
+	VMAdminLogin            = graph.StringKind("AZVMAdminLogin")
+	AddMembers              = graph.StringKind("AZAddMembers")
+	AddSecret               = graph.StringKind("AZAddSecret")
+	ExecuteCommand          = graph.StringKind("AZExecuteCommand")
+	GlobalAdmin             = graph.StringKind("AZGlobalAdmin")
+	PrivilegedAuthAdmin     = graph.StringKind("AZPrivilegedAuthAdmin")
+	Grant                   = graph.StringKind("AZGrant")
+	GrantSelf               = graph.StringKind("AZGrantSelf")
+	PrivilegedRoleAdmin     = graph.StringKind("AZPrivilegedRoleAdmin")
+	ResetPassword           = graph.StringKind("AZResetPassword")
+	UserAccessAdministrator = graph.StringKind("AZUserAccessAdministrator")
+	Owns                    = graph.StringKind("AZOwns")
+	ScopedTo                = graph.StringKind("AZScopedTo")
+	CloudAppAdmin           = graph.StringKind("AZCloudAppAdmin")
+	AppAdmin                = graph.StringKind("AZAppAdmin")
+	AddOwner                = graph.StringKind("AZAddOwner")
+	ManagedIdentity         = graph.StringKind("AZManagedIdentity")
+	// Azure Management Graph API Permissions
+	APIConnectorsReadAll                                  = graph.StringKind("AZMGAPIConnectors_Read_All")
+	APIConnectorsReadWriteAll                             = graph.StringKind("AZMGAPIConnectors_ReadWrite_All")
+	AccessReviewReadAll                                   = graph.StringKind("AZMGAccessReview_Read_All")
+	AccessReviewReadWriteAll                              = graph.StringKind("AZMGAccessReview_ReadWrite_All")
+	AccessReviewReadWriteMembership                       = graph.StringKind("AZMGAccessReview_ReadWrite_Membership")
+	AcronymReadAll                                        = graph.StringKind("AZMGAcronym_Read_All")
+	AdministrativeUnitReadAll                             = graph.StringKind("AZMGAdministrativeUnit_Read_All")
+	AdministrativeUnitReadWriteAll                        = graph.StringKind("AZMGAdministrativeUnit_ReadWrite_All")
+	AgreementAcceptanceReadAll                            = graph.StringKind("AZMGAgreementAcceptance_Read_All")
+	AllSitesRead                                          = graph.StringKind("AZMGAllSites_Read")
+	AgreementReadAll                                      = graph.StringKind("AZMGAgreement_Read_All")
+	AgreementReadWriteAll                                 = graph.StringKind("AZMGAgreement_ReadWrite_All")
+	AiEnterpriseInteractionReadAll                        = graph.StringKind("AZMGAiEnterpriseInteraction_Read_All")
+	AppCatalogReadAll                                     = graph.StringKind("AZMGAppCatalog_Read_All")
+	AppCatalogReadWriteAll                                = graph.StringKind("AZMGAppCatalog_ReadWrite_All")
+	AppCatalogSubmit                                      = graph.StringKind("AZMGAppCatalog_Submit")
+	AppCertTrustConfigurationReadAll                      = graph.StringKind("AZMGAppCertTrustConfiguration_Read_All")
+	AppCertTrustConfigurationReadWriteAll                 = graph.StringKind("AZMGAppCertTrustConfiguration_ReadWrite_All")
+	AppRoleAssignmentReadWriteAll                         = graph.StringKind("AZMGAppRoleAssignment_ReadWrite_All")
+	ApplicationReadAll                                    = graph.StringKind("AZMGApplication_Read_All")
+	ApplicationReadWriteAll                               = graph.StringKind("AZMGApplication_ReadWrite_All")
+	ApplicationReadWriteOwnedBy                           = graph.StringKind("AZMGApplication_ReadWrite_OwnedBy")
+	ApprovalSolutionReadAll                               = graph.StringKind("AZMGApprovalSolution_Read_All")
+	ApprovalSolutionReadWriteAll                          = graph.StringKind("AZMGApprovalSolution_ReadWrite_All")
+	AttackSimulationReadAll                               = graph.StringKind("AZMGAttackSimulation_Read_All")
+	AttackSimulationReadWriteAll                          = graph.StringKind("AZMGAttackSimulation_ReadWrite_All")
+	AuditLogReadAll                                       = graph.StringKind("AZMGAuditLog_Read_All")
+	AuditLogsQueryReadAll                                 = graph.StringKind("AZMGAuditLogsQuery_Read_All")
+	AuthenticationContextReadAll                          = graph.StringKind("AZMGAuthenticationContext_Read_All")
+	AuthenticationContextReadWriteAll                     = graph.StringKind("AZMGAuthenticationContext_ReadWrite_All")
+	BillingConfigurationReadWriteAll                      = graph.StringKind("AZMGBillingConfiguration_ReadWrite_All")
+	BitlockerKeyReadAll                                   = graph.StringKind("AZMGBitlockerKey_Read_All")
+	BitlockerKeyReadBasicAll                              = graph.StringKind("AZMGBitlockerKey_ReadBasic_All")
+	BookingsAppointmentReadWriteAll                       = graph.StringKind("AZMGBookingsAppointment_ReadWrite_All")
+	BookingsManageAll                                     = graph.StringKind("AZMGBookings_Manage_All")
+	BookingsReadAll                                       = graph.StringKind("AZMGBookings_Read_All")
+	BookingsReadWriteAll                                  = graph.StringKind("AZMGBookings_ReadWrite_All")
+	BookmarkReadAll                                       = graph.StringKind("AZMGBookmark_Read_All")
+	BrowserSiteListsReadAll                               = graph.StringKind("AZMGBrowserSiteLists_Read_All")
+	BrowserSiteListsReadWriteAll                          = graph.StringKind("AZMGBrowserSiteLists_ReadWrite_All")
+	BusinessScenarioConfigReadAll                         = graph.StringKind("AZMGBusinessScenarioConfig_Read_All")
+	BusinessScenarioConfigReadOwnedBy                     = graph.StringKind("AZMGBusinessScenarioConfig_Read_OwnedBy")
+	BusinessScenarioConfigReadWriteAll                    = graph.StringKind("AZMGBusinessScenarioConfig_ReadWrite_All")
+	BusinessScenarioConfigReadWriteOwnedBy                = graph.StringKind("AZMGBusinessScenarioConfig_ReadWrite_OwnedBy")
+	BusinessScenarioDataReadOwnedBy                       = graph.StringKind("AZMGBusinessScenarioData_Read_OwnedBy")
+	BusinessScenarioDataReadWriteOwnedBy                  = graph.StringKind("AZMGBusinessScenarioData_ReadWrite_OwnedBy")
+	CalendarsReadBasicAll                                 = graph.StringKind("AZMGCalendars_ReadBasic_All")
+	CalendarsReadShared                                   = graph.StringKind("AZMGCalendars_Read_Shared")
+	CalendarsReadWriteShared                              = graph.StringKind("AZMGCalendars_ReadWrite_Shared")
+	CallDelegationReadAll                                 = graph.StringKind("AZMGCallDelegation_Read_All")
+	CallDelegationReadWriteAll                            = graph.StringKind("AZMGCallDelegation_ReadWrite_All")
+	CallEventsReadAll                                     = graph.StringKind("AZMGCallEvents_Read_All")
+	CallRecordsReadAll                                    = graph.StringKind("AZMGCallRecords_Read_All")
+	CallsAccessMediaAll                                   = graph.StringKind("AZMGCalls_AccessMedia_All")
+	CallsInitiateAll                                      = graph.StringKind("AZMGCalls_Initiate_All")
+	CallsInitiateGroupCallAll                             = graph.StringKind("AZMGCalls_InitiateGroupCall_All")
+	CallsJoinGroupCallAll                                 = graph.StringKind("AZMGCalls_JoinGroupCall_All")
+	CallsJoinGroupCallAsGuestAll                          = graph.StringKind("AZMGCalls_JoinGroupCallAsGuest_All")
+	ChangeManagementReadAll                               = graph.StringKind("AZMGChangeManagement_Read_All")
+	ChannelDeleteAll                                      = graph.StringKind("AZMGChannel_Delete_All")
+	ChannelMemberReadAll                                  = graph.StringKind("AZMGChannelMember_Read_All")
+	ChannelMemberReadWriteAll                             = graph.StringKind("AZMGChannelMember_ReadWrite_All")
+	ChannelMessageReadAll                                 = graph.StringKind("AZMGChannelMessage_Read_All")
+	ChannelMessageUpdatePolicyViolationAll                = graph.StringKind("AZMGChannelMessage_UpdatePolicyViolation_All")
+	ChannelReadBasicAll                                   = graph.StringKind("AZMGChannel_ReadBasic_All")
+	ChannelSettingsReadAll                                = graph.StringKind("AZMGChannelSettings_Read_All")
+	ChannelSettingsReadWriteAll                           = graph.StringKind("AZMGChannelSettings_ReadWrite_All")
+	ChatManageDeletionAll                                 = graph.StringKind("AZMGChat_ManageDeletion_All")
+	ChatMemberRead                                        = graph.StringKind("AZMGChatMember_Read")
+	ChatMemberReadAll                                     = graph.StringKind("AZMGChatMember_Read_All")
+	ChatMemberReadWhereInstalled                          = graph.StringKind("AZMGChatMember_Read_WhereInstalled")
+	ChatMemberReadWriteAll                                = graph.StringKind("AZMGChatMember_ReadWrite_All")
+	ChatMemberReadWriteWhereInstalled                     = graph.StringKind("AZMGChatMember_ReadWrite_WhereInstalled")
+	ChatMessageReadAll                                    = graph.StringKind("AZMGChatMessage_Read_All")
+	ChatReadAll                                           = graph.StringKind("AZMGChat_Read_All")
+	ChatReadBasicAll                                      = graph.StringKind("AZMGChat_ReadBasic_All")
+	ChatReadBasicWhereInstalled                           = graph.StringKind("AZMGChat_ReadBasic_WhereInstalled")
+	ChatReadWhereInstalled                                = graph.StringKind("AZMGChat_Read_WhereInstalled")
+	ChatReadWriteAll                                      = graph.StringKind("AZMGChat_ReadWrite_All")
+	ChatReadWriteWhereInstalled                           = graph.StringKind("AZMGChat_ReadWrite_WhereInstalled")
+	ChatUpdatePolicyViolationAll                          = graph.StringKind("AZMGChat_UpdatePolicyViolation_All")
+	CloudPCReadAll                                        = graph.StringKind("AZMGCloudPC_Read_All")
+	CloudPCReadWriteAll                                   = graph.StringKind("AZMGCloudPC_ReadWrite_All")
+	CommunityReadAll                                      = graph.StringKind("AZMGCommunity_Read_All")
+	CommunityReadWriteAll                                 = graph.StringKind("AZMGCommunity_ReadWrite_All")
+	ConfigurationMonitoringReadAll                        = graph.StringKind("AZMGConfigurationMonitoring_Read_All")
+	ConfigurationMonitoringReadWriteAll                   = graph.StringKind("AZMGConfigurationMonitoring_ReadWrite_All")
+	ConsentRequestReadAll                                 = graph.StringKind("AZMGConsentRequest_Read_All")
+	ConsentRequestReadApproveAll                          = graph.StringKind("AZMGConsentRequest_ReadApprove_All")
+	ConsentRequestReadWriteAll                            = graph.StringKind("AZMGConsentRequest_ReadWrite_All")
+	ContactsReadShared                                    = graph.StringKind("AZMGContacts_Read_Shared")
+	ContactsReadWriteShared                               = graph.StringKind("AZMGContacts_ReadWrite_Shared")
+	ContentProcessAll                                     = graph.StringKind("AZMGContent_Process_All")
+	ContentProcessUser                                    = graph.StringKind("AZMGContent_Process_User")
+	CrossTenantInformationReadBasicAll                    = graph.StringKind("AZMGCrossTenantInformation_ReadBasic_All")
+	CrossTenantUserProfileSharingReadAll                  = graph.StringKind("AZMGCrossTenantUserProfileSharing_Read_All")
+	CrossTenantUserProfileSharingReadWriteAll             = graph.StringKind("AZMGCrossTenantUserProfileSharing_ReadWrite_All")
+	CustomAuthenticationExtensionReadAll                  = graph.StringKind("AZMGCustomAuthenticationExtension_Read_All")
+	CustomAuthenticationExtensionReadWriteAll             = graph.StringKind("AZMGCustomAuthenticationExtension_ReadWrite_All")
+	CustomAuthenticationExtensionReceivePayload           = graph.StringKind("AZMGCustomAuthenticationExtension_Receive_Payload")
+	CustomDetectionReadAll                                = graph.StringKind("AZMGCustomDetection_Read_All")
+	CustomDetectionReadWriteAll                           = graph.StringKind("AZMGCustomDetection_ReadWrite_All")
+	CustomSecAttributeAssignmentReadAll                   = graph.StringKind("AZMGCustomSecAttributeAssignment_Read_All")
+	CustomSecAttributeAssignmentReadWriteAll              = graph.StringKind("AZMGCustomSecAttributeAssignment_ReadWrite_All")
+	CustomSecAttributeAuditLogsReadAll                    = graph.StringKind("AZMGCustomSecAttributeAuditLogs_Read_All")
+	CustomSecAttributeDefinitionReadAll                   = graph.StringKind("AZMGCustomSecAttributeDefinition_Read_All")
+	CustomSecAttributeDefinitionReadWriteAll              = graph.StringKind("AZMGCustomSecAttributeDefinition_ReadWrite_All")
+	CustomSecAttributeProvisioningReadAll                 = graph.StringKind("AZMGCustomSecAttributeProvisioning_Read_All")
+	CustomSecAttributeProvisioningReadWriteAll            = graph.StringKind("AZMGCustomSecAttributeProvisioning_ReadWrite_All")
+	CustomTagsReadAll                                     = graph.StringKind("AZMGCustomTags_Read_All")
+	CustomTagsReadWriteAll                                = graph.StringKind("AZMGCustomTags_ReadWrite_All")
+	DatasetReadAll                                        = graph.StringKind("AZMGDataset_Read_All")
+	DelegatedAdminRelationshipReadAll                     = graph.StringKind("AZMGDelegatedAdminRelationship_Read_All")
+	DelegatedAdminRelationshipReadWriteAll                = graph.StringKind("AZMGDelegatedAdminRelationship_ReadWrite_All")
+	DelegatedPermissionGrantReadAll                       = graph.StringKind("AZMGDelegatedPermissionGrant_Read_All")
+	DelegatedPermissionGrantReadWriteAll                  = graph.StringKind("AZMGDelegatedPermissionGrant_ReadWrite_All")
+	DeviceLocalCredentialReadAll                          = graph.StringKind("AZMGDeviceLocalCredential_Read_All")
+	DeviceLocalCredentialReadBasicAll                     = graph.StringKind("AZMGDeviceLocalCredential_ReadBasic_All")
+	DeviceManagementAppsReadAll                           = graph.StringKind("AZMGDeviceManagementApps_Read_All")
+	DeviceManagementAppsReadWriteAll                      = graph.StringKind("AZMGDeviceManagementApps_ReadWrite_All")
+	DeviceManagementCloudCAReadAll                        = graph.StringKind("AZMGDeviceManagementCloudCA_Read_All")
+	DeviceManagementCloudCAReadWriteAll                   = graph.StringKind("AZMGDeviceManagementCloudCA_ReadWrite_All")
+	DeviceManagementConfigurationReadAll                  = graph.StringKind("AZMGDeviceManagementConfiguration_Read_All")
+	DeviceManagementConfigurationReadWriteAll             = graph.StringKind("AZMGDeviceManagementConfiguration_ReadWrite_All")
+	DeviceManagementManagedDevicesPrivilegedOperationsAll = graph.StringKind("AZMGDeviceManagementManagedDevices_PrivilegedOperations_All")
+	DeviceManagementManagedDevicesReadAll                 = graph.StringKind("AZMGDeviceManagementManagedDevices_Read_All")
+	DeviceManagementManagedDevicesReadWriteAll            = graph.StringKind("AZMGDeviceManagementManagedDevices_ReadWrite_All")
+	DeviceManagementRBACReadAll                           = graph.StringKind("AZMGDeviceManagementRBAC_Read_All")
+	DeviceManagementRBACReadWriteAll                      = graph.StringKind("AZMGDeviceManagementRBAC_ReadWrite_All")
+	DeviceManagementScriptsReadAll                        = graph.StringKind("AZMGDeviceManagementScripts_Read_All")
+	DeviceManagementScriptsReadWriteAll                   = graph.StringKind("AZMGDeviceManagementScripts_ReadWrite_All")
+	DeviceManagementServiceConfigReadAll                  = graph.StringKind("AZMGDeviceManagementServiceConfig_Read_All")
+	DeviceManagementServiceConfigReadWriteAll             = graph.StringKind("AZMGDeviceManagementServiceConfig_ReadWrite_All")
+	DeviceReadAll                                         = graph.StringKind("AZMGDevice_Read_All")
+	DeviceReadWriteAll                                    = graph.StringKind("AZMGDevice_ReadWrite_All")
+	DeviceTemplateReadAll                                 = graph.StringKind("AZMGDeviceTemplate_Read_All")
+	DeviceTemplateReadWriteAll                            = graph.StringKind("AZMGDeviceTemplate_ReadWrite_All")
+	DirectoryAccessAsUserAll                              = graph.StringKind("AZMGDirectory_AccessAsUser_All")
+	DirectoryReadAll                                      = graph.StringKind("AZMGDirectory_Read_All")
+	DirectoryReadWriteAll                                 = graph.StringKind("AZMGDirectory_ReadWrite_All")
+	DirectoryRecommendationsReadAll                       = graph.StringKind("AZMGDirectoryRecommendations_Read_All")
+	DirectoryRecommendationsReadWriteAll                  = graph.StringKind("AZMGDirectoryRecommendations_ReadWrite_All")
+	DomainReadAll                                         = graph.StringKind("AZMGDomain_Read_All")
+	DomainReadWriteAll                                    = graph.StringKind("AZMGDomain_ReadWrite_All")
+	EASAccessAsUserAll                                    = graph.StringKind("AZMGEAS_AccessAsUser_All")
+	EWSAccessAsUserAll                                    = graph.StringKind("AZMGEWS_AccessAsUser_All")
+	EduAdministrationReadAll                              = graph.StringKind("AZMGEduAdministration_Read_All")
+	EduAdministrationReadWriteAll                         = graph.StringKind("AZMGEduAdministration_ReadWrite_All")
+	EduAssignmentsReadAll                                 = graph.StringKind("AZMGEduAssignments_Read_All")
+	EduAssignmentsReadBasic                               = graph.StringKind("AZMGEduAssignments_ReadBasic")
+	EduAssignmentsReadBasicAll                            = graph.StringKind("AZMGEduAssignments_ReadBasic_All")
+	EduAssignmentsReadWriteAll                            = graph.StringKind("AZMGEduAssignments_ReadWrite_All")
+	EduAssignmentsReadWriteBasicAll                       = graph.StringKind("AZMGEduAssignments_ReadWriteBasic_All")
+	EduCurriculaReadAll                                   = graph.StringKind("AZMGEduCurricula_Read_All")
+	EduCurriculaReadWriteAll                              = graph.StringKind("AZMGEduCurricula_ReadWrite_All")
+	EduRosterReadAll                                      = graph.StringKind("AZMGEduRoster_Read_All")
+	EduRosterReadBasic                                    = graph.StringKind("AZMGEduRoster_ReadBasic")
+	EduRosterReadBasicAll                                 = graph.StringKind("AZMGEduRoster_ReadBasic_All")
+	EduRosterReadWriteAll                                 = graph.StringKind("AZMGEduRoster_ReadWrite_All")
+	EngagementConversationMigrationAll                    = graph.StringKind("AZMGEngagementConversation_Migration_All")
+	EngagementMeetingConversationReadAll                  = graph.StringKind("AZMGEngagementMeetingConversation_Read_All")
+	EngagementRoleReadAll                                 = graph.StringKind("AZMGEngagementRole_Read_All")
+	EngagementRoleReadWriteAll                            = graph.StringKind("AZMGEngagementRole_ReadWrite_All")
+	EntitlementManagementReadAll                          = graph.StringKind("AZMGEntitlementManagement_Read_All")
+	EntitlementManagementReadWriteAll                     = graph.StringKind("AZMGEntitlementManagement_ReadWrite_All")
+	EventListenerReadAll                                  = graph.StringKind("AZMGEventListener_Read_All")
+	EventListenerReadWriteAll                             = graph.StringKind("AZMGEventListener_ReadWrite_All")
+	ExternalConnectionReadAll                             = graph.StringKind("AZMGExternalConnection_Read_All")
+	ExternalConnectionReadWriteAll                        = graph.StringKind("AZMGExternalConnection_ReadWrite_All")
+	ExternalConnectionReadWriteOwnedBy                    = graph.StringKind("AZMGExternalConnection_ReadWrite_OwnedBy")
+	ExternalItemReadAll                                   = graph.StringKind("AZMGExternalItem_Read_All")
+	ExternalItemReadWriteAll                              = graph.StringKind("AZMGExternalItem_ReadWrite_All")
+	ExternalItemReadWriteOwnedBy                          = graph.StringKind("AZMGExternalItem_ReadWrite_OwnedBy")
+	ExternalUserProfileReadAll                            = graph.StringKind("AZMGExternalUserProfile_Read_All")
+	ExternalUserProfileReadWriteAll                       = graph.StringKind("AZMGExternalUserProfile_ReadWrite_All")
+	FileStorageContainerManageAll                         = graph.StringKind("AZMGFileStorageContainer_Manage_All")
+	FilesReadAll                                          = graph.StringKind("AZMGFiles_Read_All")
+	FilesReadSelected                                     = graph.StringKind("AZMGFiles_Read_Selected")
+	FilesReadWriteAll                                     = graph.StringKind("AZMGFiles_ReadWrite_All")
+	FilesReadWriteAppFolder                               = graph.StringKind("AZMGFiles_ReadWrite_AppFolder")
+	FilesReadWriteSelected                                = graph.StringKind("AZMGFiles_ReadWrite_Selected")
+	FilesSelectedOperationsSelected                       = graph.StringKind("AZMGFiles_SelectedOperations_Selected")
+	FinancialsReadWriteAll                                = graph.StringKind("AZMGFinancials_ReadWrite_All")
+	FormsReadWrite                                        = graph.StringKind("AZMGForms_ReadWrite")
+	GroupMemberReadAll                                    = graph.StringKind("AZMGGroupMember_Read_All")
+	GroupMemberReadWriteAll                               = graph.StringKind("AZMGGroupMember_ReadWrite_All")
+	GroupConversationReadWriteAll                         = graph.StringKind("AZMGGroupConversation_ReadWrite_All")
+	GroupReadAll                                          = graph.StringKind("AZMGGroup_Read_All")
+	GroupReadWriteAll                                     = graph.StringKind("AZMGGroup_ReadWrite_All")
+	GroupSettingsReadAll                                  = graph.StringKind("AZMGGroupSettings_Read_All")
+	GroupSettingsReadWriteAll                             = graph.StringKind("AZMGGroupSettings_ReadWrite_All")
+	HealthMonitoringAlertConfigReadAll                    = graph.StringKind("AZMGHealthMonitoringAlertConfig_Read_All")
+	HealthMonitoringAlertConfigReadWriteAll               = graph.StringKind("AZMGHealthMonitoringAlertConfig_ReadWrite_All")
+	HealthMonitoringAlertReadAll                          = graph.StringKind("AZMGHealthMonitoringAlert_Read_All")
+	HealthMonitoringAlertReadWriteAll                     = graph.StringKind("AZMGHealthMonitoringAlert_ReadWrite_All")
+	IMAPAccessAsUserAll                                   = graph.StringKind("AZMGIMAP_AccessAsUser_All")
+	IdentityProviderReadAll                               = graph.StringKind("AZMGIdentityProvider_Read_All")
+	IdentityProviderReadWriteAll                          = graph.StringKind("AZMGIdentityProvider_ReadWrite_All")
+	IdentityRiskEventReadAll                              = graph.StringKind("AZMGIdentityRiskEvent_Read_All")
+	IdentityRiskEventReadWriteAll                         = graph.StringKind("AZMGIdentityRiskEvent_ReadWrite_All")
+	IdentityRiskyServicePrincipalReadAll                  = graph.StringKind("AZMGIdentityRiskyServicePrincipal_Read_All")
+	IdentityRiskyServicePrincipalReadWriteAll             = graph.StringKind("AZMGIdentityRiskyServicePrincipal_ReadWrite_All")
+	IdentityRiskyUserReadAll                              = graph.StringKind("AZMGIdentityRiskyUser_Read_All")
+	IdentityRiskyUserReadWriteAll                         = graph.StringKind("AZMGIdentityRiskyUser_ReadWrite_All")
+	IdentityUserFlowReadAll                               = graph.StringKind("AZMGIdentityUserFlow_Read_All")
+	IdentityUserFlowReadWriteAll                          = graph.StringKind("AZMGIdentityUserFlow_ReadWrite_All")
+	IndustryDataReadBasicAll                              = graph.StringKind("AZMGIndustryData_ReadBasic_All")
+	InformationProtectionConfigReadAll                    = graph.StringKind("AZMGInformationProtectionConfig_Read_All")
+	InformationProtectionContentSignAll                   = graph.StringKind("AZMGInformationProtectionContent_Sign_All")
+	InformationProtectionContentWriteAll                  = graph.StringKind("AZMGInformationProtectionContent_Write_All")
+	InformationProtectionPolicyRead                       = graph.StringKind("AZMGInformationProtectionPolicy_Read")
+	InformationProtectionPolicyReadAll                    = graph.StringKind("AZMGInformationProtectionPolicy_Read_All")
+	LearningAssignedCourseReadAll                         = graph.StringKind("AZMGLearningAssignedCourse_Read_All")
+	LearningAssignedCourseReadWriteAll                    = graph.StringKind("AZMGLearningAssignedCourse_ReadWrite_All")
+	LearningContentReadAll                                = graph.StringKind("AZMGLearningContent_Read_All")
+	LearningContentReadWriteAll                           = graph.StringKind("AZMGLearningContent_ReadWrite_All")
+	LearningSelfInitiatedCourseReadAll                    = graph.StringKind("AZMGLearningSelfInitiatedCourse_Read_All")
+	LearningSelfInitiatedCourseReadWriteAll               = graph.StringKind("AZMGLearningSelfInitiatedCourse_ReadWrite_All")
+	LicenseAssignmentReadAll                              = graph.StringKind("AZMGLicenseAssignment_Read_All")
+	LicenseAssignmentReadWriteAll                         = graph.StringKind("AZMGLicenseAssignment_ReadWrite_All")
+	LifecycleWorkflowsReadAll                             = graph.StringKind("AZMGLifecycleWorkflows_Read_All")
+	LifecycleWorkflowsReadWriteAll                        = graph.StringKind("AZMGLifecycleWorkflows_ReadWrite_All")
+	ListItemsSelectedOperationsSelected                   = graph.StringKind("AZMGListItems_SelectedOperations_Selected")
+	ListsSelectedOperationsSelected                       = graph.StringKind("AZMGLists_SelectedOperations_Selected")
+	MailReadBasicAll                                      = graph.StringKind("AZMGMail_ReadBasic_All")
+	MailboxSettingsRead                                   = graph.StringKind("AZMGMailboxSettings_Read")
+	MailRead                                              = graph.StringKind("AZMGMail_Read")
+	MailReadBasicShared                                   = graph.StringKind("AZMGMail_ReadBasic_Shared")
+	MailReadShared                                        = graph.StringKind("AZMGMail_Read_Shared")
+	MailReadWriteShared                                   = graph.StringKind("AZMGMail_ReadWrite_Shared")
+	MailSendShared                                        = graph.StringKind("AZMGMail_Send_Shared")
+	MailboxFolderReadAll                                  = graph.StringKind("AZMGMailboxFolder_Read_All")
+	MailboxFolderReadWriteAll                             = graph.StringKind("AZMGMailboxFolder_ReadWrite_All")
+	MailboxItemImportExportAll                            = graph.StringKind("AZMGMailboxItem_ImportExport_All")
+	MailboxItemReadAll                                    = graph.StringKind("AZMGMailboxItem_Read_All")
+	ManagedTenantsReadAll                                 = graph.StringKind("AZMGManagedTenants_Read_All")
+	ManagedTenantsReadWriteAll                            = graph.StringKind("AZMGManagedTenants_ReadWrite_All")
+	MemberReadHidden                                      = graph.StringKind("AZMGMember_Read_Hidden")
+	MultiTenantOrganizationReadAll                        = graph.StringKind("AZMGMultiTenantOrganization_Read_All")
+	MultiTenantOrganizationReadBasicAll                   = graph.StringKind("AZMGMultiTenantOrganization_ReadBasic_All")
+	MultiTenantOrganizationReadWriteAll                   = graph.StringKind("AZMGMultiTenantOrganization_ReadWrite_All")
+	MutualTlsOauthConfigurationReadAll                    = graph.StringKind("AZMGMutualTlsOauthConfiguration_Read_All")
+	MutualTlsOauthConfigurationReadWriteAll               = graph.StringKind("AZMGMutualTlsOauthConfiguration_ReadWrite_All")
+	MyFilesRead                                           = graph.StringKind("AZMGMyFiles_Read")
+	MLModelExecuteAll                                     = graph.StringKind("AZMGMLModel_Execute_All")
+	NetworkAccessBranchReadAll                            = graph.StringKind("AZMGNetworkAccessBranch_Read_All")
+	NetworkAccessBranchReadWriteAll                       = graph.StringKind("AZMGNetworkAccessBranch_ReadWrite_All")
+	NetworkAccessPolicyReadAll                            = graph.StringKind("AZMGNetworkAccessPolicy_Read_All")
+	NetworkAccessPolicyReadWriteAll                       = graph.StringKind("AZMGNetworkAccessPolicy_ReadWrite_All")
+	NetworkAccessReadAll                                  = graph.StringKind("AZMGNetworkAccess_Read_All")
+	NetworkAccessReadWriteAll                             = graph.StringKind("AZMGNetworkAccess_ReadWrite_All")
+	NotesReadAll                                          = graph.StringKind("AZMGNotes_Read_All")
+	NotesReadWriteAll                                     = graph.StringKind("AZMGNotes_ReadWrite_All")
+	NotesReadWriteCreatedByApp                            = graph.StringKind("AZMGNotes_ReadWrite_CreatedByApp")
+	NotificationsReadWriteCreatedByApp                    = graph.StringKind("AZMGNotifications_ReadWrite_CreatedByApp")
+	OnPremDirectorySynchronizationReadAll                 = graph.StringKind("AZMGOnPremDirectorySynchronization_Read_All")
+	OnPremDirectorySynchronizationReadWriteAll            = graph.StringKind("AZMGOnPremDirectorySynchronization_ReadWrite_All")
+	OnPremisesPublishingProfilesReadWriteAll              = graph.StringKind("AZMGOnPremisesPublishingProfiles_ReadWrite_All")
+	OnlineMeetingAiInsightReadAll                         = graph.StringKind("AZMGOnlineMeetingAiInsight_Read_All")
+	OnlineMeetingAiInsightReadChat                        = graph.StringKind("AZMGOnlineMeetingAiInsight_Read_Chat")
+	OnlineMeetingArtifactReadAll                          = graph.StringKind("AZMGOnlineMeetingArtifact_Read_All")
+	OnlineMeetingRecordingReadAll                         = graph.StringKind("AZMGOnlineMeetingRecording_Read_All")
+	OnlineMeetingTranscriptReadAll                        = graph.StringKind("AZMGOnlineMeetingTranscript_Read_All")
+	OnlineMeetingsReadAll                                 = graph.StringKind("AZMGOnlineMeetings_Read_All")
+	OnlineMeetingsReadWriteAll                            = graph.StringKind("AZMGOnlineMeetings_ReadWrite_All")
+	OrgContactReadAll                                     = graph.StringKind("AZMGOrgContact_Read_All")
+	OrganizationReadAll                                   = graph.StringKind("AZMGOrganization_Read_All")
+	OrganizationReadWriteAll                              = graph.StringKind("AZMGOrganization_ReadWrite_All")
+	OrganizationalBrandingReadAll                         = graph.StringKind("AZMGOrganizationalBranding_Read_All")
+	OrganizationalBrandingReadWriteAll                    = graph.StringKind("AZMGOrganizationalBranding_ReadWrite_All")
+	POPAccessAsUserAll                                    = graph.StringKind("AZMGPOP_AccessAsUser_All")
+	PartnerBillingReadAll                                 = graph.StringKind("AZMGPartnerBilling_Read_All")
+	PartnerSecurityReadAll                                = graph.StringKind("AZMGPartnerSecurity_Read_All")
+	PartnerSecurityReadWriteAll                           = graph.StringKind("AZMGPartnerSecurity_ReadWrite_All")
+	PendingExternalUserProfileReadAll                     = graph.StringKind("AZMGPendingExternalUserProfile_Read_All")
+	PendingExternalUserProfileReadWriteAll                = graph.StringKind("AZMGPendingExternalUserProfile_ReadWrite_All")
+	PeopleReadAll                                         = graph.StringKind("AZMGPeople_Read_All")
+	PeopleSettingsReadAll                                 = graph.StringKind("AZMGPeopleSettings_Read_All")
+	PeopleSettingsReadWriteAll                            = graph.StringKind("AZMGPeopleSettings_ReadWrite_All")
+	PlaceDeviceReadAll                                    = graph.StringKind("AZMGPlaceDevice_Read_All")
+	PlaceDeviceReadWriteAll                               = graph.StringKind("AZMGPlaceDevice_ReadWrite_All")
+	PlaceDeviceTelemetryReadWriteAll                      = graph.StringKind("AZMGPlaceDeviceTelemetry_ReadWrite_All")
+	PlaceReadAll                                          = graph.StringKind("AZMGPlace_Read_All")
+	PlaceReadWriteAll                                     = graph.StringKind("AZMGPlace_ReadWrite_All")
+	PolicyReadAll                                         = graph.StringKind("AZMGPolicy_Read_All")
+	PolicyReadAuthenticationMethod                        = graph.StringKind("AZMGPolicy_Read_AuthenticationMethod")
+	PolicyReadConditionalAccess                           = graph.StringKind("AZMGPolicy_Read_ConditionalAccess")
+	PolicyReadDeviceConfiguration                         = graph.StringKind("AZMGPolicy_Read_DeviceConfiguration")
+	PolicyReadIdentityProtection                          = graph.StringKind("AZMGPolicy_Read_IdentityProtection")
+	PolicyReadPermissionGrant                             = graph.StringKind("AZMGPolicy_Read_PermissionGrant")
+	PolicyReadWriteAccessReview                           = graph.StringKind("AZMGPolicy_ReadWrite_AccessReview")
+	PolicyReadWriteApplicationConfiguration               = graph.StringKind("AZMGPolicy_ReadWrite_ApplicationConfiguration")
+	PolicyReadWriteAuthenticationFlows                    = graph.StringKind("AZMGPolicy_ReadWrite_AuthenticationFlows")
+	PolicyReadWriteAuthenticationMethod                   = graph.StringKind("AZMGPolicy_ReadWrite_AuthenticationMethod")
+	PolicyReadWriteAuthorization                          = graph.StringKind("AZMGPolicy_ReadWrite_Authorization")
+	PolicyReadWriteConditionalAccess                      = graph.StringKind("AZMGPolicy_ReadWrite_ConditionalAccess")
+	PolicyReadWriteConsentRequest                         = graph.StringKind("AZMGPolicy_ReadWrite_ConsentRequest")
+	PolicyReadWriteCrossTenantAccess                      = graph.StringKind("AZMGPolicy_ReadWrite_CrossTenantAccess")
+	PolicyReadWriteCrossTenantCapability                  = graph.StringKind("AZMGPolicy_ReadWrite_CrossTenantCapability")
+	PolicyReadWriteDeviceConfiguration                    = graph.StringKind("AZMGPolicy_ReadWrite_DeviceConfiguration")
+	PolicyReadWriteExternalIdentities                     = graph.StringKind("AZMGPolicy_ReadWrite_ExternalIdentities")
+	PolicyReadWriteFeatureRollout                         = graph.StringKind("AZMGPolicy_ReadWrite_FeatureRollout")
+	PolicyReadWriteFedTokenValidation                     = graph.StringKind("AZMGPolicy_ReadWrite_FedTokenValidation")
+	PolicyReadWriteIdentityProtection                     = graph.StringKind("AZMGPolicy_ReadWrite_IdentityProtection")
+	PolicyReadWriteMobilityManagement                     = graph.StringKind("AZMGPolicy_ReadWrite_MobilityManagement")
+	PolicyReadWritePermissionGrant                        = graph.StringKind("AZMGPolicy_ReadWrite_PermissionGrant")
+	PolicyReadWriteSecurityDefaults                       = graph.StringKind("AZMGPolicy_ReadWrite_SecurityDefaults")
+	PolicyReadWriteTrustFramework                         = graph.StringKind("AZMGPolicy_ReadWrite_TrustFramework")
+	PresenceReadAll                                       = graph.StringKind("AZMGPresence_Read_All")
+	PresenceReadWriteAll                                  = graph.StringKind("AZMGPresence_ReadWrite_All")
+	PrintConnectorReadAll                                 = graph.StringKind("AZMGPrintConnector_Read_All")
+	PrintConnectorReadWriteAll                            = graph.StringKind("AZMGPrintConnector_ReadWrite_All")
+	PrintJobCreate                                        = graph.StringKind("AZMGPrintJob_Create")
+	PrintJobManageAll                                     = graph.StringKind("AZMGPrintJob_Manage_All")
+	PrintJobReadAll                                       = graph.StringKind("AZMGPrintJob_Read_All")
+	PrintJobReadBasic                                     = graph.StringKind("AZMGPrintJob_ReadBasic")
+	PrintJobReadBasicAll                                  = graph.StringKind("AZMGPrintJob_ReadBasic_All")
+	PrintJobReadWriteAll                                  = graph.StringKind("AZMGPrintJob_ReadWrite_All")
+	PrintJobReadWriteBasicAll                             = graph.StringKind("AZMGPrintJob_ReadWriteBasic_All")
+	PrintSettingsReadAll                                  = graph.StringKind("AZMGPrintSettings_Read_All")
+	PrintSettingsReadWriteAll                             = graph.StringKind("AZMGPrintSettings_ReadWrite_All")
+	PrintTaskDefinitionReadWriteAll                       = graph.StringKind("AZMGPrintTaskDefinition_ReadWrite_All")
+	PrinterFullControlAll                                 = graph.StringKind("AZMGPrinter_FullControl_All")
+	PrinterReadAll                                        = graph.StringKind("AZMGPrinter_Read_All")
+	PrinterReadWriteAll                                   = graph.StringKind("AZMGPrinter_ReadWrite_All")
+	PrinterShareReadAll                                   = graph.StringKind("AZMGPrinterShare_Read_All")
+	PrinterShareReadBasicAll                              = graph.StringKind("AZMGPrinterShare_ReadBasic_All")
+	PrinterShareReadWriteAll                              = graph.StringKind("AZMGPrinterShare_ReadWrite_All")
+	PrivilegedAccessReadAzureAD                           = graph.StringKind("AZMGPrivilegedAccess_Read_AzureAD")
+	PrivilegedAccessReadAzureADGroup                      = graph.StringKind("AZMGPrivilegedAccess_Read_AzureADGroup")
+	PrivilegedAccessReadAzureResources                    = graph.StringKind("AZMGPrivilegedAccess_Read_AzureResources")
+	PrivilegedAccessReadWriteAzureAD                      = graph.StringKind("AZMGPrivilegedAccess_ReadWrite_AzureAD")
+	PrivilegedAccessReadWriteAzureADGroup                 = graph.StringKind("AZMGPrivilegedAccess_ReadWrite_AzureADGroup")
+	PrivilegedAccessReadWriteAzureResources               = graph.StringKind("AZMGPrivilegedAccess_ReadWrite_AzureResources")
+	PrivilegedAssignmentScheduleReadAzureADGroup          = graph.StringKind("AZMGPrivilegedAssignmentSchedule_Read_AzureADGroup")
+	PrivilegedAssignmentScheduleReadWriteAzureADGroup     = graph.StringKind("AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup")
+	PrivilegedAssignmentScheduleRemoveAzureADGroup        = graph.StringKind("AZMGPrivilegedAssignmentSchedule_Remove_AzureADGroup")
+	PrivilegedEligibilityScheduleReadAzureADGroup         = graph.StringKind("AZMGPrivilegedEligibilitySchedule_Read_AzureADGroup")
+	PrivilegedEligibilityScheduleReadWriteAzureADGroup    = graph.StringKind("AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup")
+	PrivilegedEligibilityScheduleRemoveAzureADGroup       = graph.StringKind("AZMGPrivilegedEligibilitySchedule_Remove_AzureADGroup")
+	ProfilePhotoReadAll                                   = graph.StringKind("AZMGProfilePhoto_Read_All")
+	ProfilePhotoReadWriteAll                              = graph.StringKind("AZMGProfilePhoto_ReadWrite_All")
+	ProgramControlReadAll                                 = graph.StringKind("AZMGProgramControl_Read_All")
+	ProgramControlReadWriteAll                            = graph.StringKind("AZMGProgramControl_ReadWrite_All")
+	ProtectionScopesComputeAll                            = graph.StringKind("AZMGProtectionScopes_Compute_All")
+	ProtectionScopesComputeUser                           = graph.StringKind("AZMGProtectionScopes_Compute_User")
+	ProvisioningLogReadAll                                = graph.StringKind("AZMGProvisioningLog_Read_All")
+	PublicKeyInfrastructureReadAll                        = graph.StringKind("AZMGPublicKeyInfrastructure_Read_All")
+	PublicKeyInfrastructureReadWriteAll                   = graph.StringKind("AZMGPublicKeyInfrastructure_ReadWrite_All")
+	QnAReadAll                                            = graph.StringKind("AZMGQnA_Read_All")
+	RecordsManagementReadAll                              = graph.StringKind("AZMGRecordsManagement_Read_All")
+	RecordsManagementReadWriteAll                         = graph.StringKind("AZMGRecordsManagement_ReadWrite_All")
+	ReportSettingsReadAll                                 = graph.StringKind("AZMGReportSettings_Read_All")
+	ReportSettingsReadWriteAll                            = graph.StringKind("AZMGReportSettings_ReadWrite_All")
+	ReportReadAll                                         = graph.StringKind("AZMGReport_Read_All")
+	ReportsReadAll                                        = graph.StringKind("AZMGReports_Read_All")
+	ResourceSpecificPermissionGrantReadForChatAll         = graph.StringKind("AZMGResourceSpecificPermissionGrant_ReadForChat_All")
+	ResourceSpecificPermissionGrantReadForTeamAll         = graph.StringKind("AZMGResourceSpecificPermissionGrant_ReadForTeam_All")
+	ResourceSpecificPermissionGrantReadForUserAll         = graph.StringKind("AZMGResourceSpecificPermissionGrant_ReadForUser_All")
+	RiskPreventionProvidersReadAll                        = graph.StringKind("AZMGRiskPreventionProviders_Read_All")
+	RiskPreventionProvidersReadWriteAll                   = graph.StringKind("AZMGRiskPreventionProviders_ReadWrite_All")
+	RoleAssignmentScheduleReadDirectory                   = graph.StringKind("AZMGRoleAssignmentSchedule_Read_Directory")
+	RoleAssignmentScheduleReadWriteDirectory              = graph.StringKind("AZMGRoleAssignmentSchedule_ReadWrite_Directory")
+	RoleAssignmentScheduleRemoveDirectory                 = graph.StringKind("AZMGRoleAssignmentSchedule_Remove_Directory")
+	RoleEligibilityScheduleReadDirectory                  = graph.StringKind("AZMGRoleEligibilitySchedule_Read_Directory")
+	RoleEligibilityScheduleReadWriteDirectory             = graph.StringKind("AZMGRoleEligibilitySchedule_ReadWrite_Directory")
+	RoleEligibilityScheduleRemoveDirectory                = graph.StringKind("AZMGRoleEligibilitySchedule_Remove_Directory")
+	RoleManagementAlertReadDirectory                      = graph.StringKind("AZMGRoleManagementAlert_Read_Directory")
+	RoleManagementAlertReadWriteDirectory                 = graph.StringKind("AZMGRoleManagementAlert_ReadWrite_Directory")
+	RoleManagementPolicyReadAzureADGroup                  = graph.StringKind("AZMGRoleManagementPolicy_Read_AzureADGroup")
+	RoleManagementPolicyReadDirectory                     = graph.StringKind("AZMGRoleManagementPolicy_Read_Directory")
+	RoleManagementPolicyReadWriteAzureADGroup             = graph.StringKind("AZMGRoleManagementPolicy_ReadWrite_AzureADGroup")
+	RoleManagementPolicyReadWriteDirectory                = graph.StringKind("AZMGRoleManagementPolicy_ReadWrite_Directory")
+	RoleManagementReadAll                                 = graph.StringKind("AZMGRoleManagement_Read_All")
+	RoleManagementReadCloudPC                             = graph.StringKind("AZMGRoleManagement_Read_CloudPC")
+	RoleManagementReadDefender                            = graph.StringKind("AZMGRoleManagement_Read_Defender")
+	RoleManagementReadDirectory                           = graph.StringKind("AZMGRoleManagement_Read_Directory")
+	RoleManagementReadExchange                            = graph.StringKind("AZMGRoleManagement_Read_Exchange")
+	RoleManagementReadWriteCloudPC                        = graph.StringKind("AZMGRoleManagement_ReadWrite_CloudPC")
+	RoleManagementReadWriteDefender                       = graph.StringKind("AZMGRoleManagement_ReadWrite_Defender")
+	RoleManagementReadWriteDirectory                      = graph.StringKind("AZMGRoleManagement_ReadWrite_Directory")
+	RoleManagementReadWriteExchange                       = graph.StringKind("AZMGRoleManagement_ReadWrite_Exchange")
+	SchedulePermissionsReadWriteAll                       = graph.StringKind("AZMGSchedulePermissions_ReadWrite_All")
+	ScheduleReadAll                                       = graph.StringKind("AZMGSchedule_Read_All")
+	ScheduleReadWriteAll                                  = graph.StringKind("AZMGSchedule_ReadWrite_All")
+	SearchConfigurationReadAll                            = graph.StringKind("AZMGSearchConfiguration_Read_All")
+	SearchConfigurationReadWriteAll                       = graph.StringKind("AZMGSearchConfiguration_ReadWrite_All")
+	SecurityActionsReadAll                                = graph.StringKind("AZMGSecurityActions_Read_All")
+	SecurityActionsReadWriteAll                           = graph.StringKind("AZMGSecurityActions_ReadWrite_All")
+	SecurityAlertReadAll                                  = graph.StringKind("AZMGSecurityAlert_Read_All")
+	SecurityAlertReadWriteAll                             = graph.StringKind("AZMGSecurityAlert_ReadWrite_All")
+	SecurityAnalyzedMessageReadAll                        = graph.StringKind("AZMGSecurityAnalyzedMessage_Read_All")
+	SecurityAnalyzedMessageReadWriteAll                   = graph.StringKind("AZMGSecurityAnalyzedMessage_ReadWrite_All")
+	SecurityCopilotWorkspacesReadAll                      = graph.StringKind("AZMGSecurityCopilotWorkspaces_Read_All")
+	SecurityCopilotWorkspacesReadWriteAll                 = graph.StringKind("AZMGSecurityCopilotWorkspaces_ReadWrite_All")
+	SecurityEventsReadAll                                 = graph.StringKind("AZMGSecurityEvents_Read_All")
+	SecurityEventsReadWriteAll                            = graph.StringKind("AZMGSecurityEvents_ReadWrite_All")
+	SecurityIdentitiesAccountReadAll                      = graph.StringKind("AZMGSecurityIdentitiesAccount_Read_All")
+	SecurityIdentitiesActionsReadWriteAll                 = graph.StringKind("AZMGSecurityIdentitiesActions_ReadWrite_All")
+	SecurityIdentitiesHealthReadAll                       = graph.StringKind("AZMGSecurityIdentitiesHealth_Read_All")
+	SecurityIdentitiesHealthReadWriteAll                  = graph.StringKind("AZMGSecurityIdentitiesHealth_ReadWrite_All")
+	SecurityIdentitiesSensorsReadAll                      = graph.StringKind("AZMGSecurityIdentitiesSensors_Read_All")
+	SecurityIdentitiesSensorsReadWriteAll                 = graph.StringKind("AZMGSecurityIdentitiesSensors_ReadWrite_All")
+	SecurityIdentitiesUserActionsReadAll                  = graph.StringKind("AZMGSecurityIdentitiesUserActions_Read_All")
+	SecurityIdentitiesUserActionsReadWriteAll             = graph.StringKind("AZMGSecurityIdentitiesUserActions_ReadWrite_All")
+	SecurityIncidentReadAll                               = graph.StringKind("AZMGSecurityIncident_Read_All")
+	SecurityIncidentReadWriteAll                          = graph.StringKind("AZMGSecurityIncident_ReadWrite_All")
+	SensitivityLabelEvaluateAll                           = graph.StringKind("AZMGSensitivityLabel_Evaluate_All")
+	SensitivityLabelsReadAll                              = graph.StringKind("AZMGSensitivityLabels_Read_All")
+	ServiceHealthReadAll                                  = graph.StringKind("AZMGServiceHealth_Read_All")
+	ServiceMessageReadAll                                 = graph.StringKind("AZMGServiceMessage_Read_All")
+	ServicePrincipalEndpointReadAll                       = graph.StringKind("AZMGServicePrincipalEndpoint_Read_All")
+	ServicePrincipalEndpointReadWriteAll                  = graph.StringKind("AZMGServicePrincipalEndpoint_ReadWrite_All")
+	SharePointTenantSettingsReadAll                       = graph.StringKind("AZMGSharePointTenantSettings_Read_All")
+	SharePointTenantSettingsReadWriteAll                  = graph.StringKind("AZMGSharePointTenantSettings_ReadWrite_All")
+	ShortNotesReadAll                                     = graph.StringKind("AZMGShortNotes_Read_All")
+	ShortNotesReadWriteAll                                = graph.StringKind("AZMGShortNotes_ReadWrite_All")
+	SignInIdentifierReadAll                               = graph.StringKind("AZMGSignInIdentifier_Read_All")
+	SignInIdentifierReadWriteAll                          = graph.StringKind("AZMGSignInIdentifier_ReadWrite_All")
+	SitesArchiveAll                                       = graph.StringKind("AZMGSites_Archive_All")
+	SitesFullControlAll                                   = graph.StringKind("AZMGSites_FullControl_All")
+	SitesManageAll                                        = graph.StringKind("AZMGSites_Manage_All")
+	SitesReadAll                                          = graph.StringKind("AZMGSites_Read_All")
+	SitesReadWriteAll                                     = graph.StringKind("AZMGSites_ReadWrite_All")
+	SpiffeTrustDomainReadAll                              = graph.StringKind("AZMGSpiffeTrustDomain_Read_All")
+	SpiffeTrustDomainReadWriteAll                         = graph.StringKind("AZMGSpiffeTrustDomain_ReadWrite_All")
+	StorylineReadWriteAll                                 = graph.StringKind("AZMGStoryline_ReadWrite_All")
+	SubjectRightsRequestReadAll                           = graph.StringKind("AZMGSubjectRightsRequest_Read_All")
+	SubjectRightsRequestReadWriteAll                      = graph.StringKind("AZMGSubjectRightsRequest_ReadWrite_All")
+	SubscriptionReadAll                                   = graph.StringKind("AZMGSubscription_Read_All")
+	SynchronizationReadAll                                = graph.StringKind("AZMGSynchronization_Read_All")
+	SynchronizationReadWriteAll                           = graph.StringKind("AZMGSynchronization_ReadWrite_All")
+	TasksReadAll                                          = graph.StringKind("AZMGTasks_Read_All")
+	TasksReadShared                                       = graph.StringKind("AZMGTasks_Read_Shared")
+	TasksReadWriteAll                                     = graph.StringKind("AZMGTasks_ReadWrite_All")
+	TasksReadWriteShared                                  = graph.StringKind("AZMGTasks_ReadWrite_Shared")
+	TeamMemberReadAll                                     = graph.StringKind("AZMGTeamMember_Read_All")
+	TeamMemberReadWriteAll                                = graph.StringKind("AZMGTeamMember_ReadWrite_All")
+	TeamMemberReadWriteNonOwnerRoleAll                    = graph.StringKind("AZMGTeamMember_ReadWriteNonOwnerRole_All")
+	TeamReadBasicAll                                      = graph.StringKind("AZMGTeam_ReadBasic_All")
+	TeamSettingsReadAll                                   = graph.StringKind("AZMGTeamSettings_Read_All")
+	TeamSettingsReadWriteAll                              = graph.StringKind("AZMGTeamSettings_ReadWrite_All")
+	TeamTemplatesReadAll                                  = graph.StringKind("AZMGTeamTemplates_Read_All")
+	TeamsActivityReadAll                                  = graph.StringKind("AZMGTeamsActivity_Read_All")
+	TeamsAppInstallationReadWriteSelfForTeam              = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelfForTeam")
+	TeamsAppInstallationManageSelectedForChatAll          = graph.StringKind("AZMGTeamsAppInstallation_ManageSelectedForChat_All")
+	TeamsAppInstallationManageSelectedForTeamAll          = graph.StringKind("AZMGTeamsAppInstallation_ManageSelectedForTeam_All")
+	TeamsAppInstallationManageSelectedForUserAll          = graph.StringKind("AZMGTeamsAppInstallation_ManageSelectedForUser_All")
+	TeamsAppInstallationReadAll                           = graph.StringKind("AZMGTeamsAppInstallation_Read_All")
+	TeamsAppInstallationReadForChatAll                    = graph.StringKind("AZMGTeamsAppInstallation_ReadForChat_All")
+	TeamsAppInstallationReadForTeamAll                    = graph.StringKind("AZMGTeamsAppInstallation_ReadForTeam_All")
+	TeamsAppInstallationReadForUserAll                    = graph.StringKind("AZMGTeamsAppInstallation_ReadForUser_All")
+	TeamsAppInstallationReadSelectedForChatAll            = graph.StringKind("AZMGTeamsAppInstallation_ReadSelectedForChat_All")
+	TeamsAppInstallationReadSelectedForTeamAll            = graph.StringKind("AZMGTeamsAppInstallation_ReadSelectedForTeam_All")
+	TeamsAppInstallationReadSelectedForUserAll            = graph.StringKind("AZMGTeamsAppInstallation_ReadSelectedForUser_All")
+	TeamsAppInstallationReadWriteAndConsentForChatAll     = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentForChat_All")
+	TeamsAppInstallationReadWriteAndConsentForTeamAll     = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam_All")
+	TeamsAppInstallationReadWriteAndConsentForUserAll     = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentForUser_All")
+	TeamsAppInstallationReadWriteAndConsentSelfForChatAll = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat_All")
+	TeamsAppInstallationReadWriteAndConsentSelfForTeamAll = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam_All")
+	TeamsAppInstallationReadWriteAndConsentSelfForUserAll = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser_All")
+	TeamsAppInstallationReadWriteForChatAll               = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteForChat_All")
+	TeamsAppInstallationReadWriteForTeamAll               = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteForTeam_All")
+	TeamsAppInstallationReadWriteForUserAll               = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteForUser_All")
+	TeamsAppInstallationReadWriteSelectedForChatAll       = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelectedForChat_All")
+	TeamsAppInstallationReadWriteSelectedForTeamAll       = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelectedForTeam_All")
+	TeamsAppInstallationReadWriteSelectedForUserAll       = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelectedForUser_All")
+	TeamsAppInstallationReadWriteSelfForChatAll           = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelfForChat_All")
+	TeamsAppInstallationReadWriteSelfForTeamAll           = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelfForTeam_All")
+	TeamsAppInstallationReadWriteSelfForUserAll           = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelfForUser_All")
+	TeamsPolicyUserAssignReadWriteAll                     = graph.StringKind("AZMGTeamsPolicyUserAssign_ReadWrite_All")
+	TeamsResourceAccountReadAll                           = graph.StringKind("AZMGTeamsResourceAccount_Read_All")
+	TeamsTabReadAll                                       = graph.StringKind("AZMGTeamsTab_Read_All")
+	TeamsTabReadWriteAll                                  = graph.StringKind("AZMGTeamsTab_ReadWrite_All")
+	TeamsTabReadWriteForChatAll                           = graph.StringKind("AZMGTeamsTab_ReadWriteForChat_All")
+	TeamsTabReadWriteForTeamAll                           = graph.StringKind("AZMGTeamsTab_ReadWriteForTeam_All")
+	TeamsTabReadWriteForUserAll                           = graph.StringKind("AZMGTeamsTab_ReadWriteForUser_All")
+	TeamsTabReadWriteSelfForChatAll                       = graph.StringKind("AZMGTeamsTab_ReadWriteSelfForChat_All")
+	TeamsTabReadWriteSelfForTeamAll                       = graph.StringKind("AZMGTeamsTab_ReadWriteSelfForTeam_All")
+	TeamsTabReadWriteSelfForUserAll                       = graph.StringKind("AZMGTeamsTab_ReadWriteSelfForUser_All")
+	TeamsTabCreate                                        = graph.StringKind("AZMGTeamsTab_Create")
+	TeamsTelephoneNumberReadAll                           = graph.StringKind("AZMGTeamsTelephoneNumber_Read_All")
+	TeamsTelephoneNumberReadWriteAll                      = graph.StringKind("AZMGTeamsTelephoneNumber_ReadWrite_All")
+	TeamsUserConfigurationReadAll                         = graph.StringKind("AZMGTeamsUserConfiguration_Read_All")
+	TeamworkAppSettingsReadAll                            = graph.StringKind("AZMGTeamworkAppSettings_Read_All")
+	TeamworkAppSettingsReadWriteAll                       = graph.StringKind("AZMGTeamworkAppSettings_ReadWrite_All")
+	TeamworkDeviceReadAll                                 = graph.StringKind("AZMGTeamworkDevice_Read_All")
+	TeamworkDeviceReadWriteAll                            = graph.StringKind("AZMGTeamworkDevice_ReadWrite_All")
+	TeamworkMigrateAll                                    = graph.StringKind("AZMGTeamwork_Migrate_All")
+	TeamworkReadAll                                       = graph.StringKind("AZMGTeamwork_Read_All")
+	TeamworkTagReadAll                                    = graph.StringKind("AZMGTeamworkTag_Read_All")
+	TeamworkTagReadWriteAll                               = graph.StringKind("AZMGTeamworkTag_ReadWrite_All")
+	TeamworkUserInteractionReadAll                        = graph.StringKind("AZMGTeamworkUserInteraction_Read_All")
+	TermStoreReadAll                                      = graph.StringKind("AZMGTermStore_Read_All")
+	TermStoreReadWriteAll                                 = graph.StringKind("AZMGTermStore_ReadWrite_All")
+	ThreatAssessmentReadAll                               = graph.StringKind("AZMGThreatAssessment_Read_All")
+	ThreatAssessmentReadWriteAll                          = graph.StringKind("AZMGThreatAssessment_ReadWrite_All")
+	ThreatHuntingReadAll                                  = graph.StringKind("AZMGThreatHunting_Read_All")
+	ThreatIndicatorsReadAll                               = graph.StringKind("AZMGThreatIndicators_Read_All")
+	ThreatIndicatorsReadWriteOwnedBy                      = graph.StringKind("AZMGThreatIndicators_ReadWrite_OwnedBy")
+	ThreatIntelligenceReadAll                             = graph.StringKind("AZMGThreatIntelligence_Read_All")
+	ThreatSubmissionPolicyReadWriteAll                    = graph.StringKind("AZMGThreatSubmissionPolicy_ReadWrite_All")
+	ThreatSubmissionReadAll                               = graph.StringKind("AZMGThreatSubmission_Read_All")
+	ThreatSubmissionReadWriteAll                          = graph.StringKind("AZMGThreatSubmission_ReadWrite_All")
+	TopicReadAll                                          = graph.StringKind("AZMGTopic_Read_All")
+	TrustFrameworkKeySetReadAll                           = graph.StringKind("AZMGTrustFrameworkKeySet_Read_All")
+	TrustFrameworkKeySetReadWriteAll                      = graph.StringKind("AZMGTrustFrameworkKeySet_ReadWrite_All")
+	UnifiedGroupMemberReadAsGuest                         = graph.StringKind("AZMGUnifiedGroupMember_Read_AsGuest")
+	UserActivityReadWriteCreatedByApp                     = graph.StringKind("AZMGUserActivity_ReadWrite_CreatedByApp")
+	UserAuthenticationMethodReadAll                       = graph.StringKind("AZMGUserAuthenticationMethod_Read_All")
+	UserAuthenticationMethodReadWriteAll                  = graph.StringKind("AZMGUserAuthenticationMethod_ReadWrite_All")
+	UserDeleteRestoreAll                                  = graph.StringKind("AZMGUser_DeleteRestore_All")
+	UserEnableDisableAccountAll                           = graph.StringKind("AZMGUser_EnableDisableAccount_All")
+	UserExportAll                                         = graph.StringKind("AZMGUser_Export_All")
+	UserInviteAll                                         = graph.StringKind("AZMGUser_Invite_All")
+	UserManageIdentitiesAll                               = graph.StringKind("AZMGUser_ManageIdentities_All")
+	UserNotificationReadWriteCreatedByApp                 = graph.StringKind("AZMGUserNotification_ReadWrite_CreatedByApp")
+	UserRead                                              = graph.StringKind("AZMGUser_Read")
+	UserReadAll                                           = graph.StringKind("AZMGUser_Read_All")
+	UserReadBasicAll                                      = graph.StringKind("AZMGUser_ReadBasic_All")
+	UserReadWriteAll                                      = graph.StringKind("AZMGUser_ReadWrite_All")
+	UserReadWriteCrossCloud                               = graph.StringKind("AZMGUser_ReadWrite_CrossCloud")
+	UserRevokeSessionsAll                                 = graph.StringKind("AZMGUser_RevokeSessions_All")
+	UserShiftPreferencesReadAll                           = graph.StringKind("AZMGUserShiftPreferences_Read_All")
+	UserShiftPreferencesReadWriteAll                      = graph.StringKind("AZMGUserShiftPreferences_ReadWrite_All")
+	UserStateReadWriteAll                                 = graph.StringKind("AZMGUserState_ReadWrite_All")
+	UserTeamworkReadAll                                   = graph.StringKind("AZMGUserTeamwork_Read_All")
+	UserTimelineActivityWriteCreatedByApp                 = graph.StringKind("AZMGUserTimelineActivity_Write_CreatedByApp")
+	UserWindowsSettingsReadAll                            = graph.StringKind("AZMGUserWindowsSettings_Read_All")
+	UserWindowsSettingsReadWriteAll                       = graph.StringKind("AZMGUserWindowsSettings_ReadWrite_All")
+	VirtualAppointmentReadAll                             = graph.StringKind("AZMGVirtualAppointment_Read_All")
+	VirtualAppointmentReadWriteAll                        = graph.StringKind("AZMGVirtualAppointment_ReadWrite_All")
+	VirtualEventReadAll                                   = graph.StringKind("AZMGVirtualEvent_Read_All")
+	WindowsUpdatesReadWriteAll                            = graph.StringKind("AZMGWindowsUpdates_ReadWrite_All")
+	WorkforceIntegrationReadAll                           = graph.StringKind("AZMGWorkforceIntegration_Read_All")
+	WorkforceIntegrationReadWriteAll                      = graph.StringKind("AZMGWorkforceIntegration_ReadWrite_All")
+
+	AgentApplicationCreate                             = graph.StringKind("AZMGAgentApplication_Create")
+	AgentIdentityCreate                                = graph.StringKind("AZMGAgentIdentity_Create")
+	AgreementAcceptanceRead                            = graph.StringKind("AZMGAgreementAcceptance_Read")
+	AiEnterpriseInteractionRead                        = graph.StringKind("AZMGAiEnterpriseInteraction_Read")
+	AnalyticsRead                                      = graph.StringKind("AZMGAnalytics_Read")
+	ApprovalSolutionRead                               = graph.StringKind("AZMGApprovalSolution_Read")
+	ApprovalSolutionReadWrite                          = graph.StringKind("AZMGApprovalSolution_ReadWrite")
+	ApprovalSolutionResponseReadWrite                  = graph.StringKind("AZMGApprovalSolutionResponse_ReadWrite")
+	AuditActivityRead                                  = graph.StringKind("AZMGAuditActivity_Read")
+	AuditActivityWrite                                 = graph.StringKind("AZMGAuditActivity_Write")
+	CalendarsRead                                      = graph.StringKind("AZMGCalendars_Read")
+	CalendarsReadBasic                                 = graph.StringKind("AZMGCalendars_ReadBasic")
+	CalendarsReadWrite                                 = graph.StringKind("AZMGCalendars_ReadWrite")
+	CallDelegationRead                                 = graph.StringKind("AZMGCallDelegation_Read")
+	CallDelegationReadWrite                            = graph.StringKind("AZMGCallDelegation_ReadWrite")
+	CallEventsRead                                     = graph.StringKind("AZMGCallEvents_Read")
+	ChannelCreate                                      = graph.StringKind("AZMGChannel_Create")
+	ChannelMessageEdit                                 = graph.StringKind("AZMGChannelMessage_Edit")
+	ChannelMessageReadWrite                            = graph.StringKind("AZMGChannelMessage_ReadWrite")
+	ChannelMessageSend                                 = graph.StringKind("AZMGChannelMessage_Send")
+	ChatCreate                                         = graph.StringKind("AZMGChat_Create")
+	ChatMemberReadWrite                                = graph.StringKind("AZMGChatMember_ReadWrite")
+	ChatMessageRead                                    = graph.StringKind("AZMGChatMessage_Read")
+	ChatMessageSend                                    = graph.StringKind("AZMGChatMessage_Send")
+	ChatRead                                           = graph.StringKind("AZMGChat_Read")
+	ChatReadBasic                                      = graph.StringKind("AZMGChat_ReadBasic")
+	ChatReadWrite                                      = graph.StringKind("AZMGChat_ReadWrite")
+	ConsentRequestCreate                               = graph.StringKind("AZMGConsentRequest_Create")
+	ConsentRequestRead                                 = graph.StringKind("AZMGConsentRequest_Read")
+	ContactsRead                                       = graph.StringKind("AZMGContacts_Read")
+	ContactsReadWrite                                  = graph.StringKind("AZMGContacts_ReadWrite")
+	ContentActivityRead                                = graph.StringKind("AZMGContentActivity_Read")
+	ContentActivityWrite                               = graph.StringKind("AZMGContentActivity_Write")
+	CrossTenantUserProfileSharingRead                  = graph.StringKind("AZMGCrossTenantUserProfileSharing_Read")
+	CrossTenantUserProfileSharingReadWrite             = graph.StringKind("AZMGCrossTenantUserProfileSharing_ReadWrite")
+	DeviceCommand                                      = graph.StringKind("AZMGDevice_Command")
+	DeviceCreateFromOwnedTemplate                      = graph.StringKind("AZMGDevice_CreateFromOwnedTemplate")
+	DeviceRead                                         = graph.StringKind("AZMGDevice_Read")
+	DeviceTemplateCreate                               = graph.StringKind("AZMGDeviceTemplate_Create")
+	EduAdministrationRead                              = graph.StringKind("AZMGEduAdministration_Read")
+	EduAdministrationReadWrite                         = graph.StringKind("AZMGEduAdministration_ReadWrite")
+	EduAssignmentsRead                                 = graph.StringKind("AZMGEduAssignments_Read")
+	EduAssignmentsReadWrite                            = graph.StringKind("AZMGEduAssignments_ReadWrite")
+	EduAssignmentsReadWriteBasic                       = graph.StringKind("AZMGEduAssignments_ReadWriteBasic")
+	EduCurriculaRead                                   = graph.StringKind("AZMGEduCurricula_Read")
+	EduCurriculaReadWrite                              = graph.StringKind("AZMGEduCurricula_ReadWrite")
+	EduRosterRead                                      = graph.StringKind("AZMGEduRoster_Read")
+	EduRosterReadWrite                                 = graph.StringKind("AZMGEduRoster_ReadWrite")
+	EngagementRoleRead                                 = graph.StringKind("AZMGEngagementRole_Read")
+	FamilyRead                                         = graph.StringKind("AZMGFamily_Read")
+	FileIngestionHybridOnboardingManage                = graph.StringKind("AZMGFileIngestionHybridOnboarding_Manage")
+	FileIngestionIngest                                = graph.StringKind("AZMGFileIngestion_Ingest")
+	FileStorageContainerSelected                       = graph.StringKind("AZMGFileStorageContainer_Selected")
+	FilesRead                                          = graph.StringKind("AZMGFiles_Read")
+	FilesReadWrite                                     = graph.StringKind("AZMGFiles_ReadWrite")
+	GroupCreate                                        = graph.StringKind("AZMGGroup_Create")
+	InformationProtectionConfigRead                    = graph.StringKind("AZMGInformationProtectionConfig_Read")
+	LearningAssignedCourseRead                         = graph.StringKind("AZMGLearningAssignedCourse_Read")
+	LearningProviderRead                               = graph.StringKind("AZMGLearningProvider_Read")
+	LearningProviderReadWrite                          = graph.StringKind("AZMGLearningProvider_ReadWrite")
+	LearningSelfInitiatedCourseRead                    = graph.StringKind("AZMGLearningSelfInitiatedCourse_Read")
+	MailReadBasic                                      = graph.StringKind("AZMGMail_ReadBasic")
+	MailReadWrite                                      = graph.StringKind("AZMGMail_ReadWrite")
+	MailSend                                           = graph.StringKind("AZMGMail_Send")
+	MailboxFolderRead                                  = graph.StringKind("AZMGMailboxFolder_Read")
+	MailboxFolderReadWrite                             = graph.StringKind("AZMGMailboxFolder_ReadWrite")
+	MailboxItemImportExport                            = graph.StringKind("AZMGMailboxItem_ImportExport")
+	MailboxItemRead                                    = graph.StringKind("AZMGMailboxItem_Read")
+	MailboxSettingsReadWrite                           = graph.StringKind("AZMGMailboxSettings_ReadWrite")
+	NotesCreate                                        = graph.StringKind("AZMGNotes_Create")
+	NotesRead                                          = graph.StringKind("AZMGNotes_Read")
+	NotesReadWrite                                     = graph.StringKind("AZMGNotes_ReadWrite")
+	OnlineMeetingsRead                                 = graph.StringKind("AZMGOnlineMeetings_Read")
+	OnlineMeetingsReadWrite                            = graph.StringKind("AZMGOnlineMeetings_ReadWrite")
+	PeopleRead                                         = graph.StringKind("AZMGPeople_Read")
+	PresenceRead                                       = graph.StringKind("AZMGPresence_Read")
+	PresenceReadWrite                                  = graph.StringKind("AZMGPresence_ReadWrite")
+	PrintJobRead                                       = graph.StringKind("AZMGPrintJob_Read")
+	PrintJobReadWrite                                  = graph.StringKind("AZMGPrintJob_ReadWrite")
+	PrintJobReadWriteBasic                             = graph.StringKind("AZMGPrintJob_ReadWriteBasic")
+	PrinterCreate                                      = graph.StringKind("AZMGPrinter_Create")
+	ResourceSpecificPermissionGrantReadForChat         = graph.StringKind("AZMGResourceSpecificPermissionGrant_ReadForChat")
+	ResourceSpecificPermissionGrantReadForTeam         = graph.StringKind("AZMGResourceSpecificPermissionGrant_ReadForTeam")
+	ResourceSpecificPermissionGrantReadForUser         = graph.StringKind("AZMGResourceSpecificPermissionGrant_ReadForUser")
+	SMTPSend                                           = graph.StringKind("AZMGSMTP_Send")
+	SensitivityLabelEvaluate                           = graph.StringKind("AZMGSensitivityLabel_Evaluate")
+	SensitivityLabelRead                               = graph.StringKind("AZMGSensitivityLabel_Read")
+	ServiceMessageViewpointWrite                       = graph.StringKind("AZMGServiceMessageViewpoint_Write")
+	ShortNotesRead                                     = graph.StringKind("AZMGShortNotes_Read")
+	ShortNotesReadWrite                                = graph.StringKind("AZMGShortNotes_ReadWrite")
+	SitesSelected                                      = graph.StringKind("AZMGSites_Selected")
+	TasksRead                                          = graph.StringKind("AZMGTasks_Read")
+	TasksReadWrite                                     = graph.StringKind("AZMGTasks_ReadWrite")
+	TeamCreate                                         = graph.StringKind("AZMGTeam_Create")
+	TeamTemplatesRead                                  = graph.StringKind("AZMGTeamTemplates_Read")
+	TeamsActivityRead                                  = graph.StringKind("AZMGTeamsActivity_Read")
+	TeamsActivitySend                                  = graph.StringKind("AZMGTeamsActivity_Send")
+	TeamsAppInstallationManageSelectedForChat          = graph.StringKind("AZMGTeamsAppInstallation_ManageSelectedForChat")
+	TeamsAppInstallationManageSelectedForTeam          = graph.StringKind("AZMGTeamsAppInstallation_ManageSelectedForTeam")
+	TeamsAppInstallationManageSelectedForUser          = graph.StringKind("AZMGTeamsAppInstallation_ManageSelectedForUser")
+	TeamsAppInstallationReadForChat                    = graph.StringKind("AZMGTeamsAppInstallation_ReadForChat")
+	TeamsAppInstallationReadForTeam                    = graph.StringKind("AZMGTeamsAppInstallation_ReadForTeam")
+	TeamsAppInstallationReadForUser                    = graph.StringKind("AZMGTeamsAppInstallation_ReadForUser")
+	TeamsAppInstallationReadSelectedForChat            = graph.StringKind("AZMGTeamsAppInstallation_ReadSelectedForChat")
+	TeamsAppInstallationReadSelectedForTeam            = graph.StringKind("AZMGTeamsAppInstallation_ReadSelectedForTeam")
+	TeamsAppInstallationReadSelectedForUser            = graph.StringKind("AZMGTeamsAppInstallation_ReadSelectedForUser")
+	TeamsAppInstallationReadWriteAndConsentForChat     = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentForChat")
+	TeamsAppInstallationReadWriteAndConsentForTeam     = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam")
+	TeamsAppInstallationReadWriteAndConsentForUser     = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentForUser")
+	TeamsAppInstallationReadWriteAndConsentSelfForChat = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat")
+	TeamsAppInstallationReadWriteAndConsentSelfForTeam = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam")
+	TeamsAppInstallationReadWriteAndConsentSelfForUser = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser")
+	TeamsAppInstallationReadWriteForChat               = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteForChat")
+	TeamsAppInstallationReadWriteForTeam               = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteForTeam")
+	TeamsAppInstallationReadWriteForUser               = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteForUser")
+	TeamsAppInstallationReadWriteSelectedForChat       = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelectedForChat")
+	TeamsAppInstallationReadWriteSelectedForTeam       = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelectedForTeam")
+	TeamsAppInstallationReadWriteSelectedForUser       = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelectedForUser")
+	TeamsAppInstallationReadWriteSelfForChat           = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelfForChat")
+	TeamsAppInstallationReadWriteSelfForUser           = graph.StringKind("AZMGTeamsAppInstallation_ReadWriteSelfForUser")
+	TeamsTabReadWriteForChat                           = graph.StringKind("AZMGTeamsTab_ReadWriteForChat")
+	TeamsTabReadWriteForTeam                           = graph.StringKind("AZMGTeamsTab_ReadWriteForTeam")
+	TeamsTabReadWriteForUser                           = graph.StringKind("AZMGTeamsTab_ReadWriteForUser")
+	TeamsTabReadWriteSelfForChat                       = graph.StringKind("AZMGTeamsTab_ReadWriteSelfForChat")
+	TeamsTabReadWriteSelfForTeam                       = graph.StringKind("AZMGTeamsTab_ReadWriteSelfForTeam")
+	TeamsTabReadWriteSelfForUser                       = graph.StringKind("AZMGTeamsTab_ReadWriteSelfForUser")
+	TeamworkTagRead                                    = graph.StringKind("AZMGTeamworkTag_Read")
+	TeamworkTagReadWrite                               = graph.StringKind("AZMGTeamworkTag_ReadWrite")
+	ThreatSubmissionRead                               = graph.StringKind("AZMGThreatSubmission_Read")
+	ThreatSubmissionReadWrite                          = graph.StringKind("AZMGThreatSubmission_ReadWrite")
+	UserAuthenticationMethodRead                       = graph.StringKind("AZMGUserAuthenticationMethod_Read")
+	UserAuthenticationMethodReadWrite                  = graph.StringKind("AZMGUserAuthenticationMethod_ReadWrite")
+	UserCloudClipboardRead                             = graph.StringKind("AZMGUserCloudClipboard_Read")
+	UserReadWrite                                      = graph.StringKind("AZMGUser_ReadWrite")
+	UserTeamworkRead                                   = graph.StringKind("AZMGUserTeamwork_Read")
+	VirtualAppointmentNotificationSend                 = graph.StringKind("AZMGVirtualAppointmentNotification_Send")
+	VirtualAppointmentRead                             = graph.StringKind("AZMGVirtualAppointment_Read")
+	VirtualAppointmentReadWrite                        = graph.StringKind("AZMGVirtualAppointment_ReadWrite")
+	VirtualEventRead                                   = graph.StringKind("AZMGVirtualEvent_Read")
+	VirtualEventReadWrite                              = graph.StringKind("AZMGVirtualEvent_ReadWrite")
+	AKSContributor                                     = graph.StringKind("AZAKSContributor")
+	NodeResourceGroup                                  = graph.StringKind("AZNodeResourceGroup")
+	WebsiteContributor                                 = graph.StringKind("AZWebsiteContributor")
+	LogicAppContributor                                = graph.StringKind("AZLogicAppContributor")
+	AZMGAddMember                                      = graph.StringKind("AZMGAddMember")
+	AZMGAddOwner                                       = graph.StringKind("AZMGAddOwner")
+	AZMGAddSecret                                      = graph.StringKind("AZMGAddSecret")
+	AZMGGrantAppRoles                                  = graph.StringKind("AZMGGrantAppRoles")
+	AZMGGrantRole                                      = graph.StringKind("AZMGGrantRole")
+	SyncedToADUser                                     = graph.StringKind("SyncedToADUser")
+	AZRoleEligible                                     = graph.StringKind("AZRoleEligible")
+	AZRoleApprover                                     = graph.StringKind("AZRoleApprover")
+	AZOAuth2PermissionGrant                            = graph.StringKind("AZOAuth2PermissionGrant")
 )
 
 type Property string
@@ -411,13 +1083,979 @@ func (s Property) Is(others ...graph.Kind) bool {
 	return false
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover}
+	return []graph.Kind{
+		AvereContributor,
+		Contains,
+		Contributor,
+		GetCertificates,
+		GetKeys,
+		GetSecrets,
+		HasRole,
+		MemberOf,
+		Owner,
+		RunsAs,
+		VMContributor,
+		AutomationContributor,
+		KeyVaultContributor,
+		VMAdminLogin,
+		AddMembers,
+		AddSecret,
+		ExecuteCommand,
+		GlobalAdmin,
+		PrivilegedAuthAdmin,
+		Grant,
+		GrantSelf,
+		PrivilegedRoleAdmin,
+		ResetPassword,
+		UserAccessAdministrator,
+		Owns,
+		ScopedTo,
+		CloudAppAdmin,
+		AppAdmin,
+		AddOwner,
+		ManagedIdentity,
+		AKSContributor,
+		NodeResourceGroup,
+		WebsiteContributor,
+		LogicAppContributor,
+		AZMGAddMember,
+		AZMGAddOwner,
+		AZMGAddSecret,
+		AZMGGrantAppRoles,
+		AZMGGrantRole,
+		SyncedToADUser,
+		AZRoleEligible,
+		AZRoleApprover,
+		AccessReviewReadAll,
+		AccessReviewReadWriteAll,
+		AccessReviewReadWriteMembership,
+		AcronymReadAll,
+		AdministrativeUnitReadAll,
+		AdministrativeUnitReadWriteAll,
+		AllSitesRead,
+		AgentApplicationCreate,
+		AgentIdentityCreate,
+		AgreementAcceptanceRead,
+		AiEnterpriseInteractionRead,
+		AnalyticsRead,
+		AppCatalogSubmit,
+		ApprovalSolutionRead,
+		ApprovalSolutionReadWrite,
+		ApprovalSolutionResponseReadWrite,
+		AuditActivityRead,
+		AuditActivityWrite,
+		CalendarsRead,
+		CalendarsReadBasic,
+		CalendarsReadWrite,
+		CallDelegationRead,
+		CallDelegationReadWrite,
+		CallEventsRead,
+		ChannelCreate,
+		ChannelMessageEdit,
+		ChannelMessageReadWrite,
+		ChannelMessageSend,
+		ChatCreate,
+		ChatRead,
+		ChatReadBasic,
+		ChatReadWrite,
+		ChatMemberRead,
+		ChatMemberReadWrite,
+		ChatMessageRead,
+		ChatMessageSend,
+		ConsentRequestCreate,
+		ConsentRequestRead,
+		ContactsRead,
+		ContactsReadWrite,
+		ContentActivityRead,
+		ContentActivityWrite,
+		CrossTenantUserProfileSharingRead,
+		CrossTenantUserProfileSharingReadWrite,
+		DeviceCommand,
+		DeviceCreateFromOwnedTemplate,
+		DeviceRead,
+		DeviceTemplateCreate,
+		EduAdministrationRead,
+		EduAdministrationReadWrite,
+		EduAssignmentsRead,
+		EduAssignmentsReadBasic,
+		EduAssignmentsReadWrite,
+		EduAssignmentsReadWriteBasic,
+		EduCurriculaRead,
+		EduCurriculaReadWrite,
+		EduRosterRead,
+		EduRosterReadBasic,
+		EduRosterReadWrite,
+		EngagementRoleRead,
+		FamilyRead,
+		FileIngestionIngest,
+		FileIngestionHybridOnboardingManage,
+		FilesRead,
+		FilesReadWrite,
+		FileStorageContainerSelected,
+		GroupCreate,
+		InformationProtectionConfigRead,
+		InformationProtectionPolicyRead,
+		LearningAssignedCourseRead,
+		LearningProviderRead,
+		LearningProviderReadWrite,
+		LearningSelfInitiatedCourseRead,
+		MailRead,
+		MailReadBasic,
+		MailReadWrite,
+		MailSend,
+		MailboxFolderRead,
+		MailboxFolderReadWrite,
+		MailboxItemImportExport,
+		MailboxItemRead,
+		MailboxSettingsRead,
+		MailboxSettingsReadWrite,
+		NotesCreate,
+		NotesRead,
+		NotesReadWrite,
+		OnlineMeetingsRead,
+		OnlineMeetingsReadWrite,
+		PeopleRead,
+		PresenceRead,
+		PresenceReadWrite,
+		PrinterCreate,
+		PrintJobCreate,
+		PrintJobRead,
+		PrintJobReadBasic,
+		PrintJobReadWrite,
+		PrintJobReadWriteBasic,
+		ResourceSpecificPermissionGrantReadForChat,
+		ResourceSpecificPermissionGrantReadForTeam,
+		ResourceSpecificPermissionGrantReadForUser,
+		SensitivityLabelEvaluate,
+		SensitivityLabelRead,
+		ServiceMessageViewpointWrite,
+		ShortNotesRead,
+		ShortNotesReadWrite,
+		SitesSelected,
+		SMTPSend,
+		TasksRead,
+		TasksReadWrite,
+		TeamCreate,
+		TeamsActivityRead,
+		TeamsActivitySend,
+		TeamsAppInstallationManageSelectedForChat,
+		TeamsAppInstallationManageSelectedForTeam,
+		TeamsAppInstallationManageSelectedForUser,
+		TeamsAppInstallationReadForChat,
+		TeamsAppInstallationReadForTeam,
+		TeamsAppInstallationReadForUser,
+		TeamsAppInstallationReadSelectedForChat,
+		TeamsAppInstallationReadSelectedForTeam,
+		TeamsAppInstallationReadSelectedForUser,
+		TeamsAppInstallationReadWriteAndConsentForChat,
+		TeamsAppInstallationReadWriteAndConsentForTeam,
+		TeamsAppInstallationReadWriteAndConsentForUser,
+		TeamsAppInstallationReadWriteAndConsentSelfForChat,
+		TeamsAppInstallationReadWriteAndConsentSelfForTeam,
+		TeamsAppInstallationReadWriteAndConsentSelfForUser,
+		TeamsAppInstallationReadWriteForChat,
+		TeamsAppInstallationReadWriteForTeam,
+		TeamsAppInstallationReadWriteForUser,
+		TeamsAppInstallationReadWriteSelectedForChat,
+		TeamsAppInstallationReadWriteSelectedForTeam,
+		TeamsAppInstallationReadWriteSelectedForUser,
+		TeamsAppInstallationReadWriteSelfForChat,
+		TeamsAppInstallationReadWriteSelfForTeam,
+		TeamsAppInstallationReadWriteSelfForUser,
+		TeamsTabCreate,
+		TeamsTabReadWriteForChat,
+		TeamsTabReadWriteForTeam,
+		TeamsTabReadWriteForUser,
+		TeamsTabReadWriteSelfForChat,
+		TeamsTabReadWriteSelfForTeam,
+		TeamsTabReadWriteSelfForUser,
+		TeamTemplatesRead,
+		TeamworkTagRead,
+		TeamworkTagReadWrite,
+		ThreatSubmissionRead,
+		ThreatSubmissionReadWrite,
+		UserRead,
+		UserReadWrite,
+		UserAuthenticationMethodRead,
+		UserAuthenticationMethodReadWrite,
+		UserCloudClipboardRead,
+		UserTeamworkRead,
+		VirtualAppointmentRead,
+		VirtualAppointmentReadWrite,
+		VirtualAppointmentNotificationSend,
+		VirtualEventRead,
+		VirtualEventReadWrite,
+		AgreementReadAll,
+		AgreementReadWriteAll,
+		AgreementAcceptanceReadAll,
+		AiEnterpriseInteractionReadAll,
+		APIConnectorsReadAll,
+		APIConnectorsReadWriteAll,
+		AppCatalogReadAll,
+		AppCatalogReadWriteAll,
+		AppCertTrustConfigurationReadAll,
+		AppCertTrustConfigurationReadWriteAll,
+		ApplicationReadAll,
+		ApplicationReadWriteAll,
+		ApplicationReadWriteOwnedBy,
+		AppRoleAssignmentReadWriteAll,
+		ApprovalSolutionReadAll,
+		ApprovalSolutionReadWriteAll,
+		AttackSimulationReadAll,
+		AttackSimulationReadWriteAll,
+		AuditLogReadAll,
+		AuditLogsQueryReadAll,
+		AuthenticationContextReadAll,
+		AuthenticationContextReadWriteAll,
+		BillingConfigurationReadWriteAll,
+		BitlockerKeyReadAll,
+		BitlockerKeyReadBasicAll,
+		BookingsManageAll,
+		BookingsReadAll,
+		BookingsReadWriteAll,
+		BookingsAppointmentReadWriteAll,
+		BookmarkReadAll,
+		BrowserSiteListsReadAll,
+		BrowserSiteListsReadWriteAll,
+		BusinessScenarioConfigReadAll,
+		BusinessScenarioConfigReadOwnedBy,
+		BusinessScenarioConfigReadWriteAll,
+		BusinessScenarioConfigReadWriteOwnedBy,
+		BusinessScenarioDataReadOwnedBy,
+		BusinessScenarioDataReadWriteOwnedBy,
+		CalendarsReadShared,
+		CalendarsReadBasicAll,
+		CalendarsReadWriteShared,
+		CallDelegationReadAll,
+		CallDelegationReadWriteAll,
+		CallEventsReadAll,
+		CallRecordsReadAll,
+		CallsAccessMediaAll,
+		CallsInitiateAll,
+		CallsInitiateGroupCallAll,
+		CallsJoinGroupCallAll,
+		CallsJoinGroupCallAsGuestAll,
+		ChangeManagementReadAll,
+		ChannelDeleteAll,
+		ChannelReadBasicAll,
+		ChannelMemberReadAll,
+		ChannelMemberReadWriteAll,
+		ChannelMessageReadAll,
+		ChannelMessageUpdatePolicyViolationAll,
+		ChannelSettingsReadAll,
+		ChannelSettingsReadWriteAll,
+		ChatManageDeletionAll,
+		ChatReadAll,
+		ChatReadWhereInstalled,
+		ChatReadBasicAll,
+		ChatReadBasicWhereInstalled,
+		ChatReadWriteAll,
+		ChatReadWriteWhereInstalled,
+		ChatUpdatePolicyViolationAll,
+		ChatMemberRead,
+		ChatMemberReadAll,
+		ChatMemberReadWhereInstalled,
+		ChatMemberReadWriteAll,
+		ChatMemberReadWriteWhereInstalled,
+		ChatMessageReadAll,
+		CloudPCReadAll,
+		CloudPCReadWriteAll,
+		CommunityReadAll,
+		CommunityReadWriteAll,
+		ConfigurationMonitoringReadAll,
+		ConfigurationMonitoringReadWriteAll,
+		ConsentRequestReadAll,
+		ConsentRequestReadApproveAll,
+		ConsentRequestReadWriteAll,
+		ContactsReadShared,
+		ContactsReadWriteShared,
+		ContentProcessAll,
+		ContentProcessUser,
+		CrossTenantInformationReadBasicAll,
+		CrossTenantUserProfileSharingReadAll,
+		CrossTenantUserProfileSharingReadWriteAll,
+		CustomAuthenticationExtensionReadAll,
+		CustomAuthenticationExtensionReadWriteAll,
+		CustomAuthenticationExtensionReceivePayload,
+		CustomDetectionReadAll,
+		CustomDetectionReadWriteAll,
+		CustomSecAttributeAssignmentReadAll,
+		CustomSecAttributeAssignmentReadWriteAll,
+		CustomSecAttributeAuditLogsReadAll,
+		CustomSecAttributeDefinitionReadAll,
+		CustomSecAttributeDefinitionReadWriteAll,
+		CustomSecAttributeProvisioningReadAll,
+		CustomSecAttributeProvisioningReadWriteAll,
+		CustomTagsReadAll,
+		CustomTagsReadWriteAll,
+		DatasetReadAll,
+		DelegatedAdminRelationshipReadAll,
+		DelegatedAdminRelationshipReadWriteAll,
+		DelegatedPermissionGrantReadAll,
+		DelegatedPermissionGrantReadWriteAll,
+		DeviceReadAll,
+		DeviceReadWriteAll,
+		DeviceLocalCredentialReadAll,
+		DeviceLocalCredentialReadBasicAll,
+		DeviceManagementAppsReadAll,
+		DeviceManagementAppsReadWriteAll,
+		DeviceManagementCloudCAReadAll,
+		DeviceManagementCloudCAReadWriteAll,
+		DeviceManagementConfigurationReadAll,
+		DeviceManagementConfigurationReadWriteAll,
+		DeviceManagementManagedDevicesPrivilegedOperationsAll,
+		DeviceManagementManagedDevicesReadAll,
+		DeviceManagementManagedDevicesReadWriteAll,
+		DeviceManagementRBACReadAll,
+		DeviceManagementRBACReadWriteAll,
+		DeviceManagementScriptsReadAll,
+		DeviceManagementScriptsReadWriteAll,
+		DeviceManagementServiceConfigReadAll,
+		DeviceManagementServiceConfigReadWriteAll,
+		DeviceTemplateReadAll,
+		DeviceTemplateReadWriteAll,
+		DirectoryAccessAsUserAll,
+		DirectoryReadAll,
+		DirectoryReadWriteAll,
+		DirectoryRecommendationsReadAll,
+		DirectoryRecommendationsReadWriteAll,
+		DomainReadAll,
+		DomainReadWriteAll,
+		EASAccessAsUserAll,
+		EduAdministrationReadAll,
+		EduAdministrationReadWriteAll,
+		EduAssignmentsReadAll,
+		EduAssignmentsReadBasic,
+		EduAssignmentsReadBasicAll,
+		EduAssignmentsReadWriteAll,
+		EduAssignmentsReadWriteBasicAll,
+		EduCurriculaReadAll,
+		EduCurriculaReadWriteAll,
+		EduRosterReadAll,
+		EduRosterReadBasic,
+		EduRosterReadBasicAll,
+		EduRosterReadWriteAll,
+		EngagementConversationMigrationAll,
+		EngagementMeetingConversationReadAll,
+		EngagementRoleReadAll,
+		EngagementRoleReadWriteAll,
+		EntitlementManagementReadAll,
+		EntitlementManagementReadWriteAll,
+		EventListenerReadAll,
+		EventListenerReadWriteAll,
+		EWSAccessAsUserAll,
+		ExternalConnectionReadAll,
+		ExternalConnectionReadWriteAll,
+		ExternalConnectionReadWriteOwnedBy,
+		ExternalItemReadAll,
+		ExternalItemReadWriteAll,
+		ExternalItemReadWriteOwnedBy,
+		ExternalUserProfileReadAll,
+		ExternalUserProfileReadWriteAll,
+		FilesReadAll,
+		FilesReadSelected,
+		FilesReadWriteAll,
+		FilesReadWriteAppFolder,
+		FilesReadWriteSelected,
+		FilesSelectedOperationsSelected,
+		FileStorageContainerManageAll,
+		FinancialsReadWriteAll,
+		FormsReadWrite,
+		GroupReadAll,
+		GroupConversationReadWriteAll,
+		GroupReadWriteAll,
+		GroupMemberReadAll,
+		GroupMemberReadWriteAll,
+		GroupSettingsReadAll,
+		GroupSettingsReadWriteAll,
+		HealthMonitoringAlertReadAll,
+		HealthMonitoringAlertReadWriteAll,
+		HealthMonitoringAlertConfigReadAll,
+		HealthMonitoringAlertConfigReadWriteAll,
+		IdentityProviderReadAll,
+		IdentityProviderReadWriteAll,
+		IdentityRiskEventReadAll,
+		IdentityRiskEventReadWriteAll,
+		IdentityRiskyServicePrincipalReadAll,
+		IdentityRiskyServicePrincipalReadWriteAll,
+		IdentityRiskyUserReadAll,
+		IdentityRiskyUserReadWriteAll,
+		IdentityUserFlowReadAll,
+		IdentityUserFlowReadWriteAll,
+		IMAPAccessAsUserAll,
+		IndustryDataReadBasicAll,
+		InformationProtectionConfigReadAll,
+		InformationProtectionContentSignAll,
+		InformationProtectionContentWriteAll,
+		InformationProtectionPolicyRead,
+		InformationProtectionPolicyReadAll,
+		LearningAssignedCourseReadAll,
+		LearningAssignedCourseReadWriteAll,
+		LearningContentReadAll,
+		LearningContentReadWriteAll,
+		LearningSelfInitiatedCourseReadAll,
+		LearningSelfInitiatedCourseReadWriteAll,
+		LicenseAssignmentReadAll,
+		LicenseAssignmentReadWriteAll,
+		LifecycleWorkflowsReadAll,
+		LifecycleWorkflowsReadWriteAll,
+		ListItemsSelectedOperationsSelected,
+		ListsSelectedOperationsSelected,
+		MailReadShared,
+		MailRead,
+		MailReadBasicAll,
+		MailboxSettingsRead,
+		MailReadBasicShared,
+		MailReadWriteShared,
+		MailSendShared,
+		MailboxFolderReadAll,
+		MailboxFolderReadWriteAll,
+		MailboxItemImportExportAll,
+		MailboxItemReadAll,
+		ManagedTenantsReadAll,
+		ManagedTenantsReadWriteAll,
+		MemberReadHidden,
+		MultiTenantOrganizationReadAll,
+		MultiTenantOrganizationReadBasicAll,
+		MultiTenantOrganizationReadWriteAll,
+		MutualTlsOauthConfigurationReadAll,
+		MutualTlsOauthConfigurationReadWriteAll,
+		MyFilesRead,
+		MLModelExecuteAll,
+		NetworkAccessReadAll,
+		NetworkAccessReadWriteAll,
+		NetworkAccessBranchReadAll,
+		NetworkAccessBranchReadWriteAll,
+		NetworkAccessPolicyReadAll,
+		NetworkAccessPolicyReadWriteAll,
+		NotesReadAll,
+		NotesReadWriteAll,
+		NotesReadWriteCreatedByApp,
+		NotificationsReadWriteCreatedByApp,
+		OnlineMeetingAiInsightReadAll,
+		OnlineMeetingAiInsightReadChat,
+		OnlineMeetingArtifactReadAll,
+		OnlineMeetingRecordingReadAll,
+		OnlineMeetingsReadAll,
+		OnlineMeetingsReadWriteAll,
+		OnlineMeetingTranscriptReadAll,
+		OnPremDirectorySynchronizationReadAll,
+		OnPremDirectorySynchronizationReadWriteAll,
+		OnPremisesPublishingProfilesReadWriteAll,
+		OrganizationReadAll,
+		OrganizationReadWriteAll,
+		OrganizationalBrandingReadAll,
+		OrganizationalBrandingReadWriteAll,
+		OrgContactReadAll,
+		PartnerBillingReadAll,
+		PartnerSecurityReadAll,
+		PartnerSecurityReadWriteAll,
+		PendingExternalUserProfileReadAll,
+		PendingExternalUserProfileReadWriteAll,
+		PeopleReadAll,
+		PeopleSettingsReadAll,
+		PeopleSettingsReadWriteAll,
+		PlaceReadAll,
+		PlaceReadWriteAll,
+		PlaceDeviceReadAll,
+		PlaceDeviceReadWriteAll,
+		PlaceDeviceTelemetryReadWriteAll,
+		PolicyReadAll,
+		PolicyReadAuthenticationMethod,
+		PolicyReadConditionalAccess,
+		PolicyReadDeviceConfiguration,
+		PolicyReadIdentityProtection,
+		PolicyReadPermissionGrant,
+		PolicyReadWriteAccessReview,
+		PolicyReadWriteApplicationConfiguration,
+		PolicyReadWriteAuthenticationFlows,
+		PolicyReadWriteAuthenticationMethod,
+		PolicyReadWriteAuthorization,
+		PolicyReadWriteConditionalAccess,
+		PolicyReadWriteConsentRequest,
+		PolicyReadWriteCrossTenantAccess,
+		PolicyReadWriteCrossTenantCapability,
+		PolicyReadWriteDeviceConfiguration,
+		PolicyReadWriteExternalIdentities,
+		PolicyReadWriteFeatureRollout,
+		PolicyReadWriteFedTokenValidation,
+		PolicyReadWriteIdentityProtection,
+		PolicyReadWriteMobilityManagement,
+		PolicyReadWritePermissionGrant,
+		PolicyReadWriteSecurityDefaults,
+		PolicyReadWriteTrustFramework,
+		POPAccessAsUserAll,
+		PresenceReadAll,
+		PresenceReadWriteAll,
+		PrintConnectorReadAll,
+		PrintConnectorReadWriteAll,
+		PrinterFullControlAll,
+		PrinterReadAll,
+		PrinterReadWriteAll,
+		PrinterShareReadAll,
+		PrinterShareReadBasicAll,
+		PrinterShareReadWriteAll,
+		PrintJobCreate,
+		PrintJobManageAll,
+		PrintJobReadAll,
+		PrintJobReadBasic,
+		PrintJobReadBasicAll,
+		PrintJobReadWriteAll,
+		PrintJobReadWriteBasicAll,
+		PrintSettingsReadAll,
+		PrintSettingsReadWriteAll,
+		PrintTaskDefinitionReadWriteAll,
+		PrivilegedAccessReadAzureAD,
+		PrivilegedAccessReadAzureADGroup,
+		PrivilegedAccessReadAzureResources,
+		PrivilegedAccessReadWriteAzureAD,
+		PrivilegedAccessReadWriteAzureADGroup,
+		PrivilegedAccessReadWriteAzureResources,
+		PrivilegedAssignmentScheduleReadAzureADGroup,
+		PrivilegedAssignmentScheduleReadWriteAzureADGroup,
+		PrivilegedAssignmentScheduleRemoveAzureADGroup,
+		PrivilegedEligibilityScheduleReadAzureADGroup,
+		PrivilegedEligibilityScheduleReadWriteAzureADGroup,
+		PrivilegedEligibilityScheduleRemoveAzureADGroup,
+		ProfilePhotoReadAll,
+		ProfilePhotoReadWriteAll,
+		ProgramControlReadAll,
+		ProgramControlReadWriteAll,
+		ProtectionScopesComputeAll,
+		ProtectionScopesComputeUser,
+		ProvisioningLogReadAll,
+		PublicKeyInfrastructureReadAll,
+		PublicKeyInfrastructureReadWriteAll,
+		QnAReadAll,
+		RecordsManagementReadAll,
+		RecordsManagementReadWriteAll,
+		ReportsReadAll,
+		ReportReadAll,
+		ReportSettingsReadAll,
+		ReportSettingsReadWriteAll,
+		ResourceSpecificPermissionGrantReadForChatAll,
+		ResourceSpecificPermissionGrantReadForTeamAll,
+		ResourceSpecificPermissionGrantReadForUserAll,
+		RiskPreventionProvidersReadAll,
+		RiskPreventionProvidersReadWriteAll,
+		RoleAssignmentScheduleReadDirectory,
+		RoleAssignmentScheduleReadWriteDirectory,
+		RoleAssignmentScheduleRemoveDirectory,
+		RoleEligibilityScheduleReadDirectory,
+		RoleEligibilityScheduleReadWriteDirectory,
+		RoleEligibilityScheduleRemoveDirectory,
+		RoleManagementReadAll,
+		RoleManagementReadCloudPC,
+		RoleManagementReadDefender,
+		RoleManagementReadDirectory,
+		RoleManagementReadExchange,
+		RoleManagementReadWriteCloudPC,
+		RoleManagementReadWriteDefender,
+		RoleManagementReadWriteDirectory,
+		RoleManagementReadWriteExchange,
+		RoleManagementAlertReadDirectory,
+		RoleManagementAlertReadWriteDirectory,
+		RoleManagementPolicyReadAzureADGroup,
+		RoleManagementPolicyReadDirectory,
+		RoleManagementPolicyReadWriteAzureADGroup,
+		RoleManagementPolicyReadWriteDirectory,
+		ScheduleReadAll,
+		ScheduleReadWriteAll,
+		SchedulePermissionsReadWriteAll,
+		SearchConfigurationReadAll,
+		SearchConfigurationReadWriteAll,
+		SecurityActionsReadAll,
+		SecurityActionsReadWriteAll,
+		SecurityAlertReadAll,
+		SecurityAlertReadWriteAll,
+		SecurityAnalyzedMessageReadAll,
+		SecurityAnalyzedMessageReadWriteAll,
+		SecurityCopilotWorkspacesReadAll,
+		SecurityCopilotWorkspacesReadWriteAll,
+		SecurityEventsReadAll,
+		SecurityEventsReadWriteAll,
+		SecurityIdentitiesAccountReadAll,
+		SecurityIdentitiesActionsReadWriteAll,
+		SecurityIdentitiesHealthReadAll,
+		SecurityIdentitiesHealthReadWriteAll,
+		SecurityIdentitiesSensorsReadAll,
+		SecurityIdentitiesSensorsReadWriteAll,
+		SecurityIdentitiesUserActionsReadAll,
+		SecurityIdentitiesUserActionsReadWriteAll,
+		SecurityIncidentReadAll,
+		SecurityIncidentReadWriteAll,
+		SensitivityLabelEvaluateAll,
+		SensitivityLabelsReadAll,
+		ServiceHealthReadAll,
+		ServiceMessageReadAll,
+		ServicePrincipalEndpointReadAll,
+		ServicePrincipalEndpointReadWriteAll,
+		SharePointTenantSettingsReadAll,
+		SharePointTenantSettingsReadWriteAll,
+		ShortNotesReadAll,
+		ShortNotesReadWriteAll,
+		SignInIdentifierReadAll,
+		SignInIdentifierReadWriteAll,
+		SitesArchiveAll,
+		SitesFullControlAll,
+		SitesManageAll,
+		SitesReadAll,
+		SitesReadWriteAll,
+		SpiffeTrustDomainReadAll,
+		SpiffeTrustDomainReadWriteAll,
+		StorylineReadWriteAll,
+		SubjectRightsRequestReadAll,
+		SubjectRightsRequestReadWriteAll,
+		SubscriptionReadAll,
+		SynchronizationReadAll,
+		SynchronizationReadWriteAll,
+		TasksReadAll,
+		TasksReadShared,
+		TasksReadWriteAll,
+		TasksReadWriteShared,
+		TeamReadBasicAll,
+		TeamMemberReadAll,
+		TeamMemberReadWriteAll,
+		TeamMemberReadWriteNonOwnerRoleAll,
+		TeamsActivityReadAll,
+		TeamsAppInstallationReadWriteSelfForTeam,
+		TeamsAppInstallationManageSelectedForChatAll,
+		TeamsAppInstallationManageSelectedForTeamAll,
+		TeamsAppInstallationManageSelectedForUserAll,
+		TeamsAppInstallationReadAll,
+		TeamsAppInstallationReadForChatAll,
+		TeamsAppInstallationReadForTeamAll,
+		TeamsAppInstallationReadForUserAll,
+		TeamsAppInstallationReadSelectedForChatAll,
+		TeamsAppInstallationReadSelectedForTeamAll,
+		TeamsAppInstallationReadSelectedForUserAll,
+		TeamsAppInstallationReadWriteAndConsentForChatAll,
+		TeamsAppInstallationReadWriteAndConsentForTeamAll,
+		TeamsAppInstallationReadWriteAndConsentForUserAll,
+		TeamsAppInstallationReadWriteAndConsentSelfForChatAll,
+		TeamsAppInstallationReadWriteAndConsentSelfForTeamAll,
+		TeamsAppInstallationReadWriteAndConsentSelfForUserAll,
+		TeamsAppInstallationReadWriteForChatAll,
+		TeamsAppInstallationReadWriteForTeamAll,
+		TeamsAppInstallationReadWriteForUserAll,
+		TeamsAppInstallationReadWriteSelectedForChatAll,
+		TeamsAppInstallationReadWriteSelectedForTeamAll,
+		TeamsAppInstallationReadWriteSelectedForUserAll,
+		TeamsAppInstallationReadWriteSelfForChatAll,
+		TeamsAppInstallationReadWriteSelfForTeamAll,
+		TeamsAppInstallationReadWriteSelfForUserAll,
+		TeamSettingsReadAll,
+		TeamSettingsReadWriteAll,
+		TeamsPolicyUserAssignReadWriteAll,
+		TeamsResourceAccountReadAll,
+		TeamsTabReadAll,
+		TeamsTabReadWriteAll,
+		TeamsTabReadWriteForChatAll,
+		TeamsTabReadWriteForTeamAll,
+		TeamsTabReadWriteForUserAll,
+		TeamsTabReadWriteSelfForChatAll,
+		TeamsTabReadWriteSelfForTeamAll,
+		TeamsTabReadWriteSelfForUserAll,
+		TeamsTabCreate,
+		TeamsTelephoneNumberReadAll,
+		TeamsTelephoneNumberReadWriteAll,
+		TeamsUserConfigurationReadAll,
+		TeamTemplatesReadAll,
+		TeamworkMigrateAll,
+		TeamworkReadAll,
+		TeamworkAppSettingsReadAll,
+		TeamworkAppSettingsReadWriteAll,
+		TeamworkDeviceReadAll,
+		TeamworkDeviceReadWriteAll,
+		TeamworkTagReadAll,
+		TeamworkTagReadWriteAll,
+		TeamworkUserInteractionReadAll,
+		TermStoreReadAll,
+		TermStoreReadWriteAll,
+		ThreatAssessmentReadAll,
+		ThreatAssessmentReadWriteAll,
+		ThreatHuntingReadAll,
+		ThreatIndicatorsReadAll,
+		ThreatIndicatorsReadWriteOwnedBy,
+		ThreatIntelligenceReadAll,
+		ThreatSubmissionReadAll,
+		ThreatSubmissionReadWriteAll,
+		ThreatSubmissionPolicyReadWriteAll,
+		TopicReadAll,
+		TrustFrameworkKeySetReadAll,
+		TrustFrameworkKeySetReadWriteAll,
+		UnifiedGroupMemberReadAsGuest,
+		UserDeleteRestoreAll,
+		UserEnableDisableAccountAll,
+		UserExportAll,
+		UserInviteAll,
+		UserManageIdentitiesAll,
+		UserRead,
+		UserReadAll,
+		UserReadBasicAll,
+		UserReadWriteAll,
+		UserReadWriteCrossCloud,
+		UserRevokeSessionsAll,
+		UserActivityReadWriteCreatedByApp,
+		UserAuthenticationMethodReadAll,
+		UserAuthenticationMethodReadWriteAll,
+		UserNotificationReadWriteCreatedByApp,
+		UserShiftPreferencesReadAll,
+		UserShiftPreferencesReadWriteAll,
+		UserStateReadWriteAll,
+		UserTeamworkReadAll,
+		UserTimelineActivityWriteCreatedByApp,
+		UserWindowsSettingsReadAll,
+		UserWindowsSettingsReadWriteAll,
+		VirtualAppointmentReadAll,
+		VirtualAppointmentReadWriteAll,
+		VirtualEventReadAll,
+		WindowsUpdatesReadWriteAll,
+		WorkforceIntegrationReadAll,
+		WorkforceIntegrationReadWriteAll,
+	}
 }
 func AppRoleTransitRelationshipKinds() []graph.Kind {
 	return []graph.Kind{AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}
 }
 func AbusableAppRoleRelationshipKinds() []graph.Kind {
 	return []graph.Kind{ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll}
+}
+func AbusablePermissionGrantRelationshipKinds() []graph.Kind {
+	return []graph.Kind{AccessReviewReadWriteAll,
+		AccessReviewReadWriteMembership,
+		AdministrativeUnitReadWriteAll,
+		AgreementReadWriteAll,
+		APIConnectorsReadWriteAll,
+		AppCatalogReadWriteAll,
+		AppCatalogSubmit,
+		AppCertTrustConfigurationReadWriteAll,
+		ApplicationReadWriteAll,
+		ApplicationReadWriteOwnedBy,
+		AppRoleAssignmentReadWriteAll,
+		ApprovalSolutionReadWriteAll,
+		AttackSimulationReadWriteAll,
+		AuthenticationContextReadWriteAll,
+		BillingConfigurationReadWriteAll,
+		BookingsReadWriteAll,
+		BookingsAppointmentReadWriteAll,
+		BrowserSiteListsReadWriteAll,
+		BusinessScenarioConfigReadWriteAll,
+		BusinessScenarioConfigReadWriteOwnedBy,
+		BusinessScenarioDataReadWriteOwnedBy,
+		CalendarsReadWriteShared,
+		CallDelegationReadWriteAll,
+		ChannelMemberReadWriteAll,
+		ChannelSettingsReadWriteAll,
+		ChatReadWriteAll,
+		ChatReadWriteWhereInstalled,
+		ChatMemberRead,
+		ChatMemberReadWriteAll,
+		ChatMemberReadWriteWhereInstalled,
+		CloudPCReadWriteAll,
+		CommunityReadWriteAll,
+		ConfigurationMonitoringReadWriteAll,
+		ConsentRequestReadWriteAll,
+		ContactsReadWriteShared,
+		CrossTenantUserProfileSharingReadWriteAll,
+		CustomAuthenticationExtensionReadWriteAll,
+		CustomDetectionReadWriteAll,
+		CustomSecAttributeAssignmentReadWriteAll,
+		CustomSecAttributeDefinitionReadWriteAll,
+		CustomSecAttributeProvisioningReadWriteAll,
+		CustomTagsReadWriteAll,
+		DatasetReadAll,
+		DelegatedAdminRelationshipReadWriteAll,
+		DelegatedPermissionGrantReadWriteAll,
+		DeviceReadWriteAll,
+		DeviceManagementAppsReadWriteAll,
+		DeviceManagementCloudCAReadWriteAll,
+		DeviceManagementConfigurationReadWriteAll,
+		DeviceManagementManagedDevicesReadWriteAll,
+		DeviceManagementRBACReadWriteAll,
+		DeviceManagementScriptsReadWriteAll,
+		DeviceManagementServiceConfigReadWriteAll,
+		DeviceTemplateReadWriteAll,
+		DirectoryReadWriteAll,
+		DirectoryRecommendationsReadWriteAll,
+		DomainReadWriteAll,
+		EduAdministrationReadWriteAll,
+		EduAssignmentsReadWriteAll,
+		EduAssignmentsReadWriteBasicAll,
+		EduCurriculaReadWriteAll,
+		EduRosterReadWriteAll,
+		EngagementRoleReadWriteAll,
+		EntitlementManagementReadWriteAll,
+		EventListenerReadWriteAll,
+		ExternalConnectionReadWriteAll,
+		ExternalConnectionReadWriteOwnedBy,
+		ExternalItemReadWriteAll,
+		ExternalItemReadWriteOwnedBy,
+		ExternalUserProfileReadWriteAll,
+		FilesReadWriteAll,
+		FilesReadWriteAppFolder,
+		FilesReadWriteSelected,
+		FinancialsReadWriteAll,
+		GroupReadWriteAll,
+		GroupMemberReadWriteAll,
+		GroupSettingsReadWriteAll,
+		GroupConversationReadWriteAll,
+		HealthMonitoringAlertReadWriteAll,
+		HealthMonitoringAlertConfigReadWriteAll,
+		IdentityProviderReadWriteAll,
+		IdentityRiskEventReadWriteAll,
+		IdentityRiskyServicePrincipalReadWriteAll,
+		IdentityRiskyUserReadWriteAll,
+		IdentityUserFlowReadWriteAll,
+		InformationProtectionContentWriteAll,
+		LearningAssignedCourseReadWriteAll,
+		LearningContentReadWriteAll,
+		LearningSelfInitiatedCourseReadWriteAll,
+		LicenseAssignmentReadWriteAll,
+		LifecycleWorkflowsReadWriteAll,
+		MailReadWriteShared,
+		MailboxFolderReadWriteAll,
+		ManagedTenantsReadWriteAll,
+		MultiTenantOrganizationReadWriteAll,
+		MutualTlsOauthConfigurationReadWriteAll,
+		NetworkAccessReadWriteAll,
+		NetworkAccessBranchReadWriteAll,
+		NetworkAccessPolicyReadWriteAll,
+		NotesReadWriteAll,
+		NotesReadWriteCreatedByApp,
+		NotificationsReadWriteCreatedByApp,
+		OnlineMeetingsReadWriteAll,
+		OnPremDirectorySynchronizationReadWriteAll,
+		OnPremisesPublishingProfilesReadWriteAll,
+		OrganizationReadWriteAll,
+		OrganizationalBrandingReadWriteAll,
+		PartnerSecurityReadWriteAll,
+		PendingExternalUserProfileReadWriteAll,
+		PeopleSettingsReadWriteAll,
+		PlaceReadWriteAll,
+		PlaceDeviceReadWriteAll,
+		PlaceDeviceTelemetryReadWriteAll,
+		PolicyReadWriteAccessReview,
+		PolicyReadWriteApplicationConfiguration,
+		PolicyReadWriteAuthenticationFlows,
+		PolicyReadWriteAuthenticationMethod,
+		PolicyReadWriteAuthorization,
+		PolicyReadWriteConditionalAccess,
+		PolicyReadWriteConsentRequest,
+		PolicyReadWriteCrossTenantAccess,
+		PolicyReadWriteCrossTenantCapability,
+		PolicyReadWriteDeviceConfiguration,
+		PolicyReadWriteExternalIdentities,
+		PolicyReadWriteFeatureRollout,
+		PolicyReadWriteFedTokenValidation,
+		PolicyReadWriteIdentityProtection,
+		PolicyReadWriteMobilityManagement,
+		PolicyReadWritePermissionGrant,
+		PolicyReadWriteSecurityDefaults,
+		PolicyReadWriteTrustFramework,
+		PresenceReadWriteAll,
+		PrintConnectorReadWriteAll,
+		PrinterReadWriteAll,
+		PrinterShareReadWriteAll,
+		PrintJobReadWriteAll,
+		PrintJobReadWriteBasicAll,
+		PrintJobCreate,
+		PrintSettingsReadWriteAll,
+		PrintTaskDefinitionReadWriteAll,
+		PrivilegedAccessReadWriteAzureAD,
+		PrivilegedAccessReadWriteAzureADGroup,
+		PrivilegedAccessReadWriteAzureResources,
+		PrivilegedAssignmentScheduleReadWriteAzureADGroup,
+		PrivilegedEligibilityScheduleReadWriteAzureADGroup,
+		ProfilePhotoReadWriteAll,
+		ProgramControlReadWriteAll,
+		PublicKeyInfrastructureReadWriteAll,
+		RecordsManagementReadWriteAll,
+		ReportSettingsReadWriteAll,
+		RiskPreventionProvidersReadWriteAll,
+		RoleAssignmentScheduleReadWriteDirectory,
+		RoleEligibilityScheduleReadWriteDirectory,
+		RoleManagementReadWriteCloudPC,
+		RoleManagementReadWriteDefender,
+		RoleManagementReadWriteDirectory,
+		RoleManagementReadWriteExchange,
+		RoleManagementAlertReadWriteDirectory,
+		RoleManagementPolicyReadWriteAzureADGroup,
+		RoleManagementPolicyReadWriteDirectory,
+		ScheduleReadWriteAll,
+		SchedulePermissionsReadWriteAll,
+		SearchConfigurationReadWriteAll,
+		SecurityActionsReadWriteAll,
+		SecurityAlertReadWriteAll,
+		SecurityAnalyzedMessageReadWriteAll,
+		SecurityCopilotWorkspacesReadWriteAll,
+		SecurityEventsReadWriteAll,
+		SecurityIdentitiesActionsReadWriteAll,
+		SecurityIdentitiesHealthReadWriteAll,
+		SecurityIdentitiesSensorsReadWriteAll,
+		SecurityIdentitiesUserActionsReadWriteAll,
+		SecurityIncidentReadWriteAll,
+		ServicePrincipalEndpointReadWriteAll,
+		SharePointTenantSettingsReadWriteAll,
+		ShortNotesReadWriteAll,
+		SignInIdentifierReadWriteAll,
+		SitesReadWriteAll,
+		SpiffeTrustDomainReadWriteAll,
+		StorylineReadWriteAll,
+		SubjectRightsRequestReadWriteAll,
+		SynchronizationReadWriteAll,
+		TasksReadWriteAll,
+		TasksReadWriteShared,
+		TeamMemberReadWriteAll,
+		TeamMemberReadWriteNonOwnerRoleAll,
+		TeamsAppInstallationReadWriteSelfForTeam,
+		TeamsAppInstallationReadWriteAndConsentForChatAll,
+		TeamsAppInstallationReadWriteAndConsentForTeamAll,
+		TeamsAppInstallationReadWriteAndConsentForUserAll,
+		TeamsAppInstallationReadWriteAndConsentSelfForChatAll,
+		TeamsAppInstallationReadWriteAndConsentSelfForTeamAll,
+		TeamsAppInstallationReadWriteAndConsentSelfForUserAll,
+		TeamsAppInstallationReadWriteForChatAll,
+		TeamsAppInstallationReadWriteForTeamAll,
+		TeamsAppInstallationReadWriteForUserAll,
+		TeamsAppInstallationReadWriteSelectedForChatAll,
+		TeamsAppInstallationReadWriteSelectedForTeamAll,
+		TeamsAppInstallationReadWriteSelectedForUserAll,
+		TeamsAppInstallationReadWriteSelfForChatAll,
+		TeamsAppInstallationReadWriteSelfForTeamAll,
+		TeamsAppInstallationReadWriteSelfForUserAll,
+		TeamSettingsReadWriteAll,
+		TeamsPolicyUserAssignReadWriteAll,
+		TeamsTabReadWriteAll,
+		TeamsTabReadWriteForChatAll,
+		TeamsTabReadWriteForTeamAll,
+		TeamsTabReadWriteForUserAll,
+		TeamsTabReadWriteSelfForChatAll,
+		TeamsTabReadWriteSelfForTeamAll,
+		TeamsTabReadWriteSelfForUserAll,
+		TeamsTabCreate,
+		TeamsTelephoneNumberReadWriteAll,
+		TeamworkAppSettingsReadWriteAll,
+		TeamworkDeviceReadWriteAll,
+		TeamworkTagReadWriteAll,
+		TermStoreReadWriteAll,
+		ThreatAssessmentReadWriteAll,
+		ThreatIndicatorsReadWriteOwnedBy,
+		ThreatSubmissionReadWriteAll,
+		ThreatSubmissionPolicyReadWriteAll,
+		TrustFrameworkKeySetReadWriteAll,
+		UserReadWriteAll,
+		UserReadWriteCrossCloud,
+		UserActivityReadWriteCreatedByApp,
+		UserAuthenticationMethodReadWriteAll,
+		UserNotificationReadWriteCreatedByApp,
+		UserShiftPreferencesReadWriteAll,
+		UserStateReadWriteAll,
+		UserTimelineActivityWriteCreatedByApp,
+		UserWindowsSettingsReadWriteAll,
+		VirtualAppointmentReadWriteAll,
+		WindowsUpdatesReadWriteAll,
+		WorkforceIntegrationReadWriteAll}
 }
 func ControlRelationships() []graph.Kind {
 	return []graph.Kind{AvereContributor, Contributor, Owner, VMContributor, AutomationContributor, KeyVaultContributor, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}

@@ -305,6 +305,19 @@ func ListEntityAbusableAppRoleAssignments(ctx context.Context, db graph.Database
 	})
 }
 
+func ListEntityAbusablePermissionGrants(ctx context.Context, db graph.Database, objectID string, direction graph.Direction, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = FetchOutboundAbusablePermissionGrants(tx, node, skip, limit)
+			return err
+		}
+	})
+}
+
 func ListEntityObjectControlPaths(ctx context.Context, db graph.Database, objectID string, direction graph.Direction) (graph.PathSet, error) {
 	var paths graph.PathSet
 
@@ -316,6 +329,19 @@ func ListEntityObjectControlPaths(ctx context.Context, db graph.Database, object
 			return err
 		} else {
 			paths, err = FetchInboundEntityObjectControlPaths(tx, node)
+			return err
+		}
+	})
+}
+
+func ListEntityGrantsPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = FetchEntityGrantsPaths(tx, node)
 			return err
 		}
 	})
