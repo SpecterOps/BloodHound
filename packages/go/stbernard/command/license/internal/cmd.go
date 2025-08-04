@@ -163,6 +163,8 @@ func processFile(path string) error {
 		return writeFile(path, generateLicenseHeader("<!--"))
 	case ".css":
 		return writeFile(path, generateLicenseHeader("/*"))
+	case ".cs":
+		return writeFile(path, generateLicenseHeader("/*"))
 	default:
 		slog.Warn("unknown extension", slog.String("path", path))
 		return nil
