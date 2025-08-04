@@ -205,6 +205,9 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return ErrAnalysisDisabled
 		}
 
+		// If we're here, there is a real analysis to do. At the end of this, successful or not, we should update the datapipe
+		defer s.db.SetDatapipeLastAnalyzed(ctx)
+
 		defer measure.LogAndMeasure(slog.LevelInfo, "Graph Analysis")()
 
 		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
