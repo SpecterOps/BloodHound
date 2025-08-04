@@ -51,8 +51,8 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 	var (
 		queries []model.ScopedSavedQuery
 		// cant chain scope + cursor after declaration so must declare twice
-		cursor         = s.db.WithContext(ctx).Select("DISTINCT sq.*, CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope", userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
-		countCursor    = s.Scope(Paginate(skip, limit)).WithContext(ctx).Select("DISTINCT sq.*, CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope", userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
+		countCursor    = s.db.WithContext(ctx).Select("DISTINCT sq.*, CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope", userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
+		cursor         = s.Scope(Paginate(skip, limit)).WithContext(ctx).Select("DISTINCT sq.*, CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope", userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
 		orderReplacer  = strings.NewReplacer("id", "sq.id", "created_at", "sq.created_at", "updated_at", "sq.updated_at")
 		filterReplacer = strings.NewReplacer("id", "sq.id")
 		count          int64
@@ -82,7 +82,8 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 	if filter.SQLString != "" {
 		cursor = cursor.Where(filter.SQLString, filter.Params...)
 		countCursor = countCursor.Where(filter.SQLString, filter.Params...)
-	} else if order != "" {
+	}
+	if order != "" {
 		cursor = cursor.Order(order)
 		countCursor = countCursor.Order(order)
 	}
@@ -93,7 +94,6 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 	}
 
 	result = cursor.Find(&queries)
-
 	return queries, int(count), CheckError(result)
 }
 
