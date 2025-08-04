@@ -18,7 +18,7 @@ package database
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -70,13 +70,13 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 		cursor = cursor.Where("sqp.shared_to_user_id = ?", userID)
 		countCursor = countCursor.Where("sqp.shared_to_user_id = ?", userID)
 	case string(model.SavedQueryScopePublic):
-		cursor = cursor.Where("sqp.public = TRUE", userID)
-		countCursor = countCursor.Where("sqp.public = TRUE", userID)
+		cursor = cursor.Where("sqp.public = TRUE")
+		countCursor = countCursor.Where("sqp.public = TRUE")
 	case string(model.SavedQueryScopeAll):
 		cursor = cursor.Where("sqp.public = TRUE OR sq.user_id = ? OR sqp.shared_to_user_id = ?", userID, userID)
 		countCursor = countCursor.Where("sqp.public = TRUE OR sq.user_id = ? OR sqp.shared_to_user_id = ?", userID, userID)
 	default:
-		return nil, 0, errors.New("invalid scope parameter")
+		return nil, 0, fmt.Errorf("invalid scope parameter: %s", scope)
 	}
 
 	if filter.SQLString != "" {
@@ -92,7 +92,6 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 		return nil, 0, CheckError(result)
 	}
 
-	cursor.Find(&queries)
 	result = cursor.Find(&queries)
 
 	return queries, int(count), CheckError(result)
