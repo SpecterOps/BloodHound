@@ -2082,7 +2082,7 @@ type OAuth2PermissionGrant struct {
 	Scope       string `json:"scope,omitempty"`
 }
 
-func getRelTypeForScope(scope string) graph.Kind {
+func GetPermissionConstant(scope string) graph.Kind {
 	switch scope {
 	case "APIConnectors.Read.All":
 		return azure.APIConnectorsReadAll
@@ -2100,16 +2100,26 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.AdministrativeUnitReadAll
 	case "AdministrativeUnit.ReadWrite.All":
 		return azure.AdministrativeUnitReadWriteAll
-	case "AllSites.Read":
-		return azure.AllSitesRead
+	case "AgentApplication.Create":
+		return azure.AgentApplicationCreate
+	case "AgentIdentity.Create":
+		return azure.AgentIdentityCreate
 	case "Agreement.Read.All":
 		return azure.AgreementReadAll
 	case "Agreement.ReadWrite.All":
 		return azure.AgreementReadWriteAll
+	case "AgreementAcceptance.Read":
+		return azure.AgreementAcceptanceRead
 	case "AgreementAcceptance.Read.All":
 		return azure.AgreementAcceptanceReadAll
+	case "AiEnterpriseInteraction.Read":
+		return azure.AiEnterpriseInteractionRead
 	case "AiEnterpriseInteraction.Read.All":
 		return azure.AiEnterpriseInteractionReadAll
+	case "AllSites.Read":
+		return azure.AllSitesRead
+	case "Analytics.Read":
+		return azure.AnalyticsRead
 	case "AppCatalog.Read.All":
 		return azure.AppCatalogReadAll
 	case "AppCatalog.ReadWrite.All":
@@ -2128,14 +2138,24 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ApplicationReadWriteAll
 	case "Application.ReadWrite.OwnedBy":
 		return azure.ApplicationReadWriteOwnedBy
+	case "ApprovalSolution.Read":
+		return azure.ApprovalSolutionRead
 	case "ApprovalSolution.Read.All":
 		return azure.ApprovalSolutionReadAll
+	case "ApprovalSolution.ReadWrite":
+		return azure.ApprovalSolutionReadWrite
 	case "ApprovalSolution.ReadWrite.All":
 		return azure.ApprovalSolutionReadWriteAll
+	case "ApprovalSolutionResponse.ReadWrite":
+		return azure.ApprovalSolutionResponseReadWrite
 	case "AttackSimulation.Read.All":
 		return azure.AttackSimulationReadAll
 	case "AttackSimulation.ReadWrite.All":
 		return azure.AttackSimulationReadWriteAll
+	case "AuditActivity.Read":
+		return azure.AuditActivityRead
+	case "AuditActivity.Write":
+		return azure.AuditActivityWrite
 	case "AuditLog.Read.All":
 		return azure.AuditLogReadAll
 	case "AuditLogsQuery.Read.All":
@@ -2176,16 +2196,30 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.BusinessScenarioDataReadOwnedBy
 	case "BusinessScenarioData.ReadWrite.OwnedBy":
 		return azure.BusinessScenarioDataReadWriteOwnedBy
+	case "Calendars.Read":
+		return azure.CalendarsRead
 	case "Calendars.Read.Shared":
 		return azure.CalendarsReadShared
+	case "Calendars.ReadBasic":
+		return azure.CalendarsReadBasic
 	case "Calendars.ReadBasic.All":
 		return azure.CalendarsReadBasicAll
+	case "Calendars.ReadWrite":
+		return azure.CalendarsReadWrite
 	case "Calendars.ReadWrite.Shared":
 		return azure.CalendarsReadWriteShared
+	case "CallAiInsights.Read.All":
+		return azure.CallAiInsightsReadAll
+	case "CallDelegation.Read":
+		return azure.CallDelegationRead
 	case "CallDelegation.Read.All":
 		return azure.CallDelegationReadAll
+	case "CallDelegation.ReadWrite":
+		return azure.CallDelegationReadWrite
 	case "CallDelegation.ReadWrite.All":
 		return azure.CallDelegationReadWriteAll
+	case "CallEvents.Read":
+		return azure.CallEventsRead
 	case "CallEvents.Read.All":
 		return azure.CallEventsReadAll
 	case "CallRecords.Read.All":
@@ -2202,6 +2236,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.CallsJoinGroupCallAsGuestAll
 	case "ChangeManagement.Read.All":
 		return azure.ChangeManagementReadAll
+	case "Channel.Create":
+		return azure.ChannelCreate
 	case "Channel.Delete.All":
 		return azure.ChannelDeleteAll
 	case "Channel.ReadBasic.All":
@@ -2210,24 +2246,38 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ChannelMemberReadAll
 	case "ChannelMember.ReadWrite.All":
 		return azure.ChannelMemberReadWriteAll
+	case "ChannelMessage.Edit":
+		return azure.ChannelMessageEdit
 	case "ChannelMessage.Read.All":
 		return azure.ChannelMessageReadAll
+	case "ChannelMessage.ReadWrite":
+		return azure.ChannelMessageReadWrite
+	case "ChannelMessage.Send":
+		return azure.ChannelMessageSend
 	case "ChannelMessage.UpdatePolicyViolation.All":
 		return azure.ChannelMessageUpdatePolicyViolationAll
 	case "ChannelSettings.Read.All":
 		return azure.ChannelSettingsReadAll
 	case "ChannelSettings.ReadWrite.All":
 		return azure.ChannelSettingsReadWriteAll
+	case "Chat.Create":
+		return azure.ChatCreate
 	case "Chat.ManageDeletion.All":
 		return azure.ChatManageDeletionAll
+	case "Chat.Read":
+		return azure.ChatRead
 	case "Chat.Read.All":
 		return azure.ChatReadAll
 	case "Chat.Read.WhereInstalled":
 		return azure.ChatReadWhereInstalled
+	case "Chat.ReadBasic":
+		return azure.ChatReadBasic
 	case "Chat.ReadBasic.All":
 		return azure.ChatReadBasicAll
 	case "Chat.ReadBasic.WhereInstalled":
 		return azure.ChatReadBasicWhereInstalled
+	case "Chat.ReadWrite":
+		return azure.ChatReadWrite
 	case "Chat.ReadWrite.All":
 		return azure.ChatReadWriteAll
 	case "Chat.ReadWrite.WhereInstalled":
@@ -2240,12 +2290,18 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ChatMemberReadAll
 	case "ChatMember.Read.WhereInstalled":
 		return azure.ChatMemberReadWhereInstalled
+	case "ChatMember.ReadWrite":
+		return azure.ChatMemberReadWrite
 	case "ChatMember.ReadWrite.All":
 		return azure.ChatMemberReadWriteAll
 	case "ChatMember.ReadWrite.WhereInstalled":
 		return azure.ChatMemberReadWriteWhereInstalled
+	case "ChatMessage.Read":
+		return azure.ChatMessageRead
 	case "ChatMessage.Read.All":
 		return azure.ChatMessageReadAll
+	case "ChatMessage.Send":
+		return azure.ChatMessageSend
 	case "CloudPC.Read.All":
 		return azure.CloudPCReadAll
 	case "CloudPC.ReadWrite.All":
@@ -2258,24 +2314,40 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ConfigurationMonitoringReadAll
 	case "ConfigurationMonitoring.ReadWrite.All":
 		return azure.ConfigurationMonitoringReadWriteAll
+	case "ConsentRequest.Create":
+		return azure.ConsentRequestCreate
+	case "ConsentRequest.Read":
+		return azure.ConsentRequestRead
 	case "ConsentRequest.Read.All":
 		return azure.ConsentRequestReadAll
 	case "ConsentRequest.ReadApprove.All":
 		return azure.ConsentRequestReadApproveAll
 	case "ConsentRequest.ReadWrite.All":
 		return azure.ConsentRequestReadWriteAll
+	case "Contacts.Read":
+		return azure.ContactsRead
 	case "Contacts.Read.Shared":
 		return azure.ContactsReadShared
+	case "Contacts.ReadWrite":
+		return azure.ContactsReadWrite
 	case "Contacts.ReadWrite.Shared":
 		return azure.ContactsReadWriteShared
 	case "Content.Process.All":
 		return azure.ContentProcessAll
 	case "Content.Process.User":
 		return azure.ContentProcessUser
+	case "ContentActivity.Read":
+		return azure.ContentActivityRead
+	case "ContentActivity.Write":
+		return azure.ContentActivityWrite
 	case "CrossTenantInformation.ReadBasic.All":
 		return azure.CrossTenantInformationReadBasicAll
+	case "CrossTenantUserProfileSharing.Read":
+		return azure.CrossTenantUserProfileSharingRead
 	case "CrossTenantUserProfileSharing.Read.All":
 		return azure.CrossTenantUserProfileSharingReadAll
+	case "CrossTenantUserProfileSharing.ReadWrite":
+		return azure.CrossTenantUserProfileSharingReadWrite
 	case "CrossTenantUserProfileSharing.ReadWrite.All":
 		return azure.CrossTenantUserProfileSharingReadWriteAll
 	case "CustomAuthenticationExtension.Read.All":
@@ -2316,6 +2388,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.DelegatedPermissionGrantReadAll
 	case "DelegatedPermissionGrant.ReadWrite.All":
 		return azure.DelegatedPermissionGrantReadWriteAll
+	case "Device.Command":
+		return azure.DeviceCommand
+	case "Device.CreateFromOwnedTemplate":
+		return azure.DeviceCreateFromOwnedTemplate
+	case "Device.Read":
+		return azure.DeviceRead
 	case "Device.Read.All":
 		return azure.DeviceReadAll
 	case "Device.ReadWrite.All":
@@ -2354,6 +2432,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.DeviceManagementServiceConfigReadAll
 	case "DeviceManagementServiceConfig.ReadWrite.All":
 		return azure.DeviceManagementServiceConfigReadWriteAll
+	case "DeviceTemplate.Create":
+		return azure.DeviceTemplateCreate
 	case "DeviceTemplate.Read.All":
 		return azure.DeviceTemplateReadAll
 	case "DeviceTemplate.ReadWrite.All":
@@ -2376,36 +2456,58 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.EASAccessAsUserAll
 	case "EWS.AccessAsUser.All":
 		return azure.EWSAccessAsUserAll
+	case "EduAdministration.Read":
+		return azure.EduAdministrationRead
 	case "EduAdministration.Read.All":
 		return azure.EduAdministrationReadAll
+	case "EduAdministration.ReadWrite":
+		return azure.EduAdministrationReadWrite
 	case "EduAdministration.ReadWrite.All":
 		return azure.EduAdministrationReadWriteAll
+	case "EduAssignments.Read":
+		return azure.EduAssignmentsRead
 	case "EduAssignments.Read.All":
 		return azure.EduAssignmentsReadAll
-	case "EduAssignmentsReadBasic":
+	case "EduAssignments.ReadBasic":
 		return azure.EduAssignmentsReadBasic
 	case "EduAssignments.ReadBasic.All":
 		return azure.EduAssignmentsReadBasicAll
+	case "EduAssignments.ReadWrite":
+		return azure.EduAssignmentsReadWrite
 	case "EduAssignments.ReadWrite.All":
 		return azure.EduAssignmentsReadWriteAll
+	case "EduAssignments.ReadWriteBasic":
+		return azure.EduAssignmentsReadWriteBasic
 	case "EduAssignments.ReadWriteBasic.All":
 		return azure.EduAssignmentsReadWriteBasicAll
+	case "EduCurricula.Read":
+		return azure.EduCurriculaRead
 	case "EduCurricula.Read.All":
 		return azure.EduCurriculaReadAll
+	case "EduCurricula.ReadWrite":
+		return azure.EduCurriculaReadWrite
 	case "EduCurricula.ReadWrite.All":
 		return azure.EduCurriculaReadWriteAll
+	case "EduRoster.Read":
+		return azure.EduRosterRead
 	case "EduRoster.Read.All":
 		return azure.EduRosterReadAll
 	case "EduRoster.ReadBasic":
 		return azure.EduRosterReadBasic
 	case "EduRoster.ReadBasic.All":
 		return azure.EduRosterReadBasicAll
+	case "EduRoster.ReadWrite":
+		return azure.EduRosterReadWrite
 	case "EduRoster.ReadWrite.All":
 		return azure.EduRosterReadWriteAll
 	case "EngagementConversation.Migration.All":
 		return azure.EngagementConversationMigrationAll
+	case "EngagementConversation.ReadWrite.All":
+		return azure.EngagementConversationReadWriteAll
 	case "EngagementMeetingConversation.Read.All":
 		return azure.EngagementMeetingConversationReadAll
+	case "EngagementRole.Read":
+		return azure.EngagementRoleRead
 	case "EngagementRole.Read.All":
 		return azure.EngagementRoleReadAll
 	case "EngagementRole.ReadWrite.All":
@@ -2434,12 +2536,26 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ExternalUserProfileReadAll
 	case "ExternalUserProfile.ReadWrite.All":
 		return azure.ExternalUserProfileReadWriteAll
+	case "Family.Read":
+		return azure.FamilyRead
+	case "FileIngestion.Ingest":
+		return azure.FileIngestionIngest
+	case "FileIngestionHybridOnboarding.Manage":
+		return azure.FileIngestionHybridOnboardingManage
 	case "FileStorageContainer.Manage.All":
 		return azure.FileStorageContainerManageAll
+	case "FileStorageContainer.Selected":
+		return azure.FileStorageContainerSelected
+	case "FileStorageContainerTypeReg.Selected":
+		return azure.FileStorageContainerTypeRegSelected
+	case "Files.Read":
+		return azure.FilesRead
 	case "Files.Read.All":
 		return azure.FilesReadAll
 	case "Files.Read.Selected":
 		return azure.FilesReadSelected
+	case "Files.ReadWrite":
+		return azure.FilesReadWrite
 	case "Files.ReadWrite.All":
 		return azure.FilesReadWriteAll
 	case "Files.ReadWrite.AppFolder":
@@ -2452,10 +2568,14 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.FinancialsReadWriteAll
 	case "Forms.ReadWrite":
 		return azure.FormsReadWrite
+	case "Group.Create":
+		return azure.GroupCreate
 	case "Group.Read.All":
 		return azure.GroupReadAll
 	case "Group.ReadWrite.All":
 		return azure.GroupReadWriteAll
+	case "Group-Conversation.ReadWrite.All":
+		return azure.GroupConversationReadWriteAll
 	case "GroupMember.Read.All":
 		return azure.GroupMemberReadAll
 	case "GroupMember.ReadWrite.All":
@@ -2496,16 +2616,20 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.IdentityUserFlowReadWriteAll
 	case "IndustryData.ReadBasic.All":
 		return azure.IndustryDataReadBasicAll
+	case "InformationProtectionConfig.Read":
+		return azure.InformationProtectionConfigRead
 	case "InformationProtectionConfig.Read.All":
 		return azure.InformationProtectionConfigReadAll
 	case "InformationProtectionContent.Sign.All":
 		return azure.InformationProtectionContentSignAll
 	case "InformationProtectionContent.Write.All":
 		return azure.InformationProtectionContentWriteAll
-	case "InformationProtectionPolicy.Read.All":
-		return azure.InformationProtectionPolicyReadAll
 	case "InformationProtectionPolicy.Read":
 		return azure.InformationProtectionPolicyRead
+	case "InformationProtectionPolicy.Read.All":
+		return azure.InformationProtectionPolicyReadAll
+	case "LearningAssignedCourse.Read":
+		return azure.LearningAssignedCourseRead
 	case "LearningAssignedCourse.Read.All":
 		return azure.LearningAssignedCourseReadAll
 	case "LearningAssignedCourse.ReadWrite.All":
@@ -2514,6 +2638,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.LearningContentReadAll
 	case "LearningContent.ReadWrite.All":
 		return azure.LearningContentReadWriteAll
+	case "LearningProvider.Read":
+		return azure.LearningProviderRead
+	case "LearningProvider.ReadWrite":
+		return azure.LearningProviderReadWrite
+	case "LearningSelfInitiatedCourse.Read":
+		return azure.LearningSelfInitiatedCourseRead
 	case "LearningSelfInitiatedCourse.Read.All":
 		return azure.LearningSelfInitiatedCourseReadAll
 	case "LearningSelfInitiatedCourse.ReadWrite.All":
@@ -2532,32 +2662,50 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ListsSelectedOperationsSelected
 	case "Mail.Read":
 		return azure.MailRead
-	case "MailboxSettings.Read":
-		return azure.MailboxSettingsRead
 	case "Mail.Read.Shared":
 		return azure.MailReadShared
+	case "Mail.ReadBasic":
+		return azure.MailReadBasic
 	case "Mail.ReadBasic.All":
 		return azure.MailReadBasicAll
 	case "Mail.ReadBasic.Shared":
 		return azure.MailReadBasicShared
+	case "Mail.ReadWrite":
+		return azure.MailReadWrite
 	case "Mail.ReadWrite.Shared":
 		return azure.MailReadWriteShared
+	case "Mail.Send":
+		return azure.MailSend
 	case "Mail.Send.Shared":
 		return azure.MailSendShared
+	case "MailboxFolder.Read":
+		return azure.MailboxFolderRead
 	case "MailboxFolder.Read.All":
 		return azure.MailboxFolderReadAll
+	case "MailboxFolder.ReadWrite":
+		return azure.MailboxFolderReadWrite
 	case "MailboxFolder.ReadWrite.All":
 		return azure.MailboxFolderReadWriteAll
+	case "MailboxItem.ImportExport":
+		return azure.MailboxItemImportExport
 	case "MailboxItem.ImportExport.All":
 		return azure.MailboxItemImportExportAll
+	case "MailboxItem.Read":
+		return azure.MailboxItemRead
 	case "MailboxItem.Read.All":
 		return azure.MailboxItemReadAll
+	case "MailboxSettings.Read":
+		return azure.MailboxSettingsRead
+	case "MailboxSettings.ReadWrite":
+		return azure.MailboxSettingsReadWrite
 	case "ManagedTenants.Read.All":
 		return azure.ManagedTenantsReadAll
 	case "ManagedTenants.ReadWrite.All":
 		return azure.ManagedTenantsReadWriteAll
 	case "Member.Read.Hidden":
 		return azure.MemberReadHidden
+	case "MLModel.Execute.All":
+		return azure.MLModelExecuteAll
 	case "MultiTenantOrganization.Read.All":
 		return azure.MultiTenantOrganizationReadAll
 	case "MultiTenantOrganization.ReadBasic.All":
@@ -2570,8 +2718,6 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.MutualTlsOauthConfigurationReadWriteAll
 	case "MyFiles.Read":
 		return azure.MyFilesRead
-	case "MLModel.Execute.All":
-		return azure.MLModelExecuteAll
 	case "NetworkAccess.Read.All":
 		return azure.NetworkAccessReadAll
 	case "NetworkAccess.ReadWrite.All":
@@ -2584,8 +2730,14 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.NetworkAccessPolicyReadAll
 	case "NetworkAccessPolicy.ReadWrite.All":
 		return azure.NetworkAccessPolicyReadWriteAll
+	case "Notes.Create":
+		return azure.NotesCreate
+	case "Notes.Read":
+		return azure.NotesRead
 	case "Notes.Read.All":
 		return azure.NotesReadAll
+	case "Notes.ReadWrite":
+		return azure.NotesReadWrite
 	case "Notes.ReadWrite.All":
 		return azure.NotesReadWriteAll
 	case "Notes.ReadWrite.CreatedByApp":
@@ -2608,8 +2760,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.OnlineMeetingRecordingReadAll
 	case "OnlineMeetingTranscript.Read.All":
 		return azure.OnlineMeetingTranscriptReadAll
+	case "OnlineMeetings.Read":
+		return azure.OnlineMeetingsRead
 	case "OnlineMeetings.Read.All":
 		return azure.OnlineMeetingsReadAll
+	case "OnlineMeetings.ReadWrite":
+		return azure.OnlineMeetingsReadWrite
 	case "OnlineMeetings.ReadWrite.All":
 		return azure.OnlineMeetingsReadWriteAll
 	case "OrgContact.Read.All":
@@ -2634,6 +2790,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.PendingExternalUserProfileReadAll
 	case "PendingExternalUserProfile.ReadWrite.All":
 		return azure.PendingExternalUserProfileReadWriteAll
+	case "People.Read":
+		return azure.PeopleRead
 	case "People.Read.All":
 		return azure.PeopleReadAll
 	case "PeopleSettings.Read.All":
@@ -2698,8 +2856,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.PolicyReadWriteSecurityDefaults
 	case "Policy.ReadWrite.TrustFramework":
 		return azure.PolicyReadWriteTrustFramework
+	case "Presence.Read":
+		return azure.PresenceRead
 	case "Presence.Read.All":
 		return azure.PresenceReadAll
+	case "Presence.ReadWrite":
+		return azure.PresenceReadWrite
 	case "Presence.ReadWrite.All":
 		return azure.PresenceReadWriteAll
 	case "PrintConnector.Read.All":
@@ -2710,14 +2872,20 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.PrintJobCreate
 	case "PrintJob.Manage.All":
 		return azure.PrintJobManageAll
+	case "PrintJob.Read":
+		return azure.PrintJobRead
 	case "PrintJob.Read.All":
 		return azure.PrintJobReadAll
 	case "PrintJob.ReadBasic":
 		return azure.PrintJobReadBasic
 	case "PrintJob.ReadBasic.All":
 		return azure.PrintJobReadBasicAll
+	case "PrintJob.ReadWrite":
+		return azure.PrintJobReadWrite
 	case "PrintJob.ReadWrite.All":
 		return azure.PrintJobReadWriteAll
+	case "PrintJob.ReadWriteBasic":
+		return azure.PrintJobReadWriteBasic
 	case "PrintJob.ReadWriteBasic.All":
 		return azure.PrintJobReadWriteBasicAll
 	case "PrintSettings.Read.All":
@@ -2726,6 +2894,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.PrintSettingsReadWriteAll
 	case "PrintTaskDefinition.ReadWrite.All":
 		return azure.PrintTaskDefinitionReadWriteAll
+	case "Printer.Create":
+		return azure.PrinterCreate
 	case "Printer.FullControl.All":
 		return azure.PrinterFullControlAll
 	case "Printer.Read.All":
@@ -2794,10 +2964,16 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ReportsReadAll
 	case "Report.Read.All":
 		return azure.ReportReadAll
+	case "ResourceSpecificPermissionGrant.ReadForChat":
+		return azure.ResourceSpecificPermissionGrantReadForChat
 	case "ResourceSpecificPermissionGrant.ReadForChat.All":
 		return azure.ResourceSpecificPermissionGrantReadForChatAll
+	case "ResourceSpecificPermissionGrant.ReadForTeam":
+		return azure.ResourceSpecificPermissionGrantReadForTeam
 	case "ResourceSpecificPermissionGrant.ReadForTeam.All":
 		return azure.ResourceSpecificPermissionGrantReadForTeamAll
+	case "ResourceSpecificPermissionGrant.ReadForUser":
+		return azure.ResourceSpecificPermissionGrantReadForUser
 	case "ResourceSpecificPermissionGrant.ReadForUser.All":
 		return azure.ResourceSpecificPermissionGrantReadForUserAll
 	case "RiskPreventionProviders.Read.All":
@@ -2846,6 +3022,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.RoleManagementPolicyReadWriteAzureADGroup
 	case "RoleManagementPolicy.ReadWrite.Directory":
 		return azure.RoleManagementPolicyReadWriteDirectory
+	case "SMTP.Send":
+		return azure.SMTPSend
 	case "Schedule.Read.All":
 		return azure.ScheduleReadAll
 	case "Schedule.ReadWrite.All":
@@ -2896,14 +3074,20 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.SecurityIncidentReadAll
 	case "SecurityIncident.ReadWrite.All":
 		return azure.SecurityIncidentReadWriteAll
+	case "SensitivityLabel.Evaluate":
+		return azure.SensitivityLabelEvaluate
 	case "SensitivityLabel.Evaluate.All":
 		return azure.SensitivityLabelEvaluateAll
+	case "SensitivityLabel.Read":
+		return azure.SensitivityLabelRead
 	case "SensitivityLabels.Read.All":
 		return azure.SensitivityLabelsReadAll
 	case "ServiceHealth.Read.All":
 		return azure.ServiceHealthReadAll
 	case "ServiceMessage.Read.All":
 		return azure.ServiceMessageReadAll
+	case "ServiceMessageViewpoint.Write":
+		return azure.ServiceMessageViewpointWrite
 	case "ServicePrincipalEndpoint.Read.All":
 		return azure.ServicePrincipalEndpointReadAll
 	case "ServicePrincipalEndpoint.ReadWrite.All":
@@ -2912,8 +3096,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.SharePointTenantSettingsReadAll
 	case "SharePointTenantSettings.ReadWrite.All":
 		return azure.SharePointTenantSettingsReadWriteAll
+	case "ShortNotes.Read":
+		return azure.ShortNotesRead
 	case "ShortNotes.Read.All":
 		return azure.ShortNotesReadAll
+	case "ShortNotes.ReadWrite":
+		return azure.ShortNotesReadWrite
 	case "ShortNotes.ReadWrite.All":
 		return azure.ShortNotesReadWriteAll
 	case "SignInIdentifier.Read.All":
@@ -2930,6 +3118,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.SitesReadAll
 	case "Sites.ReadWrite.All":
 		return azure.SitesReadWriteAll
+	case "Sites.Selected":
+		return azure.SitesSelected
 	case "SpiffeTrustDomain.Read.All":
 		return azure.SpiffeTrustDomainReadAll
 	case "SpiffeTrustDomain.ReadWrite.All":
@@ -2946,14 +3136,20 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.SynchronizationReadAll
 	case "Synchronization.ReadWrite.All":
 		return azure.SynchronizationReadWriteAll
+	case "Tasks.Read":
+		return azure.TasksRead
 	case "Tasks.Read.All":
 		return azure.TasksReadAll
 	case "Tasks.Read.Shared":
 		return azure.TasksReadShared
+	case "Tasks.ReadWrite":
+		return azure.TasksReadWrite
 	case "Tasks.ReadWrite.All":
 		return azure.TasksReadWriteAll
 	case "Tasks.ReadWrite.Shared":
 		return azure.TasksReadWriteShared
+	case "Team.Create":
+		return azure.TeamCreate
 	case "Team.ReadBasic.All":
 		return azure.TeamReadBasicAll
 	case "TeamMember.Read.All":
@@ -2966,84 +3162,148 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.TeamSettingsReadAll
 	case "TeamSettings.ReadWrite.All":
 		return azure.TeamSettingsReadWriteAll
+	case "TeamTemplates.Read":
+		return azure.TeamTemplatesRead
 	case "TeamTemplates.Read.All":
 		return azure.TeamTemplatesReadAll
+	case "TeamsActivity.Read":
+		return azure.TeamsActivityRead
 	case "TeamsActivity.Read.All":
 		return azure.TeamsActivityReadAll
-	case "TeamsAppInstallation.ReadWriteSelfForTeam":
-		return azure.TeamsAppInstallationReadWriteSelfForTeam
+	case "TeamsActivity.Send":
+		return azure.TeamsActivitySend
+	case "TeamsAppInstallation.ManageSelectedForChat":
+		return azure.TeamsAppInstallationManageSelectedForChat
 	case "TeamsAppInstallation.ManageSelectedForChat.All":
 		return azure.TeamsAppInstallationManageSelectedForChatAll
+	case "TeamsAppInstallation.ManageSelectedForTeam":
+		return azure.TeamsAppInstallationManageSelectedForTeam
 	case "TeamsAppInstallation.ManageSelectedForTeam.All":
 		return azure.TeamsAppInstallationManageSelectedForTeamAll
+	case "TeamsAppInstallation.ManageSelectedForUser":
+		return azure.TeamsAppInstallationManageSelectedForUser
 	case "TeamsAppInstallation.ManageSelectedForUser.All":
 		return azure.TeamsAppInstallationManageSelectedForUserAll
 	case "TeamsAppInstallation.Read.All":
 		return azure.TeamsAppInstallationReadAll
+	case "TeamsAppInstallation.ReadForChat":
+		return azure.TeamsAppInstallationReadForChat
 	case "TeamsAppInstallation.ReadForChat.All":
 		return azure.TeamsAppInstallationReadForChatAll
+	case "TeamsAppInstallation.ReadForTeam":
+		return azure.TeamsAppInstallationReadForTeam
 	case "TeamsAppInstallation.ReadForTeam.All":
 		return azure.TeamsAppInstallationReadForTeamAll
+	case "TeamsAppInstallation.ReadForUser":
+		return azure.TeamsAppInstallationReadForUser
 	case "TeamsAppInstallation.ReadForUser.All":
 		return azure.TeamsAppInstallationReadForUserAll
+	case "TeamsAppInstallation.ReadSelectedForChat":
+		return azure.TeamsAppInstallationReadSelectedForChat
 	case "TeamsAppInstallation.ReadSelectedForChat.All":
 		return azure.TeamsAppInstallationReadSelectedForChatAll
+	case "TeamsAppInstallation.ReadSelectedForTeam":
+		return azure.TeamsAppInstallationReadSelectedForTeam
 	case "TeamsAppInstallation.ReadSelectedForTeam.All":
 		return azure.TeamsAppInstallationReadSelectedForTeamAll
+	case "TeamsAppInstallation.ReadSelectedForUser":
+		return azure.TeamsAppInstallationReadSelectedForUser
 	case "TeamsAppInstallation.ReadSelectedForUser.All":
 		return azure.TeamsAppInstallationReadSelectedForUserAll
+	case "TeamsAppInstallation.ReadWriteAndConsentForChat":
+		return azure.TeamsAppInstallationReadWriteAndConsentForChat
 	case "TeamsAppInstallation.ReadWriteAndConsentForChat.All":
 		return azure.TeamsAppInstallationReadWriteAndConsentForChatAll
+	case "TeamsAppInstallation.ReadWriteAndConsentForTeam":
+		return azure.TeamsAppInstallationReadWriteAndConsentForTeam
 	case "TeamsAppInstallation.ReadWriteAndConsentForTeam.All":
 		return azure.TeamsAppInstallationReadWriteAndConsentForTeamAll
+	case "TeamsAppInstallation.ReadWriteAndConsentForUser":
+		return azure.TeamsAppInstallationReadWriteAndConsentForUser
 	case "TeamsAppInstallation.ReadWriteAndConsentForUser.All":
 		return azure.TeamsAppInstallationReadWriteAndConsentForUserAll
+	case "TeamsAppInstallation.ReadWriteAndConsentSelfForChat":
+		return azure.TeamsAppInstallationReadWriteAndConsentSelfForChat
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForChat.All":
 		return azure.TeamsAppInstallationReadWriteAndConsentSelfForChatAll
+	case "TeamsAppInstallation.ReadWriteAndConsentSelfForTeam":
+		return azure.TeamsAppInstallationReadWriteAndConsentSelfForTeam
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForTeam.All":
 		return azure.TeamsAppInstallationReadWriteAndConsentSelfForTeamAll
+	case "TeamsAppInstallation.ReadWriteAndConsentSelfForUser":
+		return azure.TeamsAppInstallationReadWriteAndConsentSelfForUser
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForUser.All":
 		return azure.TeamsAppInstallationReadWriteAndConsentSelfForUserAll
+	case "TeamsAppInstallation.ReadWriteForChat":
+		return azure.TeamsAppInstallationReadWriteForChat
 	case "TeamsAppInstallation.ReadWriteForChat.All":
 		return azure.TeamsAppInstallationReadWriteForChatAll
+	case "TeamsAppInstallation.ReadWriteForTeam":
+		return azure.TeamsAppInstallationReadWriteForTeam
 	case "TeamsAppInstallation.ReadWriteForTeam.All":
 		return azure.TeamsAppInstallationReadWriteForTeamAll
+	case "TeamsAppInstallation.ReadWriteForUser":
+		return azure.TeamsAppInstallationReadWriteForUser
 	case "TeamsAppInstallation.ReadWriteForUser.All":
 		return azure.TeamsAppInstallationReadWriteForUserAll
+	case "TeamsAppInstallation.ReadWriteSelectedForChat":
+		return azure.TeamsAppInstallationReadWriteSelectedForChat
 	case "TeamsAppInstallation.ReadWriteSelectedForChat.All":
 		return azure.TeamsAppInstallationReadWriteSelectedForChatAll
+	case "TeamsAppInstallation.ReadWriteSelectedForTeam":
+		return azure.TeamsAppInstallationReadWriteSelectedForTeam
 	case "TeamsAppInstallation.ReadWriteSelectedForTeam.All":
 		return azure.TeamsAppInstallationReadWriteSelectedForTeamAll
+	case "TeamsAppInstallation.ReadWriteSelectedForUser":
+		return azure.TeamsAppInstallationReadWriteSelectedForUser
 	case "TeamsAppInstallation.ReadWriteSelectedForUser.All":
 		return azure.TeamsAppInstallationReadWriteSelectedForUserAll
+	case "TeamsAppInstallation.ReadWriteSelfForChat":
+		return azure.TeamsAppInstallationReadWriteSelfForChat
 	case "TeamsAppInstallation.ReadWriteSelfForChat.All":
 		return azure.TeamsAppInstallationReadWriteSelfForChatAll
+	case "TeamsAppInstallation.ReadWriteSelfForTeam":
+		return azure.TeamsAppInstallationReadWriteSelfForTeam
 	case "TeamsAppInstallation.ReadWriteSelfForTeam.All":
 		return azure.TeamsAppInstallationReadWriteSelfForTeamAll
+	case "TeamsAppInstallation.ReadWriteSelfForUser":
+		return azure.TeamsAppInstallationReadWriteSelfForUser
 	case "TeamsAppInstallation.ReadWriteSelfForUser.All":
 		return azure.TeamsAppInstallationReadWriteSelfForUserAll
 	case "TeamsPolicyUserAssign.ReadWrite.All":
 		return azure.TeamsPolicyUserAssignReadWriteAll
 	case "TeamsResourceAccount.Read.All":
 		return azure.TeamsResourceAccountReadAll
+	case "TeamsTab.Create":
+		return azure.TeamsTabCreate
 	case "TeamsTab.Read.All":
 		return azure.TeamsTabReadAll
 	case "TeamsTab.ReadWrite.All":
 		return azure.TeamsTabReadWriteAll
+	case "TeamsTab.ReadWriteForChat":
+		return azure.TeamsTabReadWriteForChat
 	case "TeamsTab.ReadWriteForChat.All":
 		return azure.TeamsTabReadWriteForChatAll
+	case "TeamsTab.ReadWriteForTeam":
+		return azure.TeamsTabReadWriteForTeam
 	case "TeamsTab.ReadWriteForTeam.All":
 		return azure.TeamsTabReadWriteForTeamAll
+	case "TeamsTab.ReadWriteForUser":
+		return azure.TeamsTabReadWriteForUser
 	case "TeamsTab.ReadWriteForUser.All":
 		return azure.TeamsTabReadWriteForUserAll
+	case "TeamsTab.ReadWriteSelfForChat":
+		return azure.TeamsTabReadWriteSelfForChat
 	case "TeamsTab.ReadWriteSelfForChat.All":
 		return azure.TeamsTabReadWriteSelfForChatAll
+	case "TeamsTab.ReadWriteSelfForTeam":
+		return azure.TeamsTabReadWriteSelfForTeam
 	case "TeamsTab.ReadWriteSelfForTeam.All":
 		return azure.TeamsTabReadWriteSelfForTeamAll
+	case "TeamsTab.ReadWriteSelfForUser":
+		return azure.TeamsTabReadWriteSelfForUser
 	case "TeamsTab.ReadWriteSelfForUser.All":
 		return azure.TeamsTabReadWriteSelfForUserAll
-	case "TeamsTab.Create":
-		return azure.TeamsTabCreate
 	case "TeamsTelephoneNumber.Read.All":
 		return azure.TeamsTelephoneNumberReadAll
 	case "TeamsTelephoneNumber.ReadWrite.All":
@@ -3062,8 +3322,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.TeamworkDeviceReadAll
 	case "TeamworkDevice.ReadWrite.All":
 		return azure.TeamworkDeviceReadWriteAll
+	case "TeamworkTag.Read":
+		return azure.TeamworkTagRead
 	case "TeamworkTag.Read.All":
 		return azure.TeamworkTagReadAll
+	case "TeamworkTag.ReadWrite":
+		return azure.TeamworkTagReadWrite
 	case "TeamworkTag.ReadWrite.All":
 		return azure.TeamworkTagReadWriteAll
 	case "TeamworkUserInteraction.Read.All":
@@ -3084,8 +3348,12 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.ThreatIndicatorsReadWriteOwnedBy
 	case "ThreatIntelligence.Read.All":
 		return azure.ThreatIntelligenceReadAll
+	case "ThreatSubmission.Read":
+		return azure.ThreatSubmissionRead
 	case "ThreatSubmission.Read.All":
 		return azure.ThreatSubmissionReadAll
+	case "ThreatSubmission.ReadWrite":
+		return azure.ThreatSubmissionReadWrite
 	case "ThreatSubmission.ReadWrite.All":
 		return azure.ThreatSubmissionReadWriteAll
 	case "ThreatSubmissionPolicy.ReadWrite.All":
@@ -3114,6 +3382,8 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.UserReadAll
 	case "User.ReadBasic.All":
 		return azure.UserReadBasicAll
+	case "User.ReadWrite":
+		return azure.UserReadWrite
 	case "User.ReadWrite.All":
 		return azure.UserReadWriteAll
 	case "User.ReadWrite.CrossCloud":
@@ -3122,18 +3392,26 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.UserRevokeSessionsAll
 	case "UserActivity.ReadWrite.CreatedByApp":
 		return azure.UserActivityReadWriteCreatedByApp
+	case "UserAuthenticationMethod.Read":
+		return azure.UserAuthenticationMethodRead
 	case "UserAuthenticationMethod.Read.All":
 		return azure.UserAuthenticationMethodReadAll
+	case "UserAuthenticationMethod.ReadWrite":
+		return azure.UserAuthenticationMethodReadWrite
 	case "UserAuthenticationMethod.ReadWrite.All":
 		return azure.UserAuthenticationMethodReadWriteAll
+	case "UserCloudClipboard.Read":
+		return azure.UserCloudClipboardRead
 	case "UserNotification.ReadWrite.CreatedByApp":
 		return azure.UserNotificationReadWriteCreatedByApp
-	case "UserShiftPreferences.Read.All":
-		return azure.UserShiftPreferencesReadAll
 	case "UserState.ReadWrite.All":
 		return azure.UserStateReadWriteAll
+	case "UserShiftPreferences.Read.All":
+		return azure.UserShiftPreferencesReadAll
 	case "UserShiftPreferences.ReadWrite.All":
 		return azure.UserShiftPreferencesReadWriteAll
+	case "UserTeamwork.Read":
+		return azure.UserTeamworkRead
 	case "UserTeamwork.Read.All":
 		return azure.UserTeamworkReadAll
 	case "UserTimelineActivity.Write.CreatedByApp":
@@ -3142,302 +3420,28 @@ func getRelTypeForScope(scope string) graph.Kind {
 		return azure.UserWindowsSettingsReadAll
 	case "UserWindowsSettings.ReadWrite.All":
 		return azure.UserWindowsSettingsReadWriteAll
+	case "VirtualAppointment.Read":
+		return azure.VirtualAppointmentRead
 	case "VirtualAppointment.Read.All":
 		return azure.VirtualAppointmentReadAll
+	case "VirtualAppointment.ReadWrite":
+		return azure.VirtualAppointmentReadWrite
 	case "VirtualAppointment.ReadWrite.All":
 		return azure.VirtualAppointmentReadWriteAll
+	case "VirtualAppointmentNotification.Send":
+		return azure.VirtualAppointmentNotificationSend
+	case "VirtualEvent.Read":
+		return azure.VirtualEventRead
 	case "VirtualEvent.Read.All":
 		return azure.VirtualEventReadAll
+	case "VirtualEvent.ReadWrite":
+		return azure.VirtualEventReadWrite
 	case "WindowsUpdates.ReadWrite.All":
 		return azure.WindowsUpdatesReadWriteAll
 	case "WorkforceIntegration.Read.All":
 		return azure.WorkforceIntegrationReadAll
 	case "WorkforceIntegration.ReadWrite.All":
 		return azure.WorkforceIntegrationReadWriteAll
-	case "AgentApplication.Create":
-		return azure.AgentApplicationCreate
-	case "AgentIdentity.Create":
-		return azure.AgentIdentityCreate
-	case "AgreementAcceptance.Read":
-		return azure.AgreementAcceptanceRead
-	case "AiEnterpriseInteraction.Read":
-		return azure.AiEnterpriseInteractionRead
-	case "Analytics.Read":
-		return azure.AnalyticsRead
-	case "ApprovalSolution.Read":
-		return azure.ApprovalSolutionRead
-	case "ApprovalSolution.ReadWrite":
-		return azure.ApprovalSolutionReadWrite
-	case "ApprovalSolutionResponse.ReadWrite":
-		return azure.ApprovalSolutionResponseReadWrite
-	case "AuditActivity.Read":
-		return azure.AuditActivityRead
-	case "AuditActivity.Write":
-		return azure.AuditActivityWrite
-	case "Calendars.Read":
-		return azure.CalendarsRead
-	case "Calendars.ReadBasic":
-		return azure.CalendarsReadBasic
-	case "Calendars.ReadWrite":
-		return azure.CalendarsReadWrite
-	case "CallDelegation.Read":
-		return azure.CallDelegationRead
-	case "CallDelegation.ReadWrite":
-		return azure.CallDelegationReadWrite
-	case "CallEvents.Read":
-		return azure.CallEventsRead
-	case "Channel.Create":
-		return azure.ChannelCreate
-	case "ChannelMessage.Edit":
-		return azure.ChannelMessageEdit
-	case "ChannelMessage.ReadWrite":
-		return azure.ChannelMessageReadWrite
-	case "ChannelMessage.Send":
-		return azure.ChannelMessageSend
-	case "Chat.Create":
-		return azure.ChatCreate
-	case "Chat.Read":
-		return azure.ChatRead
-	case "Chat.ReadBasic":
-		return azure.ChatReadBasic
-	case "Chat.ReadWrite":
-		return azure.ChatReadWrite
-	case "ChatMember.ReadWrite":
-		return azure.ChatMemberReadWrite
-	case "ChatMessage.Read":
-		return azure.ChatMessageRead
-	case "ChatMessage.Send":
-		return azure.ChatMessageSend
-	case "ConsentRequest.Create":
-		return azure.ConsentRequestCreate
-	case "ConsentRequest.Read":
-		return azure.ConsentRequestRead
-	case "Contacts.Read":
-		return azure.ContactsRead
-	case "Contacts.ReadWrite":
-		return azure.ContactsReadWrite
-	case "ContentActivity.Read":
-		return azure.ContentActivityRead
-	case "ContentActivity.Write":
-		return azure.ContentActivityWrite
-	case "CrossTenantUserProfileSharing.Read":
-		return azure.CrossTenantUserProfileSharingRead
-	case "CrossTenantUserProfileSharing.ReadWrite":
-		return azure.CrossTenantUserProfileSharingReadWrite
-	case "Device.Command":
-		return azure.DeviceCommand
-	case "Device.CreateFromOwnedTemplate":
-		return azure.DeviceCreateFromOwnedTemplate
-	case "Device.Read":
-		return azure.DeviceRead
-	case "DeviceTemplate.Create":
-		return azure.DeviceTemplateCreate
-	case "EduAdministration.Read":
-		return azure.EduAdministrationRead
-	case "EduAdministration.ReadWrite":
-		return azure.EduAdministrationReadWrite
-	case "EduAssignments.Read":
-		return azure.EduAssignmentsRead
-	case "EduAssignments.ReadBasic":
-		return azure.EduAssignmentsReadBasic
-	case "EduAssignments.ReadWrite":
-		return azure.EduAssignmentsReadWrite
-	case "EduAssignments.ReadWriteBasic":
-		return azure.EduAssignmentsReadWriteBasic
-	case "EduCurricula.Read":
-		return azure.EduCurriculaRead
-	case "EduCurricula.ReadWrite":
-		return azure.EduCurriculaReadWrite
-	case "EduRoster.Read":
-		return azure.EduRosterRead
-	case "EduRoster.ReadWrite":
-		return azure.EduRosterReadWrite
-	case "EngagementRole.Read":
-		return azure.EngagementRoleRead
-	case "Family.Read":
-		return azure.FamilyRead
-	case "FileIngestion.Ingest":
-		return azure.FileIngestionIngest
-	case "FileIngestionHybridOnboarding.Manage":
-		return azure.FileIngestionHybridOnboardingManage
-	case "FileStorageContainer.Selected":
-		return azure.FileStorageContainerSelected
-	case "Files.Read":
-		return azure.FilesRead
-	case "Files.ReadWrite":
-		return azure.FilesReadWrite
-	case "Group.Create":
-		return azure.GroupCreate
-	case "Group-Conversation.ReadWrite.All":
-		return azure.GroupConversationReadWriteAll
-	case "InformationProtectionConfig.Read":
-		return azure.InformationProtectionConfigRead
-	case "LearningAssignedCourse.Read":
-		return azure.LearningAssignedCourseRead
-	case "LearningProvider.Read":
-		return azure.LearningProviderRead
-	case "LearningProvider.ReadWrite":
-		return azure.LearningProviderReadWrite
-	case "LearningSelfInitiatedCourse.Read":
-		return azure.LearningSelfInitiatedCourseRead
-	case "Mail.ReadBasic":
-		return azure.MailReadBasic
-	case "Mail.ReadWrite":
-		return azure.MailReadWrite
-	case "Mail.Send":
-		return azure.MailSend
-	case "MailboxFolder.Read":
-		return azure.MailboxFolderRead
-	case "MailboxFolder.ReadWrite":
-		return azure.MailboxFolderReadWrite
-	case "MailboxItem.ImportExport":
-		return azure.MailboxItemImportExport
-	case "MailboxItem.Read":
-		return azure.MailboxItemRead
-	case "MailboxSettings.ReadWrite":
-		return azure.MailboxSettingsReadWrite
-	case "Notes.Create":
-		return azure.NotesCreate
-	case "Notes.Read":
-		return azure.NotesRead
-	case "Notes.ReadWrite":
-		return azure.NotesReadWrite
-	case "OnlineMeetings.Read":
-		return azure.OnlineMeetingsRead
-	case "OnlineMeetings.ReadWrite":
-		return azure.OnlineMeetingsReadWrite
-	case "People.Read":
-		return azure.PeopleRead
-	case "Presence.Read":
-		return azure.PresenceRead
-	case "Presence.ReadWrite":
-		return azure.PresenceReadWrite
-	case "PrintJob.Read":
-		return azure.PrintJobRead
-	case "PrintJob.ReadWrite":
-		return azure.PrintJobReadWrite
-	case "PrintJob.ReadWriteBasic":
-		return azure.PrintJobReadWriteBasic
-	case "Printer.Create":
-		return azure.PrinterCreate
-	case "ResourceSpecificPermissionGrant.ReadForChat":
-		return azure.ResourceSpecificPermissionGrantReadForChat
-	case "ResourceSpecificPermissionGrant.ReadForTeam":
-		return azure.ResourceSpecificPermissionGrantReadForTeam
-	case "ResourceSpecificPermissionGrant.ReadForUser":
-		return azure.ResourceSpecificPermissionGrantReadForUser
-	case "SMTP.Send":
-		return azure.SMTPSend
-	case "SensitivityLabel.Evaluate":
-		return azure.SensitivityLabelEvaluate
-	case "SensitivityLabel.Read":
-		return azure.SensitivityLabelRead
-	case "ServiceMessageViewpoint.Write":
-		return azure.ServiceMessageViewpointWrite
-	case "ShortNotes.Read":
-		return azure.ShortNotesRead
-	case "ShortNotes.ReadWrite":
-		return azure.ShortNotesReadWrite
-	case "Sites.Selected":
-		return azure.SitesSelected
-	case "Tasks.Read":
-		return azure.TasksRead
-	case "Tasks.ReadWrite":
-		return azure.TasksReadWrite
-	case "Team.Create":
-		return azure.TeamCreate
-	case "TeamTemplates.Read":
-		return azure.TeamTemplatesRead
-	case "TeamsActivity.Read":
-		return azure.TeamsActivityRead
-	case "TeamsActivity.Send":
-		return azure.TeamsActivitySend
-	case "TeamsAppInstallation.ManageSelectedForChat":
-		return azure.TeamsAppInstallationManageSelectedForChat
-	case "TeamsAppInstallation.ManageSelectedForTeam":
-		return azure.TeamsAppInstallationManageSelectedForTeam
-	case "TeamsAppInstallation.ManageSelectedForUser":
-		return azure.TeamsAppInstallationManageSelectedForUser
-	case "TeamsAppInstallation.ReadForChat":
-		return azure.TeamsAppInstallationReadForChat
-	case "TeamsAppInstallation.ReadForTeam":
-		return azure.TeamsAppInstallationReadForTeam
-	case "TeamsAppInstallation.ReadForUser":
-		return azure.TeamsAppInstallationReadForUser
-	case "TeamsAppInstallation.ReadSelectedForChat":
-		return azure.TeamsAppInstallationReadSelectedForChat
-	case "TeamsAppInstallation.ReadSelectedForTeam":
-		return azure.TeamsAppInstallationReadSelectedForTeam
-	case "TeamsAppInstallation.ReadSelectedForUser":
-		return azure.TeamsAppInstallationReadSelectedForUser
-	case "TeamsAppInstallation.ReadWriteAndConsentForChat":
-		return azure.TeamsAppInstallationReadWriteAndConsentForChat
-	case "TeamsAppInstallation.ReadWriteAndConsentForTeam":
-		return azure.TeamsAppInstallationReadWriteAndConsentForTeam
-	case "TeamsAppInstallation.ReadWriteAndConsentForUser":
-		return azure.TeamsAppInstallationReadWriteAndConsentForUser
-	case "TeamsAppInstallation.ReadWriteAndConsentSelfForChat":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForChat
-	case "TeamsAppInstallation.ReadWriteAndConsentSelfForTeam":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForTeam
-	case "TeamsAppInstallation.ReadWriteAndConsentSelfForUser":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForUser
-	case "TeamsAppInstallation.ReadWriteForChat":
-		return azure.TeamsAppInstallationReadWriteForChat
-	case "TeamsAppInstallation.ReadWriteForTeam":
-		return azure.TeamsAppInstallationReadWriteForTeam
-	case "TeamsAppInstallation.ReadWriteForUser":
-		return azure.TeamsAppInstallationReadWriteForUser
-	case "TeamsAppInstallation.ReadWriteSelectedForChat":
-		return azure.TeamsAppInstallationReadWriteSelectedForChat
-	case "TeamsAppInstallation.ReadWriteSelectedForTeam":
-		return azure.TeamsAppInstallationReadWriteSelectedForTeam
-	case "TeamsAppInstallation.ReadWriteSelectedForUser":
-		return azure.TeamsAppInstallationReadWriteSelectedForUser
-	case "TeamsAppInstallation.ReadWriteSelfForChat":
-		return azure.TeamsAppInstallationReadWriteSelfForChat
-	case "TeamsAppInstallation.ReadWriteSelfForUser":
-		return azure.TeamsAppInstallationReadWriteSelfForUser
-	case "TeamsTab.ReadWriteForChat":
-		return azure.TeamsTabReadWriteForChat
-	case "TeamsTab.ReadWriteForTeam":
-		return azure.TeamsTabReadWriteForTeam
-	case "TeamsTab.ReadWriteForUser":
-		return azure.TeamsTabReadWriteForUser
-	case "TeamsTab.ReadWriteSelfForChat":
-		return azure.TeamsTabReadWriteSelfForChat
-	case "TeamsTab.ReadWriteSelfForTeam":
-		return azure.TeamsTabReadWriteSelfForTeam
-	case "TeamsTab.ReadWriteSelfForUser":
-		return azure.TeamsTabReadWriteSelfForUser
-	case "TeamworkTag.Read":
-		return azure.TeamworkTagRead
-	case "TeamworkTag.ReadWrite":
-		return azure.TeamworkTagReadWrite
-	case "ThreatSubmission.Read":
-		return azure.ThreatSubmissionRead
-	case "ThreatSubmission.ReadWrite":
-		return azure.ThreatSubmissionReadWrite
-	case "User.ReadWrite":
-		return azure.UserReadWrite
-	case "UserAuthenticationMethod.Read":
-		return azure.UserAuthenticationMethodRead
-	case "UserAuthenticationMethod.ReadWrite":
-		return azure.UserAuthenticationMethodReadWrite
-	case "UserCloudClipboard.Read":
-		return azure.UserCloudClipboardRead
-	case "UserTeamwork.Read":
-		return azure.UserTeamworkRead
-	case "VirtualAppointment.Read":
-		return azure.VirtualAppointmentRead
-	case "VirtualAppointment.ReadWrite":
-		return azure.VirtualAppointmentReadWrite
-	case "VirtualAppointmentNotification.Send":
-		return azure.VirtualAppointmentNotificationSend
-	case "VirtualEvent.Read":
-		return azure.VirtualEventRead
-	case "VirtualEvent.ReadWrite":
-		return azure.VirtualEventReadWrite
 	default:
 		return graph.StringKind(scope)
 	}
@@ -3468,12 +3472,12 @@ func ConvertAzureOAuth2PermissionGrantToRels(data OAuth2PermissionGrant) []Inges
 					Kind:  azure.User,
 				},
 				IngestibleEndpoint{
-					Value: strings.ToUpper(data.TenantId),
+					Value: strings.ToUpper(data.ClientId),
 					Kind:  azure.Tenant,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},
-					RelType:  getRelTypeForScope(scope),
+					RelType:  GetPermissionConstant(scope),
 				},
 			))
 		}
@@ -3488,12 +3492,12 @@ func ConvertAzureOAuth2PermissionGrantToRels(data OAuth2PermissionGrant) []Inges
 					Kind:  azure.Tenant,
 				},
 				IngestibleEndpoint{
-					Value: strings.ToUpper(data.ResourceId),
+					Value: strings.ToUpper(data.TenantId),
 					Kind:  azure.ServicePrincipal,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},
-					RelType:  getRelTypeForScope(scope),
+					RelType:  GetPermissionConstant(scope),
 				},
 			))
 		}
