@@ -372,6 +372,10 @@ export const CommonSearches: CommonSearchType[] = [
                 id: undefined,
                 query: `MATCH (u:User)\nWHERE (u:${TAG_TIER_ZERO_AGT}) AND u.enabled = true\nAND u.pwdneverexpires = true\nRETURN u\nLIMIT 100`,
             },
+            {
+                description: 'Tier Zero principals without AdminSDHolder protection',
+                cypher: `MATCH (n:Base)\nWHERE (n:${TAG_TIER_ZERO_AGT})\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+            },
         ],
     },
     {
@@ -379,10 +383,11 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
+                
                 name: 'All Global Administrators',
                 description: '',
                 id: undefined,
-                query: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(:AZBase)-[:AZHasRole*1..]->(t:AZRole)\nWHERE t.name =~ '(?i)Global Administrator.*'\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'All members of high privileged roles',

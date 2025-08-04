@@ -472,6 +472,7 @@ export enum ActiveDirectoryKindProperties {
     LDAPSAvailable = 'ldapsavailable',
     LDAPSEPA = 'ldapsepa',
     IsDC = 'isdc',
+    IsReadOnlyDC = 'isreadonlydc',
     HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
     HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
@@ -486,6 +487,7 @@ export enum ActiveDirectoryKindProperties {
     Transitive = 'transitive',
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
+    AdminSDHolderProtected = 'adminsdholderprotected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -727,6 +729,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'LDAPS EPA';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
+        case ActiveDirectoryKindProperties.IsReadOnlyDC:
+            return 'Read-Only DC';
         case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
             return 'HTTP Enrollment Endpoints';
         case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
@@ -755,6 +759,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Scope';
         case ActiveDirectoryKindProperties.NetBIOS:
             return 'NetBIOS';
+        case ActiveDirectoryKindProperties.AdminSDHolderProtected:
+            return 'AdminSDHolder Protected';
         default:
             return undefined;
     }

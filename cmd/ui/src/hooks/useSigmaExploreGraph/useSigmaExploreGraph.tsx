@@ -30,17 +30,25 @@ export const normalizeGraphDataForSigma = (
     }
 };
 
-export const useSigmaExploreGraph = (includeProperties: boolean) => {
-    const graphQuery = useExploreGraph({ includeProperties });
+export const useSigmaExploreGraph = () => {
+    const graphQuery = useExploreGraph();
     const normalizedGraphData = useMemo(() => normalizeGraphDataForSigma(graphQuery.data), [graphQuery.data]);
-
     const castGraphData = graphQuery?.data?.data as GraphData;
+
+    const nodeKeys = useMemo(
+        () =>
+            Array.isArray(castGraphData?.node_keys)
+                ? ['nodetype', 'isTierZero'].concat(castGraphData?.node_keys)
+                : undefined,
+        [castGraphData?.node_keys]
+    );
+
     // return the full query so we can know loading/error state, and use react-query tools. But override the data field with the normalized value
     return {
         ...graphQuery,
         data: {
             nodes: normalizedGraphData,
-            node_keys: castGraphData?.node_keys,
+            node_keys: nodeKeys,
             rawNodes: castGraphData?.nodes,
         },
     };

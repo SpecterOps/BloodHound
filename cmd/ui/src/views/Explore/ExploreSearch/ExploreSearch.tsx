@@ -143,7 +143,9 @@ const ExploreSearch: React.FC = () => {
             params.exploreSearchTab = 'pathfinding';
         }
         if (tab === 'cypher') {
-            params.searchType = 'cypher';
+            if (cypherSearchState.cypherQuery) {
+                params.searchType = 'cypher';
+            }
             params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
             params.exploreSearchTab = 'cypher';
         }

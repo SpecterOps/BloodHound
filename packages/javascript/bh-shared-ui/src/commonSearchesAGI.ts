@@ -307,10 +307,10 @@ export const CommonSearches: CommonSearchType[] = [
                 query: `MATCH (d:Domain)\nWHERE d.machineaccountquota > 0\nRETURN d`,
             },
             {
-                name: 'Accounts with smart card required in domains where smart account passwords do not expire',
+                name: 'Domains with smart card accounts where smart account passwords do not expire',
                 description: '',
                 id: undefined,
-                query: `MATCH p=(s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN p`,
+                cypher: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
             },
             {
                 name: 'Cross-forest trusts with abusable configuration',
@@ -372,6 +372,10 @@ export const CommonSearches: CommonSearchType[] = [
                 id: undefined,
                 query: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN u\nLIMIT 100`,
             },
+            {
+                description: 'Tier Zero principals without AdminSDHolder protection',
+                cypher: `MATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+            },
         ],
     },
     {
@@ -379,10 +383,8 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
-                name: 'All Global Administrators',
-                description: '',
-                id: undefined,
-                query: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
+                description: 'All Global Administrators',
+                cypher: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'All members of high privileged roles',

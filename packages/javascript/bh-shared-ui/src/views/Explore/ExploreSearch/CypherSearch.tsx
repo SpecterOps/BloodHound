@@ -51,11 +51,15 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
+    onRunSearchClick
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
+    onRunSearchClick?: () => void;
 }) => {
+    
+    
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
 
@@ -90,6 +94,10 @@ const CypherSearch = ({
     const handleCypherSearch = () => {
         if (cypherQuery) {
             performSearch();
+        }
+
+        if (typeof onRunSearchClick === 'function') {
+            onRunSearchClick();
         }
     };
     const handleSavedSearch = (query: any) => {
