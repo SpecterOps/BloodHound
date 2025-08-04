@@ -2049,6 +2049,20 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(ctx, configuration
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).SetConfigurationParameter), ctx, configurationParameter)
 }
 
+// SetDatapipeLastAnalyzed mocks base method.
+func (m *MockDatabase) SetDatapipeLastAnalyzed(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDatapipeLastAnalyzed", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDatapipeLastAnalyzed indicates an expected call of SetDatapipeLastAnalyzed.
+func (mr *MockDatabaseMockRecorder) SetDatapipeLastAnalyzed(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeLastAnalyzed", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeLastAnalyzed), ctx)
+}
+
 // SetDatapipeStatus mocks base method.
 func (m *MockDatabase) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
 	m.ctrl.T.Helper()
