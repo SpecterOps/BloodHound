@@ -337,6 +337,14 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'All service principals with Microsoft Graph App Role assignments',
                 cypher: `MATCH p=(:AZServicePrincipal)-[:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(:AZServicePrincipal)\nRETURN p\nLIMIT 1000`,
             },
+            {
+                description: 'All service Principals with read or write Grant to Microsoft Graph',
+                cypher: `MATCH (a)-[r]->(b)\nWHERE type(r) STARTS WITH "AZMG"\nAND type(r) ENDS WITH "ReadWrite_All"\nRETURN a, r, b`,
+            },
+            {
+                description: 'All service Principals with Microsoft Graph Grant permissions',
+                cypher: `MATCH (a)-[r]->(b)\nWHERE type(r) STARTS WITH "AZMG"\nRETURN a, r, b`,
+            }
         ],
     },
     {
