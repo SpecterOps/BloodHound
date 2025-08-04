@@ -9,13 +9,24 @@ type TagToZoneLabelProps = {
 
 const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
     const { selectedQuery } = props;
-    console.log(selectedQuery);
     const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
     const [tagToZoneOpen, setTagToZoneOpen] = useState(false);
+    //Tag to Zone or Label
+    const [isLabel, setIsLabel] = useState(false);
 
     const handleSetOpen = (isOpen: boolean) => {
         setTagToZoneOpen(isOpen);
+    };
+
+    const tagToZone = () => {
+        setIsLabel(false);
+        setTagToZoneOpen(true);
+    };
+
+    const tagToLabel = () => {
+        setIsLabel(true);
+        setTagToZoneOpen(true);
     };
 
     return (
@@ -30,15 +41,20 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className='p-0 w-28'>
-                    <div className={listItemStyles} onClick={() => setTagToZoneOpen(true)}>
+                    <div className={listItemStyles} onClick={tagToZone}>
                         Zone
                     </div>
-                    <div className={listItemStyles} onClick={() => console.log('clicked')}>
+                    <div className={listItemStyles} onClick={tagToLabel}>
                         Label
                     </div>
                 </PopoverContent>
             </Popover>
-            <TagToZoneDialog dialogOpen={tagToZoneOpen} setDialogOpen={handleSetOpen} selectedQuery={selectedQuery} />
+            <TagToZoneDialog
+                dialogOpen={tagToZoneOpen}
+                setDialogOpen={handleSetOpen}
+                isLabel={isLabel}
+                selectedQuery={selectedQuery}
+            />
         </>
     );
 };

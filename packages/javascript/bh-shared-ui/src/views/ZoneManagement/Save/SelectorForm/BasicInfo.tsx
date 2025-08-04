@@ -30,7 +30,7 @@ import {
     Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useContext, useState } from 'react';
+import { FC, useContext, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
@@ -55,6 +55,13 @@ const BasicInfo: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const receivedData = location.state;
+
+    useEffect(() => {
+        if (receivedData) {
+            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+        }
+    }, []);
 
     const {
         formState: { errors },

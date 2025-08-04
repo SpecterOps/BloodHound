@@ -18,34 +18,50 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { useNavigate } from 'react-router-dom';
 import { useTagsQuery } from '../../../hooks';
+
 type TagToZoneDialogProps = {
     dialogOpen: boolean;
     selectedQuery: any;
+    isLabel: boolean;
     setDialogOpen: (isOpen: boolean) => void;
 };
 
 const TagToZoneDialog = (props: TagToZoneDialogProps) => {
-    const { dialogOpen, selectedQuery, setDialogOpen } = props;
+    const { dialogOpen, selectedQuery, isLabel, setDialogOpen } = props;
     const navigate = useNavigate();
 
     const AssetGroupTagTypeTier = 1 as const;
-    // export const AssetGroupTagTypeLabel = 2 as const;
-    // export const AssetGroupTagTypeOwned = 3 as const;
+    const AssetGroupTagTypeLabel = 2 as const;
 
     const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
     const zones = tiersQuery.data;
-    // console.log(zones);
+
+    const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
+    const labels = labelsQuery.data;
+    console.log('labels');
+    console.log(labels);
 
     const [zone, setZone] = useState('');
+    const [label, setLabel] = useState('');
 
     const handleValueChange = (val: any) => {
-        console.log(`select value = ${val}`);
-        setZone(val);
+        isLabel ? setLabel(val) : setZone(val);
     };
 
     const onContinue = () => {
-        navigate(`/zone-management/save/tier/${zone}/selector`, { state: selectedQuery });
+        //TODO - use the const for this path
+        if (isLabel) {
+            navigate(`/zone-management/save/labels/${label}/selector`, { state: selectedQuery });
+        } else {
+            navigate(`/zone-management/save/tier/${zone}/selector`, { state: selectedQuery });
+        }
     };
+
+    const title = isLabel ? 'label' : 'zone';
+
+    const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
+
+    const continueDisabled = (isLabel && !label) || (!isLabel && !zone);
 
     return (
         <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
@@ -55,26 +71,34 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
                         blurBackground: false,
                     }}
                     maxWidth='sm'>
-                    <DialogTitle>Tag Results to Zone</DialogTitle>
+                    <DialogTitle>
+                        Tag Results to {title} {isLabel.toString()}
+                    </DialogTitle>
 
-                    <DialogDescription>
-                        Pick a zone to create a new selector. All assets returned by the query will be added to your
-                        selector.
-                    </DialogDescription>
+                    <DialogDescription>{description}</DialogDescription>
 
                     <Select onValueChange={handleValueChange}>
                         <SelectTrigger className='w-60'>
-                            <SelectValue placeholder='Select Zone' />
+                            <SelectValue placeholder={`Select ${title}`} />
                         </SelectTrigger>
                         <SelectPortal>
                             <SelectContent>
-                                {zones?.map((zone) => {
-                                    return (
-                                        <SelectItem key={zone.id} value={zone.id.toString()}>
-                                            {zone.name}
-                                        </SelectItem>
-                                    );
-                                })}
+                                {!isLabel &&
+                                    zones?.map((zone) => {
+                                        return (
+                                            <SelectItem key={zone.id} value={zone.id.toString()}>
+                                                {zone.name}
+                                            </SelectItem>
+                                        );
+                                    })}
+                                {isLabel &&
+                                    labels?.map((label) => {
+                                        return (
+                                            <SelectItem key={label.id} value={label.id.toString()}>
+                                                {label.name}
+                                            </SelectItem>
+                                        );
+                                    })}
                             </SelectContent>
                         </SelectPortal>
                     </Select>
@@ -84,7 +108,7 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
                             <Button variant='secondary'>Cancel</Button>
                         </DialogClose>
 
-                        <Button disabled={!zone} onClick={onContinue}>
+                        <Button disabled={continueDisabled} onClick={onContinue}>
                             Continue
                         </Button>
                     </DialogActions>
