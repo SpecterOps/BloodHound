@@ -189,7 +189,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		position               = null.Int32{}
 		requireCertifyTier     = null.BoolFrom(true)
 		requireCertifyLabel    = null.Bool{}
-		glyph                  = null.StringFrom("fa-rocket")
+		glyph                  = null.StringFrom("rocket")
 		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
@@ -340,7 +340,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		toUpdate.Name = "updated name"
 		toUpdate.Description = "updated desc"
 		toUpdate.RequireCertify.SetValid(true)
-		toUpdate.Glyph = null.StringFrom("fa-rocket")
+		toUpdate.Glyph = null.StringFrom("rocket")
 
 		updatedTier, err := dbInst.UpdateAssetGroupTag(testCtx, testActor, toUpdate)
 		require.NoError(t, err)
