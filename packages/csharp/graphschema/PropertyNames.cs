@@ -46,6 +46,8 @@ public const string Sensitive = "sensitive";
 public const string BlocksInheritance = "blocksinheritance";
 public const string IsACL = "isacl";
 public const string IsACLProtected = "isaclprotected";
+public const string InheritanceHash = "inheritancehash";
+public const string InheritanceHashes = "inheritancehashes";
 public const string IsDeleted = "isdeleted";
 public const string Enforced = "enforced";
 public const string Department = "department";
@@ -138,6 +140,7 @@ public const string LDAPAvailable = "ldapavailable";
 public const string LDAPSAvailable = "ldapsavailable";
 public const string LDAPSEPA = "ldapsepa";
 public const string IsDC = "isdc";
+public const string IsReadOnlyDC = "isreadonlydc";
 public const string HTTPEnrollmentEndpoints = "httpenrollmentendpoints";
 public const string HTTPSEnrollmentEndpoints = "httpsenrollmentendpoints";
 public const string HasVulnerableEndpoint = "hasvulnerableendpoint";
@@ -152,6 +155,7 @@ public const string ClientAllowedNTLMServers = "clientallowedntlmservers";
 public const string Transitive = "transitive";
 public const string GroupScope = "groupscope";
 public const string NetBIOS = "netbios";
+public const string AdminSDHolderProtected = "adminsdholderprotected";
 
 }
 }
