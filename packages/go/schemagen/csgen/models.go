@@ -288,9 +288,12 @@ func (s Annotation) Children() []SyntaxNode {
 }
 
 func (s Annotation) String() string {
-	if s.HasContent && len(s.AnnotationContent) > 0 {
-		quotedAndCommaSep := "\"" + strings.Join(s.AnnotationContent, "\", \"") + "\""
-		return fmt.Sprintf("[%s(%s)]\n", s.AnnotationType, quotedAndCommaSep)
+	if s.HasContent {
+		if len(s.AnnotationContent) > 0 {
+			quotedAndCommaSep := "\"" + strings.Join(s.AnnotationContent, "\", \"") + "\""
+			return fmt.Sprintf("[%s(%s)]\n", s.AnnotationType, quotedAndCommaSep)
+		}
+		return fmt.Sprintf("[%s]\n", s.AnnotationType)
 	}
 	return ""
 }
