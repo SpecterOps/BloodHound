@@ -46,7 +46,7 @@ afterAll(() => server.close());
 
 describe('useExploreTableAutoDisplay', () => {
     const setup = ({ enabled = true, initialRoute = '' } = {}) => {
-        const actual = renderHook(() => useExploreTableAutoDisplay({ enabled }), { route: initialRoute });
+        const actual = renderHook(() => useExploreTableAutoDisplay(enabled), { route: initialRoute });
         return actual;
     };
 

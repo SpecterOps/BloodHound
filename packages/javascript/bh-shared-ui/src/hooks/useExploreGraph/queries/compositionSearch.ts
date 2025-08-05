@@ -43,10 +43,11 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         !targetId ||
         isNaN(Number(sourceId)) ||
         isNaN(Number(targetId))
-    )
+    ) {
         return {
             enabled: false,
         };
+    }
 
     return {
         ...sharedGraphQueryOptions,

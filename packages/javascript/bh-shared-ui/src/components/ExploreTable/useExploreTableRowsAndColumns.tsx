@@ -14,13 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
-import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from '@mui/material';
+import { Tooltip } from '@mui/material';
+import { StyledGraphEdge } from 'js-client-library';
+import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
-import { EntityField, format } from '../../utils';
-import NodeIcon from '../NodeIcon';
-import { requiredColumns, type ExploreTableProps, type MungedTableRowWithId } from './explore-table-utils';
+import {
+    compareForExploreTableSort,
+    isSmallColumn,
+    REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
+    requiredColumns,
+    type ExploreTableProps,
+    type MungedTableRowWithId,
+} from './explore-table-utils';
+import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithId>();
@@ -44,6 +52,31 @@ const useExploreTableRowsAndColumns = ({
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 
+    const rows = useMemo(
+        () =>
+            (data &&
+                Object.entries(data).reduce((acc: MungedTableRowWithId[], curr) => {
+                    const [key, value] = curr;
+
+                    const valueAsPotentialEdge = value as StyledGraphEdge;
+
+                    if (!!valueAsPotentialEdge.id1 || !!valueAsPotentialEdge.id2) {
+                        return acc;
+                    }
+
+                    const nextRow = Object.assign({}, value.data);
+
+                    nextRow.id = key;
+                    nextRow.displayname = value?.label?.text;
+
+                    acc.push(nextRow as MungedTableRowWithId);
+
+                    return acc;
+                }, [])) ||
+            [],
+        [data]
+    );
+
     const handleSort = useCallback(
         (sortByColumn: keyof MungedTableRowWithId) => {
             if (sortByColumn) {
@@ -61,7 +94,7 @@ const useExploreTableRowsAndColumns = ({
                     }
                 } else {
                     setSortBy(sortByColumn);
-                    setSortOrder('desc');
+                    setSortOrder('asc');
                 }
             }
         },
@@ -75,80 +108,64 @@ const useExploreTableRowsAndColumns = ({
         [onKebabMenuClick]
     );
 
+    const firstTenRows = useMemo(() => rows?.slice(0, 10), [rows]);
     const makeColumnDef = useCallback(
-        (key: keyof MungedTableRowWithId) =>
-            columnHelper.accessor(String(key), {
-                header: () => (
-                    <ExploreTableHeaderCell
-                        sortBy={sortBy}
-                        sortOrder={sortOrder}
-                        onClick={() => handleSort(key)}
-                        headerKey={key}
-                    />
-                ),
-                cell: (info) => {
-                    const value = info.getValue() as EntityField['value'];
+        (rawKey: keyof MungedTableRowWithId) => {
+            const key = rawKey?.toString();
+            const firstTruthyValueInFirst10Rows = firstTenRows.find((row) => !!row?.[key])?.[key];
+            const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
 
-                    if (typeof value === 'boolean') {
-                        return (
-                            <div className='h-full w-full flex justify-center items-center text-center'>
-                                <FontAwesomeIcon
-                                    icon={value ? faCheck : faCancel}
-                                    color={value ? 'green' : 'lightgray'}
-                                    className='scale-125'
-                                />
-                            </div>
-                        );
-                    }
-
-                    return format({ keyprop: key?.toString(), value, label: String(key) }) || '--';
-                },
-                id: key?.toString(),
-            }),
-        [handleSort, sortOrder, sortBy]
-    );
-
-    const requiredColumnDefinitions = useMemo(
-        () => [
-            columnHelper.accessor('', {
-                id: 'action-menu',
-                cell: ({ row }) => (
-                    <Button
-                        data-testid='kebab-menu'
-                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        className='pl-4 pr-2 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0'>
-                        <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1 text-black' />
-                    </Button>
-                ),
-            }),
-            columnHelper.accessor('nodetype', {
-                id: 'nodetype',
+            return columnHelper.accessor(String(key), {
                 header: () => {
-                    return <span className='dark:text-neutral-light-1'>Type</span>;
-                },
-                cell: (info) => {
                     return (
-                        <div className='flex justify-center items-center relative'>
-                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
-                        </div>
+                        <ExploreTableHeaderCell
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                            onClick={() => handleSort(key)}
+                            headerKey={key}
+                            dataType={bestGuessAtDataType}
+                        />
                     );
                 },
-            }),
-            ...['objectid', 'displayname'].map(makeColumnDef),
-        ],
-        [handleKebabMenuClick, makeColumnDef]
+                size: isSmallColumn(key, bestGuessAtDataType) ? 100 : 250,
+                cell: (info) => {
+                    const value = info.getValue();
+
+                    return (
+                        <Tooltip
+                            title={<p>{info.getValue()}</p>}
+                            disableHoverListener={key === 'nodetype' || isEmpty(value)}>
+                            <div data-testid={`table-cell-${key}`} className='truncate'>
+                                <ExploreTableDataCell value={value} columnKey={key?.toString()} />
+                            </div>
+                        </Tooltip>
+                    );
+                },
+                id: key?.toString(),
+            });
+        },
+        [handleSort, sortOrder, sortBy, firstTenRows]
     );
 
-    const rows = useMemo(
+    const kebabColumDefinition = useMemo(
         () =>
-            ((data &&
-                Object.entries(data).map(([key, value]) => ({
-                    ...value.data,
-                    id: key,
-                    displayname: value?.label?.text,
-                }))) ||
-                []) as MungedTableRowWithId[],
-        [data]
+            columnHelper.accessor('', {
+                id: 'action-menu',
+                size: 50,
+                maxSize: 50,
+                cell: ({ row }) => (
+                    <div
+                        data-testid='kebab-menu'
+                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        className='explore-table-cell-icon h-full flex justify-center items-center'>
+                        <FontAwesomeIcon
+                            icon={faEllipsis}
+                            className='p-4 cursor-pointer hover:bg-transparent bg-transparent shadow-outer-0 rotate-90 dark:text-neutral-light-1 text-black'
+                        />
+                    </div>
+                ),
+            }),
+        [handleKebabMenuClick]
     );
 
     const filteredRows: MungedTableRowWithId[] = useMemo(() => {
@@ -169,43 +186,55 @@ const useExploreTableRowsAndColumns = ({
         const dataToSort = filteredRows.slice();
         if (sortBy) {
             if (sortOrder === 'asc') {
-                dataToSort.sort((a, b) => {
-                    return a[sortBy]?.toString().localeCompare(b[sortBy]?.toString());
-                });
+                return dataToSort.sort((a, b) => compareForExploreTableSort(a?.[sortBy], b?.[sortBy]));
             } else {
-                dataToSort.sort((a, b) => {
-                    return b[sortBy]?.toString().localeCompare(a[sortBy]?.toString());
-                });
+                return dataToSort.sort((a, b) => compareForExploreTableSort(b?.[sortBy], a?.[sortBy]));
             }
         }
 
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    const nonRequiredColumnDefinitions = useMemo(
-        () => allColumnKeys?.filter((key) => !requiredColumns[key]).map(makeColumnDef) || [],
-        [allColumnKeys, makeColumnDef]
-    );
+    const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
 
     const selectedColumnDefinitions = useMemo(
-        () => nonRequiredColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
-        [nonRequiredColumnDefinitions, selectedColumns]
+        () => allColumnDefintions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
+        [allColumnDefintions, selectedColumns]
     );
+
+    const sortedColumnDefinitions = useMemo(() => {
+        const columnDefs = selectedColumnDefinitions.sort((a, b) => {
+            const idA = a?.id || '';
+            const idB = b?.id || '';
+            const aIsRequired = requiredColumns[idA];
+            const bIsRequired = requiredColumns[idB];
+            if (aIsRequired) {
+                if (bIsRequired) {
+                    return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
+                        REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
+                        ? 1
+                        : -1;
+                }
+                return -1;
+            }
+
+            return 1;
+        });
+
+        return columnDefs;
+    }, [selectedColumnDefinitions]);
 
     const tableColumns = useMemo(
-        () => [...requiredColumnDefinitions, ...selectedColumnDefinitions],
-        [requiredColumnDefinitions, selectedColumnDefinitions]
+        () => [kebabColumDefinition, ...sortedColumnDefinitions],
+        [kebabColumDefinition, sortedColumnDefinitions]
     ) as DataTableProps['columns'];
 
-    const columnOptionsForDropdown = useMemo(
-        () => [...requiredColumnDefinitions, ...nonRequiredColumnDefinitions],
-        [requiredColumnDefinitions, nonRequiredColumnDefinitions]
-    );
-
     return {
-        columnOptionsForDropdown,
+        rows,
+        columnOptionsForDropdown: allColumnDefintions,
         tableColumns,
         sortedFilteredRows,
+        resultsCount: rows.length,
     };
 };
 

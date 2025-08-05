@@ -78,21 +78,22 @@ func ResolveAllGroupMemberships(ctx context.Context, db graph.Database, addition
 				} else {
 					var nextSegments []*graph.PathSegment
 
-					if err := nextQuery.FetchDirection(
-						graph.DirectionOutbound,
-						func(cursor graph.Cursor[graph.DirectionalResult]) error {
-							for next := range cursor.Chan() {
-								nextSegment := segment.Descend(next.Node, next.Relationship)
+					if err := nextQuery.FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
+						for next := range cursor.Chan() {
+							nextSegment := segment.Descend(
+								graph.NewNode(next.StartID, graph.NewProperties()),
+								graph.NewRelationship(next.ID, next.StartID, next.StartID, graph.NewProperties(), ad.MemberOf),
+							)
 
-								if traversalMap.CheckedAdd(next.Node.ID.Uint64()) {
-									nextSegments = append(nextSegments, nextSegment)
-								} else {
-									memberships.AddShortcut(nextSegment)
-								}
+							if traversalMap.CheckedAdd(next.StartID.Uint64()) {
+								nextSegments = append(nextSegments, nextSegment)
+							} else {
+								memberships.AddShortcut(nextSegment)
 							}
+						}
 
-							return cursor.Error()
-						}); err != nil {
+						return cursor.Error()
+					}); err != nil {
 						return nil, err
 					}
 

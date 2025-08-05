@@ -1836,6 +1836,11 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 	id := strings.ToUpper(fmt.Sprintf("%s@%s", instance.RoleDefinitionId, instance.TenantId))
 
 	relationships := make([]IngestibleRelationship, 0)
+	//If the scope is not the directory, we are going to skip creating the edges for now until later work is done
+	//This isn't necessarily the best spot for this, but it works and it makes testing simple, since none of our azure convertors are exported
+	if instance.DirectoryScopeId != "/" {
+		return relationships
+	}
 	relationships = append(relationships, NewIngestibleRelationship(
 		IngestibleEndpoint{
 			Value: strings.ToUpper(instance.PrincipalId),

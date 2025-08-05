@@ -29,11 +29,13 @@ import (
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
@@ -50,6 +52,7 @@ type IntegrationTestSuite struct {
 	GraphDB         graph.Database
 	BHDatabase      *database.BloodhoundDB
 	WorkDir         string
+	Daemon          *datapipe.BHCEPipeline
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing
@@ -110,6 +113,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
+		Daemon:          datapipe.NewPipeline(ctx, cfg, db, graphDB, cache.Cache{}, ingestSchema),
 	}
 }
 

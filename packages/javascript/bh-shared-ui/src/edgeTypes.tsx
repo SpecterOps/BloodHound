@@ -40,12 +40,11 @@ export const AllEdgeTypes: Category[] = [
             {
                 name: 'Active Directory Structure',
                 edgeTypes: [
+                    ActiveDirectoryRelationshipKind.Contains,
+                    ActiveDirectoryRelationshipKind.GPLink,
                     ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
-                    ActiveDirectoryRelationshipKind.ContainsIdentity,
-                    ActiveDirectoryRelationshipKind.GPOAppliesTo,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
-                    ActiveDirectoryRelationshipKind.PropagatesACEsTo,
                     ActiveDirectoryRelationshipKind.SameForestTrust,
                 ],
             },
@@ -95,7 +94,6 @@ export const AllEdgeTypes: Category[] = [
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.AddAllowedToAct,
                     ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
-                    ActiveDirectoryRelationshipKind.CanApplyGPO,
                     ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
                     ActiveDirectoryRelationshipKind.WriteGPLink,
                     ActiveDirectoryRelationshipKind.WriteSPN,
