@@ -163,7 +163,7 @@ export const ManageColumnsComboBox = ({
 
                                 return (
                                     <ManageColumnsListItem
-                                        isSelected={selectedColumnMap[column.id]}
+                                        isSelected={!!selectedColumnMap[column.id]}
                                         key={`${column?.id}-${index}`}
                                         item={column}
                                         onClick={isSelected ? removeSelectedItem : addSelectedItem}
