@@ -287,7 +287,7 @@ func (s Resources) getSavedQueriesByUserAndScope(ctx context.Context, userId uui
 	case string(model.SavedQueryScopeShared):
 		savedQueries, err = s.DB.GetSharedSavedQueries(ctx, userId)
 	case string(model.SavedQueryScopeOwned):
-		savedQueries, err = s.DB.GetOwnedSavedQueriesByUser(ctx, userId)
+		savedQueries, err = s.DB.GetSavedQueriesOwnedBy(ctx, userId)
 	default:
 		return nil, fmt.Errorf("invalid scope param: %s", scope)
 	}

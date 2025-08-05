@@ -2175,11 +2175,11 @@ func TestResources_ExportSavedQueries(t *testing.T) {
 			},
 		},
 		{
-			name: "fail - scope owned - GetOwnedSavedQueriesByUser error",
+			name: "fail - scope owned - GetSavedQueriesOwnedBy error",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().GetOwnedSavedQueriesByUser(gomock.Any(), userId).Return(nil, fmt.Errorf("db error"))
+					mockDB.EXPECT().GetSavedQueriesOwnedBy(gomock.Any(), userId).Return(nil, fmt.Errorf("db error"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2270,7 +2270,7 @@ func TestResources_ExportSavedQueries(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().GetOwnedSavedQueriesByUser(gomock.Any(), userId).Return(model.SavedQueries{testQuery}, nil)
+					mockDB.EXPECT().GetSavedQueriesOwnedBy(gomock.Any(), userId).Return(model.SavedQueries{testQuery}, nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},

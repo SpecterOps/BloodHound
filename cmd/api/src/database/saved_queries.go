@@ -38,7 +38,7 @@ type SavedQueriesData interface {
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
 	CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) error
 	GetAllSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
-	GetOwnedSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
+	GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 }
 
 func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error) {
@@ -149,7 +149,7 @@ func (s *BloodhoundDB) GetAllSavedQueriesByUser(ctx context.Context, userID uuid
 	return savedQueries, CheckError(results)
 }
 
-func (s *BloodhoundDB) GetOwnedSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+func (s *BloodhoundDB) GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
 	result := s.db.WithContext(ctx).Where("user_id = ?", userID).Find(&savedQueries)
 	return savedQueries, CheckError(result)

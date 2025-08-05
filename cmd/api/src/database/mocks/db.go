@@ -1479,21 +1479,6 @@ func (mr *MockDatabaseMockRecorder) GetOrderedAssetGroupTagTiers(ctx any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderedAssetGroupTagTiers", reflect.TypeOf((*MockDatabase)(nil).GetOrderedAssetGroupTagTiers), ctx)
 }
 
-// GetOwnedSavedQueriesByUser mocks base method.
-func (m *MockDatabase) GetOwnedSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOwnedSavedQueriesByUser", ctx, userID)
-	ret0, _ := ret[0].(model.SavedQueries)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetOwnedSavedQueriesByUser indicates an expected call of GetOwnedSavedQueriesByUser.
-func (mr *MockDatabaseMockRecorder) GetOwnedSavedQueriesByUser(ctx, userID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnedSavedQueriesByUser", reflect.TypeOf((*MockDatabase)(nil).GetOwnedSavedQueriesByUser), ctx, userID)
-}
-
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	m.ctrl.T.Helper()
@@ -1627,6 +1612,21 @@ func (m *MockDatabase) GetSSOProviderUsers(ctx context.Context, id int) (model.U
 func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), ctx, id)
+}
+
+// GetSavedQueriesOwnedBy mocks base method.
+func (m *MockDatabase) GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueriesOwnedBy", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueriesOwnedBy indicates an expected call of GetSavedQueriesOwnedBy.
+func (mr *MockDatabaseMockRecorder) GetSavedQueriesOwnedBy(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesOwnedBy", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesOwnedBy), ctx, userID)
 }
 
 // GetSavedQuery mocks base method.
