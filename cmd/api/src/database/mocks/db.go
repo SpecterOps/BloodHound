@@ -1614,6 +1614,21 @@ func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(ctx, id any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), ctx, id)
 }
 
+// GetSavedQueriesOwnedBy mocks base method.
+func (m *MockDatabase) GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueriesOwnedBy", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueriesOwnedBy indicates an expected call of GetSavedQueriesOwnedBy.
+func (mr *MockDatabaseMockRecorder) GetSavedQueriesOwnedBy(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesOwnedBy", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesOwnedBy), ctx, userID)
+}
+
 // GetSavedQuery mocks base method.
 func (m *MockDatabase) GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
@@ -1919,19 +1934,19 @@ func (mr *MockDatabaseMockRecorder) ListAuditLogs(ctx, before, after, offset, li
 }
 
 // ListSavedQueries mocks base method.
-func (m *MockDatabase) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
+func (m *MockDatabase) ListSavedQueries(ctx context.Context, scope string, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) ([]model.ScopedSavedQuery, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSavedQueries", ctx, userID, order, filter, skip, limit)
-	ret0, _ := ret[0].(model.SavedQueries)
+	ret := m.ctrl.Call(m, "ListSavedQueries", ctx, scope, userID, order, filter, skip, limit)
+	ret0, _ := ret[0].([]model.ScopedSavedQuery)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
 // ListSavedQueries indicates an expected call of ListSavedQueries.
-func (mr *MockDatabaseMockRecorder) ListSavedQueries(ctx, userID, order, filter, skip, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(ctx, scope, userID, order, filter, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), ctx, userID, order, filter, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), ctx, scope, userID, order, filter, skip, limit)
 }
 
 // LookupActiveSessionsByUser mocks base method.
