@@ -198,8 +198,9 @@ export type RiskDetailsRequest = {
 };
 
 export enum QueryScope {
-    PREBUILT = 'prebuilt',
+    ALL = 'all',
     OWNED = 'owned',
+    PUBLIC = 'public',
     SHARED = 'shared',
 }
 

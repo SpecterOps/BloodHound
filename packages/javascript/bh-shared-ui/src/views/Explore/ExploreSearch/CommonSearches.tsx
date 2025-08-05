@@ -144,10 +144,16 @@ const InnerCommonSearches = ({
                     queries: obj.queries.filter((item: QueryLineItem) => item.user_id === getSelfQuery.data?.id),
                 }))
                 .filter((x) => x.queries.length);
+        } else if (source && source === 'shared') {
+            filteredData = filteredData
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter(
+                        (item: QueryLineItem) => item.id && item.user_id !== getSelfQuery.data?.id
+                    ),
+                }))
+                .filter((x) => x.queries.length);
         }
-        //TO DO - add shared when api ready
-        // ...
-
         setFilteredList(filteredData);
     };
 

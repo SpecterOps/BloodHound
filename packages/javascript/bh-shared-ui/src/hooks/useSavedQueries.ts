@@ -95,7 +95,7 @@ export const useDeleteQueryPermissions = () => {
     });
 };
 
-export const useSavedQueries = (scope: QueryScope = QueryScope.OWNED) => {
+export const useSavedQueries = (scope: QueryScope = QueryScope.ALL) => {
     return useQuery(savedQueryKeys.all, ({ signal }) => getSavedQueries(scope, { signal }));
 };
 

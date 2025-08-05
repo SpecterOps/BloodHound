@@ -66,14 +66,12 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const handleSourceFilter = (val: string) => {
-        console.log(val);
         queryFilterHandler(searchTerm, platform, categoryFilter, val);
     };
 
     const exportEnabled = selectedQuery?.id ? true : false;
 
     const importHandler = () => {
-        console.log('importHandler');
         setShowImportDialog(true);
     };
 
