@@ -310,7 +310,7 @@ export const CommonSearches: CommonSearchType[] = [
                 name: 'Domains with smart card accounts where smart account passwords do not expire',
                 description: '',
                 id: undefined,
-                cypher: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
+                query: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
             },
             {
                 name: 'Cross-forest trusts with abusable configuration',
@@ -373,8 +373,10 @@ export const CommonSearches: CommonSearchType[] = [
                 query: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN u\nLIMIT 100`,
             },
             {
-                description: 'Tier Zero principals without AdminSDHolder protection',
-                cypher: `MATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+                name: 'Tier Zero principals without AdminSDHolder protection',
+                description: '',
+                id: undefined,
+                query: `MATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
             },
         ],
     },
@@ -383,8 +385,10 @@ export const CommonSearches: CommonSearchType[] = [
         category: categoryAzure,
         queries: [
             {
-                description: 'All Global Administrators',
-                cypher: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
+                name: 'All Global Administrators',
+                description: '',
+                id: undefined,
+                query: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'All members of high privileged roles',

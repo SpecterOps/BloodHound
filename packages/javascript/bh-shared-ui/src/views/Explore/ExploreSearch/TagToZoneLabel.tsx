@@ -1,7 +1,7 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../components';
-import TagToZoneDialog from './TagToZoneDialog';
+import TagToZoneDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {
     selectedQuery: any;

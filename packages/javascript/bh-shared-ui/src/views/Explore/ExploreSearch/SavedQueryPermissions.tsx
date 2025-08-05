@@ -140,35 +140,43 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     }, [searchTerm]);
 
     return (
-        <div>
+        <>
             {isLoading && <div>Loading ...</div>}
-            {usersList && (
-                <>
-                    <div className='flex-grow relative mb-2'>
-                        <AppIcon.MagnifyingGlass size={16} className='absolute left-5 top-[50%] -mt-[8px]' />
-                        <Input
-                            type='text'
-                            id='query-search'
-                            placeholder='Search'
-                            value={searchTerm}
-                            className='w-full bg-transparent dark:bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0 pl-12'
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
+            {usersList?.length && (
+                <div>
+                    <>
+                        <div className='flex-grow relative mb-2'>
+                            <AppIcon.MagnifyingGlass size={16} className='absolute left-5 top-[50%] -mt-[8px]' />
+                            <Input
+                                type='text'
+                                id='query-search'
+                                placeholder='Search'
+                                value={searchTerm}
+                                className='w-full bg-transparent dark:bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0 pl-12'
+                                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                                    handleInput(event.target.value)
+                                }
+                            />
+                        </div>
+                        <DataTable
+                            TableProps={{ className: '' }}
+                            TableHeadProps={{
+                                className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
+                            }}
+                            TableBodyProps={{ className: 'text-s font-roboto underline' }}
+                            TableBodyRowProps={{ className: '' }}
+                            TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
+                            columns={getColumns()}
+                            data={filteredUsers.length ? filteredUsers : usersList}
                         />
-                    </div>
-                    <DataTable
-                        TableProps={{ className: '' }}
-                        TableHeadProps={{
-                            className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
-                        }}
-                        TableBodyProps={{ className: 'text-s font-roboto underline' }}
-                        TableBodyRowProps={{ className: '' }}
-                        TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
-                        columns={getColumns()}
-                        data={filteredUsers.length ? filteredUsers : usersList}
-                    />
-                </>
+                    </>
+                </div>
             )}
-        </div>
+
+            {!usersList?.length && (
+                <div className='flex flex-col  py-8'>There are currently no users on this account.</div>
+            )}
+        </>
     );
 };
 
