@@ -141,6 +141,37 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 	}
 }
 
+func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, err
+	} else {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
+
+		for _, domain := range domainNodes {
+			innerDomain := domain
+			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+				if adminSDHolder, err := getAdminSDHolder(tx, innerDomain); err != nil {
+					return err
+				} else if adminSDHolderProtected, err := getAdminSDHolderProtected(tx, innerDomain); err != nil {
+					return nil
+				} else {
+					for _, object := range adminSDHolderProtected {
+						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							FromID: adminSDHolder[0],
+							ToID:   object,
+							Kind:   ad.ProtectAdminGroups,
+						})
+					}
+
+					return nil
+				}
+			})
+		}
+
+		return &operation.Stats, operation.Done()
+	}
+}
+
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
@@ -302,6 +333,35 @@ func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]grap
 				query.Kind(query.Node(), ad.Computer),
 				query.Equals(
 					query.Property(query.Node(), ad.HasLAPS.String()), true),
+				query.Equals(query.Property(query.Node(), ad.DomainSID.String()), domainSid),
+			)
+		}))
+	}
+}
+
+func getAdminSDHolder(tx graph.Transaction, domain *graph.Node) ([]graph.ID, error) {
+	if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		return nil, err
+	} else {
+		return ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), ad.Container),
+				query.StringStartsWith(query.NodeProperty(ad.DistinguishedName.String()), AdminSDHolderDNPrefix),
+				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+			)
+		}))
+	}
+}
+
+func getAdminSDHolderProtected(tx graph.Transaction, domain *graph.Node) ([]graph.ID, error) {
+	if domainSid, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		return nil, err
+	} else {
+		return ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.KindIn(query.Node(), ad.Computer, ad.User, ad.Group),
+				query.Equals(
+					query.Property(query.Node(), ad.AdminSDHolderProtected.String()), true),
 				query.Equals(query.Property(query.Node(), ad.DomainSID.String()), domainSid),
 			)
 		}))
