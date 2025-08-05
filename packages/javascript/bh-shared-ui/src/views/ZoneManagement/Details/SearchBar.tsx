@@ -29,6 +29,7 @@ import { AppIcon } from '../../../components';
 import { useDebouncedValue } from '../../../hooks';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { getTagUrlValue } from '../utils';
+import { useDebouncedValue } from '../../../hooks';
 
 type SearchBarProps = {
     selected: string | undefined;
