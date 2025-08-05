@@ -30,7 +30,7 @@ export const CopyToClipboardButton = ({
     };
 
     return (
-        <div>
+        <>
             <button
                 onClick={handleCopyToClipBoard}
                 onAnimationStart={(animationEvent) => {
@@ -57,6 +57,6 @@ export const CopyToClipboardButton = ({
                 {!displayCopyCheckmark && <FontAwesomeIcon icon={faCopy} className='animate-in fade-in duration-300' />}
             </button>
             <span className={cn('group-hover:pl-5 transition-[padding-left] ease-in', transitionDelay)}>{value}</span>
-        </div>
+        </>
     );
 };
