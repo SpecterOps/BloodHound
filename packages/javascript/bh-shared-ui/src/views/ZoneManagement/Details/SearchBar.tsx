@@ -13,11 +13,12 @@ import { useParams } from 'react-router-dom';
 import { AppIcon } from '../../../components';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { getTagUrlValue } from '../utils';
+import { useDebouncedValue } from '../../../hooks';
 
 type SearchBarProps = {
-    selected: string;
-    selectorId: string;
-    labelId: string;
+    selected: string | undefined;
+    selectorId: string | undefined;
+    labelId: string | undefined;
 };
 
 type SectorKey = 'tags' | 'selectors' | 'members';
@@ -40,22 +41,26 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
         selectors: [],
         members: [],
     });
+    const debouncedInputValue = useDebouncedValue(query, 150);
     const navigate = useAppNavigate();
-    const { tierId, labelId } = useParams();
+    const { labelId } = useParams();
     const inputRef = React.useRef<HTMLDivElement>(null);
 
     const searchQuery = useQuery({
-        queryKey: ['zone-management', 'search', query, selected],
+        queryKey: ['zone-management', 'search', debouncedInputValue, selected],
         queryFn: async () => {
-            const body = { query, tag_type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier };
+            const body = {
+                query: debouncedInputValue,
+                tag_type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+            };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
         },
-        enabled: query.length >= 3 && selected !== undefined,
+        enabled: debouncedInputValue.length >= 3 && selected !== undefined,
     });
 
     useEffect(() => {
-        if (query.length < 3) {
+        if (debouncedInputValue.length < 3) {
             setResults({ tags: [], selectors: [], members: [] });
             setOpen(false);
             return;
@@ -72,7 +77,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
 
             setOpen(true);
         }
-    }, [query, searchQuery.data]);
+    }, [debouncedInputValue, searchQuery.data]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -95,13 +100,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
             url = `/zone-management/details/${base}/${tag.id}`;
         } else if (sector === 'Selectors') {
             const selector = item as AssetGroupTagSelector;
-                url = `/zone-management/details/${base}/${selector.asset_group_tag_id}/selector/${selector.id}`;
+            url = `/zone-management/details/${base}/${selector.asset_group_tag_id}/selector/${selector.id}`;
         } else if (sector === 'Objects') {
             const member = item as AssetGroupMember;
             if (selectorId) {
                 url = `/zone-management/details/${base}/${labelId}/selector/${selectorId}/member/${member.object_id}`;
             } else {
-                url = `/zone-management/details/${base}/${member.tag_id}/member/${member.object_id}`;
+                url = `/zone-management/details/${base}/${member.asset_group_tag_id}/member/${member.object_id}`;
             }
         }
         navigate(url);
