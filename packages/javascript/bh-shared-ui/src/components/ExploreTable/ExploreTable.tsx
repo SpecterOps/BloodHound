@@ -23,8 +23,8 @@ import {
     ExploreTableProps,
     MungedTableRowWithId,
     getExploreTableData,
-    mergeOldGraphKeys,
     requiredColumns,
+    shimGraphSpecificKeys,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
@@ -77,7 +77,7 @@ const ExploreTable = ({
     );
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
-    const shimmedColumns = useMemo(() => mergeOldGraphKeys(selectedColumns), [selectedColumns]);
+    const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
 
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
@@ -121,7 +121,7 @@ const ExploreTable = ({
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
-                    selectedColumns={migratedColumns}
+                    selectedColumns={shimmedColumns}
                     pinnedColumns={requiredColumns}
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
