@@ -152,7 +152,7 @@ type Graph interface {
 	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
-	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
+	FetchNodeByGraphId(ctx context.Context, id ...graph.ID) (*graph.Node, error)
 }
 
 type GraphQuery struct {
