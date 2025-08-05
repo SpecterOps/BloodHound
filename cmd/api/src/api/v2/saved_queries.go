@@ -46,15 +46,43 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
+// GetSavedQuery - Returns the saved query for users who own the query, are admins or have the query shared with them.
+func (s Resources) GetSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if savedQuery, err := s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query not found", request), response)
+		} else {
+			api.HandleDatabaseError(request, response, err)
+		}
+	} else if isAccessibleToUser, err := s.canUserAccessQuery(request.Context(), savedQuery, user); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if !isAccessibleToUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query not found", request), response)
+	} else {
+		api.WriteBasicResponse(request.Context(), savedQuery, http.StatusOK, response)
+	}
+}
+
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
-		scopes        = queryParams[api.QueryParameterScope]
+		scope         = queryParams.Get(api.QueryParameterScope)
 	)
 
+	if scope == "" {
+		scope = string(model.SavedQueryScopeOwned)
+	}
 	for _, column := range sortByColumns {
 		var descending bool
 		if string(column[0]) == "-" {
@@ -72,13 +100,14 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		} else {
 			order = append(order, column)
 		}
-
 	}
-
+	// ensure deterministic ordering if not provided
+	if len(order) == 0 {
+		order = append(order, "id")
+	}
 	queryParameterFilterParser := model.NewQueryParameterFilterParser()
 	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
@@ -94,7 +123,6 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 				}
 			}
 		}
-
 		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
@@ -103,51 +131,16 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if len(scopes) == 0 {
-			if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
-				api.HandleDatabaseError(request, response, err)
+		} else if scopedQueries, scopedCount, err := s.DB.ListSavedQueries(request.Context(), scope, user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+			if strings.Contains(err.Error(), "invalid scope parameter") {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			} else {
-				api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
-			var queries []model.SavedQueryResponse
-			var count int
-			for _, scope := range strings.Split(scopes[0], ",") {
-				var scopedQueries model.SavedQueries
-				var scopedCount int
-
-				switch strings.ToLower(scope) {
-				case string(model.SavedQueryScopePublic):
-					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
-					scopedCount = len(scopedQueries)
-				case string(model.SavedQueryScopeShared):
-					scopedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
-					scopedCount = len(scopedQueries)
-				case string(model.SavedQueryScopeOwned):
-					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
-				default:
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
-					return
-				}
-
-				if err != nil {
-					api.HandleDatabaseError(request, response, err)
-					return
-				}
-
-				for _, query := range scopedQueries {
-					queries = append(queries, model.SavedQueryResponse{
-						SavedQuery: query,
-						Scope:      scope,
-					})
-				}
-				count += scopedCount
-
-			}
-			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(request.Context(), scopedQueries, limit, skip, scopedCount, http.StatusOK, response)
 		}
 	}
-
 }
 
 // TransferableSavedQuery - Used for importing/exporting saved queries
@@ -200,7 +193,7 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
-	} else if isAccessibleToUser, err = s.canUserAccessQuery(request.Context(), savedQuery, user.ID); err != nil {
+	} else if isAccessibleToUser, err = s.canUserAccessQuery(request.Context(), savedQuery, user); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
 	} else if !isAccessibleToUser {
@@ -216,11 +209,12 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
-func (s Resources) canUserAccessQuery(ctx context.Context, query model.SavedQuery, userId uuid.UUID) (bool, error) {
-	if userId.String() == query.UserID {
+// canUserAccessQuery - Users can access a query if they own it, are an admin, the query is shared to them or is a public query.
+func (s Resources) canUserAccessQuery(ctx context.Context, query model.SavedQuery, user model.User) (bool, error) {
+	if user.ID.String() == query.UserID || user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 		return true, nil
 	}
-	return s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, userId)
+	return s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, user.ID)
 }
 
 // ExportSavedQueries - Exports one or more saved queries in a ZIP file. The scope query parameter determines which queries are exported.
@@ -293,7 +287,7 @@ func (s Resources) getSavedQueriesByUserAndScope(ctx context.Context, userId uui
 	case string(model.SavedQueryScopeShared):
 		savedQueries, err = s.DB.GetSharedSavedQueries(ctx, userId)
 	case string(model.SavedQueryScopeOwned):
-		savedQueries, _, err = s.DB.ListSavedQueries(ctx, userId, "id", model.SQLFilter{}, 0, 0)
+		savedQueries, err = s.DB.GetSavedQueriesOwnedBy(ctx, userId)
 	default:
 		return nil, fmt.Errorf("invalid scope param: %s", scope)
 	}

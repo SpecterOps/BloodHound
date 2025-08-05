@@ -51,7 +51,7 @@ export function exploreGraphQueryFactory(
 }
 
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = (enabled = true) => {
+export const useExploreGraph = () => {
     const params = useExploreParams();
 
     const { addNotification } = useNotifications();
@@ -59,8 +59,6 @@ export const useExploreGraph = (enabled = true) => {
     const query = exploreGraphQueryFactory(params);
 
     const queryConfig = query.getQueryConfig(params);
-
-    const shouldFetch = Boolean(enabled && queryConfig?.enabled);
 
     return useQuery({
         ...queryConfig,
@@ -70,6 +68,5 @@ export const useExploreGraph = (enabled = true) => {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
-        enabled: shouldFetch,
     });
 };

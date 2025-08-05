@@ -209,7 +209,8 @@ type Session struct {
 
 type Group struct {
 	IngestBase
-	Members []TypedPrincipal
+	Members       []TypedPrincipal
+	HasSIDHistory []TypedPrincipal
 }
 
 type User struct {

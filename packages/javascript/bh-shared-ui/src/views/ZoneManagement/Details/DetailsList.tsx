@@ -15,43 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import {
-    AssetGroupTag,
-    AssetGroupTagSelector,
-    AssetGroupTagTypeLabel,
-    AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
-} from 'js-client-library';
+import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
+import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
-import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
-
-const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
-    if (listItem.counts === undefined) {
-        return null;
-    } else if (isTag(listItem)) {
-        return <span className='text-base ml-4'>{listItem.counts.selectors.toLocaleString()}</span>;
-    } else if (isSelector(listItem)) {
-        return <span className='text-base ml-4'>{listItem.counts.members.toLocaleString()}</span>;
-    } else {
-        return null;
-    }
-};
+import { SelectedHighlight, getListHeight, isTag } from './utils';
 
 type DetailsListProps = {
-    title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: UseQueryResult<AssetGroupTag[]> | UseQueryResult<AssetGroupTagSelector[]>;
+    title: 'Tiers' | 'Labels';
+    listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string | undefined;
     onSelect: (id: number) => void;
 };
 /**
- * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
+ * @description This component is meant to display the lists for either Tiers or Labels but not the Members list since that is a paginated list that loads more data as a user scrolls.
  * @param {object} props
- * @param {title} props.title Limited to 'Selectors' | 'Tiers' | 'Labels' as that is what this component is built for
+ * @param {title} props.title Limited to 'Tiers' | 'Labels' as that is what this component is built for
  * @param {UseQueryResult} props.listQuery The endpoint call result wrapper from react query that allows us to hook into different states that the fetched data could be in
  * @param {selected} props.selected The id of the particular entity that is selected for the list. It is used for selected item rendering
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
@@ -85,7 +68,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
             )}
             <div
                 className={cn(`overflow-y-auto`, {
-                    'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
                     'h-[762px]': getListHeight(window.innerHeight) === 762,
                     'h-[642px]': getListHeight(window.innerHeight) === 642,
                     'h-[438px]': getListHeight(window.innerHeight) === 438,
@@ -117,25 +99,9 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
-                                // Filters out Tier Tags when the active tab is 'Labels'
-                                if (isTag(listItem) && listItem.type === AssetGroupTagTypeTier && title !== 'Tiers') {
-                                    return null;
-                                }
-
-                                // Filters out Label and Owned Tags when the active tab is 'Tiers'
-                                if (
-                                    isTag(listItem) &&
-                                    (listItem.type === AssetGroupTagTypeLabel ||
-                                        listItem.type === AssetGroupTagTypeOwned) &&
-                                    title === 'Tiers'
-                                ) {
-                                    return null;
-                                }
-
-                                const isDisabled = isSelector(listItem) && listItem.disabled_at;
-
                                 return (
                                     <li
+                                        data-testid={`zone-management_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                         key={listItem.id}
                                         className={cn(
                                             'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
@@ -152,18 +118,22 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
+                                                {isTag(listItem) && !listItem?.analysis_enabled && (
+                                                    <ZoneAnalysisIcon size={18} />
+                                                )}
                                                 <div
                                                     className={cn(
-                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
-                                                        {
-                                                            'text-[#8E8C95] dark:text-[#919191]': isDisabled,
-                                                        }
+                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]'
                                                     )}
-                                                    title={isDisabled ? `Disabled: ${listItem.name}` : listItem.name}>
+                                                    title={listItem.name}>
                                                     {listItem.name}
                                                 </div>
                                             </div>
-                                            {getCountElement(listItem)}
+                                            {listItem.counts && (
+                                                <span className='text-base ml-4'>
+                                                    {listItem.counts.selectors.toLocaleString()}
+                                                </span>
+                                            )}
                                         </Button>
                                     </li>
                                 );

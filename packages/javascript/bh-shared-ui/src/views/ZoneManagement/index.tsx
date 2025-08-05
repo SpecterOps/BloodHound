@@ -16,6 +16,7 @@
 
 import ZoneManagement from './ZoneManagement';
 
+export * from './ZoneAnalysisIcon';
 export * from './ZoneManagementContext';
 export * from './utils';
 export default ZoneManagement;

@@ -41,6 +41,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -392,7 +394,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 
 	if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
-	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 100); err != nil {
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 99999); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if paramIncludeCounts, err := api.ParseOptionalBool(queryParams.Get(api.QueryParameterIncludeCounts), false); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
@@ -511,17 +513,29 @@ type GetAssetGroupTagMemberCountsResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
+
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind()); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
+		filters := []graph.Criteria{}
+		if len(environmentIds) > 0 {
+			filters = append(filters, query.Or(
+				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+			))
+		}
+
+		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+		}
+
 		data := GetAssetGroupTagMemberCountsResponse{
 			Counts: primaryNodeKindsCounts,
 		}
-
 		for _, count := range primaryNodeKindsCounts {
 			data.TotalCount += count
 		}
@@ -531,11 +545,12 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 }
 
 type AssetGroupMember struct {
-	NodeId      graph.ID       `json:"id"`
-	ObjectID    string         `json:"object_id"`
-	PrimaryKind string         `json:"primary_kind"`
-	Name        string         `json:"name"`
-	Properties  map[string]any `json:"properties,omitempty"`
+	NodeId        graph.ID       `json:"id"`
+	ObjectID      string         `json:"object_id"`
+	EnvironmentID string         `json:"environment_id"`
+	PrimaryKind   string         `json:"primary_kind"`
+	Name          string         `json:"name"`
+	Properties    map[string]any `json:"properties,omitempty"`
 
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
@@ -545,13 +560,15 @@ func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroup
 	var (
 		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+		envID, _    = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
 	)
 
 	member := AssetGroupMember{
-		NodeId:      node.ID,
-		ObjectID:    objectID,
-		PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
-		Name:        name,
+		NodeId:        node.ID,
+		ObjectID:      objectID,
+		EnvironmentID: envID,
+		PrimaryKind:   analysis.GetNodeKindDisplayLabel(node),
+		Name:          name,
 	}
 
 	if includeProperties {
@@ -610,8 +627,9 @@ type GetAssetGroupMembersResponse struct {
 
 func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, request *http.Request) {
 	var (
-		members     = []AssetGroupMember{}
-		queryParams = request.URL.Query()
+		members        = []AssetGroupMember{}
+		queryParams    = request.URL.Query()
+		environmentIds = queryParams[api.QueryParameterEnvironments]
 	)
 
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
@@ -628,10 +646,19 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		if len(sort) == 0 {
 			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
+		filters := []graph.Criteria{
+			query.KindIn(query.Node(), assetGroupTag.ToKind()),
+		}
+		if len(environmentIds) > 0 {
+			filters = append(filters, query.Or(
+				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+			))
+		}
 
-		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.KindIn(query.Node(), assetGroupTag.ToKind()), skip, limit); err != nil {
+		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.And(filters...), skip, limit); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
-		} else if count, err := s.GraphQuery.CountNodesByKind(request.Context(), assetGroupTag.ToKind()); err != nil {
+		} else if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {

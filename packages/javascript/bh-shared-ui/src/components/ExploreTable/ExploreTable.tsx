@@ -40,7 +40,7 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate',
+    className: 'truncate group relative',
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {

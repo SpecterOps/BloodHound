@@ -145,6 +145,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime
 	groupMembershipData := ein.ParseGroupMembershipData(group)
 	converted.RelProps = append(converted.RelProps, groupMembershipData.RegularMembers...)
 	converted.DistinguishedNameProps = append(converted.DistinguishedNameProps, groupMembershipData.DistinguishedNameMembers...)
+	converted.RelProps = append(converted.RelProps, ein.ParseGroupMiscData(group)...)
 }
 
 func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime time.Time) {

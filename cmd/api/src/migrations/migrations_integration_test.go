@@ -34,9 +34,8 @@ import (
 )
 
 func TestVersion_730_Migration(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	t.Run("Migration_v730 Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.Version730_Migration.Setup(testContext)
 			return nil

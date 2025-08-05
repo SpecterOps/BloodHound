@@ -19,6 +19,7 @@ package integration
 import (
 	"fmt"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test"
@@ -34,12 +35,16 @@ var DefaultRelProperties = graph.AsProperties(graph.PropertyMap{
 	common.LastSeen: time.Now().Format(time.RFC3339),
 })
 
-func NewGraphTestContext(testCtrl test.Controller, schema graph.Schema) *GraphTestContext {
-	testCtx := test.NewContext(testCtrl)
+// NewGraphTestContext creates a new GraphTestContext
+//
+// Deprecated: this suite of integration utils is deprecated and should be avoided
+// See latest testing guidance for more details.
+func NewGraphTestContext(t *testing.T, schema graph.Schema) *GraphTestContext {
+	testCtx := test.NewContext(t)
 
 	return &GraphTestContext{
 		testCtx: testCtx,
-		Graph:   NewGraphContext(testCtx, schema),
+		Graph:   NewGraphContext(t, testCtx, schema),
 	}
 }
 
@@ -100,11 +105,6 @@ func (s *GraphTestContext) SetupHarness(setup func(harness *HarnessDetails) erro
 }
 
 func (s *GraphTestContext) DatabaseTestWithSetup(setup func(harness *HarnessDetails) error, dbDelegate func(harness HarnessDetails, db graph.Database)) {
-	// Wipe the DB before executing the test
-	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
-		return tx.Nodes().Delete()
-	})
-
 	s.Graph.WriteTransaction(s.testCtx, func(tx graph.Transaction) error {
 		return setup(&s.Harness)
 	})
