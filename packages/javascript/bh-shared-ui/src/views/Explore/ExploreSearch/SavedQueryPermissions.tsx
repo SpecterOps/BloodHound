@@ -95,15 +95,15 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 accessorKey: 'id',
                 header: () => {
                     return (
-                        <div className='min-w-12 max-w-12'>
-                            <Checkbox className='ml-4' checked={shareAll} onCheckedChange={handleCheckAllChange} />
+                        <div className=''>
+                            <Checkbox className='' checked={shareAll} onCheckedChange={handleCheckAllChange} />
                         </div>
                     );
                 },
                 cell: ({ row }) => (
-                    <div className='min-w-12 max-w-12'>
+                    <div className=''>
                         <Checkbox
-                            className='ml-4'
+                            className=''
                             checked={isCheckboxChecked(row.getValue('id'))}
                             onCheckedChange={() => handleCheckChange(row.getValue('id'))}
                         />
@@ -117,7 +117,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 },
                 cell: ({ row }) => {
                     return (
-                        <div className='dark:text-neutral-light-1 text-nowrap text-black w-full min-w-36 max-w-36'>
+                        <div className='dark:text-neutral-light-1 text-nowrap text-black w-full'>
                             {row.getValue('name')}
                         </div>
                     );
@@ -158,9 +158,12 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     </div>
                     <DataTable
                         TableProps={{ className: '' }}
-                        TableHeadProps={{ className: 'text-s font-bold' }}
+                        TableHeadProps={{
+                            className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
+                        }}
                         TableBodyProps={{ className: 'text-s font-roboto underline' }}
                         TableBodyRowProps={{ className: '' }}
+                        TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
                         columns={getColumns()}
                         data={filteredUsers.length ? filteredUsers : usersList}
                     />
