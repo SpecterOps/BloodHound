@@ -667,12 +667,15 @@ func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) 
 	return s.CountFilteredNodes(ctx, (query.KindIn(query.Node(), kinds...)))
 }
 
-func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
+func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id ...graph.ID) (*graph.Node, error) {
 	var node *graph.Node
 
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
-		node, err = ops.FetchNode(tx, id)
+		for _, i := range id {
+			node, err = ops.FetchNode(tx, i)
+
+		}
 		return err
 	}); err != nil {
 		return nil, err

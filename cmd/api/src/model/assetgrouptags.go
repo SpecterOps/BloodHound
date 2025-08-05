@@ -49,10 +49,10 @@ const (
 type AssetGroupCertification int
 
 const (
-	AssetGroupCertificationRevoked AssetGroupCertification = -1
-	AssetGroupCertificationNone    AssetGroupCertification = 0
-	AssetGroupCertificationManual  AssetGroupCertification = 1
-	AssetGroupCertificationAuto    AssetGroupCertification = 2
+	AssetGroupCertificationPending AssetGroupCertification = 0
+	AssetGroupCertificationRevoked AssetGroupCertification = 1
+	AssetGroupCertificationManual  AssetGroupCertification = 2
+	AssetGroupCertificationAuto    AssetGroupCertification = 3
 )
 
 type AssetGroupSelectorNodeSource int
@@ -247,7 +247,6 @@ type AssetGroupSelectorNode struct {
 	Certified   AssetGroupCertification      `json:"certified"`
 	CertifiedBy null.String                  `json:"certified_by"`
 	Source      AssetGroupSelectorNodeSource `json:"source"`
-	Note        string                       `json:"note"`
 	CreatedAt   time.Time                    `json:"created_at"`
 	UpdatedAt   time.Time                    `json:"updated_at"`
 }

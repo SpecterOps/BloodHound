@@ -414,7 +414,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	var (
 		countInserted int
 
-		certified   = model.AssetGroupCertificationNone
+		certified   = model.AssetGroupCertificationPending
 		certifiedBy null.String
 
 		nodeIdsToDelete []graph.ID
@@ -442,7 +442,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it
-			} else if selector.AutoCertify.Bool && oldCert == model.AssetGroupCertificationNone {
+			} else if selector.AutoCertify.Bool && oldCert == model.AssetGroupCertificationPending {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
