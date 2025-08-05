@@ -19,7 +19,13 @@ import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn, exportToJson } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, getExploreTableData, requiredColumns } from './explore-table-utils';
+import {
+    ExploreTableProps,
+    MungedTableRowWithId,
+    getExploreTableData,
+    mergeOldGraphKeys,
+    requiredColumns,
+} from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -71,10 +77,12 @@ const ExploreTable = ({
     );
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
+    const shimmedColumns = useMemo(() => mergeOldGraphKeys(selectedColumns), [selectedColumns]);
+
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
         searchInput,
-        selectedColumns,
+        selectedColumns: shimmedColumns,
         exploreTableData,
     });
 
@@ -113,7 +121,7 @@ const ExploreTable = ({
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
-                    selectedColumns={selectedColumns}
+                    selectedColumns={migratedColumns}
                     pinnedColumns={requiredColumns}
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
