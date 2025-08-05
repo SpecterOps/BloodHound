@@ -38,8 +38,6 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
 
     const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
     const labels = labelsQuery.data;
-    console.log('labels');
-    console.log(labels);
 
     const [zone, setZone] = useState('');
     const [label, setLabel] = useState('');
@@ -51,7 +49,7 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
     const onContinue = () => {
         //TODO - use the const for this path
         if (isLabel) {
-            navigate(`/zone-management/save/labels/${label}/selector`, { state: selectedQuery });
+            navigate(`/zone-management/save/label/${label}/selector`, { state: selectedQuery });
         } else {
             navigate(`/zone-management/save/tier/${zone}/selector`, { state: selectedQuery });
         }

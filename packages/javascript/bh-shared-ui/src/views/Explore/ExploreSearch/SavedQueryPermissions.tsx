@@ -57,7 +57,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         } else {
             setSharedIds([]);
         }
-        console.log(data?.shared_to_user_ids.length);
         if (data?.shared_to_user_ids.length && data?.shared_to_user_ids.length === allUserIds?.length) {
             setShareAll(true);
         } else {
