@@ -37,6 +37,7 @@ import (
 	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
+	gorm "gorm.io/gorm"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -77,6 +78,20 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(ctx, entry any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), ctx, entry)
 }
 
+// BeginTransaction mocks base method.
+func (m *MockDatabase) BeginTransaction(ctx context.Context, fn func(*gorm.DB) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeginTransaction", ctx, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeginTransaction indicates an expected call of BeginTransaction.
+func (mr *MockDatabaseMockRecorder) BeginTransaction(ctx, fn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTransaction", reflect.TypeOf((*MockDatabase)(nil).BeginTransaction), ctx, fn)
+}
+
 // CancelAllIngestJobs mocks base method.
 func (m *MockDatabase) CancelAllIngestJobs(ctx context.Context) error {
 	m.ctrl.T.Helper()
@@ -89,6 +104,20 @@ func (m *MockDatabase) CancelAllIngestJobs(ctx context.Context) error {
 func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), ctx)
+}
+
+// CertifyOrDecertifyNodeWithHistory mocks base method.
+func (m *MockDatabase) CertifyOrDecertifyNodeWithHistory(ctx context.Context, userID, email string, nodeID, selectorID, action, assetTagID int, note string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CertifyOrDecertifyNodeWithHistory", ctx, userID, email, nodeID, selectorID, action, assetTagID, note)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CertifyOrDecertifyNodeWithHistory indicates an expected call of CertifyOrDecertifyNodeWithHistory.
+func (mr *MockDatabaseMockRecorder) CertifyOrDecertifyNodeWithHistory(ctx, userID, email, nodeID, selectorID, action, assetTagID, note any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CertifyOrDecertifyNodeWithHistory", reflect.TypeOf((*MockDatabase)(nil).CertifyOrDecertifyNodeWithHistory), ctx, userID, email, nodeID, selectorID, action, assetTagID, note)
 }
 
 // Close mocks base method.
@@ -1772,6 +1801,26 @@ func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]database.SourceKin
 func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKinds), ctx)
+}
+
+// GetTagsByKindId mocks base method.
+func (m *MockDatabase) GetTagsByKindId(ctx context.Context, kindIds ...int) (model.AssetGroupTags, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range kindIds {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetTagsByKindId", varargs...)
+	ret0, _ := ret[0].(model.AssetGroupTags)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTagsByKindId indicates an expected call of GetTagsByKindId.
+func (mr *MockDatabaseMockRecorder) GetTagsByKindId(ctx any, kindIds ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, kindIds...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsByKindId", reflect.TypeOf((*MockDatabase)(nil).GetTagsByKindId), varargs...)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.

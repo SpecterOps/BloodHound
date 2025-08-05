@@ -152,6 +152,8 @@ type Database interface {
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
 	DeleteAllDataQuality(ctx context.Context) error
 
+	BeginTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error
+
 	// Saved Queries
 	SavedQueriesData
 
@@ -262,4 +264,8 @@ func (s *BloodhoundDB) Migrate(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) BeginTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return s.db.WithContext(ctx).Transaction(fn)
 }

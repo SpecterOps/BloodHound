@@ -45,6 +45,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
+	"gorm.io/gorm"
 )
 
 const (
@@ -914,14 +915,9 @@ type CertifyMembersRequest struct {
 	Note      string                        `json:"note,omitempty"`
 }
 
-type CertifedMembersResponse struct {
-	Members model.AssetGroupSelectorNodes `json:"members"`
-}
-
 func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
 	var (
 		reqBody CertifyMembersRequest
-		members model.AssetGroupSelectorNodes
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Certify Members")()
 
@@ -934,40 +930,55 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if !validateCertType(reqBody.Action) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
+		// per node get max, update node for max map node id to max position
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodes, err := s.DB.GetSelectorNodesByNodeIds(request.Context(), reqBody.MemberIDs...); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		// A change in an object’s Zone should be apparent so that a certification can be automatically revoked
-		// add field for note to DB
-		for _, node := range nodes {
+		err := s.DB.BeginTransaction(request.Context(), func(tx *gorm.DB) error {
 
-			if reqBody.Action == 1 && node.Certified == model.AssetGroupCertificationNone {
-				node.Certified = model.AssetGroupCertificationManual
-			}
+			bhdb := database.NewBloodhoundDB(tx, auth.NewIdentityResolver())
 
-			if reqBody.Action == -1 && node.Certified == model.AssetGroupCertificationAuto {
-				node.Certified = model.AssetGroupCertificationAuto
-			}
-
-			if reqBody.Action == -1 && node.Certified == model.AssetGroupCertificationManual {
-				node.Certified = model.AssetGroupCertificationRevoked
-			}
-
-			if err = s.DB.UpdateSelectorNodesByNodeId(request.Context(), node.SelectorId, node.Certified, user.EmailAddress, node.NodeId); err != nil {
+			selNode, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(reqBody.MemberIDs))
+			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 			}
+			s.Graph.FetchKinds()
+			kinds = append(kinds, selNode.Kinds...)
+			tags, err := s.DB.GetTagsByKindId(request.Context(), kinds...)
+			// get kind ids. db call to match kinds to tags. get selectors for selected node
 
-			members = append(members, node)
+			// i think everything below this is what we dont want anymore
+			selectedNodes, err := bhdb.GetSelectorNodesByNodeIds(request.Context(), reqBody.MemberIDs...)
+			if err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return err
+			}
+			var historyAction = model.ToAssetGroupHistoryActionFromAssetGroupCertification(reqBody.Action)
+
+			for _, node := range selectedNodes {
+				if err = bhdb.UpdateSelectorNodesByNodeId(request.Context(), assetTagId, node.SelectorId, reqBody.Action, user.EmailAddress, node.NodeId); err != nil {
+					api.HandleDatabaseError(request, response, err)
+				}
+				if err = bhdb.CreateAssetGroupHistoryRecord(request.Context(), user.ID.String(), user.EmailAddress.ValueOrZero(), node.NodeId.String(), historyAction, assetTagId, null.String{}, null.NewString(reqBody.Note, true)); err != nil {
+					api.HandleDatabaseError(request, response, err)
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
 		}
+
+		response.WriteHeader(http.StatusOK)
 	}
-	api.WriteBasicResponse(request.Context(), CertifedMembersResponse{Members: members}, http.StatusOK, response)
 }
 
 func validateCertType(certType model.AssetGroupCertification) bool {
 	switch certType {
-	case model.AssetGroupCertificationManual, model.AssetGroupCertificationNone, model.AssetGroupCertificationRevoked, model.AssetGroupCertificationAuto:
+	case model.AssetGroupCertificationManual, model.AssetGroupCertificationRevoked:
 		return true
 	default:
 		return false

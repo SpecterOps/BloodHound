@@ -414,7 +414,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	var (
 		countInserted int
 
-		certified   = model.AssetGroupCertificationNone
+		certified   = model.AssetGroupCertificationPending
 		certifiedBy null.String
 
 		nodesToUpdate []model.AssetGroupSelectorNode

@@ -2828,10 +2828,6 @@ func TestResources_CertifyMembers(t *testing.T) {
 		assetGroupTagId = "1"
 	)
 
-	type WrappedResponse struct {
-		Data v2.CertifedMembersResponse `json:"data"`
-	}
-
 	defer mockCtrl.Finish()
 
 	userId, err := uuid2.NewV4()
@@ -2918,7 +2914,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 	t.Run("success - manual cert action", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{ID: 1}, nil)
 		mockDB.EXPECT().GetSelectorNodesByNodeIds(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{
-			{NodeId: 1, Certified: model.AssetGroupCertificationNone}}, nil)
+			{NodeId: 1, Certified: model.AssetGroupCertificationPending}}, nil)
 		mockDB.EXPECT().UpdateSelectorNodesByNodeId(gomock.Any(), gomock.Any(), model.AssetGroupCertificationManual, gomock.Any(), gomock.Any())
 
 		reqBody := `{"member_ids": [1], "action": 1}`
@@ -2930,17 +2926,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 		response := httptest.NewRecorder()
 		handler.ServeHTTP(response, req)
 
-		expected := WrappedResponse{v2.CertifedMembersResponse{
-			Members: []model.AssetGroupSelectorNode{
-				{NodeId: 1, Certified: model.AssetGroupCertificationManual},
-			},
-		},
-		}
-
-		wrappedResp := WrappedResponse{}
-		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
 		require.NoError(t, err)
-		require.Equal(t, expected, wrappedResp)
 		require.Equal(t, http.StatusOK, response.Code)
 	})
 
@@ -2959,17 +2945,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 		response := httptest.NewRecorder()
 		handler.ServeHTTP(response, req)
 
-		expected := WrappedResponse{v2.CertifedMembersResponse{
-			Members: []model.AssetGroupSelectorNode{
-				{NodeId: 1, Certified: model.AssetGroupCertificationAuto},
-			},
-		},
-		}
-
-		wrappedResp := WrappedResponse{}
-		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
 		require.NoError(t, err)
-		require.Equal(t, expected, wrappedResp)
 		require.Equal(t, http.StatusOK, response.Code)
 	})
 
@@ -2988,17 +2964,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 		response := httptest.NewRecorder()
 		handler.ServeHTTP(response, req)
 
-		expected := WrappedResponse{v2.CertifedMembersResponse{
-			Members: []model.AssetGroupSelectorNode{
-				{NodeId: 1, Certified: model.AssetGroupCertificationRevoked},
-			},
-		},
-		}
-
-		wrappedResp := WrappedResponse{}
-		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
 		require.NoError(t, err)
-		require.Equal(t, expected, wrappedResp)
 		require.Equal(t, http.StatusOK, response.Code)
 	})
 }
