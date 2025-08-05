@@ -19,7 +19,13 @@ import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import {
+    DEFAULT_PINNED_COLUMN_KEYS,
+    ExploreTableProps,
+    MungedTableRowWithId,
+    createColumnStateFromKeys,
+    requiredColumns,
+} from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -80,9 +86,12 @@ const ExploreTable = ({
         data,
     });
 
-    const [columnPinning, setColumnPinning] = useState<DataTableProps['columnPinning']>({
-        left: ['action-menu', 'nodetype', 'name'],
+    // Just a hardcoded list of pinned columns for now
+    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
+        left: DEFAULT_PINNED_COLUMN_KEYS,
     });
+
+    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
 
     const searchInputProps = useMemo(
         () => ({
@@ -105,7 +114,7 @@ const ExploreTable = ({
                 <TableControls
                     columns={columnOptionsForDropdown}
                     selectedColumns={selectedColumns}
-                    pinnedColumns={requiredColumns}
+                    pinnedColumns={leftPinnedColumns}
                     onDownloadClick={onDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}

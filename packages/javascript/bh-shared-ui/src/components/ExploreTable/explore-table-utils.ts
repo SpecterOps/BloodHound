@@ -30,8 +30,13 @@ export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
 export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'isTierZero', 'name', 'objectid'];
+export const DEFAULT_PINNED_COLUMN_KEYS = ['action-menu', 'nodetype', 'name'];
 
-export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+export const createColumnStateFromKeys = (keys: string[]): Record<string, boolean> => {
+    return Object.fromEntries(keys.map((key) => [key, true]));
+};
+
+export const requiredColumns = createColumnStateFromKeys(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS);
 
 export const compareForExploreTableSort = (a: any, b: any) => {
     if (typeof a === 'number' || typeof b === 'number') {
