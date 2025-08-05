@@ -31,7 +31,7 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogo size={26} className='scale-150 mt-4' color='white' />, // Note: size 26 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
+            icon: <AppIcon.BHCELogo size={26} className='scale-150 mt-4' />, // Note: size 26 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
             image: {
                 imageUrl: `${import.meta.env.BASE_URL}${darkMode ? bhceImageUrlDarkMode : bhceImageUrlLightMode}`,
                 dimensions: { height: '40px', width: '165px' },
