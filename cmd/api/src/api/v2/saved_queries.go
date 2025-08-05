@@ -132,7 +132,11 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 		} else if scopedQueries, scopedCount, err := s.DB.ListSavedQueries(request.Context(), scope, user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
-			api.HandleDatabaseError(request, response, err)
+			if strings.Contains(err.Error(), "invalid scope parameter") {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), scopedQueries, limit, skip, scopedCount, http.StatusOK, response)
 		}

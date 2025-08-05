@@ -2766,6 +2766,26 @@ func TestResources_ListSavedQueries(t *testing.T) {
 			},
 		},
 		{
+			name: "fail - invalid scope",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mock) {
+					mock.mockDatabase.EXPECT().ListSavedQueries(gomock.Any(), "invalid", user1Id, "id", model.SQLFilter{}, 0, 10000).Return(nil, 0, fmt.Errorf("invalid scope parameter: invalid"))
+				},
+			},
+			args: args{
+				func() *http.Request {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries?scope=invalid", nil)
+					require.NoError(t, err)
+					return req
+				},
+			},
+			expect: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"invalid scope parameter: invalid"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "success - return owned queries",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
