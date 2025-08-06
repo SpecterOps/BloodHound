@@ -30,7 +30,7 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {
-                    'Certify.exe request --ca rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA --template --template User --upn Administrator --sid-url S-1-5-21-976219687-1556195986-4104514715-500'
+                    'Certify.exe request --ca rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA --template User --upn Administrator --sid-url S-1-5-21-976219687-1556195986-4104514715-500'
                 }
             </Typography>
             <Typography variant='body2'>
