@@ -77,6 +77,11 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
+const (
+	Tier0Glyph = "gem"
+	OwnedGlyph = "skull"
+)
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
