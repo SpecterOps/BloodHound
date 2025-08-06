@@ -202,6 +202,7 @@ const InnerCommonSearches = ({
                     clearFiltersHandler={handleClearFilters}
                     selectedQuery={selectedQuery}
                     editHandler={onEditQuery}
+                    showCommonQueries={showCommonQueries}
                 />
             </div>
         </div>

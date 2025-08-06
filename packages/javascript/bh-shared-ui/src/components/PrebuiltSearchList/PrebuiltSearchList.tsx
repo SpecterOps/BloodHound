@@ -13,17 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
-import { FC, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { QueryListSection } from '../../types';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
     selectedQuery: any;
+    showCommonQueries: boolean;
     clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
     editHandler: (id: number) => void;
@@ -49,6 +49,7 @@ const useStyles = makeStyles((theme) => ({
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     listSections,
     selectedQuery,
+    showCommonQueries,
     clickHandler,
     deleteHandler,
     editHandler,
@@ -58,6 +59,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     const [queryId, setQueryId] = useState<number>();
 
     const styles = useStyles();
+    const itemRef = useRef<HTMLDivElement>(null);
 
     const handleClose = () => {
         setOpen(false);
@@ -86,6 +88,16 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         return false;
     };
 
+    const scrollSelectedQuery = () => {
+        if (itemRef.current) {
+            itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    useEffect(() => {
+        if (selectedQuery) scrollSelectedQuery();
+    }, [selectedQuery, showCommonQueries]);
+
     return (
         <>
             {listSections && (
@@ -103,11 +115,12 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                             const { id, name, description, query, canEdit = false } = lineItem;
                                             return (
                                                 <div
-                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 ${
+                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 scroll-my-10 ${
                                                         testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    onClick={() => clickHandler(query, id)}>
+                                                    onClick={() => clickHandler(query, id)}
+                                                    ref={testMatch(name, id) ? itemRef : null}>
                                                     <div>
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>
