@@ -17,14 +17,16 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
-
+// My AdminSDHolder research demonstrates that SDProp is not the mechanism that applies AdminSDHolder permissions
+// to protected AD objects, instead it is the ProtectAdmingGroups background task. The Microsoft documentation has
+// been wrong for decades. I'll be releasing a 160+ whitepaper on AdminSDHolder with this release.
 const General: FC<EdgeInfoProps> = ({ sourceName, targetName, targetType }) => {
     return (
         <>
             <Typography variant='body2'>
-                AdminSDHolder is an object and an associated background task which runs on the PDCe FSMO role holder
-                domain controller. Any modifications made to the security descriptor of {sourceName} will be tattooed on
-                the {targetType} {targetName} by the ProtectAdminGroups background task (not SDProp) every hour by
+                AdminSDHolder is a container object and the associated ProtectAdminGroups (not SDProp) background task
+                which runs on the PDC emulator domain controller. Any modifications made to the security descriptor of
+                {sourceName} will be tattooed on the {targetType} {targetName} by ProtectAdminGroups every hour by
                 default.
             </Typography>
             <Typography variant='body2'>

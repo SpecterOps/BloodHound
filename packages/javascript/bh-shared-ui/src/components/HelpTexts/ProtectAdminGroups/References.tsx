@@ -17,6 +17,8 @@
 import { Box, Link } from '@mui/material';
 import { FC } from 'react';
 
+// https://specterops.io/resources/adminsdholder is the placeholder URL that marketing created for my
+// AdminSDHolder whitepaper
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
