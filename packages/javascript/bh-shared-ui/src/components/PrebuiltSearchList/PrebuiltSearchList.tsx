@@ -18,11 +18,11 @@ import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTit
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
 import { FC, useEffect, useRef, useState } from 'react';
-import { QueryListSection } from '../../types';
+import { QueryLineItem, QueryListSection } from '../../types';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
-    selectedQuery: any;
+    selectedQuery: QueryLineItem | undefined;
     showCommonQueries: boolean;
     clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;

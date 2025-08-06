@@ -39,7 +39,7 @@ type CommonSearchesProps = {
     onEditQuery: (id: number) => void;
     selected: { query: string; id?: number };
     showCommonQueries: boolean;
-    selectedQuery: any;
+    selectedQuery: QueryLineItem | undefined;
 };
 
 const InnerCommonSearches = ({
@@ -163,7 +163,7 @@ const InnerCommonSearches = ({
 
     const handleExport = () => {
         if (!(selectedQuery && selectedQuery?.id)) return;
-        getExportQuery(selectedQuery.id).then((res: any) => {
+        getExportQuery(selectedQuery.id).then((res) => {
             const filename =
                 res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] || `exported_queries.zip`;
             fileDownload(res.data, filename);

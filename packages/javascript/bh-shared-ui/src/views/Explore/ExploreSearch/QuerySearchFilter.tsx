@@ -7,6 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
 import { AppIcon } from '../../../components';
+import { QueryLineItem } from '../../../types';
 import ImportQueryDialog from './ImportQueryDialog';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[], source: string) => void;
@@ -17,7 +18,7 @@ interface QuerySearchProps {
     platform: string;
     categoryFilter: string[];
     source: string;
-    selectedQuery: any;
+    selectedQuery: QueryLineItem | undefined;
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
@@ -107,7 +108,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             disabled={!exportEnabled}
                             className='ml-2'
                             variant='icon'
-                            onClick={() => deleteHandler(selectedQuery?.id)}>
+                            onClick={() => deleteHandler(selectedQuery?.id as number)}>
                             <FontAwesomeIcon icon={faTrash} />
                         </Button>
                     </div>

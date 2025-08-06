@@ -18,10 +18,11 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { useNavigate } from 'react-router-dom';
 import { useTagsQuery } from '../../../hooks';
+import { QueryLineItem } from '../../../types';
 
 type TagToZoneDialogProps = {
     dialogOpen: boolean;
-    selectedQuery: any;
+    selectedQuery: QueryLineItem | undefined;
     isLabel: boolean;
     setDialogOpen: (isOpen: boolean) => void;
 };
