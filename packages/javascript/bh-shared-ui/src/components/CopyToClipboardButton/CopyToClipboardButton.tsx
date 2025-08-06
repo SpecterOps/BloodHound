@@ -4,8 +4,8 @@ import { AnimationEvent, useState } from 'react';
 import { cn, copyToClipboard } from '../../utils';
 
 type CopyToClipboardButtonProps = {
-    onAnimationStart?: (e: AnimationEvent<HTMLDivElement>) => void;
-    onAnimationEnd?: (e: AnimationEvent<HTMLDivElement>) => void;
+    onAnimationStart?: (e: AnimationEvent<HTMLButtonElement>) => void;
+    onAnimationEnd?: (e: AnimationEvent<HTMLButtonElement>) => void;
     transitionDelay?: string;
     value: string | Array<any>;
 };
@@ -19,7 +19,7 @@ export const CopyToClipboardButton = ({
     value,
 }: CopyToClipboardButtonProps) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
-    const handleCopyToClipBoard: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const handleCopyToClipBoard: React.MouseEventHandler<HTMLButtonElement> = (e) => {
         e.stopPropagation(); // prevents the click event bubbling up the DOM and triggering the row click handler
         if (typeof value === 'string') {
             copyToClipboard(value);
@@ -31,8 +31,7 @@ export const CopyToClipboardButton = ({
 
     return (
         <>
-            <div
-                role='button'
+            <button
                 onClick={handleCopyToClipBoard}
                 onAnimationStart={(animationEvent) => {
                     const element = animationEvent.target as HTMLElement;
@@ -58,7 +57,7 @@ export const CopyToClipboardButton = ({
                 )}>
                 {displayCopyCheckmark && <FontAwesomeIcon icon={faCheck} className='animate-in fade-in duration-300' />}
                 {!displayCopyCheckmark && <FontAwesomeIcon icon={faCopy} className='animate-in fade-in duration-300' />}
-            </div>
+            </button>
             <span className={cn('group-hover:pl-5 transition-[padding-left] ease-in', transitionDelay)}>{value}</span>
         </>
     );
