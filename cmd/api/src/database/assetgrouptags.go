@@ -61,8 +61,8 @@ type AssetGroupTagSelectorData interface {
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
 type AssetGroupTagSelectorNodeData interface {
-	InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error
-	UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error
+	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, displayName string) error
+	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID, displayName string) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
@@ -679,12 +679,28 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
-func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error {
-	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (selector_id, node_id, certified, certified_by, source, created_at, updated_at) VALUES(?, ?, ?, ?, ?, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId, certified, certifiedBy, source))
+func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, displayName string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (selector_id, node_id, certified, certified_by, source, created_at, updated_at) VALUES(?, ?, ?, ?, ?, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId, certified, certifiedBy, source); result.Error != nil {
+			return CheckError(result)
+		} else if certified != model.AssetGroupCertificationNone {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
+			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
+		}
+		return nil
+	})
 }
 
-func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
-	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, selectorId, nodeId))
+func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID, displayName string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, selectorId, nodeId); result.Error != nil {
+			return CheckError(result)
+		} else if certified != model.AssetGroupCertificationNone {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
+			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
+		}
+		return nil
+	})
 }
 
 func (s *BloodhoundDB) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {

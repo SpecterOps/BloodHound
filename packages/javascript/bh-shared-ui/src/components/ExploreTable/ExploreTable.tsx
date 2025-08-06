@@ -16,10 +16,16 @@
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { useToggle } from '../../hooks';
-import { cn } from '../../utils';
+import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
+import { cn, exportToJson } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import {
+    ExploreTableProps,
+    MungedTableRowWithId,
+    getExploreTableData,
+    requiredColumns,
+    shimGraphSpecificKeys,
+} from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -52,16 +58,14 @@ const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
 };
 
 const ExploreTable = ({
-    data,
-    selectedNode,
     onClose,
-    onRowClick,
-    onDownloadClick,
     onKebabMenuClick,
     onManageColumnsChange,
-    allColumnKeys,
     selectedColumns = requiredColumns,
 }: ExploreTableProps) => {
+    const { data: graphData } = useExploreGraph();
+    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
@@ -72,12 +76,14 @@ const ExploreTable = ({
         [setSearchInput]
     );
 
+    const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
+    const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
+
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
         searchInput,
-        allColumnKeys,
-        selectedColumns,
-        data,
+        selectedColumns: shimmedColumns,
+        exploreTableData,
     });
 
     const searchInputProps = useMemo(
@@ -89,20 +95,35 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
+    const handleDownloadClick = useCallback(() => {
+        if (exploreTableData?.nodes) {
+            exportToJson({ nodes: exploreTableData?.nodes });
+        }
+    }, [exploreTableData?.nodes]);
+
+    const handleRowClick = useCallback(
+        (row: MungedTableRowWithId) => {
+            if (row.id !== selectedItem) {
+                setSelectedItem(row.id);
+            }
+        },
+        [setSelectedItem, selectedItem]
+    );
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
             className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2', {
                 'h-1/2': !isExpanded,
                 'h-[calc(100%-72px)]': isExpanded,
-                'w-[calc(100%-450px)]': selectedNode,
+                'w-[calc(100%-450px)]': selectedItem,
             })}>
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
-                    selectedColumns={selectedColumns}
+                    selectedColumns={shimmedColumns}
                     pinnedColumns={requiredColumns}
-                    onDownloadClick={onDownloadClick}
+                    onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
@@ -116,8 +137,8 @@ const ExploreTable = ({
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}
                     TableCellProps={tableCellProps}
-                    onRowClick={onRowClick}
-                    selectedRow={selectedNode || undefined}
+                    onRowClick={handleRowClick}
+                    selectedRow={selectedItem || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}
