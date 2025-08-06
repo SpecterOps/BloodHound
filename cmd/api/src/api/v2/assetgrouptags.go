@@ -551,7 +551,8 @@ type AssetGroupMember struct {
 	Name          string         `json:"name"`
 	Properties    map[string]any `json:"properties,omitempty"`
 
-	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
+	Source          model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
+	AssetGroupTagId int                                `json:"asset_group_tag_id,omitempty"`
 }
 
 // Used to minimize the response shape to just the necessary member display fields
@@ -657,7 +658,9 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {
-				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
+				groupMem := nodeToAssetGroupMember(node, excludeProperties)
+				groupMem.AssetGroupTagId = assetGroupTag.ID
+				members = append(members, groupMem)
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
