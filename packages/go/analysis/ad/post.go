@@ -151,9 +151,14 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 			innerDomain := domain
 			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 				if adminSDHolder, err := getAdminSDHolder(tx, innerDomain); err != nil {
+					if graph.IsErrNotFound(err) {
+						return nil // No AdminSDHolder found for this domain
+					}
 					return err
 				} else if adminSDHolderProtected, err := getAdminSDHolderProtected(tx, innerDomain); err != nil {
-					return nil
+					return err
+				} else if len(adminSDHolder) == 0 {
+					return nil // No AdminSDHolder found for this domain
 				} else {
 					for _, object := range adminSDHolderProtected {
 						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
