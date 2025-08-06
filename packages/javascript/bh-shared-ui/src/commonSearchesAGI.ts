@@ -281,7 +281,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'AdminSDHolder to protected objects relationship',
-                cypher: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\mRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },

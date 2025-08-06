@@ -21,12 +21,12 @@ const Opsec: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                Modifications to the AdminSDHolder security descriptor can be detected via SACLs if configured and ingested,
-                as can modifications to the security descriptor of any objects that AdminSDHolder protects.
+                Modifications to the AdminSDHolder security descriptor can be detected via SACLs if configured and
+                ingested, as can modifications to the security descriptor of any objects that AdminSDHolder protects.
             </Typography>
             <Typography variant='body2'>
-                If auditing is properly configured in the environment, Event ID 4780 will be generated if the ProtectAdminGroups background task tattoos
-                the AdminSDHolder security descriptor on a protected object.
+                If auditing is properly configured in the environment, Event ID 4780 will be generated if the
+                ProtectAdminGroups background task tattoos the AdminSDHolder security descriptor on a protected object.
             </Typography>
         </>
     );

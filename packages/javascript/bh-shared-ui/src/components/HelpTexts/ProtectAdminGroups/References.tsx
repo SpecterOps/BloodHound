@@ -24,7 +24,10 @@ const References: FC = () => {
                 SpecterOps: AdminSDHolder: Misconceptions and Myths
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://secureidentity.se/adminsdholder-pitfalls-and-misunderstandings/'>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://secureidentity.se/adminsdholder-pitfalls-and-misunderstandings/'>
                 Secure Identity: AdminSDHolder - pitfalls and misunderstandings
             </Link>
             <br />
