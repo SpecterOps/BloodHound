@@ -313,6 +313,27 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("Duplicate null gyph is accepted", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		_, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t1 name", "", null.Int32{}, null.Bool{}, null.String{})
+		require.NoError(t, err)
+
+		_, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t2 name", "", null.Int32{}, null.Bool{}, null.String{})
+		require.NoError(t, err)
+	})
+
+	t.Run("Duplicate glyph errors out", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		_, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t1 name", "", null.Int32{}, null.Bool{}, glyph)
+		require.NoError(t, err)
+
+		_, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t2 name", "", null.Int32{}, null.Bool{}, glyph)
+		require.Error(t, err)
+		require.EqualError(t, err, "ERROR: duplicate key value violates unique constraint \"asset_group_tags_glyph_key\" (SQLSTATE 23505)")
+	})
+
 }
 
 func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
