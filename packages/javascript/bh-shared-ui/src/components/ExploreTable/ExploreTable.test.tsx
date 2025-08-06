@@ -138,28 +138,42 @@ describe('ExploreTable', async () => {
 
         await screen.findByText('10 results');
 
-        // Unsorted first display name cell
-        expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
+        // Make sure sort behavior loops through ascending, descending, unsorted
+        for (let i = 0; i < 3; i++) {
+            // Unsorted first display name cell
+            expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
-        await user.click(screen.getByText('Name'));
+            await user.click(screen.getByText('Name'));
 
-        // Alphabetically sorted first display name cell
-        expect(getFirstCellOfType('label')).toHaveTextContent('ADMINISTRATOR@GHOST.CORP');
+            // Alphabetically sorted first display name cell
+            expect(getFirstCellOfType('label')).toHaveTextContent('ADMINISTRATOR@GHOST.CORP');
 
-        await user.click(screen.getByText('Name'));
+            await user.click(screen.getByText('Name'));
 
-        // Reverse Alphabetically sorted first display name cell
-        expect(getFirstCellOfType('label')).toHaveTextContent('ZZZIGNE@PHANTOM.CORP');
+            // Reverse Alphabetically sorted first display name cell
+            expect(getFirstCellOfType('label')).toHaveTextContent('ZZZIGNE@PHANTOM.CORP');
 
-        await user.click(screen.getByText('Object ID'));
+            // Reset to unsorted
+            await user.click(screen.getByText('Name'));
+        }
 
-        // Descending sorted first object id cell
-        expect(getFirstCellOfType('objectId')).toHaveTextContent('PHANTOM.CORP-S-1-5-20');
+        for (let i = 0; i < 3; i++) {
+            // Unsorted first object id cell
+            expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
 
-        await user.click(screen.getByText('Object ID'));
+            await user.click(screen.getByText('Object ID'));
 
-        // Ascending sorted first object id cell
-        expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2845847946-3451170323-4261139666-1106');
+            // Descending sorted first object id cell
+            expect(getFirstCellOfType('objectId')).toHaveTextContent('PHANTOM.CORP-S-1-5-20');
+
+            await user.click(screen.getByText('Object ID'));
+
+            // Ascending sorted first object id cell
+            expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2845847946-3451170323-4261139666-1106');
+
+            // Reset to unsorted
+            await user.click(screen.getByText('Object ID'));
+        }
     });
 
     it('Expand button causes table to expand to full height', async () => {
