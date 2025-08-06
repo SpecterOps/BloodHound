@@ -117,8 +117,8 @@ const WindowsAbuse: FC = () => {
             <Typography component={'pre'}>
                 {'Certify.exe request --ca SERVER\\CA-NAME --template TEMPLATE --machine'}
             </Typography>
-            <Typography variant='body2' className={classes.containsCodeEl}>
-                Save the certificate as <code>cert.pem</code> and the private key as <code>cert.key</code>.
+            <Typography variant='body2'>
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
         </>
     );
