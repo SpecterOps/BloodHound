@@ -12,7 +12,7 @@ export const usePrebuiltQueries = () => {
             name: query.name,
             description: query.description,
             query: query.query,
-            canEdit: true,
+            canEdit: true, //TODO - handle permissions for shared / public
             id: query.id,
             user_id: query.user_id,
         })) || [];
