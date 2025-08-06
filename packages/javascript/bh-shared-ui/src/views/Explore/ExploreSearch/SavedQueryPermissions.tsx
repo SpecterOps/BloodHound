@@ -1,23 +1,26 @@
 import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 import { CheckedState } from '@radix-ui/react-checkbox';
+import { User } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useQueryPermissions } from '../../../hooks';
 import { apiClient } from '../../../utils';
-
-import {} from 'react-query';
 type SavedQueryPermissionsProps = {
     queryId?: number;
     sharedIds: string[];
     setSharedIds: (ids: string[]) => void;
+};
+type ListUser = {
+    name: string;
+    id: string;
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
     const { queryId, sharedIds, setSharedIds } = props;
     const [shareAll, setShareAll] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<ListUser[]>([]);
 
     const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
 
@@ -29,8 +32,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     function idMap() {
         return listUsersQuery.data
-            ?.filter((user: any) => user.id !== getSelf.data.id)
-            .map((user: any) => {
+            ?.filter((user: User) => user.id !== getSelf.data.id)
+            .map((user: User) => {
                 return {
                     name: user.principal_name,
                     id: user.id,
@@ -84,12 +87,12 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         }
     };
 
-    const isCheckboxChecked = (id: any) => {
+    const isCheckboxChecked = (id: string) => {
         return sharedIds.includes(id);
     };
 
     const getColumns = () => {
-        const columns: ColumnDef<any>[] = [
+        const columns: ColumnDef<ListUser>[] = [
             {
                 accessorKey: 'id',
                 header: () => {
@@ -133,7 +136,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     useEffect(() => {
         if (searchTerm.length) {
             const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
-            setFilteredUsers(filtered as any[]);
+            setFilteredUsers(filtered as ListUser[]);
         } else {
             setFilteredUsers([]);
         }

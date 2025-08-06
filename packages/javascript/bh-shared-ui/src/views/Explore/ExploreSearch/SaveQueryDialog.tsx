@@ -38,10 +38,10 @@ import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../../constants';
+import { QueryLineItem } from '../../../types';
 import { apiClient, cn } from '../../../utils';
 import ConfirmUpdateQueryDialog from './ConfirmSaveQueryDialog';
 import SavedQueryPermissions from './SavedQueryPermissions';
-
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
@@ -51,12 +51,12 @@ type CypherSearchState = {
 const SaveQueryDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-    onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<any>;
-    onUpdate: (data: UpdateUserQueryRequest) => Promise<any>;
+    onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<void>;
+    onUpdate: (data: UpdateUserQueryRequest) => Promise<void>;
     isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
-    selectedQuery: any;
+    selectedQuery: QueryLineItem | undefined;
     sharedIds: string[];
     setSharedIds: (ids: string[]) => void;
 }> = ({
@@ -77,7 +77,7 @@ const SaveQueryDialog: React.FC<{
 
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [id, setId] = useState(undefined);
+    const [id, setId] = useState<number | undefined>(undefined);
     const [isNew, setIsNew] = useState(true);
     const [localCypherQuery, setLocalCypherQuery] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -190,13 +190,6 @@ const SaveQueryDialog: React.FC<{
                                                 setLocalCypherQuery(val);
                                             }}
                                             theme={theme.palette.mode}
-                                            // onKeyDown={(e: any) => {
-                                            //     // if enter and shift key is pressed, execute cypher search
-                                            //     if (e.key === 'Enter' && e.shiftKey) {
-                                            //         e.preventDefault();
-                                            //         handleCypherSearch();
-                                            //     }
-                                            // }}
                                             schema={graphSchema(kindsQuery.data)}
                                             lineWrapping
                                             lint

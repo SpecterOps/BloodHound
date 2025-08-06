@@ -30,13 +30,13 @@ import {
     useUpdateSavedQuery,
 } from '../../../hooks';
 import { useNotifications } from '../../../providers';
+import { QueryLineItem } from '../../../types';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
 import TagToZoneLabel from './TagToZoneLabel';
-
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
@@ -100,14 +100,14 @@ const CypherSearch = ({
             onRunSearchClick();
         }
     };
-    const handleSavedSearch = (query: any) => {
+    const handleSavedSearch = (query: string) => {
         if (autoRun) {
             performSearch(query);
         }
     };
 
     const getCypherValueOnLoadRef = useRef(false);
-    const selectedQuery: any = useGetSelectedQuery(selected.query, selected.id);
+    const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
     useEffect(() => {
         //Setting the selected query once on load
         if (!getCypherValueOnLoadRef.current && cypherQuery) {
@@ -269,7 +269,7 @@ const CypherSearch = ({
                                     setCypherQuery(val);
                                 }}
                                 theme={theme.palette.mode}
-                                onKeyDown={(e: any) => {
+                                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
                                     // if enter and shift key is pressed, execute cypher search
                                     if (e.key === 'Enter' && e.shiftKey) {
                                         e.preventDefault();

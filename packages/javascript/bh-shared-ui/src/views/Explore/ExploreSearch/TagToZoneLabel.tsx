@@ -1,10 +1,11 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../components';
+import { QueryLineItem } from '../../../types';
 import TagToZoneDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {
-    selectedQuery: any;
+    selectedQuery: QueryLineItem | undefined;
 };
 
 const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
