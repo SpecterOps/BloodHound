@@ -58,7 +58,7 @@ type Workspace struct {
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
 func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = environment.YarnCommand()
 		args    = []string{"install"}
 	)
 
@@ -74,7 +74,7 @@ func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environm
 // Format runs yarn format on current workspace
 func Format(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = environment.YarnCommand()
 		args    = []string{"format"}
 	)
 
@@ -88,7 +88,7 @@ func Format(cwd string, env environment.Environment) error {
 // BuildWorkspace runs yarn build for the current working directory
 func BuildWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = environment.YarnCommand()
 		args    = []string{"build"}
 	)
 
@@ -102,7 +102,7 @@ func BuildWorkspace(cwd string, env environment.Environment) error {
 // TestWorkspace runs yarn tests for all yarn workspaces
 func TestWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = environment.YarnCommand()
 		args    = []string{"test", "--coverage", "--run"}
 	)
 

@@ -105,7 +105,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 					addErr(err)
 				} else if hasGenerationDirectives {
 					var (
-						command = "go"
+						command = environment.GoCommand()
 						args    = []string{"generate", nextPackage.Dir}
 					)
 
