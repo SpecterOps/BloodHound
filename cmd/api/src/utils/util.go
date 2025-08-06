@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
-	"net/textproto"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -242,19 +241,6 @@ const (
 	ErrorInvalidSkip  string = "invalid skip: %v"
 	ErrorInvalidLimit string = "invalid limit: %v"
 )
-
-func MultipartPartHeaderMatches(headers textproto.MIMEHeader, key string, target ...string) bool {
-	value := strings.ToLower(headers.Get(key))
-	if value == "" {
-		return false
-	}
-	for _, t := range target {
-		if strings.Contains(value, strings.ToLower(t)) {
-			return true
-		}
-	}
-	return false
-}
 
 func HeaderMatches(headers http.Header, key string, target ...string) bool {
 	value := strings.ToLower(headers.Get(key))

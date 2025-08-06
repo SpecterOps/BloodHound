@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
 	"os"
 
@@ -33,34 +32,6 @@ import (
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
-
-func SaveMultipartIngestFile(location string, part *multipart.Part, validator IngestValidator) (IngestTaskParams, error) {
-	var (
-		fileType     model.FileType
-		validationFn FileValidator
-	)
-
-	switch {
-	case utils.MultipartPartHeaderMatches(part.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
-		fileType = model.FileTypeJson
-		validationFn = validator.WriteAndValidateJSON
-	case utils.MultipartPartHeaderMatches(part.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
-		fileType = model.FileTypeZip
-		validationFn = WriteAndValidateZip
-	default:
-		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
-	}
-
-	if tempFileName, err := WriteAndValidateFile(part, location, validationFn); err != nil {
-		return IngestTaskParams{}, err
-	} else {
-		return IngestTaskParams{
-			Filename: tempFileName,
-			FileType: fileType,
-		}, nil
-	}
-
-}
 
 func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (IngestTaskParams, error) {
 	fileData := request.Body
