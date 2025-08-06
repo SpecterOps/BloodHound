@@ -38,7 +38,6 @@ describe('ExploreTableDataCell', () => {
 
         await user.click(screen.getByText('copy'));
 
-        screen.debug();
         const checkmark = await screen.findByText('check');
         expect(checkmark).toBeInTheDocument();
 

@@ -6924,7 +6924,14 @@
             "name": "scope",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+              "type": "string",
+              "enum": [
+                "all",
+                "owned",
+                "shared",
+                "public"
+              ],
+              "default": "owned"
             }
           }
         ],
@@ -6944,7 +6951,19 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.saved-query"
+                            "allOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              {
+                                "$ref": "#/components/schemas/model.saved-query"
+                              }
+                            ]
                           }
                         }
                       }

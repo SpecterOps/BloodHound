@@ -17,14 +17,14 @@ import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
-import { StyledGraphEdge } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useMemo, useState } from 'react';
 import {
     compareForExploreTableSort,
+    getExploreTableData,
+    isRequiredColumn,
     isSmallColumn,
     REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
-    requiredColumns,
     type ExploreTableProps,
     type MungedTableRowWithId,
 } from './explore-table-utils';
@@ -35,46 +35,42 @@ const columnHelper = createColumnHelper<MungedTableRowWithId>();
 
 type DataTableProps = React.ComponentProps<typeof DataTable>;
 
-const filterKeys: (keyof MungedTableRowWithId)[] = ['displayname', 'objectid'];
+const filterKeys: (keyof MungedTableRowWithId)[] = ['label', 'objectid'];
 
-type UseExploreTableRowsAndColumnsProps = Pick<
-    ExploreTableProps,
-    'onKebabMenuClick' | 'allColumnKeys' | 'selectedColumns' | 'data'
-> & { searchInput: string };
+type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuClick' | 'selectedColumns'> & {
+    searchInput: string;
+    exploreTableData: ReturnType<typeof getExploreTableData>;
+};
 
 const useExploreTableRowsAndColumns = ({
     onKebabMenuClick,
     searchInput,
-    allColumnKeys,
     selectedColumns,
-    data,
+    exploreTableData,
 }: UseExploreTableRowsAndColumnsProps) => {
     const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
 
-    const rows = useMemo(
+    const rows: MungedTableRowWithId[] = useMemo(
         () =>
-            (data &&
-                Object.entries(data).reduce((acc: MungedTableRowWithId[], curr) => {
-                    const [key, value] = curr;
+            exploreTableData?.nodes
+                ? Object.entries(exploreTableData?.nodes).map(([key, node]) => {
+                      // To avoid extra enumerations for spread operators, the known properties are manually set
+                      const flattenedNode = {
+                          id: key,
+                          label: node.label,
+                          kind: node.kind,
+                          objectId: node.objectId,
+                          lastSeen: node.lastSeen,
+                          isTierZero: node.isTierZero,
+                          isOwnedObject: node.isOwnedObject,
+                          ...node.properties,
+                      } satisfies MungedTableRowWithId;
 
-                    const valueAsPotentialEdge = value as StyledGraphEdge;
-
-                    if (!!valueAsPotentialEdge.id1 || !!valueAsPotentialEdge.id2) {
-                        return acc;
-                    }
-
-                    const nextRow = Object.assign({}, value.data);
-
-                    nextRow.id = key;
-                    nextRow.displayname = value?.label?.text;
-
-                    acc.push(nextRow as MungedTableRowWithId);
-
-                    return acc;
-                }, [])) ||
-            [],
-        [data]
+                      return flattenedNode;
+                  })
+                : [],
+        [exploreTableData?.nodes]
     );
 
     const handleSort = useCallback(
@@ -136,7 +132,7 @@ const useExploreTableRowsAndColumns = ({
                     return (
                         <Tooltip
                             title={<p>{info.getValue()}</p>}
-                            disableHoverListener={key === 'nodetype' || isEmpty(value)}>
+                            disableHoverListener={key === 'kind' || isEmpty(value)}>
                             <div data-testid={`table-cell-${key}`} className='truncate'>
                                 <ExploreTableDataCell value={value} columnKey={key?.toString()} />
                             </div>
@@ -197,7 +193,10 @@ const useExploreTableRowsAndColumns = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    const allColumnDefintions = useMemo(() => allColumnKeys?.map(makeColumnDef) || [], [allColumnKeys, makeColumnDef]);
+    const allColumnDefintions = useMemo(
+        () => exploreTableData?.node_keys?.map(makeColumnDef) || [],
+        [exploreTableData?.node_keys, makeColumnDef]
+    );
 
     const selectedColumnDefinitions = useMemo(
         () => allColumnDefintions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
@@ -208,8 +207,8 @@ const useExploreTableRowsAndColumns = ({
         const columnDefs = selectedColumnDefinitions.sort((a, b) => {
             const idA = a?.id || '';
             const idB = b?.id || '';
-            const aIsRequired = requiredColumns[idA];
-            const bIsRequired = requiredColumns[idB];
+            const aIsRequired = isRequiredColumn(idA);
+            const bIsRequired = isRequiredColumn(idB);
             if (aIsRequired) {
                 if (bIsRequired) {
                     return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >

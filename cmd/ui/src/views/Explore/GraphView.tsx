@@ -95,7 +95,7 @@ const GraphView: FC = () => {
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
-        let items: any = graphQuery.data?.nodes;
+        let items: any = graphQuery.data;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
@@ -111,7 +111,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -260,8 +260,6 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {displayTable && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes}
-                    allColumnKeys={graphQuery.data.node_keys}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}

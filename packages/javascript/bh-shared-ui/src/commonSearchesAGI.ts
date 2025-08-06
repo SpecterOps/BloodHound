@@ -271,6 +271,10 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Tier Zero / High Value users with non-expiring passwords',
                 cypher: `MATCH (u:User)\nWHERE u.enabled = true\nAND u.pwdneverexpires = true\nand COALESCE(u.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nRETURN u\nLIMIT 100`,
             },
+            {
+                description: 'Tier Zero principals without AdminSDHolder protection',
+                cypher: `MATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+            },
         ],
     },
     {
@@ -279,7 +283,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Global Administrators',
-                cypher: `MATCH p = (:AZBase)-[:AZGlobalAdmin*1..]->(:AZTenant)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(:AZBase)-[:AZHasRole*1..]->(t:AZRole)\nWHERE t.name =~ '(?i)Global Administrator.*'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'All members of high privileged roles',
