@@ -25,6 +25,7 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useGetSelectedQuery,
+    usePrivilegeZoneAnalysis,
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
@@ -51,15 +52,13 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    onRunSearchClick
+    onRunSearchClick,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     onRunSearchClick?: () => void;
 }) => {
-    
-    
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
 
@@ -69,6 +68,7 @@ const CypherSearch = ({
 
     const createSavedQueryMutation = useCreateSavedQuery();
     const updateSavedQueryMutation = useUpdateSavedQuery();
+    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
@@ -129,8 +129,8 @@ const CypherSearch = ({
             {
                 id: id,
                 payload: {
-                    user_ids: sharedIds,
-                    public: false,
+                    user_ids: [],
+                    public: true,
                 },
             },
             {
@@ -285,7 +285,9 @@ const CypherSearch = ({
                         </div>
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        <TagToZoneLabel selectedQuery={selectedQuery}></TagToZoneLabel>
+                        {privilegeZoneAnalysisEnabled && (
+                            <TagToZoneLabel selectedQuery={selectedQuery}></TagToZoneLabel>
+                        )}
 
                         <Button
                             variant='secondary'
