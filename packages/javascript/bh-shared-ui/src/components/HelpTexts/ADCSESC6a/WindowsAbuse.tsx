@@ -28,6 +28,7 @@ const WindowsAbuse: FC = () => {
             <Typography component={'pre'}>
                 {
                     'Certify.exe request --ca rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA --template User --upn Administrator --sid-url S-1-5-21-976219687-1556195986-4104514715-500'
+                }
             </Typography>
             <Typography variant='body2'>
                 The certificate PFX is printed to the console in a base64-encoded format.
