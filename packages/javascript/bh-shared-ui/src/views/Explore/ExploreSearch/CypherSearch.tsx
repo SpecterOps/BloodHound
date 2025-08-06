@@ -129,8 +129,8 @@ const CypherSearch = ({
             {
                 id: id,
                 payload: {
-                    user_ids: [],
-                    public: true,
+                    user_ids: sharedIds,
+                    public: false,
                 },
             },
             {
