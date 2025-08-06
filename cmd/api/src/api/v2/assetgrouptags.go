@@ -613,7 +613,9 @@ func (s *Resources) GetAssetGroupTagMemberInfo(response http.ResponseWriter, req
 	} else if node, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(memberID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{nodeToAssetGroupMember(node, includeProperties), selectors}}, http.StatusOK, response)
+		groupMember := nodeToAssetGroupMember(node, includeProperties)
+		groupMember.AssetGroupTagId = assetGroupTagID
+		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{groupMember, selectors}}, http.StatusOK, response)
 	}
 }
 
