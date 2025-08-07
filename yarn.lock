@@ -361,17 +361,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bh-shared-ui%40workspace%3Apackages%2Fjavascript%2Fbh-shared-ui":
-  version: 1.0.0-alpha.22
-  resolution: "@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bh-shared-ui%40workspace%3Apackages%2Fjavascript%2Fbh-shared-ui"
+"@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_22008/package.tgz::locator=bh-shared-ui%40workspace%3Apackages%2Fjavascript%2Fbh-shared-ui":
+  version: 1.0.0-alpha.26
+  resolution: "@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_22008/package.tgz::locator=bh-shared-ui%40workspace%3Apackages%2Fjavascript%2Fbh-shared-ui"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
     "@radix-ui/react-dialog": ^1.1.2
-    "@radix-ui/react-label": ^2.1.0
+    "@radix-ui/react-label": ^2.1.7
     "@radix-ui/react-popover": ^1.1.2
     "@radix-ui/react-select": ^2.1.1
-    "@radix-ui/react-slot": ^1.1.0
+    "@radix-ui/react-slot": ^1.2.3
     "@radix-ui/react-switch": ^1.0.2
     "@radix-ui/react-tabs": ^1.1.8
     "@radix-ui/react-tooltip": ^1.1.3
@@ -386,27 +386,28 @@ __metadata:
     embla-carousel-react: ^8.3.0
     lucide-react: ^0.436.0
     react-day-picker: 8.10.1
+    react-hook-form: ^7.62.0
     tailwind-merge: ^2.3.0
     tailwindcss-animate: ^1.0.7
   peerDependencies:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: ac1ad03b055fd6eb75ecac4b296852ae8d1d4a3dee29333fc37a4ef8df0ff000928456aac1e5221780be0a0e63648785685d5576c63c5efad8f0d3500a4b9c7e
+  checksum: 1b1432bb82a96a15a97fbe9cd356528c4b36c23e96878cec79eac647a67070e1e7a4dc14750fb440c79d0c5e196611b85b1172c2cda4c929ae486b2def2ce8a2
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bloodhound-ui%40workspace%3Acmd%2Fui":
-  version: 1.0.0-alpha.22
-  resolution: "@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_30040/package.tgz::locator=bloodhound-ui%40workspace%3Acmd%2Fui"
+"@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_22008/package.tgz::locator=bloodhound-ui%40workspace%3Acmd%2Fui":
+  version: 1.0.0-alpha.26
+  resolution: "@bloodhoundenterprise/doodleui@file:/Users/dpcairns/coding/something_22008/package.tgz::locator=bloodhound-ui%40workspace%3Acmd%2Fui"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
     "@radix-ui/react-dialog": ^1.1.2
-    "@radix-ui/react-label": ^2.1.0
+    "@radix-ui/react-label": ^2.1.7
     "@radix-ui/react-popover": ^1.1.2
     "@radix-ui/react-select": ^2.1.1
-    "@radix-ui/react-slot": ^1.1.0
+    "@radix-ui/react-slot": ^1.2.3
     "@radix-ui/react-switch": ^1.0.2
     "@radix-ui/react-tabs": ^1.1.8
     "@radix-ui/react-tooltip": ^1.1.3
@@ -421,13 +422,14 @@ __metadata:
     embla-carousel-react: ^8.3.0
     lucide-react: ^0.436.0
     react-day-picker: 8.10.1
+    react-hook-form: ^7.62.0
     tailwind-merge: ^2.3.0
     tailwindcss-animate: ^1.0.7
   peerDependencies:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: ac1ad03b055fd6eb75ecac4b296852ae8d1d4a3dee29333fc37a4ef8df0ff000928456aac1e5221780be0a0e63648785685d5576c63c5efad8f0d3500a4b9c7e
+  checksum: 1b1432bb82a96a15a97fbe9cd356528c4b36c23e96878cec79eac647a67070e1e7a4dc14750fb440c79d0c5e196611b85b1172c2cda4c929ae486b2def2ce8a2
   languageName: node
   linkType: hard
 
@@ -2246,11 +2248,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-label@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "@radix-ui/react-label@npm:2.1.0"
+"@radix-ui/react-label@npm:^2.1.7":
+  version: 2.1.7
+  resolution: "@radix-ui/react-label@npm:2.1.7"
   dependencies:
-    "@radix-ui/react-primitive": 2.0.0
+    "@radix-ui/react-primitive": 2.1.3
   peerDependencies:
     "@types/react": "*"
     "@types/react-dom": "*"
@@ -2261,7 +2263,7 @@ __metadata:
       optional: true
     "@types/react-dom":
       optional: true
-  checksum: 462f3b47f43bd69c937e660dee229eb05990441e1b214923cdcf848aea62226e9f1c4673de6664bb4ad66f8a480acdb0f5d2ce4c88c425652b47432876b3f32f
+  checksum: 6fe47ff695ac127a87a3ee77489fb345a89515edc8df4b2b290c801a9ae14ad934cc64ddad7638cddb71b064ff898bd1c2ac88c16dd1b8236a0939d7fea95e3b
   languageName: node
   linkType: hard
 
@@ -2464,6 +2466,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@radix-ui/react-primitive@npm:2.1.3":
+  version: 2.1.3
+  resolution: "@radix-ui/react-primitive@npm:2.1.3"
+  dependencies:
+    "@radix-ui/react-slot": 1.2.3
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-dom": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-dom":
+      optional: true
+  checksum: 01f82e4bad76b57767198762c905e5bcea04f4f52129749791e31adfcb1b36f6fdc89c73c40017d812b6e25e4ac925d837214bb280cfeaa5dc383457ce6940b0
+  languageName: node
+  linkType: hard
+
 "@radix-ui/react-roving-focus@npm:1.1.7":
   version: 1.1.7
   resolution: "@radix-ui/react-roving-focus@npm:1.1.7"
@@ -2530,7 +2551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-slot@npm:1.1.0, @radix-ui/react-slot@npm:^1.1.0":
+"@radix-ui/react-slot@npm:1.1.0":
   version: 1.1.0
   resolution: "@radix-ui/react-slot@npm:1.1.0"
   dependencies:
@@ -2557,6 +2578,21 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 2dd57bfd1ab452df355d17924e0b74173559d3322519dc869930d7ed04331eb2baec9477f127af3029f0fe8f6bcb7425cfdcdd12f169683c813a4d863956ae5c
+  languageName: node
+  linkType: hard
+
+"@radix-ui/react-slot@npm:1.2.3, @radix-ui/react-slot@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "@radix-ui/react-slot@npm:1.2.3"
+  dependencies:
+    "@radix-ui/react-compose-refs": 1.1.2
+  peerDependencies:
+    "@types/react": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 2731089e15477dd5eef98a5757c36113dd932d0c52ff05123cd89f05f0412e95e5b205229185d1cd705cda4a674a838479cce2b3b46ed903f82f5d23d9e3f3c2
   languageName: node
   linkType: hard
 
@@ -4994,7 +5030,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": /Users/dpcairns/coding/something_30040/package.tgz
+    "@bloodhoundenterprise/doodleui": /Users/dpcairns/coding/something_22008/package.tgz
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
     "@faker-js/faker": ^7.3.0
@@ -5047,7 +5083,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     react-error-boundary: ^3.1.4
-    react-hook-form: ^7.45.1
+    react-hook-form: ^7.62.0
     react-immutable-proptypes: ^2.2.0
     react-query: ^3.39.3
     react-router-dom: 6.4.1
@@ -5113,7 +5149,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": /Users/dpcairns/coding/something_30040/package.tgz
+    "@bloodhoundenterprise/doodleui": /Users/dpcairns/coding/something_22008/package.tgz
     "@date-io/luxon": ^1.3.13
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -10655,12 +10691,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:^7.0.0, react-hook-form@npm:^7.45.1":
+"react-hook-form@npm:^7.0.0":
   version: 7.45.2
   resolution: "react-hook-form@npm:7.45.2"
   peerDependencies:
     react: ^16.8.0 || ^17 || ^18
   checksum: 023ca091f2bb1f3117d8a694871874c4a344f02c795c6a08b8f78b09b78444451375fbe921d7db4ba7cd78909b1fa5e92d19efd2bfedc43124fdc44540ac036c
+  languageName: node
+  linkType: hard
+
+"react-hook-form@npm:^7.62.0":
+  version: 7.62.0
+  resolution: "react-hook-form@npm:7.62.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18 || ^19
+  checksum: 76f0574d0df632c22b37c2666e8aef8b4378dfa0bcc5ae5b20c410d3103abd17e0bcf6256f8a6d9d18cbd687f96edf3fce35bf41d06872ffb412c91664361b1a
   languageName: node
   linkType: hard
 

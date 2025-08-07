@@ -61,7 +61,6 @@ const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
 
 const ExploreTable = ({
     onClose,
-    onRowClick,
     onKebabMenuClick,
     onManageColumnsChange,
     selectedColumns = requiredColumns,
@@ -69,6 +68,7 @@ const ExploreTable = ({
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem } = useExploreSelectedItem();
 
+    console.log({ setSelectedItem });
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
@@ -98,6 +98,17 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
+    const handleRowClick = useCallback(
+        (row: MungedTableRowWithId) => {
+            if (row.id !== selectedItem) {
+                setSelectedItem(row.id);
+            } else {
+                setSelectedItem('');
+            }
+        },
+        [setSelectedItem, selectedItem]
+    );
+
     const handleDownloadClick = useCallback(() => {
         const nodes = exploreTableData?.nodes;
         if (nodes) {
@@ -108,21 +119,14 @@ const ExploreTable = ({
 
                 return flattenedNode;
             });
+
             const csv = json2csv(nodeValues, { keys: exploreTableData.node_keys });
 
             fileDownload(csv, 'nodes.csv');
         }
     }, [exploreTableData]);
 
-    const handleRowClick = useCallback(
-        (row: MungedTableRowWithId) => {
-            if (row.id !== selectedItem) {
-                setSelectedItem(row.id);
-            }
-        },
-        [setSelectedItem, selectedItem]
-    );
-
+    console.log({ selectedItem });
     return (
         <div
             data-testid='explore-table-container-wrapper'

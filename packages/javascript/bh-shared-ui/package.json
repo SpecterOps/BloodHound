@@ -19,7 +19,7 @@
     "author": "The BloodHound Enterprise Team (https://bloodhoundenterprise.io/)",
     "license": "MIT",
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "/Users/dpcairns/coding/something_30040/package.tgz",
+        "@bloodhoundenterprise/doodleui": "/Users/dpcairns/coding/something_22008/package.tgz",
         "@fortawesome/fontawesome-free": "^6.4.2",
         "@fortawesome/fontawesome-svg-core": "^6.4.2",
         "@fortawesome/free-regular-svg-icons": "^6.7.2",
@@ -40,7 +40,7 @@
         "notistack": "^2.0.5",
         "prop-types": "^15.8.1",
         "react-error-boundary": "^3.1.4",
-        "react-hook-form": "^7.45.1",
+        "react-hook-form": "^7.62.0",
         "react-immutable-proptypes": "^2.2.0",
         "react-query": "^3.39.3",
         "react-router-dom": "6.4.1",

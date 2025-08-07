@@ -144,6 +144,5 @@ export interface ExploreTableProps {
     onClose?: () => void;
     selectedColumns?: Record<string, boolean>;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
-    selectedNode: string | null;
     onKebabMenuClick: (clickInfo: NodeClickInfo) => void;
 }

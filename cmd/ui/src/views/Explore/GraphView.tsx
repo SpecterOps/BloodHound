@@ -23,7 +23,6 @@ import {
     GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
-    MungedTableRowWithId,
     NodeClickInfo,
     WebGLDisabledAlert,
     baseGraphLayouts,
@@ -129,17 +128,6 @@ const GraphView: FC = () => {
             setHighlightedItem(id);
         },
         [setSelectedItem]
-    );
-
-    const handleRowClick = useCallback(
-        (row: MungedTableRowWithId) => {
-            if (row.id !== selectedItem) {
-                setSelectedItem(row.id);
-            } else {
-                setSelectedItem('');
-            }
-        },
-        [setSelectedItem, selectedItem]
     );
 
     const handleContextMenu = useCallback(
@@ -263,8 +251,6 @@ const GraphView: FC = () => {
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
-                    onRowClick={handleRowClick}
-                    selectedNode={selectedItem}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

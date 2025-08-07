@@ -17,24 +17,19 @@ import ExploreTable from './ExploreTable';
 
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { json2csv } from 'json-2-csv';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
 import { cypherTestResponse } from '../../mocks';
 import { render } from '../../test-utils';
-import * as exportUtils from '../../utils/exportGraphData';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
-
 const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primary)]';
 
-<<<<<<< HEAD
-=======
-const exportToJsonSpy = vi.spyOn(exportUtils, 'exportToJson');
-exportToJsonSpy.mockImplementation(() => undefined);
-
->>>>>>> 2ba3b455566db0821a26bb81b29072249250e27f
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
+
+vi.mock('json-2-csv');
 
 const getFirstCellOfType = (type: string) => screen.getAllByTestId(`table-cell-${type}`)[0];
 
@@ -65,6 +60,376 @@ beforeAll(() => {
     server.listen();
 });
 
+const jsonToCsvArgs = [
+    [
+        {
+            admincount: true,
+            displayname: 'certman',
+            distinguishedname: 'CN=CERTMAN,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP',
+            domain: 'PHANTOM.CORP',
+            domainsid: 'S-1-5-21-2697957641-2271029196-387917394',
+            dontreqpreauth: false,
+            enabled: true,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: true,
+            isaclprotected: true,
+            kind: 'User',
+            label: 'CERTMAN@PHANTOM.CORP',
+            lastSeen: '2025-07-09T00:28:46.292Z',
+            lastcollected: '2025-07-09T00:28:46.055264963Z',
+            lastlogon: 1695966948,
+            lastlogontimestamp: 1695966443,
+            lastseen: '2025-07-09T00:28:46.292Z',
+            name: 'CERTMAN@PHANTOM.CORP',
+            objectId: 'S-1-5-21-2697957641-2271029196-387917394-2201',
+            objectid: 'S-1-5-21-2697957641-2271029196-387917394-2201',
+            ownersid: 'S-1-5-21-2697957641-2271029196-387917394-512',
+            passwordnotreqd: false,
+            pwdlastset: 1695966321,
+            pwdneverexpires: true,
+            samaccountname: 'certman',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            system_tags: 'admin_tier_0',
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1695941121,
+        },
+        {
+            admincount: true,
+            displayname: 'alice',
+            distinguishedname: 'CN=ALICE,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP',
+            domain: 'PHANTOM.CORP',
+            domainsid: 'S-1-5-21-2697957641-2271029196-387917394',
+            dontreqpreauth: false,
+            enabled: true,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: true,
+            isaclprotected: true,
+            kind: 'User',
+            label: 'ALICE@PHANTOM.CORP',
+            lastSeen: '2025-07-09T00:28:46.292Z',
+            lastcollected: '2025-07-09T00:28:46.055264963Z',
+            lastlogon: 0,
+            lastlogontimestamp: -1,
+            lastseen: '2025-07-09T00:28:46.292Z',
+            name: 'ALICE@PHANTOM.CORP',
+            objectId: 'S-1-5-21-2697957641-2271029196-387917394-2173',
+            objectid: 'S-1-5-21-2697957641-2271029196-387917394-2173',
+            ownersid: 'S-1-5-21-2697957641-2271029196-387917394-512',
+            passwordnotreqd: false,
+            pwdlastset: 1681286877,
+            pwdneverexpires: true,
+            samaccountname: 'alice',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            system_tags: 'admin_tier_0',
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1681261677,
+        },
+
+        {
+            admincount: true,
+            displayname: 'T1_TonyMontana',
+            distinguishedname: 'CN=T1_TONYMONTANA,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP',
+            domain: 'PHANTOM.CORP',
+            domainsid: 'S-1-5-21-2697957641-2271029196-387917394',
+            dontreqpreauth: false,
+            enabled: true,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: false,
+            isaclprotected: true,
+            kind: 'User',
+            label: 'T1_TONYMONTANA@PHANTOM.CORP',
+            lastSeen: '2025-07-09T00:28:46.306Z',
+            lastcollected: '2025-07-09T00:28:46.055264963Z',
+            lastlogon: 1674216447,
+            lastlogontimestamp: 1673626093,
+            lastseen: '2025-07-09T00:28:46.306Z',
+            name: 'T1_TONYMONTANA@PHANTOM.CORP',
+            objectId: 'S-1-5-21-2697957641-2271029196-387917394-2110',
+            objectid: 'S-1-5-21-2697957641-2271029196-387917394-2110',
+            ownersid: 'S-1-5-21-2697957641-2271029196-387917394-512',
+            passwordnotreqd: false,
+            pwdlastset: 1664381451,
+            pwdneverexpires: true,
+            samaccountname: 'T1_TonyMontana',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1664356251,
+        },
+        {
+            admincount: false,
+            displayname: 'zzzigne',
+            distinguishedname: 'CN=ZZZIGNE,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP',
+            domain: 'PHANTOM.CORP',
+            domainsid: 'S-1-5-21-2697957641-2271029196-387917394',
+            dontreqpreauth: false,
+            enabled: true,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: false,
+            isaclprotected: false,
+            kind: 'User',
+            label: 'ZZZIGNE@PHANTOM.CORP',
+            lastSeen: '2025-07-09T00:28:46.292Z',
+            lastcollected: '2025-07-09T00:28:46.055264963Z',
+            lastlogon: 0,
+            lastlogontimestamp: -1,
+            lastseen: '2025-07-09T00:28:46.292Z',
+            name: 'ZZZIGNE@PHANTOM.CORP',
+            objectId: 'S-1-5-21-2697957641-2271029196-387917394-2216',
+            objectid: 'S-1-5-21-2697957641-2271029196-387917394-2216',
+            ownersid: 'S-1-5-21-2697957641-2271029196-387917394-512',
+            passwordnotreqd: false,
+            pwdlastset: 1707939756,
+            pwdneverexpires: true,
+            samaccountname: 'zzzigne',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1707910956,
+        },
+        {
+            admincount: false,
+            displayname: 'svc_shs',
+            distinguishedname: 'CN=SVC_SHS,OU=SHARPHOUND TEST,DC=PHANTOM,DC=CORP',
+            domain: 'PHANTOM.CORP',
+            domainsid: 'S-1-5-21-2697957641-2271029196-387917394',
+            dontreqpreauth: false,
+            enabled: true,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: false,
+            isaclprotected: false,
+            kind: 'User',
+            label: 'SVC_SHS@PHANTOM.CORP',
+            lastSeen: '2025-07-09T00:28:46.292Z',
+            lastcollected: '2025-07-09T00:28:46.055264963Z',
+            lastlogon: 0,
+            lastlogontimestamp: -1,
+            lastseen: '2025-07-09T00:28:46.292Z',
+            name: 'SVC_SHS@PHANTOM.CORP',
+            objectId: 'S-1-5-21-2697957641-2271029196-387917394-2165',
+            objectid: 'S-1-5-21-2697957641-2271029196-387917394-2165',
+            ownersid: 'S-1-5-21-2697957641-2271029196-387917394-512',
+            passwordnotreqd: false,
+            pwdlastset: 1678309565,
+            pwdneverexpires: true,
+            samaccountname: 'svc_shs',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1678280765,
+        },
+        {
+            domain: 'PHANTOM.CORP',
+            domainsid: 'S-1-5-21-2697957641-2271029196-387917394',
+            isOwnedObject: false,
+            isTierZero: false,
+            kind: 'User',
+            label: 'NETWORK SERVICE@PHANTOM.CORP',
+            lastSeen: '2025-07-09T00:28:46.055264963Z',
+            lastcollected: '2025-07-09T00:28:46.055264963Z',
+            lastseen: '2025-07-09T00:28:46.055264963Z',
+            name: 'NETWORK SERVICE@PHANTOM.CORP',
+            objectId: 'PHANTOM.CORP-S-1-5-20',
+            objectid: 'PHANTOM.CORP-S-1-5-20',
+        },
+        {
+            admincount: true,
+            displayname: 'tom',
+            distinguishedname: 'CN=TOM,CN=USERS,DC=GHOST,DC=CORP',
+            domain: 'GHOST.CORP',
+            domainsid: 'S-1-5-21-2845847946-3451170323-4261139666',
+            dontreqpreauth: false,
+            enabled: false,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: true,
+            isaclprotected: true,
+            kind: 'User',
+            label: 'TOM@GHOST.CORP',
+            lastSeen: '2025-07-09T00:28:46.525Z',
+            lastcollected: '2025-07-09T00:28:46.504907963Z',
+            lastlogon: 1352620493,
+            lastlogontimestamp: 1352620493,
+            lastseen: '2025-07-09T00:28:46.525Z',
+            name: 'TOM@GHOST.CORP',
+            objectId: 'S-1-5-21-2845847946-3451170323-4261139666-1105',
+            objectid: 'S-1-5-21-2845847946-3451170323-4261139666-1105',
+            ownersid: 'S-1-5-21-2845847946-3451170323-4261139666-512',
+            passwordnotreqd: false,
+            pwdlastset: 1294408493,
+            pwdneverexpires: true,
+            samaccountname: 'tom',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            system_tags: 'admin_tier_0',
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1107163853,
+        },
+        {
+            admincount: true,
+            displayname: 'walter',
+            distinguishedname: 'CN=WALTER,CN=USERS,DC=GHOST,DC=CORP',
+            domain: 'GHOST.CORP',
+            domainsid: 'S-1-5-21-2845847946-3451170323-4261139666',
+            dontreqpreauth: false,
+            enabled: false,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: true,
+            isaclprotected: true,
+            kind: 'User',
+            label: 'WALTER@GHOST.CORP',
+            lastSeen: '2025-07-09T00:28:46.525Z',
+            lastcollected: '2025-07-09T00:28:46.504907963Z',
+            lastlogon: 1221657838,
+            lastlogontimestamp: 1221657838,
+            lastseen: '2025-07-09T00:28:46.525Z',
+            name: 'WALTER@GHOST.CORP',
+            objectId: 'S-1-5-21-2845847946-3451170323-4261139666-1106',
+            objectid: 'S-1-5-21-2845847946-3451170323-4261139666-1106',
+            ownersid: 'S-1-5-21-2845847946-3451170323-4261139666-512',
+            passwordnotreqd: false,
+            pwdlastset: 1117877458,
+            pwdneverexpires: true,
+            samaccountname: 'walter',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            system_tags: 'admin_tier_0',
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1107164693,
+        },
+        {
+            admincount: true,
+            description: 'Built-in account for administering the computer/domain',
+            distinguishedname: 'CN=ADMINISTRATOR,CN=USERS,DC=GHOST,DC=CORP',
+            domain: 'GHOST.CORP',
+            domainsid: 'S-1-5-21-2845847946-3451170323-4261139666',
+            dontreqpreauth: false,
+            enabled: true,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: true,
+            isaclprotected: true,
+            kind: 'User',
+            label: 'ADMINISTRATOR@GHOST.CORP',
+            lastSeen: '2025-07-09T00:28:46.525Z',
+            lastcollected: '2025-07-09T00:28:46.504907963Z',
+            lastlogon: 1702913193,
+            lastlogontimestamp: 1702913054,
+            lastseen: '2025-07-09T00:28:46.525Z',
+            name: 'ADMINISTRATOR@GHOST.CORP',
+            objectId: 'S-1-5-21-2845847946-3451170323-4261139666-500',
+            objectid: 'S-1-5-21-2845847946-3451170323-4261139666-500',
+            ownersid: 'S-1-5-21-2845847946-3451170323-4261139666-512',
+            passwordnotreqd: false,
+            pwdlastset: 1674763808,
+            pwdneverexpires: true,
+            samaccountname: 'Administrator',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            system_tags: 'admin_tier_0',
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1656555664,
+        },
+        {
+            admincount: false,
+            description: 'Built-in account for guest access to the computer/domain',
+            distinguishedname: 'CN=GUEST,CN=USERS,DC=GHOST,DC=CORP',
+            domain: 'GHOST.CORP',
+            domainsid: 'S-1-5-21-2845847946-3451170323-4261139666',
+            dontreqpreauth: false,
+            enabled: false,
+            hasspn: false,
+            isOwnedObject: false,
+            isTierZero: false,
+            isaclprotected: false,
+            kind: 'User',
+            label: 'GUEST@GHOST.CORP',
+            lastSeen: '2025-07-09T00:28:46.525Z',
+            lastcollected: '2025-07-09T00:28:46.504907963Z',
+            lastlogon: 0,
+            lastlogontimestamp: -1,
+            lastseen: '2025-07-09T00:28:46.525Z',
+            name: 'GUEST@GHOST.CORP',
+            objectId: 'S-1-5-21-2845847946-3451170323-4261139666-501',
+            objectid: 'S-1-5-21-2845847946-3451170323-4261139666-501',
+            ownersid: 'GHOST.CORP-S-1-5-32-544',
+            passwordnotreqd: true,
+            pwdlastset: 0,
+            pwdneverexpires: true,
+            samaccountname: 'Guest',
+            sensitive: false,
+            serviceprincipalnames: [],
+            sidhistory: [],
+            trustedtoauth: false,
+            unconstraineddelegation: false,
+            whencreated: 1656555664,
+        },
+    ],
+    {
+        keys: [
+            'admincount',
+            'description',
+            'displayname',
+            'distinguishedname',
+            'domain',
+            'domainsid',
+            'dontreqpreauth',
+            'email',
+            'enabled',
+            'gmsa',
+            'hasspn',
+            'isaclprotected',
+            'lastcollected',
+            'lastlogon',
+            'lastlogontimestamp',
+            'msa',
+            'ownersid',
+            'passwordnotreqd',
+            'pwdlastset',
+            'pwdneverexpires',
+            'samaccountname',
+            'sensitive',
+            'serviceprincipalnames',
+            'sidhistory',
+            'system_tags',
+            'title',
+            'trustedtoauth',
+            'unconstraineddelegation',
+            'whencreated',
+            'kind',
+            'label',
+            'objectId',
+            'isTierZero',
+            'isOwnedObject',
+            'lastSeen',
+        ],
+    },
+];
+
 const WrappedExploreTable = () => {
     const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
         kind: true,
@@ -82,18 +447,9 @@ const WrappedExploreTable = () => {
                 setSelectedColumns(newColumns);
             }}
             onClose={closeCallbackSpy}
-<<<<<<< HEAD
-            selectedNode={selectedNode || null}
             onKebabMenuClick={(row) => {
-                setSelectedNode(row.id);
                 kebabCallbackSpy(row);
             }}
-            onRowClick={(row) => {
-                setSelectedNode(row.id);
-            }}
-=======
-            onKebabMenuClick={kebabCallbackSpy}
->>>>>>> 2ba3b455566db0821a26bb81b29072249250e27f
         />
     );
 };
@@ -188,20 +544,17 @@ describe('ExploreTable', async () => {
         expect(container.className).toContain('h-[calc(100%');
     });
 
-<<<<<<< HEAD
-=======
-    it('Download button causes the callback function to be called', async () => {
+    it('Download button causes the json2csv function to be called', async () => {
         const { user } = await setup();
 
-        expect(exportToJsonSpy).not.toBeCalled();
+        expect(json2csv).not.toBeCalled();
         const downloadButton = screen.getByTestId('download-button');
 
         await user.click(downloadButton);
 
-        expect(exportToJsonSpy).toBeCalledWith({ nodes: cypherTestResponse.data.nodes });
+        expect(json2csv).toBeCalledWith(...jsonToCsvArgs);
     });
 
->>>>>>> 2ba3b455566db0821a26bb81b29072249250e27f
     it('Close button click causes the callback function to be called', async () => {
         const { user } = await setup();
 
@@ -262,6 +615,7 @@ describe('ExploreTable', async () => {
         await user.click(jdPhantomRow);
 
         expect(kebabCallbackSpy).not.toBeCalled();
+        screen.debug(jdPhantomRow);
 
         expect(jdPhantomRow.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
     });
@@ -275,8 +629,6 @@ describe('ExploreTable', async () => {
 
         const kebabButton = within(jdPhantomRow).getByTestId('kebab-menu');
 
-        expect(jdPhantomRow.className).not.toContain(SELECTED_ROW_INDICATOR_CLASS);
-
         await user.click(kebabButton);
 
         expect(kebabCallbackSpy).toBeCalledWith({
@@ -284,7 +636,5 @@ describe('ExploreTable', async () => {
             x: 0,
             y: 0,
         });
-
-        expect(jdPhantomRow.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
     });
 });
