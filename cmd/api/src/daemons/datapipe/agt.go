@@ -397,13 +397,13 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 }
 
 // fetchOldSelectedNodes - fetches the currently selected nodes and assembles a map lookup for minimal memory footprint
-func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId int) (map[graph.ID]model.AssetGroupCertification, error) {
-	oldSelectedNodesMap := make(map[graph.ID]model.AssetGroupCertification)
+func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId int) (map[graph.ID]model.AssetGroupSelectorNode, error) {
+	oldSelectedNodesMap := make(map[graph.ID]model.AssetGroupSelectorNode)
 	if oldSelectedNodes, err := db.GetSelectorNodesBySelectorIds(ctx, selectorId); err != nil {
 		return oldSelectedNodesMap, err
 	} else {
 		for _, node := range oldSelectedNodes {
-			oldSelectedNodesMap[node.NodeId] = node.Certified
+			oldSelectedNodesMap[node.NodeId] = node
 		}
 		return oldSelectedNodesMap, nil
 	}
@@ -434,15 +434,23 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
+			var (
+				primaryKind    = analysis.GetNodeKindDisplayLabel(node.Node)
+				objectID, _    = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+				displayName, _ = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+				envID, _       = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
+			)
 			// Missing, insert the record
-			if oldCert, ok := oldSelectedNodesByNodeId[id]; !ok {
-				displayName, _ := node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, displayName); err != nil {
+			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
+				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envID, objectID, displayName); err != nil {
 					return err
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it
-			} else if selector.AutoCertify.Bool && oldCert == model.AssetGroupCertificationNone {
+			} else if selector.AutoCertify.Bool && oldNode.Certified == model.AssetGroupCertificationNone {
+				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
+				delete(oldSelectedNodesByNodeId, id)
+			} else if oldNode.NodeName != displayName || oldNode.NodePrimaryKind != primaryKind || oldNode.NodeEnvironmentId != envID || oldNode.NodeObjectId != objectID {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
@@ -453,8 +461,14 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		// Update the selected nodes that need updating
 		if len(nodeIdsToUpdate) > 0 {
 			for _, nodeId := range nodeIdsToUpdate {
-				displayName, _ := nodesWithSrcSet[nodeId].Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, certified, certifiedBy, nodeId, displayName); err != nil {
+				var (
+					node           = nodesWithSrcSet[nodeId]
+					primaryKind    = analysis.GetNodeKindDisplayLabel(node.Node)
+					displayName, _ = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+					objectID, _    = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+					envID, _       = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
+				)
+				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, certified, certifiedBy, nodeId, primaryKind, envID, objectID, displayName); err != nil {
 					return err
 				}
 			}
