@@ -24,6 +24,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -35,10 +36,14 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
 	}
+	type input struct {
+		environments []string
+		user         model.User
+	}
 	type testData struct {
 		name       string
 		setupMocks func(t *testing.T, mock *mock)
-		input      []string
+		input      input
 		expected   bool
 	}
 
@@ -50,6 +55,8 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 		{
 			name: "Positive Test - Exact Match",
 			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
 				envs := database.EnvironmentAccessList{
 					database.EnvironmentAccess{
 						UserID:      "lorem ipsum",
@@ -67,12 +74,22 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
 			},
-			input:    []string{"1", "2", "3"},
+			input: input{
+				environments: []string{"1", "2", "3"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
 			expected: true,
 		},
 		{
 			name: "Positive Test - Partial Match",
 			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
 				envs := database.EnvironmentAccessList{
 					database.EnvironmentAccess{
 						UserID:      "lorem ipsum",
@@ -90,12 +107,21 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
 			},
-			input:    []string{"1", "2"},
-			expected: true,
+			input: input{
+				environments: []string{"1", "2"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			}, expected: true,
 		},
 		{
 			name: "Negative Test - Extra Environment",
 			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
 				envs := database.EnvironmentAccessList{
 					database.EnvironmentAccess{
 						UserID:      "lorem ipsum",
@@ -113,18 +139,50 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
 			},
-			input:    []string{"1", "2", "4"},
+			input: input{
+				environments: []string{"1", "2", "4"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
 			expected: false,
 		},
 		{
 			name: "Negative Test - No Allowed Environments",
 			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
 				envs := database.EnvironmentAccessList{}
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
 			},
-			input:    []string{"1", "2", "4"},
+			input: input{
+				environments: []string{"1", "2", "4"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
 			expected: false,
+		},
+		{
+			name:       "Positive Test - All Environments True",
+			setupMocks: func(t *testing.T, mock *mock) {},
+			input: input{
+				environments: []string{"1", "2", "4"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: true,
+				},
+			},
+			expected: true,
 		},
 	}
 
@@ -140,7 +198,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 			testCase.setupMocks(t, mocks)
 
-			actual, err := api.CheckUserAccessToEnvironments(context.Background(), mocks.mockDatabase, userUuid, testCase.input...)
+			actual, err := api.CheckUserAccessToEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
 
 			require.NoError(t, err)
 			assert.Equal(t, testCase.expected, actual)
