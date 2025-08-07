@@ -20,7 +20,7 @@ import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
+export type ExploreSearchTab = 'node' | 'pathfinding' | 'sniffdeep' | 'cypher';
 type SearchType = ExploreSearchTab | 'relationship' | 'composition' | 'aclinheritance';
 
 export type ExploreQueryParams = {
@@ -39,6 +39,7 @@ export type ExploreQueryParams = {
 export const acceptedExploreSearchTabs = {
     node: 'node',
     pathfinding: 'pathfinding',
+    sniffdeep: 'sniffdeep',
     cypher: 'cypher',
 } satisfies MappedStringLiteral<ExploreSearchTab, ExploreSearchTab>;
 

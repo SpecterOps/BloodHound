@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faCode, faDirections, faMinus, faPlus, faSearch, faArrowDownShortWide } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
@@ -55,7 +55,8 @@ const useStyles = makeStyles((theme) => ({
 const tabMap = {
     node: 0,
     pathfinding: 1,
-    cypher: 2,
+    sniffdeep: 2,
+    cypher: 3,
 } satisfies MappedStringLiteral<ExploreSearchTab, number>;
 
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
@@ -85,7 +86,7 @@ const ExploreSearch: React.FC = () => {
 
     /* Event Handlers */
     const handleTabChange = (newTabIndex: number) => {
-        const tabs = ['node', 'pathfinding', 'cypher'] as ExploreSearchTab[];
+        const tabs = ['node', 'pathfinding', 'sniffdeep', 'cypher'] as ExploreSearchTab[];
         const nextTab = tabs[newTabIndex];
 
         const teardownParams = teardownActiveTab(activeTab);
@@ -104,7 +105,7 @@ const ExploreSearch: React.FC = () => {
                 pathfindingSearchState.handleSourceNodeEdited(nodeSearchState.searchTerm);
             }
         }
-        if (tab === 'pathfinding') {
+        if (tab === 'pathfinding' || tab === 'sniffdeep') {
             if (!pathfindingSearchState.sourceSelectedItem) {
                 params.primarySearch = null;
                 nodeSearchState.editSourceNode(pathfindingSearchState.sourceSearchTerm);
@@ -139,6 +140,14 @@ const ExploreSearch: React.FC = () => {
             }
             params.exploreSearchTab = 'pathfinding';
         }
+        if (tab === 'sniffdeep') {
+            if (pathfindingSearchState.sourceSelectedItem && pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'pathfinding';
+            } else if (pathfindingSearchState.sourceSelectedItem || pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'sniffdeep';
+        }
         if (tab === 'cypher') {
             if (cypherSearchState.cypherQuery) {
                 params.searchType = 'cypher';
@@ -152,9 +161,7 @@ const ExploreSearch: React.FC = () => {
     return (
         <div
             data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
-                'w-[600px]': activeTab === 'cypher' && showSearchWidget,
-            })}>
+            className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]'>
             <div
                 className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
@@ -192,6 +199,10 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
+                        <PathfindingSearch
+                            pathfindingSearchState={pathfindingSearchState}
+                            pathfindingFilterState={pathfindingFilterState}
+                        />,
                         <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}
@@ -211,6 +222,10 @@ const getTabsContent = (matches: boolean) => {
         {
             label: 'Pathfinding',
             icon: faDirections,
+        },
+        {
+            label: 'Sniff Deep',
+            icon: faArrowDownShortWide,
         },
         {
             label: 'Cypher',
