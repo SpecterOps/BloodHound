@@ -19,12 +19,16 @@ package api
 import (
 	"context"
 
-	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, userUuid uuid.UUID, environments ...string) (bool, error) {
-	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, userUuid)
+func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, user model.User, environments ...string) (bool, error) {
+	if user.AllEnvironments {
+		return true, nil
+	}
+
+	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user.ID)
 
 	if err != nil {
 		return false, err
