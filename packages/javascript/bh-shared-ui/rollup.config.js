@@ -34,6 +34,7 @@ export default {
     ],
     external: [
         '@bloodhoundenterprise/doodleui',
+        '@date-io/luxon',
         '@emotion/react',
         '@emotion/styled',
         '@faker-js/faker',
@@ -41,6 +42,7 @@ export default {
         '@fortawesome/free-regular-svg-icons',
         '@fortawesome/free-solid-svg-icons',
         '@fortawesome/react-fontawesome',
+        '@mona-health/react-input-mask',
         '@neo4j-cypher/react-codemirror',
         '@neo4j-cypher/codemirror/css/cypher-codemirror.css',
         '@mui/material',

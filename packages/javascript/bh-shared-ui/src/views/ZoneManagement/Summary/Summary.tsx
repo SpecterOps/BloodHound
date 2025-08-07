@@ -50,35 +50,39 @@ const Summary: FC = () => {
     const tagsQuery = useTagsQuery();
 
     return (
-        <div>
-            <div className='flex mt-6 gap-8'>
-                <InfoHeader />
-                <div className='basis-1/3'>
-                    <Button asChild variant={'secondary'}>
-                        <Link data-testid='zone-management_edit-button' to={getSavePath(tierId, labelId, selectorId)}>
-                            Edit
-                        </Link>
-                    </Button>
+        <>
+            <div>
+                <div className='flex mt-6 gap-8'>
+                    <InfoHeader />
+                    <div className='basis-1/3'>
+                        <Button asChild variant={'secondary'}>
+                            <Link
+                                data-testid='zone-management_edit-button'
+                                to={getSavePath(tierId, labelId, selectorId)}>
+                                Edit
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
-            </div>
-            <div className='flex gap-8 mt-4 w-full'>
-                <div className='basis-2/3'>
-                    <SummaryList
-                        title={labelId ? 'Labels' : 'Tiers'}
-                        listQuery={tagsQuery}
-                        selected={tagId as string}
-                        onSelect={(id) =>
-                            navigate(
-                                `/zone-management/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
-                            )
-                        }
-                    />
+                <div className='flex gap-8 mt-4 w-full'>
+                    <div className='basis-2/3'>
+                        <SummaryList
+                            title={labelId ? 'Labels' : 'Tiers'}
+                            listQuery={tagsQuery}
+                            selected={tagId as string}
+                            onSelect={(id) =>
+                                navigate(
+                                    `/zone-management/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
+                                )
+                            }
+                        />
+                    </div>
+                    <div className='basis-1/3'>
+                        <SelectedDetails />
+                    </div>
                 </div>
-                <div className='basis-1/3'>
-                    <SelectedDetails />
-                </div>
-            </div>
-        </div>
+            </div>{' '}
+        </>
     );
 };
 

@@ -59,6 +59,8 @@ export { default as CreateUserDialog } from './CreateUserDialog';
 export * from './DataTable';
 export { default as DataTable } from './DataTable';
 
+export * from './DatePicker';
+
 export * from './DeleteConfirmationDialog';
 export { default as DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 
