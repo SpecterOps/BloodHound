@@ -76,6 +76,7 @@ export const useTagFormUtils = () => {
     const disableNameInput = tagId === topTagId?.toString() || tagId === ownedId?.toString();
 
     return {
+        privilegeZoneAnalysisEnabled,
         disableNameInput,
         formTitle,
         tagKind,

@@ -67,6 +67,7 @@ export const TagForm: FC = () => {
 
     const { tagId } = useZonePathParams();
     const {
+        privilegeZoneAnalysisEnabled,
         disableNameInput,
         isLabelLocation,
         isUpdateTierLocation,
@@ -105,12 +106,15 @@ export const TagForm: FC = () => {
     const handleCreateTag = useCallback(
         async (formData: CreateAssetGroupTagRequest) => {
             try {
+                const requestValues = {
+                    name: formData.name,
+                    description: formData.description,
+                    position: null,
+                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                };
+
                 const response = await createTagMutation.mutateAsync({
-                    values: {
-                        ...formData,
-                        position: null,
-                        type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
-                    },
+                    values: requestValues,
                 });
 
                 addNotification(`${tagKindDisplay} was created successfully!`, undefined, {
@@ -135,10 +139,12 @@ export const TagForm: FC = () => {
                     return;
                 }
 
+                const updatedValues = { ...formData };
+
+                if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+
                 await updateTagMutation.mutateAsync({
-                    updatedValues: {
-                        ...formData,
-                    },
+                    updatedValues,
                     tagId,
                 });
 
@@ -193,7 +199,9 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             form.reset({
-                ...tagQuery.data,
+                name: tagQuery.data.name,
+                description: tagQuery.data.description,
+                position: tagQuery.data.position,
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
             });
         }

@@ -39,7 +39,6 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useState } from 'react';
-// import { useFormContext } from 'react-hook-form';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
