@@ -43,8 +43,8 @@ describe('ExploreTableDataCell', () => {
 
         const animatedElement = screen.getByRole('button');
 
+        animatedElement.role = 'button'; // Looks like JSDOM does not apply the role property implicitly?
         fireEvent.animationEnd(animatedElement); // Manually trigger the animationend event
-
         const copyButton = await screen.findByText('copy');
         expect(copyButton).toBeInTheDocument();
     });

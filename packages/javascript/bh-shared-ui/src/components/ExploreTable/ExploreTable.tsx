@@ -68,7 +68,6 @@ const ExploreTable = ({
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem } = useExploreSelectedItem();
 
-    console.log({ setSelectedItem });
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
@@ -126,7 +125,6 @@ const ExploreTable = ({
         }
     }, [exploreTableData]);
 
-    console.log({ selectedItem });
     return (
         <div
             data-testid='explore-table-container-wrapper'
