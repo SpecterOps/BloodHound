@@ -32,4 +32,10 @@ describe('SniffDeep', () => {
         const screen = render(<SniffDeep />);
         expect(screen.getByTestId('sniff-deep-page')).toBeInTheDocument();
     });
+
+    it('should render the play button', () => {
+        const screen = render(<SniffDeep />);
+        expect(screen.getByTestId('sniff-deep-play-button')).toBeInTheDocument();
+        expect(screen.getByText('Start Sniffing')).toBeInTheDocument();
+    });
 });

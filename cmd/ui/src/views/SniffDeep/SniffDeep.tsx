@@ -14,7 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Typography } from '@mui/material';
+import { faPlay } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Button, Typography } from '@mui/material';
 import { PageWithTitle } from 'bh-shared-ui';
 
 const SniffDeep = () => {
@@ -33,9 +35,20 @@ const SniffDeep = () => {
                 <Typography variant="h4" component="h1" gutterBottom>
                     Sniff Deep
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body1" color="text.secondary" gutterBottom>
                     This is an empty tab ready for your content.
                 </Typography>
+                <Box sx={{ mt: 3 }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        startIcon={<FontAwesomeIcon icon={faPlay} />}
+                        data-testid="sniff-deep-play-button"
+                    >
+                        Start Sniffing
+                    </Button>
+                </Box>
             </Box>
         </PageWithTitle>
     );
