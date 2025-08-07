@@ -28,6 +28,7 @@ const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ 
 const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
 const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
+const SniffDeep = React.lazy(() => import('src/views/SniffDeep'));
 const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
 const ZoneManagement = React.lazy(() => import('src/views/ZoneManagement'));
 
@@ -97,6 +98,12 @@ export const ROUTES: Routable[] = [
         exact: true,
         path: routes.ROUTE_API_EXPLORER,
         component: ApiExplorer,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        path: routes.ROUTE_SNIFF_DEEP,
+        component: SniffDeep,
         authenticationRequired: true,
         navigation: true,
     },

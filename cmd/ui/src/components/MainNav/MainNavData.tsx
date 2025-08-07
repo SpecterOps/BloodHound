@@ -66,6 +66,12 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: 'global_nav-explore',
         },
         {
+            label: 'Sniff Deep',
+            icon: <AppIcon.MagnifyingGlass size={24} />,
+            route: routes.ROUTE_SNIFF_DEEP,
+            testId: 'global_nav-sniff-deep',
+        },
+        {
             label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
             route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
