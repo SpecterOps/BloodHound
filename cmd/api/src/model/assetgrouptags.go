@@ -242,13 +242,17 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
-	SelectorId  int                          `json:"selector_id"`
-	NodeId      graph.ID                     `json:"node_id"`
-	Certified   AssetGroupCertification      `json:"certified"`
-	CertifiedBy null.String                  `json:"certified_by"`
-	Source      AssetGroupSelectorNodeSource `json:"source"`
-	CreatedAt   time.Time                    `json:"created_at"`
-	UpdatedAt   time.Time                    `json:"updated_at"`
+	SelectorId        int                          `json:"selector_id"`
+	NodeId            graph.ID                     `json:"node_id"`
+	Certified         AssetGroupCertification      `json:"certified"`
+	CertifiedBy       null.String                  `json:"certified_by"`
+	Source            AssetGroupSelectorNodeSource `json:"source"`
+	CreatedAt         time.Time                    `json:"created_at"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
+	NodePrimaryKind   string                       `json:"node_primary_kind"`
+	NodeEnvironmentId string                       `json:"node_environment_id"`
+	NodeObjectId      string                       `json:"node_object_id"`
+	NodeName          string                       `json:"node_name"`
 }
 
 func (s AssetGroupSelectorNode) TableName() string {
