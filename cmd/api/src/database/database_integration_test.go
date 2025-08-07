@@ -1,5 +1,20 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
-// +build integration
 
 package database_test
 
@@ -12,23 +27,14 @@ import (
 
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/migrations"
-	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/dawgs"
-	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/stretchr/testify/require"
 )
 
 type IntegrationTestSuite struct {
-	Context         context.Context
-	GraphifyService graphify.GraphifyService
-	BHDatabase      *database.BloodhoundDB
-	WorkDir         string
+	Context    context.Context
+	BHDatabase *database.BloodhoundDB
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing
@@ -40,48 +46,23 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	var (
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
-		workDir  = t.TempDir()
 	)
 
 	// #region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
-	require.NoError(t, err)
 
 	gormDB, err := database.OpenDatabase(connConf.URL())
 	require.NoError(t, err)
 
 	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
 
-	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
-		ConnectionString:      connConf.URL(),
-		Pool:                  pool,
-	})
-	require.NoError(t, err)
-
-	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema())
-	require.NoError(t, err)
-
 	err = db.Migrate(ctx)
-	require.NoError(t, err)
-
-	err = graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema())
-	require.NoError(t, err)
-
-	ingestSchema, err := upload.LoadIngestSchema()
 	require.NoError(t, err)
 
 	// #endregion
 
-	cfg := config.Configuration{
-		WorkDir: workDir,
-	}
-
 	return IntegrationTestSuite{
-		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
-		BHDatabase:      db,
-		WorkDir:         workDir,
+		Context:    ctx,
+		BHDatabase: db,
 	}
 }
 
