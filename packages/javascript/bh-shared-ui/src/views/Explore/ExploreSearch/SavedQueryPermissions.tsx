@@ -9,7 +9,9 @@ import { apiClient } from '../../../utils';
 type SavedQueryPermissionsProps = {
     queryId?: number;
     sharedIds: string[];
+    isPublic: boolean;
     setSharedIds: (ids: string[]) => void;
+    setIsPublic: (isPublic: boolean) => void;
 };
 type ListUser = {
     name: string;
@@ -17,8 +19,7 @@ type ListUser = {
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
-    const { queryId, sharedIds, setSharedIds } = props;
-    const [shareAll, setShareAll] = useState<boolean>(false);
+    const { isPublic, queryId, sharedIds, setSharedIds, setIsPublic } = props;
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<ListUser[]>([]);
 
@@ -50,7 +51,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         // manually setting data on error.
         // api returns error for empty state.
         queryClient.setQueryData(['permissions'], (oldData: any) => {
-            return { ...oldData, shared_to_user_ids: [] };
+            return { ...oldData, query_id: undefined, public: false, shared_to_user_ids: [] };
         });
     }, [error, isError]);
 
@@ -60,15 +61,16 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         } else {
             setSharedIds([]);
         }
-        if (data?.shared_to_user_ids.length && data?.shared_to_user_ids.length === allUserIds?.length) {
-            setShareAll(true);
+        if (data?.public) {
+            setIsPublic(true);
+            setSharedIds(allUserIds as string[]);
         } else {
-            setShareAll(false);
+            setIsPublic(false);
         }
     }, [data, allUserIds]);
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
-        setShareAll(checkedState as boolean);
+        setIsPublic(checkedState as boolean);
         if (checkedState) {
             setSharedIds(allUserIds as string[]);
         } else {
@@ -85,6 +87,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             // add
             setSharedIds([...sharedIds, sharedUserId]);
         }
+        setIsPublic(false);
     };
 
     const isCheckboxChecked = (id: string) => {
@@ -98,7 +101,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 header: () => {
                     return (
                         <div className=''>
-                            <Checkbox className='' checked={shareAll} onCheckedChange={handleCheckAllChange} />
+                            <Checkbox className='' checked={isPublic} onCheckedChange={handleCheckAllChange} />
                         </div>
                     );
                 },

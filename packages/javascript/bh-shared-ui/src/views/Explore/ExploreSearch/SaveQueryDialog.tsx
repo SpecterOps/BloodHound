@@ -50,26 +50,30 @@ type CypherSearchState = {
 
 const SaveQueryDialog: React.FC<{
     open: boolean;
-    onClose: () => void;
-    onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<void>;
-    onUpdate: (data: UpdateUserQueryRequest) => Promise<void>;
     isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
     selectedQuery: QueryLineItem | undefined;
     sharedIds: string[];
+    isPublic: boolean;
+    onClose: () => void;
+    onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<void>;
+    onUpdate: (data: UpdateUserQueryRequest) => Promise<void>;
     setSharedIds: (ids: string[]) => void;
+    setIsPublic: (isPublic: boolean) => void;
 }> = ({
     open,
-    onClose,
-    onSave,
-    onUpdate,
     isLoading = false,
     error = undefined,
     cypherSearchState,
     selectedQuery,
     sharedIds,
+    isPublic,
+    onClose,
+    onSave,
+    onUpdate,
     setSharedIds,
+    setIsPublic,
 }) => {
     const theme = useTheme();
 
@@ -223,7 +227,9 @@ const SaveQueryDialog: React.FC<{
                                     <SavedQueryPermissions
                                         queryId={selectedQuery?.id}
                                         sharedIds={sharedIds}
+                                        isPublic={isPublic}
                                         setSharedIds={setSharedIds}
+                                        setIsPublic={setIsPublic}
                                     />
                                 </CardContent>
                             </Card>

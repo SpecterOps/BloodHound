@@ -79,6 +79,7 @@ const CypherSearch = ({
     });
 
     const [sharedIds, setSharedIds] = useState<string[]>([]);
+    const [isPublic, setIsPublic] = useState(false);
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -129,13 +130,14 @@ const CypherSearch = ({
             {
                 id: id,
                 payload: {
-                    user_ids: sharedIds,
-                    public: false,
+                    user_ids: isPublic ? [] : sharedIds,
+                    public: isPublic,
                 },
             },
             {
                 onSuccess: () => {
                     setSharedIds([]);
+                    setIsPublic(false);
                 },
             }
         );
@@ -325,15 +327,17 @@ const CypherSearch = ({
 
             <SaveQueryDialog
                 open={showSaveQueryDialog}
-                onClose={handleCloseSaveQueryDialog}
-                onSave={handleSaveQuery}
-                onUpdate={handleUpdateQuery}
                 isLoading={updateSavedQueryMutation.isLoading}
                 error={createSavedQueryMutation.error}
                 cypherSearchState={cypherSearchState}
                 selectedQuery={selectedQuery}
                 sharedIds={sharedIds}
+                isPublic={isPublic}
+                onClose={handleCloseSaveQueryDialog}
+                onSave={handleSaveQuery}
+                onUpdate={handleUpdateQuery}
                 setSharedIds={setSharedIds}
+                setIsPublic={setIsPublic}
             />
         </>
     );
