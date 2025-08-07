@@ -1,18 +1,22 @@
+import { useQuery } from 'react-query';
 import { CommonSearches as prebuiltSearchListAGI } from '../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../commonSearchesAGT';
 import { useFeatureFlag, useSavedQueries } from '../../hooks';
 import { QueryLineItem } from '../../types';
+import { apiClient } from '../../utils';
 
 export const usePrebuiltQueries = () => {
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
     const userQueries = useSavedQueries();
+    const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
+
     //Get master list of queries to validate against
     const savedLineItems: QueryLineItem[] =
         userQueries.data?.map((query) => ({
             name: query.name,
             description: query.description,
             query: query.query,
-            canEdit: true, //TODO - handle permissions for shared / public
+            canEdit: query.user_id === getSelf.data.id, //TODO - handle permissions for shared / public
             id: query.id,
             user_id: query.user_id,
         })) || [];
