@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -405,23 +404,14 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilter(name, value string
 	return QueryParameterFilter{}, ErrNotFiltered
 }
 
-// TODO tac on a variadic arg to the end to add to ignoreFilters
-func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Request) (QueryParameterFilterMap, error) {
+func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Request, additionalFiltersToIgnore ...string) (QueryParameterFilterMap, error) {
 	filters := make(QueryParameterFilterMap)
+	filtersToIgnore := CreateFiltersToIgnore(additionalFiltersToIgnore)
 
 	for name, values := range request.URL.Query() {
-		// ignore pagination query params
-		// update this to be a switch
-
-		// TODO put these checks into a helper function and change it in the other duplicated spots
-		if slices.Contains(AllPaginationQueryParameters(), name) {
+		if _, exists := filtersToIgnore[name]; exists {
 			continue
 		}
-
-		if IgnoreFilters(name) {
-			continue
-		}
-
 		for _, value := range values {
 			if filter, err := s.ParseQueryParameterFilter(name, value); err != nil {
 				if !errors.Is(err, ErrNotFiltered) {
@@ -434,6 +424,20 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 	}
 
 	return filters, nil
+}
+
+type IgnoreFilterMap map[string]bool
+
+func CreateFiltersToIgnore(filtersToIgnore []string) IgnoreFilterMap {
+	// always ignore hard-coded Ignore Filters
+	filtersToIgnore = append(filtersToIgnore, IgnoreFilters()...)
+	//always ignore pagination
+	filtersToIgnore = append(filtersToIgnore, AllPaginationQueryParameters()...)
+	ignoreFilters := make(IgnoreFilterMap)
+	for _, filter := range filtersToIgnore {
+		ignoreFilters[filter] = true
+	}
+	return ignoreFilters
 }
 
 func NewQueryParameterFilterParser() QueryParameterFilterParser {

@@ -910,11 +910,10 @@ func (AssetGroupMemberWithCertification) ValidFilters() map[string][]FilterOpera
 		"environments": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"asset_group_tag_id":        {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"type":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		// TODO -- is query a valid filter? 
 		"query":     {},
 		"certified": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"certified_by":     {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		// "start": {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		// "end":   {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
 	}
 }
 
@@ -946,36 +945,36 @@ func (s AssetGroupMemberWithCertification) MeetsFilterRequirements(conditionals 
 // TODO do this for server-side processing conditionals AGSNs
 // TODO there may be a better way to do this
 // Maybe don't do this, might just need to make something bespoke
-func (s AssetGroupMemberWithCertification) BuildServerSideFilteringConditional(column string, operator FilterOperator, value string) (FilteringConditional, error) {
+func (s AssetGroupMemberWithCertification) BuildServerSideFilteringConditional(column string, operator model.FilterOperator, value string) (FilteringConditional, error) {
 	switch column {
 	case "certified":
-		if operator == Equals {
+		if operator == model.Equals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.Certified == value }, nil
-		} else if operator == NotEquals {
+		} else if operator == model.NotEquals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.Certified != value }, nil
 		} else {
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "certified_by":
-		if operator == Equals {
+		if operator == model.Equals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.CertifiedBy == value }, nil
-		} else if operator == NotEquals {
+		} else if operator == model.NotEquals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.CertifiedBy != value }, nil
 		} else {
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
 		}
 	case "start":
-		if operator == Equals {
+		if operator == model.Equals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.FirstSeen.String() == value }, nil
-		} else if operator == NotEquals {
+		} else if operator == model.NotEquals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind != value }, nil
-		} else if operator == GreaterThan {
+		} else if operator == model.GreaterThan {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind > value }, nil
-		} else if operator == GreaterThanOrEquals {
+		} else if operator == model.GreaterThanOrEquals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind >= value }, nil
-		} else if operator == LessThan {
+		} else if operator == model.LessThan {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind < value }, nil
-		} else if operator == LessThanOrEquals {
+		} else if operator == model.LessThanOrEquals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind <= value }, nil
 		} else {
 			return nil, errors.New(ErrorResponseDetailsFilterPredicateNotSupported)
@@ -983,7 +982,7 @@ func (s AssetGroupMemberWithCertification) BuildServerSideFilteringConditional(c
 	case "end":
 		if operator == Equals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind == value }, nil
-		} else if operator == NotEquals {
+		} else if operator == model.NotEquals {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind != value }, nil
 		} else if operator == GreaterThan {
 			return func(t AssetGroupMemberWithCertification) bool { return t.PrimaryKind > value }, nil
@@ -1081,8 +1080,6 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 		defaultStartTime = time.Now()
 		defaultEndTime = time.Time()
 		assetGroupMemberWithCertification = AssetGroupMemberWithCertification{}
-		firstSeenStartQueryParam = "start"
-		firstSeenEndQueryParam = "end"
 		queryParams            = request.URL.Query()
 	)
 	// Parse Query Parameters
@@ -1090,11 +1087,12 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, defaultLimit); err != nil {
 		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-	} else if firstSeenStartTime, err := ParseTimeQueryParameter(queryParams, firstSeenStartQueryParam, defaultStartTime); err != nil {
-		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
-	} else if firstSeenEndTime, err := ParseTimeQueryParameter(queryParams, firstSeenEndQueryParam, defaultStartTime); err != nil {
-		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
-	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+	} else if firstSeenStartTime, err := ParseTimeQueryParameter(queryParams, api.QueryParameterStart, defaultStartTime); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, api.QueryParameterStart, err), response)
+	} else if firstSeenEndTime, err := ParseTimeQueryParameter(queryParams, api.QueryParameterEnd, defaultStartTime); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, api.QueryParameterEnd, err), response)
+		// TODO -- what filters to ignore here? 
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request, api.QueryParameterStart, api.QueryParameterEnd, "query"); err != nil {
 		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
 		// TODO maybe -- this is repeated in other places, good opportunity to DRY
@@ -1112,8 +1110,6 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 			}
 
 		}
-
-		// TODO split filters out -- some for dawgs, some for sql, and some for server-side filtering
 
 		// SQL Filters for zoneId only
 		sqlFilter := model.SQLFilter{
@@ -1146,11 +1142,31 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 				}
 			}
 
-			// post-processing to get only the nodes that match the certification status, first seen query params (if present)
+			// post-processing to get only the nodes that match the certification status, start/end, and certified by filter (if present)
+			if _, ok := queryFilters["certification_status"]; !ok {
+				queryFilters.AddFilter(model.QueryParameterFilter{
+					Name: "certification_status",
+					Operator: model.Equals,
+					Value: model.AssetGroupCertificationNone,
+					IsStringData: true,
+				})
+			}
 
-			// TODO create filterMap -- make sure if no certification_status param, default to 0 (uncertified)
-			// also add start and end date times to the queryFilters 
-			if queryFilters["certification_status"]
+			queryFilters.AddFilter(model.QueryParameterFilterMap{
+				Name: api.QueryParameterStart, 
+				Operator: model.GreaterThanOrEquals,
+				Value: firstSeenStartTime,
+				IsStringData: false,
+			})
+
+			queryFilters.AddFilter(model.QueryParameterFilterMap{
+				Name: api.QueryParameterEnd, 
+				Operator: model.LessThan,
+				Value: firstSeenEndTime,
+				IsStringData: false,
+			})
+
+			// TODO these filtering conditionals should only be cert status, start/end. and certified by
 			conditionals, err := assetGroupMemberWithCertification.CreateFilteringConditionals(queryFilters)
 
 			var nodeIds []graph.ID

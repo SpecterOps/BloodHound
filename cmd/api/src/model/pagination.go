@@ -25,6 +25,8 @@ const (
 	PaginationQueryParameterSortBy = "sort_by"
 )
 
+// AllPaginationQueryParameters is the definitive list of pagination related query
+// parameters. This is primarily used to remove them from filtering logic.
 func AllPaginationQueryParameters() []string {
 	return []string{
 		PaginationQueryParameterAfter,
@@ -33,4 +35,12 @@ func AllPaginationQueryParameters() []string {
 		PaginationQueryParameterOffset,
 		PaginationQueryParameterSkip,
 		PaginationQueryParameterSortBy}
+}
+
+// IgnoreFilters is a definitive list of query parameters that should not be used
+// as filters
+func IgnoreFilters() []string {
+	return []string{
+		"scope",
+	}
 }

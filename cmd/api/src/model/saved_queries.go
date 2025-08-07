@@ -59,13 +59,14 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func IgnoreFilters(filterName string) bool {
-	switch filterName {
-	case "scope", "start", "end":
-		return true
-	default:
-		return false
+func SkipFilter(filterName string, additionalFilters []string) bool {
+	placeholderMapValue := struct{}{}
+	filterSet := make(map[string]struct{})
+	for _, filter := range additionalFilters {
+		filterSet[filter] = placeholderMapValue
 	}
+	_, exists := filterSet[filterName]
+	return exists
 
 }
 

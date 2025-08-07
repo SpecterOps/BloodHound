@@ -27,14 +27,7 @@ get:
   parameters:
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
-    - name: environments
-      in: query
-      required: false
-      description: Environment IDs
-      schema:
-        type: array
-        items:
-          type: string
+    - $ref: './../parameters/query.environment-id.yaml'
     - name: asset_group_tag_id
       in: query
       required: false
