@@ -15,17 +15,38 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'src/test-utils';
+import { vi } from 'vitest';
 import SniffDeep from './SniffDeep';
+
+// Mock the API client
+vi.mock('bh-shared-ui', async () => {
+    const actual = await vi.importActual('bh-shared-ui');
+    return {
+        ...actual,
+        apiClient: {
+            cypherSearch: vi.fn().mockResolvedValue({
+                data: {
+                    data: {
+                        nodes: {
+                            'node1': { kind: 'User', label: 'Test User', properties: { name: 'Test User' } },
+                            'node2': { kind: 'Domain', label: 'Test Domain', properties: { name: 'Test Domain' } }
+                        }
+                    }
+                }
+            })
+        }
+    };
+});
 
 describe('SniffDeep', () => {
     it('should render the page title', () => {
         const screen = render(<SniffDeep />);
-        expect(screen.getByText('Sniff Deep')).toBeInTheDocument();
+        expect(screen.getByText('Sniff Deep Analysis')).toBeInTheDocument();
     });
 
-    it('should render the placeholder content', () => {
+    it('should render the description', () => {
         const screen = render(<SniffDeep />);
-        expect(screen.getByText('This is an empty tab ready for your content.')).toBeInTheDocument();
+        expect(screen.getByText('Execute Cypher query to find paths with DCSync-like privileges')).toBeInTheDocument();
     });
 
     it('should have the correct test id', () => {
