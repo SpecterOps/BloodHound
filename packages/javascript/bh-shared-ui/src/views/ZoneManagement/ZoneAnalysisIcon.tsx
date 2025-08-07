@@ -34,10 +34,9 @@ type ZoneAnalysisIconProps = {
 
 export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
-
+    const isLabelPage = location.pathname.includes('/label');
     const iconProps = {
         size,
-        'data-testid': 'analysis_disabled_icon',
         'aria-label': 'Analysis disabled for this tier',
         role: 'img',
         className: clsx(
@@ -48,13 +47,15 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
         ),
     };
 
+    if (isLabelPage) return null;
+
     if (privilegeZoneAnalysisEnabled === false) {
         return tooltip ? (
             <TooltipProvider>
                 <TooltipRoot>
                     <TooltipTrigger>
                         <div className={clsx(wrapperClasses)}>
-                            <AppIcon.DataAlert {...iconProps} />
+                            <AppIcon.DataAlert {...iconProps} data-testid="analysis_upgrade_icon" />
                         </div>
                     </TooltipTrigger>
                     <TooltipPortal>
@@ -75,7 +76,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 <TooltipRoot>
                     <TooltipTrigger>
                         <div className={clsx(wrapperClasses)}>
-                            <AppIcon.Disabled {...iconProps} />
+                            <AppIcon.Disabled {...iconProps} data-testid="analysis_disabled_icon" />
                         </div>
                     </TooltipTrigger>
                     <TooltipPortal>
