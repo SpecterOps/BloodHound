@@ -331,7 +331,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 
 		_, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "t2 name", "", null.Int32{}, null.Bool{}, glyph)
 		require.Error(t, err)
-		require.EqualError(t, err, "ERROR: duplicate key value violates unique constraint \"asset_group_tags_glyph_key\" (SQLSTATE 23505)")
+		require.EqualError(t, err, "duplicate glyph: ERROR: duplicate key value violates unique constraint \"asset_group_tags_glyph_key\" (SQLSTATE 23505)")
 	})
 
 }
