@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faPaw } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Switch } from '@bloodhoundenterprise/doodleui';
 import { AppIcon, MainNavData, useFeatureFlags } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
@@ -67,7 +69,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
         },
         {
             label: 'Sniff Deep',
-            icon: <AppIcon.MagnifyingGlass size={24} />,
+            icon: <FontAwesomeIcon icon={faPaw} style={{ fontSize: '24px' }} />,
             route: routes.ROUTE_SNIFF_DEEP,
             testId: 'global_nav-sniff-deep',
         },
