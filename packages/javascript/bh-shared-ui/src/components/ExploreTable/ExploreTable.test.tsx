@@ -29,6 +29,7 @@ const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primar
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
 
+vi.mock('js-file-download');
 vi.mock('json-2-csv');
 
 const getFirstCellOfType = (type: string) => screen.getAllByTestId(`table-cell-${type}`)[0];
