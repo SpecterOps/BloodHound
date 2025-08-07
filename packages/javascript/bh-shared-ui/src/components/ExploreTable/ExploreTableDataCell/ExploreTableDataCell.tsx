@@ -25,7 +25,7 @@ const transitionDelay = 'delay-300';
 
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
-    if (columnKey === 'nodetype') {
+    if (columnKey === 'kind') {
         return (
             <div className='flex justify-center'>
                 <NodeIcon nodeType={value?.toString() || ''} />

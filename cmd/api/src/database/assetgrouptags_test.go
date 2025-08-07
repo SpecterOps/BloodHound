@@ -37,6 +37,7 @@ import (
 )
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -979,7 +980,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 	)
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
-	err = dbInst.InsertSelectorNode(testCtx, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source))
+	err = dbInst.InsertSelectorNode(testCtx, 1, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source), "")
 	require.NoError(t, err)
 	selectors, err := dbInst.GetSelectorsByMemberId(testCtx, testMemberId, test1Selector.AssetGroupTagId)
 	require.NoError(t, err)

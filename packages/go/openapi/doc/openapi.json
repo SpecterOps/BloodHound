@@ -5325,6 +5325,17 @@
         ],
         "parameters": [
           {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
@@ -5415,6 +5426,19 @@
           "Asset Isolation",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -6900,7 +6924,14 @@
             "name": "scope",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+              "type": "string",
+              "enum": [
+                "all",
+                "owned",
+                "shared",
+                "public"
+              ],
+              "default": "owned"
             }
           }
         ],
@@ -6920,7 +6951,19 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.saved-query"
+                            "allOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              {
+                                "$ref": "#/components/schemas/model.saved-query"
+                              }
+                            ]
                           }
                         }
                       }
@@ -7017,6 +7060,63 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetSavedQuery",
+        "summary": "Return a saved query",
+        "description": "Returns an existing saved query by ID",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saved-query"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSavedQuery",
         "summary": "Delete a saved query",
@@ -7025,6 +7125,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "responses": {
           "204": {
@@ -7058,6 +7170,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for updating a saved query",
@@ -7123,6 +7247,63 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetSavedQueryPermissions",
+        "summary": "Retrieves saved query permissions for provided query id",
+        "description": "Retrieves saved query permissions for provided query id",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.saved-queries-permissions.response"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "delete": {
         "operationId": "DeleteSavedQueryPermissions",
         "summary": "Revokes permission of a saved query from users",
@@ -7131,6 +7312,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for revoking permissions of a saved query from users",
@@ -7185,6 +7378,18 @@
           "Cypher",
           "Community",
           "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "saved_query_id",
+            "description": "ID of the saved query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
         ],
         "requestBody": {
           "description": "The request body for sharing a saved query or making it public",
@@ -15681,7 +15886,7 @@
             "name": "from",
             "deprecated": true,
             "x-go-name": "fromDeprecated",
-            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time",
+            "description": "Lower bound for created_at; to return posture stats starting at a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15692,7 +15897,7 @@
             "name": "to",
             "deprecated": true,
             "x-go-name": "toDeprecated",
-            "description": "Upper bound for created_at; to return posture stats upto a specific date/time",
+            "description": "Upper bound for created_at; to return posture stats upto a specific date/time. This filter has been deprecated, please use created_at instead.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -15708,6 +15913,13 @@
           },
           {
             "name": "exposure_index",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
@@ -15735,7 +15947,28 @@
             }
           },
           {
-            "$ref": "#/components/parameters/query.asset-group-tag-id"
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "deleted_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
           }
         ],
         "responses": {
@@ -17815,6 +18048,9 @@
           "object_id": {
             "type": "string"
           },
+          "environment_id": {
+            "type": "string"
+          },
           "primary_kind": {
             "type": "string"
           },
@@ -18465,6 +18701,24 @@
             }
           }
         ]
+      },
+      "model.saved-queries-permissions.response": {
+        "type": "object",
+        "properties": {
+          "shared_to_user_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.components.uuid"
+            }
+          },
+          "query_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "public": {
+            "type": "boolean"
+          }
+        }
       },
       "model.saved-queries-permissions": {
         "allOf": [
