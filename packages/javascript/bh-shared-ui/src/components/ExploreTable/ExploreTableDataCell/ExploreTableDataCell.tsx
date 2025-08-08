@@ -37,8 +37,10 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
             <div className='flex justify-center items-center pb-1 pt-1'>
                 <FontAwesomeIcon
                     icon={value ? faCheck : faXmark}
-                    color={value ? 'green' : 'lightgray'}
-                    className='scale-125'
+                    className={cn(
+                        'scale-125 fill-current',
+                        value ? 'text-green-600' : 'text-gray-600 dark:text-gray-400'
+                    )}
                 />
             </div>
         );

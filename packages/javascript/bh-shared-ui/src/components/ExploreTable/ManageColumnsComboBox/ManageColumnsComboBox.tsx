@@ -180,6 +180,7 @@ export const ManageColumnsComboBox = ({
                             }, [] as ReactNode[]),
                             ...unselectedColumns.map((column, index) => (
                                 <ManageColumnsListItem
+                                    isSelected={false}
                                     key={`${column?.id}-${index}`}
                                     item={column}
                                     onClick={addSelectedItem}

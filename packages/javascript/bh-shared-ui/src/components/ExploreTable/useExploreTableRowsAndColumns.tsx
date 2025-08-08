@@ -22,9 +22,7 @@ import { useCallback, useMemo, useState } from 'react';
 import {
     compareForExploreTableSort,
     getExploreTableData,
-    isRequiredColumn,
     isSmallColumn,
-    REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
     type ExploreTableProps,
     type MungedTableRowWithId,
 } from './explore-table-utils';
@@ -191,46 +189,24 @@ const useExploreTableRowsAndColumns = ({
         return dataToSort;
     }, [filteredRows, sortBy, sortOrder]);
 
-    const allColumnDefintions = useMemo(
+    const allColumnDefinitions = useMemo(
         () => exploreTableData?.node_keys?.map(makeColumnDef) || [],
         [exploreTableData?.node_keys, makeColumnDef]
     );
 
     const selectedColumnDefinitions = useMemo(
-        () => allColumnDefintions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
-        [allColumnDefintions, selectedColumns]
+        () => allColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
+        [allColumnDefinitions, selectedColumns]
     );
 
-    const sortedColumnDefinitions = useMemo(() => {
-        const columnDefs = selectedColumnDefinitions.sort((a, b) => {
-            const idA = a?.id || '';
-            const idB = b?.id || '';
-            const aIsRequired = isRequiredColumn(idA);
-            const bIsRequired = isRequiredColumn(idB);
-            if (aIsRequired) {
-                if (bIsRequired) {
-                    return REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idA) >
-                        REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.indexOf(idB)
-                        ? 1
-                        : -1;
-                }
-                return -1;
-            }
-
-            return 1;
-        });
-
-        return columnDefs;
-    }, [selectedColumnDefinitions]);
-
     const tableColumns = useMemo(
-        () => [kebabColumDefinition, ...sortedColumnDefinitions],
-        [kebabColumDefinition, sortedColumnDefinitions]
+        () => [kebabColumDefinition, ...selectedColumnDefinitions],
+        [kebabColumDefinition, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
     return {
         rows,
-        columnOptionsForDropdown: allColumnDefintions,
+        columnOptionsForDropdown: allColumnDefinitions,
         tableColumns,
         sortedFilteredRows,
         resultsCount: rows.length,
