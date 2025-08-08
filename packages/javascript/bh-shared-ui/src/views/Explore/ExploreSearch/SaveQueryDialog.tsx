@@ -167,7 +167,6 @@ const SaveQueryDialog: React.FC<{
                                                 setName(e.target.value);
                                             }}
                                         />
-                                        <div>{isLoading.toString()}</div>
                                     </div>
 
                                     <div className='mb-2'>
