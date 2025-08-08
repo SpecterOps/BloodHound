@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright, 2025 Specter Ops, LLC.  All rights reserved.
 
 BH_USER="bloodhound"
