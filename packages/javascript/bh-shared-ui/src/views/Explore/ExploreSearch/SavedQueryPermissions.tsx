@@ -101,7 +101,12 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 header: () => {
                     return (
                         <div className=''>
-                            <Checkbox className='' checked={isPublic} onCheckedChange={handleCheckAllChange} />
+                            <Checkbox
+                                className=''
+                                checked={isPublic}
+                                onCheckedChange={handleCheckAllChange}
+                                data-testid='public-query'
+                            />
                         </div>
                     );
                 },
@@ -165,12 +170,10 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                             />
                         </div>
                         <DataTable
-                            TableProps={{ className: '' }}
                             TableHeadProps={{
                                 className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
                             }}
                             TableBodyProps={{ className: 'text-s font-roboto underline' }}
-                            TableBodyRowProps={{ className: '' }}
                             TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
                             columns={getColumns()}
                             data={filteredUsers.length ? filteredUsers : usersList}
