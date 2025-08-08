@@ -22,7 +22,9 @@ import {
     DropdownOption,
     ExploreSearchCombobox,
     usePathfindingFilters,
-    usePathfindingSearch
+    usePathfindingSearch,
+    useExploreParams,
+    encodeCypherQuery
 } from 'bh-shared-ui';
 import { useState, useCallback } from 'react';
 import { SearchValue } from 'bh-shared-ui/src/views/Explore/ExploreSearch/types';
@@ -34,16 +36,35 @@ const sniffDeepOptions: DropdownOption[] = [
 
 // Custom search state interface for sniff deep
 interface SniffDeepSearchState {
+    sourceSearchTerm: string;
+    sourceSelectedItem: SearchValue | undefined;
     destinationSearchTerm: string;
     destinationSelectedItem: SearchValue | undefined;
+    handleSourceNodeEdited: (edit: string) => void;
+    handleSourceNodeSelected: (selected: SearchValue) => void;
     handleDestinationNodeEdited: (edit: string) => void;
     handleDestinationNodeSelected: (selected: SearchValue) => void;
 }
 
 // Custom hook for sniff deep search functionality
 const useSniffDeepSearch = (): SniffDeepSearchState => {
+    const [sourceSearchTerm, setSourceSearchTerm] = useState('');
+    const [sourceSelectedItem, setSourceSelectedItem] = useState<SearchValue | undefined>();
     const [destinationSearchTerm, setDestinationSearchTerm] = useState('');
     const [destinationSelectedItem, setDestinationSelectedItem] = useState<SearchValue | undefined>();
+
+    const handleSourceNodeEdited = useCallback((edit: string) => {
+        setSourceSearchTerm(edit);
+        // Clear selected item when editing
+        if (sourceSelectedItem) {
+            setSourceSelectedItem(undefined);
+        }
+    }, [sourceSelectedItem]);
+
+    const handleSourceNodeSelected = useCallback((selected: SearchValue) => {
+        setSourceSelectedItem(selected);
+        setSourceSearchTerm(selected.name || '');
+    }, []);
 
     const handleDestinationNodeEdited = useCallback((edit: string) => {
         setDestinationSearchTerm(edit);
@@ -59,8 +80,12 @@ const useSniffDeepSearch = (): SniffDeepSearchState => {
     }, []);
 
     return {
+        sourceSearchTerm,
+        sourceSelectedItem,
         destinationSearchTerm,
         destinationSelectedItem,
+        handleSourceNodeEdited,
+        handleSourceNodeSelected,
         handleDestinationNodeEdited,
         handleDestinationNodeSelected,
     };
@@ -75,6 +100,7 @@ const SniffDeepSearch = ({
 }) => {
     const [selectedOption, setSelectedOption] = useState<DropdownOption>(sniffDeepOptions[0]);
     const sniffDeepSearchState = useSniffDeepSearch();
+    const { setExploreParams } = useExploreParams();
 
     const handleDropdownChange = (option: DropdownOption) => {
         setSelectedOption(option);
@@ -82,55 +108,46 @@ const SniffDeepSearch = ({
     };
 
     const executeSniffDeepSearch = useCallback(async () => {
-        if (!sniffDeepSearchState.destinationSelectedItem) {
-            console.warn('No destination node selected for sniff deep search');
+        if (!sniffDeepSearchState.sourceSelectedItem || !sniffDeepSearchState.destinationSelectedItem) {
+            console.warn('Both source and destination nodes must be selected for sniff deep search');
             return;
         }
 
+        const sourceNodeId = sniffDeepSearchState.sourceSelectedItem.objectid;
         const destinationNodeId = sniffDeepSearchState.destinationSelectedItem.objectid;
         const selectedSearchType = selectedOption.value;
 
         try {
-            let cypherQueries: string[] = [];
+            let cypherQuery = '';
 
             if (selectedSearchType === 'All' || selectedSearchType === 'DCSync') {
-                // Path 1: GetChanges edge from Group nodes to the destination node
-                const getChangesQuery = `
-                    MATCH p=(g:Group)-[:GetChanges]->(d)
-                    WHERE d.objectid = "${destinationNodeId}"
-                    RETURN p
-                    LIMIT 1000
-                `;
-                cypherQueries.push(getChangesQuery);
-
-                // Path 2: GetChangesAll edge from Group nodes to the destination node  
-                const getChangesAllQuery = `
-                    MATCH p=(g:Group)-[:GetChangesAll]->(d)
-                    WHERE d.objectid = "${destinationNodeId}"
-                    RETURN p
-                    LIMIT 1000
-                `;
-                cypherQueries.push(getChangesAllQuery);
+                cypherQuery = `MATCH p_changes = (x1:Base)-[:GetChanges]->(d:Domain)
+                WHERE d.objectid = "${destinationNodeId}"
+                MATCH p_changesall = (x2:Base)-[:GetChangesAll]->(d)
+                MATCH p_tochanges = shortestpath((n:Base)-[:GenericAll|AddMember|MemberOf*0..]->(x1))
+                WHERE NOT (n)-[:GenericAll|AddMember|MemberOf*0..10]->()-[:DCSync]->(d)
+                    AND n.objectid = "${sourceNodeId}"
+                MATCH p_tochangesall = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2)) 
+                WHERE n.objectid = "${sourceNodeId}"
+                RETURN p_changes,p_tochanges, p_changesall,p_tochangesall`;
             }
 
-            // Execute the cypher queries
-            for (const query of cypherQueries) {
-                console.log('Executing sniff deep search query:', query);
-                console.log('Target destination node:', destinationNodeId);
+            if (cypherQuery) {
+                console.log('Executing sniff deep search query:', cypherQuery);
+                console.log('Source node:', sourceNodeId, 'Destination node:', destinationNodeId);
                 
-                // TODO: Execute the actual cypher query via apiClient
-                // This will need to be integrated with the graph visualization
-                // For now, just log the query that would be executed
-                
-                // Example of how this might look:
-                // const result = await apiClient.cypherSearch(query, {}, true);
-                // console.log('Sniff deep search result:', result);
+                // Execute the cypher query via the explore params system
+                // This will trigger the same query execution and graph visualization as cypher search
+                setExploreParams({
+                    searchType: 'cypher',
+                    cypherSearch: encodeCypherQuery(cypherQuery),
+                });
             }
 
         } catch (error) {
             console.error('Error executing sniff deep search:', error);
         }
-    }, [sniffDeepSearchState.destinationSelectedItem, selectedOption.value]);
+    }, [sniffDeepSearchState.sourceSelectedItem, sniffDeepSearchState.destinationSelectedItem, selectedOption.value, setExploreParams]);
 
     const handlePlayButtonClick = () => {
         console.log('Play button clicked - starting sniff deep search with option:', selectedOption.value);
@@ -152,12 +169,14 @@ const SniffDeepSearch = ({
 
                     {/* Search inputs */}
                     <div className='flex flex-col flex-grow gap-2'>
-                        {/* Source node - shows "Group nodes" as placeholder/fixed */}
-                        <div className='relative'>
-                            <div className='min-h-[40px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 flex items-center text-sm text-gray-500 dark:text-gray-400'>
-                                Group nodes (source)
-                            </div>
-                        </div>
+                        {/* Source node - functional search */}
+                        <ExploreSearchCombobox
+                            handleNodeEdited={sniffDeepSearchState.handleSourceNodeEdited}
+                            handleNodeSelected={sniffDeepSearchState.handleSourceNodeSelected}
+                            inputValue={sniffDeepSearchState.sourceSearchTerm}
+                            selectedItem={sniffDeepSearchState.sourceSelectedItem || null}
+                            labelText='Source Node'
+                        />
                         
                         {/* Destination node - functional search */}
                         <ExploreSearchCombobox
@@ -193,7 +212,7 @@ const SniffDeepSearch = ({
                 <Button
                     className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
                     onClick={handlePlayButtonClick}
-                    disabled={!sniffDeepSearchState.destinationSelectedItem}
+                    disabled={!sniffDeepSearchState.sourceSelectedItem || !sniffDeepSearchState.destinationSelectedItem}
                     title="Start Sniff Deep search">
                     <FontAwesomeIcon icon={faPlay} size='xs' />
                 </Button>
