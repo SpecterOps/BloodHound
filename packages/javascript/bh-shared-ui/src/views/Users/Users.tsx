@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Dialog, DialogPortal, DialogTrigger } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
@@ -57,6 +57,8 @@ const Users: FC = () => {
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-users-permission';
+
+    console.log(apiClient);
 
     const effect: React.EffectCallback = () => {
         if (!hasPermission) {
@@ -183,15 +185,40 @@ const Users: FC = () => {
                     </Typography>
                 }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    <Button
-                        disabled={!hasPermission}
-                        onClick={() => {
-                            setSelectedUserId(null);
-                            toggleCreateUserDialog();
-                        }}
-                        data-testid='manage-users_button-create-user'>
-                        Create User
-                    </Button>
+                    {/* TODO: IMPLEMENT FEATURE FLAG TO DISPLAY IF ON */}
+                    {/*
+                    <FeatureFlag
+                    flagKey='PUT_ETAC_FEATURE_FLAG_HERE'
+                        enabled={
+                        }
+                        disabled={
+                        }
+                    />
+                    */}
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button
+                                disabled={!hasPermission}
+                                onClick={() => {
+                                    setSelectedUserId(null);
+                                    toggleCreateUserDialog();
+                                }}
+                                data-testid='manage-users_button-create-user'>
+                                Create User
+                            </Button>
+                        </DialogTrigger>
+                        <DialogPortal>
+                            <CreateUserDialog
+                                open={createUserDialogOpen}
+                                onClose={toggleCreateUserDialog}
+                                onExited={createUserMutation.reset}
+                                onSave={createUserMutation.mutateAsync}
+                                isLoading={createUserMutation.isLoading}
+                                error={createUserMutation.error}
+                                //showEnvironmentAccessControls={true} // or false
+                            />
+                        </DialogPortal>
+                    </Dialog>
                 </Box>
                 <Paper data-testid='manage-users_table'>
                     <UsersTable
@@ -208,14 +235,6 @@ const Users: FC = () => {
                 </Paper>
             </PageWithTitle>
 
-            <CreateUserDialog
-                open={createUserDialogOpen}
-                onClose={toggleCreateUserDialog}
-                onExited={createUserMutation.reset}
-                onSave={createUserMutation.mutateAsync}
-                isLoading={createUserMutation.isLoading}
-                error={createUserMutation.error}
-            />
             <UpdateUserDialog
                 open={updateUserDialogOpen}
                 onClose={toggleUpdateUserDialog}
