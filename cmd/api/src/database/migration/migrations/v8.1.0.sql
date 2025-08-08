@@ -14,7 +14,7 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Targeted Access Control Feature Flag
+-- Environment Targeted Access Control Feature Flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (current_timestamp,
         current_timestamp,
@@ -25,7 +25,14 @@ VALUES (current_timestamp,
         false)
 ON CONFLICT DO NOTHING;
 
--- Targeted Access Control users_roles column additions and defaults
-ALTER TABLE users_roles 
-        ADD COLUMN IF NOT EXISTS access_control_list text[] default array ['all_environments'],
-        ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
+-- Environment Targeted Access Control
+CREATE TABLE IF NOT EXISTS environment_access_control (
+    id BIGSERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    environment TEXT NOT NULL,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone
+);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS explore_enabled BOOL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS all_environments BOOL DEFAULT TRUE;
