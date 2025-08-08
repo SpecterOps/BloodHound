@@ -20,8 +20,10 @@ import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks'
 import { cn, exportToJson } from '../../utils';
 import TableControls from './TableControls';
 import {
+    DEFAULT_PINNED_COLUMN_KEYS,
     ExploreTableProps,
     MungedTableRowWithId,
+    createColumnStateFromKeys,
     getExploreTableData,
     requiredColumns,
     shimGraphSpecificKeys,
@@ -86,6 +88,13 @@ const ExploreTable = ({
         exploreTableData,
     });
 
+    // Just a hardcoded list of pinned columns for now
+    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
+        left: DEFAULT_PINNED_COLUMN_KEYS,
+    });
+
+    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
+
     const searchInputProps = useMemo(
         () => ({
             onChange: handleSearchInputChange,
@@ -122,7 +131,7 @@ const ExploreTable = ({
                 <TableControls
                     columns={columnOptionsForDropdown}
                     selectedColumns={shimmedColumns}
-                    pinnedColumns={requiredColumns}
+                    pinnedColumns={leftPinnedColumns}
                     onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
@@ -137,6 +146,8 @@ const ExploreTable = ({
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}
                     TableCellProps={tableCellProps}
+                    columnPinning={columnPinning}
+                    onColumnPinningChange={setColumnPinning}
                     onRowClick={handleRowClick}
                     selectedRow={selectedItem || undefined}
                     data={sortedFilteredRows}

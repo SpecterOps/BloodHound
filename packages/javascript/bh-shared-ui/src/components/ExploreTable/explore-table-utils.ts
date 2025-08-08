@@ -43,6 +43,10 @@ export const KNOWN_NODE_KEYS = [
     'isOwnedObject',
     'lastSeen',
 ] satisfies KnownNodeProperties[];
+export const DEFAULT_PINNED_COLUMN_KEYS = ['action-menu', 'kind', 'label'] satisfies (
+    | 'action-menu'
+    | KnownNodeProperties
+)[];
 /**
  * Keys that can be found in a nodes property bag that are lifted into the UnifiedNode type
  */
@@ -99,7 +103,11 @@ export const shimGraphSpecificKeys = (selectedColumns: NonNullable<ExploreTableP
     return shimmedColumns;
 };
 
-export const requiredColumns = Object.fromEntries(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.map((key) => [key, true]));
+export const createColumnStateFromKeys = (keys: string[]): Record<string, boolean> => {
+    return Object.fromEntries(keys.map((key) => [key, true]));
+};
+
+export const requiredColumns = createColumnStateFromKeys(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS);
 export const isRequiredColumn = (value: string): value is (typeof REQUIRED_EXPLORE_TABLE_COLUMN_KEYS)[number] => {
     return requiredColumns[value];
 };

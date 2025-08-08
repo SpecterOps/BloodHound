@@ -124,7 +124,7 @@ export const ManageColumnsComboBox = ({
                     disabled={disabled}
                     onClick={handleManageColumnsClick}
                     className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'>
-                    Manage Columns
+                    Columns
                 </Button>
             </div>
 
@@ -155,7 +155,7 @@ export const ManageColumnsComboBox = ({
 
                                 return (
                                     <ManageColumnsListItem
-                                        isSelected={selectedColumnMap[column.id]}
+                                        isSelected={!!selectedColumnMap[column.id]}
                                         key={`${column?.id}-${index}`}
                                         item={column}
                                         onClick={isSelected ? removeSelectedItem : addSelectedItem}
@@ -180,6 +180,7 @@ export const ManageColumnsComboBox = ({
                             }, [] as ReactNode[]),
                             ...unselectedColumns.map((column, index) => (
                                 <ManageColumnsListItem
+                                    isSelected={false}
                                     key={`${column?.id}-${index}`}
                                     item={column}
                                     onClick={addSelectedItem}
