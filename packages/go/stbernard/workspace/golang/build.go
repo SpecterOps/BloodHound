@@ -76,7 +76,7 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 
 	args := []string{"build", "-ldflags", strings.Join(ldflagArgComponents, " "), "-o", buildDir}
 
-	if packages, err := moduleListPackages(modPath); err != nil {
+	if packages, err := moduleListPackages(modPath, env); err != nil {
 		return fmt.Errorf("list module packages: %w", err)
 	} else {
 		for _, pkg := range packages {
