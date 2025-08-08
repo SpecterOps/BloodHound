@@ -200,10 +200,7 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <SniffDeepSearch
-                            pathfindingSearchState={pathfindingSearchState}
-                            pathfindingFilterState={pathfindingFilterState}
-                        />,
+                        <SniffDeepSearch />,
                         <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}

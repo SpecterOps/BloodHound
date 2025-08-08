@@ -7,7 +7,6 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { usePathfindingFilters, usePathfindingSearch } from 'bh-shared-ui';
 import { act } from '../../../test-utils';
 import SniffDeepSearch from './SniffDeepSearch';
 
@@ -32,15 +31,9 @@ describe('SniffDeepSearch', () => {
     );
 
     const MockSniffDeepSearchWrapper = () => {
-        const pathfindingSearchState = usePathfindingSearch();
-        const pathfindingFilterState = usePathfindingFilters();
-        
         return (
             <BrowserRouter>
-                <SniffDeepSearch
-                    pathfindingSearchState={pathfindingSearchState}
-                    pathfindingFilterState={pathfindingFilterState}
-                />
+                <SniffDeepSearch />
             </BrowserRouter>
         );
     };

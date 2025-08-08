@@ -21,8 +21,6 @@ import {
     DropdownSelector, 
     DropdownOption,
     ExploreSearchCombobox,
-    usePathfindingFilters,
-    usePathfindingSearch,
     useExploreParams,
     encodeCypherQuery
 } from 'bh-shared-ui';
@@ -91,13 +89,7 @@ const useSniffDeepSearch = (): SniffDeepSearchState => {
     };
 };
 
-const SniffDeepSearch = ({
-    pathfindingSearchState,
-    pathfindingFilterState,
-}: {
-    pathfindingSearchState: ReturnType<typeof usePathfindingSearch>;
-    pathfindingFilterState: ReturnType<typeof usePathfindingFilters>;
-}) => {
+const SniffDeepSearch = () => {
     const [selectedOption, setSelectedOption] = useState<DropdownOption>(sniffDeepOptions[0]);
     const sniffDeepSearchState = useSniffDeepSearch();
     const { setExploreParams } = useExploreParams();
