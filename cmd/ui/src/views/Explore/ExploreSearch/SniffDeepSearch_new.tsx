@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { faBullseye, faCircle, faPlay, faFilter } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FontAwesome Icon } from '@fortawesome/react-fontawesome';
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { 
     DropdownSelector, 
@@ -55,7 +55,7 @@ const useSniffDeepSearch = (): SniffDeepSearchState => {
 
     const handleDestinationNodeSelected = useCallback((selected: SearchValue) => {
         setDestinationSelectedItem(selected);
-        setDestinationSearchTerm(selected.name || '');
+        setDestinationSearchTerm(selected.name);
     }, []);
 
     return {
@@ -145,9 +145,9 @@ const SniffDeepSearch = ({
                 <div className='flex items-center gap-2'>
                     {/* Source to bullseye icon */}
                     <div className='flex flex-col items-center'>
-                        <FontAwesomeIcon icon={faCircle} size='xs' />
+                        <FontAwesome Icon icon={faCircle} size='xs' />
                         <div className='border-l border-dotted border-primary dark:border-white my-2 h-4'></div>
-                        <FontAwesomeIcon icon={faBullseye} size='xs' />
+                        <FontAwesome Icon icon={faBullseye} size='xs' />
                     </div>
 
                     {/* Search inputs */}
@@ -174,7 +174,7 @@ const SniffDeepSearch = ({
                         className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
                         disabled={true}
                         title="Edge filters (not available for sniff deep)">
-                        <FontAwesomeIcon icon={faFilter} size='xs' />
+                        <FontAwesome Icon icon={faFilter} size='xs' />
                     </Button>
                 </div>
             </div>
@@ -195,7 +195,7 @@ const SniffDeepSearch = ({
                     onClick={handlePlayButtonClick}
                     disabled={!sniffDeepSearchState.destinationSelectedItem}
                     title="Start Sniff Deep search">
-                    <FontAwesomeIcon icon={faPlay} size='xs' />
+                    <FontAwesome Icon icon={faPlay} size='xs' />
                 </Button>
             </div>
         </div>
