@@ -14,7 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogTitle } from '@mui/material';
+//import { Dialog, DialogTitle } from '@mui/material';
+import { DialogContent } from '@bloodhoundenterprise/doodleui';
+import { Dialog } from '@mui/material';
 import { CreateUserRequest } from 'js-client-library';
 import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
@@ -26,7 +28,8 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     isLoading: boolean;
     error: any;
-}> = ({ open, onClose, onExited, onSave, isLoading, error }) => {
+    showEnvironmentAccessControls?: boolean; //TODO: required or not?
+}> = ({ open, onClose, onExited, onSave, isLoading, error, showEnvironmentAccessControls = true }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
@@ -44,6 +47,36 @@ const CreateUserDialog: React.FC<{
     };
 
     return (
+        <>
+            {!showEnvironmentAccessControls ? (
+                <DialogContent maxWidth='lg' className='!bg-transparent'>
+                    <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
+                </DialogContent>
+            ) : (
+                <Dialog
+                    open={open}
+                    fullWidth={true}
+                    maxWidth={'sm'}
+                    onClose={onClose}
+                    disableEscapeKeyDown
+                    PaperProps={{
+                        //@ts-ignore
+                        'data-testid': 'create-user-dialog',
+                    }}
+                    TransitionProps={{
+                        onExited,
+                    }}>
+                    <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
+                </Dialog>
+            )}
+        </>
+    );
+};
+
+export default CreateUserDialog;
+
+{
+    /*
         <Dialog
             open={open}
             fullWidth={true}
@@ -60,7 +93,5 @@ const CreateUserDialog: React.FC<{
             <DialogTitle>{'Create User'}</DialogTitle>
             <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
         </Dialog>
-    );
-};
-
-export default CreateUserDialog;
+        */
+}
