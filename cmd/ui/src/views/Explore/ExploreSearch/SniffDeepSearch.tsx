@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faPlay } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { 
     DropdownSelector, 
     DropdownOption, 
@@ -39,25 +42,43 @@ const SniffDeepSearch = ({
 
     const handleDropdownChange = (option: DropdownOption) => {
         setSelectedOption(option);
-        // TODO: Add logic to handle the filter change based on the selected option
         console.log('Selected Sniff Deep option:', option.value);
+    };
+
+    const handlePlayButtonClick = () => {
+        // TODO: Implement manual search trigger logic based on selected option
+        console.log('Play button clicked - starting search with option:', selectedOption.value);
+        // This is where you would trigger the actual search based on the selected dropdown option
     };
 
     return (
         <div className='relative'>
-            {/* Original PathfindingSearch component */}
-            <PathfindingSearch 
-                pathfindingSearchState={pathfindingSearchState}
-                pathfindingFilterState={pathfindingFilterState}
-            />
+            {/* Wrapper div with increased height for the gray search container */}
+            <div className='bg-gray-100 dark:bg-gray-800 p-2 origin-top-center rounded-lg min-h-[100px]'>
+                {/* Original PathfindingSearch component */}
+                <PathfindingSearch 
+                    pathfindingSearchState={pathfindingSearchState}
+                    pathfindingFilterState={pathfindingFilterState}
+                />
+            </div>
             
-            {/* Compact dropdown positioned absolutely under the buttons */}
-            <div className='absolute top-[52px] right-0 scale-75 origin-top-right'>
+            {/* Compact dropdown positioned above the buttons area */}
+            <div className='absolute top-[-5px] right-[8px] scale-75 origin-top-right z-10'>
                 <DropdownSelector
                     options={sniffDeepOptions}
                     selectedText={selectedOption.value}
                     onChange={handleDropdownChange}
                 />
+            </div>
+
+            {/* Play button positioned as third button in the row */}
+            <div className='absolute top-[68px] right-[25px] z-10'>
+                <Button
+                    className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
+                    onClick={handlePlayButtonClick}
+                    title="Start Sniff Deep search">
+                    <FontAwesomeIcon icon={faPlay} size='xs' />
+                </Button>
             </div>
         </div>
     );

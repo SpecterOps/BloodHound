@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { BrowserRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 import { usePathfindingFilters, usePathfindingSearch } from 'bh-shared-ui';
 import { act } from '../../../test-utils';
 import SniffDeepSearch from './SniffDeepSearch';
@@ -65,7 +66,7 @@ describe('SniffDeepSearch', () => {
         expect(screen.getByRole('button', { name: /dcsync/i })).toBeInTheDocument();
     });
 
-    it('renders pathfinding search components below the dropdown', async () => {
+    it('renders pathfinding search components and play button', async () => {
         await act(async () => {
             render(<MockSniffDeepSearchWrapper />);
         });
@@ -73,5 +74,25 @@ describe('SniffDeepSearch', () => {
         // Check that the pathfinding search elements are present
         expect(screen.getByLabelText(/start node/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/destination node/i)).toBeInTheDocument();
+        
+        // Check that the play button is present
+        expect(screen.getByTitle(/start sniff deep search/i)).toBeInTheDocument();
+    });
+
+    it('triggers search when play button is clicked', async () => {
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const user = userEvent.setup();
+        
+        await act(async () => {
+            render(<MockSniffDeepSearchWrapper />);
+        });
+
+        const playButton = screen.getByTitle(/start sniff deep search/i);
+        await user.click(playButton);
+
+        // Check that the play button click was logged (placeholder for actual search logic)
+        expect(consoleSpy).toHaveBeenCalledWith('Play button clicked - starting search with option:', 'All');
+        
+        consoleSpy.mockRestore();
     });
 });

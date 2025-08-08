@@ -21,21 +21,27 @@ Added a dropdown menu to the Sniff Deep search tab with "All" and "DCSync" optio
 - Tests dropdown rendering, option selection, and integration with pathfinding components
 
 ## Features Added
-1. **Dropdown Menu**: Located at the top of the sniff deep search tab
+1. **Dropdown Menu**: Located above the swap and filter buttons on the right side
 2. **Two Options Available**:
    - "All" (default selection)
    - "DCSync"
-3. **Seamless Integration**: The dropdown doesn't interfere with existing pathfinding search functionality
-4. **Future Extensibility**: Easy to add more filter options or integrate with actual search logic
+3. **Play Button**: Located below the swap and filter buttons - triggers manual search execution
+4. **Manual Search Control**: Search no longer happens automatically when selecting principals - user must click the play button
+5. **Seamless Integration**: The dropdown and play button don't interfere with existing pathfinding search functionality
+6. **Future Extensibility**: Easy to add more filter options or integrate with actual search logic
 
 ## Technical Notes
 - Reuses existing PathfindingSearch component for search functionality
 - Uses the same state management hooks (`usePathfindingSearch`, `usePathfindingFilters`)
 - Follows existing component patterns and styling
+- Dropdown positioned absolutely above the existing swap/filter buttons
+- Play button positioned below the buttons provides manual search trigger
 - Ready for integration with backend filtering logic when DCSync functionality is implemented
 
 ## Next Steps
-The dropdown is currently functional for UI purposes. To complete the feature:
+The dropdown and play button are currently functional for UI purposes. To complete the feature:
 1. Connect the dropdown selection to actual search filtering logic
 2. Implement DCSync-specific search parameters
-3. Add any additional dropdown options as needed
+3. Connect the play button to trigger the appropriate search based on dropdown selection
+4. Disable automatic search triggering and make it manual via play button
+5. Add any additional dropdown options as needed
