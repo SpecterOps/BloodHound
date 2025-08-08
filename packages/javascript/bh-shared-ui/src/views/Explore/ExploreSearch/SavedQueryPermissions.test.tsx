@@ -42,9 +42,7 @@ const handlers = [
     rest.get(`/api/v2/self`, async (_req, res, ctx) => {
         return res(
             ctx.json({
-                data: {
-                    id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
-                },
+                data: testSelf,
             })
         );
     }),

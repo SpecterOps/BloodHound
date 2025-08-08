@@ -32,16 +32,16 @@ interface PrebuiltSearchListProps {
 
 const useStyles = makeStyles((theme) => ({
     subheader: {
-        color: theme.palette.color.primary,
-        backgroundColor: theme.palette.neutral.tertiary,
+        color: theme.palette?.color.primary,
+        backgroundColor: theme.palette?.neutral.tertiary,
         paddingLeft: '8px',
         paddingRight: '8px',
         fontWeight: 'bold',
     },
     selected: {
-        backgroundColor: theme.palette.neutral.quaternary,
+        backgroundColor: theme.palette?.neutral.quaternary,
         '&:hover': {
-            backgroundColor: theme.palette.neutral.quaternary,
+            backgroundColor: theme.palette?.neutral.quaternary,
         },
     },
 }));
@@ -60,6 +60,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 
     const styles = useStyles();
     const itemRef = useRef<HTMLDivElement>(null);
+    console.log(listSections);
 
     const handleClose = () => {
         setOpen(false);

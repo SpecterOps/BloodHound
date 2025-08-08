@@ -30,8 +30,10 @@ import {
     DialogClose,
     DialogContent,
     DialogPortal,
+    DialogTitle,
     Input,
     Label,
+    VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -233,6 +235,9 @@ const SaveQueryDialog: React.FC<{
                                 </CardContent>
                             </Card>
                         </div>
+                        <VisuallyHidden>
+                            <DialogTitle>Save Custom Query</DialogTitle>
+                        </VisuallyHidden>
                     </DialogContent>
                 </DialogPortal>
             </Dialog>
