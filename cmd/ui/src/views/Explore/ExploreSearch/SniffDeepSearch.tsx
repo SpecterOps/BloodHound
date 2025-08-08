@@ -26,6 +26,7 @@ import {
 } from 'bh-shared-ui';
 import { useState, useCallback } from 'react';
 import { SearchValue } from 'bh-shared-ui/src/views/Explore/ExploreSearch/types';
+import { useDCSyncPanel } from '../../../hooks/useDCSyncPanel';
 
 const sniffDeepOptions: DropdownOption[] = [
     { key: 0, value: 'All' },
@@ -93,10 +94,10 @@ const SniffDeepSearch = () => {
     const [selectedOption, setSelectedOption] = useState<DropdownOption>(sniffDeepOptions[0]);
     const sniffDeepSearchState = useSniffDeepSearch();
     const { setExploreParams } = useExploreParams();
+    const { setIsDCSyncSearch } = useDCSyncPanel();
 
     const handleDropdownChange = (option: DropdownOption) => {
         setSelectedOption(option);
-        console.log('Selected Sniff Deep option:', option.value);
     };
 
     const executeSniffDeepSearch = useCallback(async () => {
@@ -125,24 +126,24 @@ const SniffDeepSearch = () => {
             }
 
             if (cypherQuery) {
-                console.log('Executing sniff deep search query:', cypherQuery);
-                console.log('Source node:', sourceNodeId, 'Destination node:', destinationNodeId);
-                
                 // Execute the cypher query via the explore params system
                 // This will trigger the same query execution and graph visualization as cypher search
                 setExploreParams({
                     searchType: 'cypher',
                     cypherSearch: encodeCypherQuery(cypherQuery),
                 });
+
+                // Show the DCSync info panel when search is executed
+                console.log('SniffDeepSearch - Setting isDCSyncSearch to true');
+                setIsDCSyncSearch(true);
             }
 
         } catch (error) {
             console.error('Error executing sniff deep search:', error);
         }
-    }, [sniffDeepSearchState.sourceSelectedItem, sniffDeepSearchState.destinationSelectedItem, selectedOption.value, setExploreParams]);
+    }, [sniffDeepSearchState.sourceSelectedItem, sniffDeepSearchState.destinationSelectedItem, selectedOption.value, setExploreParams, setIsDCSyncSearch]);
 
     const handlePlayButtonClick = () => {
-        console.log('Play button clicked - starting sniff deep search with option:', selectedOption.value);
         executeSniffDeepSearch();
     };
 

@@ -25,11 +25,16 @@ import {
     isNode,
     useExploreSelectedItem,
 } from 'bh-shared-ui';
+import { useDCSyncPanel } from 'src/hooks/useDCSyncPanel';
+import { EnableAttackPathsInfoPane } from 'src/components/DCSync';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
+    const { showDCSyncPanel } = useDCSyncPanel();
 
     const theme = useTheme();
+
+    console.log('GraphItemInformationPanel - showDCSyncPanel:', showDCSyncPanel, 'selectedItem:', selectedItem);
 
     const infoPaneStyles: SxProps = {
         bottom: 0,
@@ -41,6 +46,11 @@ const GraphItemInformationPanel = () => {
         right: theme.spacing(2),
         width: theme.spacing(50),
     };
+
+    // Show DCSync attack paths pane when DCSync search is active and no item is selected
+    if (showDCSyncPanel && !selectedItem) {
+        return <EnableAttackPathsInfoPane sx={infoPaneStyles} />;
+    }
 
     if (!selectedItem || selectedItemQuery.isLoading) {
         return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;

@@ -48,6 +48,7 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
+import { DCSyncPanelProvider } from 'src/hooks/useDCSyncPanel';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -58,6 +59,14 @@ import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
+    return (
+        <DCSyncPanelProvider>
+            <GraphViewContent />
+        </DCSyncPanelProvider>
+    );
+};
+
+const GraphViewContent: FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
 
