@@ -35,6 +35,7 @@ import {
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
+import SniffDeepSearch from './SniffDeepSearch';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -199,7 +200,7 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <PathfindingSearch
+                        <SniffDeepSearch
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
