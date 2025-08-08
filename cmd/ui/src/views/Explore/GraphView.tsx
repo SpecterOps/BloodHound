@@ -35,7 +35,6 @@ import {
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
-    useFeatureFlag,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
@@ -64,7 +63,6 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
-    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
     const { searchType } = useExploreParams();
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
@@ -75,14 +73,10 @@ const GraphView: FC = () => {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
-    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
-
-    if (!tableViewFeatureFlag?.enabled) {
-        isExploreTableSelected = false;
-    }
 
     const graphQuery = useSigmaExploreGraph();
     // TODO: incorporate into larger hook with auto display table logic
@@ -252,7 +246,7 @@ const GraphView: FC = () => {
 
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            {tableViewFeatureFlag?.enabled && displayTable && (
+            {displayTable && (
                 <ExploreTable
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}

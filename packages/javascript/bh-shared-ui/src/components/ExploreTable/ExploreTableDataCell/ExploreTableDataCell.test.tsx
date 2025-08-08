@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
 import ExploreTableDataCell from '.';
-import { render } from '../../../test-utils';
+import { fireEvent, render } from '../../../test-utils';
 
 describe('ExploreTableDataCell', () => {
     const cellValue = '123';
@@ -41,6 +41,10 @@ describe('ExploreTableDataCell', () => {
         const checkmark = await screen.findByText('check');
         expect(checkmark).toBeInTheDocument();
 
+        const animatedElement = screen.getByRole('button');
+
+        animatedElement.role = 'button'; // Looks like JSDOM does not apply the role property implicitly?
+        fireEvent.animationEnd(animatedElement); // Manually trigger the animationend event
         const copyButton = await screen.findByText('copy');
         expect(copyButton).toBeInTheDocument();
     });

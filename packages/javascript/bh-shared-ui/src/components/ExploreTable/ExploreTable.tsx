@@ -15,16 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import fileDownload from 'js-file-download';
+import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
-import { cn, exportToJson } from '../../utils';
+import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
-    ExploreTableProps,
-    MungedTableRowWithId,
     getExploreTableData,
     requiredColumns,
     shimGraphSpecificKeys,
+    type ExploreTableProps,
+    type MungedTableRowWithId,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
@@ -95,20 +97,33 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
-    const handleDownloadClick = useCallback(() => {
-        if (exploreTableData?.nodes) {
-            exportToJson({ nodes: exploreTableData?.nodes });
-        }
-    }, [exploreTableData?.nodes]);
-
     const handleRowClick = useCallback(
         (row: MungedTableRowWithId) => {
             if (row.id !== selectedItem) {
                 setSelectedItem(row.id);
+            } else {
+                setSelectedItem('');
             }
         },
         [setSelectedItem, selectedItem]
     );
+
+    const handleDownloadClick = useCallback(() => {
+        const nodes = exploreTableData?.nodes;
+        if (nodes) {
+            const nodeValues = Object.values(nodes)?.map((node) => {
+                const flattenedNode = Object.assign(node, node.properties);
+
+                delete flattenedNode.properties;
+
+                return flattenedNode;
+            });
+
+            const csv = json2csv(nodeValues, { keys: exploreTableData.node_keys });
+
+            fileDownload(csv, 'nodes.csv');
+        }
+    }, [exploreTableData]);
 
     return (
         <div
