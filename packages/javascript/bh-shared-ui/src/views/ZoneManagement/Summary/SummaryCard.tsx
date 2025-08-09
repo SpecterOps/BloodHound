@@ -44,7 +44,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, '_')}-list_item-${id}`}>
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
                 {!analysisEnabled && <ZoneAnalysisIcon size={24} tooltip />}
-                <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
+                <span className='text-2xl font-bold truncate min-w-0'>{title}</span>
             </div>
             <LargeRightArrow className='w-8 h-16' />
             <div className='flex-1 flex flex-col items-center justify-center'>
