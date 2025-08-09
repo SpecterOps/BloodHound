@@ -13,19 +13,20 @@ BloodHound leverages graph theory to reveal hidden and often unintended relation
 BloodHound CE is created and maintained by the [SpecterOps](https://specterops.io/) team who also brought you [BloodHound Enterprise](https://specterops.io/bloodhound-overview/). The original BloodHound was created by [@\_wald0](https://www.twitter.com/_wald0), [@CptJesus](https://twitter.com/CptJesus), and [@harmj0y](https://twitter.com/harmj0y).
 
 ## Running BloodHound Community Edition
+
 Please refer to the [Quickstart Guide for BloodHound Community Edition](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart), which is part of the [BloodHound documentation](https://bloodhound.specterops.io).
 
 ## Useful Links
 
-- [BloodHound Documentation](https://bloodhound.specterops.io/)
-- [BloodHound Community Edition Quickstart Guide](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart)
-- [BloodHound Slack](https://slack.specterops.io)
-- [OpenGraph Documentation](https://bloodhound.specterops.io/opengraph/overview)
-- [Wiki](https://github.com/SpecterOps/BloodHound/wiki)
-- [Docker Compose Example](./examples/docker-compose/README.md)
-- [Developer Quick Start Guide](https://github.com/SpecterOps/BloodHound/wiki/Development)
-- [Contributing Guide](https://github.com/SpecterOps/BloodHound/wiki/Contributing)
-- [Contributors](./CONTRIBUTORS.md)
+-   [BloodHound Documentation](https://bloodhound.specterops.io/)
+-   [BloodHound Community Edition Quickstart Guide](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart)
+-   [BloodHound Slack](https://slack.specterops.io)
+-   [OpenGraph Documentation](https://bloodhound.specterops.io/opengraph/overview)
+-   [Wiki](https://github.com/SpecterOps/BloodHound/wiki)
+-   [Docker Compose Example](./examples/docker-compose/README.md)
+-   [Developer Quick Start Guide](https://github.com/SpecterOps/BloodHound/wiki/Development)
+-   [Contributing Guide](https://github.com/SpecterOps/BloodHound/wiki/Contributing)
+-   [Contributors](./CONTRIBUTORS.md)
 
 ## Contact
 
