@@ -171,12 +171,25 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 // updateJobFunc generates a valid graphify.UpdateJobFunc by injecting the parent context and database interface
 // Only used as a callback, so not exposed
 func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJobFunc {
-	return func(jobID int64, totalFiles int, totalFailed int) {
+	return func(jobID int64, fileData []graphify.IngestFileData) {
 		if job, err := db.GetIngestJob(ctx, jobID); err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobID, err))
 		} else {
-			job.TotalFiles += totalFiles
-			job.FailedFiles += totalFailed
+			for _, file := range fileData {
+				job.TotalFiles += 1
+				completedTask := model.CompletedTask{
+					FileName:   file.Name,
+					ParentFile: file.ParentFile,
+					Errors:     []string{},
+				}
+
+				if len(file.Errors) > 0 {
+					job.FailedFiles += 1
+					completedTask.Errors = file.Errors
+				}
+
+				job.TaskInfo.CompletedTasks = append(job.TaskInfo.CompletedTasks, completedTask)
+			}
 
 			if err = db.UpdateIngestJob(ctx, job); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))

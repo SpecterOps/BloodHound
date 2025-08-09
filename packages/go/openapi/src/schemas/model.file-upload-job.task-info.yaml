@@ -1,0 +1,15 @@
+type: object
+properties:
+  completed_tasks:
+    type: array
+    items:
+      type: object
+      properties:
+        file_name:
+          type: string
+        parent_file:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
