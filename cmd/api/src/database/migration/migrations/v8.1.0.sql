@@ -29,3 +29,6 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE users_roles 
         ADD COLUMN IF NOT EXISTS access_control_list text[] default array ['all_environments'],
         ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
+
+ALTER TABLE asset_group_tags
+        ADD COLUMN IF NOT EXISTS glyph TEXT UNIQUE;
