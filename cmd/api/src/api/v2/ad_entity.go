@@ -147,6 +147,7 @@ func (s *Resources) GetDomainEntityInfo(response http.ResponseWriter, request *h
 			"controllers":           adAnalysis.FetchInboundADEntityControllers,
 			"linkedgpos":            adAnalysis.FetchEnforcedGPOs,
 			"dcsyncers":             adAnalysis.FetchDCSyncers,
+			"adcs-escalations":      adAnalysis.CreateADCSEscalationsListDelegate,
 		}
 	)
 
@@ -169,7 +170,8 @@ func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http
 func (s *Resources) GetAIACAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"controllers":   adAnalysis.FetchInboundADEntityControllers,
+			"pki-hierarchy": adAnalysis.CreateCAPKIHierarchyListDelegate,
 		}
 	)
 
@@ -179,7 +181,8 @@ func (s *Resources) GetAIACAEntityInfo(response http.ResponseWriter, request *ht
 func (s *Resources) GetRootCAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"controllers":   adAnalysis.FetchInboundADEntityControllers,
+			"pki-hierarchy": adAnalysis.CreateRootCAPKIHierarchyListDelegate,
 		}
 	)
 
@@ -189,7 +192,9 @@ func (s *Resources) GetRootCAEntityInfo(response http.ResponseWriter, request *h
 func (s *Resources) GetEnterpriseCAEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"controllers":         adAnalysis.FetchInboundADEntityControllers,
+			"pki-hierarchy":       adAnalysis.CreateCAPKIHierarchyListDelegate,
+			"published-templates": adAnalysis.CreatePublishedTemplatesListDelegate,
 		}
 	)
 	s.handleAdEntityInfoQuery(response, request, ad.EnterpriseCA, countQueries)
@@ -199,6 +204,7 @@ func (s *Resources) GetNTAuthStoreEntityInfo(response http.ResponseWriter, reque
 	var (
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"trusted-cas": adAnalysis.CreateTrustedCAsListDelegate,
 		}
 	)
 	s.handleAdEntityInfoQuery(response, request, ad.NTAuthStore, countQueries)
@@ -207,7 +213,8 @@ func (s *Resources) GetNTAuthStoreEntityInfo(response http.ResponseWriter, reque
 func (s *Resources) GetCertTemplateEntityInfo(response http.ResponseWriter, request *http.Request) {
 	var (
 		countQueries = map[string]any{
-			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"controllers":      adAnalysis.FetchInboundADEntityControllers,
+			"published-to-cas": adAnalysis.CreatePublishedToCAsListDelegate,
 		}
 	)
 
