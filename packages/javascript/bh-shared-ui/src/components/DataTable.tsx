@@ -24,11 +24,12 @@ import {
     TablePagination,
     TableRow,
 } from '@mui/material';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 export interface Header {
     label: string;
     alignment?: 'inherit' | 'left' | 'center' | 'right' | 'justify';
+    verticalAlign?: CSSProperties['verticalAlign'];
 }
 
 export interface DataTableProps {
@@ -84,7 +85,10 @@ const DataTable: React.FC<DataTableProps> = ({
                             data?.map((row, rowIndex) => (
                                 <TableRow key={rowIndex}>
                                     {row.map((cell, cellIndex) => (
-                                        <TableCell key={cellIndex} align={headers[cellIndex]?.alignment}>
+                                        <TableCell
+                                            key={cellIndex}
+                                            align={headers[cellIndex]?.alignment}
+                                            sx={{ verticalAlign: headers[cellIndex]?.verticalAlign ?? '' }}>
                                             {cell}
                                         </TableCell>
                                     ))}

@@ -284,3 +284,69 @@ export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityColle
 export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;
 
 export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;
+
+export type OuDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    distinguishedname: string;
+    type: string;
+};
+
+export type DomainDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    type: string;
+};
+
+export type DomainResult = {
+    job_id: number;
+    domain_name: string;
+    success: boolean;
+    message: string;
+    user_count: number;
+    group_count: number;
+    computer_count: number;
+    gpo_count: number;
+    ou_count: number;
+    container_count: number;
+    aiaca_count: number;
+    rootca_count: number;
+    enterpriseca_count: number;
+    ntauthstore_count: number;
+    certtemplate_count: number;
+    deleted_count: number;
+    id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
+
+export type ScheduledJobDisplay = {
+    id: number;
+    client_id: string;
+    client_name: string;
+    event_id: number;
+    execution_time: string;
+    start_time: string;
+    end_time: string;
+    status: number;
+    status_message: string;
+    session_collection: boolean;
+    local_group_collection: boolean;
+    ad_structure_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
+    all_trusted_domains: boolean;
+    domain_controller: string;
+    ous: OuDetails[];
+    domains: DomainDetails[];
+    domain_results: DomainResult[];
+};
+
+export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
