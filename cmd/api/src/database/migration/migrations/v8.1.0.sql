@@ -26,6 +26,22 @@ VALUES (current_timestamp,
 ON CONFLICT DO NOTHING;
 
 -- Targeted Access Control users_roles column additions and defaults
-ALTER TABLE users_roles 
+ALTER TABLE users_roles
         ADD COLUMN IF NOT EXISTS access_control_list text[] default array ['all_environments'],
         ADD COLUMN IF NOT EXISTS explore_enabled bool DEFAULT true;
+
+-- Add denormalized property columns to asset_group_tag_selector_nodes table
+ALTER TABLE ONLY asset_group_tag_selector_nodes
+  ADD COLUMN IF NOT EXISTS node_primary_kind TEXT;
+ALTER TABLE ONLY asset_group_tag_selector_nodes
+  ADD COLUMN IF NOT EXISTS node_environment_id TEXT;
+ALTER TABLE ONLY asset_group_tag_selector_nodes
+  ADD COLUMN IF NOT EXISTS node_object_id TEXT;
+ALTER TABLE ONLY asset_group_tag_selector_nodes
+  ADD COLUMN IF NOT EXISTS node_name TEXT;
+
+-- Add indexes for the above new columns added to asset_group_tag_selector_nodes table
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_primary_kind ON asset_group_tag_selector_nodes USING btree (node_primary_kind);
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_environment_id ON asset_group_tag_selector_nodes USING btree (node_environment_id);
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_object_id ON asset_group_tag_selector_nodes USING btree (node_object_id);
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_name ON asset_group_tag_selector_nodes USING btree (node_name);
