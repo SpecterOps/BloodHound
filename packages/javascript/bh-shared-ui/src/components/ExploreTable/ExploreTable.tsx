@@ -24,8 +24,8 @@ import {
     ExploreTableProps,
     MungedTableRowWithId,
     createColumnStateFromKeys,
+    defaultColumns,
     getExploreTableData,
-    requiredColumns,
     shimGraphSpecificKeys,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
@@ -63,7 +63,7 @@ const ExploreTable = ({
     onClose,
     onKebabMenuClick,
     onManageColumnsChange,
-    selectedColumns = requiredColumns,
+    selectedColumns = defaultColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
     const { selectedItem, setSelectedItem } = useExploreSelectedItem();

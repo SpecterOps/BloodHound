@@ -17,9 +17,9 @@ import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
-import { ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { ReactNode, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
-import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
+import { defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
@@ -49,6 +49,7 @@ export const ManageColumnsComboBox = ({
     );
 
     const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
+    const initialColumns = useMemo(() => allColumns.filter((item) => defaultColumns[item.id]), [allColumns]);
     const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
 
     const unselectedColumns = useMemo(() => {
@@ -61,9 +62,9 @@ export const ManageColumnsComboBox = ({
         });
     }, [allColumns, selectedColumnMap, inputValue]);
 
-    const handleResetDefault = useCallback(() => {
-        onChange([...pinnedColumns]);
-    }, [onChange, pinnedColumns]);
+    const handleResetDefault = () => {
+        onChange([...initialColumns]);
+    };
 
     const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
 

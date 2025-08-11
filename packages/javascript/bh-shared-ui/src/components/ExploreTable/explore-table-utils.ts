@@ -32,14 +32,14 @@ export const makeStoreMapFromColumnOptions = (columnOptions: ManageColumnsComboB
 export type NodeClickInfo = { id: string; x: number; y: number };
 export type MungedTableRowWithId = GraphNodeSpreadWithProperties & { id: string };
 
-export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = [
+export const DEFAULT_EXPLORE_TABLE_COLUMN_KEYS = [
     'kind',
     'label',
     'objectId',
     'isTierZero',
 ] satisfies KnownNodeProperties[];
 export const KNOWN_NODE_KEYS = [
-    ...REQUIRED_EXPLORE_TABLE_COLUMN_KEYS,
+    ...DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     'isOwnedObject',
     'lastSeen',
 ] satisfies KnownNodeProperties[];
@@ -107,9 +107,9 @@ export const createColumnStateFromKeys = (keys: string[]): Record<string, boolea
     return Object.fromEntries(keys.map((key) => [key, true]));
 };
 
-export const requiredColumns = createColumnStateFromKeys(REQUIRED_EXPLORE_TABLE_COLUMN_KEYS);
-export const isRequiredColumn = (value: string): value is (typeof REQUIRED_EXPLORE_TABLE_COLUMN_KEYS)[number] => {
-    return requiredColumns[value];
+export const defaultColumns = createColumnStateFromKeys(DEFAULT_EXPLORE_TABLE_COLUMN_KEYS);
+export const isRequiredColumn = (value: string): value is (typeof DEFAULT_EXPLORE_TABLE_COLUMN_KEYS)[number] => {
+    return defaultColumns[value];
 };
 
 export const compareForExploreTableSort = (a: any, b: any) => {
