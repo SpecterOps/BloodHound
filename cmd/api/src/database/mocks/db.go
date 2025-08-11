@@ -1360,18 +1360,18 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 }
 
 // GetEnvironmentAccessListForUser mocks base method.
-func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) ([]database.EnvironmentAccess, error) {
+func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]database.EnvironmentAccess, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnvironmentAccessListForUser", ctx, userUuid)
+	ret := m.ctrl.Call(m, "GetEnvironmentAccessListForUser", ctx, user)
 	ret0, _ := ret[0].([]database.EnvironmentAccess)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetEnvironmentAccessListForUser indicates an expected call of GetEnvironmentAccessListForUser.
-func (mr *MockDatabaseMockRecorder) GetEnvironmentAccessListForUser(ctx, userUuid any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetEnvironmentAccessListForUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentAccessListForUser", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentAccessListForUser), ctx, userUuid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentAccessListForUser", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentAccessListForUser), ctx, user)
 }
 
 // GetFlag mocks base method.
@@ -2276,9 +2276,9 @@ func (mr *MockDatabaseMockRecorder) UpdateCustomNodeKind(ctx, customNodeKind any
 }
 
 // UpdateEnvironmentListForUser mocks base method.
-func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, userUuid uuid.UUID, environments ...string) error {
+func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, userUuid}
+	varargs := []any{ctx, user}
 	for _, a := range environments {
 		varargs = append(varargs, a)
 	}
@@ -2288,9 +2288,9 @@ func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, userUui
 }
 
 // UpdateEnvironmentListForUser indicates an expected call of UpdateEnvironmentListForUser.
-func (mr *MockDatabaseMockRecorder) UpdateEnvironmentListForUser(ctx, userUuid any, environments ...any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateEnvironmentListForUser(ctx, user any, environments ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, userUuid}, environments...)
+	varargs := append([]any{ctx, user}, environments...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEnvironmentListForUser", reflect.TypeOf((*MockDatabase)(nil).UpdateEnvironmentListForUser), varargs...)
 }
 
