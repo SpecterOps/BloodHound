@@ -58,8 +58,6 @@ const Users: FC = () => {
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'manage-users-permission';
 
-    console.log(apiClient);
-
     const effect: React.EffectCallback = () => {
         if (!hasPermission) {
             addNotification(
