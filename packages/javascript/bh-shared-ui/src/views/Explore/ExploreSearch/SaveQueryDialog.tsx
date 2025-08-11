@@ -224,7 +224,7 @@ const SaveQueryDialog: React.FC<{
                                 <CardHeader>
                                     <CardTitle>Manage Shared Queries</CardTitle>
                                 </CardHeader>
-                                <CardContent className='flex flex-col h-[calc(100%-28px)]'>
+                                <CardContent>
                                     <SavedQueryPermissions
                                         queryId={selectedQuery?.id}
                                         sharedIds={sharedIds}

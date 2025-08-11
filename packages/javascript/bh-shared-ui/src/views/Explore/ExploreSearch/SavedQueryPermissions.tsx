@@ -155,20 +155,18 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             {isLoading && <div>Loading ...</div>}
             {usersList?.length && (
                 <div>
-                    <>
-                        <div className='flex-grow relative mb-2'>
-                            <AppIcon.MagnifyingGlass size={16} className='absolute left-5 top-[50%] -mt-[8px]' />
-                            <Input
-                                type='text'
-                                id='query-search'
-                                placeholder='Search'
-                                value={searchTerm}
-                                className='w-full bg-transparent dark:bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0 pl-12'
-                                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                                    handleInput(event.target.value)
-                                }
-                            />
-                        </div>
+                    <div className='flex-grow relative mb-2'>
+                        <AppIcon.MagnifyingGlass size={16} className='absolute left-5 top-[50%] -mt-[8px]' />
+                        <Input
+                            type='text'
+                            id='query-search'
+                            placeholder='Search'
+                            value={searchTerm}
+                            className='w-full bg-transparent dark:bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0 pl-12'
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
+                        />
+                    </div>
+                    <div className='overflow-auto'>
                         <DataTable
                             TableHeadProps={{
                                 className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
@@ -178,7 +176,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                             columns={getColumns()}
                             data={filteredUsers.length ? filteredUsers : usersList}
                         />
-                    </>
+                    </div>
                 </div>
             )}
 
