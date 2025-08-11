@@ -70,7 +70,7 @@ export const Cypher: FC<{
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
     return (
-        <Card>
+        <Card className={cn({ 'min-h-[36rem] max-h-[36rem]': !preview })}>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Search'}</CardTitle>
@@ -113,6 +113,7 @@ export const Cypher: FC<{
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
+                                'md:min-h-[20rem] md:max-h-[20rem] h-[24rem] max-h-[24rem]': !preview,
                             }
                         )}
                         ref={cypherEditorRef}
