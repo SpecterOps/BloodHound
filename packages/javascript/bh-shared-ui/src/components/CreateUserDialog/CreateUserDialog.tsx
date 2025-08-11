@@ -16,7 +16,6 @@
 
 //import { Dialog, DialogTitle } from '@mui/material';
 import { DialogContent } from '@bloodhoundenterprise/doodleui';
-import { Dialog } from '@mui/material';
 import { CreateUserRequest } from 'js-client-library';
 import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
@@ -47,29 +46,9 @@ const CreateUserDialog: React.FC<{
     };
 
     return (
-        <>
-            {!showEnvironmentAccessControls ? (
-                <DialogContent maxWidth='lg' className='!bg-transparent'>
-                    <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
-                </DialogContent>
-            ) : (
-                <Dialog
-                    open={open}
-                    fullWidth={true}
-                    maxWidth={'sm'}
-                    onClose={onClose}
-                    disableEscapeKeyDown
-                    PaperProps={{
-                        //@ts-ignore
-                        'data-testid': 'create-user-dialog',
-                    }}
-                    TransitionProps={{
-                        onExited,
-                    }}>
-                    <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
-                </Dialog>
-            )}
-        </>
+        <DialogContent maxWidth='lg' className='!bg-transparent'>
+            <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
+        </DialogContent>
     );
 };
 
