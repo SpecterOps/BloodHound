@@ -35,6 +35,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockUser     model.User
 	}
 	type input struct {
 		environments []string
@@ -72,7 +73,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 					},
 				}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "3"},
@@ -105,7 +106,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 					},
 				}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2"},
@@ -137,7 +138,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 					},
 				}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "4"},
@@ -157,7 +158,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				envs := []database.EnvironmentAccess{}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "4"},
@@ -194,6 +195,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockUser:     testCase.input.user,
 			}
 
 			testCase.setupMocks(t, mocks)
