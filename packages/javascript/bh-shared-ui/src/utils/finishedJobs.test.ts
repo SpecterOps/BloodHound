@@ -148,12 +148,6 @@ describe('toMins', () => {
 });
 
 describe('useFinishedJobsQuery', () => {
-    // afterEach(() => {
-    //     addNotificationMock.mockReset();
-    //     checkPermissionMock.mockReset();
-    //     dismissNotificationMock.mockReset();
-    // });
-
     it('requests finished jobs', async () => {
         checkPermissionMock.mockImplementation(() => true);
         const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
