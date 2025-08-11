@@ -392,6 +392,7 @@ const jsonToCsvArgs = [
     ],
     {
         emptyFieldValue: '',
+        preventCsvInjection: true,
         keys: [
             'admincount',
             'description',
