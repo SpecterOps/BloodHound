@@ -128,7 +128,11 @@ const ExploreTable = ({
                 return flattenedNode;
             });
 
-            const csv = json2csv(nodeValues, { keys: exploreTableData.node_keys, emptyFieldValue: '' });
+            const csv = json2csv(nodeValues, {
+                keys: exploreTableData.node_keys,
+                emptyFieldValue: '',
+                preventCsvInjection: true,
+            });
 
             fileDownload(csv, 'nodes.csv');
         }
