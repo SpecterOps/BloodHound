@@ -22,7 +22,7 @@ import { FinishedJobsTable } from './FinishedJobsTable';
 
 const checkPermissionMock = vi.fn();
 
-vi.mock('../../hooks', async () => {
+vi.mock('../../hooks/usePermissions', async () => {
     const actual = await vi.importActual('../../hooks');
     return {
         ...actual,
