@@ -3,7 +3,7 @@ export type StatusType = 'good' | 'bad' | 'pending';
 type Props = {
     label?: string;
     pulse?: boolean;
-    type: StatusType;
+    status: StatusType;
 };
 
 const STATUS_COLORS: Record<StatusType, string> = {
@@ -17,11 +17,11 @@ const STATUS_COLORS: Record<StatusType, string> = {
  *
  * @example
  * ```tsx
- * const status = <StatusIndicator status={jobStatus} type="job" />
+ * const status = <StatusIndicator label="Success" status="good" />
  * ```
  */
-export const StatusIndicator: React.FC<Props> = ({ label = '', pulse = false, type }) => {
-    const color = STATUS_COLORS[type];
+export const StatusIndicator: React.FC<Props> = ({ label = '', pulse = false, status }) => {
+    const color = STATUS_COLORS[status];
     return (
         <span className='inline-flex items-center'>
             <span className='mr-1.5'>

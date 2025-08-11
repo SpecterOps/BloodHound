@@ -39,7 +39,7 @@ const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     domain_results: [],
 };
 
-export const MOCK_FINISHED_JOBS_RESPONSE = {
+const MOCK_FINISHED_JOBS_RESPONSE = {
     count: 20,
     data: new Array(10).fill(MOCK_FINISHED_JOB).map((item, index) => ({
         ...item,

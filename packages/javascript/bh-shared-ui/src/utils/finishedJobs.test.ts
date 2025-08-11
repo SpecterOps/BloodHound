@@ -19,8 +19,8 @@ const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
 const checkPermissionMock = vi.fn();
 
-vi.mock('../../providers', async () => {
-    const actual = await vi.importActual('../../providers');
+vi.mock('../providers', async () => {
+    const actual = await vi.importActual('../providers');
     return {
         ...actual,
         useNotifications: () => ({
@@ -30,8 +30,8 @@ vi.mock('../../providers', async () => {
     };
 });
 
-vi.mock('../../hooks', async () => {
-    const actual = await vi.importActual('../../hooks');
+vi.mock('../hooks', async () => {
+    const actual = await vi.importActual('../hooks');
     return {
         ...actual,
         usePermissions: () => ({
@@ -63,7 +63,7 @@ const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     domain_results: [],
 };
 
-export const MOCK_FINISHED_JOBS_RESPONSE = {
+const MOCK_FINISHED_JOBS_RESPONSE = {
     count: 20,
     data: new Array(10).fill(MOCK_FINISHED_JOB).map((item, index) => ({
         ...item,
@@ -75,7 +75,9 @@ export const MOCK_FINISHED_JOBS_RESPONSE = {
 };
 
 const server = setupServer(
-    rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.json(MOCK_FINISHED_JOBS_RESPONSE)))
+    rest.get('/api/v2/jobs/finished', (req, res, ctx) => {
+        return res(ctx.json(MOCK_FINISHED_JOBS_RESPONSE));
+    })
 );
 
 beforeAll(() => server.listen());
@@ -131,11 +133,11 @@ describe('toMins', () => {
 });
 
 describe('useFinishedJobsQuery', () => {
-    afterEach(() => {
-        addNotificationMock.mockReset();
-        checkPermissionMock.mockReset();
-        dismissNotificationMock.mockReset();
-    });
+    // afterEach(() => {
+    //     addNotificationMock.mockReset();
+    //     checkPermissionMock.mockReset();
+    //     dismissNotificationMock.mockReset();
+    // });
 
     it('requests finished jobs', async () => {
         checkPermissionMock.mockImplementation(() => true);

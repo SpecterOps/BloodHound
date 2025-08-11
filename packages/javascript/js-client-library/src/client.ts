@@ -652,7 +652,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.get<GetScheduledJobDisplayResponse>(
-            `/api/v2/jobs/finished`,
+            '/api/v2/jobs/finished',
             Object.assign(
                 {
                     params: {

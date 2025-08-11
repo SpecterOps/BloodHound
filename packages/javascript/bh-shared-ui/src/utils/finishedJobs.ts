@@ -15,17 +15,17 @@ export interface FinishedJobParams {
     rowsPerPage: number;
 }
 
-export const JOB_STATUS_MAP: Record<number, { label: string; type: StatusType; pulse?: boolean }> = {
-    [-1]: { label: 'Invalid', type: 'bad' },
-    0: { label: 'Ready', type: 'good' },
-    1: { label: 'Running', type: 'pending', pulse: true },
-    2: { label: 'Complete', type: 'good' },
-    3: { label: 'Canceled', type: 'bad' },
-    4: { label: 'Timed Out', type: 'bad' },
-    5: { label: 'Failed', type: 'bad' },
-    6: { label: 'Ingesting', type: 'pending', pulse: true },
-    7: { label: 'Analyzing', type: 'pending' },
-    8: { label: 'Partially Completed', type: 'pending' },
+export const JOB_STATUS_MAP: Record<number, { label: string; status: StatusType; pulse?: boolean }> = {
+    [-1]: { label: 'Invalid', status: 'bad' },
+    0: { label: 'Ready', status: 'good' },
+    1: { label: 'Running', status: 'pending', pulse: true },
+    2: { label: 'Complete', status: 'good' },
+    3: { label: 'Canceled', status: 'bad' },
+    4: { label: 'Timed Out', status: 'bad' },
+    5: { label: 'Failed', status: 'bad' },
+    6: { label: 'Ingesting', status: 'pending', pulse: true },
+    7: { label: 'Analyzing', status: 'pending' },
+    8: { label: 'Partially Completed', status: 'pending' },
 };
 
 export const FINISHED_JOBS_LOG_HEADERS = [
@@ -79,7 +79,10 @@ export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) =
         enabled: hasPermission,
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
-        queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),
+        queryFn: () =>
+            apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => {
+                return res.data;
+            }),
         queryKey: ['finished-jobs', { page, rowsPerPage }],
     });
 };
