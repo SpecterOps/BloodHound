@@ -20,7 +20,13 @@ import {
     DialogClose,
     DialogDescription,
     DialogTitle,
-    VisuallyHidden,
+    Label,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectPortal,
+    SelectTrigger,
+    SelectValue,
 } from '@bloodhoundenterprise/doodleui';
 import {
     Alert,
@@ -31,12 +37,9 @@ import {
     FormHelperText,
     Grid,
     InputLabel,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
     TextField,
 } from '@mui/material';
-import { CreateUserRequest, SSOProvider } from 'js-client-library';
+import { CreateUserRequest } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -51,7 +54,11 @@ const CreateUserFormLeftPanel: React.FC<{
     isLoading?: boolean;
     error?: any;
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
-}> = ({ onCancel, onSubmit, isLoading, error, showEnvironmentAccessControls = true }) => {
+    className?: any;
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+    value?: string;
+}> = ({ onCancel, onSubmit, isLoading, error, showEnvironmentAccessControls = true, onChange, disabled, value }) => {
     const {
         control,
         //handleSubmit,
@@ -104,14 +111,14 @@ const CreateUserFormLeftPanel: React.FC<{
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
+    console.log();
+
     return (
-        <Card className='flex-1 p-4 rounded shadow'>
+        <Card className='flex-1 p-4 rounded shadow max-w-[600px]'>
             <DialogTitle>Create User</DialogTitle>
-            <VisuallyHidden>
-                something that we want to hide visually but still want in the DOM for accessibility
-            </VisuallyHidden>
+
             <DialogDescription className='flex flex-col' data-testid='environments-checkboxes'>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} className='min-h-[650px]'>
                     <Grid item xs={12}>
                         <Controller
                             name='emailAddress'
@@ -255,9 +262,27 @@ const CreateUserFormLeftPanel: React.FC<{
                     <>
                         <Grid item xs={12}>
                             <FormControl>
-                                <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }}>
-                                    Authentication Method
-                                </InputLabel>
+                                <Label className='text-base font-bold'>Authentication Method</Label>
+                                <Select
+                                    //onValueChange={(e) => setAuthenticationMethod(e.target.value as string)}
+                                    onValueChange={(value) => setAuthenticationMethod(value as string)}
+                                    data-testid='create-user-dialog_select-authentication-method'
+                                    value={authenticationMethod}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={getRolesQuery.data![2].name} />
+                                    </SelectTrigger>
+                                    <SelectPortal>
+                                        <SelectContent>
+                                            <SelectItem value='password'>Username / Password</SelectItem>
+                                            <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
+                                            {/*TODO: NEEDS TO BE IMPLEMENTED 
+                                            listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
+                                                <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
+                                            )*/}
+                                        </SelectContent>
+                                    </SelectPortal>
+                                </Select>
+                                {/*
                                 <Select
                                     labelId='authenticationMethod-label'
                                     id='authenticationMethod'
@@ -272,6 +297,7 @@ const CreateUserFormLeftPanel: React.FC<{
                                         <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
                                     )}
                                 </Select>
+                                */}
                             </FormControl>
                         </Grid>
 
@@ -347,6 +373,7 @@ const CreateUserFormLeftPanel: React.FC<{
                                             <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
                                                 SSO Provider
                                             </InputLabel>
+                                            {/*
                                             <Select
                                                 onChange={onChange as (event: SelectChangeEvent<string>) => void}
                                                 defaultValue={''}
@@ -365,6 +392,7 @@ const CreateUserFormLeftPanel: React.FC<{
                                                     </MenuItem>
                                                 ))}
                                             </Select>
+                                            */}
                                             <FormHelperText>{errors.SSOProviderId?.message}</FormHelperText>
                                         </FormControl>
                                     )}
@@ -374,6 +402,26 @@ const CreateUserFormLeftPanel: React.FC<{
                     </>
 
                     <Grid item xs={12}>
+                        <Label className='text-base font-bold'>Role</Label>
+                        <Select value={value} onValueChange={onChange} disabled={disabled}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={getRolesQuery.data![2].name} />
+                            </SelectTrigger>
+                            <SelectPortal>
+                                <SelectContent>
+                                    {getRolesQuery.isLoading ? (
+                                        <SelectItem value={''}>Loading...</SelectItem>
+                                    ) : (
+                                        getRolesQuery.data?.map((role: any) => (
+                                            <SelectItem key={role.id} value={role.id.toString()}>
+                                                {role.name}
+                                            </SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </SelectPortal>
+                        </Select>
+                        {/*
                         <Controller
                             name='roles.0'
                             control={control}
@@ -387,17 +435,17 @@ const CreateUserFormLeftPanel: React.FC<{
                                         Role
                                     </InputLabel>
                                     <Select
-                                        labelId='role-label'
+                                        data-testid='create-user-dialog_select-role'
+                                        fullWidth
                                         id='role'
+                                        labelId='role-label'
                                         name='role'
                                         onChange={(e) => {
                                             const output = parseInt(e.target.value as string, 10);
                                             field.onChange(isNaN(output) ? 1 : output);
                                         }}
                                         value={isNaN(field.value) ? '' : field.value.toString()}
-                                        variant='standard'
-                                        fullWidth
-                                        data-testid='create-user-dialog_select-role'>
+                                        variant='standard'>
                                         {getRolesQuery.isLoading ? (
                                             <MenuItem value={1}>Loading...</MenuItem>
                                         ) : (
@@ -411,6 +459,7 @@ const CreateUserFormLeftPanel: React.FC<{
                                 </FormControl>
                             )}
                         />
+                        */}
                     </Grid>
                     {!!errors.root?.generic && (
                         <Grid item xs={12}>
