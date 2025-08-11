@@ -61,7 +61,7 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
     };
 
     return formattedValue ? (
-        <span className='cursor-auto'>
+        <span className='cursor-auto relative'>
             <button
                 onClick={handleCopyToClipBoard}
                 className={cn(
