@@ -22,6 +22,10 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -257,4 +261,16 @@ type AssetGroupSelectorNode struct {
 
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
+}
+
+/*
+These are the relevant properties for asset group tags. This method serves to keep consistency across the feature
+*/
+func GetAssetGroupMemberProperties(node *graph.Node) (primaryKind, displayName, objectId, envId string) {
+	primaryKind = analysis.GetNodeKindDisplayLabel(node)
+	displayName, _ = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+	objectId, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
+
+	return primaryKind, displayName, objectId, envId
 }

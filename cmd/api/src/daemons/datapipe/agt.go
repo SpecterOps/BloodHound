@@ -421,7 +421,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		nodeIdsToUpdate []graph.ID
 	)
 
-	if selector.AutoCertify.Bool {
+	if selector.AutoCertify.ValueOrZero() {
 		certified = model.AssetGroupCertificationAuto
 		certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 	}
@@ -434,23 +434,15 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
-			var (
-				primaryKind    = analysis.GetNodeKindDisplayLabel(node.Node)
-				objectID, _    = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-				displayName, _ = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-				envID, _       = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
-			)
+			primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node.Node)
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
-				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envID, objectID, displayName); err != nil {
+				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
 					return err
 				}
 				countInserted++
-				// Auto certify is enabled but this node hasn't been certified, certify it
-			} else if selector.AutoCertify.Bool && oldNode.Certified == model.AssetGroupCertificationNone {
-				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
-				delete(oldSelectedNodesByNodeId, id)
-			} else if oldNode.NodeName != displayName || oldNode.NodePrimaryKind != primaryKind || oldNode.NodeEnvironmentId != envID || oldNode.NodeObjectId != objectID {
+				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
+			} else if (selector.AutoCertify.Bool && oldNode.Certified == model.AssetGroupCertificationNone) || oldNode.NodeName != displayName || oldNode.NodePrimaryKind != primaryKind || oldNode.NodeEnvironmentId != envId || oldNode.NodeObjectId != objectId {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
@@ -461,14 +453,8 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		// Update the selected nodes that need updating
 		if len(nodeIdsToUpdate) > 0 {
 			for _, nodeId := range nodeIdsToUpdate {
-				var (
-					node           = nodesWithSrcSet[nodeId]
-					primaryKind    = analysis.GetNodeKindDisplayLabel(node.Node)
-					displayName, _ = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-					objectID, _    = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-					envID, _       = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
-				)
-				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, certified, certifiedBy, nodeId, primaryKind, envID, objectID, displayName); err != nil {
+				primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(nodesWithSrcSet[nodeId].Node)
+				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, nodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
 					return err
 				}
 			}
