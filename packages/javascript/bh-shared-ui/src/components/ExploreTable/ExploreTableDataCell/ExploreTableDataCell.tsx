@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { EntityField, format } from '../../../utils';
+import { EntityField, cn, format } from '../../../utils';
 import CopyToClipboardButton from '../../CopyToClipboardButton';
 import NodeIcon from '../../NodeIcon';
 
