@@ -66,7 +66,7 @@ const ExploreTable = ({
     selectedColumns = requiredColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
-    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
@@ -102,10 +102,10 @@ const ExploreTable = ({
             if (row.id !== selectedItem) {
                 setSelectedItem(row.id);
             } else {
-                setSelectedItem('');
+                clearSelectedItem();
             }
         },
-        [setSelectedItem, selectedItem]
+        [setSelectedItem, selectedItem, clearSelectedItem]
     );
 
     const handleDownloadClick = useCallback(() => {
@@ -119,7 +119,7 @@ const ExploreTable = ({
                 return flattenedNode;
             });
 
-            const csv = json2csv(nodeValues, { keys: exploreTableData.node_keys });
+            const csv = json2csv(nodeValues, { keys: exploreTableData.node_keys, emptyFieldValue: '' });
 
             fileDownload(csv, 'nodes.csv');
         }
