@@ -73,23 +73,17 @@ const useExploreTableRowsAndColumns = ({
 
     const handleSort = useCallback(
         (sortByColumn: keyof MungedTableRowWithId) => {
-            if (sortByColumn) {
-                if (sortBy === sortByColumn) {
-                    switch (sortOrder) {
-                        case 'desc':
-                            setSortOrder('asc');
-                            break;
-                        case 'asc':
-                            setSortOrder('desc');
-                            break;
-                        default:
-                            setSortOrder('desc');
-                            break;
-                    }
-                } else {
-                    setSortBy(sortByColumn);
-                    setSortOrder('asc');
-                }
+            if (!sortByColumn || sortByColumn !== sortBy) {
+                // first sort of a new column
+                setSortBy(sortByColumn);
+                setSortOrder('asc');
+            } else if (sortOrder === 'asc') {
+                // second sort, swap the sort direction
+                setSortOrder('desc');
+            } else {
+                // on third sort, reset the sort state to default
+                setSortBy(undefined);
+                setSortOrder(undefined);
             }
         },
         [sortBy, sortOrder]
