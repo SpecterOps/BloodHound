@@ -46,7 +46,7 @@ vi.mock('../providers', async () => {
     };
 });
 
-vi.mock('../hooks', async () => {
+vi.mock('../hooks/usePermissions', async () => {
     const actual = await vi.importActual('../hooks');
     return {
         ...actual,
