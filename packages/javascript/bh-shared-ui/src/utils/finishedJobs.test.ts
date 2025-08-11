@@ -103,7 +103,7 @@ afterAll(() => server.close());
 describe('toCollected', () => {
     it('shows the collection methods for the given job', () => {
         expect(toCollected(MOCK_FINISHED_JOB)).toBe(
-            'Sessions, Local Groups, AD Structure, Certificate Services, CA Registry, DC Registry, All Trusted Domains'
+            'Sessions, Local Groups, AD Structure, Certificate Services, CA Registry, DC Registry'
         );
     });
 
@@ -116,7 +116,6 @@ describe('toCollected', () => {
             cert_services_collection: false,
             ca_registry_collection: false,
             dc_registry_collection: false,
-            all_trusted_domains: false,
         };
         expect(toCollected(NO_COLLECTIONS_JOB)).toBe('');
     });
@@ -129,7 +128,7 @@ describe('toCollected', () => {
             ad_structure_collection: false,
             cert_services_collection: false,
         };
-        expect(toCollected(SOME_COLLECTIONS_JOB)).toBe('CA Registry, DC Registry, All Trusted Domains');
+        expect(toCollected(SOME_COLLECTIONS_JOB)).toBe('CA Registry, DC Registry');
     });
 });
 
