@@ -161,7 +161,16 @@ export const TagForm: FC = () => {
                 handleError(error, 'updating', tagKind, addNotification);
             }
         },
-        [tagId, handleUpdateNavigate, addNotification, updateTagMutation, tagKind, tagKindDisplay, isDirty]
+        [
+            tagId,
+            handleUpdateNavigate,
+            addNotification,
+            updateTagMutation,
+            tagKind,
+            tagKindDisplay,
+            isDirty,
+            privilegeZoneAnalysisEnabled,
+        ]
     );
 
     const handleDeleteTag = useCallback(async () => {
@@ -411,7 +420,7 @@ export const TagForm: FC = () => {
                     <TierList
                         tiers={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
                         setPosition={(position: number | undefined) => {
-                            form.setValue('position', position);
+                            form.setValue('position', position, { shouldDirty: true });
                         }}
                         name={tagQuery.data?.name || 'New Tier'}
                     />
