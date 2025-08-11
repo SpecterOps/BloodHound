@@ -34,7 +34,7 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 		return false, err
 	}
 
-	allowedMap := make(map[string]struct{}, 10)
+	allowedMap := make(map[string]struct{}, len(allowedList))
 	for _, envAccess := range allowedList {
 		allowedMap[envAccess.Environment] = struct{}{}
 	}

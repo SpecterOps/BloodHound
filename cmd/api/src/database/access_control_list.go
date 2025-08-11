@@ -29,7 +29,7 @@ const (
 )
 
 type EnvironmentAccessControlData interface {
-	GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) (EnvironmentAccessList, error)
+	GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) ([]EnvironmentAccess, error)
 	UpdateEnvironmentListForUser(ctx context.Context, userUuid uuid.UUID, environments ...string) error
 }
 
@@ -40,25 +40,38 @@ type EnvironmentAccess struct {
 	model.BigSerial
 }
 
-// EnvironmentAccessList is a slice of EnvironmentAccess that provides additional helper methods
-type EnvironmentAccessList []EnvironmentAccess
+func (EnvironmentAccess) TableName() string {
+	return EnvironmentAccessControlTable
+}
 
 // GetEnvironmentAccessListForUser given a user's id, this will return all access control list rows for the user
-func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) (EnvironmentAccessList, error) {
+func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) ([]EnvironmentAccess, error) {
 	var accessControlList []EnvironmentAccess
 
-	result := s.db.WithContext(ctx).Table(EnvironmentAccessControlTable).Select("environment").Where("user_id = ?", userUuid.String()).Scan(&accessControlList)
+	result := s.db.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", userUuid.String()).Find(&accessControlList)
 	return accessControlList, CheckError(result)
 }
 
 // UpdateEnvironmentListForUser will remove all entries in the access control list for a user and add a new entry for each environment provided
 func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, userUuid uuid.UUID, environments ...string) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	var (
+		auditData = model.AuditData{
+			"userUuid":     userUuid,
+			"environments": environments,
+		}
+		auditEntry, err = model.NewAuditEntry(model.AuditLogActionUpdateEnvironmentAccessList, model.AuditLogStatusIntent, auditData)
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if err := CheckError(tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", userUuid).Delete(&EnvironmentAccess{})); err != nil {
 			return err
 		} else {
 
-			availableEnvironments := make([]EnvironmentAccess, 0, 10)
+			availableEnvironments := make([]EnvironmentAccess, 0, len(environments))
 
 			for _, environment := range environments {
 				newAccessControl := EnvironmentAccess{

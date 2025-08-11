@@ -57,17 +57,17 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := database.EnvironmentAccessList{
+				envs := []database.EnvironmentAccess{
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "1",
 					},
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "2",
 					},
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "3",
 					},
 				}
@@ -90,17 +90,17 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := database.EnvironmentAccessList{
+				envs := []database.EnvironmentAccess{
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "1",
 					},
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "2",
 					},
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "3",
 					},
 				}
@@ -122,17 +122,17 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := database.EnvironmentAccessList{
+				envs := []database.EnvironmentAccess{
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "1",
 					},
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "2",
 					},
 					database.EnvironmentAccess{
-						UserID:      "lorem ipsum",
+						UserID:      userUuid.String(),
 						Environment: "3",
 					},
 				}
@@ -155,7 +155,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := database.EnvironmentAccessList{}
+				envs := []database.EnvironmentAccess{}
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), userUuid).Return(envs, nil)
 			},

@@ -36,3 +36,5 @@ CREATE TABLE IF NOT EXISTS environment_access_control (
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS explore_enabled BOOL DEFAULT TRUE,
     ADD COLUMN IF NOT EXISTS all_environments BOOL DEFAULT TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_environment_access_control_user_id ON environment_access_control USING HASH (user_id);
