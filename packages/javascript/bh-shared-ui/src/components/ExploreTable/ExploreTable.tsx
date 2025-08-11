@@ -121,11 +121,12 @@ const ExploreTable = ({
         const nodes = exploreTableData?.nodes;
         if (nodes) {
             const nodeValues = Object.values(nodes)?.map((node) => {
-                const flattenedNode = Object.assign(node, node.properties);
+                const nodeClone = Object.assign({}, node);
+                const flattenedNodeClone = Object.assign(nodeClone, node.properties);
 
-                delete flattenedNode.properties;
+                delete flattenedNodeClone.properties;
 
-                return flattenedNode;
+                return flattenedNodeClone;
             });
 
             const csv = json2csv(nodeValues, {
