@@ -20,7 +20,7 @@ import type { OptionsObject } from 'notistack';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import type { StatusType } from '../components';
-import { usePermissions } from '../hooks';
+import { usePermissions } from '../hooks/usePermissions';
 import { useNotifications } from '../providers';
 import { apiClient } from './api';
 import { LuxonFormat } from './datetime';
