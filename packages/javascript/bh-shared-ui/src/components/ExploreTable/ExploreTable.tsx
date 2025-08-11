@@ -111,13 +111,7 @@ const ExploreTable = ({
     const handleDownloadClick = useCallback(() => {
         const nodes = exploreTableData?.nodes;
         if (nodes) {
-            const nodeValues = Object.values(nodes)?.map((node) => {
-                const flattenedNode = Object.assign(node, node.properties);
-
-                delete flattenedNode.properties;
-
-                return flattenedNode;
-            });
+            const nodeValues = Object.values(nodes)?.map((node) => Object.assign(node, node.properties));
 
             const csv = json2csv(nodeValues, { keys: exploreTableData.node_keys, emptyFieldValue: '' });
 
