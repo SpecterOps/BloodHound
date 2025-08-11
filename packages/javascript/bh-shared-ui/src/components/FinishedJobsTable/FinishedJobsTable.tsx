@@ -1,3 +1,19 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
 import { JOB_STATUS_MAP, toCollected, toFormatted, toMins, useFinishedJobsQuery } from '../../utils';
@@ -8,7 +24,7 @@ const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'D
 
 const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verticalAlign: 'baseline' }));
 
-const getRows = (job: ScheduledJobDisplay) => {
+const getRow = (job: ScheduledJobDisplay) => {
     const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
     const statusProps = JOB_STATUS_MAP[job.status];
 
@@ -45,7 +61,7 @@ export const FinishedJobsTable: FC = () => {
 
     return (
         <DataTable
-            data={finishedJobs.map(getRows)}
+            data={finishedJobs.map(getRow)}
             headers={getHeaders(HEADERS)}
             isLoading={isLoading}
             paginationProps={{
