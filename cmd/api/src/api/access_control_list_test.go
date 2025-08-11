@@ -58,15 +58,15 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 				t.Helper()
 
 				envs := []database.EnvironmentAccess{
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "1",
 					},
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "2",
 					},
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "3",
 					},
@@ -91,15 +91,15 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 				t.Helper()
 
 				envs := []database.EnvironmentAccess{
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "1",
 					},
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "2",
 					},
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "3",
 					},
@@ -123,15 +123,15 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 				t.Helper()
 
 				envs := []database.EnvironmentAccess{
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "1",
 					},
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "2",
 					},
-					database.EnvironmentAccess{
+					{
 						UserID:      userUuid.String(),
 						Environment: "3",
 					},

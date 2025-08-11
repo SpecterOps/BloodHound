@@ -1360,10 +1360,10 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 }
 
 // GetEnvironmentAccessListForUser mocks base method.
-func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) (database.EnvironmentAccessList, error) {
+func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) ([]database.EnvironmentAccess, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEnvironmentAccessListForUser", ctx, userUuid)
-	ret0, _ := ret[0].(database.EnvironmentAccessList)
+	ret0, _ := ret[0].([]database.EnvironmentAccess)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
