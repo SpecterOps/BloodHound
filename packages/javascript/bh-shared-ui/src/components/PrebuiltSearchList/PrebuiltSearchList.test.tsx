@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PrebuiltSearchList from './PrebuiltSearchList';
 
@@ -118,9 +118,8 @@ describe('PrebuiltSearchList', () => {
                 clearFiltersHandler={testClearFiltersHandler}
             />
         );
-        // expect(screen.getByRole('button')).toHaveAttribute('aria-haspopup');
-        await user.click(screen.getByRole('button'));
 
+        await user.click(screen.getByRole('button'));
         expect(screen.getByText(/delete/i)).toBeInTheDocument();
 
         await user.click(screen.getByText(/delete/i));
@@ -130,6 +129,64 @@ describe('PrebuiltSearchList', () => {
         expect(testDeleteHandler).toBeCalledWith(1);
     });
 
-    // Run Click
-    // Edit / Share Click
+    it('clicking the run button calls run', async () => {
+        const user = userEvent.setup();
+
+        const testClickHandler = vitest.fn();
+        const testDeleteHandler = vitest.fn();
+        const testEditHandler = vitest.fn();
+        const testClearFiltersHandler = vitest.fn();
+
+        render(
+            <PrebuiltSearchList
+                listSections={testListSections}
+                selectedQuery={undefined}
+                showCommonQueries={true}
+                clickHandler={testClickHandler}
+                deleteHandler={testDeleteHandler}
+                editHandler={testEditHandler}
+                clearFiltersHandler={testClearFiltersHandler}
+            />
+        );
+
+        const actionMenuTrigger = screen.getByTestId('saved-query-action-menu-trigger');
+
+        expect(actionMenuTrigger).toHaveAttribute('aria-haspopup');
+        await user.click(actionMenuTrigger);
+
+        const container = screen.getByTestId('saved-query-action-menu', { exact: true });
+        expect(screen.getByTestId('saved-query-action-menu')).toBeInTheDocument();
+
+        const runButton = await within(container).findByText(/run/i);
+        await user.click(runButton);
+
+        expect(testClickHandler).toBeCalled();
+    });
+
+    it('clicking a edit/share button calls editHandler', async () => {
+        const user = userEvent.setup();
+
+        const testClickHandler = vitest.fn();
+        const testDeleteHandler = vitest.fn();
+        const testEditHandler = vitest.fn();
+        const testClearFiltersHandler = vitest.fn();
+
+        render(
+            <PrebuiltSearchList
+                listSections={testListSections}
+                selectedQuery={undefined}
+                showCommonQueries={true}
+                clickHandler={testClickHandler}
+                deleteHandler={testDeleteHandler}
+                editHandler={testEditHandler}
+                clearFiltersHandler={testClearFiltersHandler}
+            />
+        );
+
+        await user.click(screen.getByRole('button'));
+        expect(screen.getByText(/edit\/share/i)).toBeInTheDocument();
+
+        await user.click(screen.getByText(/edit\/share/i));
+        expect(testEditHandler).toBeCalled();
+    });
 });

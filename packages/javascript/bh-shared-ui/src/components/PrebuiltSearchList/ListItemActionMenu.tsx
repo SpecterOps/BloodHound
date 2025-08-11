@@ -19,17 +19,20 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery, edit
         editQuery(id as number);
     };
 
+    //on click run - event bubbles up the line item click event which fires Run
+
     const listItemStyles = 'w-full px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
     return (
         <>
             <Popover>
                 <PopoverTrigger
+                    data-testid='saved-query-action-menu-trigger'
                     className='dark:text-white p-2 rounded rounded-full hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-2'
                     onClick={(event) => event.stopPropagation()}>
                     <VerticalEllipsis size={24} />
                 </PopoverTrigger>
-                <PopoverContent className='p-0'>
+                <PopoverContent className='p-0' data-testid='saved-query-action-menu'>
                     <div className={listItemStyles}>Run</div>
                     <div className={listItemStyles} onClick={handleEdit}>
                         Edit/Share
