@@ -23,40 +23,86 @@ import React from 'react';
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
-const CreateUserFormRightPanel: React.FC<{}> = ({}) => {
+const CreateUserFormRightPanel: React.FC<{
+    checked?: any[];
+    disabled?: boolean;
+    onChange?: (checked: any[]) => void;
+}> = ({ checked, onChange }) => {
+    const environments = [
+        { name: 'Environment 1', id: 'environment1' },
+        { name: 'Environment 2', id: 'environment2' },
+        { name: 'Environment 3', id: 'environment3' },
+    ];
+
+    let amountChecked = 'none';
+
+    // If all boxes are checked, they are all unchecked; other wise all boxes are checked
+    /*
+    const toggleAllChecked = () => {
+        if (environments) {
+            onChange(['none', 'some'].includes(amountChecked) ? environments.map((item) => item.id) : []);
+        }
+    };
+    */
+
+    /*
+    const toggleCheckedEnvironment = (id: string) => () => {
+        const newChecked = checked.includes(id) ? checked.filter((item) => item !== id) : [...checked, id];
+        onChange(newChecked);
+    };
+    */
+
     return (
-        <div className=' '>
-            <Card className='flex-1  p-4 rounded shadow'>
-                <DialogTitle>Environmental Access Control</DialogTitle>
-                <VisuallyHidden>
-                    something that we want to hide visually but still want in the DOM for accessibility
-                </VisuallyHidden>
-                <DialogDescription className='flex flex-col' data-testid='environments-checkboxes'>
-                    <Box className={'ml-4 w-[90%] flex items-center uppercase'}>
-                        <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
-                        <TextField
-                            autoFocus
-                            //onChange={handleEnvironmentSearch}
-                            className={'w-full'}
-                            variant='standard'
-                            //label=''
-                        />
-                    </Box>
-                    <div>
+        <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
+            <DialogTitle>Environmental Access Control</DialogTitle>
+            <VisuallyHidden>
+                something that we want to hide visually but still want in the DOM for accessibility
+            </VisuallyHidden>
+            <DialogDescription className='flex flex-col' data-testid='environments-checkboxes'>
+                <Box className={'ml-4 w-[90%] flex items-center uppercase'}>
+                    <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
+                    <TextField
+                        autoFocus
+                        //onChange={handleEnvironmentSearch}
+                        className={'w-full'}
+                        variant='standard'
+                        label='Search'
+                    />
+                </Box>
+                <div className='flex flex-col' data-testid='source-kinds-checkboxes'>
+                    <FormControlLabel
+                        label='Select All Environments'
+                        control={
+                            <Checkbox
+                                checked={amountChecked === 'all'}
+                                //disabled={isDisabled}
+                                indeterminate={amountChecked === 'some'}
+                                name='All Environments Data'
+                                //onChange={toggleAllChecked}
+                            />
+                        }
+                    />
+
+                    {/*isLoading && LOADING_CHECKBOXES*/}
+
+                    {environments.map((item) => (
                         <FormControlLabel
-                            label='Select All Environments'
+                            className='pl-8'
                             control={
                                 <Checkbox
-                                //checked={checked[0] && checked[1]}
-                                //indeterminate={checked[0] !== checked[1]}
-                                //onChange={handleChange1}
+                                    //checked={checked.includes(item.id)}
+                                    //onChange={toggleCheckedEnvironment(item.id)}
+                                    name={item.name}
+                                    //disabled={isDisabled}
                                 />
                             }
+                            label={item.name}
+                            key={item.id}
                         />
-                    </div>
-                </DialogDescription>
-            </Card>
-        </div>
+                    ))}
+                </div>
+            </DialogDescription>
+        </Card>
     );
 };
 
