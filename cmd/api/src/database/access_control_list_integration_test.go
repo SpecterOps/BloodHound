@@ -42,15 +42,13 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	userUuid := newUser.ID
-
 	t.Run("UpdateEnvironmentListForUser", func(t *testing.T) {
-		err = suite.BHDatabase.UpdateEnvironmentListForUser(suite.Context, userUuid, "1234", "1234")
+		err = suite.BHDatabase.UpdateEnvironmentListForUser(suite.Context, newUser, "1234", "1234")
 		require.NoError(t, err)
 	})
 
 	t.Run("GetEnvironmentAccessListForUser", func(t *testing.T) {
-		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, userUuid)
+		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, newUser)
 		require.NoError(t, err)
 		assert.Len(t, result, 2)
 	})
@@ -59,7 +57,7 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 		err := suite.BHDatabase.DeleteUser(suite.Context, newUser)
 		require.NoError(t, err)
 
-		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, userUuid)
+		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, newUser)
 		require.NoError(t, err)
 		assert.Len(t, result, 0)
 	})

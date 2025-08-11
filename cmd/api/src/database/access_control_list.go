@@ -19,7 +19,6 @@ package database
 import (
 	"context"
 
-	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"gorm.io/gorm"
 )
@@ -29,8 +28,8 @@ const (
 )
 
 type EnvironmentAccessControlData interface {
-	GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) ([]EnvironmentAccess, error)
-	UpdateEnvironmentListForUser(ctx context.Context, userUuid uuid.UUID, environments ...string) error
+	GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]EnvironmentAccess, error)
+	UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error
 }
 
 // EnvironmentAccess defines the model for a row in the environment_access_control table
@@ -45,18 +44,18 @@ func (EnvironmentAccess) TableName() string {
 }
 
 // GetEnvironmentAccessListForUser given a user's id, this will return all access control list rows for the user
-func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, userUuid uuid.UUID) ([]EnvironmentAccess, error) {
+func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]EnvironmentAccess, error) {
 	var accessControlList []EnvironmentAccess
 
-	result := s.db.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", userUuid.String()).Find(&accessControlList)
+	result := s.db.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", user.ID.String()).Find(&accessControlList)
 	return accessControlList, CheckError(result)
 }
 
 // UpdateEnvironmentListForUser will remove all entries in the access control list for a user and add a new entry for each environment provided
-func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, userUuid uuid.UUID, environments ...string) error {
+func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error {
 	var (
 		auditData = model.AuditData{
-			"userUuid":     userUuid,
+			"userUuid":     user.ID.String(),
 			"environments": environments,
 		}
 		auditEntry, err = model.NewAuditEntry(model.AuditLogActionUpdateEnvironmentAccessList, model.AuditLogStatusIntent, auditData)
@@ -67,27 +66,38 @@ func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, userUui
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		if err := CheckError(tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", userUuid).Delete(&EnvironmentAccess{})); err != nil {
+
+		err := CheckError(tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", user.ID.String()).Delete(&EnvironmentAccess{}))
+
+		if err != nil {
 			return err
-		} else {
-
-			availableEnvironments := make([]EnvironmentAccess, 0, len(environments))
-
-			for _, environment := range environments {
-				newAccessControl := EnvironmentAccess{
-					UserID:      userUuid.String(),
-					Environment: environment,
-				}
-
-				availableEnvironments = append(availableEnvironments, newAccessControl)
-			}
-
-			result := tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Create(&availableEnvironments)
-
-			if err := CheckError(result); err != nil {
-				return err
-			}
 		}
+
+		availableEnvironments := make([]EnvironmentAccess, 0, len(environments))
+
+		for _, environment := range environments {
+			newAccessControl := EnvironmentAccess{
+				UserID:      user.ID.String(),
+				Environment: environment,
+			}
+
+			availableEnvironments = append(availableEnvironments, newAccessControl)
+		}
+
+		result := tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Create(&availableEnvironments)
+
+		if err := CheckError(result); err != nil {
+			return err
+		}
+
+		user.AllEnvironments = false
+
+		err = s.UpdateUser(ctx, user)
+
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

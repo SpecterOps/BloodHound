@@ -28,7 +28,7 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 		return true, nil
 	}
 
-	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user.ID)
+	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user)
 
 	if err != nil {
 		return false, err
