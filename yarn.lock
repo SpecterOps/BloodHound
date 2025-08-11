@@ -361,9 +361,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.24":
-  version: 1.0.0-alpha.24
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.24"
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.25":
+  version: 1.0.0-alpha.25
+  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.25"
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
@@ -393,7 +393,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: 2ec7bfab8ad488c69660c557297bc8cab42d906ba1d2793749529942a5afd92dcf9f07bbeb39f1e25124daaefb6d5ad8629aba8922c8b7ab482e1e4c350a5a30
+  checksum: 251e505ee4f4a43c14ec3ec5b2d66783e66ca0741fc39da54960eb28338dc4f95e91510530a79f5e980c888d2d1abbff5ac84fbc1b2f9df9cd6594499e41a862
   languageName: node
   linkType: hard
 
@@ -4994,7 +4994,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-shared-ui@workspace:packages/javascript/bh-shared-ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.24
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.25
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
     "@faker-js/faker": ^7.3.0
@@ -5111,7 +5111,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.24
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.25
     "@date-io/luxon": ^1.3.13
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -10639,11 +10639,11 @@ __metadata:
   linkType: hard
 
 "react-hook-form@npm:^7.61.1":
-  version: 7.61.1
-  resolution: "react-hook-form@npm:7.61.1"
+  version: 7.62.0
+  resolution: "react-hook-form@npm:7.62.0"
   peerDependencies:
     react: ^16.8.0 || ^17 || ^18 || ^19
-  checksum: 2cd69df3fbdd0175c38c08f12749a0d6029475eb5601940ac5326182d40026c6a6e0a08d8c5bf83ff8849c82037759ead7052f7e5c962723e847d642e27ff637
+  checksum: 76f0574d0df632c22b37c2666e8aef8b4378dfa0bcc5ae5b20c410d3103abd17e0bcf6256f8a6d9d18cbd687f96edf3fce35bf41d06872ffb412c91664361b1a
   languageName: node
   linkType: hard
 
