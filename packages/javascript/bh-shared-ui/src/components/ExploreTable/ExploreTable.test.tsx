@@ -617,7 +617,6 @@ describe('ExploreTable', async () => {
         await user.click(jdPhantomRow);
 
         expect(kebabCallbackSpy).not.toBeCalled();
-        screen.debug(jdPhantomRow);
 
         expect(jdPhantomRow.className).toContain(SELECTED_ROW_INDICATOR_CLASS);
     });
