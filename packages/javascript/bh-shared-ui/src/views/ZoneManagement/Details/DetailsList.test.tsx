@@ -80,7 +80,11 @@ const configTrueResponse = {
     ],
 };
 
-const server = setupServer();
+const server = setupServer(
+    rest.get('/api/v2/config', async (_, res, ctx) => {
+        return res(ctx.json(configTrueResponse));
+    })
+);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());

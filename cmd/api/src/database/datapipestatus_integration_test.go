@@ -42,6 +42,8 @@ func TestDatapipeStatus(t *testing.T) {
 	oldAnalysisTime := status.LastAnalysisRunAt
 	err = db.SetDatapipeStatus(testCtx, model.DatapipeStatusAnalyzing)
 	require.Nil(t, err)
+	err = db.SetLastAnalysisStartTime(testCtx)
+	require.Nil(t, err)
 	status, err = db.GetDatapipeStatus(testCtx)
 	require.Nil(t, err)
 	assert.Equal(t, model.DatapipeStatusAnalyzing, status.Status)
