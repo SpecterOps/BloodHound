@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -27,13 +28,14 @@ const (
 	LogLevelVarName           = "SB_LOG_LEVEL"
 	VersionVarName            = "SB_VERSION"
 	PostgresConnectionVarName = "SB_PG_CONNECTION"
+	YarnCmdVarName            = "SB_YARN_CMD"
 )
 
 // Environment is a string map representation of env vars
 type Environment map[string]string
 
 // NewEnvironment pulls os.Environ and converts to an Environment
-func NewEnvironment() Environment {
+func NewEnvironment() (Environment, error) {
 	var (
 		envVars = os.Environ()
 		envMap  = make(Environment, len(envVars))
@@ -44,7 +46,13 @@ func NewEnvironment() Environment {
 		envMap[envTuple[0]] = envTuple[1]
 	}
 
-	return envMap
+	// If yarn isn't available, it's catastrophic
+	err := envMap.SetExecIfEmpty(YarnCmdVarName, []string{"yarn", "yarnpkg"})
+	if err != nil {
+		return nil, err
+	}
+
+	return envMap, nil
 }
 
 // SetIfEmpty sets a value only if the key currently has no value
@@ -52,6 +60,22 @@ func (s Environment) SetIfEmpty(key string, value string) {
 	if _, ok := s[key]; !ok {
 		s[key] = value
 	}
+}
+
+// SetExecIfEmpty sets an system executable from an array of options if empty
+func (s Environment) SetExecIfEmpty(key string, execCmds[]string) error {
+	if _, ok := s[key]; !ok {
+		for _, execCmd := range execCmds {
+			_, err := exec.LookPath(execCmd)
+			if err == nil {
+				s[key] = execCmd
+				return nil
+			}
+		}
+		options := strings.Join(execCmds, ", ")
+		return fmt.Errorf("unable to locate any of %s executable(s) in path for undefined env %s", options, key)
+	}
+	return nil
 }
 
 // Overrides an environment variable with a new value

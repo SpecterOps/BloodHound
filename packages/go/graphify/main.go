@@ -25,7 +25,11 @@ import (
 )
 
 func main() {
-	env := environment.NewEnvironment()
+	env, err := environment.NewEnvironment()
+	if err != nil {
+		slog.Error(fmt.Sprintf("Failed to init environment: %v", err))
+		os.Exit(1)
+	}
 
 	gs, err := graph.NewCommunityGraphService()
 	if err != nil {

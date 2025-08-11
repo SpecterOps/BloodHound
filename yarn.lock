@@ -5046,7 +5046,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     react-error-boundary: ^3.1.4
-    react-hook-form: ^7.45.1
+    react-hook-form: ^7.61.1
     react-immutable-proptypes: ^2.2.0
     react-query: ^3.39.3
     react-router-dom: 6.4.1
@@ -10629,7 +10629,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:^7.0.0, react-hook-form@npm:^7.45.1":
+"react-hook-form@npm:^7.0.0":
   version: 7.45.2
   resolution: "react-hook-form@npm:7.45.2"
   peerDependencies:

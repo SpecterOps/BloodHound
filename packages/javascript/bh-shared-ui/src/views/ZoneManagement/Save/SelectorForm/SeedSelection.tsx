@@ -14,29 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    FormControl,
+    FormField,
+    FormItem,
+    Input,
+    Skeleton,
+} from '@bloodhoundenterprise/doodleui';
 import { SeedTypeObjectId } from 'js-client-library';
-import { FC, useContext, useEffect, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { FC, useContext } from 'react';
+import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useDebouncedValue } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
-const getListScalar = (windowHeight: number) => {
-    if (windowHeight > 1080) return 18;
-    if (1080 >= windowHeight && windowHeight > 900) return 14;
-    if (900 >= windowHeight) return 10;
-    return 8;
-};
-
-const SeedSelection: FC = () => {
+const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
-    const { register } = useFormContext<SelectorFormInputs>();
 
     const previewQuery = useQuery({
         queryKey: ['zone-management', 'preview-selectors', selectorType, seeds],
@@ -50,15 +50,6 @@ const SeedSelection: FC = () => {
         enabled: seeds.length > 0,
     });
 
-    const [heightScalar, setHeightScalar] = useState(getListScalar(window.innerHeight));
-
-    const updateHeightScalar = useDebouncedValue(() => setHeightScalar(getListScalar(window.innerHeight)), 100);
-
-    useEffect(() => {
-        window.addEventListener('resize', updateHeightScalar);
-        return () => window.removeEventListener('resize', updateHeightScalar);
-    }, [updateHeightScalar]);
-
     if (selectorQuery.isLoading) return <Skeleton />;
     if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
 
@@ -67,24 +58,38 @@ const SeedSelection: FC = () => {
     return (
         <>
             <div
-                className={cn('w-full grow h-[36rem]', {
-                    'md:w-60 xl:max-w-[36rem] 2xl:max-w-full': selectorType === SeedTypeObjectId,
+                className={cn('w-full grow h-[36rem] md:w-96 xl:max-w-[36rem] 2xl:max-w-full', {
+                    'md:w-60': selectorType === SeedTypeObjectId,
                 })}>
-                <Input {...register('seeds', { value: Array.from(seeds) })} className='hidden w-0' />
+                <FormField
+                    control={control}
+                    name='seeds'
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <Input
+                                    {...field}
+                                    value={Array.from(seeds) as unknown as string}
+                                    className='hidden w-0'
+                                />
+                            </FormControl>
+                        </FormItem>
+                    )}
+                />
                 {selectorType === SeedTypeObjectId ? (
                     <ObjectSelect />
                 ) : (
                     <Cypher preview={false} initialInput={firstSeed?.value} />
                 )}
-            </div>{' '}
-            <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem] h-auto max-h-[400px]'>
+            </div>
+            <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
                 <CardHeader className='pl-6 first:py-6 text-xl font-bold'>Sample Results</CardHeader>
                 <CardContent className='pl-4'>
                     <div className='font-bold pl-2 mb-2'>
                         <span>Type</span>
                         <span className='ml-8'>Object Name</span>
                     </div>
-                    <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={heightScalar} />
+                    <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={10} />
                 </CardContent>
             </Card>
         </>
