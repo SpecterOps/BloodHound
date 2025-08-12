@@ -193,24 +193,23 @@ const BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);
 //Here is some related documentation:
 //https://learn.microsoft.com/en-us/windows/win32/adschema/a-lastlogon
 //https://social.technet.microsoft.com/wiki/contents/articles/22461.understanding-the-ad-account-attributes-lastlogon-lastlogontimestamp-and-lastlogondate.aspx
+export const AD_NEVER_VALUE = 'NEVER';
+export const AD_UNKNOWN_VALUE = 'UNKNOWN';
 export const formatADSpecificTime = (timeValue: number, keyprop: ADSpecificTimeProperties): string => {
-    const unknownValue = 'UNKNOWN';
-    const neverValue = 'NEVER';
-
     switch (keyprop) {
         case ADSpecificTimeProperties.WHEN_CREATED: {
-            if (timeValue === 0 || timeValue === -1) return unknownValue;
+            if (timeValue === 0 || timeValue === -1) return AD_UNKNOWN_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
         case ADSpecificTimeProperties.LAST_LOGON: //fallthrough
         case ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP: {
-            if (timeValue === 0) return unknownValue;
-            if (timeValue === -1) return neverValue;
+            if (timeValue === 0) return AD_UNKNOWN_VALUE;
+            if (timeValue === -1) return AD_NEVER_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
         case ADSpecificTimeProperties.PASSWORD_LAST_SET:
             if (timeValue === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
-            if (timeValue === -1) return neverValue;
+            if (timeValue === -1) return AD_NEVER_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         default:
             return '';
