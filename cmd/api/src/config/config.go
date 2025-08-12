@@ -164,6 +164,7 @@ type Configuration struct {
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
+	OverrideCSP                  bool                      `json:"override_csp"`
 }
 
 func (s Configuration) TempDirectory() string {

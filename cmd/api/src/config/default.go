@@ -19,8 +19,9 @@ package config
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/dawgs/drivers/neo4j"
+
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
 )
 
 // NewDefaultConfiguration returns a new Configuration struct containing all documented
@@ -53,6 +54,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableMigrations:            false,
 			EnableCypherMutations:        false,
 			RecreateDefaultAdmin:         false,
+			OverrideCSP:                  false,
 			GraphQueryMemoryLimit:        2,     // 2 GiB by default
 			EnableTextLogger:             false, // Default to JSON logging
 			TLS:                          TLSConfiguration{},
