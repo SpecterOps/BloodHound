@@ -81,7 +81,7 @@ const Summary: FC = () => {
                         <SelectedDetails />
                     </div>
                 </div>
-            </div>{' '}
+            </div>
         </>
     );
 };

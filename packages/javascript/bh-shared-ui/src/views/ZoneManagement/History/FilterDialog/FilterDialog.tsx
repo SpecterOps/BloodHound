@@ -35,11 +35,12 @@ import {
     Skeleton,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { FC, HTMLAttributes, useEffect } from 'react';
+import { FC, HTMLAttributes, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { DatePicker } from '../../../../components';
 import { useTagsQuery } from '../../../../hooks';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
+import { cn } from '../../../../utils';
 
 const actionOptions = [
     '', // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
@@ -69,10 +70,19 @@ const FilterDialog: FC<{
 }> = ({ open = true, filters = defaultValues, handleClose, setFilters }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
+
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues, values: filters });
 
-    const selectClasses: HTMLAttributes<'select'>['className'] =
-        'rounded-md border border-neutral-dark-5 dark:border-neutral-light-5 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:border-2 w-24 bg-neutral-1';
+    const selectClasses: (field: keyof AssetGroupTagHistoryFilters) => HTMLAttributes<'select'>['className'] =
+        useCallback(
+            (fieldName: keyof AssetGroupTagHistoryFilters) => {
+                return cn(
+                    'rounded-md border border-neutral-dark-5 dark:border-neutral-light-5 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:border-2 bg-neutral-1',
+                    { 'w-24': form.getValues(fieldName) === '' }
+                );
+            },
+            [form]
+        );
 
     useEffect(() => {
         if (tagsQuery.data && filters.tag !== '') {
@@ -115,7 +125,7 @@ const FilterDialog: FC<{
                                             value={field.value}
                                             defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className={selectClasses}>
+                                                <SelectTrigger className={selectClasses(field.name)}>
                                                     <SelectValue placeholder='Select' {...field} />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -146,12 +156,19 @@ const FilterDialog: FC<{
                                             value={field.value}
                                             defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className={selectClasses}>
-                                                    <SelectValue placeholder='Select' />
-                                                </SelectTrigger>
+                                                {tagsQuery.isError ? (
+                                                    <span className='text-error'>
+                                                        There was an error fetching this data. Please refresh the page
+                                                        to try again.
+                                                    </span>
+                                                ) : (
+                                                    <SelectTrigger className={selectClasses(field.name)}>
+                                                        <SelectValue placeholder='Select' />
+                                                    </SelectTrigger>
+                                                )}
                                             </FormControl>
                                             <SelectPortal>
-                                                {tagsQuery.isLoading || tagsQuery.isError ? (
+                                                {tagsQuery.isLoading ? (
                                                     <Skeleton className='h-10 w-24' />
                                                 ) : (
                                                     <SelectContent>
@@ -178,20 +195,45 @@ const FilterDialog: FC<{
                                             value={field.value}
                                             defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className={selectClasses}>
-                                                    <SelectValue placeholder='Select' />
-                                                </SelectTrigger>
+                                                {bloodHoundUsersQuery.isError ? (
+                                                    <span className='text-error'>
+                                                        There was an error fetching this data. Please refresh the page
+                                                        to try again.
+                                                    </span>
+                                                ) : (
+                                                    <SelectTrigger className={selectClasses(field.name)}>
+                                                        <SelectValue placeholder='Select' />
+                                                    </SelectTrigger>
+                                                )}
                                             </FormControl>
                                             <SelectPortal>
-                                                {bloodHoundUsersQuery.isLoading || bloodHoundUsersQuery.isError ? (
+                                                {bloodHoundUsersQuery.isLoading ? (
                                                     <Skeleton className='h-10 w-24' />
                                                 ) : (
                                                     <SelectContent>
-                                                        {bloodHoundUsersQuery.data?.map((user) => (
-                                                            <SelectItem key={user.id} value={user.email_address || ''}>
-                                                                {user.email_address}
-                                                            </SelectItem>
-                                                        ))}
+                                                        <SelectItem value={'SYSTEM'}>SYSTEM</SelectItem>
+                                                        {bloodHoundUsersQuery.data
+                                                            ?.filter((user) => {
+                                                                let hasPermission = false;
+                                                                user.roles.forEach((role) => {
+                                                                    role.permissions.forEach((permission) => {
+                                                                        if (
+                                                                            permission.name === 'ManageUsers' &&
+                                                                            permission.authority === 'auth'
+                                                                        )
+                                                                            hasPermission = true;
+                                                                    });
+                                                                });
+
+                                                                return hasPermission;
+                                                            })
+                                                            ?.map((user) => (
+                                                                <SelectItem
+                                                                    key={user.id}
+                                                                    value={user.email_address || user.id}>
+                                                                    {user.email_address}
+                                                                </SelectItem>
+                                                            ))}
                                                     </SelectContent>
                                                 )}
                                             </SelectPortal>

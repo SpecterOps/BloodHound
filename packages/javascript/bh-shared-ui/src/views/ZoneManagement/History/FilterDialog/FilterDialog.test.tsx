@@ -57,7 +57,7 @@ describe('Privilege Zones History Filter Dialog', () => {
                 filters={{
                     action: 'Certified',
                     tag: 'foo',
-                    madeBy: 'mlaw@specterops.io',
+                    madeBy: 'test_admin@specterops.io',
                     'start-date': '2025-07-12',
                     'end-date': '2025-08-12',
                 }}
@@ -73,7 +73,7 @@ describe('Privilege Zones History Filter Dialog', () => {
         });
 
         await waitFor(() => {
-            expect(screen.getByText('mlaw@specterops.io', { ignore: 'option' })).toBeInTheDocument();
+            expect(screen.getByText('test_admin@specterops.io', { ignore: 'option' })).toBeInTheDocument();
         });
 
         expect(screen.getByLabelText('Start Date')).toHaveValue('2025-07-12');
