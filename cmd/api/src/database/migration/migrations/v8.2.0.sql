@@ -15,22 +15,26 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Grant Upload-Only user GraphDBWrite permissions
-INSERT INTO roles_permissions (role_id, permission_id)
-VALUES ((SELECT id FROM roles WHERE roles.name = 'Upload-Only'),
-        (SELECT id FROM permissions WHERE permissions.authority = 'graphdb' and permissions.name = 'Write'))
-ON CONFLICT DO NOTHING;
+-- Change current Upload-Only role name to Client-Tasking
+UPDATE roles
+SET "name"='Client-Tasking'
+WHERE roles.name = 'Upload-Only';
 
--- Create new User-Upload-Only with GraphDBWrite
+-- Create Upload-Only role with GraphDBIngest permission
 INSERT INTO roles (name, description, created_at, updated_at) VALUES 
-('User-Upload-Only', 'Used to ingest files manually', current_timestamp, current_timestamp)
+('Upload-Only', 'Used for users to ingest files manually', current_timestamp, current_timestamp)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 JOIN permissions p
-  ON ((r.name = 'User-Upload-Only' AND (p.authority, p.name) IN (
-      ('graphdb', 'Write')
+  ON ((r.name = 'Upload-Only' AND (p.authority, p.name) IN (
+      ('graphdb', 'Ingest')
     )))
 ON CONFLICT DO NOTHING;
+
+-- Migrate users with Client-Tasking role to Upload-Only role
+UPDATE users_roles
+SET role_id=(select id from roles r where r."name" = 'Upload-Only')
+WHERE role_id=(select id from roles r where r."name" ='Client-Tasking');
