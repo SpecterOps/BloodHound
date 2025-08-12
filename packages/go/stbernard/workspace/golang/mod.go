@@ -60,8 +60,8 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 	return modules, nil
 }
 
-func moduleListPackages(modPath string) ([]GoPackage, error) {
-	if result, err := cmdrunner.Run("go", []string{"list", "-json", "./..."}, modPath, environment.NewEnvironment()); err != nil {
+func moduleListPackages(modPath string, env environment.Environment) ([]GoPackage, error) {
+	if result, err := cmdrunner.Run("go", []string{"list", "-json", "./..."}, modPath, env); err != nil {
 		return nil, fmt.Errorf("running go mod list: %w", err)
 	} else {
 		var (

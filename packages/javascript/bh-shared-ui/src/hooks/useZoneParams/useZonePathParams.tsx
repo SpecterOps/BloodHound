@@ -13,4 +13,28 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export const useZonePathParams = {};
+
+import { useParams } from 'react-router-dom';
+
+export const useZonePathParams = () => {
+    const { tierId = '', labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
+
+    const isLabelLocation = labelId !== undefined;
+    const isTierLocation = tierId !== '';
+
+    const tagKind: 'label' | 'tier' = isLabelLocation ? 'label' : 'tier';
+    const tagKindDisplay: 'Label' | 'Tier' = isLabelLocation ? 'Label' : 'Tier';
+
+    return {
+        tagId,
+        tierId,
+        labelId,
+        selectorId,
+        memberId,
+        isLabelLocation,
+        isTierLocation,
+        tagKind,
+        tagKindDisplay,
+    };
+};

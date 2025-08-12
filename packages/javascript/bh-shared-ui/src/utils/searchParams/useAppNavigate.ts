@@ -22,12 +22,14 @@ import {
     persistSearchParams,
 } from './searchParams';
 
+export type AppNavigateOptions = NavigateOptions & AppNavigateProps;
+
 export const useAppNavigate = () => {
     const navigate = useNavigate();
     const search = persistSearchParams(GloballySupportedSearchParams);
 
     // The navigate() function can optionally take a number as its only argument, which moves up and down the history stack by that amount
-    return (to: To | number, options?: NavigateOptions & AppNavigateProps): void => {
+    return (to: To | number, options?: AppNavigateOptions): void => {
         if (typeof to === 'number') {
             navigate(to);
         } else if (options?.discardQueryParams) {

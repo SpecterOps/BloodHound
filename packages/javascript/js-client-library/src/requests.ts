@@ -35,29 +35,23 @@ export interface LoginRequest {
 export type CreateAssetGroupTagRequest = {
     name: string;
     description: string;
-    position: number | null;
     type: AssetGroupTagTypes;
-    requireCertify?: boolean;
+    position?: number | null;
+    requireCertify?: boolean | null;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<
-    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: string | boolean | undefined }
+    Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: boolean | undefined }
 >;
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 
-// This type makes it so that `selector_id` is optional in the selector seed request shape.
-// The `selector_id` will only be available when updating an already existing selector.
-export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
+export type SelectorSeedRequest = Pick<AssetGroupTagSelectorSeed, 'type' | 'value'>;
 
-export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
-    Partial<Pick<AssetGroupTagSelector, 'description' | 'auto_certify'>> & {
-        seeds: SelectorSeedRequest[];
-    };
+export type CreateSelectorRequest = { name: string; description?: string } & PreviewSelectorsRequest;
 
-export type UpdateSelectorRequest = Partial<
-    Omit<CreateSelectorRequest, 'id' | 'disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
->;
+export type UpdateSelectorRequest = Partial<CreateSelectorRequest & { disabled: boolean }> &
+    Pick<AssetGroupTagSelector, 'id'>;
 
 export interface CreateAssetGroupRequest {
     name: string;
