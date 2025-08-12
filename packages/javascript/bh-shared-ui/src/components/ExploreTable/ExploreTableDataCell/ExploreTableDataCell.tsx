@@ -17,6 +17,7 @@ import { faCheck, faCopy, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 import { EntityField, cn, copyToClipboard, format } from '../../../utils';
+import { validateProperty } from '../../../utils/entityInfoDisplay';
 import NodeIcon from '../../NodeIcon';
 
 const FALLBACK_STRING = '--';
@@ -47,7 +48,8 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
     }
 
     const stringyKey = columnKey?.toString();
-    const formattedValue = format({ keyprop: stringyKey, value, label: stringyKey });
+    const { kind } = validateProperty(columnKey);
+    const formattedValue = format({ kind, keyprop: stringyKey, value, label: stringyKey });
 
     const handleCopyToClipBoard: React.MouseEventHandler<HTMLButtonElement> = (e) => {
         e.stopPropagation(); // prevents the click event bubbling up the DOM and triggering the row click handler

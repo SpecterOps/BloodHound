@@ -90,16 +90,22 @@ export const makeFormattedObjectInfoFieldsMap = (props: any) => {
     }
 };
 
+// Convert *KindProperties enums to a map to for quick lookup and defined outside of the typeguard so we perform enumerations once
+const activeDirectoryKindPropertiesMap = Object.fromEntries(
+    Object.values(ActiveDirectoryKindProperties).map((value) => [value, true])
+);
 const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
-    return Object.values(ActiveDirectoryKindProperties).includes(enumValue);
+    return activeDirectoryKindPropertiesMap[enumValue];
 };
 
+const azureKindPropertiesMap = Object.fromEntries(Object.values(AzureKindProperties).map((value) => [value, true]));
 const isAzureProperty = (enumValue: AzureKindProperties): boolean => {
-    return Object.values(AzureKindProperties).includes(enumValue);
+    return azureKindPropertiesMap[enumValue];
 };
 
+const commonKindPropertiesMap = Object.fromEntries(Object.values(AzureKindProperties).map((value) => [value, true]));
 const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
-    return Object.values(CommonKindProperties).includes(enumValue);
+    return commonKindPropertiesMap[enumValue];
 };
 
 export type KnownNodeProperties = keyof Omit<GraphNode, 'properties'> | 'nodeType';
