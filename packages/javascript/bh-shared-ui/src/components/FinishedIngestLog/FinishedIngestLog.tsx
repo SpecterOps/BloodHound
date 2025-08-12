@@ -39,7 +39,7 @@ const FinishedIngestLog: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     const { data: listFileIngestJobsData } = useListFileIngestJobs(page, rowsPerPage, hasPermission);
 
