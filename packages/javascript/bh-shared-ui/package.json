@@ -19,7 +19,7 @@
     "author": "The BloodHound Enterprise Team (https://bloodhoundenterprise.io/)",
     "license": "MIT",
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.25",
+        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.26",
         "@fortawesome/fontawesome-free": "^6.4.2",
         "@fortawesome/fontawesome-svg-core": "^6.4.2",
         "@fortawesome/free-regular-svg-icons": "^6.7.2",
@@ -33,6 +33,7 @@
         "history": "5.3.0",
         "immutable": "^5.0.0-beta.5",
         "js-client-library": "workspace:*",
+        "json-2-csv": "^5.5.9",
         "lodash": "^4.17.21",
         "luxon": "^3.3.0",
         "memoize-one": "^6.0.0",

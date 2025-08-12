@@ -162,12 +162,6 @@ describe('GraphControls', () => {
             expect(onLayoutChangeFn).toBeCalledWith(selectedLayout);
         });
         it('displays active styles for the selected layout when explore table is enabled', async () => {
-            server.use(
-                rest.get('/api/v2/features', async (_req, res, ctx) => {
-                    return res(ctx.json({ data: [{ key: 'explore_table_view', enabled: true }] }));
-                })
-            );
-
             const { user } = setup();
 
             const layoutMenu = screen.getByText('Layout');

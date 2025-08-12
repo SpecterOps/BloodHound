@@ -13,19 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faCheck, faCopy, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useState } from 'react';
-import { EntityField, cn, copyToClipboard, format } from '../../../utils';
+import { EntityField, cn, format } from '../../../utils';
 import { validateProperty } from '../../../utils/entityInfoDisplay';
+import CopyToClipboardButton from '../../CopyToClipboardButton';
 import NodeIcon from '../../NodeIcon';
 
 const FALLBACK_STRING = '--';
 
-const transitionDelay = 'delay-300';
-
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
-    const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
     if (columnKey === 'kind') {
         return (
             <div className='flex justify-center'>
@@ -51,30 +48,9 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
     const { kind } = validateProperty(columnKey);
     const formattedValue = format({ kind, keyprop: stringyKey, value, label: stringyKey });
 
-    const handleCopyToClipBoard: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-        e.stopPropagation(); // prevents the click event bubbling up the DOM and triggering the row click handler
-        if (typeof formattedValue === 'string') {
-            copyToClipboard(formattedValue);
-        } else {
-            copyToClipboard(formattedValue.join(', '));
-        }
-        setDisplayCopyCheckmark(true);
-        setTimeout(() => setDisplayCopyCheckmark(false), 500);
-    };
-
     return formattedValue ? (
-        <span className='cursor-auto relative'>
-            <button
-                onClick={handleCopyToClipBoard}
-                className={cn(
-                    'absolute top-1/2 left-2 -translate-x-1/2 -translate-y-1/2 opacity-0 pr-1 group-hover:opacity-100 transition-opacity ease-in',
-                    transitionDelay
-                )}>
-                <FontAwesomeIcon icon={displayCopyCheckmark ? faCheck : faCopy} />
-            </button>
-            <span className={cn('group-hover:pl-5 transition-[padding-left] ease-in', transitionDelay)}>
-                {formattedValue}
-            </span>
+        <span className='cursor-auto'>
+            <CopyToClipboardButton value={formattedValue} />
         </span>
     ) : (
         FALLBACK_STRING
