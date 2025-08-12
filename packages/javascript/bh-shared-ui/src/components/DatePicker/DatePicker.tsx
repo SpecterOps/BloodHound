@@ -36,12 +36,13 @@ interface DatePickerProps extends InputHTMLAttributes<HTMLInputElement> {
     error?: string;
     clearError?: () => void;
     onOpenChange?: (open: boolean) => void;
-    fromDate?: DateTime;
-    toDate?: DateTime;
+    fromDate?: DateTime | undefined;
+    toDate?: DateTime | undefined;
+    disabled?: any;
 }
 
 export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
-    ({ setValue, label, labelClasses, error, clearError, onOpenChange, fromDate, toDate, ...props }, ref) => {
+    ({ setValue, label, labelClasses, error, clearError, onOpenChange, fromDate, toDate, disabled, ...props }, ref) => {
         const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
 
         const handleSelect = (date: Date | undefined) => {
@@ -116,6 +117,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                         onSelect={handleSelect}
                         fromDate={fromDate?.toJSDate()}
                         toDate={toDate?.toJSDate()}
+                        disabled={disabled}
                     />
                 </PopoverContent>
             </Popover>

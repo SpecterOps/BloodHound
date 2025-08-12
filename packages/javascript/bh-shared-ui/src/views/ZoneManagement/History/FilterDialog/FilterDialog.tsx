@@ -35,12 +35,13 @@ import {
     Skeleton,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
+import { DateTime } from 'luxon';
 import { FC, HTMLAttributes, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { DatePicker } from '../../../../components';
 import { useTagsQuery } from '../../../../hooks';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
-import { cn } from '../../../../utils';
+import { LuxonFormat, cn } from '../../../../utils';
 
 const actionOptions = [
     '', // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
@@ -62,16 +63,19 @@ interface AssetGroupTagHistoryFilters {
 
 const defaultValues = { action: actionOptions[0], tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
 
+const toDate = DateTime.local();
+const fromDate = toDate.minus({ years: 1 });
+
 const FilterDialog: FC<{
     open: boolean;
     handleClose: () => void;
-    setFilters: (filters: any) => void;
+    setFilters: (filters: AssetGroupTagHistoryFilters) => void;
     filters?: AssetGroupTagHistoryFilters;
-}> = ({ open = true, filters = defaultValues, handleClose, setFilters }) => {
+}> = ({ open, filters = defaultValues, handleClose, setFilters }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
 
-    const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues, values: filters });
+    const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues });
 
     const selectClasses: (field: keyof AssetGroupTagHistoryFilters) => HTMLAttributes<HTMLSelectElement>['className'] =
         useCallback(
@@ -85,21 +89,13 @@ const FilterDialog: FC<{
         );
 
     useEffect(() => {
-        if (tagsQuery.data && filters.tag !== '') {
-            form.setValue('tag', filters.tag);
-        }
-    }, [tagsQuery.data, form, filters]);
-
-    useEffect(() => {
-        if (bloodHoundUsersQuery.data && filters.madeBy !== '') {
-            form.setValue('madeBy', filters.madeBy);
-        }
-    }, [bloodHoundUsersQuery.data, form, filters]);
+        form.reset(filters);
+    }, [form, filters]);
 
     return (
         <Dialog open={open}>
             <DialogPortal>
-                <DialogContent aria-describedby='Filter History Results' className='flex flex-col gap-4'>
+                <DialogContent className='flex flex-col gap-4'>
                     <Form {...form}>
                         <form className='flex flex-col gap-4'>
                             <DialogTitle className='flex justify-between items-center'>
@@ -260,6 +256,11 @@ const FilterDialog: FC<{
                                                 setValue={(date: string) =>
                                                     form.setValue('start-date', date, { shouldDirty: true })
                                                 }
+                                                fromDate={fromDate}
+                                                toDate={toDate}
+                                                disabled={(date: Date) => {
+                                                    return DateTime.fromJSDate(date) > DateTime.local();
+                                                }}
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -278,6 +279,17 @@ const FilterDialog: FC<{
                                                 clearError={() => form.clearErrors(field.name)}
                                                 setValue={(date: string) =>
                                                     form.setValue('end-date', date, { shouldDirty: true })
+                                                }
+                                                fromDate={fromDate}
+                                                toDate={toDate}
+                                                disabled={
+                                                    form.getValues('start-date')
+                                                        ? (date: Date) =>
+                                                              DateTime.fromFormat(
+                                                                  form.getValues('start-date'),
+                                                                  LuxonFormat.ISO_8601
+                                                              ) > DateTime.fromJSDate(date)
+                                                        : undefined
                                                 }
                                             />
                                         </FormControl>
