@@ -118,24 +118,28 @@ const ExploreTable = ({
     );
 
     const handleDownloadClick = useCallback(() => {
-        const nodes = exploreTableData?.nodes;
-        if (nodes) {
-            const nodeValues = Object.values(nodes)?.map((node) => {
-                const nodeClone = Object.assign({}, node);
-                const flattenedNodeClone = Object.assign(nodeClone, node.properties);
+        try {
+            const nodes = exploreTableData?.nodes;
+            if (nodes) {
+                const nodeValues = Object.values(nodes)?.map((node) => {
+                    const nodeClone = Object.assign({}, node);
+                    const flattenedNodeClone = Object.assign(nodeClone, node.properties);
 
-                delete flattenedNodeClone.properties;
+                    delete flattenedNodeClone.properties;
 
-                return flattenedNodeClone;
-            });
+                    return flattenedNodeClone;
+                });
 
-            const csv = json2csv(nodeValues, {
-                keys: exploreTableData.node_keys,
-                emptyFieldValue: '',
-                preventCsvInjection: true,
-            });
+                const csv = json2csv(nodeValues, {
+                    keys: exploreTableData.node_keys,
+                    emptyFieldValue: '',
+                    preventCsvInjection: true,
+                });
 
-            fileDownload(csv, 'nodes.csv');
+                fileDownload(csv, 'nodes.csv');
+            }
+        } catch (err) {
+            console.error('Failed to export CSV:', err);
         }
     }, [exploreTableData]);
 

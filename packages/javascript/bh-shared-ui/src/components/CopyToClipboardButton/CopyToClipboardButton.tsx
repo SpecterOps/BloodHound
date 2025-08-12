@@ -57,7 +57,6 @@ export const CopyToClipboardButton = ({
                     }
                 }}
                 aria-label='Copy to clipboard'
-                title='Copy to clipboard'
                 onAnimationEnd={(animationEvent) => {
                     const element = animationEvent.target as HTMLElement;
 
