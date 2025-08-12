@@ -11,7 +11,7 @@ import (
 const (
 	assertTableSQL = `
 create table if not exists node_change_stream (
-	id bigint generated always as identity not null,
+	id bigserial not null,
 	target_node text not null,
 	kind_ids smallint[] not null,
 	modified_properties jsonb,
@@ -27,7 +27,7 @@ create index if not exists node_change_stream_target_node_index on node_change_s
 create index if not exists node_change_stream_created_at_index on node_change_stream using btree (created_at);
 
 create table if not exists edge_change_stream (
-	id bigint generated always as identity not null,
+	id bigserial not null,
 	target_node text not null,
 	related_node text not null,
 	kind_id smallint not null,

@@ -38,7 +38,7 @@ var (
 )
 
 func test(ctx context.Context, csDaemon *changestream.Daemon) error {
-	for idx := 0; idx < 10_000; idx++ {
+	for idx := 0; idx < 100_000; idx++ {
 		var (
 			nodeObjectID   = strconv.Itoa(idx)
 			nodeProperties = graph.NewProperties()
@@ -62,7 +62,7 @@ func test(ctx context.Context, csDaemon *changestream.Daemon) error {
 
 	time.Sleep(5 * time.Second)
 
-	for idx := 0; idx < 10_000; idx++ {
+	for idx := 0; idx < 100_000; idx++ {
 		var (
 			nodeObjectID   = strconv.Itoa(idx)
 			nodeProperties = graph.NewProperties()
