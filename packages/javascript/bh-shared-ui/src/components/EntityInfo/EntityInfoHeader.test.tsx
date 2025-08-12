@@ -23,9 +23,7 @@ import { ObjectInfoPanelContext } from '../../views';
 import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
 
 const testProps: HeaderProps = {
-    expanded: true,
     name: 'testName',
-    onToggleExpanded: vi.fn(),
     nodeType: AzureNodeKind.Group,
 };
 

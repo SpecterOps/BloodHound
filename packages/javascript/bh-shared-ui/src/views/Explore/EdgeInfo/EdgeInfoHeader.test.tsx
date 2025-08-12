@@ -20,9 +20,7 @@ import { ObjectInfoPanelContext } from '../providers';
 import EdgeInfoHeader, { HeaderProps } from './EdgeInfoHeader';
 
 const testProps: HeaderProps = {
-    expanded: true,
     name: 'testName',
-    onToggleExpanded: vi.fn(),
 };
 
 const setIsObjectInfoPanelOpen = (newValue: boolean) => {
