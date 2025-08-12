@@ -284,8 +284,8 @@ func (s *Daemon) flush(ctx context.Context, now time.Time) error {
 	var (
 		numNodeChangesPending      = len(s.nodeChangeBuffer)
 		numEdgeChangesPending      = len(s.edgeChangeBuffer)
-		hasNodeChangesPendingFlush = numNodeChangesPending > 0 && numNodeChangesPending == s.lastNodeBufferWatermark
-		hasEdgeChangesPendingFlush = numEdgeChangesPending > 0 && numEdgeChangesPending == s.lastEdgeBufferWatermark
+		hasNodeChangesPendingFlush = numNodeChangesPending > 0 && (numNodeChangesPending == s.lastNodeBufferWatermark || numNodeChangesPending >= batchSize)
+		hasEdgeChangesPendingFlush = numEdgeChangesPending > 0 && (numEdgeChangesPending == s.lastEdgeBufferWatermark || numEdgeChangesPending >= batchSize)
 	)
 
 	if hasNodeChangesPendingFlush || hasEdgeChangesPendingFlush {

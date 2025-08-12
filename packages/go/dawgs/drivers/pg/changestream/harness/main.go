@@ -51,6 +51,7 @@ func test(ctx context.Context, csDaemon *changestream.Daemon) error {
 		nodeProperties.Set("objectid", nodeObjectID)
 		nodeProperties.Set("node_index", idx)
 
+		// Ingest File --> This function
 		csDaemon.Submit(ctx, changestream.NewNodeChange(
 			changestream.ChangeTypeAdd,
 			nodeObjectID,
@@ -124,13 +125,21 @@ func main() {
 		fmt.Printf("Failed to open database connection: %v\n", err)
 		os.Exit(1)
 	} else {
+		// Attempt to truncate but don't care about the error
+		dawgsDB.Run(
+			ctx,
+			`
+				do $$ declare
+					r record;
+				begin
+					for r in (select tablename from pg_tables where schemaname = 'public') loop
+						execute 'drop table if exists ' || quote_ident(r.tablename) || ' cascade';
+					end loop;
+				end $$;
+`, nil)
+
 		if err := dawgsDB.AssertSchema(ctx, schema()); err != nil {
 			fmt.Printf("Failed to validate schema: %v\n", err)
-			os.Exit(1)
-		}
-
-		if err := dawgsDB.Run(ctx, "truncate table node, edge, node_change_stream, edge_change_stream;", nil); err != nil {
-			fmt.Printf("Failed to truncate tables: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -142,7 +151,7 @@ func main() {
 		} else if csDaemon, err := changestream.NewDaemon(ctx, newFlagger(), "user=postgres dbname=bhe password=bhe4eva host=localhost", schemaManager, notificationC); err != nil {
 			fmt.Printf("Failed to create daemon: %v\n", err)
 			os.Exit(1)
-		} else if err := csDaemon.RunLoop(ctx, time.Second); err != nil {
+		} else if err := csDaemon.RunLoop(ctx, 5*time.Second); err != nil {
 			fmt.Printf("Failed to run daemon: %v\n", err)
 			os.Exit(1)
 		} else {
@@ -184,7 +193,6 @@ func main() {
 									if _, err := pool.Exec(ctx, changestream.UpdateNodeFromChangeSQL, change.TargetNodeID, encoder.EncodeInt16(kindIDs), propertyJSON); err != nil {
 										slog.ErrorContext(ctx, "failed to insert node to graph", slog.Any("error", err))
 									}
-
 
 								case changestream.ChangeTypeRemove:
 									slog.Error("not implemented")
