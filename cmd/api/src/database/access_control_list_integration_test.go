@@ -35,10 +35,11 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &suite)
 
 	newUser, err := suite.BHDatabase.CreateUser(context.Background(), model.User{
-		FirstName:     null.StringFrom("First"),
-		LastName:      null.StringFrom("Last"),
-		EmailAddress:  null.StringFrom(userPrincipal),
-		PrincipalName: userPrincipal,
+		FirstName:       null.StringFrom("First"),
+		LastName:        null.StringFrom("Last"),
+		EmailAddress:    null.StringFrom(userPrincipal),
+		PrincipalName:   userPrincipal,
+		AllEnvironments: true,
 	})
 	require.NoError(t, err)
 
@@ -51,6 +52,12 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, newUser)
 		require.NoError(t, err)
 		assert.Len(t, result, 2)
+	})
+
+	t.Run("Updating ACL disables AllEnvironments", func(t *testing.T) {
+		updatedUser, err := suite.BHDatabase.GetUser(suite.Context, newUser.ID)
+		require.NoError(t, err)
+		assert.False(t, updatedUser.AllEnvironments)
 	})
 
 	t.Run("Deleting User Removes ACL", func(t *testing.T) {

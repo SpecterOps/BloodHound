@@ -439,7 +439,6 @@ type User struct {
 	PrincipalName   string       `json:"principal_name" gorm:"unique;index"`
 	LastLogin       time.Time    `json:"last_login"`
 	IsDisabled      bool         `json:"is_disabled"`
-	ExploreEnabled  bool         `json:"explore_enabled"`
 	AllEnvironments bool         `json:"all_environments"`
 
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
@@ -460,7 +459,6 @@ func (s *User) AuditData() AuditData {
 		"sso_provider_id":  s.SSOProviderID.ValueOrZero(),
 		"is_disabled":      s.IsDisabled,
 		"eula_accepted":    s.EULAAccepted,
-		"explore_enabled":  s.ExploreEnabled,
 		"all_environments": s.AllEnvironments,
 	}
 }
