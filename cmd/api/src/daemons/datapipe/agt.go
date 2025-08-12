@@ -442,7 +442,11 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-			} else if (selector.AutoCertify.Bool && oldNode.Certified == model.AssetGroupCertificationNone) || oldNode.NodeName != displayName || oldNode.NodePrimaryKind != primaryKind || oldNode.NodeEnvironmentId != envId || oldNode.NodeObjectId != objectId {
+			} else if (selector.AutoCertify.Bool && oldNode.Certified == model.AssetGroupCertificationNone) ||
+				oldNode.NodeName != displayName ||
+				oldNode.NodePrimaryKind != primaryKind ||
+				oldNode.NodeEnvironmentId != envId ||
+				oldNode.NodeObjectId != objectId {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
