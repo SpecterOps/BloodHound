@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faCancel, faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faCopy, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 import { EntityField, cn, copyToClipboard, format } from '../../../utils';
@@ -25,7 +25,7 @@ const transitionDelay = 'delay-300';
 
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
-    if (columnKey === 'nodetype') {
+    if (columnKey === 'kind') {
         return (
             <div className='flex justify-center'>
                 <NodeIcon nodeType={value?.toString() || ''} />
@@ -36,9 +36,11 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
         return (
             <div className='flex justify-center items-center pb-1 pt-1'>
                 <FontAwesomeIcon
-                    icon={value ? faCheck : faCancel}
-                    color={value ? 'green' : 'lightgray'}
-                    className='scale-125'
+                    icon={value ? faCheck : faXmark}
+                    className={cn(
+                        'scale-125 fill-current',
+                        value ? 'text-green-600' : 'text-gray-600 dark:text-gray-400'
+                    )}
                 />
             </div>
         );
@@ -59,7 +61,7 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
     };
 
     return formattedValue ? (
-        <span className='cursor-auto'>
+        <span className='cursor-auto relative'>
             <button
                 onClick={handleCopyToClipBoard}
                 className={cn(

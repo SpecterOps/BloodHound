@@ -357,6 +357,7 @@ LICENSE_HEADERS_BY_EXTENSION = {
     ".cue": generate_license_header("//"),
     ".sql": generate_license_header("--"),
     ".toml": generate_license_header("#"),
+    ".cs":generate_license_header("//")
 }
 
 # Below is a list of valid file headers that the license must be placed after

@@ -20,7 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
 import TagForm from '.';
-import { longWait, render, screen, waitFor } from '../../../../test-utils';
+import { act, fireEvent, longWait, render, screen, waitFor, within } from '../../../../test-utils';
 
 const testTierZero = {
     id: 1,
@@ -262,7 +262,7 @@ describe('Tag Form', () => {
         );
 
         expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
-        expect(screen.queryByText(/Enable Analysis/i)).toBeInTheDocument();
+        expect(await screen.findByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
     it('renders the form for editing an existing tier', async () => {
@@ -280,7 +280,7 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
 
-        const nameInput = screen.getByLabelText('Name');
+        const nameInput = await screen.findByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
         longWait(() => {
             expect(nameInput).toHaveValue('Tier Zero');
@@ -337,11 +337,16 @@ describe('Tag Form', () => {
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '2' });
         render(<TagForm />, { route: createNewLabelPath });
 
-        await user.click(await screen.findByRole('button', { name: /Cancel/ }));
+        await act(async () => {
+            fireEvent.click(await screen.findByTestId('zone-management_save_tag-form_cancel-button'));
+        });
 
-        expect(mockNavigate).toBeCalledWith(-1);
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith(-1);
+        });
     });
 
     test('a name value is required to submit the form', async () => {
@@ -389,7 +394,7 @@ describe('Tag Form', () => {
 
         expect(screen.queryByText('Please provide a name for the tier')).not.toBeInTheDocument();
 
-        waitFor(() => {
+        await waitFor(() => {
             expect(mockNavigate).toBeCalled();
         });
     });
@@ -442,39 +447,20 @@ describe('Tag Form', () => {
         });
     });
 
-    it('disables the confirm button when dialog is opened', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
-
-        render(
-            <Routes>
-                <Route path={deletionTestsPath} element={<TagForm />} />
-            </Routes>,
-            { route: deletionTestsPath }
-        );
-
-        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
-        await user.click(deleteButton);
-
-        const confirmButton = await screen.findByRole('button', { name: 'Confirm' });
-
-        expect(confirmButton).toBeDisabled();
-    });
-
     it('disables the confirm button until user types required text', async () => {
         vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
 
-        render(
-            <Routes>
-                <Route path={deletionTestsPath} element={<TagForm />} />
-            </Routes>,
-            { route: deletionTestsPath }
-        );
+        render(<TagForm />);
 
-        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
-        await user.click(deleteButton);
+        const deleteButton = await screen.findByTestId('zone-management_save_tag-form_delete-button');
 
-        const dialog = await screen.findByRole('dialog');
-        expect(dialog).toBeInTheDocument();
+        await act(async () => {
+            fireEvent.click(deleteButton);
+        });
+
+        await waitFor(() => {
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+        });
 
         const confirmButton = screen.getByRole('button', { name: 'Confirm' });
         expect(confirmButton).toBeDisabled();
@@ -485,33 +471,35 @@ describe('Tag Form', () => {
         expect(confirmButton).toBeDisabled();
 
         await user.clear(textField);
-        await user.type(textField, 'Delete this label');
+        await user.type(textField, 'delete this label');
 
-        waitFor(() => {
-            expect(confirmButton).not.toBeDisabled();
-        });
+        expect(confirmButton).not.toHaveAttribute('disabled', true);
     });
 
-    it('open and closes the dialog with the cancel button', async () => {
+    it('opens and closes the dialog with the cancel button', async () => {
         vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
 
-        render(
-            <Routes>
-                <Route path={deletionTestsPath} element={<TagForm />} />
-            </Routes>,
-            { route: deletionTestsPath }
-        );
+        render(<TagForm />);
 
-        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
-        await user.click(deleteButton);
+        const deleteButton = await screen.findByTestId('zone-management_save_tag-form_delete-button');
 
-        const dialog = screen.getByRole('dialog');
-        expect(dialog).toBeInTheDocument();
+        await act(async () => {
+            fireEvent.click(deleteButton);
+        });
 
-        const closeButton = screen.getByRole('button', { name: /cancel/i });
-        await user.click(closeButton);
+        await waitFor(() => {
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+        });
 
-        expect(dialog).not.toBeInTheDocument();
+        const closeButton = within(screen.getByRole('dialog')).getByRole('button', { name: /cancel/i });
+
+        await act(async () => {
+            await user.click(closeButton);
+        });
+
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
     });
 
     it('open and closes dialog with confirm button after user inputs required text', async () => {
@@ -526,10 +514,13 @@ describe('Tag Form', () => {
         );
 
         const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
-        await user.click(deleteButton);
+        await act(async () => {
+            fireEvent.click(deleteButton);
+        });
 
-        const dialog = await screen.findByRole('dialog');
-        expect(dialog).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+        });
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         expect(confirmButton).toBeDisabled();
@@ -541,7 +532,7 @@ describe('Tag Form', () => {
         await user.click(confirmButton);
 
         waitFor(() => {
-            expect(dialog).not.toBeInTheDocument();
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
     });
 });
