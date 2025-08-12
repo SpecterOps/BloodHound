@@ -44,7 +44,7 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("UpdateEnvironmentListForUser", func(t *testing.T) {
-		err = suite.BHDatabase.UpdateEnvironmentListForUser(suite.Context, newUser, "1234", "1234")
+		err = suite.BHDatabase.UpdateEnvironmentListForUser(suite.Context, newUser, "1234", "123")
 		require.NoError(t, err)
 	})
 
