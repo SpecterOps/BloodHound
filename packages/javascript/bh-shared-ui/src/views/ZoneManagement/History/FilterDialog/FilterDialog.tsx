@@ -73,7 +73,7 @@ const FilterDialog: FC<{
 
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues, values: filters });
 
-    const selectClasses: (field: keyof AssetGroupTagHistoryFilters) => HTMLAttributes<'select'>['className'] =
+    const selectClasses: (field: keyof AssetGroupTagHistoryFilters) => HTMLAttributes<HTMLSelectElement>['className'] =
         useCallback(
             (fieldName: keyof AssetGroupTagHistoryFilters) => {
                 return cn(

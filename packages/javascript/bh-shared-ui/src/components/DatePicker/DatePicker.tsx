@@ -32,7 +32,7 @@ import { LuxonFormat } from '../../utils';
 interface DatePickerProps extends InputHTMLAttributes<HTMLInputElement> {
     setValue: (date: string) => void;
     label?: string;
-    labelClasses?: HTMLAttributes<'div'>['className'];
+    labelClasses?: HTMLAttributes<HTMLLabelElement>['className'];
     error?: string;
     clearError?: () => void;
     onOpenChange?: (open: boolean) => void;
@@ -86,9 +86,12 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                             />
                         </InputMask>
                         <PopoverTrigger asChild>
-                            <Button variant={'text'} className='absolute right-2 top-2 p-0 h-6'>
+                            <Button
+                                variant={'text'}
+                                className='absolute right-2 top-2 p-0 h-6'
+                                aria-label='Choose Date'>
                                 <FontAwesomeIcon
-                                    aria-describedby='Chooose Date'
+                                    aria-hidden='true'
                                     size='xl'
                                     icon={faCalendarDay}
                                     className='opacity-50 hover:opacity-100 hover:cursor-pointer transition-all'
