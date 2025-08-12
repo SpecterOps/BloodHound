@@ -69,7 +69,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		ingestSchema:        ingestSchema,
 	}
 
-	if kindMapper, err := pg.KindMapperFromGraphDatabase(connections.Graph); err != nil {
+	if kindMapper, err := pg.SchemaManagerFromGraphDatabase(connections.Graph); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting kind mapper for change stream: %v", err))
 	} else if changeStream, err := changestream.NewDaemon(ctx, connections.RDMS, cfg.Database.PostgreSQLConnectionString(), kindMapper); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error setting up change stream: %v", err))

@@ -14,8 +14,9 @@ create table if not exists node_change_stream (
 	id bigint generated always as identity not null,
 	target_node text not null,
 	kind_ids smallint[] not null,
+	modified_properties jsonb,
+	deleted_properties text[],
 	properties_hash bytea not null,
-	property_fields text[] not null,
 	change_type integer not null,
 	created_at timestamp with time zone not null,
 
@@ -30,8 +31,9 @@ create table if not exists edge_change_stream (
 	target_node text not null,
 	related_node text not null,
 	kind_id smallint not null,
+	modified_properties jsonb,
+	deleted_properties text[],
 	properties_hash bytea not null,
-	property_fields text[] not null,
 	identity_hash bytea not null,
 	change_type integer not null,
 	created_at timestamp with time zone not null,
@@ -51,9 +53,18 @@ create index if not exists edge_change_stream_created_at_index on edge_change_st
 --
 `
 
+	UpdateNodeFromChangeSQL = `update node set kind_ids = $2::int2[], properties = properties || $3::jsonb where properties ->> 'objectid' = $1::text;`
+	InsertNodeFromChangeSQL = `insert into node (graph_id, kind_ids, properties) values ($1, $2::int2[], $3::jsonb)`
+
 	insertNodeChangeSQL = `insert into node_change_stream (target_node, kind_ids, property_fields, properties_hash, change_type, created_at) select unnest($1::text[]), unnest($2::text[])::int2[], unnest($3::text[])::text[], unnest($4::bytea[]), 0, now();`
 
 	insertEdgeChangeSQL = `insert into edge_change_stream (target_node, related_node, kind_id, property_fields, properties_hash, identity_hash, change_type, created_at) select unnest($1::text[]), unnest($2::text[]), unnest($3::int2[]), unnest($4::text[])::text[], unnest($5::bytea[]), unnest($6::bytea[]), 0, now();`
+
+	selectNodeChangeRangeSQL = `select cs.change_type, cs.target_node, cs.kind_ids, cs.modified_properties, cs.deleted_properties from node_change_stream cs where cs.id > $1 order by created_at desc`
+	selectEdgeChangeRangeSQL = `select cs.change_type, cs.target_node, cs.related_node, cs.kind_id, cs.modified_properties, cs.deleted_properties from edge_change_stream cs where cs.id > $1 order by created_at desc`
+
+	latestNodeChangeSQL = `select cs.id from node_change_stream cs order by created_at desc limit 1`
+	latestEdgeChangeSQL = `select cs.id from node_change_stream cs order by created_at desc limit 1`
 
 	lastNodeChangeSQL = `select cs.properties_hash != $2, cs.change_type from node_change_stream cs where cs.target_node = $1 order by created_at desc limit 1;`
 
@@ -88,7 +99,7 @@ func edgeChangePartitionName(now time.Time) string {
 
 func shouldAssertNextPartition(lastPartitionAssert time.Time) bool {
 	var (
-		now                     = time.Now()
+		now                   = time.Now()
 		lastPartitionRangeStr = lastPartitionAssert.Format(tablePartitionRangeFormatStr)
 		nowPartitionRangeStr  = now.Format(tablePartitionRangeFormatStr)
 	)

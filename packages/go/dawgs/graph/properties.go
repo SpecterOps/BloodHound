@@ -19,9 +19,10 @@ package graph
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cespare/xxhash"
 	"sort"
 	"time"
+
+	"github.com/cespare/xxhash"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/dawgs/util/size"
@@ -247,6 +248,15 @@ type Properties struct {
 	Map      map[string]any      `json:"map"`
 	Deleted  map[string]struct{} `json:"deleted"`
 	Modified map[string]struct{} `json:"modified"`
+}
+func (s *Properties) DeletedList() []string {
+	list := make([]string, 0, len(s.Deleted))
+
+	for key := range s.Deleted {
+		list = append(list, key)
+	}
+
+	return list
 }
 
 func (s *Properties) Keys(ignoredKeys map[string]struct{}) []string {

@@ -38,10 +38,10 @@ type KindMapper interface {
 	AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
 }
 
-func KindMapperFromGraphDatabase(graphDB graph.Database) (KindMapper, error) {
+func SchemaManagerFromGraphDatabase(graphDB graph.Database) (*SchemaManager, error) {
 	switch typedGraphDB := graphDB.(type) {
 	case *graph.DatabaseSwitch:
-		return KindMapperFromGraphDatabase(typedGraphDB.InnerDB())
+		return SchemaManagerFromGraphDatabase(typedGraphDB.InnerDB())
 	case *Driver:
 		return typedGraphDB.SchemaManager, nil
 	default:
