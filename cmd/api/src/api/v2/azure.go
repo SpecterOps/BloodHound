@@ -179,13 +179,6 @@ func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, 
 			return bloodhoundgraph.PathSetToBloodHoundGraph(objectControl), objectControl.Len(), nil
 		}
 
-	case azure.RelatedEntityTypeGrants:
-		if grants, err := azure.ListEntityGrantsPaths(ctx, db, objectID); err != nil {
-			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
-		} else {
-			return bloodhoundgraph.PathSetToBloodHoundGraph(grants), grants.Len(), nil
-		}
-
 	default:
 		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", entityType), request)
 	}
@@ -266,11 +259,6 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 
 	case azure.RelatedEntityTypeOutboundAbusableAppRoleAssignments:
 		if nodeSet, err = azure.ListEntityAbusableAppRoleAssignments(ctx, db, objectID, graph.DirectionOutbound, 0, 0); err != nil {
-			return nil, 0, err
-		}
-
-	case azure.RelatedEntityTypeOutboundAbusablePermissionGrants:
-		if nodeSet, err = azure.ListEntityAbusablePermissionGrants(ctx, db, objectID, graph.DirectionOutbound, 0, 0); err != nil {
 			return nil, 0, err
 		}
 

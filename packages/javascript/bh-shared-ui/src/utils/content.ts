@@ -436,11 +436,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 label: 'Inbound Abusable App Role Assignments',
                 queryType: 'azserviceprincipal-inbound_abusable_app_role_assignments',
             },
-            {
-                id,
-                label: 'Abusable Permission Grants',
-                queryType: 'azserviceprincipal-outbound_abusable_permission_grants',
-            },
         ];
         if (id === '00000003-0000-0000-C000-000000000000') {
             const OutboundAbusableAppRoleAssignmentsProp: EntityInfoDataTableProps = {
@@ -641,11 +636,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'azuser-inbound_object_control',
         },
-        {
-            id,
-            label: 'Grants',
-            queryType: 'azuser-grants',
-        }
     ],
     [AzureNodeKind.VM]: (id: string) => [
         {
@@ -1367,21 +1357,6 @@ export const entityRelationshipEndpoints = {
                 }
             )
             .then((res) => res.data),
-    'azserviceprincipal-outbound_abusable_permission_grants': ({ id, counts, skip, limit, type }) =>
-        apiClient
-            .getAZEntityInfoV2(
-                'service-principals',
-                id,
-                'outbound-abusable-permission-grants',
-                counts,
-                skip,
-                limit,
-                type,
-                {
-                    signal: controller.signal,
-                }
-            )
-            .then((res) => res.data),
     'azsubscription-descendant_objects-descendant_resource_groups': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('subscriptions', id, 'descendent-resource-groups', counts, skip, limit, type, {
@@ -1581,10 +1556,6 @@ export const entityRelationshipEndpoints = {
     'azuser-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'inbound-control', counts, skip, limit, type, { signal: controller.signal })
-            .then((res) => res.data),
-    'azuser-grants': ({ id, counts, skip, limit, type }) =>
-        apiClient
-            .getAZEntityInfoV2('users', id, 'grants', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'azvm-local_admins': ({ id, counts, skip, limit, type }) =>
         apiClient

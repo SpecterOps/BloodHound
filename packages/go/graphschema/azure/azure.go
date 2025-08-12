@@ -1087,6 +1087,7 @@ func (s Property) Is(others ...graph.Kind) bool {
 	}
 	return false
 }
+
 func Relationships() []graph.Kind {
 	return []graph.Kind{
 		AvereContributor,

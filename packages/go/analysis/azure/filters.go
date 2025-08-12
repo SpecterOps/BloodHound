@@ -58,20 +58,12 @@ func FilterControlsRelationships() graph.Criteria {
 	return query.KindIn(query.Relationship(), append(azure.ControlRelationships(), azure.MemberOf, azure.Contains)...)
 }
 
-func FilterPermissionGrantRelationships() graph.Criteria {
-	return query.KindIn(query.Relationship(), azure.AbusablePermissionGrantRelationshipKinds()...)
-}
-
 func FilterAppRoleAssignmentTransitRelationships() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.AppRoleTransitRelationshipKinds()...)
 }
 
 func FilterAbusableAppRoleAssignmentRelationships() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.AbusableAppRoleRelationshipKinds()...)
-}
-
-func FilterAbusablePermissionGrantRelationships() graph.Criteria {
-	return query.KindIn(query.Relationship(), azure.AbusablePermissionGrantRelationshipKinds()...)
 }
 
 func FilterGroupMembership() graph.Criteria {

@@ -41,11 +41,9 @@ const (
 	RelatedEntityTypeInboundExecutionPrivileges         RelatedEntityType = "inbound-execution-privileges"
 	RelatedEntityTypeOutboundExecutionPrivileges        RelatedEntityType = "outbound-execution-privileges"
 	RelatedEntityTypeOutboundAbusableAppRoleAssignments RelatedEntityType = "outbound-abusable-app-role-assignments"
-	RelatedEntityTypeOutboundAbusablePermissionGrants   RelatedEntityType = "outbound-abusable-permission-grants"
 	RelatedEntityTypeInboundAbusableAppRoleAssignments  RelatedEntityType = "inbound-abusable-app-role-assignments"
 	RelatedEntityTypeOutboundControl                    RelatedEntityType = "outbound-control"
 	RelatedEntityTypeInboundControl                     RelatedEntityType = "inbound-control"
-	RelatedEntityTypeGrants                             RelatedEntityType = "grants"
 	RelatedEntityTypeDescendentUsers                    RelatedEntityType = "descendent-users"
 	RelatedEntityTypeDescendentGroups                   RelatedEntityType = "descendent-groups"
 	RelatedEntityTypeDescendentManagementGroups         RelatedEntityType = "descendent-management-groups"
@@ -234,7 +232,6 @@ type ServicePrincipalDetails struct {
 	OutboundObjectControl              int `json:"outbound_object_control"`
 	InboundAbusableAppRoleAssignments  int `json:"inbound-abusable-app-role-assignments"`
 	OutboundAbusableAppRoleAssignments int `json:"outbound-abusable-app-role-assignments"`
-	OutboundAbusablePermissionGrants   int `json:"outbound-abusable-permission-grants"`
 }
 
 type RoleDetails struct {
