@@ -174,6 +174,9 @@ type Database interface {
 
 	// Source Kinds
 	SourceKindsData
+
+	// Access Control List
+	EnvironmentAccessControlData
 }
 
 type BloodhoundDB struct {
