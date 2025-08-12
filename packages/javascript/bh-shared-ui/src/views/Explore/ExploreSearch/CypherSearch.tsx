@@ -288,7 +288,9 @@ const CypherSearch = ({
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
                         {privilegeZoneAnalysisEnabled && (
-                            <TagToZoneLabel selectedQuery={selectedQuery}></TagToZoneLabel>
+                            <TagToZoneLabel
+                                selectedQuery={selectedQuery}
+                                cypherSearchState={cypherSearchState}></TagToZoneLabel>
                         )}
 
                         <Button

@@ -6,10 +6,13 @@ import TagToZoneDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {
     selectedQuery: QueryLineItem | undefined;
+    cypherSearchState: any;
 };
 
 const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
-    const { selectedQuery } = props;
+    const { selectedQuery, cypherSearchState } = props;
+    const { cypherQuery } = cypherSearchState;
+
     const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
     const [tagToZoneOpen, setTagToZoneOpen] = useState(false);
@@ -33,7 +36,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
     return (
         <>
             <Popover>
-                <PopoverTrigger disabled={!selectedQuery}>
+                <PopoverTrigger disabled={!selectedQuery && !cypherQuery}>
                     <Button variant='secondary' asChild size='small'>
                         <div>
                             <span className='mr-2 text-base'>Tag</span>
@@ -55,6 +58,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                 setDialogOpen={handleSetOpen}
                 isLabel={isLabel}
                 selectedQuery={selectedQuery}
+                cypherSearchState={cypherSearchState}
             />
         </>
     );

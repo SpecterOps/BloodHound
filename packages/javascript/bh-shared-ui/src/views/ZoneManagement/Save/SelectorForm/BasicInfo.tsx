@@ -38,7 +38,7 @@ import {
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
@@ -73,7 +73,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTag(tagId);
             return response.data.data['tag'];
-        }
+        },
         enabled: tagId !== '',
     });
 

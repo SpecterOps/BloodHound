@@ -24,11 +24,12 @@ type TagToZoneDialogProps = {
     dialogOpen: boolean;
     selectedQuery: QueryLineItem | undefined;
     isLabel: boolean;
+    cypherSearchState: any;
     setDialogOpen: (isOpen: boolean) => void;
 };
 
 const TagToZoneDialog = (props: TagToZoneDialogProps) => {
-    const { dialogOpen, selectedQuery, isLabel, setDialogOpen } = props;
+    const { dialogOpen, selectedQuery, isLabel, cypherSearchState, setDialogOpen } = props;
     const navigate = useNavigate();
 
     const AssetGroupTagTypeTier = 1 as const;
@@ -47,12 +48,14 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
         isLabel ? setLabel(val) : setZone(val);
     };
 
+    const stateToPass = cypherSearchState.cypherQuery ? { query: cypherSearchState.cypherQuery } : selectedQuery;
+
     const onContinue = () => {
         //TODO - use the const for this path
         if (isLabel) {
-            navigate(`/zone-management/save/label/${label}/selector`, { state: selectedQuery });
+            navigate(`/zone-management/save/label/${label}/selector`, { state: stateToPass });
         } else {
-            navigate(`/zone-management/save/tier/${zone}/selector`, { state: selectedQuery });
+            navigate(`/zone-management/save/tier/${zone}/selector`, { state: stateToPass });
         }
     };
 
