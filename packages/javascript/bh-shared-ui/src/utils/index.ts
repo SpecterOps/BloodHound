@@ -16,6 +16,7 @@
 
 export * from './abbreviatedNumber';
 export * from './api';
+export * from './array';
 export * from './colors';
 export * from './compatibility';
 export * from './content';

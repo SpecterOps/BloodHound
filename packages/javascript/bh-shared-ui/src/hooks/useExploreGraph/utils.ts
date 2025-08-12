@@ -27,13 +27,6 @@ export const mapParamsToFilters = (params: string[], initial: EdgeCheckboxType[]
     }));
 };
 
-export const compareEdgeTypes = (initial: string[], comparison: string[]): boolean => {
-    const a = initial.slice(0).sort();
-    const b = comparison.slice(0).sort();
-
-    return a.length === b.length && a.every((item, index) => item === b[index]);
-};
-
 // Create a list of all edge types to initialize pathfinding filter state
 export const getInitialPathFilters = (): EdgeCheckboxType[] => {
     const initialPathFilters: EdgeCheckboxType[] = [];
