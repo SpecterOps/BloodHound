@@ -104,13 +104,13 @@ describe('ExploreTable', async () => {
         expect(screen.getByText('S-1-5-21-2697957641-2271029196-387917394-2201')).toBeInTheDocument();
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
     });
-    it('Manage Columns allow user to change columns', async () => {
+    it('"Columns" button allows user to edit column settings', async () => {
         const { user } = await setup();
 
         // await for results to return
         await screen.findByText('10 results');
 
-        const manageColumnsButton = screen.getByRole('button', { name: 'Manage Columns' });
+        const manageColumnsButton = screen.getByRole('button', { name: 'Columns' });
         expect(screen.queryByText('Domain FQDN')).not.toBeInTheDocument();
         expect(screen.queryByText('Admin Count')).not.toBeInTheDocument();
 
@@ -141,25 +141,32 @@ describe('ExploreTable', async () => {
         // Unsorted first display name cell
         expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
-        await user.click(screen.getByText('Name'));
-
         // Alphabetically sorted first display name cell
+        await user.click(screen.getByText('Name'));
         expect(getFirstCellOfType('label')).toHaveTextContent('ADMINISTRATOR@GHOST.CORP');
 
-        await user.click(screen.getByText('Name'));
-
         // Reverse Alphabetically sorted first display name cell
+        await user.click(screen.getByText('Name'));
         expect(getFirstCellOfType('label')).toHaveTextContent('ZZZIGNE@PHANTOM.CORP');
 
-        await user.click(screen.getByText('Object ID'));
+        // Reset to unsorted
+        await user.click(screen.getByText('Name'));
+        expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
+
+        // Unsorted first object id cell
+        expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
 
         // Descending sorted first object id cell
+        await user.click(screen.getByText('Object ID'));
         expect(getFirstCellOfType('objectId')).toHaveTextContent('PHANTOM.CORP-S-1-5-20');
 
-        await user.click(screen.getByText('Object ID'));
-
         // Ascending sorted first object id cell
+        await user.click(screen.getByText('Object ID'));
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2845847946-3451170323-4261139666-1106');
+
+        // Reset to unsorted
+        await user.click(screen.getByText('Object ID'));
+        expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
     });
 
     it('Expand button causes table to expand to full height', async () => {
