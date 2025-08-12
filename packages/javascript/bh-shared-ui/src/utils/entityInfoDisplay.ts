@@ -95,15 +95,15 @@ const activeDirectoryKindPropertiesMap = Object.fromEntries(
     Object.values(ActiveDirectoryKindProperties).map((value) => [value, true])
 );
 const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
-    return activeDirectoryKindPropertiesMap[enumValue];
+    return !!activeDirectoryKindPropertiesMap[enumValue];
 };
 
 const azureKindPropertiesMap = Object.fromEntries(Object.values(AzureKindProperties).map((value) => [value, true]));
 const isAzureProperty = (enumValue: AzureKindProperties): boolean => {
-    return azureKindPropertiesMap[enumValue];
+    return !!azureKindPropertiesMap[enumValue];
 };
 
-const commonKindPropertiesMap = Object.fromEntries(Object.values(AzureKindProperties).map((value) => [value, true]));
+const commonKindPropertiesMap = Object.fromEntries(Object.values(CommonKindProperties).map((value) => [value, true]));
 const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
     return commonKindPropertiesMap[enumValue];
 };
