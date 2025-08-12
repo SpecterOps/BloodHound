@@ -53,7 +53,7 @@ describe('EdgeInfoHeader', async () => {
     it('should render', async () => {
         const { screen } = await setup();
 
-        const collapsePanelButton = screen.getByRole('button', { name: /minus/i });
+        const collapsePanelButton = screen.getByRole('button', { name: /remove/i });
         const edgeTitle = screen.getByRole('heading');
         const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
 
