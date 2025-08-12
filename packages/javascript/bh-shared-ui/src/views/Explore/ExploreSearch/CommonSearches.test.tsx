@@ -14,8 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { render, waitForElementToBeRemoved } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import CommonSearches from './CommonSearches';
 
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
@@ -44,7 +48,14 @@ const server = setupServer(
     rest.get('/api/v2/features', async (req, res, ctx) => {
         return res(
             ctx.json({
-                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+                data: [{ id: 16, key: 'tier_management_engine', enabled: true }],
+            })
+        );
+    }),
+    rest.get('/api/v2/self', async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { id: '4e09c965-65bd-4f15-ae71-5075a6fed14b' },
             })
         );
     })
@@ -57,85 +68,215 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+const queryClient = new QueryClient();
+
 describe('CommonSearches', () => {
-    // it('renders headers', async () => {
-    //     const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
-    //     await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-    //     const header = screen.getByText(/pre-built searches/i);
-    //     const adTab = screen.getByRole('tab', { name: /active directory/i });
-    //     const azTab = screen.getByRole('tab', { name: /azure/i });
-    //     const userTab = screen.getByRole('tab', { name: /custom searches/i });
-    //     expect(header).toBeInTheDocument();
-    //     expect(adTab).toBeInTheDocument();
-    //     expect(azTab).toBeInTheDocument();
-    //     expect(userTab).toBeInTheDocument();
-    //     expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Active Directory');
-    // });
-    // it('renders search list for the currently active tab', async () => {
-    //     const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
-    //     await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-    //     const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
-    //     const subheadersForAD = adSearches.map((element) => element.subheader);
-    //     subheadersForAD.forEach((subheader) => {
-    //         expect(screen.getByText(subheader)).toBeInTheDocument();
-    //     });
-    // });
-    // it('renders a different list of queries when user switches tab', async () => {
-    //     const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
-    //     await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-    //     const user = userEvent.setup();
-    //     // switch tabs to AZ
-    //     const azureTab = screen.getByRole('tab', { name: /azure/i });
-    //     await user.click(azureTab);
-    //     const azSearches = prebuiltSearchList.filter(({ category }) => category === 'Azure');
-    //     const subheadersForAZ = azSearches.map((element) => element.subheader);
-    //     subheadersForAZ.forEach((subheader) => {
-    //         expect(screen.getByText(subheader)).toBeInTheDocument();
-    //     });
-    // });
-    // it(`fetches a user's saved queries when the 'custom searches' tab is clicked`, async () => {
-    //     const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
-    //     await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-    //     const user = userEvent.setup();
-    //     // switch tabs to user searches
-    //     const userTab = screen.getByRole('tab', { name: /custom searches/i });
-    //     await user.click(userTab);
-    //     const queries = screen.getAllByRole('button', { name: /me save a query/i });
-    //     expect(queries).toHaveLength(2);
-    // });
-    // it('handles a click on each list item', async () => {
-    //     const onSetCypherQueryMock = vi.fn();
-    //     const onPerformCypherSearchMock = vi.fn();
-    //     const screen = render(
-    //         <CommonSearches onSetCypherQuery={onSetCypherQueryMock} onPerformCypherSearch={onPerformCypherSearchMock} />
-    //     );
-    //     await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-    //     const user = userEvent.setup();
-    //     const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
-    //     const { cypher, description } = adSearches[0].queries[0];
-    //     const listItem = screen.getByRole('button', { name: description });
-    //     expect(listItem).toBeInTheDocument();
-    //     await user.click(listItem);
-    //     expect(onSetCypherQueryMock).toHaveBeenCalledTimes(1);
-    //     expect(onPerformCypherSearchMock).toHaveBeenCalledTimes(1);
-    //     expect(onSetCypherQueryMock).toHaveBeenCalledWith(cypher);
-    // });
-    // it('deletes a query that a user has saved', async () => {
-    //     const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
-    //     await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-    //     const spy = vi.spyOn(apiClient, 'deleteUserQuery');
-    //     const user = userEvent.setup();
-    //     // switch tabs to user searches
-    //     const userTab = screen.getByRole('tab', { name: /custom searches/i });
-    //     await user.click(userTab);
-    //     const deleteButtons = screen.getAllByRole('button', { name: /delete query/i });
-    //     await user.click(deleteButtons[0]);
-    //     // verify confirmation dialog appears
-    //     const deleteConfirmationDialog = screen.getByRole('dialog', { name: /delete query/i });
-    //     expect(deleteConfirmationDialog).toBeInTheDocument();
-    //     const confirmDeleteButton = screen.getByRole('button', { name: /confirm/i });
-    //     await user.click(confirmDeleteButton);
-    //     expect(spy).toHaveBeenCalledTimes(1);
-    //     expect(spy).toHaveBeenCalledWith(1);
-    // });
+    it('renders headers', async () => {
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={true}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+
+        //wait for loading to complete
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
+        await waitForElementToBeRemoved(() => screen.getByTestId('common-searches-skeleton'));
+
+        const header = screen.getByText(/Pre-built Queries/i);
+        expect(header).toBeInTheDocument();
+    });
+
+    it('should display filter dropwdowns', async () => {
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={true}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+
+        const platformLabel = await screen.findByLabelText(/platforms/i);
+        const categoriesLabel = await screen.findByLabelText(/categories/i);
+        const sourceLabel = await screen.findByLabelText(/source/i);
+        expect(platformLabel).toBeInTheDocument();
+        expect(categoriesLabel).toBeInTheDocument();
+        expect(sourceLabel).toBeInTheDocument();
+    });
+
+    it('renders a filter search and platform dropdown menu', async () => {
+        const user = userEvent.setup();
+
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={false}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+
+        const testSearch = await screen.findByPlaceholderText('Search');
+        expect(testSearch).toBeInTheDocument();
+        expect(testSearch).toHaveValue('');
+        const testPlatforms = await screen.findByLabelText(/platform/i);
+        expect(testPlatforms).toBeInTheDocument();
+        await user.click(testPlatforms);
+        const testListBox = await screen.findByRole('listbox');
+        expect(testListBox).toBeInTheDocument();
+        expect(testListBox).toBeVisible();
+
+        const ulElement = testListBox;
+        expect(ulElement.children).toHaveLength(4);
+
+        await user.click(ulElement.children[0]);
+
+        expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
+    });
+
+    it('displays correct content based on platform filter Azure', async () => {
+        const user = userEvent.setup();
+
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={false}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+
+        const testPlatforms = await screen.findByLabelText(/platform/i);
+        expect(testPlatforms).toBeInTheDocument();
+        await user.click(testPlatforms);
+        const testListBox = await screen.findByRole('listbox');
+        expect(testListBox).toBeInTheDocument();
+        expect(testListBox).toBeVisible();
+
+        const ulElement = testListBox;
+        expect(ulElement.children).toHaveLength(4);
+
+        //select Azure
+        await user.click(ulElement.children[2]);
+
+        //Azure query present
+        expect(screen.getByText(/All members of high privileged roles/i)).toBeInTheDocument();
+
+        //AD query not present
+        const adText = screen.queryByText(/all domain admins/i);
+        expect(adText).toBeNull();
+    });
+
+    it('displays correct content based on platform filter AD', async () => {
+        const user = userEvent.setup();
+
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={false}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+
+        const testPlatforms = await screen.findByLabelText(/platform/i);
+        expect(testPlatforms).toBeInTheDocument();
+        await user.click(testPlatforms);
+        const testListBox = await screen.findByRole('listbox');
+        const ulElement = testListBox;
+        expect(ulElement.children).toHaveLength(4);
+
+        //select AD
+        await user.click(ulElement.children[1]);
+
+        //AD query present
+        expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
+
+        //Axure query not present
+        const adText = screen.queryByText(/All members of high privileged roles/i);
+        expect(adText).toBeNull();
+    });
+
+    it('handles list item click event', async () => {
+        const user = userEvent.setup();
+        const handleSetSelected = vi.fn();
+
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={handleSetSelected}
+                    onToggleCommonQueries={vi.fn()}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={false}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+
+        const testListItem = screen.getByText(/all domain admins/i);
+        await user.click(testListItem);
+        expect(handleSetSelected).toBeCalled;
+        expect(handleSetSelected).toBeCalledTimes(1);
+    });
+
+    //Toggle switch - test visibility
+    it('handles chevron click event', async () => {
+        const user = userEvent.setup();
+        const handleToggle = vi.fn();
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onSetSelected={vi.fn()}
+                    onToggleCommonQueries={handleToggle}
+                    onEditQuery={vi.fn()}
+                    selected={{ query: '', id: 1 }}
+                    showCommonQueries={true}
+                    selectedQuery={undefined}
+                />
+            </QueryClientProvider>
+        );
+        const queriesToggle = screen.getByTestId('common-queries-toggle');
+        await user.click(queriesToggle);
+        expect(handleToggle).toBeCalled();
+        expect(handleToggle).toBeCalledTimes(1);
+        expect(screen.getByText(/chevron-down/i)).toBeInTheDocument();
+    });
 });

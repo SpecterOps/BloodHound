@@ -16,7 +16,7 @@ export const usePrebuiltQueries = () => {
             name: query.name,
             description: query.description,
             query: query.query,
-            canEdit: query.user_id === getSelf.data.id, //TODO - handle permissions for shared / public
+            canEdit: query.user_id === getSelf.data.id,
             id: query.id,
             user_id: query.user_id,
         })) || [];

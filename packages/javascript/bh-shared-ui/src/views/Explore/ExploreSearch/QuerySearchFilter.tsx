@@ -150,13 +150,13 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         </Select>
                     </FormControl>
                     <FormControl size='small' className='w-full ml-2'>
-                        <InputLabel id='category-filter-label'>Source</InputLabel>
+                        <InputLabel id='source-filter-label'>Source</InputLabel>
 
                         <Select
                             labelId='source-filter-label'
                             id='source-filter'
                             value={source || ''}
-                            label='sources'
+                            label='source'
                             open={sourcesOpen}
                             onOpen={() => setSourcesOpen(true)}
                             onClose={() => setSourcesOpen(false)}

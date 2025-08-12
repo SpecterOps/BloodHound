@@ -60,7 +60,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 
     const styles = useStyles();
     const itemRef = useRef<HTMLDivElement>(null);
-    console.log(listSections);
 
     const handleClose = () => {
         setOpen(false);
@@ -102,7 +101,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     return (
         <>
             {listSections && (
-                <div>
+                <div data-testid='list-sections'>
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
                         <div key={category} className='relative'>
                             {!!queryData[0].queries.length && (

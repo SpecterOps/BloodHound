@@ -100,7 +100,7 @@ describe('CypherSearch', () => {
         const { screen, user, state } = await setup();
         await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
         const searchbox = screen.getAllByRole('textbox');
-        const run = screen.getByRole('button', { name: /run/ });
+        const run = screen.getByRole('button', { name: /run/i });
 
         await user.type(searchbox[0], CYPHER);
         await user.click(run);

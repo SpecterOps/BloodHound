@@ -97,13 +97,15 @@ const InnerCommonSearches = ({
             },
         });
     };
+
     if (userQueries.isLoading) {
         return (
-            <Box mt={2}>
+            <Box mt={2} data-testid='common-searches-skeleton'>
                 <Skeleton />
             </Box>
         );
     }
+
     const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
         setSearchTerm(searchTerm);
         setPlatform(platform);
@@ -173,11 +175,9 @@ const InnerCommonSearches = ({
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
-                <FontAwesomeIcon
-                    className='px-2 mr-2'
-                    icon={showCommonQueries ? faChevronDown : faChevronUp}
-                    onClick={onToggleCommonQueries}
-                />
+                <button onClick={onToggleCommonQueries} data-testid='common-queries-toggle'>
+                    <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
+                </button>
                 <h5 className='my-4 font-bold text-lg'>Pre-built Queries</h5>
             </div>
 
