@@ -15,9 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import fileDownload from 'js-file-download';
+import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
-import { cn, exportToJson } from '../../utils';
+import { cn } from '../../utils';
 import TableControls from './TableControls';
 import {
     DEFAULT_PINNED_COLUMN_KEYS,
@@ -66,7 +68,7 @@ const ExploreTable = ({
     selectedColumns = defaultColumns,
 }: ExploreTableProps) => {
     const { data: graphData } = useExploreGraph();
-    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
@@ -104,20 +106,42 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
-    const handleDownloadClick = useCallback(() => {
-        if (exploreTableData?.nodes) {
-            exportToJson({ nodes: exploreTableData?.nodes });
-        }
-    }, [exploreTableData?.nodes]);
-
     const handleRowClick = useCallback(
         (row: MungedTableRowWithId) => {
             if (row.id !== selectedItem) {
                 setSelectedItem(row.id);
+            } else {
+                clearSelectedItem();
             }
         },
-        [setSelectedItem, selectedItem]
+        [setSelectedItem, selectedItem, clearSelectedItem]
     );
+
+    const handleDownloadClick = useCallback(() => {
+        try {
+            const nodes = exploreTableData?.nodes;
+            if (nodes) {
+                const nodeValues = Object.values(nodes)?.map((node) => {
+                    const nodeClone = Object.assign({}, node);
+                    const flattenedNodeClone = Object.assign(nodeClone, node.properties);
+
+                    delete flattenedNodeClone.properties;
+
+                    return flattenedNodeClone;
+                });
+
+                const csv = json2csv(nodeValues, {
+                    keys: exploreTableData.node_keys,
+                    emptyFieldValue: '',
+                    preventCsvInjection: true,
+                });
+
+                fileDownload(csv, 'nodes.csv');
+            }
+        } catch (err) {
+            console.error('Failed to export CSV:', err);
+        }
+    }, [exploreTableData]);
 
     return (
         <div
