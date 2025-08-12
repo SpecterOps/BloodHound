@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS environment_access_control (
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     environment TEXT NOT NULL,
     created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    CONSTRAINT environment_access_control_user_env_key UNIQUE (user_id, environment),
+    CONSTRAINT environment_not_blank CHECK (btrim(environment) <> '')
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS all_environments BOOL DEFAULT TRUE;
-
-CREATE INDEX IF NOT EXISTS idx_environment_access_control_user_id ON environment_access_control USING HASH (user_id);
