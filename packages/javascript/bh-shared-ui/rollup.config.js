@@ -55,6 +55,7 @@ export default {
         'history',
         'immer',
         'immutable',
+        'json-2-csv',
         'js-client-library',
         'js-file-download',
         'lodash/capitalize',

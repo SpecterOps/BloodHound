@@ -44,6 +44,7 @@
         "js-client-library": "workspace:*",
         "js-cookie": "^3.0.1",
         "js-file-download": "^0.4.12",
+        "json-2-csv": "^5.5.9",
         "lodash": "^4.17.21",
         "luxon": "^3.3.0",
         "memoize-one": "^6.0.0",

@@ -5177,6 +5177,7 @@ __metadata:
     js-cookie: ^3.0.1
     js-file-download: ^0.4.12
     jsdom: ^20.0.2
+    json-2-csv: ^5.5.9
     lint-staged: ^10.5.4
     lodash: ^4.17.21
     luxon: ^3.3.0
