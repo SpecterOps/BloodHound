@@ -1,0 +1,12 @@
+[Unit]
+Description=BloodHound CE
+After=network.target postgresql@17-main.service
+
+[Service]
+Type=simple
+User=bloodhound
+ExecStart=/usr/lib/bloodhound/bin/bhapi -configfile /etc/bloodhound/bhapi.json
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
