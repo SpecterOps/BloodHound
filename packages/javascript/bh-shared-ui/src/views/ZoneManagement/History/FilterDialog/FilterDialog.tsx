@@ -227,11 +227,16 @@ const FilterDialog: FC<{
 
                                                                 return hasPermission;
                                                             })
+                                                            .sort((a, b) =>
+                                                                (a.email_address || a.principal_name).localeCompare(
+                                                                    b.email_address || b.principal_name
+                                                                )
+                                                            )
                                                             ?.map((user) => (
                                                                 <SelectItem
                                                                     key={user.id}
                                                                     value={user.email_address || user.id}>
-                                                                    {user.email_address}
+                                                                    {user.email_address || user.principal_name}
                                                                 </SelectItem>
                                                             ))}
                                                     </SelectContent>
