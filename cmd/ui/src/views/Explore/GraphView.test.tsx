@@ -18,7 +18,6 @@ import { cypherTestResponse } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { createFeatureFlags } from 'src/mocks/factories/featureFlags';
 import { render, screen, waitFor } from 'src/test-utils';
 import GraphView from './GraphView';
 
@@ -26,13 +25,6 @@ const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherTestResponse));
     }),
-    rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(
-            ctx.status(200),
-            ctx.json({ data: createFeatureFlags([{ key: 'explore_table_view', enabled: true }]) })
-        );
-    }),
-
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),

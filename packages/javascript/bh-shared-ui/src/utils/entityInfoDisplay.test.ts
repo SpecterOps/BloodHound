@@ -17,6 +17,8 @@
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../graphSchema';
 import {
     ADSpecificTimeProperties,
+    AD_NEVER_VALUE,
+    AD_UNKNOWN_VALUE,
     DATE_FIELDS,
     EntityField,
     formatADSpecificTime,
@@ -30,17 +32,17 @@ import {
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
     test('whencreated', () => {
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
-        expect(formatADSpecificTime(0, ADSpecificTimeProperties.WHEN_CREATED)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(AD_UNKNOWN_VALUE);
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(AD_UNKNOWN_VALUE);
         expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.WHEN_CREATED)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
     });
     test('lastlogon, lastlogontimestamp', () => {
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON)).toEqual('NEVER');
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('NEVER');
-        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON)).toEqual('UNKNOWN');
-        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual('UNKNOWN');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON)).toEqual(AD_NEVER_VALUE);
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual(AD_NEVER_VALUE);
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON)).toEqual(AD_UNKNOWN_VALUE);
+        expect(formatADSpecificTime(0, ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP)).toEqual(AD_UNKNOWN_VALUE);
         expect(formatADSpecificTime(1694549003, ADSpecificTimeProperties.LAST_LOGON)).toEqual(
             '2023-09-12 13:03 PDT (GMT-0700)'
         );
@@ -49,7 +51,7 @@ describe('Handling value formatting for Active Directory entity properties lastl
         );
     });
     test('pwdlastset', () => {
-        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual('NEVER');
+        expect(formatADSpecificTime(-1, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual(AD_NEVER_VALUE);
         expect(formatADSpecificTime(0, ADSpecificTimeProperties.PASSWORD_LAST_SET)).toEqual(
             'ACCOUNT CREATED BUT NO PASSWORD SET'
         );
@@ -72,7 +74,7 @@ describe('Formatting number properties', () => {
     });
 
     it('handles specific Active Directory properties differently than Azure derived properties', () => {
-        expect(formatNumber(0, 'ad', 'whencreated')).toEqual('UNKNOWN');
+        expect(formatNumber(0, 'ad', 'whencreated')).toEqual(AD_UNKNOWN_VALUE);
         //A value of 0 will not be held by azure property whencreated but this demonstrated handling the values differently
         expect(formatNumber(0, 'az', 'whencreated')).toEqual('0');
     });
