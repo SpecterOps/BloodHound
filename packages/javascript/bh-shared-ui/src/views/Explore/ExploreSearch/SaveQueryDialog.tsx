@@ -43,7 +43,7 @@ import { useQuery } from 'react-query';
 import { graphSchema } from '../../../constants';
 import { QueryLineItem } from '../../../types';
 import { apiClient, cn } from '../../../utils';
-import ConfirmUpdateQueryDialog from './ConfirmSaveQueryDialog';
+import ConfirmUpdateQueryDialog from './ConfirmUpdateQueryDialog';
 import SavedQueryPermissions from './SavedQueryPermissions';
 type CypherSearchState = {
     cypherQuery: string;

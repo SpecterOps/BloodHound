@@ -329,7 +329,6 @@ const CypherSearch = ({
 
             <SaveQueryDialog
                 open={showSaveQueryDialog}
-                isLoading={updateSavedQueryMutation.isLoading}
                 error={createSavedQueryMutation.error}
                 cypherSearchState={cypherSearchState}
                 selectedQuery={selectedQuery}

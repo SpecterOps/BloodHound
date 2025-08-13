@@ -137,8 +137,6 @@ describe('CypherSearch', () => {
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {
         const { screen, user, state } = await setup();
         const searchbox = screen.getAllByRole('textbox');
-        // screen.debug(searchbox[0]);
-
         await user.type(searchbox[0], CYPHER);
         expect(state.setCypherQuery).toBeCalled();
         expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);

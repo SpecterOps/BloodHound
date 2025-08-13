@@ -14,46 +14,46 @@
 // //
 // // SPDX-License-Identifier: Apache-2.0
 
-// import { CommonSearches } from './commonSearchesAGI';
-// import {
-//     ActiveDirectoryNodeKind,
-//     ActiveDirectoryRelationshipKind,
-//     AzureNodeKind,
-//     AzureRelationshipKind,
-// } from './graphSchema';
-// import { CommonSearchType } from './types';
+import { CommonSearches } from './commonSearchesAGI';
+import {
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    AzureNodeKind,
+    AzureRelationshipKind,
+} from './graphSchema';
+import { CommonSearchType } from './types';
 
-// describe('common search list', () => {
-//     const kindPattern = /:([^ )\]*]+)/gm;
+describe('common search list', () => {
+    const kindPattern = /:([^ )\]*]+)/gm;
 
-//     test('the queries in the list only include nodes and edges that are defined in our schema', () => {
-//         CommonSearches.forEach((commonSearchType: CommonSearchType) => {
-//             commonSearchType.queries.forEach((query) => {
-//                 const kinds = query.cypher.match(kindPattern);
+    test('the queries in the list only include nodes and edges that are defined in our schema', () => {
+        CommonSearches.forEach((commonSearchType: CommonSearchType) => {
+            commonSearchType.queries.forEach((query) => {
+                const kinds = query.query.match(kindPattern);
 
-//                 if (kinds) {
-//                     kinds.forEach((result) => {
-//                         result
-//                             .slice(1)
-//                             .split('|')
-//                             .forEach((kind) => {
-//                                 const isADNode = Object.values(ActiveDirectoryNodeKind).includes(
-//                                     kind as ActiveDirectoryNodeKind
-//                                 );
-//                                 const isADEdge = Object.values(ActiveDirectoryRelationshipKind).includes(
-//                                     kind as ActiveDirectoryRelationshipKind
-//                                 );
-//                                 const isAZNode = Object.values(AzureNodeKind).includes(kind as AzureNodeKind);
-//                                 const isAZEdge = Object.values(AzureRelationshipKind).includes(
-//                                     kind as AzureRelationshipKind
-//                                 );
-//                                 const inSchema = isADNode || isADEdge || isAZNode || isAZEdge;
+                if (kinds) {
+                    kinds.forEach((result) => {
+                        result
+                            .slice(1)
+                            .split('|')
+                            .forEach((kind) => {
+                                const isADNode = Object.values(ActiveDirectoryNodeKind).includes(
+                                    kind as ActiveDirectoryNodeKind
+                                );
+                                const isADEdge = Object.values(ActiveDirectoryRelationshipKind).includes(
+                                    kind as ActiveDirectoryRelationshipKind
+                                );
+                                const isAZNode = Object.values(AzureNodeKind).includes(kind as AzureNodeKind);
+                                const isAZEdge = Object.values(AzureRelationshipKind).includes(
+                                    kind as AzureRelationshipKind
+                                );
+                                const inSchema = isADNode || isADEdge || isAZNode || isAZEdge;
 
-//                                 expect(inSchema).toBeTruthy();
-//                             });
-//                     });
-//                 }
-//             });
-//         });
-//     });
-// });
+                                expect(inSchema).toBeTruthy();
+                            });
+                    });
+                }
+            });
+        });
+    });
+});
