@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
-    const { clearSelectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -41,9 +41,11 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
 
     return (
         <div className={styles.header}>
-            <Icon className={styles.icon} click={clearSelectedItem}>
-                <FontAwesomeIcon icon={faRemove} />
-            </Icon>
+            {!!selectedItem && (
+                <Icon className={styles.icon} click={clearSelectedItem}>
+                    <FontAwesomeIcon icon={faRemove} />
+                </Icon>
+            )}
 
             <Typography
                 data-testid='explore_edge-information-pane_header-text'

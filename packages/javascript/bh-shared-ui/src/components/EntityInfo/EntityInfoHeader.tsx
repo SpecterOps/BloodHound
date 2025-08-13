@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { clearSelectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -47,9 +47,11 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
 
     return (
         <Box className={styles.header}>
-            <Icon className={styles.icon} click={clearSelectedItem}>
-                <FontAwesomeIcon icon={faRemove} />
-            </Icon>
+            {!!selectedItem && (
+                <Icon className={styles.icon} click={clearSelectedItem}>
+                    <FontAwesomeIcon icon={faRemove} />
+                </Icon>
+            )}
 
             {nodeType && <NodeIcon nodeType={nodeType} />}
 
