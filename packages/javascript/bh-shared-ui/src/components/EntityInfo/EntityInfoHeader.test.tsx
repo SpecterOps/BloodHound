@@ -31,6 +31,7 @@ vi.mock('../../hooks', async () => {
         ...actual,
         useExploreSelectedItem: () => ({
             clearSelectedItem: mockClearSelectedItem,
+            selectedItem: '123',
         }),
     };
 });
