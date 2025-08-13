@@ -870,16 +870,11 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		if selectors, err = s.DB.GetAssetGroupTagSelectors(request.Context(), selectorFilter, AssetGroupTagDefaultLimit); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 			return
-<<<<<<< HEAD
 		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, AssetGroupTagDefaultLimit); err != nil {
-=======
-		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, assetGroupTagsSearchLimit); err != nil {
->>>>>>> 052b3d43a (Revert "Return AGT id in members for /api/v2/asset-group-tags/search")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 			return
 		} else {
 			for _, node := range nodes {
-<<<<<<< HEAD
 				groupMember := nodeToAssetGroupMember(node, excludeProperties)
 				for _, kind := range node.Kinds {
 					// Find the first valid kind for this search type and attribute it to this member
@@ -889,9 +884,6 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 					}
 				}
 				members = append(members, groupMember)
-=======
-				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
->>>>>>> 052b3d43a (Revert "Return AGT id in members for /api/v2/asset-group-tags/search")
 			}
 		}
 
