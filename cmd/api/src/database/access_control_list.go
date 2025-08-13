@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	EnvironmentAccessControlTable = "environment_access_control"
+	EnvironmentAccessControlTable       = "environment_access_control"
+	EnvironmentAccessControlFeatureFlag = "targeted_access_control"
 )
 
 type EnvironmentAccessControlData interface {
