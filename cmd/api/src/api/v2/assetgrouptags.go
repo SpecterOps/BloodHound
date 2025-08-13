@@ -807,6 +807,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			kinds  graph.Kinds
 			tagIds []int
 		)
+		kindToAgtId := make(map[graph.Kind]int)
 
 		for _, t := range tags {
 			// owned tag is a label despite distinct designation
@@ -815,6 +816,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				// filter the below node and selector query to tag type
 				kinds = kinds.Add(t.ToKind())
 				tagIds = append(tagIds, t.ID)
+				kindToAgtId[t.ToKind()] = t.ID
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
 					matchedTags = append(matchedTags, t)
 				}
@@ -839,7 +841,11 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			return
 		} else {
 			for _, node := range nodes {
-				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
+				groupMember := nodeToAssetGroupMember(node, excludeProperties)
+				if pzKind, found := model.KindsToAgtKind(node.Kinds); found {
+					groupMember.AssetGroupTagId = kindToAgtId[pzKind]
+				}
+				members = append(members, groupMember)
 			}
 		}
 
