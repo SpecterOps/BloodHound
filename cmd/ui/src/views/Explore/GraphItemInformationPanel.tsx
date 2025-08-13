@@ -15,8 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SxProps, useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
 import {
     EdgeInfoPane,
+    DeepSniffInfoPane,
     EntityInfoDataTable,
     EntityInfoDataTableGraphed,
     EntityInfoPanel,
@@ -24,10 +26,23 @@ import {
     isEdge,
     isNode,
     useExploreSelectedItem,
+    useExploreGraph,
 } from 'bh-shared-ui';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
+    // Must call hooks unconditionally at top level
+    const graphQuery = useExploreGraph();
+    const isDeepSniff = Boolean((graphQuery.data as any)?.deepSniff);
+    const [dismissedDeepSniff, setDismissedDeepSniff] = useState(false);
+    // Dismiss deep sniff when a selection is made
+    useEffect(() => {
+        if (selectedItem) setDismissedDeepSniff(true);
+    }, [selectedItem]);
+    // Reset dismissal when a new deep sniff result arrives
+    useEffect(() => {
+        if (isDeepSniff) setDismissedDeepSniff(false);
+    }, [isDeepSniff]);
 
     const theme = useTheme();
 
@@ -41,9 +56,15 @@ const GraphItemInformationPanel = () => {
         right: theme.spacing(2),
         width: theme.spacing(50),
     };
+    // Show Deep Sniff pane (unless user dismissed it by selecting an item)
+    const deepSniffActive = isDeepSniff && !dismissedDeepSniff;
 
-    if (!selectedItem || selectedItemQuery.isLoading) {
+    if (!deepSniffActive && (!selectedItem || selectedItemQuery.isLoading)) {
         return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;
+    }
+
+    if (deepSniffActive) {
+        return <DeepSniffInfoPane sx={infoPaneStyles} />;
     }
 
     if (selectedItemQuery.isError) {
@@ -51,7 +72,7 @@ const GraphItemInformationPanel = () => {
             <EntityInfoPanel
                 DataTable={EntityInfoDataTableGraphed}
                 sx={infoPaneStyles}
-                selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
+                selectedNode={{ graphId: selectedItem ?? undefined, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
             />
         );
     }
@@ -79,7 +100,7 @@ const GraphItemInformationPanel = () => {
 
     if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
         const selectedNode = {
-            graphId: selectedItem,
+            graphId: selectedItem ?? undefined,
             id: selectedItemQuery.data.objectId,
             name: selectedItemQuery.data.label,
             type: selectedItemQuery.data.kind as EntityKinds,
@@ -88,6 +109,14 @@ const GraphItemInformationPanel = () => {
             <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} DataTable={EntityInfoDataTableGraphed} />
         );
     }
+
+    // No selection: show default empty info panel
+    if (!selectedItem) {
+        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;
+    }
+
+    // Default fallback
+    return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;
 };
 
 export default GraphItemInformationPanel;

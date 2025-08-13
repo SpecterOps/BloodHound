@@ -68,7 +68,7 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
                         const includeProperties = true;
                         return apiClient
                             .cypherSearch(cypher, { signal }, includeProperties)
-                            .then((res) => res.data);
+                            .then((res) => ({ ...(res.data as any), deepSniff: true } as any));
                     }
                     // Propagate other errors
                     throw error;
