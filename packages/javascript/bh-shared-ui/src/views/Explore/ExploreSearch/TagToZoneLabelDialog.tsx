@@ -24,12 +24,12 @@ type TagToZoneDialogProps = {
     dialogOpen: boolean;
     selectedQuery: QueryLineItem | undefined;
     isLabel: boolean;
-    cypherSearchState: any;
+    cypherQuery: string;
     setDialogOpen: (isOpen: boolean) => void;
 };
 
 const TagToZoneDialog = (props: TagToZoneDialogProps) => {
-    const { dialogOpen, selectedQuery, isLabel, cypherSearchState, setDialogOpen } = props;
+    const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useNavigate();
 
     const AssetGroupTagTypeTier = 1 as const;
@@ -48,7 +48,7 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
         isLabel ? setLabel(val) : setZone(val);
     };
 
-    const stateToPass = cypherSearchState.cypherQuery ? { query: cypherSearchState.cypherQuery } : selectedQuery;
+    const stateToPass = cypherQuery ? { query: cypherQuery } : selectedQuery;
 
     const onContinue = () => {
         //TODO - use the const for this path

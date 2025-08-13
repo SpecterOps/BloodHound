@@ -6,12 +6,11 @@ import TagToZoneDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {
     selectedQuery: QueryLineItem | undefined;
-    cypherSearchState: any;
+    cypherQuery: string;
 };
 
 const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
-    const { selectedQuery, cypherSearchState } = props;
-    const { cypherQuery } = cypherSearchState;
+    const { selectedQuery, cypherQuery } = props;
 
     const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
@@ -58,7 +57,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                 setDialogOpen={handleSetOpen}
                 isLabel={isLabel}
                 selectedQuery={selectedQuery}
-                cypherSearchState={cypherSearchState}
+                cypherQuery={cypherQuery}
             />
         </>
     );

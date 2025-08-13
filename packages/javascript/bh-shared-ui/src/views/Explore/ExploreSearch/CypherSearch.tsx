@@ -290,7 +290,7 @@ const CypherSearch = ({
                         {privilegeZoneAnalysisEnabled && (
                             <TagToZoneLabel
                                 selectedQuery={selectedQuery}
-                                cypherSearchState={cypherSearchState}></TagToZoneLabel>
+                                cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                         )}
 
                         <Button
