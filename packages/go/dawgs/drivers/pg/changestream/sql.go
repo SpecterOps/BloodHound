@@ -85,7 +85,7 @@ func disableSynchronousCommitForConn(ctx context.Context, conn *pgx.Conn) error 
 
 const (
 	tablePartitionRangeDuration   = time.Hour
-	tablePartitionRangeFormatStr  = "2006-01-02 15:00:00"
+	tablePartitionRangeFormatStr  = "2006-01-02 15:00:00 MST"
 	tablePartitionSuffixFormatStr = "2006_01_02_15"
 )
 
