@@ -29,6 +29,7 @@ import {
     DialogActions,
     DialogClose,
     DialogContent,
+    DialogDescription,
     DialogPortal,
     DialogTitle,
     Input,
@@ -237,6 +238,7 @@ const SaveQueryDialog: React.FC<{
                         </div>
                         <VisuallyHidden>
                             <DialogTitle>Save Custom Query</DialogTitle>
+                            <DialogDescription>Save Custom Query</DialogDescription>
                         </VisuallyHidden>
                     </DialogContent>
                 </DialogPortal>

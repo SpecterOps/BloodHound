@@ -60,8 +60,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         // manually setting data on error.
         // api returns error for empty state.
         queryClient.setQueryData(['permissions'], (oldData: PermissionsData) => {
-            console.log('set Query Permissions - oldData = ');
-            console.log(oldData);
             return { ...oldData, query_id: undefined, public: false, shared_to_user_ids: [] };
         });
     }, [error, isError]);
