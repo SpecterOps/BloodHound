@@ -63,7 +63,7 @@ func (s Environment) SetIfEmpty(key string, value string) {
 }
 
 // SetExecIfEmpty sets an system executable from an array of options if empty
-func (s Environment) SetExecIfEmpty(key string, execCmds[]string) error {
+func (s Environment) SetExecIfEmpty(key string, execCmds []string) error {
 	if _, ok := s[key]; !ok {
 		for _, execCmd := range execCmds {
 			_, err := exec.LookPath(execCmd)
