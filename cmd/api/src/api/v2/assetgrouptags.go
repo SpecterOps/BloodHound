@@ -39,7 +39,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -557,18 +556,14 @@ type AssetGroupMember struct {
 
 // Used to minimize the response shape to just the necessary member display fields
 func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroupMember {
-	var (
-		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-		envID, _    = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
-	)
+	primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node)
 
 	member := AssetGroupMember{
 		NodeId:        node.ID,
-		ObjectID:      objectID,
-		EnvironmentID: envID,
-		PrimaryKind:   analysis.GetNodeKindDisplayLabel(node),
-		Name:          name,
+		ObjectID:      objectId,
+		EnvironmentID: envId,
+		PrimaryKind:   primaryKind,
+		Name:          displayName,
 	}
 
 	if includeProperties {
