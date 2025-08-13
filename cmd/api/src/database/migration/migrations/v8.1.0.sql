@@ -37,3 +37,16 @@ CREATE TABLE IF NOT EXISTS environment_access_control (
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS all_environments BOOL DEFAULT TRUE;
+
+-- Add denormalized property columns to asset_group_tag_selector_nodes table
+ALTER TABLE asset_group_tag_selector_nodes
+  ADD COLUMN IF NOT EXISTS node_primary_kind TEXT,
+  ADD COLUMN IF NOT EXISTS node_environment_id TEXT,
+  ADD COLUMN IF NOT EXISTS node_object_id TEXT,
+  ADD COLUMN IF NOT EXISTS node_name TEXT;
+
+-- Add indexes for the above new columns added to asset_group_tag_selector_nodes table
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_primary_kind ON asset_group_tag_selector_nodes USING btree (node_primary_kind);
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_environment_id ON asset_group_tag_selector_nodes USING btree (node_environment_id);
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_object_id ON asset_group_tag_selector_nodes USING btree (node_object_id);
+CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_name ON asset_group_tag_selector_nodes USING btree (node_name);
