@@ -451,6 +451,8 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 				pgErr.Code == "23505" && // unique_violation
 				pgErr.ConstraintName == "agl_name_unique_index" {
 				return fmt.Errorf("tag name must be unique: %w: %v", ErrDuplicateAGName, result.Error)
+			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"asset_group_tags_glyph_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateGlyph, result.Error)
 			}
 			return CheckError(result)
 		} else {
