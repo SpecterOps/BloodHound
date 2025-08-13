@@ -29,6 +29,20 @@ import {
 // Only need to create our default filters once
 const DEFAULT_FILTERS = createPathFilterString(INITIAL_FILTER_TYPES);
 
+// Build the Deep Sniff Cypher query using source and destination object IDs
+const buildDeepSniffCypher = (sourceNodeId: string, destinationNodeId: string) => {
+    return (
+        'MATCH p_changes = (x1:Base)-[:GetChanges]->(d:Domain) ' +
+        `WHERE d.objectid = "${destinationNodeId}" ` +
+        'MATCH p_changesall = (x2:Base)-[:GetChangesAll]->(d) ' +
+        'MATCH p_tochanges = shortestpath((n:Base)-[:GenericAll|AddMember|MemberOf*0..]->(x1)) ' +
+        `WHERE n.objectid = "${sourceNodeId}" ` +
+        'MATCH p_tochangesall = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2)) ' +
+        `WHERE n.objectid = "${sourceNodeId}" ` +
+        'RETURN p_changes,p_tochanges,p_changesall,p_tochangesall'
+    );
+};
+
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch, secondarySearch, pathFilters } = paramOptions;
 
@@ -45,7 +59,20 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
         queryFn: ({ signal }) => {
             return apiClient
                 .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
-                .then((res) => res.data);
+                .then((res) => res.data)
+                .catch((error) => {
+                    const statusCode = error?.response?.status;
+                    // Fallback: if no shortest path, attempt Deep Sniff cypher query
+                    if (statusCode === 404 && primarySearch && secondarySearch) {
+                        const cypher = buildDeepSniffCypher(primarySearch, secondarySearch);
+                        const includeProperties = true;
+                        return apiClient
+                            .cypherSearch(cypher, { signal }, includeProperties)
+                            .then((res) => res.data);
+                    }
+                    // Propagate other errors
+                    throw error;
+                });
         },
         enabled: !!(searchType && primarySearch && secondarySearch),
     };
