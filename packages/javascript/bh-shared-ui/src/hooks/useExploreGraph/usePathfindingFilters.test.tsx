@@ -57,7 +57,7 @@ describe('usePathfindingFilters', () => {
         const hook = renderHook(() => usePathfindingFilters());
 
         await act(() => hook.result.current.handleUpdateFilters([TEST_FILTER]));
-        await act(() => hook.result.current.handleCancelFilters());
+        await act(() => hook.result.current.initialize());
 
         expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
         expect(window.location.search).toEqual('');
