@@ -15,19 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SxProps, useTheme } from '@mui/material';
-import { useEffect, useState } from 'react';
 import {
-    EdgeInfoPane,
     DeepSniffInfoPane,
+    EdgeInfoPane,
     EntityInfoDataTable,
     EntityInfoDataTableGraphed,
     EntityInfoPanel,
     EntityKinds,
     isEdge,
     isNode,
-    useExploreSelectedItem,
     useExploreGraph,
+    useExploreSelectedItem,
 } from 'bh-shared-ui';
+import { useEffect, useState } from 'react';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
@@ -72,7 +72,12 @@ const GraphItemInformationPanel = () => {
             <EntityInfoPanel
                 DataTable={EntityInfoDataTableGraphed}
                 sx={infoPaneStyles}
-                selectedNode={{ graphId: selectedItem ?? undefined, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
+                selectedNode={{
+                    graphId: selectedItem ?? undefined,
+                    id: '',
+                    name: 'Unknown',
+                    type: 'Unknown' as EntityKinds,
+                }}
             />
         );
     }

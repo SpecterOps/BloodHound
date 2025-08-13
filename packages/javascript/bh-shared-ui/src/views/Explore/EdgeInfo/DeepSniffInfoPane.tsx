@@ -31,7 +31,7 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
         <Box sx={sx} className={styles.container} data-testid='explore_deepsniff-information-pane'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={'Deep Sniff'}
+                    name={'Deep Sniff - Enable DCSync'}
                     expanded={expanded}
                     onToggleExpanded={(isExpanded: boolean) => setExpanded(isExpanded)}
                 />
@@ -41,15 +41,16 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
                 classes={{ root: styles.contentPaperRoot }}
                 style={{ display: expanded ? 'initial' : 'none' }}>
                 <Typography variant='body2' sx={{ mb: 2 }}>
-                    The principal has attack paths that can grant it DCSync permissions on the target domain.
+                    The principal has attack paths that can grant it DCSync permissions on a domain, which can reach the
+                    target.
                 </Typography>
 
                 <Typography variant='h6' sx={{ mb: 1, fontWeight: 'bold' }}>
                     Abuse
                 </Typography>
                 <Typography variant='body2' sx={{ mb: 2 }}>
-                    A DCSync attack requires both the GetChanges and GetChangesAll permissions. Execute the attack
-                    paths that result in obtaining these permissions on the target domain.
+                    A DCSync attack requires both the GetChanges and GetChangesAll permissions. Execute the attack paths
+                    that result in obtaining these permissions on the domain, and continue on to the target.
                 </Typography>
 
                 <Typography variant='body2'>

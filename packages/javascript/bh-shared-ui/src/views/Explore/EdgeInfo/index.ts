@@ -14,5 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as EdgeInfoPane } from './EdgeInfoPane';
 export { default as DeepSniffInfoPane } from './DeepSniffInfoPane';
+export { default as EdgeInfoPane } from './EdgeInfoPane';

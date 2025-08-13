@@ -33,13 +33,14 @@ const DEFAULT_FILTERS = createPathFilterString(INITIAL_FILTER_TYPES);
 const buildDeepSniffCypher = (sourceNodeId: string, destinationNodeId: string) => {
     return (
         'MATCH p_changes = (x1:Base)-[:GetChanges]->(d:Domain) ' +
-        `WHERE d.objectid = "${destinationNodeId}" ` +
         'MATCH p_changesall = (x2:Base)-[:GetChangesAll]->(d) ' +
-        'MATCH p_tochanges = shortestpath((n:Base)-[:GenericAll|AddMember|MemberOf*0..]->(x1)) ' +
+        'MATCH p_tochanges = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x1)) ' +
         `WHERE n.objectid = "${sourceNodeId}" ` +
         'MATCH p_tochangesall = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2)) ' +
         `WHERE n.objectid = "${sourceNodeId}" ` +
-        'RETURN p_changes,p_tochanges,p_changesall,p_tochangesall'
+        'MATCH p_totarget = (d)-[:Contains|GenericAll|AddMember|MemberOf*0..]->(target) ' +
+        `WHERE target.objectid = "${destinationNodeId}" ` +
+        'RETURN p_changes,p_tochanges,p_changesall,p_tochangesall,p_totarget'
     );
 };
 
@@ -68,7 +69,7 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
                         const includeProperties = true;
                         return apiClient
                             .cypherSearch(cypher, { signal }, includeProperties)
-                            .then((res) => ({ ...(res.data as any), deepSniff: true } as any));
+                            .then((res) => ({ ...(res.data as any), deepSniff: true }) as any);
                     }
                     // Propagate other errors
                     throw error;
