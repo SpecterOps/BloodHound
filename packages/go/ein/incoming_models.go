@@ -209,7 +209,8 @@ type Session struct {
 
 type Group struct {
 	IngestBase
-	Members []TypedPrincipal
+	Members       []TypedPrincipal
+	HasSIDHistory []TypedPrincipal
 }
 
 type User struct {
@@ -355,6 +356,10 @@ type OU struct {
 	Links             []GPLink
 	GPOChanges        GPOChanges
 	InheritanceHashes []string
+}
+
+type GenericMetadata struct {
+	SourceKind string `json:"source_kind"`
 }
 
 type GenericNode struct {

@@ -25,10 +25,7 @@ import {
     sharedGraphQueryOptions,
 } from './utils';
 
-export const cypherSearchGraphQuery = (
-    paramOptions: Partial<ExploreQueryParams>,
-    includeProperties = false
-): ExploreGraphQueryOptions => {
+export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, cypherSearch } = paramOptions;
 
     if (!cypherSearch || !searchType) {
@@ -39,9 +36,7 @@ export const cypherSearchGraphQuery = (
 
     const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch];
 
-    if (includeProperties) {
-        queryKey.push('includeProperties');
-    }
+    const includeProperties = true;
 
     return {
         ...sharedGraphQueryOptions,
@@ -66,10 +61,7 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
 };
 
 export type CypherExploreGraphQuery = ExploreGraphQuery & {
-    getQueryConfig: (
-        paramOptions: Partial<ExploreQueryParams>,
-        includeProperties?: boolean
-    ) => ExploreGraphQueryOptions;
+    getQueryConfig: (paramOptions: Partial<ExploreQueryParams>) => ExploreGraphQueryOptions;
 };
 
 export const cypherSearchQuery: CypherExploreGraphQuery = {

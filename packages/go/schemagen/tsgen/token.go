@@ -68,7 +68,7 @@ func (s token) Render(writer io.Writer) error {
 		}
 
 	case tokenTypeKeyword, tokenTypeOperator, tokenTypeFormatting, tokenTypeDelimiter:
-		if _, err := writer.Write([]byte(fmt.Sprintf("%s", s.Value))); err != nil {
+		if _, err := fmt.Fprintf(writer, "%s", s.Value); err != nil {
 			return err
 		}
 

@@ -138,7 +138,7 @@ func Run(env environment.Environment) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error walking the path: %w", err)
+		errs = append(errs, fmt.Errorf("error walking the path: %w", err))
 	}
 
 	// close path channel to signal we're done sending values
@@ -162,6 +162,8 @@ func processFile(path string) error {
 	case ".xml", ".html", ".svg":
 		return writeFile(path, generateLicenseHeader("<!--"))
 	case ".css":
+		return writeFile(path, generateLicenseHeader("/*"))
+	case ".cs":
 		return writeFile(path, generateLicenseHeader("/*"))
 	default:
 		slog.Warn("unknown extension", slog.String("path", path))

@@ -46,7 +46,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
     return (
         <li
             className={cn(
-                'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-0 dark:text-neutral-light-1',
+                'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-1 dark:text-neutral-light-1',
                 {
                     'text-primary dark:text-primary dark:hover:text-primary bg-neutral-light-4 cursor-default':
                         isActiveRoute,
@@ -135,7 +135,7 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
         <div className='relative w-full flex min-h-10 h-10' data-testid='global_nav-version-number'>
             <div
                 className={cn(
-                    'w-9 flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-0 dark:text-neutral-light-1',
+                    'w-9 flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-1 dark:text-neutral-light-1',
                     {
                         'group-hover:w-auto group-hover:overflow-x-hidden group-hover:whitespace-nowrap group-hover:left-16':
                             hoverActive,
@@ -158,7 +158,7 @@ const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ c
         <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='global_nav-powered-by'>
             <div
                 className={cn(
-                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-0 dark:text-neutral-light-1',
+                    'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-1 dark:text-neutral-light-1',
                     {
                         'group-hover:left-12': hoverActive,
                     }
@@ -182,7 +182,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     return (
         <nav
             className={cn(
-                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-light-2 dark:bg-neutral-dark-2 print:hidden group',
+                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-2 print:hidden group',
                 {
                     'hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden': !isMouseDragging,
                 }

@@ -36,6 +36,16 @@ export interface EntityInfoDataTableProps {
     parentLabels?: string[];
     queryType?: EntityRelationshipQueryTypes;
 }
+export interface EntityInfoContentProps {
+    DataTable: React.FC<EntityInfoDataTableProps>;
+    id: string;
+    nodeType: EntityKinds | string;
+    databaseId?: string;
+    additionalTables?: {
+        sectionProps: EntityInfoDataTableProps;
+        TableComponent: React.FC<EntityInfoDataTableProps>;
+    }[];
+}
 
 let controller = new AbortController();
 

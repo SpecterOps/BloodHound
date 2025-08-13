@@ -16,7 +16,7 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-put:
+get:
   operationId: GetAllAttackPathFindings
   summary: Get all attack path findings
   description: Fetches all attack path findings and their associated details, including documentation.
@@ -25,7 +25,11 @@ put:
     - Enterprise
   responses:
     200:
-      $ref: './../schemas/api.response.all-findings.yaml'
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ./../schemas/api.response.all-findings.yaml
     400:
       $ref: './../responses/bad-request.yaml'
     401:

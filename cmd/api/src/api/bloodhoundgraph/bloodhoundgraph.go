@@ -278,70 +278,70 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 func (s *BloodHoundGraphNode) SetBackground(nType string) {
 	switch nType {
 	case "AZApp":
-		s.BloodHoundGraphItem.Color = "#03FC84"
+		s.Color = "#03FC84"
 	case "AZVMScaleSet":
-		s.BloodHoundGraphItem.Color = "#007CD0"
+		s.Color = "#007CD0"
 	case "AZDevice":
-		s.BloodHoundGraphItem.Color = "#B18FCF"
+		s.Color = "#B18FCF"
 	case "AZFunctionApp":
-		s.BloodHoundGraphItem.Color = "#F4BA44"
+		s.Color = "#F4BA44"
 	case "AZGroup":
-		s.BloodHoundGraphItem.Color = "#F57C9B"
+		s.Color = "#F57C9B"
 	case "AZKeyVault":
-		s.BloodHoundGraphItem.Color = "#ED658C"
+		s.Color = "#ED658C"
 	case "AZManagementGroup":
-		s.BloodHoundGraphItem.Color = "#BD93D8"
+		s.Color = "#BD93D8"
 	case "AZResourceGroup":
-		s.BloodHoundGraphItem.Color = "#89BD9E"
+		s.Color = "#89BD9E"
 	case "AZRole":
-		s.BloodHoundGraphItem.Color = "#ED8537"
+		s.Color = "#ED8537"
 	case "AZServicePrincipal":
-		s.BloodHoundGraphItem.Color = "#C1D6D6"
+		s.Color = "#C1D6D6"
 	case "AZSubscription":
-		s.BloodHoundGraphItem.Color = "#D2CCA1"
+		s.Color = "#D2CCA1"
 	case "AZTenant":
-		s.BloodHoundGraphItem.Color = "#54F2F2"
+		s.Color = "#54F2F2"
 	case "AZUser":
-		s.BloodHoundGraphItem.Color = "#34D2EB"
+		s.Color = "#34D2EB"
 	case "AZVM":
-		s.BloodHoundGraphItem.Color = "#F9ADA0"
+		s.Color = "#F9ADA0"
 	case "AZManagedCluster":
-		s.BloodHoundGraphItem.Color = "#326CE5"
+		s.Color = "#326CE5"
 	case "AZContainerRegistry":
-		s.BloodHoundGraphItem.Color = "#0885D7"
+		s.Color = "#0885D7"
 	case "AZWebApp":
-		s.BloodHoundGraphItem.Color = "#4696E9"
+		s.Color = "#4696E9"
 	case "AZLogicApp":
-		s.BloodHoundGraphItem.Color = "#9EE047"
+		s.Color = "#9EE047"
 	case "AZAutomationAccount":
-		s.BloodHoundGraphItem.Color = "#F4BA44"
+		s.Color = "#F4BA44"
 	case "User":
-		s.BloodHoundGraphItem.Color = "#17E625"
+		s.Color = "#17E625"
 	case "Group":
-		s.BloodHoundGraphItem.Color = "#DBE617"
+		s.Color = "#DBE617"
 	case "Computer":
-		s.BloodHoundGraphItem.Color = "#E67873"
+		s.Color = "#E67873"
 	case "Container":
-		s.BloodHoundGraphItem.Color = "#F79A78"
+		s.Color = "#F79A78"
 	case "Domain":
-		s.BloodHoundGraphItem.Color = "#17E6B9"
+		s.Color = "#17E6B9"
 	case "OU":
-		s.BloodHoundGraphItem.Color = "#FFAA00"
+		s.Color = "#FFAA00"
 	case "GPO":
-		s.BloodHoundGraphItem.Color = "#998EFD"
+		s.Color = "#998EFD"
 	case "AIACA":
-		s.BloodHoundGraphItem.Color = "#9769F0"
+		s.Color = "#9769F0"
 	case "RootCA":
-		s.BloodHoundGraphItem.Color = "#6968E8"
+		s.Color = "#6968E8"
 	case "EnterpriseCA":
-		s.BloodHoundGraphItem.Color = "#4696E9"
+		s.Color = "#4696E9"
 	case "NTAuthStore":
-		s.BloodHoundGraphItem.Color = "#D575F5"
+		s.Color = "#D575F5"
 	case "CertTemplate":
-		s.BloodHoundGraphItem.Color = "#B153F3"
+		s.Color = "#B153F3"
 	case "Meta":
-		s.BloodHoundGraphItem.Color = "#000"
+		s.Color = "#000"
 	default:
-		s.BloodHoundGraphItem.Color = "#EEE"
+		s.Color = "#EEE"
 	}
 }

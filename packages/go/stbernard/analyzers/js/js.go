@@ -69,8 +69,8 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 		esLintEntries []esLintEntry
 		output        *bytes.Buffer
 
-		command = "yarn"
-		args    = []string{"run", "lint", "--format", "json"}
+		command = env[environment.YarnCmdVarName]
+		args    = []string{"run", "lint", "--quiet", "--format", "json"}
 	)
 
 	if result, err := cmdrunner.Run(command, args, path, env); err != nil {

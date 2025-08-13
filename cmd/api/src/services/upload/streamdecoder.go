@@ -77,6 +77,7 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 		decoder:    decoder,
 		nodeSchema: schema.NodeSchema,
 		edgeSchema: schema.EdgeSchema,
+		metaSchema: schema.MetaSchema,
 		maxErrors:  15,
 	}
 
@@ -220,17 +221,25 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 					return ingest.Metadata{}, ingest.ErrDataTagNotFound
 				}
 				dataFound = true
+			case "metadata":
+				var item map[string]any
+				if err := scanner.decoder.Decode(&item); err != nil {
+					return ingest.Metadata{}, fmt.Errorf("error decoding metadata tag: %w", err)
+				} else if err := schema.MetaSchema.Validate(item); err != nil {
+					return ingest.Metadata{}, fmt.Errorf("error validating metadata tag: %w", err)
+				}
 			case "graph":
 				// enforce mutual exclusivity
 				if dataFound || metaFound {
 					return ingest.Metadata{}, ingest.ErrMixedIngestFormat
 				}
-				// generic ingest path
-				meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
+
+				// opengraph ingest path
+				meta = ingest.Metadata{Type: ingest.DataTypeOpenGraph}
 				if shouldValidateGraph {
 					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
-							slog.With("validation", report).Warn("generic ingest failed")
+							slog.With("validation", report).Warn("opengraph ingest failed")
 						}
 						return meta, err
 					}
@@ -410,6 +419,7 @@ type validator struct {
 	decoder          *json.Decoder
 	nodeSchema       *jsonschema.Schema
 	edgeSchema       *jsonschema.Schema
+	metaSchema       *jsonschema.Schema
 	maxErrors        int
 	nodesFound       bool
 	edgesFound       bool

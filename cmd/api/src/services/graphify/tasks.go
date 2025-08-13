@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/dawgs/graph"
@@ -130,13 +129,6 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
-	adcsEnabled := false
-	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
-	} else {
-		adcsEnabled = adcsFlag.Enabled
-	}
-
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
 	if paths, failedExtracting, err := s.extractIngestFiles(task.FileName, task.FileType); err != nil {
 		return 0, failedExtracting, err
@@ -149,7 +141,10 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
 			for _, filePath := range paths {
-				readOpts := ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}
+				readOpts := ReadOptions{
+					IngestSchema:       s.schema,
+					FileType:           task.FileType,
+					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx)}
 
 				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
 					failedIngestion++

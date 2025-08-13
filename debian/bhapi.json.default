@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "bind_addr": "127.0.0.1:8080",
+  "root_url": "http://localhost:8080",
+  "work_dir": "/var/lib/bloodhound/work",
+  "graph_driver": "pg",
+  "database": {
+    "connection": "postgresql://"
+  },
+  "default_admin": {
+    "principal_name": "admin",
+    "password": "admin",
+    "first_name": "Bloodhound",
+    "last_name": "Admin"
+  }
+}

@@ -153,7 +153,7 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 // Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
 //
 // Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelationship, baseKind graph.Kind) ([]graph.RelationshipUpdate, error) {
+func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelationship, sourceKind graph.Kind) ([]graph.RelationshipUpdate, error) {
 	if cache, err := resolveAllEndpointsByName(batch.Batch, rels); err != nil {
 		return nil, err
 	} else {
@@ -180,8 +180,8 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 
 			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
-			startKinds := mergeBaseKind(baseKind, rel.Source.Kind)
-			endKinds := mergeBaseKind(baseKind, rel.Target.Kind)
+			startKinds := MergeNodeKinds(sourceKind, rel.Source.Kind)
+			endKinds := MergeNodeKinds(sourceKind, rel.Target.Kind)
 
 			update := graph.RelationshipUpdate{
 				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
@@ -189,12 +189,12 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 					common.LastSeen: batch.IngestTime,
 				}), startKinds...),
 				StartIdentityProperties: []string{common.ObjectID.String()},
-				StartIdentityKind:       baseKind,
+				StartIdentityKind:       sourceKind,
 				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: targetID,
 					common.LastSeen: batch.IngestTime,
 				}), endKinds...),
-				EndIdentityKind:       baseKind,
+				EndIdentityKind:       sourceKind,
 				EndIdentityProperties: []string{common.ObjectID.String()},
 				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
 			}
@@ -223,18 +223,46 @@ func resolveEndpointID(endpoint ein.IngestibleEndpoint, cache map[endpointKey]st
 	return endpoint.Value, endpoint.Value != ""
 }
 
-// MergeNodeKinds returns a combined list of node kinds, optionally including the baseKind.
-//
-// EmptyKind is used as a sentinel value to indicate that there is no global or inherited kind
-// to apply to this node, unlike AD and AZ, which have a base kind (Base or AZBase) applied to all entities.
-//
-// This is especially important for generic ingest flows, where each node defines its own kind(s) explicitly,
-// and no shared base kind should be enforced.
-func mergeBaseKind(baseKind graph.Kind, additionalKinds ...graph.Kind) []graph.Kind {
-	var kinds []graph.Kind
-	if baseKind != graph.EmptyKind {
-		kinds = append(kinds, baseKind)
+// MergeNodeKinds combines a source kind with any additional kinds,
+// then removes any occurrences of graph.EmptyKind from the result.
+// Ensures a clean, usable kind list for downstream logic.
+func MergeNodeKinds(sourceKind graph.Kind, additionalKinds ...graph.Kind) []graph.Kind {
+	merged := mergeKinds(sourceKind, additionalKinds...)
+	filtered := filterOutEmptyKind(merged)
+	return deduplicateKinds(filtered)
+}
+
+// mergeKinds appends the sourceKind (if not EmptyKind)
+// to the front of the additionalKinds slice, preserving order.
+func mergeKinds(sourceKind graph.Kind, additionalKinds ...graph.Kind) []graph.Kind {
+	if sourceKind == graph.EmptyKind {
+		return append([]graph.Kind(nil), additionalKinds...)
 	}
-	kinds = append(kinds, additionalKinds...)
-	return kinds
+	return append([]graph.Kind{sourceKind}, additionalKinds...)
+}
+
+// filterOutEmptyKind removes any graph.EmptyKind values from the provided slice.
+// Used to ensure the final kind list contains only meaningful entries.
+func filterOutEmptyKind(kinds []graph.Kind) []graph.Kind {
+	var result []graph.Kind
+	for _, k := range kinds {
+		if k != graph.EmptyKind {
+			result = append(result, k)
+		}
+	}
+	return result
+}
+
+// deduplicateKinds removes duplicate kinds from the list while preserving order.
+// prevents duplicates like ["Base", "Base", "Person"]
+func deduplicateKinds(kinds []graph.Kind) []graph.Kind {
+	seen := make(map[graph.Kind]struct{})
+	var result []graph.Kind
+	for _, key := range kinds {
+		if _, ok := seen[key]; !ok {
+			seen[key] = struct{}{}
+			result = append(result, key)
+		}
+	}
+	return result
 }

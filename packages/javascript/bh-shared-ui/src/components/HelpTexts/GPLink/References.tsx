@@ -14,26 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link } from '@mui/material';
+import { Link } from '@mui/material';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
         <>
-            <Box sx={{ overflowX: 'auto' }}>
-                <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
-                    A Red Teamer's Guide to GPOs and OUs
-                </Link>
-                <br />
-                <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
-                    GitHub: SharpGPOAbuse
-                </Link>
-                <br />
-                <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
-                    GitHub: pyGPOAbuse
-                </Link>
-                <br />
-            </Box>
+            <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
+                https://wald0.com/?p=179
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://blog.cptjesus.com/posts/bloodhound15'>
+                https://blog.cptjesus.com/posts/bloodhound15
+            </Link>
         </>
     );
 };

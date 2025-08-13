@@ -23,20 +23,18 @@ import {
     GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
-    MungedTableRowWithId,
     NodeClickInfo,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
-    exportToJson,
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
     useCustomNodeKinds,
+    useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
-    useFeatureFlag,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
@@ -65,7 +63,7 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
-    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
+    const { searchType } = useExploreParams();
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
 
@@ -75,19 +73,14 @@ const GraphView: FC = () => {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
-    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
-    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-        enabled: !exploreLayout,
-    });
+    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
 
-    if (!tableViewFeatureFlag?.enabled) {
-        isExploreTableSelected = false;
-    }
-
-    const displayTable = autoDisplayTable || !!isExploreTableSelected;
-    const includeProperties = displayTable;
-    const graphQuery = useSigmaExploreGraph(includeProperties);
+    const graphQuery = useSigmaExploreGraph();
+    // TODO: incorporate into larger hook with auto display table logic
+    const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -101,7 +94,7 @@ const GraphView: FC = () => {
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
-        let items: any = graphQuery.data?.nodes;
+        let items: any = graphQuery.data;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
@@ -117,7 +110,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -137,15 +130,6 @@ const GraphView: FC = () => {
         [setSelectedItem]
     );
 
-    const handleRowClick = useCallback(
-        (row: MungedTableRowWithId) => {
-            if (row.id !== selectedItem) {
-                setSelectedItem(row.id);
-            }
-        },
-        [setSelectedItem, selectedItem]
-    );
-
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
             selectItem(event.node);
@@ -162,12 +146,6 @@ const GraphView: FC = () => {
         },
         [handleContextMenu]
     );
-
-    const handleDownloadClick = useCallback(() => {
-        if (graphQuery.data) {
-            exportToJson({ nodes: graphQuery.data.rawNodes });
-        }
-    }, [graphQuery.data]);
 
     if (isLoading) {
         return (
@@ -232,6 +210,7 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
+                    isExploreTableSelected={isExploreTableSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
@@ -267,17 +246,11 @@ const GraphView: FC = () => {
 
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            {tableViewFeatureFlag?.enabled && (
+            {displayTable && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes}
-                    allColumnKeys={graphQuery.data.node_keys}
-                    open={displayTable}
                     selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onKebabMenuClick={handleKebabMenuClick}
-                    onDownloadClick={handleDownloadClick}
-                    onRowClick={handleRowClick}
-                    selectedNode={selectedItem}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

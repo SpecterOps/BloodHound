@@ -27,6 +27,8 @@ import (
 const (
 	ActiveDirectoryGraphPrefix = "ad"
 	AzureGraphPrefix           = "az"
+	DefaultMissingName         = "NO NAME"
+	DefaultMissingObjectId     = "NO OBJECT ID"
 )
 
 func ActiveDirectoryGraphName(suffix string) string {

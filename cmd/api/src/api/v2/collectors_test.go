@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -29,8 +30,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	fsmocks "github.com/specterops/bloodhound/cmd/api/src/services/fs/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -326,4 +330,76 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Old tests that should be rewritten
+
+func TestResources_GetCollectorManifest(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		manifests = config.CollectorManifests{"sharphound": config.CollectorManifest{}, "azurehound": config.CollectorManifest{}}
+		resources = v2.Resources{
+			CollectorManifests: manifests,
+		}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/collectors/%s"
+
+	t.Run("sharphound", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf(endpoint, "sharphound"), nil)
+		require.NoError(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/collectors/{collector_type}", resources.GetCollectorManifest).Methods(http.MethodGet)
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("azurehound", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf(endpoint, "azurehound"), nil)
+		require.NoError(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/collectors/{collector_type}", resources.GetCollectorManifest).Methods(http.MethodGet)
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		assert.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf(endpoint, "invalid"), nil)
+		require.NoError(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/collectors/{collector_type}", resources.GetCollectorManifest).Methods(http.MethodGet)
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("internal error", func(t *testing.T) {
+		resources := v2.Resources{CollectorManifests: map[string]config.CollectorManifest{}}
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf(endpoint, "azurehound"), nil)
+		require.NoError(t, err)
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+		router := mux.NewRouter()
+		router.HandleFunc("/api/v2/collectors/{collector_type}", resources.GetCollectorManifest).Methods(http.MethodGet)
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		assert.Equal(t, http.StatusInternalServerError, response.Code)
+	})
 }

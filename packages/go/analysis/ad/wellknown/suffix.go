@@ -67,17 +67,40 @@ func NewSIDSuffix(suffix string) SIDSuffix {
 // These are implemented as interface values to ensure they cannot be modified
 // after initialization, providing stronger guarantees than string constants.
 var (
-	// AuthenticatedUsersSIDSuffix represents the SID suffix for the "Authenticated Users" group.
-	AuthenticatedUsersSIDSuffix SIDSuffix = NewSIDSuffix("-S-1-5-11")
-
-	// DomainComputersSIDSuffix represents the SID suffix for the "Domain Computers" group.
-	DomainComputersSIDSuffix = NewSIDSuffix("-515")
-
-	// DomainUsersSIDSuffix represents the SID suffix for the "Domain Users" group.
-	DomainUsersSIDSuffix = NewSIDSuffix("-513")
-
-	// EveryoneSIDSuffix represents the SID suffix for the "Everyone" group.
-	EveryoneSIDSuffix = NewSIDSuffix("-S-1-1-0")
+	CompoundedAuthenticationSIDSuffix                = NewSIDSuffix("-496")
+	ClaimsValidSIDSuffix                             = NewSIDSuffix("-497")
+	AdministratorAccountSIDSuffix                    = NewSIDSuffix("-500")
+	GuestSIDSuffix                                   = NewSIDSuffix("-501")
+	DomainAdminsGroupSIDSuffix                       = NewSIDSuffix("-512")
+	DomainUsersSIDSuffix                             = NewSIDSuffix("-513")
+	DomainComputersSIDSuffix                         = NewSIDSuffix("-515")
+	DomainControllersGroupSIDSuffix                  = NewSIDSuffix("-516")
+	SchemaAdminsGroupSIDSuffix                       = NewSIDSuffix("-518")
+	EnterpriseAdminsGroupSIDSuffix                   = NewSIDSuffix("-519")
+	ProtectedUsersSIDSuffix                          = NewSIDSuffix("-525")
+	KeyAdminsGroupSIDSuffix                          = NewSIDSuffix("-526")
+	EnterpriseKeyAdminsGroupSIDSuffix                = NewSIDSuffix("-527")
+	AdministratorsSIDSuffix                          = NewSIDSuffix("-544")
+	UsersSIDSuffix                                   = NewSIDSuffix("-545")
+	BackupOperatorsGroupSIDSuffix                    = NewSIDSuffix("-551")
+	RemoteDesktopUsersSIDSuffix                      = NewSIDSuffix("-555")
+	EveryoneSIDSuffix                                = NewSIDSuffix("-S-1-1-0")
+	DialupSIDSuffix                                  = NewSIDSuffix("-S-1-5-1")
+	NetworkSIDSuffix                                 = NewSIDSuffix("-S-1-5-2")
+	AnonymousSIDSuffix                               = NewSIDSuffix("-S-1-5-7")
+	EnterpriseDomainControllersGroupSIDSuffix        = NewSIDSuffix("-S-1-5-9")
+	AuthenticatedUsersSIDSuffix                      = NewSIDSuffix("-S-1-5-11")
+	ThisOrganizationSIDSuffix                        = NewSIDSuffix("-S-1-5-15")
+	NTLMAuthenticationSIDSuffix                      = NewSIDSuffix("-S-1-5-64-10")
+	SchannelAuthenticationSIDSuffix                  = NewSIDSuffix("-S-1-5-64-14")
+	ThisOrganizationCertificateSIDSuffix             = NewSIDSuffix("-S-1-5-65-1")
+	OtherOrganizationSIDSuffix                       = NewSIDSuffix("-S-1-5-1000")
+	AuthenticationAuthorityAssertedIdentitySIDSuffix = NewSIDSuffix("-S-1-18-1")
+	ServiceAssertedIdentitySIDSuffix                 = NewSIDSuffix("-S-1-18-2")
+	FreshPublicKeyIdentitySIDSuffix                  = NewSIDSuffix("-S-1-18-3")
+	KeyTrustSIDSuffix                                = NewSIDSuffix("-S-1-18-4")
+	MFAKeyPropertySIDSuffix                          = NewSIDSuffix("-S-1-18-5")
+	AttestedKeyPropertySIDSuffix                     = NewSIDSuffix("-S-1-18-6")
 )
 
 // DefineSID creates a complete SID by combining a domain-specific SID prefix with

@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -247,8 +248,8 @@ func Test_nodesToSearchResult_default(t *testing.T) {
 		input = []*graph.Node{
 			{Properties: graph.NewProperties()},
 		}
-		expectedName              = "NO NAME"
-		expectedObjectId          = "NO OBJECT ID"
+		expectedName              = graphschema.DefaultMissingName
+		expectedObjectId          = graphschema.DefaultMissingObjectId
 		expectedDistinguishedName = ""
 	)
 

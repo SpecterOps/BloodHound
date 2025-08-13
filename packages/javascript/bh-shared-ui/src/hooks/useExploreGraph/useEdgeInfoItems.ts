@@ -23,12 +23,17 @@ import { useExploreParams } from '../useExploreParams';
 export enum EdgeInfoItems {
     relayTargets = 'relayTargets',
     composition = 'composition',
+    aclInheritance = 'aclinheritance',
 }
 
 type EdgeInfoItemsArguments = Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName' | 'onNodeClick'>;
 
 export type EdgeInfoItemsProps = EdgeInfoItemsArguments & {
     type: EdgeInfoItems;
+};
+
+type EdgeInfoItemOpts = {
+    withProperties: boolean;
 };
 
 const queryConfig = {
@@ -42,21 +47,31 @@ const queryConfig = {
             return apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data);
         },
     },
+    [EdgeInfoItems.aclInheritance]: {
+        endpoint: ({ sourceDBId, targetDBId, edgeName }: EdgeInfoItemsArguments) => {
+            return apiClient.getACLInheritance(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data);
+        },
+    },
 };
 
-export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
+// These incoming ids can be strings sometimes, despite the parameter type (see composition dropdown). This helper function
+// provides more flexible validation
+const validateId = (id: any) => (typeof id === 'number' ? Number.isInteger(id) : !!id);
+
+export const useEdgeInfoItems = (
+    { sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps,
+    opts?: EdgeInfoItemOpts
+) => {
     const { setExploreParams } = useExploreParams();
     const { data, isLoading, isError } = useQuery(
         [type, sourceDBId, targetDBId, edgeName],
         () => queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName }),
-        { enabled: !!(sourceDBId && targetDBId && edgeName) }
+        { enabled: validateId(sourceDBId) && validateId(targetDBId) && !!edgeName }
     );
 
-    const handleNodeClick = (item: number) => {
-        const node = nodesArray[item];
-
+    const handleNodeClick = (objectId: string) => {
         setExploreParams({
-            primarySearch: node.objectId,
+            primarySearch: objectId,
             searchType: 'node',
             exploreSearchTab: 'node',
         });
@@ -67,7 +82,9 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: Edg
         objectId: node.objectId,
         graphId,
         kind: node.kind,
-        onClick: handleNodeClick,
+        ...(opts?.withProperties && { properties: node.properties }),
+        onClick: () => handleNodeClick(node.objectId),
     }));
+
     return { isLoading, isError, nodesArray };
 };

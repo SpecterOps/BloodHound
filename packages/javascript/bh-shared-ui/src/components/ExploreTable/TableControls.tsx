@@ -53,7 +53,7 @@ const TableControls = <TData, TValue>({
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
-            columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
+            columns?.map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',
                 value: formatPotentiallyUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,
@@ -61,6 +61,8 @@ const TableControls = <TData, TValue>({
         [columns, pinnedColumns]
     );
 
+    const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
+    const noResults = !resultsCount;
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
@@ -71,32 +73,45 @@ const TableControls = <TData, TValue>({
                 {SearchInputProps && (
                     <div className='flex justify-center items-center relative'>
                         <Input
-                            className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
+                            data-testid='explore-table-search'
+                            disabled={noResults}
+                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
+                                [DISABLED_CLASSNAME]: noResults,
+                                'border-neutral-400': noResults,
+                            })}
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                        <FontAwesomeIcon
+                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
+                            icon={faSearch}
+                        />
                     </div>
                 )}
                 {onDownloadClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onDownloadClick} className={ICON_CLASSES} icon={faDownload} />
-                    </div>
+                    <button
+                        aria-disabled={noResults}
+                        onClick={onDownloadClick}
+                        data-testid='download-button'
+                        className={cn({ [DISABLED_CLASSNAME]: noResults })}>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
+                    </button>
                 )}
                 {onExpandClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onExpandClick} className={ICON_CLASSES} icon={faExpand} />
+                    <div onClick={onExpandClick} data-testid='expand-button'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
+                        disabled={noResults}
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
                     />
                 )}
                 {onCloseClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onCloseClick} className={ICON_CLASSES} icon={faClose} />
+                    <div onClick={onCloseClick} data-testid='close-button'>
+                        <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
                     </div>
                 )}
             </div>

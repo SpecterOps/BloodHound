@@ -75,18 +75,12 @@ type ResponseWrapper struct {
 }
 
 func WriteErrorResponse(ctx context.Context, untypedError any, response http.ResponseWriter) {
-	switch typedError := untypedError.(type) {
-	case *ErrorResponse: // V1 error handling
-		slog.WarnContext(ctx, fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Error))
-		WriteJSONResponse(context.Background(), typedError.Error, typedError.HTTPStatus, response)
-
-	case *ErrorWrapper: // V2 error handling
-		slog.WarnContext(ctx, fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors))
-		WriteJSONResponse(ctx, typedError, typedError.HTTPStatus, response)
-
-	default:
+	if typedError, ok := untypedError.(*ErrorWrapper); !ok {
 		slog.WarnContext(ctx, fmt.Sprintf("Failure Writing API Error. Status: %v. Message: %v", http.StatusInternalServerError, "Invalid error format returned"))
 		WriteJSONResponse(ctx, "An internal error has occurred that is preventing the service from servicing this request.", http.StatusInternalServerError, response)
+	} else {
+		slog.WarnContext(ctx, fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors))
+		WriteJSONResponse(ctx, typedError, typedError.HTTPStatus, response)
 	}
 }
 

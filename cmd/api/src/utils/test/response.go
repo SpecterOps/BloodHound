@@ -18,11 +18,13 @@ package test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 
@@ -125,4 +127,59 @@ func OverwriteQueryParamIfHeaderAndParamExist(headers http.Header, headerKey, pa
 	// Rebuild query string, preserve leading "?"
 	headers.Set(headerKey, "?"+q.Encode())
 	return headers
+}
+
+// SortJSONArrayElements parses JSON and recursively sorts all arrays so their order doesn't affect equality.
+// Returns the raw string if the input is not valid JSON.
+//
+// Use this to normalize JSON bodies in tests where slice order is nondeterministic.
+func SortJSONArrayElements(t *testing.T, raw string) any {
+	var data any
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
+		return raw
+	}
+
+	sortJSONArrays(data)
+	return data
+}
+
+func sortJSONArrays(v any) {
+	switch val := v.(type) {
+	case []any:
+		for _, elem := range val {
+			sortJSONArrays(elem) // Recursively sort nested arrays
+		}
+		slices.SortStableFunc(val, func(a, b any) int {
+			ba, err1 := json.Marshal(a)
+			bb, err2 := json.Marshal(b)
+			if err1 != nil || err2 != nil {
+				// Fallback to string representation if marshaling fails
+				sa := fmt.Sprintf("%#v", a)
+				sb := fmt.Sprintf("%#v", b)
+
+				// Check if sa comes before sb in order
+				if sa < sb {
+					return -1
+					// Check if sa comes after sb in order
+				} else if sa > sb {
+					return 1
+				}
+				// sa and sb are equal
+				return 0
+			}
+
+			// Compare JSON-encoded strings in order
+			sa, sb := string(ba), string(bb)
+			if sa < sb {
+				return -1
+			} else if sa > sb {
+				return 1
+			}
+			return 0
+		})
+	case map[string]any:
+		for _, vv := range val {
+			sortJSONArrays(vv) // Recursively sort nested arrays
+		}
+	}
 }

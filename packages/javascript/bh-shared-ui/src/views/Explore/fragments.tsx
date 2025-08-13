@@ -104,13 +104,17 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
 export const Field: React.FC<EntityField> = (entityField) => {
     const { label, value, keyprop } = entityField;
 
-    if (
-        value === undefined ||
-        value === '' ||
-        (Array.isArray(value) && value.length === 0) ||
-        (typeof value === 'object' && Object.keys(value).length === 0)
-    )
+    try {
+        if (
+            value === undefined ||
+            value === '' ||
+            (Array.isArray(value) && value.length === 0) ||
+            (typeof value === 'object' && Object.keys(value).length === 0)
+        )
+            return null;
+    } catch (e) {
         return null;
+    }
 
     const formattedValue = format(entityField);
 

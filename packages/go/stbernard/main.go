@@ -31,13 +31,18 @@ import (
 )
 
 func main() {
-	env := environment.NewEnvironment()
+	env, err := environment.NewEnvironment()
+	if err != nil {
+		slog.Error(fmt.Sprintf("Could not init environment: %v", err))
+		os.Exit(1)
+	}
+
 	var rawLvl = env[environment.LogLevelVarName]
 
 	bhlog.ConfigureDefaultText(os.Stderr)
 
 	if rawLvl == "" {
-		rawLvl = "warn"
+		rawLvl = "info"
 	}
 
 	if lvl, err := bhlog.ParseLevel(rawLvl); err != nil {

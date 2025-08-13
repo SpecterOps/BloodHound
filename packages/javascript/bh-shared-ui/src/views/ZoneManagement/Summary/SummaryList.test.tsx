@@ -46,6 +46,7 @@ const mockData: AssetGroupTag[] = [
             selectors: 5,
             members: 10,
         },
+        analysis_enabled: false,
     },
     {
         id: 2,
@@ -65,6 +66,7 @@ const mockData: AssetGroupTag[] = [
             selectors: 3,
             members: 6,
         },
+        analysis_enabled: false,
     },
 ];
 

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util"
 )
 
@@ -76,7 +77,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 	return errs.Combined()
 }
 
-func decodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFunc[T]) error {
+func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
@@ -100,7 +101,7 @@ func decodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, co
 		}
 
 		if count == IngestCountThreshold {
-			if err := IngestGenericData(batch, convertedData); err != nil {
+			if err := IngestGenericData(batch, sourceKind, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
@@ -110,7 +111,7 @@ func decodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, co
 	}
 
 	if count > 0 {
-		if err := IngestGenericData(batch, convertedData); err != nil {
+		if err := IngestGenericData(batch, sourceKind, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}

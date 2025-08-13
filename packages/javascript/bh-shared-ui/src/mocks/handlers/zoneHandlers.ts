@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ConfigurationKey } from 'js-client-library';
 import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
 import * as tierMocks from '../factories/zoneManagement';
 
@@ -53,6 +54,23 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
 
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
+    }),
+
+    rest.get('/api/v2/users/*', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    rest.get('/api/v2/config', async (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: ConfigurationKey.Tiering,
+                        value: { multi_tier_analysis_enabled: true, tier_limit: 3, label_limit: 10 },
+                    },
+                ],
+            })
+        );
     }),
 
     // GET Tags

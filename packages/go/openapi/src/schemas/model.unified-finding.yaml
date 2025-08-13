@@ -83,7 +83,8 @@ oneOf:
         additionalProperties:
           type: object
       attack_path_edge_id:
-        type: int64
+        type: number
+        format: int64
       finding_name:
         type: string
       environment_id:

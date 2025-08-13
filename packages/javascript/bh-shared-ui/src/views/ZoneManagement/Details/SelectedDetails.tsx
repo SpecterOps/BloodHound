@@ -17,9 +17,10 @@
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { apiClient } from '../../../utils';
+import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
+import { EntityKinds, apiClient } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
-import WrappedEntityInfoPanel from './EntityInfo/EntityInfoPanel';
+import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
     const { tierId, labelId, selectorId, memberId } = useParams();
@@ -58,8 +59,26 @@ export const SelectedDetails: FC = () => {
         enabled: tagId !== undefined && memberId !== undefined,
     });
 
-    if (memberId !== undefined) {
-        return <WrappedEntityInfoPanel selectedNode={memberQuery.data ?? null} />;
+    if (memberQuery.data) {
+        const selectedNode = {
+            id: memberQuery.data.object_id,
+            name: memberQuery.data.name,
+            type: memberQuery.data.primary_kind as EntityKinds,
+        };
+        return (
+            <div className='w-[400px] max-w-[400px]'>
+                <EntityInfoPanel
+                    DataTable={EntityInfoDataTable}
+                    selectedNode={selectedNode}
+                    additionalTables={[
+                        {
+                            sectionProps: { label: 'Selectors', id: memberQuery.data.object_id },
+                            TableComponent: EntitySelectorsInformation,
+                        },
+                    ]}
+                />
+            </div>
+        );
     } else if (selectorId !== undefined) {
         return <DynamicDetails queryResult={selectorQuery} />;
     } else if (tagId !== undefined) {

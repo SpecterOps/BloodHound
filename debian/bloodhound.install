@@ -1,0 +1,4 @@
+debian/bhapi.json.default etc/bloodhound
+debian/bloodhound.service usr/lib/systemd/system
+beagle cmd local-harnesses usr/lib/bloodhound
+dist/* usr/lib/bloodhound/bin

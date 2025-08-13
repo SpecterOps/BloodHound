@@ -27,7 +27,6 @@ Commands:
   build       Build commands in current workspace
   cover       Collect coverage reports
   license     Check all supported files for expected license header and add one if missing
-  graph       Ingests test files from test fixture directory and transforms the node/edge data into a generic ingestible file
 ```
 
 ### Usage

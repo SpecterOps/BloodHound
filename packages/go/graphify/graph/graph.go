@@ -56,7 +56,6 @@ const (
 
 type Command struct {
 	env     environment.Environment
-	outpath string
 	path    string
 	service GraphService
 }
@@ -86,8 +85,7 @@ func (s *Command) Parse() error {
 		cmd = flag.NewFlagSet(Name, flag.ContinueOnError)
 	)
 
-	cmd.StringVar(&s.outpath, "outpath", "tmp/", "destination path for generic graph files, default is tmp/")
-	cmd.StringVar(&s.path, "path", "", "directory containing bloodhound collection files")
+	cmd.StringVar(&s.path, "path", "", "working directory containing a raw folder with ingest files")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -141,7 +139,7 @@ func NewCommunityGraphService() (*CommunityGraphService, error) {
 		return nil, fmt.Errorf("error loading ingest schema: %w", err)
 	}
 
-	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
+	readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson}
 
 	return &CommunityGraphService{readOpts: readOpts}, nil
 }
@@ -164,6 +162,15 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 	}
 
 	s.db = database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+
+	if s.db != nil {
+		err := s.db.Wipe(ctx)
+		if err != nil {
+			return fmt.Errorf("precommand wipe database: %w", err)
+		} else {
+			slog.Info("Successfully wiped database during initialization")
+		}
+	}
 
 	if err := s.db.Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating database: %w", err)
@@ -205,7 +212,7 @@ func (s *Command) Run() error {
 		return fmt.Errorf("error retrieving nodes and edges from database: %w", err)
 	} else if graph, err := transformGraph(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
-	} else if err := writeGraphToFile(&graph, s.outpath, "ingested.json"); err != nil {
+	} else if err := writeGraphToFile(&graph, s.path, "ingest", "ingested.json"); err != nil {
 		return fmt.Errorf("error writing graph to file: %w", err)
 	} else if err := s.service.RunAnalysis(ctx, graphDB); err != nil {
 		return fmt.Errorf("error running analysis: %w", err)
@@ -213,19 +220,23 @@ func (s *Command) Run() error {
 		return fmt.Errorf("error getting nodes and edges: %w", err)
 	} else if graph, err := transformGraph(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
-	} else if err := writeGraphToFile(&graph, s.outpath, "analyzed.json"); err != nil {
+	} else if err := writeGraphToFile(&graph, s.path, "analysis", "analyzed.json"); err != nil {
 		return fmt.Errorf("error writing graph to file: %w", err)
 	}
 
 	return nil
 }
 
-func writeGraphToFile(graph *generic.Graph, folder string, fileName string) error {
-	outputFile := filepath.Join(folder, fileName)
+func writeGraphToFile(graph *generic.Graph, root, folder, fileName string) error {
+	outputDir := filepath.Join(root, folder)
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		return fmt.Errorf("making output directory %s: %w", outputDir, err)
+	}
+	outputFile := filepath.Join(outputDir, fileName)
 
 	if jsonBytes, err := json.MarshalIndent(generateGenericGraphFile(graph), "", "  "); err != nil {
 		return fmt.Errorf("error occurred while marshalling ingest file into bytes: %w", err)
-	} else if err := os.MkdirAll(folder, 0755); err != nil {
+	} else if err := os.MkdirAll(root, 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	} else {
 		return os.WriteFile(outputFile, jsonBytes, 0644)
@@ -255,11 +266,12 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (generic.G
 		var kinds = make([]string, 0, len(node.Kinds))
 
 		for _, kind := range node.Kinds {
-			if kind == ad.Entity {
+			switch kind {
+			case ad.Entity:
 				isBase = true
-			} else if kind == azure.Entity {
+			case azure.Entity:
 				isAZBase = true
-			} else {
+			default:
 				kinds = append(kinds, kind.String())
 			}
 		}
@@ -443,7 +455,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 func (s *Command) getIngestFilePaths() ([]string, error) {
 	var paths = make([]string, 0, 16)
 
-	if err := filepath.Walk(s.path, func(path string, info fs.FileInfo, err error) error {
+	if err := filepath.Walk(filepath.Join(s.path, "raw"), func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error walking filepath: %w", err)
 		}

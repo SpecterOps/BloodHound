@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { cypherTestResponse } from 'bh-shared-ui';
+import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from 'src/test-utils';
@@ -21,7 +23,7 @@ import GraphView from './GraphView';
 
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json(cypherTestResponse));
     }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
@@ -31,13 +33,22 @@ const server = setupServer(
     })
 );
 
-beforeAll(() => server.listen());
+beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        value: 800,
+    });
+
+    server.listen();
+});
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('GraphView', () => {
     it('renders a graph view', () => {
-        render(<GraphView />);
+        render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
         const container = screen.getByTestId('explore');
         expect(container).toBeInTheDocument();
     });
@@ -55,5 +66,54 @@ describe('GraphView', () => {
         );
 
         expect(errorAlert).toBeInTheDocument();
+    });
+
+    it('renders a table if the query has NO node edges', async () => {
+        render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
+
+        const table = await screen.findByRole('table');
+
+        expect(table).toBeInTheDocument();
+
+        const rows = await screen.findAllByRole('row');
+
+        const expectedNumberOfRows = Object.keys(cypherTestResponse.data.nodes).length + 1; // plus one for the header row
+        expect(rows.length).toBe(expectedNumberOfRows);
+    });
+
+    it('renders a graph if the query has any node edges', async () => {
+        const tempEdges: Array<GraphEdge> = [];
+        const clonedCypherResponse = {
+            ...cypherTestResponse,
+            data: {
+                ...cypherTestResponse.data,
+                edges: tempEdges,
+            },
+        };
+
+        clonedCypherResponse.data.edges.push({
+            source: '108',
+            target: '108',
+            label: 'some label',
+            kind: 'some kind',
+            lastSeen: 'some lastSeen',
+            impactPercent: 10,
+            exploreGraphId: 'some exploreGraphId',
+            data: {},
+        });
+
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(ctx.json(clonedCypherResponse));
+            })
+        );
+
+        render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
+
+        const sigma = await screen.findByTestId('sigma-container-wrapper');
+        const table = screen.queryByRole('table');
+
+        expect(sigma).toBeInTheDocument();
+        expect(table).not.toBeInTheDocument();
     });
 });

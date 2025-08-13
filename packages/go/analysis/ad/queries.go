@@ -25,6 +25,7 @@ import (
 
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -374,50 +375,45 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 
 func CreateGPOAffectedIntermediariesPathDelegate(targetKinds ...graph.Kind) analysis.PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-		return GetGPOAffectedObjectsPath(tx, node, graph.UnregisteredNodeID, targetKinds...)
-	}
-}
+		pathSet := graph.NewPathSet()
 
-func GetGPOAffectedObjectsPath(tx graph.Transaction, gpo *graph.Node, targetID graph.ID, targetKinds ...graph.Kind) (graph.PathSet, error) {
-	pathSet := graph.NewPathSet()
+		if gpLinks, err := getGPOLinks(tx, node); err != nil {
+			return nil, err
+		} else {
+			for _, rel := range gpLinks {
+				// It's possible the property isn't here, so lets set enforced to false and let it roll
+				enforced, _ := rel.Properties.GetOrDefault(ad.Enforced.String(), false).Bool()
 
-	if gpLinks, err := getGPOLinks(tx, gpo); err != nil {
-		return nil, err
-	} else {
-		for _, rel := range gpLinks {
-			// It's possible the property isn't here, so lets set enforced to false and let it roll
-			enforced, _ := rel.Properties.GetOrDefault(ad.Enforced.String(), false).Bool()
+				if end, err := ops.FetchNode(tx, rel.EndID); err != nil {
+					return nil, err
+				} else if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+					Root:        end,
+					Direction:   graph.DirectionOutbound,
+					BranchQuery: FilterContainsRelationship,
+					DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+						if !enforced {
+							return BlocksInheritanceDescentFilter(ctx, segment)
+						}
 
-			if end, err := ops.FetchNode(tx, rel.EndID); err != nil {
-				return nil, err
-			} else if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
-				Root:        end,
-				Direction:   graph.DirectionOutbound,
-				BranchQuery: FilterContainsRelationship,
-				DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-					if !enforced {
-						return BlocksInheritanceDescentFilter(ctx, segment)
-					}
-
-					return true
-				},
-				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-					matchesKind := len(targetKinds) == 0 || segment.Node.Kinds.ContainsOneOf(targetKinds...)
-					matchesID := targetID == graph.UnregisteredNodeID || targetID == segment.Node.ID
-					return matchesKind && matchesID
-				},
-			}); err != nil {
-				return nil, err
-			} else if paths.Len() > 0 {
-				pathSet.AddPathSet(paths)
-				pathSet.AddPath(graph.Path{
-					Nodes: []*graph.Node{gpo, end},
-					Edges: []*graph.Relationship{rel},
-				})
+						return true
+					},
+					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+						return len(targetKinds) == 0 || segment.Node.Kinds.ContainsOneOf(targetKinds...)
+					},
+				}); err != nil {
+					return nil, err
+				} else if paths.Len() > 0 {
+					pathSet.AddPathSet(paths)
+					pathSet.AddPath(graph.Path{
+						Nodes: []*graph.Node{node, end},
+						Edges: []*graph.Relationship{rel},
+					})
+				}
 			}
+
+			return pathSet, nil
 		}
 	}
-	return pathSet, nil
 }
 
 func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int) (graph.NodeSet, error) {
@@ -599,8 +595,9 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 						isInheritable := true
 						// Walk back up the inheritance chain until we reach our start node, checking that inheritance is not blocked
 						segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-							// If we run into an intermediary node that is protected, we can stop walking this path
-							if isACLProtected, _ := end.Properties.GetOrDefault(ad.IsACLProtected.String(), false).Bool(); isACLProtected {
+							// If we run into an intermediary node that is protected, we can stop walking this path. Checking just
+							// the start node of each segment purposefully excludes the inheritance source from this check.
+							if isACLProtected, _ := start.Properties.GetOrDefault(ad.IsACLProtected.String(), false).Bool(); isACLProtected {
 								isInheritable = false
 								return false
 							}
@@ -1895,8 +1892,8 @@ func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction) (graph.NodeSet, error
 		return query.And(
 			query.Kind(query.Node(), ad.Group),
 			query.Or(
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), EveryoneSuffix),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String()),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.EveryoneSIDSuffix.String()),
 			),
 		)
 	}))

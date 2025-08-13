@@ -91,7 +91,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("clearing asset directory: %w", err)
 	} else if err := s.runJSBuild(paths.Root, paths.Assets); err != nil {
 		return fmt.Errorf("building JS artifacts: %w", err)
-	} else if err := s.runGoBuild(paths.Root, paths.GoModules); err != nil {
+	} else if err := s.runGoBuild(paths.Root, paths.GoModule); err != nil {
 		return fmt.Errorf("building Go artifacts: %w", err)
 	} else {
 		return nil
@@ -108,10 +108,10 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 	}
 }
 
-func (s command) runGoBuild(cwd string, modPaths []string) error {
+func (s command) runGoBuild(cwd string, modPath string) error {
 	s.env.SetIfEmpty("CGO_ENABLED", "0")
 
-	if err := golang.BuildMainPackages(cwd, modPaths, s.env); err != nil {
+	if err := golang.BuildMainPackages(cwd, modPath, s.env); err != nil {
 		return fmt.Errorf("building main packages: %w", err)
 	} else {
 		return nil

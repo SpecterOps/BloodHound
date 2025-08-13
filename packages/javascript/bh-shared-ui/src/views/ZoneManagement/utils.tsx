@@ -27,7 +27,7 @@ export const ItemSkeleton = (title: string, key: number, height?: string, style?
             key={key}
             data-testid={`zone-management_${title.toLowerCase()}-list_loading-skeleton`}
             style={style}
-            className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
+            className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
             <Skeleton className={`${height ?? 'min-h-10'} rounded-none`} />
         </li>
     );

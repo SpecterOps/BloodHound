@@ -145,10 +145,8 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 }
 
 func TestPostNTLMRelaySMB(t *testing.T) {
-	// TODO: Add some negative tests here
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	t.Run("NTLMCoerceAndRelayNTLMToSMB Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
 			return nil
@@ -191,11 +189,12 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 						start, end, err := ops.FetchRelationshipNodes(tx, result)
 						require.NoError(t, err)
 
-						if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID {
+						switch start.ID {
+						case harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
-						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID {
+						case harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
-						} else {
+						default:
 							require.FailNow(t, "unrecognized start node id")
 						}
 					}
@@ -206,6 +205,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToSMB Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToSMBSelfRelay.Setup(testContext)
 			return nil
@@ -328,9 +328,8 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 }
 
 func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
 	t.Run("NTLMCoerceAndRelayNTLMToLDAP Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToLDAP.Setup(testContext)
 			return nil
@@ -391,13 +390,14 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						dcSet, err := ad2.GetVulnerableDomainControllersForRelayNTLMtoLDAP(context.Background(), db, result)
 						require.NoError(t, err)
 
-						if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAP.Group1.ID {
+						switch start.ID {
+						case harness.NTLMCoerceAndRelayNTLMToLDAP.Group1.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer2.ID)
 							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAP.Computer1.ID))
-						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAP.Group5.ID {
+						case harness.NTLMCoerceAndRelayNTLMToLDAP.Group5.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAP.Computer7.ID)
 							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAP.Computer6.ID))
-						} else {
+						default:
 							require.FailNow(t, "unrecognized start node id")
 						}
 
@@ -409,6 +409,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAPS Success", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToLDAPS.Setup(testContext)
 			return nil
@@ -464,15 +465,16 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 						dcSet, err := ad2.GetVulnerableDomainControllersForRelayNTLMtoLDAPS(context.Background(), db, result)
 						require.NoError(t, err)
 
-						if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAPS.Group1.ID {
+						switch start.ID {
+						case harness.NTLMCoerceAndRelayNTLMToLDAPS.Group1.ID:
 							if end.ID != harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer2.ID && end.ID != harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer5.ID {
 								require.FailNow(t, "unrecognized end node associated with Group1")
 							}
 							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer1.ID))
-						} else if start.ID == harness.NTLMCoerceAndRelayNTLMToLDAPS.Group5.ID {
+						case harness.NTLMCoerceAndRelayNTLMToLDAPS.Group5.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer7.ID)
 							assert.True(t, dcSet.ContainsID(harness.NTLMCoerceAndRelayNTLMToLDAPS.Computer6.ID))
-						} else {
+						default:
 							require.FailNow(t, "unrecognized start node id")
 						}
 					}
@@ -483,6 +485,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAPS Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayToLDAPSSelfRelay.Setup(testContext)
 			return nil
@@ -537,6 +540,7 @@ func TestPostCoerceAndRelayNTLMToLDAP(t *testing.T) {
 	})
 
 	t.Run("NTLMCoerceAndRelayNTLMToLDAP Self Relay Does Not Create Edge", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayToLDAPSelfRelay.Setup(testContext)
 			return nil
