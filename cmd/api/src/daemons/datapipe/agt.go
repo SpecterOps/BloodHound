@@ -417,8 +417,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		certified   = model.AssetGroupCertificationNone
 		certifiedBy null.String
 
-		nodeIdsToDelete []graph.ID
-		nodesToUpdate   []model.AssetGroupSelectorNode
+		nodesToUpdate []model.AssetGroupSelectorNode
 	)
 
 	if selector.AutoCertify.ValueOrZero() {
@@ -483,7 +482,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			}
 		}
 
-		slog.Info("AGT: Completed selecting", "selector", selector.Name, "countTotal", len(nodesWithSrcSet), "countInserted", countInserted, "countUpdated", len(nodesToUpdate), "countDeleted", len(nodeIdsToDelete))
+		slog.Info("AGT: Completed selecting", "selector", selector.Name, "countTotal", len(nodesWithSrcSet), "countInserted", countInserted, "countUpdated", len(nodesToUpdate), "countDeleted", len(oldSelectedNodesByNodeId))
 	}
 	return nil
 }
