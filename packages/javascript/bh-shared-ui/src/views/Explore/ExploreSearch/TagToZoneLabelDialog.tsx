@@ -44,14 +44,13 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
     const [zone, setZone] = useState('');
     const [label, setLabel] = useState('');
 
-    const handleValueChange = (val: any) => {
+    const handleValueChange = (val: string) => {
         isLabel ? setLabel(val) : setZone(val);
     };
 
     const stateToPass = cypherQuery ? { query: cypherQuery } : selectedQuery;
 
     const onContinue = () => {
-        //TODO - use the const for this path
         if (isLabel) {
             navigate(`/zone-management/save/label/${label}/selector`, { state: stateToPass });
         } else {

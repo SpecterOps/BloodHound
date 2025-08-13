@@ -24,7 +24,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
         transform: 'scale(1)',
     };
 
-    const transitionStyles: any = {
+    const transitionStyles: { [key: string]: React.CSSProperties } = {
         entering: { opacity: 1, transform: 'translateX(0) scale(0.96)' },
         entered: { opacity: 1 },
         exiting: { opacity: 0, transform: 'scale(0.9)' },

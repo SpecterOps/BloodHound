@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useQueryPermissions } from '../../../hooks';
 import { apiClient } from '../../../utils';
+
 type SavedQueryPermissionsProps = {
     queryId?: number;
     sharedIds: string[];
@@ -47,10 +48,20 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const queryClient = useQueryClient();
 
+    type PermissionsData =
+        | {
+              query_id: number | undefined;
+              public: boolean;
+              shared_to_user_ids: string[];
+          }
+        | undefined;
+
     useEffect(() => {
         // manually setting data on error.
         // api returns error for empty state.
-        queryClient.setQueryData(['permissions'], (oldData: any) => {
+        queryClient.setQueryData(['permissions'], (oldData: PermissionsData) => {
+            console.log('set Query Permissions - oldData = ');
+            console.log(oldData);
             return { ...oldData, query_id: undefined, public: false, shared_to_user_ids: [] };
         });
     }, [error, isError]);
