@@ -94,11 +94,25 @@ const ZoneManagement: FC = () => {
                     <Tabs
                         defaultValue='tier'
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
-                        value={location.pathname.includes('label') ? 'label' : 'tier'}
+                        value={
+                            location.pathname.includes('label')
+                                ? 'label'
+                                : location.pathname.includes('certification')
+                                  ? 'certification'
+                                  : 'tier'
+                        }
                         onValueChange={(value) => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? tagId : ownedId;
+                            // const id = value === 'tier' ? tagId : ownedId;
+                            let id: number | undefined;
+                            if (value === 'tier') {
+                                id = tagId;
+                            } else if (value === 'label') {
+                                id = ownedId;
+                            } else if (value === 'certification') {
+                                // id = certificationId;
+                            }
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
@@ -107,6 +121,9 @@ const ZoneManagement: FC = () => {
                             </TabsTrigger>
                             <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
                                 Labels
+                            </TabsTrigger>
+                            <TabsTrigger value='certification' data-testid='zone-management_tab-list_certification-tab'>
+                                Certification
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
