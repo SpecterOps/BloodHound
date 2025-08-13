@@ -660,9 +660,9 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {
-				groupMem := nodeToAssetGroupMember(node, excludeProperties)
-				groupMem.AssetGroupTagId = assetGroupTag.ID
-				members = append(members, groupMem)
+				groupMember := nodeToAssetGroupMember(node, excludeProperties)
+				groupMember.AssetGroupTagId = assetGroupTag.ID
+				members = append(members, groupMember)
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
@@ -807,7 +807,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			kinds  graph.Kinds
 			tagIds []int
 		)
-		kindToAgtId := make(map[graph.Kind]int)
+		tagIdByKind := make(map[graph.Kind]int)
 
 		for _, t := range tags {
 			// owned tag is a label despite distinct designation
@@ -816,7 +816,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				// filter the below node and selector query to tag type
 				kinds = kinds.Add(t.ToKind())
 				tagIds = append(tagIds, t.ID)
-				kindToAgtId[t.ToKind()] = t.ID
+				tagIdByKind[t.ToKind()] = t.ID
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
 					matchedTags = append(matchedTags, t)
 				}
@@ -842,8 +842,12 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		} else {
 			for _, node := range nodes {
 				groupMember := nodeToAssetGroupMember(node, excludeProperties)
-				if pzKind, found := model.KindsToAgtKind(node.Kinds); found {
-					groupMember.AssetGroupTagId = kindToAgtId[pzKind]
+				for _, kind := range node.Kinds {
+					// Find the first valid kind for this search type and attribute it to this member
+					if tagId, ok := tagIdByKind[kind]; ok {
+						groupMember.AssetGroupTagId = tagId
+						break
+					}
 				}
 				members = append(members, groupMember)
 			}
