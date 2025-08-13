@@ -838,6 +838,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		var (
+			kinds  graph.Kinds
 			tagIds []int
 		)
 		tagIdByKind := make(map[graph.Kind]int)
@@ -846,26 +847,8 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			// owned tag is a label despite distinct designation
 			if reqBody.TagType == t.Type || (reqBody.TagType == model.AssetGroupTagTypeLabel && t.Type == model.AssetGroupTagTypeOwned) {
 
-				nodeFilter := query.And(
-					query.Or(
-						query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), reqBody.Query),
-						query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), reqBody.Query),
-					),
-					query.KindIn(query.Node(), t.ToKind()),
-				)
-
-				if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, assetGroupTagsSearchLimit); err != nil {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
-					return
-				} else {
-					for _, node := range nodes {
-						groupMember := nodeToAssetGroupMember(node, excludeProperties)
-						groupMember.AssetGroupTagId = t.ID
-						members = append(members, groupMember)
-					}
-				}
-
 				// filter the below node and selector query to tag type
+				kinds = kinds.Add(t.ToKind())
 				tagIds = append(tagIds, t.ID)
 				tagIdByKind[t.ToKind()] = t.ID
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < AssetGroupTagDefaultLimit {
@@ -874,17 +857,29 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			}
 		}
 		var (
+			nodeFilter = query.And(
+				query.Or(
+					query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), reqBody.Query),
+					query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), reqBody.Query),
+				),
+				query.KindIn(query.Node(), kinds...),
+			)
 			selectorFilter = model.SQLFilter{SQLString: "name ILIKE ? AND asset_group_tag_id IN ?", Params: []any{"%" + reqBody.Query + "%", tagIds}}
 		)
 
 		if selectors, err = s.DB.GetAssetGroupTagSelectors(request.Context(), selectorFilter, AssetGroupTagDefaultLimit); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 			return
+<<<<<<< HEAD
 		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, AssetGroupTagDefaultLimit); err != nil {
+=======
+		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, assetGroupTagsSearchLimit); err != nil {
+>>>>>>> 052b3d43a (Revert "Return AGT id in members for /api/v2/asset-group-tags/search")
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 			return
 		} else {
 			for _, node := range nodes {
+<<<<<<< HEAD
 				groupMember := nodeToAssetGroupMember(node, excludeProperties)
 				for _, kind := range node.Kinds {
 					// Find the first valid kind for this search type and attribute it to this member
@@ -894,8 +889,12 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 					}
 				}
 				members = append(members, groupMember)
+=======
+				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
+>>>>>>> 052b3d43a (Revert "Return AGT id in members for /api/v2/asset-group-tags/search")
 			}
 		}
+
 		api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tags: matchedTags, Selectors: selectors, Members: members}, http.StatusOK, response)
 	}
 }
