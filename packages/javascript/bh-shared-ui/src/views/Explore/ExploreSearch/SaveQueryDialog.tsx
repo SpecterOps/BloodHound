@@ -53,7 +53,6 @@ type CypherSearchState = {
 
 const SaveQueryDialog: React.FC<{
     open: boolean;
-    isLoading?: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
     selectedQuery: QueryLineItem | undefined;
@@ -66,7 +65,6 @@ const SaveQueryDialog: React.FC<{
     setIsPublic: (isPublic: boolean) => void;
 }> = ({
     open,
-    isLoading = false,
     error = undefined,
     cypherSearchState,
     selectedQuery,

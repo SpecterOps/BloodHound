@@ -59,7 +59,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     const [queryId, setQueryId] = useState<number>();
 
     const styles = useStyles();
-    const itemRef = useRef<HTMLDivElement>(null);
+    const itemRef = useRef<HTMLLIElement>(null);
 
     const handleClose = () => {
         setOpen(false);
@@ -110,12 +110,12 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                             {queryData.map((queryItem, i) => {
                                 const { subheader, queries } = queryItem;
                                 return (
-                                    <li key={i} className='list-none'>
+                                    <ul key={i} className='list-none'>
                                         {queries?.map((lineItem, idx) => {
                                             const { id, name, description, query, canEdit = false } = lineItem;
                                             return (
-                                                <div
-                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 scroll-my-10 ${
+                                                <li
+                                                    className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 scroll-my-10 list-none ${
                                                         testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
@@ -143,10 +143,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             editQuery={() => handleEdit(id as number)}
                                                         />
                                                     )}
-                                                </div>
+                                                </li>
                                             );
                                         })}
-                                    </li>
+                                    </ul>
                                 );
                             })}
                         </div>

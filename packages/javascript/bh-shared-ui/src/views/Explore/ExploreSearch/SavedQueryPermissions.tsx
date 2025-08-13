@@ -100,7 +100,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     };
 
     const isCheckboxChecked = (id: string) => {
-        return sharedIds.includes(id);
+        return sharedIds?.includes(id);
     };
 
     const getColumns = () => {
