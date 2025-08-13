@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,13 +78,28 @@ type patchAssetGroupTagSelectorRequest struct {
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
-	var rCtx = request.Context()
+	var (
+		rCtx           = request.Context()
+		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
+	)
 
 	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specified for include counts", request), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
+		if etacFlag, err := s.DB.GetFlagByKey(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if etacFlag.Enabled && len(environmentIds) > 0 {
+			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+				slog.Error("Unable to get user from auth context")
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+			} else if hasAccess, err := api.CheckUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); !hasAccess {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "", request), response)
+			} else if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "", request), response)
+			}
+		}
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupTag{}, name); err != nil {
 				api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
@@ -490,11 +506,24 @@ type getAssetGroupTagResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http.Request) {
+	var (
+		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
+	)
 	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		if len(environmentIds) > 0 {
+			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+				slog.Error("Unable to get user from auth context")
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+			} else if hasAccess, err := api.CheckUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); !hasAccess {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "", request), response)
+			} else if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "", request), response)
+			}
+		}
 		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.CreatedBy)); err == nil {
 			assetGroupTag.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
 		}
@@ -896,4 +925,9 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 			api.WriteResponseWrapperWithPagination(rCtx, AssetGroupHistoryResp{Records: historyRecs}, limit, skip, count, http.StatusOK, response)
 		}
 	}
+}
+
+func checkUserAccessToEnvironments(ctx context.Context, user model.User, environmentIds ...string) (bool, error) {
+
+	return true, nil
 }
