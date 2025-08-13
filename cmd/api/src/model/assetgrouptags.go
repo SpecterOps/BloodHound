@@ -121,15 +121,6 @@ func (s AssetGroupTag) KindName() string {
 	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
 }
 
-func KindsToAgtKind(kinds graph.Kinds) (graph.Kind, bool) {
-	for _, kind := range kinds {
-		if strings.HasPrefix(kind.String(), "Tag_") {
-			return kind, true
-		}
-	}
-	return nil, false
-}
-
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
 	return filter == "name" || filter == "description"
 }
