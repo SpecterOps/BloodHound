@@ -40,6 +40,7 @@ import {
     UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
+    UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateSelectorRequest,
@@ -60,6 +61,7 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
@@ -276,6 +278,42 @@ class BHEAPIClient {
             }
         );
 
+    getAssetGroupTagsCertifications = (
+        limit: number,
+        skip: number,
+        filter?: types.AssetGroupTagCertificationParams,
+        options?: RequestOptions
+    ) => {
+        const params = new URLSearchParams();
+        params.append('skip', skip.toString());
+        params.append('limit', limit.toString());
+        if (filter) {
+            if (filter.certificationStatus !== undefined)
+                params.append('certified', `eq:${filter.certificationStatus}`);
+        }
+        return this.baseClient.get<AssetGroupTagsCertification>(
+            `/api/v2/asset-group-tags/certifications`,
+            Object.assign(
+                {
+                    params,
+                },
+                options
+            )
+        );
+    };
+
+    searchAssetGroupTagsCertifications = (limit: number, skip: number, query = '') =>
+        this.baseClient.post<AssetGroupTagsCertification>(
+            `/api/v2/asset-group-tags/certifications`,
+            { query },
+            {
+                params: {
+                    skip,
+                    limit,
+                },
+            }
+        );
+
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
@@ -404,6 +442,10 @@ class BHEAPIClient {
             payload,
             options
         );
+    };
+
+    updateAssetGroupTagCertification = (requestBody: UpdateCertificationRequest) => {
+        return this.baseClient.post('/api/v2/asset-group-tags/certifications', requestBody);
     };
 
     /* asset group isolation (AGI) */

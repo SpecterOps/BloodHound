@@ -14,91 +14,110 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    ButtonProps,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+    TooltipContent,
+    TooltipPortal,
+    TooltipProvider,
+    TooltipRoot,
+    TooltipTrigger,
+} from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
+import { PopperContentProps } from '@radix-ui/react-popper';
 import { FC, useState } from 'react';
-import { cn } from '../../utils/theme';
+import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
+    variant?: ButtonProps['variant'];
     options: DropdownOption[];
-    selectedText: string;
+    selectedText: JSX.Element | string;
     onChange: (selection: DropdownOption) => void;
-}> = ({ options, selectedText, onChange }) => {
-    const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
+    align?: PopperContentProps['align'];
+}> = ({ variant = 'primary', options, selectedText, align = 'start', onChange }) => {
+    const [open, setOpen] = useState<boolean>(false);
 
-    const handleClick = (e: any) => {
-        setAnchorEl(e.currentTarget);
-    };
+    const handleClose = () => setOpen(false);
 
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+    const buttonPrimary = variant === 'primary';
+
+    const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
     return (
-        <Box p={1}>
-            <Button className='w-full truncate uppercase' onClick={handleClick} data-testid='dropdown_context-selector'>
-                <span className='inline-flex justify-between gap-4 items-center w-full'>
-                    <span>{selectedText}</span>
-                    <span className={cn({ 'rotate-180 transition-transform': open })}>
-                        <AppIcon.CaretDown size={12} />
+        <Popover open={open} onOpenChange={handleOpenChange}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant={variant}
+                    className={cn({
+                        'rounded-md border shadow-outer-0 hover:bg-neutral-3 hover:text-primary text-black dark:text-white truncate':
+                            !buttonPrimary,
+                        'w-full uppercase': buttonPrimary,
+                    })}
+                    data-testid='dropdown_context-selector'>
+                    <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
+                        <span>{selectedText}</span>
+                        <span
+                            className={cn({
+                                'rotate-180 transition-transform': open,
+                                'justify-self-end': buttonPrimary,
+                            })}>
+                            <AppIcon.CaretDown size={12} />
+                        </span>
                     </span>
-                </span>
-            </Button>
-            <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                }}
-                data-testid='dropdown_context-selector-popover'>
-                {options.map((option) => {
-                    return (
-                        <MenuItem
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: 450,
-                                maxWidth: 450,
-                            }}
-                            key={option.key}
-                            onClick={() => {
-                                onChange(option);
-                                handleClose();
-                            }}>
-                            <Tooltip title={option.value}>
-                                <Typography
-                                    style={{
-                                        overflow: 'hidden',
-                                        textTransform: 'uppercase',
-                                        display: 'inline-block',
-                                        textOverflow: 'ellipsis',
-                                        maxWidth: 350,
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent
+                align={align}
+                className={cn(
+                    'flex flex-col gap-2 p-1 border border-neutral-light-5',
+                    { 'w-80': buttonPrimary },
+                    { 'w-full': !buttonPrimary }
+                )}>
+                <ul>
+                    {options.map((option: DropdownOption) => {
+                        return (
+                            <li key={option.key}>
+                                <Button
+                                    variant={'text'}
+                                    className='flex justify-between items-center gap-2 w-full'
+                                    onClick={() => {
+                                        onChange(option);
+                                        handleClose();
                                     }}>
-                                    {option.value}
-                                </Typography>
-                            </Tooltip>
-                            {option.icon && (
-                                <FontAwesomeIcon
-                                    style={{ width: '10%', alignSelf: 'center' }}
-                                    icon={option.icon}
-                                    size='sm'
-                                />
-                            )}
-                        </MenuItem>
-                    );
-                })}
-            </Popover>
-        </Box>
+                                    <TooltipProvider>
+                                        <TooltipRoot>
+                                            <TooltipTrigger>
+                                                <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
+                                                    {option.value}
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipPortal>
+                                                <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
+                                                    <span className='uppercase'>{option.value}</span>
+                                                </TooltipContent>
+                                            </TooltipPortal>
+                                        </TooltipRoot>
+                                    </TooltipProvider>
+                                    {option.icon && (
+                                        <FontAwesomeIcon
+                                            style={{ width: '10%', alignSelf: 'center' }}
+                                            icon={option.icon}
+                                            data-testid={`dropdown-icon-${option.icon.iconName}`}
+                                            size='sm'
+                                        />
+                                    )}
+                                </Button>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </PopoverContent>
+        </Popover>
     );
 };
 

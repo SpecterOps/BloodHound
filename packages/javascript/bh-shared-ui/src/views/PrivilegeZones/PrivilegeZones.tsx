@@ -20,6 +20,7 @@ import React, { FC, Suspense, useContext } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../hooks';
 import {
+    ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
     ROUTE_PZ_LABEL_DETAILS,
     ROUTE_PZ_LABEL_MEMBER_DETAILS,
@@ -32,6 +33,7 @@ import {
     ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
     ROUTE_PZ_ZONE_SUMMARY,
     Routable,
+    certificationsPath,
     detailsPath,
     historyPath,
     labelsPath,
@@ -47,6 +49,7 @@ import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
+const Certification = React.lazy(() => import('./Certification/Certification'));
 
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
@@ -61,6 +64,7 @@ const detailsPaths = [
 
 const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
 const historyPaths = [ROUTE_PZ_HISTORY];
+const certificationsPaths = [ROUTE_PZ_CERTIFICATIONS];
 
 const PrivilegeZones: FC = () => {
     const navigate = useAppNavigate();
@@ -84,6 +88,9 @@ const PrivilegeZones: FC = () => {
         }),
         ...historyPaths.map((path) => {
             return { path, component: History, authenticationRequired: true, navigation: true };
+        }),
+        ...certificationsPaths.map((path) => {
+            return { path, component: Certification, authenticationRequired: true, navigation: true };
         }),
     ];
 
@@ -112,6 +119,11 @@ const PrivilegeZones: FC = () => {
                         value={tabValue}
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
+                            if (value === certificationsPath) {
+                                return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
+                                    discardQueryParams: true,
+                                });
+                            }
                             if (value === historyPath) {
                                 return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
                             } else {
@@ -129,6 +141,11 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                             <TabsTrigger value={historyPath} data-testid='privilege-zones_tab-list_history-tab'>
                                 History
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value={certificationsPath}
+                                data-testid='privilege-zones_tab-list_certifications-tab'>
+                                Certifications
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
