@@ -47,10 +47,12 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
 
     return (
         <Box className={styles.header}>
-            {!!selectedItem && (
+            {selectedItem ? (
                 <Icon className={styles.icon} click={clearSelectedItem}>
                     <FontAwesomeIcon icon={faRemove} />
                 </Icon>
+            ) : (
+                <div className='w-3' />
             )}
 
             {nodeType && <NodeIcon nodeType={nodeType} />}
