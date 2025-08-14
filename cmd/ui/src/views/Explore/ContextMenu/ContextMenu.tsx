@@ -14,82 +14,42 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
+import { Menu } from '@mui/material';
 
-import {
-    Permission,
-    isNode,
-    useExploreParams,
-    useExploreSelectedItem,
-    useFeatureFlag,
-    usePermissions,
-} from 'bh-shared-ui';
-import { FC } from 'react';
-import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppSelector } from 'src/store';
-import AssetGroupMenuItem from './AssetGroupMenuItem';
-import CopyMenuItem from './CopyMenuItem';
+import { CopyMenuItems, EdgeMenuItems, NodeMenuItems, type MousePosition, type PathfindingFilters } from 'bh-shared-ui';
+import { type FC } from 'react';
+import { AssetGroupMenuItems } from './AssetGroupMenuItems';
+
+const NAV_MENU_WIDTH = 56;
+
+const getMenuPosition = (position: MousePosition | null) =>
+    position
+        ? {
+              left: position.mouseX + NAV_MENU_WIDTH,
+              top: position.mouseY,
+          }
+        : null;
 
 const ContextMenu: FC<{
-    contextMenu: { mouseX: number; mouseY: number } | null;
-    handleClose: () => void;
-}> = ({ contextMenu, handleClose }) => {
-    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { selectedItemQuery } = useExploreSelectedItem();
-    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
+    onClose: () => void;
+    pathfindingFilters: PathfindingFilters;
+    position: MousePosition | null;
+}> = ({ onClose, pathfindingFilters, position }) => {
+    const menuPosition = getMenuPosition(position);
 
-    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
-    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
-
-    const { checkPermission } = usePermissions();
-
-    const handleSetStartingNode = () => {
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            const searchType = secondarySearch ? 'pathfinding' : 'node';
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                primarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
-
-    const handleSetEndingNode = () => {
-        const searchType = primarySearch ? 'pathfinding' : 'node';
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                secondarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
+    if (menuPosition === null) {
+        return null;
+    }
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+        <Menu open anchorPosition={menuPosition} anchorReference='anchorPosition' onClick={onClose}>
+            <EdgeMenuItems pathfindingFilters={pathfindingFilters} />
 
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
-                        assetGroupId={tierZeroAssetGroupId}
-                        assetGroupName='High Value'
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
-                ]}
-            <CopyMenuItem />
+            <NodeMenuItems />
+
+            <AssetGroupMenuItems />
+
+            <CopyMenuItems />
         </Menu>
     );
 };

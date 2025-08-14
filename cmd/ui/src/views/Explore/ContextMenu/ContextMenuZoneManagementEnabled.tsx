@@ -17,33 +17,32 @@
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
 import {
-    NodeResponse,
-    Permission,
+    CopyMenuItems,
+    EdgeMenuItems,
+    NodeMenuItems,
     apiClient,
-    isNode,
-    useExploreParams,
-    useExploreSelectedItem,
+    useContextMenuItems,
     useNotifications,
-    usePermissions,
     useTagsQuery,
+    type MousePosition,
+    type NodeResponse,
+    type PathfindingFilters,
 } from 'bh-shared-ui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
-import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
-    contextMenu: { mouseX: number; mouseY: number } | null;
-    onClose?: () => void;
-}> = ({ contextMenu, onClose = () => {} }) => {
+    onClose: () => void;
+    pathfindingFilters: PathfindingFilters;
+    position: MousePosition | null;
+}> = ({ onClose, pathfindingFilters, position }) => {
+    const { asNodeItem, isAssetGroupEnabled, menuPosition, selectedItemQuery } = useContextMenuItems(position);
+
+    const nodeItem = asNodeItem(selectedItemQuery);
+
     const { addNotification } = useNotifications();
-
-    const { checkPermission } = usePermissions();
-
-    const { selectedItemQuery } = useExploreSelectedItem();
-
-    const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
 
     const getAssetGroupTagsQuery = useTagsQuery();
 
@@ -68,44 +67,27 @@ const ContextMenu: FC<{
         },
     });
 
-    const handleSetStartingNode = () => {
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            const searchType = secondarySearch ? 'pathfinding' : 'node';
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                primarySearch: selectedItemData?.objectId,
-            });
-        }
-    };
-
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    const handleSetEndingNode = () => {
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            const searchType = primarySearch ? 'pathfinding' : 'node';
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                secondarySearch: selectedItemData?.objectId,
-            });
-        }
-    };
+    // Null position is used to indicated the menu is closed
+    if (menuPosition === null && !dialogOpen) {
+        return null;
+    }
 
     const handleAddNode = (assetGroupId: string | number) => {
-        createAssetGroupTagSelectorMutation.mutate(
-            {
-                assetGroupId,
-                node: selectedItemQuery.data as NodeResponse,
-            },
-            {
-                onSettled: () => {
-                    setDialogOpen(false);
+        if (nodeItem) {
+            createAssetGroupTagSelectorMutation.mutate(
+                {
+                    assetGroupId,
+                    node: nodeItem,
                 },
-            }
-        );
+                {
+                    onSettled: () => {
+                        setDialogOpen(false);
+                    },
+                }
+            );
+        }
     };
 
     const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
@@ -116,28 +98,18 @@ const ContextMenu: FC<{
         return value.type === 3;
     });
 
-    if (getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading) {
-        return (
-            <Menu
-                open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-                anchorReference='anchorPosition'
-                onClick={onClose}
-                keepMounted>
-                <MenuItem disabled>Loading</MenuItem>
-            </Menu>
-        );
-    }
+    const isLoading = getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading;
+    const isError = getAssetGroupTagsQuery.isError || selectedItemQuery.isError;
 
-    if (getAssetGroupTagsQuery.isError || selectedItemQuery.isError) {
+    if (isLoading || isError) {
         return (
             <Menu
-                open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+                open={menuPosition !== null}
+                anchorPosition={menuPosition!}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>
-                <MenuItem disabled>Unavailable</MenuItem>
+                <MenuItem disabled>{isLoading ? 'Loading' : 'Unavailable'}</MenuItem>
             </Menu>
         );
     }
@@ -145,40 +117,43 @@ const ContextMenu: FC<{
     return (
         <Dialog open={dialogOpen}>
             <Menu
-                open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+                open={menuPosition !== null}
+                anchorPosition={menuPosition!}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>
-                <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-                <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-                {checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroup!.id}
-                        assetGroupId={tierZeroAssetGroup!.id}
-                        assetGroupName={tierZeroAssetGroup!.name}
-                        onAddNode={handleAddNode}
-                        removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
-                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
-                        onShowConfirmation={() => {
-                            setDialogOpen(true);
-                        }}
-                        onCancelConfirmation={() => {
-                            setDialogOpen(false);
-                        }}
-                        showConfirmationOnAdd
-                        confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroup!.id}
-                        assetGroupId={ownedAssetGroup!.id}
-                        assetGroupName={ownedAssetGroup!.name}
-                        onAddNode={handleAddNode}
-                        removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
-                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
-                    />,
-                ]}
-                <CopyMenuItem />
+                <EdgeMenuItems pathfindingFilters={pathfindingFilters} />
+
+                <NodeMenuItems />
+
+                {nodeItem &&
+                    isAssetGroupEnabled && [
+                        <AssetGroupMenuItem
+                            key={tierZeroAssetGroup!.id}
+                            assetGroupId={tierZeroAssetGroup!.id}
+                            assetGroupName={tierZeroAssetGroup!.name}
+                            onAddNode={handleAddNode}
+                            removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
+                            isCurrentMember={nodeItem!.isTierZero}
+                            onShowConfirmation={() => {
+                                setDialogOpen(true);
+                            }}
+                            onCancelConfirmation={() => {
+                                setDialogOpen(false);
+                            }}
+                            showConfirmationOnAdd
+                            confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
+                        />,
+                        <AssetGroupMenuItem
+                            key={ownedAssetGroup!.id}
+                            assetGroupId={ownedAssetGroup!.id}
+                            assetGroupName={ownedAssetGroup!.name}
+                            onAddNode={handleAddNode}
+                            removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
+                            isCurrentMember={nodeItem!.isOwnedObject}
+                        />,
+                    ]}
+                <CopyMenuItems />
             </Menu>
         </Dialog>
     );

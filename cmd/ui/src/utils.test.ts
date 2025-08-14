@@ -14,9 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SigmaNodeEventPayload } from 'sigma/sigma';
+import type { SigmaEdgeEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
 import type { MouseCoords } from 'sigma/types';
-import { preventAllDefaults } from './utils';
+import { isNodeEvent, preventAllDefaults } from './utils';
+
+describe('isNodeEvent', () => {
+    it('type-gates Sigma node events', () => {
+        expect(isNodeEvent({ node: 'node-id' } as SigmaNodeEventPayload)).toBeTruthy();
+    });
+
+    it('type-gates Sigma edge events', () => {
+        expect(isNodeEvent({ edge: 'edge-id' } as SigmaEdgeEventPayload)).toBeFalsy();
+    });
+});
 
 describe('preventAllDefaults', () => {
     it('prevents Sigma defaults events', () => {

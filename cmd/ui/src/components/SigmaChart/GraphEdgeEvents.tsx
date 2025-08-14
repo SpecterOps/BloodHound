@@ -17,6 +17,7 @@
 import { useSigma } from '@react-sigma/core';
 import { useCreateDisableZoomRef } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
+import type { SigmaEdgeEventPayload } from 'sigma/sigma';
 import {
     calculateEdgeDistanceForLabel,
     getEdgeDataFromKey,
@@ -29,10 +30,13 @@ import { bezier } from 'src/rendering/utils/bezier';
 import handleWheelFromSigma from './sigma-functions';
 
 interface GraphEdgeEventProps {
-    onClickEdge?: (id: string) => void;
+    onClickEdge: (id: string) => void;
+    onRightClickEdge: (event: SigmaEdgeEventPayload) => void;
 }
 
-export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
+const EDGE_EVENTS = ['contextmenu', 'click', 'mousemove'];
+
+export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge, onRightClickEdge }) => {
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
     const sigmaContainer = document.getElementById('sigma-container');
@@ -44,7 +48,7 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
         (event: any) => {
             const context = edgeLabelsCanvas.getContext('2d');
             if (!context) return;
-            if (event.type === 'click' || event.type === 'mousemove') {
+            if (EDGE_EVENTS.includes(event.type)) {
                 const camera = sigma.getCamera();
                 const ratio = camera.getState().ratio;
                 const inverseSqrtZoomRatio = 1 / Math.sqrt(ratio);
@@ -137,7 +141,15 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
                     //Check if the click happened within the bounds of the label
                     if (viewportX > x1 && viewportX < x2 && viewportY > y1 && viewportY < y2) {
                         if (event.type === 'click') {
-                            onClickEdge?.(edge);
+                            onClickEdge(edge);
+                        } else if (event.type === 'contextmenu') {
+                            onRightClickEdge({
+                                event: {
+                                    x: event.nativeEvent.offsetX,
+                                    y: event.nativeEvent.offsetY,
+                                },
+                                edge,
+                            } as SigmaEdgeEventPayload);
                         } else {
                             //Hover the edge label
                             if (sigmaContainer) sigmaContainer.style.cursor = 'pointer';
@@ -161,7 +173,7 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
-        [edgeLabelsCanvas, sigmaContainer, mouseCanvas, sigma, onClickEdge]
+        [edgeLabelsCanvas, mouseCanvas, onClickEdge, onRightClickEdge, sigma, sigmaContainer]
     );
 
     const edgeEventsRef = useCreateDisableZoomRef<HTMLCanvasElement>((e) => {

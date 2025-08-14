@@ -70,7 +70,7 @@ export const parseRelationshipQueryType = (paramValue: string | null): EntityRel
     return null;
 };
 
-interface UseExploreParamsReturn extends ExploreQueryParams {
+export interface UseExploreParamsReturn extends ExploreQueryParams {
     setExploreParams: (params: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) => void;
 }
 

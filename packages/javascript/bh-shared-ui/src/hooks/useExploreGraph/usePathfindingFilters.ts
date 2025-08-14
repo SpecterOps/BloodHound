@@ -21,6 +21,8 @@ import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
 import { extractEdgeTypes, mapParamsToFilters } from './utils';
 
+export type PathfindingFilters = ReturnType<typeof usePathfindingFilters>;
+
 export const usePathfindingFilters = () => {
     const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
     const { pathFilters, setExploreParams } = useExploreParams();
@@ -41,8 +43,8 @@ export const usePathfindingFilters = () => {
 
     const handleUpdateFilters = (checked: EdgeCheckboxType[]) => updateSelectedFilters(checked);
 
-    const handleApplyFilters = () => {
-        const selectedEdgeTypes = extractEdgeTypes(selectedFilters);
+    const handleApplyFilters = (filters = selectedFilters) => {
+        const selectedEdgeTypes = extractEdgeTypes(filters);
 
         if (selectedEdgeTypes.length === 0) {
             // query string stores a value indicating an empty set if every option is unselected
@@ -51,8 +53,15 @@ export const usePathfindingFilters = () => {
             // query string is not set if user selects the default
             setExploreParams({ pathFilters: null });
         } else {
-            setExploreParams({ pathFilters: extractEdgeTypes(selectedFilters) });
+            setExploreParams({ pathFilters: selectedEdgeTypes });
         }
+    };
+
+    /** Update and applies the filter at the same time. Needed for Graph context menu filtering */
+    const handleUpdateAndApplyFilter = (edgeType: string) => {
+        const filteredTypes = selectedFilters.filter((item) => item.edgeType !== edgeType);
+        handleUpdateFilters(filteredTypes);
+        handleApplyFilters(filteredTypes);
     };
 
     return {
@@ -60,5 +69,6 @@ export const usePathfindingFilters = () => {
         initialize,
         handleApplyFilters,
         handleUpdateFilters,
+        handleUpdateAndApplyFilter,
     };
 };

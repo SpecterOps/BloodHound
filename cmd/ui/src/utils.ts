@@ -17,7 +17,7 @@
 import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
-import type { SigmaNodeEventPayload } from 'sigma/sigma';
+import type { SigmaEdgeEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates, MouseCoords } from 'sigma/types';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';
@@ -51,6 +51,10 @@ export const getUsername = (user: any): string | undefined => {
     }
     return undefined;
 };
+
+/** Type guard used to narrow Sigma event payloads to Node type */
+export const isNodeEvent = (event: SigmaEdgeEventPayload | SigmaNodeEventPayload): event is SigmaNodeEventPayload =>
+    'node' in event;
 
 /**
  * Reusable method to prevent defaults for mouse move, right click, and double click
