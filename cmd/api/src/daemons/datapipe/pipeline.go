@@ -178,9 +178,9 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 			for _, file := range fileData {
 				job.TotalFiles += 1
 				completedTask := model.CompletedTask{
-					FileName:   file.Name,
-					ParentFile: file.ParentFile,
-					Errors:     []string{},
+					FileName:       file.Name,
+					ParentFileName: file.ParentFile,
+					Errors:         []string{},
 				}
 
 				if len(file.Errors) > 0 {
@@ -188,7 +188,9 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 					completedTask.Errors = file.Errors
 				}
 
-				job.TaskInfo.CompletedTasks = append(job.TaskInfo.CompletedTasks, completedTask)
+				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Failed to create completed task for ingest task %d: %v", job.ID, err))
+				}
 			}
 
 			if err = db.UpdateIngestJob(ctx, job); err != nil {

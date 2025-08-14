@@ -42,5 +42,3 @@ allOf:
         type: integer
       failed_files:
         type: integer
-      task_info:
-        $ref: "./model.file-upload-job.task-info.yaml"

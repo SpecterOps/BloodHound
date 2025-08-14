@@ -221,3 +221,19 @@ func IsValidContentTypeForUpload(header http.Header) bool {
 		return slices.Contains(ingestModel.AllowedFileUploadTypes, parsed)
 	}
 }
+
+func (s Resources) GetCompletedTasks(response http.ResponseWriter, request *http.Request) {
+	var (
+		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+	)
+
+	if jobID, err := strconv.Atoi(jobIdString); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if tasks, err := s.DB.GetCompletedTasks(request.Context(), ingestJob.ID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), tasks, http.StatusOK, response)
+	}
+}

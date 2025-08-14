@@ -52,5 +52,13 @@ CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_object_id ON asset_group_tag_s
 CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_name ON asset_group_tag_selector_nodes USING btree (node_name);
 
 -- File Ingest Details
-ALTER TABLE ingest_jobs ADD COLUMN IF NOT EXISTS task_info jsonb NOT NULL DEFAULT '{"completed_tasks": []}'::jsonb;
 ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS provided_file_name text NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS completed_tasks (
+    id BIGSERIAL PRIMARY KEY,
+    ingest_job_id BIGINT NOT NULL REFERENCES ingest_jobs(id) ON DELETE CASCADE,
+    file_name TEXT NOT NULL,
+    parent_file_name TEXT NOT NULL,
+    errors TEXT[] NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);

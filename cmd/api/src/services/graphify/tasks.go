@@ -70,7 +70,7 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 	} else {
 		var (
 			errs     = newGraphifyErrorBuilder()
-			fileData = make([]IngestFileData, len(archive.File))
+			fileData = make([]IngestFileData, 0)
 		)
 
 		defer func() {
@@ -82,7 +82,7 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 			}
 		}()
 
-		for i, f := range archive.File {
+		for _, f := range archive.File {
 			//skip directories
 			if f.FileInfo().IsDir() {
 				continue
@@ -90,19 +90,19 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 
 			fileName, err := s.extractToTempFile(f)
 			if err != nil {
-				fileData[i] = IngestFileData{
+				fileData = append(fileData, IngestFileData{
 					Name:       f.Name,
 					ParentFile: providedFileName,
 					Errors:     []string{err.Error()},
-				}
+				})
 
 				errs.Add(err)
 			} else {
-				fileData[i] = IngestFileData{
+				fileData = append(fileData, IngestFileData{
 					Name:       f.Name,
 					ParentFile: providedFileName,
 					Path:       fileName,
-				}
+				})
 			}
 		}
 

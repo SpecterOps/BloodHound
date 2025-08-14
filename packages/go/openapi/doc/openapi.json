@@ -2782,6 +2782,65 @@
         }
       }
     },
+    "/api/v2/file-upload/{file_upload_job_id}/completed-tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "file_upload_job_id",
+          "description": "The ID for the file upload job.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCompletedTasks",
+        "summary": "Get Completed Tasks",
+        "description": "Get information about the individual completed file upload tasks associated with a job",
+        "tags": [
+          "Collection Uploads",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.file-upload-job"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/file-upload/{file_upload_job_id}/end": {
       "parameters": [
         {
@@ -17630,31 +17689,6 @@
           }
         }
       },
-      "model.file-upload-job.task-info": {
-        "type": "object",
-        "properties": {
-          "completed_tasks": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "file_name": {
-                  "type": "string"
-                },
-                "parent_file": {
-                  "type": "string"
-                },
-                "errors": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "model.file-upload-job": {
         "allOf": [
           {
@@ -17697,9 +17731,6 @@
               },
               "failed_files": {
                 "type": "integer"
-              },
-              "task_info": {
-                "$ref": "#/components/schemas/model.file-upload-job.task-info"
               }
             }
           }

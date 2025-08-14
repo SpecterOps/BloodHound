@@ -42,9 +42,6 @@ func StartIngestJob(ctx context.Context, db JobData, user model.User) (model.Ing
 		Status:     model.JobStatusRunning,
 		StartTime:  time.Now().UTC(),
 		LastIngest: time.Now().UTC(),
-		TaskInfo: model.TaskInfo{
-			CompletedTasks: []model.CompletedTask{},
-		},
 	}
 	return db.CreateIngestJob(ctx, job)
 }

@@ -210,9 +210,6 @@ func TestResources_StartIngestJob(t *testing.T) {
 					LastIngest:    time.Time{},
 					TotalFiles:    0,
 					FailedFiles:   0,
-					TaskInfo: model.TaskInfo{
-						CompletedTasks: []model.CompletedTask{},
-					},
 				}, nil)
 			},
 			expected: expected{
