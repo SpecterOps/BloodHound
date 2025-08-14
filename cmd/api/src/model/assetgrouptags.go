@@ -78,8 +78,8 @@ const (
 )
 
 const (
-	Tier0Glyph = "gem"
-	OwnedGlyph = "skull"
+	TierZeroGlyph = "gem"
+	OwnedGlyph    = "skull"
 )
 
 type AssetGroupTag struct {
