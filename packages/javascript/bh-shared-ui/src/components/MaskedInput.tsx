@@ -13,4 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export * from './DatePicker';
+
+import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
+import InputMask from '@mona-health/react-input-mask';
+import { forwardRef } from 'react';
+
+export const MaskedInput = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+    return (
+        <InputMask {...props} id={props.name} mask='9999-99-99' maskPlaceholder='' placeholder='yyyy-mm-dd' ref={ref}>
+            <Input id={props.name} variant={'outlined'} className='rounded bg-neutral-light-1 dark:bg-neutral-dark-1' />
+        </InputMask>
+    );
+});
+MaskedInput.displayName = 'input';

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {
     Button,
+    DatePicker,
     Dialog,
     DialogActions,
     DialogContent,
@@ -26,6 +27,7 @@ import {
     FormField,
     FormItem,
     FormLabel,
+    FormMessage,
     Select,
     SelectContent,
     SelectItem,
@@ -36,12 +38,12 @@ import {
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
-import { FC, HTMLAttributes, useCallback, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { DatePicker } from '../../../../components';
+import { FC, useCallback, useEffect } from 'react';
+import { ErrorOption, useForm } from 'react-hook-form';
+import { MaskedInput } from '../../../../components';
 import { useTagsQuery } from '../../../../hooks';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
-import { LuxonFormat, cn } from '../../../../utils';
+import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
 
 const actionOptions = [
     '', // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
@@ -63,8 +65,8 @@ interface AssetGroupTagHistoryFilters {
 
 const defaultValues = { action: actionOptions[0], tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
 
-const toDate = DateTime.local();
-const fromDate = toDate.minus({ years: 1 });
+const toDate = DateTime.local().toJSDate();
+const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 const FilterDialog: FC<{
     open: boolean;
@@ -77,16 +79,51 @@ const FilterDialog: FC<{
 
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues });
 
-    const selectClasses: (field: keyof AssetGroupTagHistoryFilters) => HTMLAttributes<HTMLSelectElement>['className'] =
-        useCallback(
-            (fieldName: keyof AssetGroupTagHistoryFilters) => {
-                return cn(
-                    'rounded-md border border-neutral-dark-5 dark:border-neutral-light-5 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:border-2 bg-neutral-1',
-                    { 'w-24': form.getValues(fieldName) === '' }
-                );
-            },
-            [form]
-        );
+    const validateDateFields = useCallback(
+        (startDate: DateTime, endDate: DateTime) => {
+            form.clearErrors();
+            const errors: { name: typeof START_DATE | typeof END_DATE; error: ErrorOption }[] = [];
+
+            if (!startDate.isValid) {
+                errors.push({ name: START_DATE, error: { message: CustomRangeError.INVALID_DATE } });
+            }
+            if (!endDate.isValid) {
+                errors.push({ name: END_DATE, error: { message: CustomRangeError.INVALID_DATE } });
+            }
+            if (errors.length === 0 && startDate > endDate) {
+                errors.push({ name: START_DATE, error: { message: CustomRangeError.INVALID_RANGE_START } });
+                errors.push({ name: END_DATE, error: { message: CustomRangeError.INVALID_RANGE_END } });
+            }
+
+            if (errors.length > 0) {
+                errors.forEach((error) => form.setError(error.name, error.error));
+                return false;
+            } else {
+                form.clearErrors();
+                return true;
+            }
+        },
+        [form]
+    );
+
+    const handleConfirm = useCallback(() => {
+        const start = form.getValues(START_DATE);
+        const end = form.getValues(END_DATE);
+
+        // Allow partial filtering of records; Do not block if neither date is filled
+        if (!start && !end) {
+            setFilters({ ...form.getValues() });
+            return;
+        }
+
+        const startDate = DateTime.fromFormat(start, LuxonFormat.ISO_8601);
+        const endDate = DateTime.fromFormat(end, LuxonFormat.ISO_8601);
+
+        // Otherwise validate that both dates are chosen for a valid range
+        if (validateDateFields(startDate, endDate)) {
+            setFilters({ ...form.getValues() });
+        }
+    }, [form, setFilters, validateDateFields]);
 
     useEffect(() => {
         form.reset(filters);
@@ -95,11 +132,11 @@ const FilterDialog: FC<{
     return (
         <Dialog open={open}>
             <DialogPortal>
-                <DialogContent className='flex flex-col gap-4'>
+                <DialogContent>
                     <Form {...form}>
                         <form className='flex flex-col gap-4'>
                             <DialogTitle className='flex justify-between items-center'>
-                                <span>Filter</span>
+                                <span className='text-xl'>Filter</span>
                                 <Button
                                     variant={'text'}
                                     onClick={() => form.reset(defaultValues)}
@@ -121,7 +158,7 @@ const FilterDialog: FC<{
                                             value={field.value}
                                             defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className={selectClasses(field.name)}>
+                                                <SelectTrigger>
                                                     <SelectValue placeholder='Select' {...field} />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -158,7 +195,7 @@ const FilterDialog: FC<{
                                                         to try again.
                                                     </span>
                                                 ) : (
-                                                    <SelectTrigger className={selectClasses(field.name)}>
+                                                    <SelectTrigger>
                                                         <SelectValue placeholder='Select' />
                                                     </SelectTrigger>
                                                 )}
@@ -197,7 +234,7 @@ const FilterDialog: FC<{
                                                         to try again.
                                                     </span>
                                                 ) : (
-                                                    <SelectTrigger className={selectClasses(field.name)}>
+                                                    <SelectTrigger>
                                                         <SelectValue placeholder='Select' />
                                                     </SelectTrigger>
                                                 )}
@@ -242,60 +279,85 @@ const FilterDialog: FC<{
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                name='start-date'
-                                control={form.control}
-                                render={({ field }) => (
-                                    <FormItem className='w-40'>
-                                        <FormLabel htmlFor={field.name}>Start Date</FormLabel>
-                                        <FormControl>
-                                            <DatePicker
-                                                {...field}
-                                                error={form.formState.errors['start-date']?.message}
-                                                clearError={() => form.clearErrors(field.name)}
-                                                setValue={(date: string) =>
-                                                    form.setValue('start-date', date, { shouldDirty: true })
-                                                }
-                                                fromDate={fromDate}
-                                                toDate={toDate}
-                                                disabled={(date: Date) => {
-                                                    return DateTime.fromJSDate(date) > DateTime.local();
-                                                }}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                name='end-date'
-                                control={form.control}
-                                render={({ field }) => (
-                                    <FormItem className='w-40'>
-                                        <FormLabel htmlFor={field.name}>End Date</FormLabel>
-                                        <FormControl>
-                                            <DatePicker
-                                                {...field}
-                                                error={form.formState.errors['end-date']?.message}
-                                                clearError={() => form.clearErrors(field.name)}
-                                                setValue={(date: string) =>
-                                                    form.setValue('end-date', date, { shouldDirty: true })
-                                                }
-                                                fromDate={fromDate}
-                                                toDate={toDate}
-                                                disabled={
-                                                    form.getValues('start-date')
-                                                        ? (date: Date) =>
-                                                              DateTime.fromFormat(
-                                                                  form.getValues('start-date'),
-                                                                  LuxonFormat.ISO_8601
-                                                              ) > DateTime.fromJSDate(date)
-                                                        : undefined
-                                                }
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
+                            <div className='flex gap-6'>
+                                <FormField
+                                    name='start-date'
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <FormItem className='w-40 flex flex-col gap-2 justify-start'>
+                                            <FormLabel htmlFor={field.name}>Start Date</FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    {...field}
+                                                    InputElement={MaskedInput}
+                                                    calendarProps={{
+                                                        mode: 'single',
+                                                        fromDate,
+                                                        toDate,
+                                                        selected: DateTime.fromFormat(
+                                                            field.value,
+                                                            LuxonFormat.ISO_8601
+                                                        ).toJSDate(),
+                                                        onSelect: (value: Date | undefined) => {
+                                                            form.setValue(
+                                                                field.name,
+                                                                value
+                                                                    ? DateTime.fromJSDate(value).toFormat(
+                                                                          LuxonFormat.ISO_8601
+                                                                      )
+                                                                    : ''
+                                                            );
+                                                        },
+                                                        disabled: (date: Date) => {
+                                                            return DateTime.fromJSDate(date) > DateTime.local();
+                                                        },
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    name='end-date'
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <FormItem className='w-40 flex flex-col gap-2 justify-start'>
+                                            <FormLabel htmlFor={field.name}>End Date</FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    {...field}
+                                                    InputElement={MaskedInput}
+                                                    calendarProps={{
+                                                        mode: 'single',
+                                                        fromDate,
+                                                        toDate,
+                                                        selected: DateTime.fromFormat(
+                                                            field.value,
+                                                            LuxonFormat.ISO_8601
+                                                        ).toJSDate(),
+                                                        onSelect: (value: Date | undefined) => {
+                                                            form.setValue(
+                                                                field.name,
+                                                                value
+                                                                    ? DateTime.fromJSDate(value).toFormat(
+                                                                          LuxonFormat.ISO_8601
+                                                                      )
+                                                                    : ''
+                                                            );
+                                                        },
+                                                        disabled: (date: Date) => {
+                                                            return DateTime.fromJSDate(date) > DateTime.local();
+                                                        },
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
                             <DialogActions>
                                 <Button variant={'text'} onClick={handleClose} className='p-2'>
                                     Cancel
@@ -303,9 +365,7 @@ const FilterDialog: FC<{
                                 <Button
                                     variant={'text'}
                                     className='text-primary dark:text-secondary-variant-2 p-2'
-                                    onClick={() => {
-                                        setFilters({ ...form.getValues() });
-                                    }}>
+                                    onClick={handleConfirm}>
                                     Confirm
                                 </Button>
                             </DialogActions>

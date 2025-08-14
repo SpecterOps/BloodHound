@@ -59,8 +59,6 @@ export { default as CreateUserDialog } from './CreateUserDialog';
 export * from './DataTable';
 export { default as DataTable } from './DataTable';
 
-export * from './DatePicker';
-
 export * from './DeleteConfirmationDialog';
 export { default as DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 
@@ -141,6 +139,8 @@ export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 
 export * from './LoginForm';
 export { default as LoginForm } from './LoginForm';
+
+export * from './MaskedInput';
 
 export * from './MenuItem';
 export { default as MenuItem } from './MenuItem';

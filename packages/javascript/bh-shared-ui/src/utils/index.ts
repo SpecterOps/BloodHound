@@ -21,6 +21,7 @@ export * from './colors';
 export * from './compatibility';
 export * from './content';
 export * from './copyToClipboard';
+export * from './datePicker';
 export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './exportGraphData';
