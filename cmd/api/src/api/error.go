@@ -82,6 +82,7 @@ const (
 	ErrorResponseAssetGroupCertTypeInvalid          = "valid certification action is required"
 	ErrorResponseInvalidTagGlyph                    = "the glyph specified is invalid"
 	ErrorResponseAssetGroupTagDuplicateGlyph        = "asset group tag glyph must be unique"
+	ErrorResponseAssetGroupMemberIDsRequired        = "asset group member IDs are required"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

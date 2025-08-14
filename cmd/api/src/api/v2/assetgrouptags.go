@@ -21,8 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -915,72 +917,103 @@ type CertifyMembersRequest struct {
 	Note      string                        `json:"note,omitempty"`
 }
 
-func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
-	var (
-		reqBody CertifyMembersRequest
-	)
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Certify Members")()
+type ZoneId = int
+type NodeId = graph.ID
 
-	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if !validateCertType(reqBody.Action) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
-		// per node get max, update node for max map node id to max position
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		err := s.DB.BeginTransaction(request.Context(), func(tx *gorm.DB) error {
-
-			bhdb := database.NewBloodhoundDB(tx, auth.NewIdentityResolver())
-
-			selNode, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(reqBody.MemberIDs))
-			if err != nil {
-				api.HandleDatabaseError(request, response, err)
-			}
-			s.Graph.FetchKinds()
-			kinds = append(kinds, selNode.Kinds...)
-			tags, err := s.DB.GetTagsByKindId(request.Context(), kinds...)
-			// get kind ids. db call to match kinds to tags. get selectors for selected node
-
-			// i think everything below this is what we dont want anymore
-			selectedNodes, err := bhdb.GetSelectorNodesByNodeIds(request.Context(), reqBody.MemberIDs...)
-			if err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return err
-			}
-			var historyAction = model.ToAssetGroupHistoryActionFromAssetGroupCertification(reqBody.Action)
-
-			for _, node := range selectedNodes {
-				if err = bhdb.UpdateSelectorNodesByNodeId(request.Context(), assetTagId, node.SelectorId, reqBody.Action, user.EmailAddress, node.NodeId); err != nil {
-					api.HandleDatabaseError(request, response, err)
-				}
-				if err = bhdb.CreateAssetGroupHistoryRecord(request.Context(), user.ID.String(), user.EmailAddress.ValueOrZero(), node.NodeId.String(), historyAction, assetTagId, null.String{}, null.NewString(reqBody.Note, true)); err != nil {
-					api.HandleDatabaseError(request, response, err)
-				}
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		}
-
-		response.WriteHeader(http.StatusOK)
-	}
+type CertifyMembersMap struct {
+	NodeId      graph.ID
+	NodesByZone map[ZoneId][]model.AssetGroupSelectorNodeWithZoneId
 }
 
-func validateCertType(certType model.AssetGroupCertification) bool {
+func isValidCertType(certType model.AssetGroupCertification) bool {
 	switch certType {
 	case model.AssetGroupCertificationManual, model.AssetGroupCertificationRevoked:
 		return true
 	default:
 		return false
+	}
+}
+
+func getHighestZoneId(zoneMap map[ZoneId][]model.AssetGroupSelectorNodeWithZoneId) ZoneId {
+	keys := slices.Collect(maps.Keys(zoneMap))
+	sort.Slice(keys, func(i, j ZoneId) bool {
+		return keys[j] < keys[i]
+	})
+	return keys[0]
+}
+
+func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
+	var (
+		reqBody CertifyMembersRequest
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Certify Members")()
+	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if !isValidCertType(reqBody.Action) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
+	} else if memberIds := reqBody.MemberIDs; len(memberIds) == 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
+
+	} else {
+		nodes, err := s.DB.GetAssetGroupSelectorNodesWithZoneIdsIgnoreAutoCertify(request.Context(), reqBody.MemberIDs...)
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+		}
+
+		selectorNodesByZone := make(map[NodeId]map[ZoneId][]model.AssetGroupSelectorNodeWithZoneId)
+
+		// build a map where the key is the nodeId, and the value is a map of zoneId:AGTSN&Z
+		// TODO this should be a helper function
+		for _, node := range nodes {
+			if nodeByZoneMap, exists := selectorNodesByZone[node.AssetGroupSelectorNode.NodeId]; exists {
+				if selectorNodesForZone, exists := nodeByZoneMap[node.ZoneId]; exists {
+					nodeByZoneMap[node.ZoneId] = append(selectorNodesForZone, node)
+				} else {
+					nodeByZoneMap[node.ZoneId] = []model.AssetGroupSelectorNodeWithZoneId{node}
+				}
+			} else {
+				selectorNodesByZone[node.AssetGroupSelectorNode.NodeId] = map[ZoneId][]model.AssetGroupSelectorNodeWithZoneId{
+					node.ZoneId: {node},
+				}
+			}
+		}
+		//TODO: does this transaction work?
+		err = s.DB.BeginTransaction(request.Context(), func(tx *gorm.DB) error {
+			bhdb := database.NewBloodhoundDB(tx, auth.NewIdentityResolver())
+
+			// ONLY do the nodes with the highest zone. set other nodes in other zones to pending
+
+			for _, nodesInZone := range selectorNodesByZone {
+				// sort the zones
+				highestZone := getHighestZoneId(nodesInZone)
+				for zone, nodes := range nodesInZone {
+					// TODO these should be refactored as defaults
+					certificationStatus := model.AssetGroupCertificationPending
+					note := null.String{}
+					for _, node := range nodes {
+						if zone == highestZone {
+							certificationStatus = reqBody.Action
+							note = null.StringFrom(reqBody.Note)
+						}
+						if err = bhdb.UpdateSelectorNodesByNodeId(request.Context(), zone, node.AssetGroupSelectorNode.SelectorId, certificationStatus, user.EmailAddress, node.AssetGroupSelectorNode.NodeId, "", note); err != nil {
+							api.HandleDatabaseError(request, response, err)
+						}
+					}
+				}
+			}
+			return nil
+		})
+
+		// TODO -- return ONE error response if the transaction fails??
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
+		// TODO -- should this endpoint return OK? Or should it return what the DB returns?
+		response.WriteHeader(http.StatusOK)
 	}
 }
