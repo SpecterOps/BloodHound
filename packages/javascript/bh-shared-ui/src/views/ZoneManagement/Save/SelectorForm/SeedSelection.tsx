@@ -24,11 +24,18 @@ import {
     Input,
     Skeleton,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeObjectId } from 'js-client-library';
+import {
+    SeedExpansionMethodAll,
+    SeedExpansionMethodChild,
+    SeedExpansionMethodNone,
+    SeedExpansionMethods,
+    SeedTypeObjectId,
+} from 'js-client-library';
 import { FC, useContext } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
+import { useOwnedTagId, useZonePathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
@@ -37,12 +44,20 @@ import { SelectorFormInputs } from './types';
 
 const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { tagKind, tagId } = useZonePathParams();
+    const ownedId = useOwnedTagId();
+
+    let expansion: SeedExpansionMethods = tagKind == 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+    // Owned is a specific label that does not expand
+    if (tagId == ownedId?.toString()) {
+        expansion = SeedExpansionMethodNone;
+    }
 
     const previewQuery = useQuery({
-        queryKey: ['zone-management', 'preview-selectors', selectorType, seeds],
+        queryKey: ['zone-management', 'preview-selectors', selectorType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
-                .assetGroupTagsPreviewSelectors({ seeds: seeds }, { signal })
+                .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })
                 .then((res) => res.data.data['members']);
         },
         retry: false,
