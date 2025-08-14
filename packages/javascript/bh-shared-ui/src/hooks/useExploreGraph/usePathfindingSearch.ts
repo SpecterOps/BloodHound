@@ -41,14 +41,21 @@ export const usePathfindingSearch = () => {
 
     // Watch query params and seperately sync them to each search field
     useEffect(() => {
+        if (primarySearch?.startsWith('tag:')) {
+            // Tag-based source: keep raw text, no selected item
+            setSourceSearchTerm(primarySearch);
+            setSourceSelectedItem(undefined);
+            return;
+        }
         if (primarySearch && sourceSearchData) {
             const matchedNode = Object.values(sourceSearchData).find((node) => node.objectid === primarySearch);
-
             if (matchedNode) {
                 setSourceSearchTerm(matchedNode.name);
                 setSourceSelectedItem(matchedNode);
+                return;
             }
-        } else {
+        }
+        if (!primarySearch) {
             setSourceSearchTerm('');
             setSourceSelectedItem(undefined);
         }
@@ -100,7 +107,8 @@ export const usePathfindingSearch = () => {
         setDestinationSelectedItem(selected);
         setDestinationSearchTerm(term);
 
-        if (primarySearch && sourceSelectedItem) {
+    const sourceIsTag = primarySearch?.startsWith('tag:') || sourceSearchTerm.startsWith('tag:');
+    if (primarySearch && (sourceSelectedItem || sourceIsTag)) {
             setExploreParams({
                 searchType: 'pathfinding',
                 secondarySearch: objectId,
@@ -128,6 +136,16 @@ export const usePathfindingSearch = () => {
     const handleSourceNodeEdited = (edit: string) => {
         setSourceSelectedItem(undefined);
         setSourceSearchTerm(edit);
+        const isTag = edit.startsWith('tag:') && edit.length > 4;
+        if (isTag) {
+            if (secondarySearch && destinationSelectedItem) {
+                setExploreParams({ searchType: 'pathfinding', primarySearch: edit });
+            } else {
+                setExploreParams({ searchType: 'node', primarySearch: edit, secondarySearch: null });
+            }
+        } else if (edit === '') {
+            setExploreParams({ primarySearch: null });
+        }
     };
 
     const handleDestinationNodeEdited = (edit: string) => {

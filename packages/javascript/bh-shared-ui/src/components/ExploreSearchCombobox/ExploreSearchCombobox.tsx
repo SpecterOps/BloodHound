@@ -56,16 +56,9 @@ const ExploreSearchCombobox: React.FC<{
             itemToString: (item) => item?.name || item?.objectid || '',
         });
 
-    const disabledText: string = getEmptyResultsText(
-        isLoading,
-        isFetching,
-        isError,
-        error,
-        inputValue,
-        type,
-        keyword,
-        data
-    );
+    const disabledText: string = inputValue.startsWith('tag:')
+        ? ''
+        : getEmptyResultsText(isLoading, isFetching, isError, error, inputValue, type, keyword, data);
 
     return (
         <div {...getComboboxProps()} style={{ position: 'relative' }}>

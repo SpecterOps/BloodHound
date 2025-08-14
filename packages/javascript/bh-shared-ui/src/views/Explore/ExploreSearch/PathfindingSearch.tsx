@@ -17,6 +17,7 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
+import { Tooltip } from '@mui/material';
 import { EdgeFilter, PathfindingFilterState } from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
 import { SearchValue } from './types';
@@ -57,13 +58,21 @@ const PathfindingSearch = ({
             <SourceToBullseyeIcon />
 
             <div className='flex flex-col flex-grow gap-2'>
-                <ExploreSearchCombobox
-                    handleNodeEdited={handleSourceNodeEdited}
-                    handleNodeSelected={handleSourceNodeSelected}
-                    inputValue={sourceSearchTerm}
-                    selectedItem={sourceSelectedItem || null}
-                    labelText='Start Node'
-                />
+                <Tooltip
+                    title={
+                        'Enter a node name to select a specific principal, or use tag:<system_tag> (e.g. tag:owned, tag:admin_tier_0) to start from any node with that system tag.'
+                    }
+                    placement='top-start'>
+                    <div>
+                        <ExploreSearchCombobox
+                            handleNodeEdited={handleSourceNodeEdited}
+                            handleNodeSelected={handleSourceNodeSelected}
+                            inputValue={sourceSearchTerm}
+                            selectedItem={sourceSelectedItem || null}
+                            labelText='Start Node or tag:<system_tag>'
+                        />
+                    </div>
+                </Tooltip>
                 <ExploreSearchCombobox
                     handleNodeEdited={handleDestinationNodeEdited}
                     handleNodeSelected={handleDestinationNodeSelected}

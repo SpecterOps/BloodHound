@@ -37,6 +37,19 @@ export const useSearch = (keyword: string, type: EntityKinds | undefined) => {
     return useQuery<SearchResults, any>(
         searchKeys.detail(keyword, type),
         ({ signal }) => {
+            // Tag-based pseudo search: if user enters tag:<value>, we don't hit API; we synthesize a pseudo result
+            if (keyword.startsWith('tag:')) {
+                const tagVal = keyword.substring(4);
+                if (!tagVal) return [];
+                return [
+                    {
+                        name: `Any with tag:${tagVal}`,
+                        objectid: `tag:${tagVal}`,
+                        type: 'Meta',
+                        system_tags: tagVal,
+                    } as SearchResult,
+                ];
+            }
             if (keyword === '') return [];
             return apiClient.searchHandler(keyword, type, { signal }).then((result) => {
                 if (!result.data.data) return [];
@@ -56,6 +69,10 @@ export const getKeywordAndTypeValues = (inputValue = ''): { keyword: string; typ
     let keyword = '';
     let type: EntityKinds | undefined = undefined;
 
+    // Preserve tag:<tagValue> as entire keyword so our hook can synthesize pseudo result
+    if (inputValue.startsWith('tag:')) {
+        return { keyword: inputValue, type: undefined };
+    }
     if (splitValue.length > 1) {
         type = validateNodeType(splitValue[0]);
         keyword = splitValue.slice(1).join(':');
