@@ -36,6 +36,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { apiClient } from '../../utils';
+import {useListDisplayRoles} from '../../hooks'
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
@@ -89,9 +90,7 @@ const CreateUserForm: React.FC<{
         }
     }, [authenticationMethod, setValue, error, setError]);
 
-    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
-    );
+    const getListDisplayRolesQuery = useListDisplayRoles();
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
@@ -104,7 +103,7 @@ const CreateUserForm: React.FC<{
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-            {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
+            {!(getListDisplayRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                 <>
                     <DialogContent>
                         <Grid container spacing={2}>
@@ -398,10 +397,10 @@ const CreateUserForm: React.FC<{
                                                 variant='standard'
                                                 fullWidth
                                                 data-testid='create-user-dialog_select-role'>
-                                                {getRolesQuery.isLoading ? (
+                                                {getListDisplayRolesQuery.isLoading ? (
                                                     <MenuItem value={1}>Loading...</MenuItem>
                                                 ) : (
-                                                    getRolesQuery.data?.map((role: any) => (
+                                                    getListDisplayRolesQuery.data?.map((role: any) => (
                                                         <MenuItem key={role.id} value={role.id.toString()}>
                                                             {role.name}
                                                         </MenuItem>
