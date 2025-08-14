@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     return (
         <Box className={styles.header}>
             {selectedItem ? (
-                <Icon className={styles.icon} click={clearSelectedItem}>
+                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />
                 </Icon>
             ) : (

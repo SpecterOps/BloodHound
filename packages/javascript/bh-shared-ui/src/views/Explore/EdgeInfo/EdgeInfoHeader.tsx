@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     return (
         <div className={styles.header}>
             {selectedItem ? (
-                <Icon className={styles.icon} click={clearSelectedItem}>
+                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />
                 </Icon>
             ) : (
