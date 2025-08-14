@@ -35,10 +35,11 @@ const buildEnableDCSyncCypher = (sourceNodeId: string, destinationNodeId: string
 MATCH p_changes = (x1:Base)-[:GetChanges]->(d:Domain)
 MATCH p_changesall = (x2:Base)-[:GetChangesAll]->(d)
 WHERE x1:Group OR x2:Group
-${tagMatch ? `MATCH (n:Base) WHERE COALESCE(n.system_tags,'') CONTAINS '${tagMatch}'` : ''}
-MATCH p_tochanges = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x1))
+${tagMatch ? `MATCH (n1:Base) WHERE COALESCE(n1.system_tags,'') CONTAINS '${tagMatch}'` : ''}
+MATCH p_tochanges = shortestpath((${tagMatch ? 'n1' : 'n'})-[:GenericAll|AddMember|MemberOf*0..]->(x1))
 ${tagMatch ? '' : `WHERE n.objectid = "${sourceNodeId}"`}
-MATCH p_tochangesall = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2))
+${tagMatch ? `MATCH (n2:Base) WHERE COALESCE(n2.system_tags,'') CONTAINS '${tagMatch}'` : ''}
+MATCH p_tochangesall = shortestpath((${tagMatch ? 'n2' : 'n'})-[:GenericAll|AddMember|MemberOf*0..]->(x2))
 MATCH p_totarget = (d)-[:Contains*0..]->(target)
 WHERE target.objectid = "${destinationNodeId}"
 RETURN p_changes,p_tochanges,p_changesall,p_tochangesall,p_totarget`;
@@ -73,12 +74,15 @@ WHERE x2:Group OR x4:Group
 MATCH p6 = (eca1)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
 MATCH p7 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
 
-${tagMatch ? `MATCH (n:Base) WHERE COALESCE(n.system_tags,'') CONTAINS '${tagMatch}'` : ''}
-MATCH p_tox1 = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x1))
+${tagMatch ? `MATCH (n1:Base) WHERE COALESCE(n1.system_tags,'') CONTAINS '${tagMatch}'` : ''}
+MATCH p_tox1 = shortestpath((${tagMatch ? 'n1' : 'n'})-[:GenericAll|AddMember|MemberOf*0..]->(x1))
 ${tagMatch ? '' : `WHERE n.objectid = "${sourceNodeId}"`}
-MATCH p_tox2 = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2))
-MATCH p_tox3 = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x3))
-MATCH p_tox4 = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x4))
+${tagMatch ? `MATCH (n2:Base) WHERE COALESCE(n2.system_tags,'') CONTAINS '${tagMatch}'` : ''}
+MATCH p_tox2 = shortestpath((${tagMatch ? 'n2' : 'n'})-[:GenericAll|AddMember|MemberOf*0..]->(x2))
+${tagMatch ? `MATCH (n3:Base) WHERE COALESCE(n3.system_tags,'') CONTAINS '${tagMatch}'` : ''}
+MATCH p_tox3 = shortestpath((${tagMatch ? 'n3' : 'n'})-[:GenericAll|AddMember|MemberOf*0..]->(x3))
+${tagMatch ? `MATCH (n4:Base) WHERE COALESCE(n4.system_tags,'') CONTAINS '${tagMatch}'` : ''}
+MATCH p_tox4 = shortestpath((${tagMatch ? 'n4' : 'n'})-[:GenericAll|AddMember|MemberOf*0..]->(x4))
 
 MATCH p_totarget = (d)-[:Contains*0..]->(target)
 WHERE target.objectid = "${destinationNodeId}"
@@ -143,9 +147,11 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
     const mode: 'hybrid' | 'path' | 'deepsniff' =
         pathSearchMode === 'path' || pathSearchMode === 'deepsniff' ? pathSearchMode : 'hybrid';
 
-    // Detect tag-based source (user enters primarySearch like `tag:owned`)
+    // Detect tag-based source/destination (user enters tag:<value>)
     const tagMatch = primarySearch.startsWith('tag:') ? primarySearch.substring(4) : undefined;
+    const tagDestMatch = secondarySearch.startsWith('tag:') ? secondarySearch.substring(4) : undefined;
     const isTagSource = !!tagMatch;
+    const isTagDest = !!tagDestMatch;
     // Build allowed relationship kinds list from pathFilters (if provided) when we need to craft a cypher path query
     const edgeTypeList = pathFilters?.length ? pathFilters : INITIAL_FILTER_TYPES;
     const isEmptyFilter = edgeTypeList[0] === 'empty';
@@ -174,20 +180,28 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
             }
             // Path only mode: do not fall back to deep sniff
             if (mode === 'path') {
-                if (isTagSource) {
+                if (isTagSource || isTagDest) {
                     if (isEmptyFilter) {
                         const error: any = new Error('No path');
                         error.response = { status: 404 };
                         throw error;
                     }
                     const relPattern = edgeTypeList.filter((e) => e !== 'empty').join('|');
-                    const cypher = `MATCH (dst:Base {objectid:"${secondarySearch}"}) MATCH (src:Base) WHERE COALESCE(src.system_tags,'') CONTAINS '${tagMatch}' MATCH p=shortestPath((src)-[:${relPattern}*1..]->(dst)) RETURN p LIMIT 1`;
+                    const srcClause = isTagSource
+                        ? `MATCH (src:Base) WHERE COALESCE(src.system_tags,'') CONTAINS '${tagMatch}'`
+                        : `MATCH (src:Base {objectid:"${primarySearch}"})`;
+                    const dstClause = isTagDest
+                        ? `MATCH (dst:Base) WHERE COALESCE(dst.system_tags,'') CONTAINS '${tagDestMatch}'`
+                        : `MATCH (dst:Base {objectid:"${secondarySearch}"})`;
+                    const cypher = `${srcClause} ${dstClause} MATCH p=shortestPath((src)-[:${relPattern}*1..]->(dst)) RETURN p LIMIT 1`;
                     return apiClient.cypherSearch(cypher, { signal }, true).then((res) => res.data);
                 }
-                return apiClient.getShortestPathV2(primarySearch, secondarySearch, filter, { signal }).then((res) => res.data);
+                return apiClient
+                    .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
+                    .then((res) => res.data);
             }
             // Hybrid: attempt path then deep sniff fallback
-            if (isTagSource) {
+            if (isTagSource || isTagDest) {
                 const attemptTagShortest = async () => {
                     if (isEmptyFilter) {
                         const error: any = new Error('No path');
@@ -195,7 +209,13 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
                         throw error;
                     }
                     const relPattern = edgeTypeList.filter((e) => e !== 'empty').join('|');
-                    const cypher = `MATCH (dst:Base {objectid:"${secondarySearch}"}) MATCH (src:Base) WHERE COALESCE(src.system_tags,'') CONTAINS '${tagMatch}' MATCH p=shortestPath((src)-[:${relPattern}*1..]->(dst)) RETURN p LIMIT 1`;
+                    const srcClause = isTagSource
+                        ? `MATCH (src:Base) WHERE COALESCE(src.system_tags,'') CONTAINS '${tagMatch}'`
+                        : `MATCH (src:Base {objectid:"${primarySearch}"})`;
+                    const dstClause = isTagDest
+                        ? `MATCH (dst:Base) WHERE COALESCE(dst.system_tags,'') CONTAINS '${tagDestMatch}'`
+                        : `MATCH (dst:Base {objectid:"${secondarySearch}"})`;
+                    const cypher = `${srcClause} ${dstClause} MATCH p=shortestPath((src)-[:${relPattern}*1..]->(dst)) RETURN p LIMIT 1`;
                     return apiClient.cypherSearch(cypher, { signal }, true).then((res) => res.data);
                 };
                 return attemptTagShortest().catch((error) => {
@@ -206,13 +226,14 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
                             secondarySearch,
                             signal,
                             deepSniffVariants ?? null,
-                            tagMatch
+                            tagMatch // Deep sniff currently only uses source tag; destination tag not relevant to enablement queries
                         );
                     }
                     throw error;
                 });
             }
-            return apiClient.getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
+            return apiClient
+                .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
                 .then((res) => res.data)
                 .catch((error) => {
                     const statusCode = error?.response?.status;

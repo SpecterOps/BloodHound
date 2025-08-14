@@ -16,8 +16,8 @@
 
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
 import { Tooltip } from '@mui/material';
+import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
 import { EdgeFilter, PathfindingFilterState } from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
 import { SearchValue } from './types';
@@ -73,13 +73,21 @@ const PathfindingSearch = ({
                         />
                     </div>
                 </Tooltip>
-                <ExploreSearchCombobox
-                    handleNodeEdited={handleDestinationNodeEdited}
-                    handleNodeSelected={handleDestinationNodeSelected}
-                    inputValue={destinationSearchTerm}
-                    selectedItem={destinationSelectedItem || null}
-                    labelText='Destination Node'
-                />
+                <Tooltip
+                    title={
+                        'Enter a node name or tag:<system_tag> (e.g. tag:owned, tag:admin_tier_0) to target any node with that system tag.'
+                    }
+                    placement='top-start'>
+                    <div>
+                        <ExploreSearchCombobox
+                            handleNodeEdited={handleDestinationNodeEdited}
+                            handleNodeSelected={handleDestinationNodeSelected}
+                            inputValue={destinationSearchTerm}
+                            selectedItem={destinationSelectedItem || null}
+                            labelText='Destination Node or tag:<system_tag>'
+                        />
+                    </div>
+                </Tooltip>
             </div>
 
             <PathfindingSwapButton

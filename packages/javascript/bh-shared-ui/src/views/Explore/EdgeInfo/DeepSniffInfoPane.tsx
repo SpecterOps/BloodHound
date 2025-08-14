@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Link, Paper, SxProps, Typography } from '@mui/material';
 import React, { useState } from 'react';
+import { useExploreParams } from '../../../hooks';
 import { useExploreGraph } from '../../../index';
 import { usePaneStyles } from '../InfoStyles';
 import { ObjectInfoPanelContextProvider } from '../providers';
@@ -30,6 +31,13 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
     const graphQuery = useExploreGraph();
     const variant = (graphQuery.data as any)?.deepSniffVariant as 'EnableDCSync' | 'EnableADCSESC3' | undefined;
     const isEsc3 = variant === 'EnableADCSESC3';
+    const { primarySearch } = useExploreParams();
+    const tagValue = primarySearch?.startsWith('tag:') ? primarySearch.slice(4) : undefined;
+    const isTagSource = !!tagValue;
+
+    const subjectPhrase = isTagSource
+        ? `One or more principals tagged '${tagValue}' have attack paths that`
+        : 'The principal has attack paths that';
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_deepsniff-information-pane'>
@@ -47,8 +55,7 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
                 {isEsc3 ? (
                     <>
                         <Typography variant='body2' sx={{ mb: 2 }}>
-                            The principal has attack paths that enables ADCS ESC3 against a domain, which can reach the
-                            target.
+                            {subjectPhrase} enable ADCS ESC3 against a domain, which can reach the target.
                         </Typography>
                         <Typography variant='h6' sx={{ mb: 1, fontWeight: 'bold' }}>
                             Abuse
@@ -76,8 +83,7 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
                 ) : (
                     <>
                         <Typography variant='body2' sx={{ mb: 2 }}>
-                            The principal has attack paths that can grant it DCSync permissions on a domain, which can
-                            reach the target.
+                            {subjectPhrase} can grant DCSync permissions on a domain, which can reach the target.
                         </Typography>
                         <Typography variant='h6' sx={{ mb: 1, fontWeight: 'bold' }}>
                             Abuse

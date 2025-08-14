@@ -62,14 +62,21 @@ export const usePathfindingSearch = () => {
     }, [primarySearch, sourceSearchData]);
 
     useEffect(() => {
+        if (secondarySearch?.startsWith('tag:')) {
+            setDestinationSearchTerm(secondarySearch);
+            setDestinationSelectedItem(undefined);
+            return;
+        }
         if (secondarySearch && destinationSearchData) {
             const matchedNode = Object.values(destinationSearchData).find((node) => node.objectid === secondarySearch);
 
             if (matchedNode) {
                 setDestinationSearchTerm(matchedNode.name);
                 setDestinationSelectedItem(matchedNode);
+                return;
             }
-        } else {
+        }
+        if (!secondarySearch) {
             setDestinationSearchTerm('');
             setDestinationSelectedItem(undefined);
         }
@@ -107,8 +114,8 @@ export const usePathfindingSearch = () => {
         setDestinationSelectedItem(selected);
         setDestinationSearchTerm(term);
 
-    const sourceIsTag = primarySearch?.startsWith('tag:') || sourceSearchTerm.startsWith('tag:');
-    if (primarySearch && (sourceSelectedItem || sourceIsTag)) {
+        const sourceIsTag = primarySearch?.startsWith('tag:') || sourceSearchTerm.startsWith('tag:');
+        if (primarySearch && (sourceSelectedItem || sourceIsTag)) {
             setExploreParams({
                 searchType: 'pathfinding',
                 secondarySearch: objectId,
@@ -151,6 +158,17 @@ export const usePathfindingSearch = () => {
     const handleDestinationNodeEdited = (edit: string) => {
         setDestinationSelectedItem(undefined);
         setDestinationSearchTerm(edit);
+        const isTag = edit.startsWith('tag:') && edit.length > 4;
+        if (isTag) {
+            const sourceIsReady = !!primarySearch && (sourceSelectedItem || sourceSearchTerm.startsWith('tag:'));
+            if (sourceIsReady) {
+                setExploreParams({ searchType: 'pathfinding', secondarySearch: edit });
+            } else {
+                setExploreParams({ searchType: 'node', secondarySearch: edit, primarySearch: null });
+            }
+        } else if (edit === '') {
+            setExploreParams({ secondarySearch: null });
+        }
     };
 
     return {
