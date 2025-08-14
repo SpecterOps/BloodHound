@@ -85,7 +85,7 @@ describe('EntityInfoHeader', async () => {
     it('should render', async () => {
         const { screen } = await setup();
 
-        const collapsePanelButton = screen.getByRole('button', { name: /xmark/i });
+        const collapsePanelButton = screen.getByRole('button', { name: /Clear selected item/i });
         const nodeIcon = screen.getByTitle(testProps.nodeType!);
         const nodeTitle = screen.getByRole('heading');
         const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
@@ -107,7 +107,7 @@ describe('EntityInfoHeader', async () => {
     });
     it('should on clicking remove call clearSelectedItem', async () => {
         const { screen, user } = await setup();
-        const removeButton = screen.getByRole('button', { name: /xmark/i });
+        const removeButton = screen.getByRole('button', { name: /Clear selected item/i });
 
         await user.click(removeButton);
 
