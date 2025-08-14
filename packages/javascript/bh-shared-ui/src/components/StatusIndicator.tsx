@@ -42,7 +42,7 @@ export const StatusIndicator: React.FC<Props> = ({ label = '', pulse = false, st
         <span className='inline-flex items-center'>
             <span className='mr-1.5'>
                 <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'>
-                    <circle cx='6' cy='6' r='6' className={`${color}${pulse ? ' animate-pulse' : ''}`} />
+                    <circle cx='6' cy='6' r='6' className={cn(color, pulse && 'animate-pulse')} />
                 </svg>
             </span>
             {label && <span>{label}</span>}
