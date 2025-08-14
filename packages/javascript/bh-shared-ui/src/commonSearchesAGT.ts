@@ -52,6 +52,10 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Map OU structure',
                 cypher: `MATCH p = (:Domain)-[:Contains*1..]->(:OU)\nRETURN p\nLIMIT 1000`,
             },
+            {
+                description: 'Location of AdminSDHolder Protected objects',
+                cypher: `MATCH p = (n:Base)<-[:Contains*1..]-(:Domain)\nWHERE n.adminsdholderprotected = True\nRETURN p\nLIMIT 1000`,
+            },
         ],
     },
     {
@@ -274,6 +278,10 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 description: 'Tier Zero principals without AdminSDHolder protection',
                 cypher: `MATCH (n:Base)\nWHERE (n:${TAG_TIER_ZERO_AGT})\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+            },
+            {
+                description: 'AdminSDHolder to protected objects relationship',
+                cypher: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
