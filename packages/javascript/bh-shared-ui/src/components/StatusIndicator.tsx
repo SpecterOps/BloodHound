@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { cn } from '../utils';
+
 export type StatusType = 'good' | 'bad' | 'pending';
 
 type Props = {
