@@ -734,29 +734,45 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 	}
 }
 
+func validateAssetGroupExpansionMethodWithFallback(maybeMethod *model.AssetGroupExpansionMethod) model.AssetGroupExpansionMethod {
+	if maybeMethod == nil {
+		return model.AssetGroupExpansionMethodAll
+	}
+	switch *maybeMethod {
+	case model.AssetGroupExpansionMethodNone, model.AssetGroupExpansionMethodAll, model.AssetGroupExpansionMethodChildren, model.AssetGroupExpansionMethodParents:
+		return *maybeMethod
+	default:
+		return model.AssetGroupExpansionMethodAll
+	}
+}
+
 type PreviewSelectorBody struct {
-	Seeds model.SelectorSeeds `json:"seeds" validate:"required"`
+	Seeds     model.SelectorSeeds              `json:"seeds" validate:"required"`
+	Expansion *model.AssetGroupExpansionMethod `json:"expansion"`
 }
 
 func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
-		seeds   PreviewSelectorBody
+		body    PreviewSelectorBody
 		members = []AssetGroupMember{}
 	)
 
 	if limit, err := ParseLimitQueryParameter(request.URL.Query(), assetGroupPreviewSelectorDefaultLimit); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-	} else if err := json.NewDecoder(request.Body).Decode(&seeds); err != nil {
+	} else if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if errs := validation.Validate(seeds); len(errs) > 0 {
+	} else if errs := validation.Validate(body); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if _, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if err := validateSelectorSeeds(s.GraphQuery, seeds.Seeds); err != nil {
+	} else if err := validateSelectorSeeds(s.GraphQuery, body.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		nodes := datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, seeds.Seeds, model.AssetGroupExpansionMethodAll, limit)
+		var (
+			expansion = validateAssetGroupExpansionMethodWithFallback(body.Expansion)
+			nodes     = datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
+		)
 		for _, node := range nodes {
 			if node.Node != nil {
 				members = append(members, nodeToAssetGroupMember(node.Node, excludeProperties))
