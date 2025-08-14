@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
 import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views/Explore';
@@ -33,26 +33,13 @@ interface EntityInfoPanelProps {
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
     const styles = usePaneStyles();
-    const [expanded, setExpanded] = useState(true);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                <Header
-                    name={selectedNode?.name || NoEntitySelectedHeader}
-                    nodeType={selectedNode?.type}
-                    expanded={expanded}
-                    onToggleExpanded={(expanded) => {
-                        setExpanded(expanded);
-                    }}
-                />
+                <Header name={selectedNode?.name || NoEntitySelectedHeader} nodeType={selectedNode?.type} />
             </Paper>
-            <Paper
-                elevation={0}
-                classes={{ root: styles.contentPaperRoot }}
-                style={{
-                    display: expanded ? 'initial' : 'none',
-                }}>
+            <Paper elevation={0} classes={{ root: styles.contentPaperRoot }}>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}
