@@ -19,6 +19,7 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorSeed,
     AssetGroupTagTypes,
+    SeedExpansionMethods,
     SSOProviderConfiguration,
 } from './types';
 import { ConfigurationPayload } from './utils';
@@ -44,11 +45,11 @@ export type UpdateAssetGroupTagRequest = Partial<
     Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: boolean | undefined }
 >;
 
-export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
+export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[]; expansion: SeedExpansionMethods };
 
 export type SelectorSeedRequest = Pick<AssetGroupTagSelectorSeed, 'type' | 'value'>;
 
-export type CreateSelectorRequest = { name: string; description?: string } & PreviewSelectorsRequest;
+export type CreateSelectorRequest = { name: string; description?: string } & { seeds: SelectorSeedRequest[] };
 
 export type UpdateSelectorRequest = Partial<CreateSelectorRequest & { disabled: boolean }> &
     Pick<AssetGroupTagSelector, 'id'>;
