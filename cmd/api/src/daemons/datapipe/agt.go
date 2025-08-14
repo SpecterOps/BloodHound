@@ -454,7 +454,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		if len(nodeIdsToUpdate) > 0 {
 			for _, nodeId := range nodeIdsToUpdate {
 				displayName, _ := nodesWithSrcSet[nodeId].Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, certified, certifiedBy, nodeId, displayName); err != nil {
+				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, certified, certifiedBy, nodeId, displayName, null.String{}); err != nil {
 					return err
 				}
 			}

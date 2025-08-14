@@ -254,3 +254,8 @@ type AssetGroupSelectorNode struct {
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
 }
+
+type AssetGroupSelectorNodeWithZoneId struct {
+	AssetGroupSelectorNode
+	ZoneId int `json:"zone_id"`
+}

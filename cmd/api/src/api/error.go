@@ -80,6 +80,7 @@ const (
 	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided tier position is out of range"
 	ErrorResponseDetailsQueryTooShort               = "search query must be at least 3 characters long"
 	ErrorResponseAssetGroupCertTypeInvalid          = "valid certification action is required"
+	ErrorResponseAssetGroupMemberIDsRequired        = "asset group member IDs are required"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

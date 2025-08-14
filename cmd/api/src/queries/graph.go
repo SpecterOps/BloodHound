@@ -152,7 +152,8 @@ type Graph interface {
 	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
-	FetchNodeByGraphId(ctx context.Context, id ...graph.ID) (*graph.Node, error)
+	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
+	FetchNodesByGraphIds(ctx context.Context, ids []graph.ID) ([]*graph.Node, error)
 }
 
 type GraphQuery struct {
@@ -667,15 +668,12 @@ func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) 
 	return s.CountFilteredNodes(ctx, (query.KindIn(query.Node(), kinds...)))
 }
 
-func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id ...graph.ID) (*graph.Node, error) {
+func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
 	var node *graph.Node
 
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
-		for _, i := range id {
-			node, err = ops.FetchNode(tx, i)
-
-		}
+		node, err = ops.FetchNode(tx, id)
 		return err
 	}); err != nil {
 		return nil, err
@@ -684,6 +682,16 @@ func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id ...graph.ID) (*g
 	} else {
 		return node, err
 	}
+}
+
+func (s *GraphQuery) FetchNodesByGraphIds(ctx context.Context, ids []graph.ID) ([]*graph.Node, error) {
+	var nodes []*graph.Node
+
+	return nodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		nodes, err = ops.FetchNodes(tx.Nodes().Filter(query.InIDs(query.NodeID(), ids...)))
+		return err
+	})
 }
 
 func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
