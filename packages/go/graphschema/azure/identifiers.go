@@ -41,12 +41,12 @@ var (
 	}
 
 	RelationshipKindByAppRoleID = map[string]graph.Kind{
-		ApplicationReadWriteAllID:              ApplicationReadWriteAll,
-		AppRoleAssignmentReadWriteAllID:        AppRoleAssignmentReadWriteAll,
-		DirectoryReadWriteAllID:                DirectoryReadWriteAll,
-		GroupReadWriteAllID:                    GroupReadWriteAll,
-		GroupMemberReadWriteAllID:              GroupMemberReadWriteAll,
-		RoleManagementReadWriteDirectoryID:     RoleManagementReadWriteDirectory,
-		ServicePrincipalEndpointReadWriteAllID: ServicePrincipalEndpointReadWriteAll,
+		ApplicationReadWriteAllID:              AZMGApplicationReadWriteAll,
+		AppRoleAssignmentReadWriteAllID:        AZMGAppRoleAssignmentReadWriteAll,
+		DirectoryReadWriteAllID:                AZMGDirectoryReadWriteAll,
+		GroupReadWriteAllID:                    AZMGGroupReadWriteAll,
+		GroupMemberReadWriteAllID:              AZMGGroupMemberReadWriteAll,
+		RoleManagementReadWriteDirectoryID:     AZMGRoleManagementReadWriteDirectory,
+		ServicePrincipalEndpointReadWriteAllID: AZMGServicePrincipalEndpointReadWriteAll,
 	}
 )

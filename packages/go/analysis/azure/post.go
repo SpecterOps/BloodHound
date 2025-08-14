@@ -256,7 +256,7 @@ func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Databa
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
 			return err
-		} else if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ApplicationReadWriteAll); err != nil {
+		} else if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGApplicationReadWriteAll); err != nil {
 			return err
 		} else {
 			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -296,7 +296,7 @@ func createAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Databa
 
 func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AppRoleAssignmentReadWriteAll); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGAppRoleAssignmentReadWriteAll); err != nil {
 			return err
 		} else {
 			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -326,7 +326,7 @@ func createAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.
 
 func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.DirectoryReadWriteAll); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGDirectoryReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
@@ -367,7 +367,7 @@ func createAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database
 
 func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.GroupReadWriteAll); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGGroupReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
@@ -408,7 +408,7 @@ func createAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, op
 
 func createAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.GroupMemberReadWriteAll); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGGroupMemberReadWriteAll); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
@@ -439,7 +439,7 @@ func createAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Databa
 
 func createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGRoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
 			return err
@@ -470,7 +470,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, d
 
 func createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGRoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
 			return err
@@ -501,7 +501,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, d
 
 func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGRoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else {
 			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -541,7 +541,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, d
 
 func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGRoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
 			return err
@@ -583,7 +583,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, d
 
 func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGRoleManagementReadWriteDirectory); err != nil {
 			return err
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Group); err != nil {
 			return err
@@ -624,7 +624,7 @@ func createAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, d
 
 func createAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db graph.Database, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob], tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ServicePrincipalEndpointReadWriteAll); err != nil {
+		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AZMGServicePrincipalEndpointReadWriteAll); err != nil {
 			return err
 		} else {
 			return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {

@@ -2090,1363 +2090,1363 @@ type OAuth2PermissionGrant struct {
 func GetPermissionConstant(scope string) graph.Kind {
 	switch scope {
 	case "APIConnectors.Read.All":
-		return azure.APIConnectorsReadAll
+		return azure.AZMGAPIConnectorsReadAll
 	case "APIConnectors.ReadWrite.All":
-		return azure.APIConnectorsReadWriteAll
+		return azure.AZMGAPIConnectorsReadWriteAll
 	case "AccessReview.Read.All":
-		return azure.AccessReviewReadAll
+		return azure.AZMGAccessReviewReadAll
 	case "AccessReview.ReadWrite.All":
-		return azure.AccessReviewReadWriteAll
+		return azure.AZMGAccessReviewReadWriteAll
 	case "AccessReview.ReadWrite.Membership":
-		return azure.AccessReviewReadWriteMembership
+		return azure.AZMGAccessReviewReadWriteMembership
 	case "Acronym.Read.All":
-		return azure.AcronymReadAll
+		return azure.AZMGAccessReviewReadWriteMembership
 	case "AdministrativeUnit.Read.All":
-		return azure.AdministrativeUnitReadAll
+		return azure.AZMGAdministrativeUnitReadAll
 	case "AdministrativeUnit.ReadWrite.All":
-		return azure.AdministrativeUnitReadWriteAll
+		return azure.AZMGAdministrativeUnitReadWriteAll
 	case "AgentApplication.Create":
-		return azure.AgentApplicationCreate
+		return azure.AZMGAgentApplicationCreate
 	case "AgentIdentity.Create":
-		return azure.AgentIdentityCreate
+		return azure.AZMGAgentIdentityCreate
 	case "Agreement.Read.All":
-		return azure.AgreementReadAll
+		return azure.AZMGAgreementReadAll
 	case "Agreement.ReadWrite.All":
-		return azure.AgreementReadWriteAll
+		return azure.AZMGAgreementReadWriteAll
 	case "AgreementAcceptance.Read":
-		return azure.AgreementAcceptanceRead
+		return azure.AZMGAgreementAcceptanceRead
 	case "AgreementAcceptance.Read.All":
-		return azure.AgreementAcceptanceReadAll
+		return azure.AZMGAgreementAcceptanceReadAll
 	case "AiEnterpriseInteraction.Read":
-		return azure.AiEnterpriseInteractionRead
+		return azure.AZMGAiEnterpriseInteractionRead
 	case "AiEnterpriseInteraction.Read.All":
-		return azure.AiEnterpriseInteractionReadAll
+		return azure.AZMGAiEnterpriseInteractionReadAll
 	case "AllSites.Read":
-		return azure.AllSitesRead
+		return azure.AZMGAllSitesRead
 	case "Analytics.Read":
-		return azure.AnalyticsRead
+		return azure.AZMGAnalyticsRead
 	case "AppCatalog.Read.All":
-		return azure.AppCatalogReadAll
+		return azure.AZMGAppCatalogReadAll
 	case "AppCatalog.ReadWrite.All":
-		return azure.AppCatalogReadWriteAll
+		return azure.AZMGAppCatalogReadWriteAll
 	case "AppCatalog.Submit":
-		return azure.AppCatalogSubmit
+		return azure.AZMGAppCatalogSubmit
 	case "AppCertTrustConfiguration.Read.All":
-		return azure.AppCertTrustConfigurationReadAll
+		return azure.AZMGAppCertTrustConfigurationReadAll
 	case "AppCertTrustConfiguration.ReadWrite.All":
-		return azure.AppCertTrustConfigurationReadWriteAll
+		return azure.AZMGAppCertTrustConfigurationReadWriteAll
 	case "AppRoleAssignment.ReadWrite.All":
-		return azure.AppRoleAssignmentReadWriteAll
+		return azure.AZMGAppRoleAssignmentReadWriteAll
 	case "Application.Read.All":
-		return azure.ApplicationReadAll
+		return azure.AZMGApplicationReadAll
 	case "Application.ReadWrite.All":
-		return azure.ApplicationReadWriteAll
+		return azure.AZMGApplicationReadWriteAll
 	case "Application.ReadWrite.OwnedBy":
-		return azure.ApplicationReadWriteOwnedBy
+		return azure.AZMGApplicationReadWriteOwnedBy
 	case "ApprovalSolution.Read":
-		return azure.ApprovalSolutionRead
+		return azure.AZMGApprovalSolutionRead
 	case "ApprovalSolution.Read.All":
-		return azure.ApprovalSolutionReadAll
+		return azure.AZMGApprovalSolutionReadAll
 	case "ApprovalSolution.ReadWrite":
-		return azure.ApprovalSolutionReadWrite
+		return azure.AZMGApprovalSolutionReadWrite
 	case "ApprovalSolution.ReadWrite.All":
-		return azure.ApprovalSolutionReadWriteAll
+		return azure.AZMGApprovalSolutionReadWriteAll
 	case "ApprovalSolutionResponse.ReadWrite":
-		return azure.ApprovalSolutionResponseReadWrite
+		return azure.AZMGApprovalSolutionResponseReadWrite
 	case "AttackSimulation.Read.All":
-		return azure.AttackSimulationReadAll
+		return azure.AZMGAttackSimulationReadAll
 	case "AttackSimulation.ReadWrite.All":
-		return azure.AttackSimulationReadWriteAll
+		return azure.AZMGAttackSimulationReadWriteAll
 	case "AuditActivity.Read":
-		return azure.AuditActivityRead
+		return azure.AZMGAuditActivityRead
 	case "AuditActivity.Write":
-		return azure.AuditActivityWrite
+		return azure.AZMGAuditActivityWrite
 	case "AuditLog.Read.All":
-		return azure.AuditLogReadAll
+		return azure.AZMGAuditLogReadAll
 	case "AuditLogsQuery.Read.All":
-		return azure.AuditLogsQueryReadAll
+		return azure.AZMGAuditLogsQueryReadAll
 	case "AuthenticationContext.Read.All":
-		return azure.AuthenticationContextReadAll
+		return azure.AZMGAuthenticationContextReadAll
 	case "AuthenticationContext.ReadWrite.All":
-		return azure.AuthenticationContextReadWriteAll
+		return azure.AZMGAuthenticationContextReadWriteAll
 	case "BillingConfiguration.ReadWrite.All":
-		return azure.BillingConfigurationReadWriteAll
+		return azure.AZMGBillingConfigurationReadWriteAll
 	case "BitlockerKey.Read.All":
-		return azure.BitlockerKeyReadAll
+		return azure.AZMGBitlockerKeyReadAll
 	case "BitlockerKey.ReadBasic.All":
-		return azure.BitlockerKeyReadBasicAll
+		return azure.AZMGBitlockerKeyReadBasicAll
 	case "Bookings.Manage.All":
-		return azure.BookingsManageAll
+		return azure.AZMGBookingsManageAll
 	case "Bookings.Read.All":
-		return azure.BookingsReadAll
+		return azure.AZMGBookingsReadAll
 	case "Bookings.ReadWrite.All":
-		return azure.BookingsReadWriteAll
+		return azure.AZMGBookingsReadWriteAll
 	case "BookingsAppointment.ReadWrite.All":
-		return azure.BookingsAppointmentReadWriteAll
+		return azure.AZMGBookingsAppointmentReadWriteAll
 	case "Bookmark.Read.All":
-		return azure.BookmarkReadAll
+		return azure.AZMGBookmarkReadAll
 	case "BrowserSiteLists.Read.All":
-		return azure.BrowserSiteListsReadAll
+		return azure.AZMGBrowserSiteListsReadAll
 	case "BrowserSiteLists.ReadWrite.All":
-		return azure.BrowserSiteListsReadWriteAll
+		return azure.AZMGBrowserSiteListsReadWriteAll
 	case "BusinessScenarioConfig.Read.All":
-		return azure.BusinessScenarioConfigReadAll
+		return azure.AZMGBusinessScenarioConfigReadAll
 	case "BusinessScenarioConfig.Read.OwnedBy":
-		return azure.BusinessScenarioConfigReadOwnedBy
+		return azure.AZMGBusinessScenarioConfigReadOwnedBy
 	case "BusinessScenarioConfig.ReadWrite.All":
-		return azure.BusinessScenarioConfigReadWriteAll
+		return azure.AZMGBusinessScenarioConfigReadWriteAll
 	case "BusinessScenarioConfig.ReadWrite.OwnedBy":
-		return azure.BusinessScenarioConfigReadWriteOwnedBy
+		return azure.AZMGBusinessScenarioConfigReadWriteOwnedBy
 	case "BusinessScenarioData.Read.OwnedBy":
-		return azure.BusinessScenarioDataReadOwnedBy
+		return azure.AZMGBusinessScenarioDataReadOwnedBy
 	case "BusinessScenarioData.ReadWrite.OwnedBy":
-		return azure.BusinessScenarioDataReadWriteOwnedBy
+		return azure.AZMGBusinessScenarioDataReadWriteOwnedBy
 	case "Calendars.Read":
-		return azure.CalendarsRead
+		return azure.AZMGCalendarsRead
 	case "Calendars.Read.Shared":
-		return azure.CalendarsReadShared
+		return azure.AZMGCalendarsReadShared
 	case "Calendars.ReadBasic":
-		return azure.CalendarsReadBasic
+		return azure.AZMGCalendarsReadBasic
 	case "Calendars.ReadBasic.All":
-		return azure.CalendarsReadBasicAll
+		return azure.AZMGCalendarsReadBasicAll
 	case "Calendars.ReadWrite":
-		return azure.CalendarsReadWrite
+		return azure.AZMGCalendarsReadWrite
 	case "Calendars.ReadWrite.Shared":
-		return azure.CalendarsReadWriteShared
+		return azure.AZMGCalendarsReadWriteShared
 	case "CallAiInsights.Read.All":
-		return azure.CallAiInsightsReadAll
+		return azure.AZMGCallAiInsightsReadAll
 	case "CallDelegation.Read":
-		return azure.CallDelegationRead
+		return azure.AZMGCallDelegationRead
 	case "CallDelegation.Read.All":
-		return azure.CallDelegationReadAll
+		return azure.AZMGCallDelegationReadAll
 	case "CallDelegation.ReadWrite":
-		return azure.CallDelegationReadWrite
+		return azure.AZMGCallDelegationReadWrite
 	case "CallDelegation.ReadWrite.All":
-		return azure.CallDelegationReadWriteAll
+		return azure.AZMGCallDelegationReadWriteAll
 	case "CallEvents.Read":
-		return azure.CallEventsRead
+		return azure.AZMGCallEventsRead
 	case "CallEvents.Read.All":
-		return azure.CallEventsReadAll
+		return azure.AZMGCallEventsReadAll
 	case "CallRecords.Read.All":
-		return azure.CallRecordsReadAll
+		return azure.AZMGCallRecordsReadAll
 	case "Calls.AccessMedia.All":
-		return azure.CallsAccessMediaAll
+		return azure.AZMGCallsAccessMediaAll
 	case "Calls.Initiate.All":
-		return azure.CallsInitiateAll
+		return azure.AZMGCallsInitiateAll
 	case "Calls.InitiateGroupCall.All":
-		return azure.CallsInitiateGroupCallAll
+		return azure.AZMGCallsInitiateGroupCallAll
 	case "Calls.JoinGroupCall.All":
-		return azure.CallsJoinGroupCallAll
+		return azure.AZMGCallsJoinGroupCallAll
 	case "Calls.JoinGroupCallAsGuest.All":
-		return azure.CallsJoinGroupCallAsGuestAll
+		return azure.AZMGCallsJoinGroupCallAsGuestAll
 	case "ChangeManagement.Read.All":
-		return azure.ChangeManagementReadAll
+		return azure.AZMGChangeManagementReadAll
 	case "Channel.Create":
-		return azure.ChannelCreate
+		return azure.AZMGChannelCreate
 	case "Channel.Delete.All":
-		return azure.ChannelDeleteAll
+		return azure.AZMGChannelDeleteAll
 	case "Channel.ReadBasic.All":
-		return azure.ChannelReadBasicAll
+		return azure.AZMGChannelReadBasicAll
 	case "ChannelMember.Read.All":
-		return azure.ChannelMemberReadAll
+		return azure.AZMGChannelMemberReadAll
 	case "ChannelMember.ReadWrite.All":
-		return azure.ChannelMemberReadWriteAll
+		return azure.AZMGChannelMemberReadWriteAll
 	case "ChannelMessage.Edit":
-		return azure.ChannelMessageEdit
+		return azure.AZMGChannelMessageEdit
 	case "ChannelMessage.Read.All":
-		return azure.ChannelMessageReadAll
+		return azure.AZMGChannelMessageReadAll
 	case "ChannelMessage.ReadWrite":
-		return azure.ChannelMessageReadWrite
+		return azure.AZMGChannelMessageReadWrite
 	case "ChannelMessage.Send":
-		return azure.ChannelMessageSend
+		return azure.AZMGChannelMessageSend
 	case "ChannelMessage.UpdatePolicyViolation.All":
-		return azure.ChannelMessageUpdatePolicyViolationAll
+		return azure.AZMGChannelMessageUpdatePolicyViolationAll
 	case "ChannelSettings.Read.All":
-		return azure.ChannelSettingsReadAll
+		return azure.AZMGChannelSettingsReadAll
 	case "ChannelSettings.ReadWrite.All":
-		return azure.ChannelSettingsReadWriteAll
+		return azure.AZMGChannelSettingsReadWriteAll
 	case "Chat.Create":
-		return azure.ChatCreate
+		return azure.AZMGChatCreate
 	case "Chat.ManageDeletion.All":
-		return azure.ChatManageDeletionAll
+		return azure.AZMGChatManageDeletionAll
 	case "Chat.Read":
-		return azure.ChatRead
+		return azure.AZMGChatRead
 	case "Chat.Read.All":
-		return azure.ChatReadAll
+		return azure.AZMGChatReadAll
 	case "Chat.Read.WhereInstalled":
-		return azure.ChatReadWhereInstalled
+		return azure.AZMGChatReadWhereInstalled
 	case "Chat.ReadBasic":
-		return azure.ChatReadBasic
+		return azure.AZMGChatReadBasic
 	case "Chat.ReadBasic.All":
-		return azure.ChatReadBasicAll
+		return azure.AZMGChatReadBasicAll
 	case "Chat.ReadBasic.WhereInstalled":
-		return azure.ChatReadBasicWhereInstalled
+		return azure.AZMGChatReadBasicWhereInstalled
 	case "Chat.ReadWrite":
-		return azure.ChatReadWrite
+		return azure.AZMGChatReadWrite
 	case "Chat.ReadWrite.All":
-		return azure.ChatReadWriteAll
+		return azure.AZMGChatReadWriteAll
 	case "Chat.ReadWrite.WhereInstalled":
-		return azure.ChatReadWriteWhereInstalled
+		return azure.AZMGChatReadWriteWhereInstalled
 	case "Chat.UpdatePolicyViolation.All":
-		return azure.ChatUpdatePolicyViolationAll
+		return azure.AZMGChatUpdatePolicyViolationAll
 	case "ChatMember.Read":
-		return azure.ChatMemberRead
+		return azure.AZMGChatMemberRead
 	case "ChatMember.Read.All":
-		return azure.ChatMemberReadAll
+		return azure.AZMGChatMemberReadAll
 	case "ChatMember.Read.WhereInstalled":
-		return azure.ChatMemberReadWhereInstalled
+		return azure.AZMGChatMemberReadWhereInstalled
 	case "ChatMember.ReadWrite":
-		return azure.ChatMemberReadWrite
+		return azure.AZMGChatMemberReadWrite
 	case "ChatMember.ReadWrite.All":
-		return azure.ChatMemberReadWriteAll
+		return azure.AZMGChatMemberReadWriteAll
 	case "ChatMember.ReadWrite.WhereInstalled":
-		return azure.ChatMemberReadWriteWhereInstalled
+		return azure.AZMGChatMemberReadWriteWhereInstalled
 	case "ChatMessage.Read":
-		return azure.ChatMessageRead
+		return azure.AZMGChatMessageRead
 	case "ChatMessage.Read.All":
-		return azure.ChatMessageReadAll
+		return azure.AZMGChatMessageReadAll
 	case "ChatMessage.Send":
-		return azure.ChatMessageSend
+		return azure.AZMGChatMessageSend
 	case "CloudPC.Read.All":
-		return azure.CloudPCReadAll
+		return azure.AZMGCloudPCReadAll
 	case "CloudPC.ReadWrite.All":
-		return azure.CloudPCReadWriteAll
+		return azure.AZMGCloudPCReadWriteAll
 	case "Community.Read.All":
-		return azure.CommunityReadAll
+		return azure.AZMGCommunityReadAll
 	case "Community.ReadWrite.All":
-		return azure.CommunityReadWriteAll
+		return azure.AZMGCommunityReadWriteAll
 	case "ConfigurationMonitoring.Read.All":
-		return azure.ConfigurationMonitoringReadAll
+		return azure.AZMGConfigurationMonitoringReadAll
 	case "ConfigurationMonitoring.ReadWrite.All":
-		return azure.ConfigurationMonitoringReadWriteAll
+		return azure.AZMGConfigurationMonitoringReadWriteAll
 	case "ConsentRequest.Create":
-		return azure.ConsentRequestCreate
+		return azure.AZMGConsentRequestCreate
 	case "ConsentRequest.Read":
-		return azure.ConsentRequestRead
+		return azure.AZMGConsentRequestRead
 	case "ConsentRequest.Read.All":
-		return azure.ConsentRequestReadAll
+		return azure.AZMGConsentRequestReadAll
 	case "ConsentRequest.ReadApprove.All":
-		return azure.ConsentRequestReadApproveAll
+		return azure.AZMGConsentRequestReadApproveAll
 	case "ConsentRequest.ReadWrite.All":
-		return azure.ConsentRequestReadWriteAll
+		return azure.AZMGConsentRequestReadWriteAll
 	case "Contacts.Read":
-		return azure.ContactsRead
+		return azure.AZMGContactsRead
 	case "Contacts.Read.Shared":
-		return azure.ContactsReadShared
+		return azure.AZMGContactsReadShared
 	case "Contacts.ReadWrite":
-		return azure.ContactsReadWrite
+		return azure.AZMGContactsReadWrite
 	case "Contacts.ReadWrite.Shared":
-		return azure.ContactsReadWriteShared
+		return azure.AZMGContactsReadWriteShared
 	case "Content.Process.All":
-		return azure.ContentProcessAll
+		return azure.AZMGContentProcessAll
 	case "Content.Process.User":
-		return azure.ContentProcessUser
+		return azure.AZMGContentProcessUser
 	case "ContentActivity.Read":
-		return azure.ContentActivityRead
+		return azure.AZMGContentActivityRead
 	case "ContentActivity.Write":
-		return azure.ContentActivityWrite
+		return azure.AZMGContentActivityWrite
 	case "CrossTenantInformation.ReadBasic.All":
-		return azure.CrossTenantInformationReadBasicAll
+		return azure.AZMGCrossTenantInformationReadBasicAll
 	case "CrossTenantUserProfileSharing.Read":
-		return azure.CrossTenantUserProfileSharingRead
+		return azure.AZMGCrossTenantUserProfileSharingRead
 	case "CrossTenantUserProfileSharing.Read.All":
-		return azure.CrossTenantUserProfileSharingReadAll
+		return azure.AZMGCrossTenantUserProfileSharingReadAll
 	case "CrossTenantUserProfileSharing.ReadWrite":
-		return azure.CrossTenantUserProfileSharingReadWrite
+		return azure.AZMGCrossTenantUserProfileSharingReadWrite
 	case "CrossTenantUserProfileSharing.ReadWrite.All":
-		return azure.CrossTenantUserProfileSharingReadWriteAll
+		return azure.AZMGCrossTenantUserProfileSharingReadWriteAll
 	case "CustomAuthenticationExtension.Read.All":
-		return azure.CustomAuthenticationExtensionReadAll
+		return azure.AZMGCustomAuthenticationExtensionReadAll
 	case "CustomAuthenticationExtension.ReadWrite.All":
-		return azure.CustomAuthenticationExtensionReadWriteAll
+		return azure.AZMGCustomAuthenticationExtensionReadWriteAll
 	case "CustomAuthenticationExtension.Receive.Payload":
-		return azure.CustomAuthenticationExtensionReceivePayload
+		return azure.AZMGCustomAuthenticationExtensionReceivePayload
 	case "CustomDetection.Read.All":
-		return azure.CustomDetectionReadAll
+		return azure.AZMGCustomDetectionReadAll
 	case "CustomDetection.ReadWrite.All":
-		return azure.CustomDetectionReadWriteAll
+		return azure.AZMGCustomDetectionReadWriteAll
 	case "CustomSecAttributeAssignment.Read.All":
-		return azure.CustomSecAttributeAssignmentReadAll
+		return azure.AZMGCustomSecAttributeAssignmentReadAll
 	case "CustomSecAttributeAssignment.ReadWrite.All":
-		return azure.CustomSecAttributeAssignmentReadWriteAll
+		return azure.AZMGCustomSecAttributeAssignmentReadWriteAll
 	case "CustomSecAttributeAuditLogs.Read.All":
-		return azure.CustomSecAttributeAuditLogsReadAll
+		return azure.AZMGCustomSecAttributeAuditLogsReadAll
 	case "CustomSecAttributeDefinition.Read.All":
-		return azure.CustomSecAttributeDefinitionReadAll
+		return azure.AZMGCustomSecAttributeDefinitionReadAll
 	case "CustomSecAttributeDefinition.ReadWrite.All":
-		return azure.CustomSecAttributeDefinitionReadWriteAll
+		return azure.AZMGCustomSecAttributeDefinitionReadWriteAll
 	case "CustomSecAttributeProvisioning.Read.All":
-		return azure.CustomSecAttributeProvisioningReadAll
+		return azure.AZMGCustomSecAttributeProvisioningReadAll
 	case "CustomSecAttributeProvisioning.ReadWrite.All":
-		return azure.CustomSecAttributeProvisioningReadWriteAll
+		return azure.AZMGCustomSecAttributeProvisioningReadWriteAll
 	case "CustomTags.Read.All":
-		return azure.CustomTagsReadAll
+		return azure.AZMGCustomTagsReadAll
 	case "CustomTags.ReadWrite.All":
-		return azure.CustomTagsReadWriteAll
+		return azure.AZMGCustomTagsReadWriteAll
 	case "Dataset.Read.All":
-		return azure.DatasetReadAll
+		return azure.AZMGDatasetReadAll
 	case "DelegatedAdminRelationship.Read.All":
-		return azure.DelegatedAdminRelationshipReadAll
+		return azure.AZMGDelegatedAdminRelationshipReadAll
 	case "DelegatedAdminRelationship.ReadWrite.All":
-		return azure.DelegatedAdminRelationshipReadWriteAll
+		return azure.AZMGDelegatedAdminRelationshipReadWriteAll
 	case "DelegatedPermissionGrant.Read.All":
-		return azure.DelegatedPermissionGrantReadAll
+		return azure.AZMGDelegatedPermissionGrantReadAll
 	case "DelegatedPermissionGrant.ReadWrite.All":
-		return azure.DelegatedPermissionGrantReadWriteAll
+		return azure.AZMGDelegatedPermissionGrantReadWriteAll
 	case "Device.Command":
-		return azure.DeviceCommand
+		return azure.AZMGDeviceCommand
 	case "Device.CreateFromOwnedTemplate":
-		return azure.DeviceCreateFromOwnedTemplate
+		return azure.AZMGDeviceCreateFromOwnedTemplate
 	case "Device.Read":
-		return azure.DeviceRead
+		return azure.AZMGDeviceRead
 	case "Device.Read.All":
-		return azure.DeviceReadAll
+		return azure.AZMGDeviceReadAll
 	case "Device.ReadWrite.All":
-		return azure.DeviceReadWriteAll
+		return azure.AZMGDeviceReadWriteAll
 	case "DeviceLocalCredential.Read.All":
-		return azure.DeviceLocalCredentialReadAll
+		return azure.AZMGDeviceLocalCredentialReadAll
 	case "DeviceLocalCredential.ReadBasic.All":
-		return azure.DeviceLocalCredentialReadBasicAll
+		return azure.AZMGDeviceLocalCredentialReadBasicAll
 	case "DeviceManagementApps.Read.All":
-		return azure.DeviceManagementAppsReadAll
+		return azure.AZMGDeviceManagementAppsReadAll
 	case "DeviceManagementApps.ReadWrite.All":
-		return azure.DeviceManagementAppsReadWriteAll
+		return azure.AZMGDeviceManagementAppsReadWriteAll
 	case "DeviceManagementCloudCA.Read.All":
-		return azure.DeviceManagementCloudCAReadAll
+		return azure.AZMGDeviceManagementCloudCAReadAll
 	case "DeviceManagementCloudCA.ReadWrite.All":
-		return azure.DeviceManagementCloudCAReadWriteAll
+		return azure.AZMGDeviceManagementCloudCAReadWriteAll
 	case "DeviceManagementConfiguration.Read.All":
-		return azure.DeviceManagementConfigurationReadAll
+		return azure.AZMGDeviceManagementConfigurationReadAll
 	case "DeviceManagementConfiguration.ReadWrite.All":
-		return azure.DeviceManagementConfigurationReadWriteAll
+		return azure.AZMGDeviceManagementConfigurationReadWriteAll
 	case "DeviceManagementManagedDevices.PrivilegedOperations.All":
-		return azure.DeviceManagementManagedDevicesPrivilegedOperationsAll
+		return azure.AZMGDeviceManagementManagedDevicesPrivilegedOperationsAll
 	case "DeviceManagementManagedDevices.Read.All":
-		return azure.DeviceManagementManagedDevicesReadAll
+		return azure.AZMGDeviceManagementManagedDevicesReadAll
 	case "DeviceManagementManagedDevices.ReadWrite.All":
-		return azure.DeviceManagementManagedDevicesReadWriteAll
+		return azure.AZMGDeviceManagementManagedDevicesReadWriteAll
 	case "DeviceManagementRBAC.Read.All":
-		return azure.DeviceManagementRBACReadAll
+		return azure.AZMGDeviceManagementRBACReadAll
 	case "DeviceManagementRBAC.ReadWrite.All":
-		return azure.DeviceManagementRBACReadWriteAll
+		return azure.AZMGDeviceManagementRBACReadWriteAll
 	case "DeviceManagementScripts.Read.All":
-		return azure.DeviceManagementScriptsReadAll
+		return azure.AZMGDeviceManagementScriptsReadAll
 	case "DeviceManagementScripts.ReadWrite.All":
-		return azure.DeviceManagementScriptsReadWriteAll
+		return azure.AZMGDeviceManagementScriptsReadWriteAll
 	case "DeviceManagementServiceConfig.Read.All":
-		return azure.DeviceManagementServiceConfigReadAll
+		return azure.AZMGDeviceManagementServiceConfigReadAll
 	case "DeviceManagementServiceConfig.ReadWrite.All":
-		return azure.DeviceManagementServiceConfigReadWriteAll
+		return azure.AZMGDeviceManagementServiceConfigReadWriteAll
 	case "DeviceTemplate.Create":
-		return azure.DeviceTemplateCreate
+		return azure.AZMGDeviceTemplateCreate
 	case "DeviceTemplate.Read.All":
-		return azure.DeviceTemplateReadAll
+		return azure.AZMGDeviceTemplateReadAll
 	case "DeviceTemplate.ReadWrite.All":
-		return azure.DeviceTemplateReadWriteAll
+		return azure.AZMGDeviceTemplateReadWriteAll
 	case "Directory.AccessAsUser.All":
-		return azure.DirectoryAccessAsUserAll
+		return azure.AZMGDirectoryAccessAsUserAll
 	case "Directory.Read.All":
-		return azure.DirectoryReadAll
+		return azure.AZMGDirectoryReadAll
 	case "Directory.ReadWrite.All":
-		return azure.DirectoryReadWriteAll
+		return azure.AZMGDirectoryReadWriteAll
 	case "DirectoryRecommendations.Read.All":
-		return azure.DirectoryRecommendationsReadAll
+		return azure.AZMGDirectoryRecommendationsReadAll
 	case "DirectoryRecommendations.ReadWrite.All":
-		return azure.DirectoryRecommendationsReadWriteAll
+		return azure.AZMGDirectoryRecommendationsReadWriteAll
 	case "Domain.Read.All":
-		return azure.DomainReadAll
+		return azure.AZMGDomainReadAll
 	case "Domain.ReadWrite.All":
-		return azure.DomainReadWriteAll
+		return azure.AZMGDomainReadWriteAll
 	case "EAS.AccessAsUser.All":
-		return azure.EASAccessAsUserAll
+		return azure.AZMGEASAccessAsUserAll
 	case "EWS.AccessAsUser.All":
-		return azure.EWSAccessAsUserAll
+		return azure.AZMGEWSAccessAsUserAll
 	case "EduAdministration.Read":
-		return azure.EduAdministrationRead
+		return azure.AZMGEduAdministrationRead
 	case "EduAdministration.Read.All":
-		return azure.EduAdministrationReadAll
+		return azure.AZMGEduAdministrationReadAll
 	case "EduAdministration.ReadWrite":
-		return azure.EduAdministrationReadWrite
+		return azure.AZMGEduAdministrationReadWrite
 	case "EduAdministration.ReadWrite.All":
-		return azure.EduAdministrationReadWriteAll
+		return azure.AZMGEduAdministrationReadWriteAll
 	case "EduAssignments.Read":
-		return azure.EduAssignmentsRead
+		return azure.AZMGEduAssignmentsRead
 	case "EduAssignments.Read.All":
-		return azure.EduAssignmentsReadAll
+		return azure.AZMGEduAssignmentsReadAll
 	case "EduAssignments.ReadBasic":
-		return azure.EduAssignmentsReadBasic
+		return azure.AZMGEduAssignmentsReadBasic
 	case "EduAssignments.ReadBasic.All":
-		return azure.EduAssignmentsReadBasicAll
+		return azure.AZMGEduAssignmentsReadBasicAll
 	case "EduAssignments.ReadWrite":
-		return azure.EduAssignmentsReadWrite
+		return azure.AZMGEduAssignmentsReadWrite
 	case "EduAssignments.ReadWrite.All":
-		return azure.EduAssignmentsReadWriteAll
+		return azure.AZMGEduAssignmentsReadWriteAll
 	case "EduAssignments.ReadWriteBasic":
-		return azure.EduAssignmentsReadWriteBasic
+		return azure.AZMGEduAssignmentsReadWriteBasic
 	case "EduAssignments.ReadWriteBasic.All":
-		return azure.EduAssignmentsReadWriteBasicAll
+		return azure.AZMGEduAssignmentsReadWriteBasicAll
 	case "EduCurricula.Read":
-		return azure.EduCurriculaRead
+		return azure.AZMGEduCurriculaRead
 	case "EduCurricula.Read.All":
-		return azure.EduCurriculaReadAll
+		return azure.AZMGEduCurriculaReadAll
 	case "EduCurricula.ReadWrite":
-		return azure.EduCurriculaReadWrite
+		return azure.AZMGEduCurriculaReadWrite
 	case "EduCurricula.ReadWrite.All":
-		return azure.EduCurriculaReadWriteAll
+		return azure.AZMGEduCurriculaReadWriteAll
 	case "EduRoster.Read":
-		return azure.EduRosterRead
+		return azure.AZMGEduRosterRead
 	case "EduRoster.Read.All":
-		return azure.EduRosterReadAll
+		return azure.AZMGEduRosterReadAll
 	case "EduRoster.ReadBasic":
-		return azure.EduRosterReadBasic
+		return azure.AZMGEduRosterReadBasic
 	case "EduRoster.ReadBasic.All":
-		return azure.EduRosterReadBasicAll
+		return azure.AZMGEduRosterReadBasicAll
 	case "EduRoster.ReadWrite":
-		return azure.EduRosterReadWrite
+		return azure.AZMGEduRosterReadWrite
 	case "EduRoster.ReadWrite.All":
-		return azure.EduRosterReadWriteAll
+		return azure.AZMGEduRosterReadWriteAll
 	case "EngagementConversation.Migration.All":
-		return azure.EngagementConversationMigrationAll
+		return azure.AZMGEngagementConversationMigrationAll
 	case "EngagementConversation.ReadWrite.All":
-		return azure.EngagementConversationReadWriteAll
+		return azure.AZMGEngagementConversationReadWriteAll
 	case "EngagementMeetingConversation.Read.All":
-		return azure.EngagementMeetingConversationReadAll
+		return azure.AZMGEngagementMeetingConversationReadAll
 	case "EngagementRole.Read":
-		return azure.EngagementRoleRead
+		return azure.AZMGEngagementRoleRead
 	case "EngagementRole.Read.All":
-		return azure.EngagementRoleReadAll
+		return azure.AZMGEngagementRoleReadAll
 	case "EngagementRole.ReadWrite.All":
-		return azure.EngagementRoleReadWriteAll
+		return azure.AZMGEngagementRoleReadWriteAll
 	case "EntitlementManagement.Read.All":
-		return azure.EntitlementManagementReadAll
+		return azure.AZMGEntitlementManagementReadAll
 	case "EntitlementManagement.ReadWrite.All":
-		return azure.EntitlementManagementReadWriteAll
+		return azure.AZMGEntitlementManagementReadWriteAll
 	case "EventListener.Read.All":
-		return azure.EventListenerReadAll
+		return azure.AZMGEventListenerReadAll
 	case "EventListener.ReadWrite.All":
-		return azure.EventListenerReadWriteAll
+		return azure.AZMGEventListenerReadWriteAll
 	case "ExternalConnection.Read.All":
-		return azure.ExternalConnectionReadAll
+		return azure.AZMGExternalConnectionReadAll
 	case "ExternalConnection.ReadWrite.All":
-		return azure.ExternalConnectionReadWriteAll
+		return azure.AZMGExternalConnectionReadWriteAll
 	case "ExternalConnection.ReadWrite.OwnedBy":
-		return azure.ExternalConnectionReadWriteOwnedBy
+		return azure.AZMGExternalConnectionReadWriteOwnedBy
 	case "ExternalItem.Read.All":
-		return azure.ExternalItemReadAll
+		return azure.AZMGExternalItemReadAll
 	case "ExternalItem.ReadWrite.All":
-		return azure.ExternalItemReadWriteAll
+		return azure.AZMGExternalItemReadWriteAll
 	case "ExternalItem.ReadWrite.OwnedBy":
-		return azure.ExternalItemReadWriteOwnedBy
+		return azure.AZMGExternalItemReadWriteOwnedBy
 	case "ExternalUserProfile.Read.All":
-		return azure.ExternalUserProfileReadAll
+		return azure.AZMGExternalUserProfileReadAll
 	case "ExternalUserProfile.ReadWrite.All":
-		return azure.ExternalUserProfileReadWriteAll
+		return azure.AZMGExternalUserProfileReadWriteAll
 	case "Family.Read":
-		return azure.FamilyRead
+		return azure.AZMGFamilyRead
 	case "FileIngestion.Ingest":
-		return azure.FileIngestionIngest
+		return azure.AZMGFileIngestionIngest
 	case "FileIngestionHybridOnboarding.Manage":
-		return azure.FileIngestionHybridOnboardingManage
+		return azure.AZMGFileIngestionHybridOnboardingManage
 	case "FileStorageContainer.Manage.All":
-		return azure.FileStorageContainerManageAll
+		return azure.AZMGFileStorageContainerManageAll
 	case "FileStorageContainer.Selected":
-		return azure.FileStorageContainerSelected
+		return azure.AZMGFileStorageContainerSelected
 	case "FileStorageContainerTypeReg.Selected":
-		return azure.FileStorageContainerTypeRegSelected
+		return azure.AZMGFileStorageContainerTypeRegSelected
 	case "Files.Read":
-		return azure.FilesRead
+		return azure.AZMGFilesRead
 	case "Files.Read.All":
-		return azure.FilesReadAll
+		return azure.AZMGFilesReadAll
 	case "Files.Read.Selected":
-		return azure.FilesReadSelected
+		return azure.AZMGFilesReadSelected
 	case "Files.ReadWrite":
-		return azure.FilesReadWrite
+		return azure.AZMGFilesReadWrite
 	case "Files.ReadWrite.All":
-		return azure.FilesReadWriteAll
+		return azure.AZMGFilesReadWriteAll
 	case "Files.ReadWrite.AppFolder":
-		return azure.FilesReadWriteAppFolder
+		return azure.AZMGFilesReadWriteAppFolder
 	case "Files.ReadWrite.Selected":
-		return azure.FilesReadWriteSelected
+		return azure.AZMGFilesReadWriteSelected
 	case "Files.SelectedOperations.Selected":
-		return azure.FilesSelectedOperationsSelected
+		return azure.AZMGFilesSelectedOperationsSelected
 	case "Financials.ReadWrite.All":
-		return azure.FinancialsReadWriteAll
+		return azure.AZMGFinancialsReadWriteAll
 	case "Forms.ReadWrite":
-		return azure.FormsReadWrite
+		return azure.AZMGFormsReadWrite
 	case "Group.Create":
-		return azure.GroupCreate
+		return azure.AZMGGroupCreate
 	case "Group.Read.All":
-		return azure.GroupReadAll
+		return azure.AZMGGroupReadAll
 	case "Group.ReadWrite.All":
-		return azure.GroupReadWriteAll
+		return azure.AZMGGroupReadWriteAll
 	case "Group-Conversation.ReadWrite.All":
-		return azure.GroupConversationReadWriteAll
+		return azure.AZMGGroupConversationReadWriteAll
 	case "GroupMember.Read.All":
-		return azure.GroupMemberReadAll
+		return azure.AZMGGroupMemberReadAll
 	case "GroupMember.ReadWrite.All":
-		return azure.GroupMemberReadWriteAll
+		return azure.AZMGGroupMemberReadWriteAll
 	case "GroupSettings.Read.All":
-		return azure.GroupSettingsReadAll
+		return azure.AZMGGroupSettingsReadAll
 	case "GroupSettings.ReadWrite.All":
-		return azure.GroupSettingsReadWriteAll
+		return azure.AZMGGroupSettingsReadWriteAll
 	case "HealthMonitoringAlert.Read.All":
-		return azure.HealthMonitoringAlertReadAll
+		return azure.AZMGHealthMonitoringAlertReadAll
 	case "HealthMonitoringAlert.ReadWrite.All":
-		return azure.HealthMonitoringAlertReadWriteAll
+		return azure.AZMGHealthMonitoringAlertReadWriteAll
 	case "HealthMonitoringAlertConfig.Read.All":
-		return azure.HealthMonitoringAlertConfigReadAll
+		return azure.AZMGHealthMonitoringAlertConfigReadAll
 	case "HealthMonitoringAlertConfig.ReadWrite.All":
-		return azure.HealthMonitoringAlertConfigReadWriteAll
+		return azure.AZMGHealthMonitoringAlertConfigReadWriteAll
 	case "IMAP.AccessAsUser.All":
-		return azure.IMAPAccessAsUserAll
+		return azure.AZMGIMAPAccessAsUserAll
 	case "IdentityProvider.Read.All":
-		return azure.IdentityProviderReadAll
+		return azure.AZMGIdentityProviderReadAll
 	case "IdentityProvider.ReadWrite.All":
-		return azure.IdentityProviderReadWriteAll
+		return azure.AZMGIdentityProviderReadWriteAll
 	case "IdentityRiskEvent.Read.All":
-		return azure.IdentityRiskEventReadAll
+		return azure.AZMGIdentityRiskEventReadAll
 	case "IdentityRiskEvent.ReadWrite.All":
-		return azure.IdentityRiskEventReadWriteAll
+		return azure.AZMGIdentityRiskEventReadWriteAll
 	case "IdentityRiskyServicePrincipal.Read.All":
-		return azure.IdentityRiskyServicePrincipalReadAll
+		return azure.AZMGIdentityRiskyServicePrincipalReadAll
 	case "IdentityRiskyServicePrincipal.ReadWrite.All":
-		return azure.IdentityRiskyServicePrincipalReadWriteAll
+		return azure.AZMGIdentityRiskyServicePrincipalReadWriteAll
 	case "IdentityRiskyUser.Read.All":
-		return azure.IdentityRiskyUserReadAll
+		return azure.AZMGIdentityRiskyUserReadAll
 	case "IdentityRiskyUser.ReadWrite.All":
-		return azure.IdentityRiskyUserReadWriteAll
+		return azure.AZMGIdentityRiskyUserReadWriteAll
 	case "IdentityUserFlow.Read.All":
-		return azure.IdentityUserFlowReadAll
+		return azure.AZMGIdentityUserFlowReadAll
 	case "IdentityUserFlow.ReadWrite.All":
-		return azure.IdentityUserFlowReadWriteAll
+		return azure.AZMGIdentityUserFlowReadWriteAll
 	case "IndustryData.ReadBasic.All":
-		return azure.IndustryDataReadBasicAll
+		return azure.AZMGIndustryDataReadBasicAll
 	case "InformationProtectionConfig.Read":
-		return azure.InformationProtectionConfigRead
+		return azure.AZMGInformationProtectionConfigRead
 	case "InformationProtectionConfig.Read.All":
-		return azure.InformationProtectionConfigReadAll
+		return azure.AZMGInformationProtectionConfigReadAll
 	case "InformationProtectionContent.Sign.All":
-		return azure.InformationProtectionContentSignAll
+		return azure.AZMGInformationProtectionContentSignAll
 	case "InformationProtectionContent.Write.All":
-		return azure.InformationProtectionContentWriteAll
+		return azure.AZMGInformationProtectionContentWriteAll
 	case "InformationProtectionPolicy.Read":
-		return azure.InformationProtectionPolicyRead
+		return azure.AZMGInformationProtectionPolicyRead
 	case "InformationProtectionPolicy.Read.All":
-		return azure.InformationProtectionPolicyReadAll
+		return azure.AZMGInformationProtectionPolicyReadAll
 	case "LearningAssignedCourse.Read":
-		return azure.LearningAssignedCourseRead
+		return azure.AZMGLearningAssignedCourseRead
 	case "LearningAssignedCourse.Read.All":
-		return azure.LearningAssignedCourseReadAll
+		return azure.AZMGLearningAssignedCourseReadAll
 	case "LearningAssignedCourse.ReadWrite.All":
-		return azure.LearningAssignedCourseReadWriteAll
+		return azure.AZMGLearningAssignedCourseReadWriteAll
 	case "LearningContent.Read.All":
-		return azure.LearningContentReadAll
+		return azure.AZMGLearningContentReadAll
 	case "LearningContent.ReadWrite.All":
-		return azure.LearningContentReadWriteAll
+		return azure.AZMGLearningContentReadWriteAll
 	case "LearningProvider.Read":
-		return azure.LearningProviderRead
+		return azure.AZMGLearningProviderRead
 	case "LearningProvider.ReadWrite":
-		return azure.LearningProviderReadWrite
+		return azure.AZMGLearningProviderReadWrite
 	case "LearningSelfInitiatedCourse.Read":
-		return azure.LearningSelfInitiatedCourseRead
+		return azure.AZMGLearningSelfInitiatedCourseRead
 	case "LearningSelfInitiatedCourse.Read.All":
-		return azure.LearningSelfInitiatedCourseReadAll
+		return azure.AZMGLearningSelfInitiatedCourseReadAll
 	case "LearningSelfInitiatedCourse.ReadWrite.All":
-		return azure.LearningSelfInitiatedCourseReadWriteAll
+		return azure.AZMGLearningSelfInitiatedCourseReadWriteAll
 	case "LicenseAssignment.Read.All":
-		return azure.LicenseAssignmentReadAll
+		return azure.AZMGLicenseAssignmentReadAll
 	case "LicenseAssignment.ReadWrite.All":
-		return azure.LicenseAssignmentReadWriteAll
+		return azure.AZMGLicenseAssignmentReadWriteAll
 	case "LifecycleWorkflows.Read.All":
-		return azure.LifecycleWorkflowsReadAll
+		return azure.AZMGLifecycleWorkflowsReadAll
 	case "LifecycleWorkflows.ReadWrite.All":
-		return azure.LifecycleWorkflowsReadWriteAll
+		return azure.AZMGLifecycleWorkflowsReadWriteAll
 	case "ListItems.SelectedOperations.Selected":
-		return azure.ListItemsSelectedOperationsSelected
+		return azure.AZMGListItemsSelectedOperationsSelected
 	case "Lists.SelectedOperations.Selected":
-		return azure.ListsSelectedOperationsSelected
+		return azure.AZMGListsSelectedOperationsSelected
 	case "Mail.Read":
-		return azure.MailRead
+		return azure.AZMGMailRead
 	case "Mail.Read.Shared":
-		return azure.MailReadShared
+		return azure.AZMGMailReadShared
 	case "Mail.ReadBasic":
-		return azure.MailReadBasic
+		return azure.AZMGMailReadBasic
 	case "Mail.ReadBasic.All":
-		return azure.MailReadBasicAll
+		return azure.AZMGMailReadBasicAll
 	case "Mail.ReadBasic.Shared":
-		return azure.MailReadBasicShared
+		return azure.AZMGMailReadBasicShared
 	case "Mail.ReadWrite":
-		return azure.MailReadWrite
+		return azure.AZMGMailReadWrite
 	case "Mail.ReadWrite.Shared":
-		return azure.MailReadWriteShared
+		return azure.AZMGMailReadWriteShared
 	case "Mail.Send":
-		return azure.MailSend
+		return azure.AZMGMailSend
 	case "Mail.Send.Shared":
-		return azure.MailSendShared
+		return azure.AZMGMailSendShared
 	case "MailboxFolder.Read":
-		return azure.MailboxFolderRead
+		return azure.AZMGMailboxFolderRead
 	case "MailboxFolder.Read.All":
-		return azure.MailboxFolderReadAll
+		return azure.AZMGMailboxFolderReadAll
 	case "MailboxFolder.ReadWrite":
-		return azure.MailboxFolderReadWrite
+		return azure.AZMGMailboxFolderReadWrite
 	case "MailboxFolder.ReadWrite.All":
-		return azure.MailboxFolderReadWriteAll
+		return azure.AZMGMailboxFolderReadWriteAll
 	case "MailboxItem.ImportExport":
-		return azure.MailboxItemImportExport
+		return azure.AZMGMailboxItemImportExport
 	case "MailboxItem.ImportExport.All":
-		return azure.MailboxItemImportExportAll
+		return azure.AZMGMailboxItemImportExportAll
 	case "MailboxItem.Read":
-		return azure.MailboxItemRead
+		return azure.AZMGMailboxItemRead
 	case "MailboxItem.Read.All":
-		return azure.MailboxItemReadAll
+		return azure.AZMGMailboxItemReadAll
 	case "MailboxSettings.Read":
-		return azure.MailboxSettingsRead
+		return azure.AZMGMailboxSettingsRead
 	case "MailboxSettings.ReadWrite":
-		return azure.MailboxSettingsReadWrite
+		return azure.AZMGMailboxSettingsReadWrite
 	case "ManagedTenants.Read.All":
-		return azure.ManagedTenantsReadAll
+		return azure.AZMGManagedTenantsReadAll
 	case "ManagedTenants.ReadWrite.All":
-		return azure.ManagedTenantsReadWriteAll
+		return azure.AZMGManagedTenantsReadWriteAll
 	case "Member.Read.Hidden":
-		return azure.MemberReadHidden
+		return azure.AZMGMemberReadHidden
 	case "MLModel.Execute.All":
-		return azure.MLModelExecuteAll
+		return azure.AZMGMLModelExecuteAll
 	case "MultiTenantOrganization.Read.All":
-		return azure.MultiTenantOrganizationReadAll
+		return azure.AZMGMultiTenantOrganizationReadAll
 	case "MultiTenantOrganization.ReadBasic.All":
-		return azure.MultiTenantOrganizationReadBasicAll
+		return azure.AZMGMultiTenantOrganizationReadBasicAll
 	case "MultiTenantOrganization.ReadWrite.All":
-		return azure.MultiTenantOrganizationReadWriteAll
+		return azure.AZMGMultiTenantOrganizationReadWriteAll
 	case "MutualTlsOauthConfiguration.Read.All":
-		return azure.MutualTlsOauthConfigurationReadAll
+		return azure.AZMGMutualTlsOauthConfigurationReadAll
 	case "MutualTlsOauthConfiguration.ReadWrite.All":
-		return azure.MutualTlsOauthConfigurationReadWriteAll
+		return azure.AZMGMutualTlsOauthConfigurationReadWriteAll
 	case "MyFiles.Read":
-		return azure.MyFilesRead
+		return azure.AZMGMyFilesRead
 	case "NetworkAccess.Read.All":
-		return azure.NetworkAccessReadAll
+		return azure.AZMGNetworkAccessReadAll
 	case "NetworkAccess.ReadWrite.All":
-		return azure.NetworkAccessReadWriteAll
+		return azure.AZMGNetworkAccessReadWriteAll
 	case "NetworkAccessBranch.Read.All":
-		return azure.NetworkAccessBranchReadAll
+		return azure.AZMGNetworkAccessBranchReadAll
 	case "NetworkAccessBranch.ReadWrite.All":
-		return azure.NetworkAccessBranchReadWriteAll
+		return azure.AZMGNetworkAccessBranchReadWriteAll
 	case "NetworkAccessPolicy.Read.All":
-		return azure.NetworkAccessPolicyReadAll
+		return azure.AZMGNetworkAccessPolicyReadAll
 	case "NetworkAccessPolicy.ReadWrite.All":
-		return azure.NetworkAccessPolicyReadWriteAll
+		return azure.AZMGNetworkAccessPolicyReadWriteAll
 	case "Notes.Create":
-		return azure.NotesCreate
+		return azure.AZMGNotesCreate
 	case "Notes.Read":
-		return azure.NotesRead
+		return azure.AZMGNotesRead
 	case "Notes.Read.All":
-		return azure.NotesReadAll
+		return azure.AZMGNotesReadAll
 	case "Notes.ReadWrite":
-		return azure.NotesReadWrite
+		return azure.AZMGNotesReadWrite
 	case "Notes.ReadWrite.All":
-		return azure.NotesReadWriteAll
+		return azure.AZMGNotesReadWriteAll
 	case "Notes.ReadWrite.CreatedByApp":
-		return azure.NotesReadWriteCreatedByApp
+		return azure.AZMGNotesReadWriteCreatedByApp
 	case "Notifications.ReadWrite.CreatedByApp":
-		return azure.NotificationsReadWriteCreatedByApp
+		return azure.AZMGNotificationsReadWriteCreatedByApp
 	case "OnPremDirectorySynchronization.Read.All":
-		return azure.OnPremDirectorySynchronizationReadAll
+		return azure.AZMGOnPremDirectorySynchronizationReadAll
 	case "OnPremDirectorySynchronization.ReadWrite.All":
-		return azure.OnPremDirectorySynchronizationReadWriteAll
+		return azure.AZMGOnPremDirectorySynchronizationReadWriteAll
 	case "OnPremisesPublishingProfiles.ReadWrite.All":
-		return azure.OnPremisesPublishingProfilesReadWriteAll
+		return azure.AZMGOnPremisesPublishingProfilesReadWriteAll
 	case "OnlineMeetingAiInsight.Read.All":
-		return azure.OnlineMeetingAiInsightReadAll
+		return azure.AZMGOnlineMeetingAiInsightReadAll
 	case "OnlineMeetingAiInsight.Read.Chat":
-		return azure.OnlineMeetingAiInsightReadChat
+		return azure.AZMGOnlineMeetingAiInsightReadChat
 	case "OnlineMeetingArtifact.Read.All":
-		return azure.OnlineMeetingArtifactReadAll
+		return azure.AZMGOnlineMeetingArtifactReadAll
 	case "OnlineMeetingRecording.Read.All":
-		return azure.OnlineMeetingRecordingReadAll
+		return azure.AZMGOnlineMeetingRecordingReadAll
 	case "OnlineMeetingTranscript.Read.All":
-		return azure.OnlineMeetingTranscriptReadAll
+		return azure.AZMGOnlineMeetingTranscriptReadAll
 	case "OnlineMeetings.Read":
-		return azure.OnlineMeetingsRead
+		return azure.AZMGOnlineMeetingsRead
 	case "OnlineMeetings.Read.All":
-		return azure.OnlineMeetingsReadAll
+		return azure.AZMGOnlineMeetingsReadAll
 	case "OnlineMeetings.ReadWrite":
-		return azure.OnlineMeetingsReadWrite
+		return azure.AZMGOnlineMeetingsReadWrite
 	case "OnlineMeetings.ReadWrite.All":
-		return azure.OnlineMeetingsReadWriteAll
+		return azure.AZMGOnlineMeetingsReadWriteAll
 	case "OrgContact.Read.All":
-		return azure.OrgContactReadAll
+		return azure.AZMGOrgContactReadAll
 	case "Organization.Read.All":
-		return azure.OrganizationReadAll
+		return azure.AZMGOrganizationReadAll
 	case "Organization.ReadWrite.All":
-		return azure.OrganizationReadWriteAll
+		return azure.AZMGOrganizationReadWriteAll
 	case "OrganizationalBranding.Read.All":
-		return azure.OrganizationalBrandingReadAll
+		return azure.AZMGOrganizationalBrandingReadAll
 	case "OrganizationalBranding.ReadWrite.All":
-		return azure.OrganizationalBrandingReadWriteAll
+		return azure.AZMGOrganizationalBrandingReadWriteAll
 	case "POP.AccessAsUser.All":
-		return azure.POPAccessAsUserAll
+		return azure.AZMGPOPAccessAsUserAll
 	case "PartnerBilling.Read.All":
-		return azure.PartnerBillingReadAll
+		return azure.AZMGPartnerBillingReadAll
 	case "PartnerSecurity.Read.All":
-		return azure.PartnerSecurityReadAll
+		return azure.AZMGPartnerSecurityReadAll
 	case "PartnerSecurity.ReadWrite.All":
-		return azure.PartnerSecurityReadWriteAll
+		return azure.AZMGPartnerSecurityReadWriteAll
 	case "PendingExternalUserProfile.Read.All":
-		return azure.PendingExternalUserProfileReadAll
+		return azure.AZMGPendingExternalUserProfileReadAll
 	case "PendingExternalUserProfile.ReadWrite.All":
-		return azure.PendingExternalUserProfileReadWriteAll
+		return azure.AZMGPendingExternalUserProfileReadWriteAll
 	case "People.Read":
-		return azure.PeopleRead
+		return azure.AZMGPeopleRead
 	case "People.Read.All":
-		return azure.PeopleReadAll
+		return azure.AZMGPeopleReadAll
 	case "PeopleSettings.Read.All":
-		return azure.PeopleSettingsReadAll
+		return azure.AZMGPeopleSettingsReadAll
 	case "PeopleSettings.ReadWrite.All":
-		return azure.PeopleSettingsReadWriteAll
+		return azure.AZMGPeopleSettingsReadWriteAll
 	case "Place.Read.All":
-		return azure.PlaceReadAll
+		return azure.AZMGPlaceReadAll
 	case "Place.ReadWrite.All":
-		return azure.PlaceReadWriteAll
+		return azure.AZMGPlaceReadWriteAll
 	case "PlaceDevice.Read.All":
-		return azure.PlaceDeviceReadAll
+		return azure.AZMGPlaceDeviceReadAll
 	case "PlaceDevice.ReadWrite.All":
-		return azure.PlaceDeviceReadWriteAll
+		return azure.AZMGPlaceDeviceReadWriteAll
 	case "PlaceDeviceTelemetry.ReadWrite.All":
-		return azure.PlaceDeviceTelemetryReadWriteAll
+		return azure.AZMGPlaceDeviceTelemetryReadWriteAll
 	case "Policy.Read.All":
-		return azure.PolicyReadAll
+		return azure.AZMGPolicyReadAll
 	case "Policy.Read.AuthenticationMethod":
-		return azure.PolicyReadAuthenticationMethod
+		return azure.AZMGPolicyReadAuthenticationMethod
 	case "Policy.Read.ConditionalAccess":
-		return azure.PolicyReadConditionalAccess
+		return azure.AZMGPolicyReadConditionalAccess
 	case "Policy.Read.DeviceConfiguration":
-		return azure.PolicyReadDeviceConfiguration
+		return azure.AZMGPolicyReadDeviceConfiguration
 	case "Policy.Read.IdentityProtection":
-		return azure.PolicyReadIdentityProtection
+		return azure.AZMGPolicyReadIdentityProtection
 	case "Policy.Read.PermissionGrant":
-		return azure.PolicyReadPermissionGrant
+		return azure.AZMGPolicyReadPermissionGrant
 	case "Policy.ReadWrite.AccessReview":
-		return azure.PolicyReadWriteAccessReview
+		return azure.AZMGPolicyReadWriteAccessReview
 	case "Policy.ReadWrite.ApplicationConfiguration":
-		return azure.PolicyReadWriteApplicationConfiguration
+		return azure.AZMGPolicyReadWriteApplicationConfiguration
 	case "Policy.ReadWrite.AuthenticationFlows":
-		return azure.PolicyReadWriteAuthenticationFlows
+		return azure.AZMGPolicyReadWriteAuthenticationFlows
 	case "Policy.ReadWrite.AuthenticationMethod":
-		return azure.PolicyReadWriteAuthenticationMethod
+		return azure.AZMGPolicyReadWriteAuthenticationMethod
 	case "Policy.ReadWrite.Authorization":
-		return azure.PolicyReadWriteAuthorization
+		return azure.AZMGPolicyReadWriteAuthorization
 	case "Policy.ReadWrite.ConditionalAccess":
-		return azure.PolicyReadWriteConditionalAccess
+		return azure.AZMGPolicyReadWriteConditionalAccess
 	case "Policy.ReadWrite.ConsentRequest":
-		return azure.PolicyReadWriteConsentRequest
+		return azure.AZMGPolicyReadWriteConsentRequest
 	case "Policy.ReadWrite.CrossTenantAccess":
-		return azure.PolicyReadWriteCrossTenantAccess
+		return azure.AZMGPolicyReadWriteCrossTenantAccess
 	case "Policy.ReadWrite.CrossTenantCapability":
-		return azure.PolicyReadWriteCrossTenantCapability
+		return azure.AZMGPolicyReadWriteCrossTenantCapability
 	case "Policy.ReadWrite.DeviceConfiguration":
-		return azure.PolicyReadWriteDeviceConfiguration
+		return azure.AZMGPolicyReadWriteDeviceConfiguration
 	case "Policy.ReadWrite.ExternalIdentities":
-		return azure.PolicyReadWriteExternalIdentities
+		return azure.AZMGPolicyReadWriteExternalIdentities
 	case "Policy.ReadWrite.FeatureRollout":
-		return azure.PolicyReadWriteFeatureRollout
+		return azure.AZMGPolicyReadWriteFeatureRollout
 	case "Policy.ReadWrite.FedTokenValidation":
-		return azure.PolicyReadWriteFedTokenValidation
+		return azure.AZMGPolicyReadWriteFedTokenValidation
 	case "Policy.ReadWrite.IdentityProtection":
-		return azure.PolicyReadWriteIdentityProtection
+		return azure.AZMGPolicyReadWriteIdentityProtection
 	case "Policy.ReadWrite.MobilityManagement":
-		return azure.PolicyReadWriteMobilityManagement
+		return azure.AZMGPolicyReadWriteMobilityManagement
 	case "Policy.ReadWrite.PermissionGrant":
-		return azure.PolicyReadWritePermissionGrant
+		return azure.AZMGPolicyReadWritePermissionGrant
 	case "Policy.ReadWrite.SecurityDefaults":
-		return azure.PolicyReadWriteSecurityDefaults
+		return azure.AZMGPolicyReadWriteSecurityDefaults
 	case "Policy.ReadWrite.TrustFramework":
-		return azure.PolicyReadWriteTrustFramework
+		return azure.AZMGPolicyReadWriteTrustFramework
 	case "Presence.Read":
-		return azure.PresenceRead
+		return azure.AZMGPresenceRead
 	case "Presence.Read.All":
-		return azure.PresenceReadAll
+		return azure.AZMGPresenceReadAll
 	case "Presence.ReadWrite":
-		return azure.PresenceReadWrite
+		return azure.AZMGPresenceReadWrite
 	case "Presence.ReadWrite.All":
-		return azure.PresenceReadWriteAll
+		return azure.AZMGPresenceReadWriteAll
 	case "PrintConnector.Read.All":
-		return azure.PrintConnectorReadAll
+		return azure.AZMGPrintConnectorReadAll
 	case "PrintConnector.ReadWrite.All":
-		return azure.PrintConnectorReadWriteAll
+		return azure.AZMGPrintConnectorReadWriteAll
 	case "PrintJob.Create":
-		return azure.PrintJobCreate
+		return azure.AZMGPrintJobCreate
 	case "PrintJob.Manage.All":
-		return azure.PrintJobManageAll
+		return azure.AZMGPrintJobManageAll
 	case "PrintJob.Read":
-		return azure.PrintJobRead
+		return azure.AZMGPrintJobRead
 	case "PrintJob.Read.All":
-		return azure.PrintJobReadAll
+		return azure.AZMGPrintJobReadAll
 	case "PrintJob.ReadBasic":
-		return azure.PrintJobReadBasic
+		return azure.AZMGPrintJobReadBasic
 	case "PrintJob.ReadBasic.All":
-		return azure.PrintJobReadBasicAll
+		return azure.AZMGPrintJobReadBasicAll
 	case "PrintJob.ReadWrite":
-		return azure.PrintJobReadWrite
+		return azure.AZMGPrintJobReadWrite
 	case "PrintJob.ReadWrite.All":
-		return azure.PrintJobReadWriteAll
+		return azure.AZMGPrintJobReadWriteAll
 	case "PrintJob.ReadWriteBasic":
-		return azure.PrintJobReadWriteBasic
+		return azure.AZMGPrintJobReadWriteBasic
 	case "PrintJob.ReadWriteBasic.All":
-		return azure.PrintJobReadWriteBasicAll
+		return azure.AZMGPrintJobReadWriteBasicAll
 	case "PrintSettings.Read.All":
-		return azure.PrintSettingsReadAll
+		return azure.AZMGPrintSettingsReadAll
 	case "PrintSettings.ReadWrite.All":
-		return azure.PrintSettingsReadWriteAll
+		return azure.AZMGPrintSettingsReadWriteAll
 	case "PrintTaskDefinition.ReadWrite.All":
-		return azure.PrintTaskDefinitionReadWriteAll
+		return azure.AZMGPrintTaskDefinitionReadWriteAll
 	case "Printer.Create":
-		return azure.PrinterCreate
+		return azure.AZMGPrinterCreate
 	case "Printer.FullControl.All":
-		return azure.PrinterFullControlAll
+		return azure.AZMGPrinterFullControlAll
 	case "Printer.Read.All":
-		return azure.PrinterReadAll
+		return azure.AZMGPrinterReadAll
 	case "Printer.ReadWrite.All":
-		return azure.PrinterReadWriteAll
+		return azure.AZMGPrinterReadWriteAll
 	case "PrinterShare.Read.All":
-		return azure.PrinterShareReadAll
+		return azure.AZMGPrinterShareReadAll
 	case "PrinterShare.ReadBasic.All":
-		return azure.PrinterShareReadBasicAll
+		return azure.AZMGPrinterShareReadBasicAll
 	case "PrinterShare.ReadWrite.All":
-		return azure.PrinterShareReadWriteAll
+		return azure.AZMGPrinterShareReadWriteAll
 	case "PrivilegedAccess.Read.AzureAD":
-		return azure.PrivilegedAccessReadAzureAD
+		return azure.AZMGPrivilegedAccessReadAzureAD
 	case "PrivilegedAccess.Read.AzureADGroup":
-		return azure.PrivilegedAccessReadAzureADGroup
+		return azure.AZMGPrivilegedAccessReadAzureADGroup
 	case "PrivilegedAccess.Read.AzureResources":
-		return azure.PrivilegedAccessReadAzureResources
+		return azure.AZMGPrivilegedAccessReadAzureResources
 	case "PrivilegedAccess.ReadWrite.AzureAD":
-		return azure.PrivilegedAccessReadWriteAzureAD
+		return azure.AZMGPrivilegedAccessReadWriteAzureAD
 	case "PrivilegedAccess.ReadWrite.AzureADGroup":
-		return azure.PrivilegedAccessReadWriteAzureADGroup
+		return azure.AZMGPrivilegedAccessReadWriteAzureADGroup
 	case "PrivilegedAccess.ReadWrite.AzureResources":
-		return azure.PrivilegedAccessReadWriteAzureResources
+		return azure.AZMGPrivilegedAccessReadWriteAzureResources
 	case "PrivilegedAssignmentSchedule.Read.AzureADGroup":
-		return azure.PrivilegedAssignmentScheduleReadAzureADGroup
+		return azure.AZMGPrivilegedAssignmentScheduleReadAzureADGroup
 	case "PrivilegedAssignmentSchedule.ReadWrite.AzureADGroup":
-		return azure.PrivilegedAssignmentScheduleReadWriteAzureADGroup
+		return azure.AZMGPrivilegedAssignmentScheduleReadWriteAzureADGroup
 	case "PrivilegedAssignmentSchedule.Remove.AzureADGroup":
-		return azure.PrivilegedAssignmentScheduleRemoveAzureADGroup
+		return azure.AZMGPrivilegedAssignmentScheduleRemoveAzureADGroup
 	case "PrivilegedEligibilitySchedule.Read.AzureADGroup":
-		return azure.PrivilegedEligibilityScheduleReadAzureADGroup
+		return azure.AZMGPrivilegedEligibilityScheduleReadAzureADGroup
 	case "PrivilegedEligibilitySchedule.ReadWrite.AzureADGroup":
-		return azure.PrivilegedEligibilityScheduleReadWriteAzureADGroup
+		return azure.AZMGPrivilegedEligibilityScheduleReadWriteAzureADGroup
 	case "PrivilegedEligibilitySchedule.Remove.AzureADGroup":
-		return azure.PrivilegedEligibilityScheduleRemoveAzureADGroup
+		return azure.AZMGPrivilegedEligibilityScheduleRemoveAzureADGroup
 	case "ProfilePhoto.Read.All":
-		return azure.ProfilePhotoReadAll
+		return azure.AZMGProfilePhotoReadAll
 	case "ProfilePhoto.ReadWrite.All":
-		return azure.ProfilePhotoReadWriteAll
+		return azure.AZMGProfilePhotoReadWriteAll
 	case "ProgramControl.Read.All":
-		return azure.ProgramControlReadAll
+		return azure.AZMGProgramControlReadAll
 	case "ProgramControl.ReadWrite.All":
-		return azure.ProgramControlReadWriteAll
+		return azure.AZMGProgramControlReadWriteAll
 	case "ProtectionScopes.Compute.All":
-		return azure.ProtectionScopesComputeAll
+		return azure.AZMGProtectionScopesComputeAll
 	case "ProtectionScopes.Compute.User":
-		return azure.ProtectionScopesComputeUser
+		return azure.AZMGProtectionScopesComputeUser
 	case "ProvisioningLog.Read.All":
-		return azure.ProvisioningLogReadAll
+		return azure.AZMGProvisioningLogReadAll
 	case "PublicKeyInfrastructure.Read.All":
-		return azure.PublicKeyInfrastructureReadAll
+		return azure.AZMGPublicKeyInfrastructureReadAll
 	case "PublicKeyInfrastructure.ReadWrite.All":
-		return azure.PublicKeyInfrastructureReadWriteAll
+		return azure.AZMGPublicKeyInfrastructureReadWriteAll
 	case "QnA.Read.All":
-		return azure.QnAReadAll
+		return azure.AZMGQnAReadAll
 	case "RecordsManagement.Read.All":
-		return azure.RecordsManagementReadAll
+		return azure.AZMGRecordsManagementReadAll
 	case "RecordsManagement.ReadWrite.All":
-		return azure.RecordsManagementReadWriteAll
+		return azure.AZMGRecordsManagementReadWriteAll
 	case "ReportSettings.Read.All":
-		return azure.ReportSettingsReadAll
+		return azure.AZMGReportSettingsReadAll
 	case "ReportSettings.ReadWrite.All":
-		return azure.ReportSettingsReadWriteAll
+		return azure.AZMGReportSettingsReadWriteAll
 	case "Reports.Read.All":
-		return azure.ReportsReadAll
+		return azure.AZMGReportsReadAll
 	case "Report.Read.All":
-		return azure.ReportReadAll
+		return azure.AZMGReportReadAll
 	case "ResourceSpecificPermissionGrant.ReadForChat":
-		return azure.ResourceSpecificPermissionGrantReadForChat
+		return azure.AZMGResourceSpecificPermissionGrantReadForChat
 	case "ResourceSpecificPermissionGrant.ReadForChat.All":
-		return azure.ResourceSpecificPermissionGrantReadForChatAll
+		return azure.AZMGResourceSpecificPermissionGrantReadForChatAll
 	case "ResourceSpecificPermissionGrant.ReadForTeam":
-		return azure.ResourceSpecificPermissionGrantReadForTeam
+		return azure.AZMGResourceSpecificPermissionGrantReadForTeam
 	case "ResourceSpecificPermissionGrant.ReadForTeam.All":
-		return azure.ResourceSpecificPermissionGrantReadForTeamAll
+		return azure.AZMGResourceSpecificPermissionGrantReadForTeamAll
 	case "ResourceSpecificPermissionGrant.ReadForUser":
-		return azure.ResourceSpecificPermissionGrantReadForUser
+		return azure.AZMGResourceSpecificPermissionGrantReadForUser
 	case "ResourceSpecificPermissionGrant.ReadForUser.All":
-		return azure.ResourceSpecificPermissionGrantReadForUserAll
+		return azure.AZMGResourceSpecificPermissionGrantReadForUserAll
 	case "RiskPreventionProviders.Read.All":
-		return azure.RiskPreventionProvidersReadAll
+		return azure.AZMGRiskPreventionProvidersReadAll
 	case "RiskPreventionProviders.ReadWrite.All":
-		return azure.RiskPreventionProvidersReadWriteAll
+		return azure.AZMGRiskPreventionProvidersReadWriteAll
 	case "RoleAssignmentSchedule.Read.Directory":
-		return azure.RoleAssignmentScheduleReadDirectory
+		return azure.AZMGRoleAssignmentScheduleReadDirectory
 	case "RoleAssignmentSchedule.ReadWrite.Directory":
-		return azure.RoleAssignmentScheduleReadWriteDirectory
+		return azure.AZMGRoleAssignmentScheduleReadWriteDirectory
 	case "RoleAssignmentSchedule.Remove.Directory":
-		return azure.RoleAssignmentScheduleRemoveDirectory
+		return azure.AZMGRoleAssignmentScheduleRemoveDirectory
 	case "RoleEligibilitySchedule.Read.Directory":
-		return azure.RoleEligibilityScheduleReadDirectory
+		return azure.AZMGRoleEligibilityScheduleReadDirectory
 	case "RoleEligibilitySchedule.ReadWrite.Directory":
-		return azure.RoleEligibilityScheduleReadWriteDirectory
+		return azure.AZMGRoleEligibilityScheduleReadWriteDirectory
 	case "RoleEligibilitySchedule.Remove.Directory":
-		return azure.RoleEligibilityScheduleRemoveDirectory
+		return azure.AZMGRoleEligibilityScheduleRemoveDirectory
 	case "RoleManagement.Read.All":
-		return azure.RoleManagementReadAll
+		return azure.AZMGRoleManagementReadAll
 	case "RoleManagement.Read.CloudPC":
-		return azure.RoleManagementReadCloudPC
+		return azure.AZMGRoleManagementReadCloudPC
 	case "RoleManagement.Read.Defender":
-		return azure.RoleManagementReadDefender
+		return azure.AZMGRoleManagementReadDefender
 	case "RoleManagement.Read.Directory":
-		return azure.RoleManagementReadDirectory
+		return azure.AZMGRoleManagementReadDirectory
 	case "RoleManagement.Read.Exchange":
-		return azure.RoleManagementReadExchange
+		return azure.AZMGRoleManagementReadExchange
 	case "RoleManagement.ReadWrite.CloudPC":
-		return azure.RoleManagementReadWriteCloudPC
+		return azure.AZMGRoleManagementReadWriteCloudPC
 	case "RoleManagement.ReadWrite.Defender":
-		return azure.RoleManagementReadWriteDefender
+		return azure.AZMGRoleManagementReadWriteDefender
 	case "RoleManagement.ReadWrite.Directory":
-		return azure.RoleManagementReadWriteDirectory
+		return azure.AZMGRoleManagementReadWriteDirectory
 	case "RoleManagement.ReadWrite.Exchange":
-		return azure.RoleManagementReadWriteExchange
+		return azure.AZMGRoleManagementReadWriteExchange
 	case "RoleManagementAlert.Read.Directory":
-		return azure.RoleManagementAlertReadDirectory
+		return azure.AZMGRoleManagementAlertReadDirectory
 	case "RoleManagementAlert.ReadWrite.Directory":
-		return azure.RoleManagementAlertReadWriteDirectory
+		return azure.AZMGRoleManagementAlertReadWriteDirectory
 	case "RoleManagementPolicy.Read.AzureADGroup":
-		return azure.RoleManagementPolicyReadAzureADGroup
+		return azure.AZMGRoleManagementPolicyReadAzureADGroup
 	case "RoleManagementPolicy.Read.Directory":
-		return azure.RoleManagementPolicyReadDirectory
+		return azure.AZMGRoleManagementPolicyReadDirectory
 	case "RoleManagementPolicy.ReadWrite.AzureADGroup":
-		return azure.RoleManagementPolicyReadWriteAzureADGroup
+		return azure.AZMGRoleManagementPolicyReadWriteAzureADGroup
 	case "RoleManagementPolicy.ReadWrite.Directory":
-		return azure.RoleManagementPolicyReadWriteDirectory
+		return azure.AZMGRoleManagementPolicyReadWriteDirectory
 	case "SMTP.Send":
-		return azure.SMTPSend
+		return azure.AZMGSMTPSend
 	case "Schedule.Read.All":
-		return azure.ScheduleReadAll
+		return azure.AZMGScheduleReadAll
 	case "Schedule.ReadWrite.All":
-		return azure.ScheduleReadWriteAll
+		return azure.AZMGScheduleReadWriteAll
 	case "SchedulePermissions.ReadWrite.All":
-		return azure.SchedulePermissionsReadWriteAll
+		return azure.AZMGSchedulePermissionsReadWriteAll
 	case "SearchConfiguration.Read.All":
-		return azure.SearchConfigurationReadAll
+		return azure.AZMGSearchConfigurationReadAll
 	case "SearchConfiguration.ReadWrite.All":
-		return azure.SearchConfigurationReadWriteAll
+		return azure.AZMGSearchConfigurationReadWriteAll
 	case "SecurityActions.Read.All":
-		return azure.SecurityActionsReadAll
+		return azure.AZMGSecurityActionsReadAll
 	case "SecurityActions.ReadWrite.All":
-		return azure.SecurityActionsReadWriteAll
+		return azure.AZMGSecurityActionsReadWriteAll
 	case "SecurityAlert.Read.All":
-		return azure.SecurityAlertReadAll
+		return azure.AZMGSecurityAlertReadAll
 	case "SecurityAlert.ReadWrite.All":
-		return azure.SecurityAlertReadWriteAll
+		return azure.AZMGSecurityAlertReadWriteAll
 	case "SecurityAnalyzedMessage.Read.All":
-		return azure.SecurityAnalyzedMessageReadAll
+		return azure.AZMGSecurityAnalyzedMessageReadAll
 	case "SecurityAnalyzedMessage.ReadWrite.All":
-		return azure.SecurityAnalyzedMessageReadWriteAll
+		return azure.AZMGSecurityAnalyzedMessageReadWriteAll
 	case "SecurityCopilotWorkspaces.Read.All":
-		return azure.SecurityCopilotWorkspacesReadAll
+		return azure.AZMGSecurityCopilotWorkspacesReadAll
 	case "SecurityCopilotWorkspaces.ReadWrite.All":
-		return azure.SecurityCopilotWorkspacesReadWriteAll
+		return azure.AZMGSecurityCopilotWorkspacesReadWriteAll
 	case "SecurityEvents.Read.All":
-		return azure.SecurityEventsReadAll
+		return azure.AZMGSecurityEventsReadAll
 	case "SecurityEvents.ReadWrite.All":
-		return azure.SecurityEventsReadWriteAll
+		return azure.AZMGSecurityEventsReadWriteAll
 	case "SecurityIdentitiesAccount.Read.All":
-		return azure.SecurityIdentitiesAccountReadAll
+		return azure.AZMGSecurityIdentitiesAccountReadAll
 	case "SecurityIdentitiesActions.ReadWrite.All":
-		return azure.SecurityIdentitiesActionsReadWriteAll
+		return azure.AZMGSecurityIdentitiesActionsReadWriteAll
 	case "SecurityIdentitiesHealth.Read.All":
-		return azure.SecurityIdentitiesHealthReadAll
+		return azure.AZMGSecurityIdentitiesHealthReadAll
 	case "SecurityIdentitiesHealth.ReadWrite.All":
-		return azure.SecurityIdentitiesHealthReadWriteAll
+		return azure.AZMGSecurityIdentitiesHealthReadWriteAll
 	case "SecurityIdentitiesSensors.Read.All":
-		return azure.SecurityIdentitiesSensorsReadAll
+		return azure.AZMGSecurityIdentitiesSensorsReadAll
 	case "SecurityIdentitiesSensors.ReadWrite.All":
-		return azure.SecurityIdentitiesSensorsReadWriteAll
+		return azure.AZMGSecurityIdentitiesSensorsReadWriteAll
 	case "SecurityIdentitiesUserActions.Read.All":
-		return azure.SecurityIdentitiesUserActionsReadAll
+		return azure.AZMGSecurityIdentitiesUserActionsReadAll
 	case "SecurityIdentitiesUserActions.ReadWrite.All":
-		return azure.SecurityIdentitiesUserActionsReadWriteAll
+		return azure.AZMGSecurityIdentitiesUserActionsReadWriteAll
 	case "SecurityIncident.Read.All":
-		return azure.SecurityIncidentReadAll
+		return azure.AZMGSecurityIncidentReadAll
 	case "SecurityIncident.ReadWrite.All":
-		return azure.SecurityIncidentReadWriteAll
+		return azure.AZMGSecurityIncidentReadWriteAll
 	case "SensitivityLabel.Evaluate":
-		return azure.SensitivityLabelEvaluate
+		return azure.AZMGSensitivityLabelEvaluate
 	case "SensitivityLabel.Evaluate.All":
-		return azure.SensitivityLabelEvaluateAll
+		return azure.AZMGSensitivityLabelEvaluateAll
 	case "SensitivityLabel.Read":
-		return azure.SensitivityLabelRead
+		return azure.AZMGSensitivityLabelRead
 	case "SensitivityLabels.Read.All":
-		return azure.SensitivityLabelsReadAll
+		return azure.AZMGSensitivityLabelsReadAll
 	case "ServiceHealth.Read.All":
-		return azure.ServiceHealthReadAll
+		return azure.AZMGServiceHealthReadAll
 	case "ServiceMessage.Read.All":
-		return azure.ServiceMessageReadAll
+		return azure.AZMGServiceMessageReadAll
 	case "ServiceMessageViewpoint.Write":
-		return azure.ServiceMessageViewpointWrite
+		return azure.AZMGServiceMessageViewpointWrite
 	case "ServicePrincipalEndpoint.Read.All":
-		return azure.ServicePrincipalEndpointReadAll
+		return azure.AZMGServicePrincipalEndpointReadAll
 	case "ServicePrincipalEndpoint.ReadWrite.All":
-		return azure.ServicePrincipalEndpointReadWriteAll
+		return azure.AZMGServicePrincipalEndpointReadWriteAll
 	case "SharePointTenantSettings.Read.All":
-		return azure.SharePointTenantSettingsReadAll
+		return azure.AZMGSharePointTenantSettingsReadAll
 	case "SharePointTenantSettings.ReadWrite.All":
-		return azure.SharePointTenantSettingsReadWriteAll
+		return azure.AZMGSharePointTenantSettingsReadWriteAll
 	case "ShortNotes.Read":
-		return azure.ShortNotesRead
+		return azure.AZMGShortNotesRead
 	case "ShortNotes.Read.All":
-		return azure.ShortNotesReadAll
+		return azure.AZMGShortNotesReadAll
 	case "ShortNotes.ReadWrite":
-		return azure.ShortNotesReadWrite
+		return azure.AZMGShortNotesReadWrite
 	case "ShortNotes.ReadWrite.All":
-		return azure.ShortNotesReadWriteAll
+		return azure.AZMGShortNotesReadWriteAll
 	case "SignInIdentifier.Read.All":
-		return azure.SignInIdentifierReadAll
+		return azure.AZMGSignInIdentifierReadAll
 	case "SignInIdentifier.ReadWrite.All":
-		return azure.SignInIdentifierReadWriteAll
+		return azure.AZMGSignInIdentifierReadWriteAll
 	case "Sites.Archive.All":
-		return azure.SitesArchiveAll
+		return azure.AZMGSitesArchiveAll
 	case "Sites.FullControl.All":
-		return azure.SitesFullControlAll
+		return azure.AZMGSitesFullControlAll
 	case "Sites.Manage.All":
-		return azure.SitesManageAll
+		return azure.AZMGSitesManageAll
 	case "Sites.Read.All":
-		return azure.SitesReadAll
+		return azure.AZMGSitesReadAll
 	case "Sites.ReadWrite.All":
-		return azure.SitesReadWriteAll
+		return azure.AZMGSitesReadWriteAll
 	case "Sites.Selected":
-		return azure.SitesSelected
+		return azure.AZMGSitesSelected
 	case "SpiffeTrustDomain.Read.All":
-		return azure.SpiffeTrustDomainReadAll
+		return azure.AZMGSpiffeTrustDomainReadAll
 	case "SpiffeTrustDomain.ReadWrite.All":
-		return azure.SpiffeTrustDomainReadWriteAll
+		return azure.AZMGSpiffeTrustDomainReadWriteAll
 	case "Storyline.ReadWrite.All":
-		return azure.StorylineReadWriteAll
+		return azure.AZMGStorylineReadWriteAll
 	case "SubjectRightsRequest.Read.All":
-		return azure.SubjectRightsRequestReadAll
+		return azure.AZMGSubjectRightsRequestReadAll
 	case "SubjectRightsRequest.ReadWrite.All":
-		return azure.SubjectRightsRequestReadWriteAll
+		return azure.AZMGSubjectRightsRequestReadWriteAll
 	case "Subscription.Read.All":
-		return azure.SubscriptionReadAll
+		return azure.AZMGSubscriptionReadAll
 	case "Synchronization.Read.All":
-		return azure.SynchronizationReadAll
+		return azure.AZMGSynchronizationReadAll
 	case "Synchronization.ReadWrite.All":
-		return azure.SynchronizationReadWriteAll
+		return azure.AZMGSynchronizationReadWriteAll
 	case "Tasks.Read":
-		return azure.TasksRead
+		return azure.AZMGTasksRead
 	case "Tasks.Read.All":
-		return azure.TasksReadAll
+		return azure.AZMGTasksReadAll
 	case "Tasks.Read.Shared":
-		return azure.TasksReadShared
+		return azure.AZMGTasksReadShared
 	case "Tasks.ReadWrite":
-		return azure.TasksReadWrite
+		return azure.AZMGTasksReadWrite
 	case "Tasks.ReadWrite.All":
-		return azure.TasksReadWriteAll
+		return azure.AZMGTasksReadWriteAll
 	case "Tasks.ReadWrite.Shared":
-		return azure.TasksReadWriteShared
+		return azure.AZMGTasksReadWriteShared
 	case "Team.Create":
-		return azure.TeamCreate
+		return azure.AZMGTeamCreate
 	case "Team.ReadBasic.All":
-		return azure.TeamReadBasicAll
+		return azure.AZMGTeamReadBasicAll
 	case "TeamMember.Read.All":
-		return azure.TeamMemberReadAll
+		return azure.AZMGTeamMemberReadAll
 	case "TeamMember.ReadWrite.All":
-		return azure.TeamMemberReadWriteAll
+		return azure.AZMGTeamMemberReadWriteAll
 	case "TeamMember.ReadWriteNonOwnerRole.All":
-		return azure.TeamMemberReadWriteNonOwnerRoleAll
+		return azure.AZMGTeamMemberReadWriteNonOwnerRoleAll
 	case "TeamSettings.Read.All":
-		return azure.TeamSettingsReadAll
+		return azure.AZMGTeamSettingsReadAll
 	case "TeamSettings.ReadWrite.All":
-		return azure.TeamSettingsReadWriteAll
+		return azure.AZMGTeamSettingsReadWriteAll
 	case "TeamTemplates.Read":
-		return azure.TeamTemplatesRead
+		return azure.AZMGTeamTemplatesRead
 	case "TeamTemplates.Read.All":
-		return azure.TeamTemplatesReadAll
+		return azure.AZMGTeamTemplatesReadAll
 	case "TeamsActivity.Read":
-		return azure.TeamsActivityRead
+		return azure.AZMGTeamsActivityRead
 	case "TeamsActivity.Read.All":
-		return azure.TeamsActivityReadAll
+		return azure.AZMGTeamsActivityReadAll
 	case "TeamsActivity.Send":
-		return azure.TeamsActivitySend
+		return azure.AZMGTeamsActivitySend
 	case "TeamsAppInstallation.ManageSelectedForChat":
-		return azure.TeamsAppInstallationManageSelectedForChat
+		return azure.AZMGTeamsAppInstallationManageSelectedForChat
 	case "TeamsAppInstallation.ManageSelectedForChat.All":
-		return azure.TeamsAppInstallationManageSelectedForChatAll
+		return azure.AZMGTeamsAppInstallationManageSelectedForChatAll
 	case "TeamsAppInstallation.ManageSelectedForTeam":
-		return azure.TeamsAppInstallationManageSelectedForTeam
+		return azure.AZMGTeamsAppInstallationManageSelectedForTeam
 	case "TeamsAppInstallation.ManageSelectedForTeam.All":
-		return azure.TeamsAppInstallationManageSelectedForTeamAll
+		return azure.AZMGTeamsAppInstallationManageSelectedForTeamAll
 	case "TeamsAppInstallation.ManageSelectedForUser":
-		return azure.TeamsAppInstallationManageSelectedForUser
+		return azure.AZMGTeamsAppInstallationManageSelectedForUser
 	case "TeamsAppInstallation.ManageSelectedForUser.All":
-		return azure.TeamsAppInstallationManageSelectedForUserAll
+		return azure.AZMGTeamsAppInstallationManageSelectedForUserAll
 	case "TeamsAppInstallation.Read.All":
-		return azure.TeamsAppInstallationReadAll
+		return azure.AZMGTeamsAppInstallationReadAll
 	case "TeamsAppInstallation.ReadForChat":
-		return azure.TeamsAppInstallationReadForChat
+		return azure.AZMGTeamsAppInstallationReadForChat
 	case "TeamsAppInstallation.ReadForChat.All":
-		return azure.TeamsAppInstallationReadForChatAll
+		return azure.AZMGTeamsAppInstallationReadForChatAll
 	case "TeamsAppInstallation.ReadForTeam":
-		return azure.TeamsAppInstallationReadForTeam
+		return azure.AZMGTeamsAppInstallationReadForTeam
 	case "TeamsAppInstallation.ReadForTeam.All":
-		return azure.TeamsAppInstallationReadForTeamAll
+		return azure.AZMGTeamsAppInstallationReadForTeamAll
 	case "TeamsAppInstallation.ReadForUser":
-		return azure.TeamsAppInstallationReadForUser
+		return azure.AZMGTeamsAppInstallationReadForUser
 	case "TeamsAppInstallation.ReadForUser.All":
-		return azure.TeamsAppInstallationReadForUserAll
+		return azure.AZMGTeamsAppInstallationReadForUserAll
 	case "TeamsAppInstallation.ReadSelectedForChat":
-		return azure.TeamsAppInstallationReadSelectedForChat
+		return azure.AZMGTeamsAppInstallationReadSelectedForChat
 	case "TeamsAppInstallation.ReadSelectedForChat.All":
-		return azure.TeamsAppInstallationReadSelectedForChatAll
+		return azure.AZMGTeamsAppInstallationReadSelectedForChatAll
 	case "TeamsAppInstallation.ReadSelectedForTeam":
-		return azure.TeamsAppInstallationReadSelectedForTeam
+		return azure.AZMGTeamsAppInstallationReadSelectedForTeam
 	case "TeamsAppInstallation.ReadSelectedForTeam.All":
-		return azure.TeamsAppInstallationReadSelectedForTeamAll
+		return azure.AZMGTeamsAppInstallationReadSelectedForTeamAll
 	case "TeamsAppInstallation.ReadSelectedForUser":
-		return azure.TeamsAppInstallationReadSelectedForUser
+		return azure.AZMGTeamsAppInstallationReadSelectedForUser
 	case "TeamsAppInstallation.ReadSelectedForUser.All":
-		return azure.TeamsAppInstallationReadSelectedForUserAll
+		return azure.AZMGTeamsAppInstallationReadSelectedForUserAll
 	case "TeamsAppInstallation.ReadWriteAndConsentForChat":
-		return azure.TeamsAppInstallationReadWriteAndConsentForChat
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentForChat
 	case "TeamsAppInstallation.ReadWriteAndConsentForChat.All":
-		return azure.TeamsAppInstallationReadWriteAndConsentForChatAll
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentForChatAll
 	case "TeamsAppInstallation.ReadWriteAndConsentForTeam":
-		return azure.TeamsAppInstallationReadWriteAndConsentForTeam
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentForTeam
 	case "TeamsAppInstallation.ReadWriteAndConsentForTeam.All":
-		return azure.TeamsAppInstallationReadWriteAndConsentForTeamAll
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentForTeamAll
 	case "TeamsAppInstallation.ReadWriteAndConsentForUser":
-		return azure.TeamsAppInstallationReadWriteAndConsentForUser
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentForUser
 	case "TeamsAppInstallation.ReadWriteAndConsentForUser.All":
-		return azure.TeamsAppInstallationReadWriteAndConsentForUserAll
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentForUserAll
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForChat":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForChat
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentSelfForChat
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForChat.All":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForChatAll
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentSelfForChatAll
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForTeam":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForTeam
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentSelfForTeam
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForTeam.All":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForTeamAll
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentSelfForTeamAll
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForUser":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForUser
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentSelfForUser
 	case "TeamsAppInstallation.ReadWriteAndConsentSelfForUser.All":
-		return azure.TeamsAppInstallationReadWriteAndConsentSelfForUserAll
+		return azure.AZMGTeamsAppInstallationReadWriteAndConsentSelfForUserAll
 	case "TeamsAppInstallation.ReadWriteForChat":
-		return azure.TeamsAppInstallationReadWriteForChat
+		return azure.AZMGTeamsAppInstallationReadWriteForChat
 	case "TeamsAppInstallation.ReadWriteForChat.All":
-		return azure.TeamsAppInstallationReadWriteForChatAll
+		return azure.AZMGTeamsAppInstallationReadWriteForChatAll
 	case "TeamsAppInstallation.ReadWriteForTeam":
-		return azure.TeamsAppInstallationReadWriteForTeam
+		return azure.AZMGTeamsAppInstallationReadWriteForTeam
 	case "TeamsAppInstallation.ReadWriteForTeam.All":
-		return azure.TeamsAppInstallationReadWriteForTeamAll
+		return azure.AZMGTeamsAppInstallationReadWriteForTeamAll
 	case "TeamsAppInstallation.ReadWriteForUser":
-		return azure.TeamsAppInstallationReadWriteForUser
+		return azure.AZMGTeamsAppInstallationReadWriteForUser
 	case "TeamsAppInstallation.ReadWriteForUser.All":
-		return azure.TeamsAppInstallationReadWriteForUserAll
+		return azure.AZMGTeamsAppInstallationReadWriteForUserAll
 	case "TeamsAppInstallation.ReadWriteSelectedForChat":
-		return azure.TeamsAppInstallationReadWriteSelectedForChat
+		return azure.AZMGTeamsAppInstallationReadWriteSelectedForChat
 	case "TeamsAppInstallation.ReadWriteSelectedForChat.All":
-		return azure.TeamsAppInstallationReadWriteSelectedForChatAll
+		return azure.AZMGTeamsAppInstallationReadWriteSelectedForChatAll
 	case "TeamsAppInstallation.ReadWriteSelectedForTeam":
-		return azure.TeamsAppInstallationReadWriteSelectedForTeam
+		return azure.AZMGTeamsAppInstallationReadWriteSelectedForTeam
 	case "TeamsAppInstallation.ReadWriteSelectedForTeam.All":
-		return azure.TeamsAppInstallationReadWriteSelectedForTeamAll
+		return azure.AZMGTeamsAppInstallationReadWriteSelectedForTeamAll
 	case "TeamsAppInstallation.ReadWriteSelectedForUser":
-		return azure.TeamsAppInstallationReadWriteSelectedForUser
+		return azure.AZMGTeamsAppInstallationReadWriteSelectedForUser
 	case "TeamsAppInstallation.ReadWriteSelectedForUser.All":
-		return azure.TeamsAppInstallationReadWriteSelectedForUserAll
+		return azure.AZMGTeamsAppInstallationReadWriteSelectedForUserAll
 	case "TeamsAppInstallation.ReadWriteSelfForChat":
-		return azure.TeamsAppInstallationReadWriteSelfForChat
+		return azure.AZMGTeamsAppInstallationReadWriteSelfForChat
 	case "TeamsAppInstallation.ReadWriteSelfForChat.All":
-		return azure.TeamsAppInstallationReadWriteSelfForChatAll
+		return azure.AZMGTeamsAppInstallationReadWriteSelfForChatAll
 	case "TeamsAppInstallation.ReadWriteSelfForTeam":
-		return azure.TeamsAppInstallationReadWriteSelfForTeam
+		return azure.AZMGTeamsAppInstallationReadWriteSelfForTeam
 	case "TeamsAppInstallation.ReadWriteSelfForTeam.All":
-		return azure.TeamsAppInstallationReadWriteSelfForTeamAll
+		return azure.AZMGTeamsAppInstallationReadWriteSelfForTeamAll
 	case "TeamsAppInstallation.ReadWriteSelfForUser":
-		return azure.TeamsAppInstallationReadWriteSelfForUser
+		return azure.AZMGTeamsAppInstallationReadWriteSelfForUser
 	case "TeamsAppInstallation.ReadWriteSelfForUser.All":
-		return azure.TeamsAppInstallationReadWriteSelfForUserAll
+		return azure.AZMGTeamsAppInstallationReadWriteSelfForUserAll
 	case "TeamsPolicyUserAssign.ReadWrite.All":
-		return azure.TeamsPolicyUserAssignReadWriteAll
+		return azure.AZMGTeamsPolicyUserAssignReadWriteAll
 	case "TeamsResourceAccount.Read.All":
-		return azure.TeamsResourceAccountReadAll
+		return azure.AZMGTeamsResourceAccountReadAll
 	case "TeamsTab.Create":
-		return azure.TeamsTabCreate
+		return azure.AZMGTeamsTabCreate
 	case "TeamsTab.Read.All":
-		return azure.TeamsTabReadAll
+		return azure.AZMGTeamsTabReadAll
 	case "TeamsTab.ReadWrite.All":
-		return azure.TeamsTabReadWriteAll
+		return azure.AZMGTeamsTabReadWriteAll
 	case "TeamsTab.ReadWriteForChat":
-		return azure.TeamsTabReadWriteForChat
+		return azure.AZMGTeamsTabReadWriteForChat
 	case "TeamsTab.ReadWriteForChat.All":
-		return azure.TeamsTabReadWriteForChatAll
+		return azure.AZMGTeamsTabReadWriteForChatAll
 	case "TeamsTab.ReadWriteForTeam":
-		return azure.TeamsTabReadWriteForTeam
+		return azure.AZMGTeamsTabReadWriteForTeam
 	case "TeamsTab.ReadWriteForTeam.All":
-		return azure.TeamsTabReadWriteForTeamAll
+		return azure.AZMGTeamsTabReadWriteForTeamAll
 	case "TeamsTab.ReadWriteForUser":
-		return azure.TeamsTabReadWriteForUser
+		return azure.AZMGTeamsTabReadWriteForUser
 	case "TeamsTab.ReadWriteForUser.All":
-		return azure.TeamsTabReadWriteForUserAll
+		return azure.AZMGTeamsTabReadWriteForUserAll
 	case "TeamsTab.ReadWriteSelfForChat":
-		return azure.TeamsTabReadWriteSelfForChat
+		return azure.AZMGTeamsTabReadWriteSelfForChat
 	case "TeamsTab.ReadWriteSelfForChat.All":
-		return azure.TeamsTabReadWriteSelfForChatAll
+		return azure.AZMGTeamsTabReadWriteSelfForChatAll
 	case "TeamsTab.ReadWriteSelfForTeam":
-		return azure.TeamsTabReadWriteSelfForTeam
+		return azure.AZMGTeamsTabReadWriteSelfForTeam
 	case "TeamsTab.ReadWriteSelfForTeam.All":
-		return azure.TeamsTabReadWriteSelfForTeamAll
+		return azure.AZMGTeamsTabReadWriteSelfForTeamAll
 	case "TeamsTab.ReadWriteSelfForUser":
-		return azure.TeamsTabReadWriteSelfForUser
+		return azure.AZMGTeamsTabReadWriteSelfForUser
 	case "TeamsTab.ReadWriteSelfForUser.All":
-		return azure.TeamsTabReadWriteSelfForUserAll
+		return azure.AZMGTeamsTabReadWriteSelfForUserAll
 	case "TeamsTelephoneNumber.Read.All":
-		return azure.TeamsTelephoneNumberReadAll
+		return azure.AZMGTeamsTelephoneNumberReadAll
 	case "TeamsTelephoneNumber.ReadWrite.All":
-		return azure.TeamsTelephoneNumberReadWriteAll
+		return azure.AZMGTeamsTelephoneNumberReadWriteAll
 	case "TeamsUserConfiguration.Read.All":
-		return azure.TeamsUserConfigurationReadAll
+		return azure.AZMGTeamsUserConfigurationReadAll
 	case "Teamwork.Migrate.All":
-		return azure.TeamworkMigrateAll
+		return azure.AZMGTeamworkMigrateAll
 	case "Teamwork.Read.All":
-		return azure.TeamworkReadAll
+		return azure.AZMGTeamworkReadAll
 	case "TeamworkAppSettings.Read.All":
-		return azure.TeamworkAppSettingsReadAll
+		return azure.AZMGTeamworkAppSettingsReadAll
 	case "TeamworkAppSettings.ReadWrite.All":
-		return azure.TeamworkAppSettingsReadWriteAll
+		return azure.AZMGTeamworkAppSettingsReadWriteAll
 	case "TeamworkDevice.Read.All":
-		return azure.TeamworkDeviceReadAll
+		return azure.AZMGTeamworkDeviceReadAll
 	case "TeamworkDevice.ReadWrite.All":
-		return azure.TeamworkDeviceReadWriteAll
+		return azure.AZMGTeamworkDeviceReadWriteAll
 	case "TeamworkTag.Read":
-		return azure.TeamworkTagRead
+		return azure.AZMGTeamworkTagRead
 	case "TeamworkTag.Read.All":
-		return azure.TeamworkTagReadAll
+		return azure.AZMGTeamworkTagReadAll
 	case "TeamworkTag.ReadWrite":
-		return azure.TeamworkTagReadWrite
+		return azure.AZMGTeamworkTagReadWrite
 	case "TeamworkTag.ReadWrite.All":
-		return azure.TeamworkTagReadWriteAll
+		return azure.AZMGTeamworkTagReadWriteAll
 	case "TeamworkUserInteraction.Read.All":
-		return azure.TeamworkUserInteractionReadAll
+		return azure.AZMGTeamworkUserInteractionReadAll
 	case "TermStore.Read.All":
-		return azure.TermStoreReadAll
+		return azure.AZMGTermStoreReadAll
 	case "TermStore.ReadWrite.All":
-		return azure.TermStoreReadWriteAll
+		return azure.AZMGTermStoreReadWriteAll
 	case "ThreatAssessment.Read.All":
-		return azure.ThreatAssessmentReadAll
+		return azure.AZMGThreatAssessmentReadAll
 	case "ThreatAssessment.ReadWrite.All":
-		return azure.ThreatAssessmentReadWriteAll
+		return azure.AZMGThreatAssessmentReadWriteAll
 	case "ThreatHunting.Read.All":
-		return azure.ThreatHuntingReadAll
+		return azure.AZMGThreatHuntingReadAll
 	case "ThreatIndicators.Read.All":
-		return azure.ThreatIndicatorsReadAll
+		return azure.AZMGThreatIndicatorsReadAll
 	case "ThreatIndicators.ReadWrite.OwnedBy":
-		return azure.ThreatIndicatorsReadWriteOwnedBy
+		return azure.AZMGThreatIndicatorsReadWriteOwnedBy
 	case "ThreatIntelligence.Read.All":
-		return azure.ThreatIntelligenceReadAll
+		return azure.AZMGThreatIntelligenceReadAll
 	case "ThreatSubmission.Read":
-		return azure.ThreatSubmissionRead
+		return azure.AZMGThreatSubmissionRead
 	case "ThreatSubmission.Read.All":
-		return azure.ThreatSubmissionReadAll
+		return azure.AZMGThreatSubmissionReadAll
 	case "ThreatSubmission.ReadWrite":
-		return azure.ThreatSubmissionReadWrite
+		return azure.AZMGThreatSubmissionReadWrite
 	case "ThreatSubmission.ReadWrite.All":
-		return azure.ThreatSubmissionReadWriteAll
+		return azure.AZMGThreatSubmissionReadWriteAll
 	case "ThreatSubmissionPolicy.ReadWrite.All":
-		return azure.ThreatSubmissionPolicyReadWriteAll
+		return azure.AZMGThreatSubmissionPolicyReadWriteAll
 	case "Topic.Read.All":
-		return azure.TopicReadAll
+		return azure.AZMGTopicReadAll
 	case "TrustFrameworkKeySet.Read.All":
-		return azure.TrustFrameworkKeySetReadAll
+		return azure.AZMGTrustFrameworkKeySetReadAll
 	case "TrustFrameworkKeySet.ReadWrite.All":
-		return azure.TrustFrameworkKeySetReadWriteAll
+		return azure.AZMGTrustFrameworkKeySetReadWriteAll
 	case "UnifiedGroupMember.Read.AsGuest":
-		return azure.UnifiedGroupMemberReadAsGuest
+		return azure.AZMGUnifiedGroupMemberReadAsGuest
 	case "User.DeleteRestore.All":
-		return azure.UserDeleteRestoreAll
+		return azure.AZMGUserDeleteRestoreAll
 	case "User.EnableDisableAccount.All":
-		return azure.UserEnableDisableAccountAll
+		return azure.AZMGUserEnableDisableAccountAll
 	case "User.Export.All":
-		return azure.UserExportAll
+		return azure.AZMGUserExportAll
 	case "User.Invite.All":
-		return azure.UserInviteAll
+		return azure.AZMGUserInviteAll
 	case "User.ManageIdentities.All":
-		return azure.UserManageIdentitiesAll
+		return azure.AZMGUserManageIdentitiesAll
 	case "User.Read":
-		return azure.UserRead
+		return azure.AZMGUserRead
 	case "User.Read.All":
-		return azure.UserReadAll
+		return azure.AZMGUserReadAll
 	case "User.ReadBasic.All":
-		return azure.UserReadBasicAll
+		return azure.AZMGUserReadBasicAll
 	case "User.ReadWrite":
-		return azure.UserReadWrite
+		return azure.AZMGUserReadWrite
 	case "User.ReadWrite.All":
-		return azure.UserReadWriteAll
+		return azure.AZMGUserReadWriteAll
 	case "User.ReadWrite.CrossCloud":
-		return azure.UserReadWriteCrossCloud
+		return azure.AZMGUserReadWriteCrossCloud
 	case "User.RevokeSessions.All":
-		return azure.UserRevokeSessionsAll
+		return azure.AZMGUserRevokeSessionsAll
 	case "UserActivity.ReadWrite.CreatedByApp":
-		return azure.UserActivityReadWriteCreatedByApp
+		return azure.AZMGUserActivityReadWriteCreatedByApp
 	case "UserAuthenticationMethod.Read":
-		return azure.UserAuthenticationMethodRead
+		return azure.AZMGUserAuthenticationMethodRead
 	case "UserAuthenticationMethod.Read.All":
-		return azure.UserAuthenticationMethodReadAll
+		return azure.AZMGUserAuthenticationMethodReadAll
 	case "UserAuthenticationMethod.ReadWrite":
-		return azure.UserAuthenticationMethodReadWrite
+		return azure.AZMGUserAuthenticationMethodReadWrite
 	case "UserAuthenticationMethod.ReadWrite.All":
-		return azure.UserAuthenticationMethodReadWriteAll
+		return azure.AZMGUserAuthenticationMethodReadWriteAll
 	case "UserCloudClipboard.Read":
-		return azure.UserCloudClipboardRead
+		return azure.AZMGUserCloudClipboardRead
 	case "UserNotification.ReadWrite.CreatedByApp":
-		return azure.UserNotificationReadWriteCreatedByApp
+		return azure.AZMGUserNotificationReadWriteCreatedByApp
 	case "UserState.ReadWrite.All":
-		return azure.UserStateReadWriteAll
+		return azure.AZMGUserStateReadWriteAll
 	case "UserShiftPreferences.Read.All":
-		return azure.UserShiftPreferencesReadAll
+		return azure.AZMGUserShiftPreferencesReadAll
 	case "UserShiftPreferences.ReadWrite.All":
-		return azure.UserShiftPreferencesReadWriteAll
+		return azure.AZMGUserShiftPreferencesReadWriteAll
 	case "UserTeamwork.Read":
-		return azure.UserTeamworkRead
+		return azure.AZMGUserTeamworkRead
 	case "UserTeamwork.Read.All":
-		return azure.UserTeamworkReadAll
+		return azure.AZMGUserTeamworkReadAll
 	case "UserTimelineActivity.Write.CreatedByApp":
-		return azure.UserTimelineActivityWriteCreatedByApp
+		return azure.AZMGUserTimelineActivityWriteCreatedByApp
 	case "UserWindowsSettings.Read.All":
-		return azure.UserWindowsSettingsReadAll
+		return azure.AZMGUserWindowsSettingsReadAll
 	case "UserWindowsSettings.ReadWrite.All":
-		return azure.UserWindowsSettingsReadWriteAll
+		return azure.AZMGUserWindowsSettingsReadWriteAll
 	case "VirtualAppointment.Read":
-		return azure.VirtualAppointmentRead
+		return azure.AZMGVirtualAppointmentRead
 	case "VirtualAppointment.Read.All":
-		return azure.VirtualAppointmentReadAll
+		return azure.AZMGVirtualAppointmentReadAll
 	case "VirtualAppointment.ReadWrite":
-		return azure.VirtualAppointmentReadWrite
+		return azure.AZMGVirtualAppointmentReadWrite
 	case "VirtualAppointment.ReadWrite.All":
-		return azure.VirtualAppointmentReadWriteAll
+		return azure.AZMGVirtualAppointmentReadWriteAll
 	case "VirtualAppointmentNotification.Send":
-		return azure.VirtualAppointmentNotificationSend
+		return azure.AZMGVirtualAppointmentNotificationSend
 	case "VirtualEvent.Read":
-		return azure.VirtualEventRead
+		return azure.AZMGVirtualEventRead
 	case "VirtualEvent.Read.All":
-		return azure.VirtualEventReadAll
+		return azure.AZMGVirtualEventReadAll
 	case "VirtualEvent.ReadWrite":
-		return azure.VirtualEventReadWrite
+		return azure.AZMGVirtualEventReadWrite
 	case "WindowsUpdates.ReadWrite.All":
-		return azure.WindowsUpdatesReadWriteAll
+		return azure.AZMGWindowsUpdatesReadWriteAll
 	case "WorkforceIntegration.Read.All":
-		return azure.WorkforceIntegrationReadAll
+		return azure.AZMGWorkforceIntegrationReadAll
 	case "WorkforceIntegration.ReadWrite.All":
-		return azure.WorkforceIntegrationReadWriteAll
+		return azure.AZMGWorkforceIntegrationReadWriteAll
 	default:
 		return graph.StringKind(scope)
 	}
