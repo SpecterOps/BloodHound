@@ -192,18 +192,18 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(ctx, actorId, 
 }
 
 // CreateAssetGroupTag mocks base method.
-func (m *MockDatabase) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
+func (m *MockDatabase) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupTag", ctx, tagType, user, name, description, position, requireCertify)
+	ret := m.ctrl.Call(m, "CreateAssetGroupTag", ctx, tagType, user, name, description, position, requireCertify, glyph)
 	ret0, _ := ret[0].(model.AssetGroupTag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAssetGroupTag indicates an expected call of CreateAssetGroupTag.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(ctx, tagType, user, name, description, position, requireCertify any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(ctx, tagType, user, name, description, position, requireCertify, glyph any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), ctx, tagType, user, name, description, position, requireCertify)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), ctx, tagType, user, name, description, position, requireCertify, glyph)
 }
 
 // CreateAssetGroupTagSelector mocks base method.

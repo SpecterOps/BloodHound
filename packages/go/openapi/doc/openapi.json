@@ -18219,6 +18219,9 @@
           },
           "analysis_enabled": {
             "$ref": "#/components/schemas/null.boolean"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
           }
         }
       },
@@ -18239,6 +18242,9 @@
           },
           "position": {
             "type": "integer"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
           }
         }
       },
