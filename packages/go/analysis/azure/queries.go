@@ -380,6 +380,35 @@ func FetchInboundEntityObjectControllers(tx graph.Transaction, root *graph.Node,
 	})
 }
 
+func FetchOutboundEntityOAuth2PermissionGrantPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:          root,
+		Direction:     graph.DirectionOutbound,
+		BranchQuery:   FilterOAuth2PermissionGrants,
+		DescentFilter: OutboundControlDescentFilter,
+		PathFilter:    OutboundControlPathFilter,
+	})
+}
+
+func FetchInboundEntityOAuth2PermissionGrantPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:          root,
+		Direction:     graph.DirectionInbound,
+		BranchQuery:   FilterOAuth2PermissionGrants,
+		DescentFilter: InboundControlDescentFilter,
+	})
+}
+
+func FetchEntityOAuth2PermissionGrants(tx graph.Transaction, root *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        root,
+		Direction:   graph.DirectionOutbound, // Kanten: User/Tenant -> ServicePrincipal(clientId)
+		Skip:        skip,
+		Limit:       limit,
+		BranchQuery: FilterOAuth2PermissionGrants, // filtert auf deine Scope-Relationship-Kinds
+	})
+}
+
 func FetchEntityActiveAssignmentPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:        node,

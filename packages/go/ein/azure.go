@@ -3458,13 +3458,24 @@ func ConvertAzureOAuth2PermissionGrantToRels(data OAuth2PermissionGrant) []Inges
 	// Seperate the Scope into individual permissions
 	scopes := strings.Split(data.Scope, " ")
 	scopeSet := make(map[string]struct{})
+	
 	for _, scope := range scopes {
-		scopeSet[strings.TrimSpace(scope)] = struct{}{}
-	}
+        s := strings.TrimSpace(scope)
+        if s != "" && s != "null" && s != "openid" && s != "profile" && s != "email" && s != "offline_access" {
+            scopeSet[s] = struct{}{}
+        }
+    }
+
+	
 	// If the ConsentType is "Principal", we create a relationship from the Principal to the Tenant
 	// If the ConsentType is "AllPrincipals", we create a relationship from the Tenant to the Tenant
+	
+	// Modellierung:
+    // - consentType == "Principal": User (principalId) --> ServicePrincipal (clientId)  [RelType = Scope]
+    // - consentType == "AllPrincipals": Tenant (tenantId) --> ServicePrincipal (clientId) [RelType = Scope]
+    //   (resourceId wird als RelProp mitgegeben, damit das Ziel-API/SP ersichtlich ist)
 
-	if data.ConsentType == "Principal" && data.TenantId != "" {
+    if data.ConsentType == "Principal" && data.PrincipalId != "" && data.ClientId != "" {
 
 		// Create a relationship for each scope
 		for scope := range scopeSet {
@@ -3481,13 +3492,16 @@ func ConvertAzureOAuth2PermissionGrantToRels(data OAuth2PermissionGrant) []Inges
 					Kind:  azure.Tenant,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{},
+					RelProps: map[string]any{
+						"consentType": data.ConsentType,
+						"resourceId":  strings.ToUpper(data.ResourceId),
+					},
 					RelType:  GetPermissionConstant(scope),
 				},
 			))
 		}
-	} else if data.ConsentType == "AllPrincipals" && data.TenantId != "" {
-		for scope := range scopeSet {
+	} else if data.ConsentType == "AllPrincipals" && data.TenantId != "" && data.ClientId != "" {
+    	for scope := range scopeSet {
 			if scope == "" || scope == "null" || scope == "openid" || scope == "profile" || scope == "email" || scope == "offline_access" || scope == " " {
 				continue
 			}
@@ -3501,7 +3515,10 @@ func ConvertAzureOAuth2PermissionGrantToRels(data OAuth2PermissionGrant) []Inges
 					Kind:  azure.ServicePrincipal,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{},
+					RelProps: map[string]any{
+                        "consentType": data.ConsentType,
+                        "resourceId":  strings.ToUpper(data.ResourceId),
+                    },
 					RelType:  GetPermissionConstant(scope),
 				},
 			))

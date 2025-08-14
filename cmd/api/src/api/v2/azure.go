@@ -83,7 +83,8 @@ func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, 
 		azure.RelatedEntityTypeDescendentContainerRegistries,
 		azure.RelatedEntityTypeDescendentWebApps,
 		azure.RelatedEntityTypeDescendentAutomationAccounts,
-		azure.RelatedEntityTypeDescendentLogicApps, azure.RelatedEntityTypeDescendentFunctionApps:
+		azure.RelatedEntityTypeDescendentLogicApps, 
+		azure.RelatedEntityTypeDescendentFunctionApps:
 		if descendents, err := azure.ListEntityDescendentPaths(ctx, db, relatedEntityType, objectID); err != nil {
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
 		} else {
@@ -177,6 +178,13 @@ func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, 
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(objectControl), objectControl.Len(), nil
+		}
+	
+	case azure.RelatedEntityTypeOAuth2PermissionGrants:
+		if paths, err := azure.ListEntityOAuth2PermissionGrantPaths(ctx, db, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(paths), paths.Len(), nil
 		}
 
 	default:
@@ -276,6 +284,11 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 		if nodeSet, err = azure.ListEntityObjectControl(ctx, db, objectID, graph.DirectionInbound, 0, 0); err != nil {
 			return nil, 0, err
 		}
+
+	case azure.RelatedEntityTypeOAuth2PermissionGrants:
+		if nodeSet, err = azure.ListEntityOAuth2PermissionGrants(ctx, db, objectID, 0, 0); err != nil {
+            return nil, 0, err
+        }
 
 	default:
 		return nil, 0, ErrParameterRelatedEntityType

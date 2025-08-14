@@ -636,6 +636,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'azuser-inbound_object_control',
         },
+        {
+            id,
+            label: 'OAuth2 Permission Grants',
+            queryType: 'azuser-oauth2_permission_grants',
+        },
     ],
     [AzureNodeKind.VM]: (id: string) => [
         {
@@ -1556,6 +1561,12 @@ export const entityRelationshipEndpoints = {
     'azuser-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'inbound-control', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azuser-oauth2_permission_grants': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'oauth2-permission-grants', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
             .then((res) => res.data),
     'azvm-local_admins': ({ id, counts, skip, limit, type }) =>
         apiClient
