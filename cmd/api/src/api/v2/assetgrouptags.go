@@ -39,7 +39,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
-	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -552,23 +551,20 @@ type AssetGroupMember struct {
 	Name          string         `json:"name"`
 	Properties    map[string]any `json:"properties,omitempty"`
 
-	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
+	Source          model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
+	AssetGroupTagId int                                `json:"asset_group_tag_id,omitempty"`
 }
 
 // Used to minimize the response shape to just the necessary member display fields
 func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroupMember {
-	var (
-		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-		envID, _    = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
-	)
+	primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node)
 
 	member := AssetGroupMember{
 		NodeId:        node.ID,
-		ObjectID:      objectID,
-		EnvironmentID: envID,
-		PrimaryKind:   analysis.GetNodeKindDisplayLabel(node),
-		Name:          name,
+		ObjectID:      objectId,
+		EnvironmentID: envId,
+		PrimaryKind:   primaryKind,
+		Name:          displayName,
 	}
 
 	if includeProperties {
@@ -617,7 +613,9 @@ func (s *Resources) GetAssetGroupTagMemberInfo(response http.ResponseWriter, req
 	} else if node, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(memberID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{nodeToAssetGroupMember(node, includeProperties), selectors}}, http.StatusOK, response)
+		groupMember := nodeToAssetGroupMember(node, includeProperties)
+		groupMember.AssetGroupTagId = assetGroupTagID
+		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{groupMember, selectors}}, http.StatusOK, response)
 	}
 }
 
@@ -662,7 +660,9 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {
-				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
+				groupMember := nodeToAssetGroupMember(node, excludeProperties)
+				groupMember.AssetGroupTagId = assetGroupTag.ID
+				members = append(members, groupMember)
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
@@ -807,6 +807,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			kinds  graph.Kinds
 			tagIds []int
 		)
+		tagIdByKind := make(map[graph.Kind]int)
 
 		for _, t := range tags {
 			// owned tag is a label despite distinct designation
@@ -815,6 +816,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				// filter the below node and selector query to tag type
 				kinds = kinds.Add(t.ToKind())
 				tagIds = append(tagIds, t.ID)
+				tagIdByKind[t.ToKind()] = t.ID
 				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
 					matchedTags = append(matchedTags, t)
 				}
@@ -839,7 +841,15 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			return
 		} else {
 			for _, node := range nodes {
-				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
+				groupMember := nodeToAssetGroupMember(node, excludeProperties)
+				for _, kind := range node.Kinds {
+					// Find the first valid kind for this search type and attribute it to this member
+					if tagId, ok := tagIdByKind[kind]; ok {
+						groupMember.AssetGroupTagId = tagId
+						break
+					}
+				}
+				members = append(members, groupMember)
 			}
 		}
 

@@ -16,6 +16,7 @@
 import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { EntityField, cn, format } from '../../../utils';
+import { validateProperty } from '../../../utils/entityInfoDisplay';
 import CopyToClipboardButton from '../../CopyToClipboardButton';
 import NodeIcon from '../../NodeIcon';
 
@@ -44,7 +45,8 @@ const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value'
     }
 
     const stringyKey = columnKey?.toString();
-    const formattedValue = format({ keyprop: stringyKey, value, label: stringyKey });
+    const { kind } = validateProperty(columnKey);
+    const formattedValue = format({ kind, keyprop: stringyKey, value, label: stringyKey });
 
     return formattedValue ? (
         <span className='cursor-auto'>
