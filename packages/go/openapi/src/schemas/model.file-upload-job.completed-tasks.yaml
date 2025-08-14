@@ -21,7 +21,7 @@ allOf:
     properties:
       file_name:
         type: string
-      parent_file:
+      parent_file_name:
         type: string
       errors:
         type: array

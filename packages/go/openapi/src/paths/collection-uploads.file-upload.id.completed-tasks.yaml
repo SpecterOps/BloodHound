@@ -41,7 +41,7 @@ get:
               data:
                 type: array
                 items:
-                  $ref: './../schemas/model.file-upload-job.yaml'
+                  $ref: './../schemas/model.file-upload-job.completed-tasks.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

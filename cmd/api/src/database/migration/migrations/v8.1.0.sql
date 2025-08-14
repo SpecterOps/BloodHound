@@ -62,3 +62,4 @@ CREATE TABLE IF NOT EXISTS completed_tasks (
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
+CREATE INDEX IF NOT EXISTS idx_completed_tasks_ingest_job_id ON completed_tasks USING btree (ingest_job_id);
