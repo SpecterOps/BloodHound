@@ -109,9 +109,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 accessorKey: 'id',
                 header: () => {
                     return (
-                        <div className=''>
+                        <div>
                             <Checkbox
-                                className=''
                                 checked={isPublic}
                                 onCheckedChange={handleCheckAllChange}
                                 data-testid='public-query'
@@ -120,9 +119,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     );
                 },
                 cell: ({ row }) => (
-                    <div className=''>
+                    <div>
                         <Checkbox
-                            className=''
                             checked={isCheckboxChecked(row.getValue('id'))}
                             onCheckedChange={() => handleCheckChange(row.getValue('id'))}
                         />
@@ -175,7 +173,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
                     </div>
-                    <div className='overflow-auto'>
+                    <div className='h-[335px] overflow-auto'>
                         <DataTable
                             TableHeadProps={{
                                 className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
