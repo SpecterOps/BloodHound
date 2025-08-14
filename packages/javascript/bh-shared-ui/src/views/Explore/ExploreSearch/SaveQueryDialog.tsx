@@ -58,6 +58,7 @@ const SaveQueryDialog: React.FC<{
     selectedQuery: QueryLineItem | undefined;
     sharedIds: string[];
     isPublic: boolean;
+    saveAction: string | undefined;
     onClose: () => void;
     onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<void>;
     onUpdate: (data: UpdateUserQueryRequest) => Promise<void>;
@@ -70,6 +71,7 @@ const SaveQueryDialog: React.FC<{
     selectedQuery,
     sharedIds,
     isPublic,
+    saveAction,
     onClose,
     onSave,
     onUpdate,
@@ -137,6 +139,9 @@ const SaveQueryDialog: React.FC<{
         setIsConfirmOpen(false);
     };
 
+    const cardTitle =
+        saveAction === 'edit' ? 'Edit Saved Query' : saveAction === 'saveas' ? 'Save As New Query' : 'Save Query';
+
     return (
         <>
             <Dialog open={open} onOpenChange={onClose}>
@@ -150,9 +155,8 @@ const SaveQueryDialog: React.FC<{
                         <div className='grid grid-cols-12 gap-4'>
                             <Card className='w-full col-span-8 p-2 rounded-lg'>
                                 <CardHeader>
-                                    <CardTitle>Save Query</CardTitle>
+                                    <CardTitle>{cardTitle}</CardTitle>
                                     <CardDescription>
-                                        {' '}
                                         To save your query to the Pre-built Query, add a name, optional description, and
                                         set sharing permissions.
                                     </CardDescription>

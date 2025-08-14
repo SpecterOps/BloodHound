@@ -69,6 +69,7 @@ const CypherSearch = ({
     });
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
+    const [saveAction, setSaveAction] = useState<string | undefined>(undefined);
 
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
@@ -168,6 +169,7 @@ const CypherSearch = ({
         if (selectedQuery) {
             if (selectedQuery.canEdit) {
                 //save existing
+                setSaveAction('edit');
                 setShowSaveQueryDialog(true);
             } else {
                 setMessageState({
@@ -177,12 +179,14 @@ const CypherSearch = ({
             }
         } else {
             //save new
+            setSaveAction(undefined);
             setShowSaveQueryDialog(true);
         }
     };
 
     const handleEditQuery = (id: number) => {
         setSelected({ query: '', id: id });
+        setSaveAction('edit');
         setShowSaveQueryDialog(true);
     };
 
@@ -213,6 +217,7 @@ const CypherSearch = ({
 
     const handleSaveAs = () => {
         setSelected({ query: '' });
+        setSaveAction('saveas');
         setShowSaveQueryDialog(true);
     };
 
@@ -324,6 +329,7 @@ const CypherSearch = ({
                 selectedQuery={selectedQuery}
                 sharedIds={sharedIds}
                 isPublic={isPublic}
+                saveAction={saveAction}
                 onClose={handleCloseSaveQueryDialog}
                 onSave={handleSaveQuery}
                 onUpdate={handleUpdateQuery}
