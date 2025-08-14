@@ -212,6 +212,7 @@ const FileUploadDialog: React.FC<{
                     setFilesForIngest([]);
                 },
             }}>
+            <div>Upload Files</div>
             <DialogContent>
                 <>
                     {fileUploadStep === FileUploadStep.ADD_FILES && (
