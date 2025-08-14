@@ -401,8 +401,8 @@ const CreateUserForm: React.FC<{
                                                     <MenuItem value={1}>Loading...</MenuItem>
                                                 ) : (
                                                     getListDisplayRolesQuery.data?.map((role: any) => (
-                                                        <MenuItem key={role.id} value={role.id.toString()}>
-                                                            {role.name}
+                                                        <MenuItem key={role?.id} value={role?.id.toString()}>
+                                                            {role?.name}
                                                         </MenuItem>
                                                     ))
                                                 )}
