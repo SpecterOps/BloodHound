@@ -89,38 +89,44 @@ WHERE (
 
 RETURN p1,p2,p3,p4,p5,p6,p7,p8,p_tox1,p_tox2,p_tox3,p_tox4,p_totarget`;
 
-// Executes Deep Sniff sequence (EnableDCSync first, then EnableADCSESC3 if needed)
-const runDeepSniffSequence = async (
+// Helper to run deep sniff variants based on user selection
+const runDeepSniffWithPreferences = async (
     primarySearch: string,
     secondarySearch: string,
-    signal: AbortSignal | undefined
+    signal: AbortSignal | undefined,
+    variantsPref: ('EnableDCSync' | 'EnableADCSESC3')[] | null
 ) => {
     const includeProperties = true;
-    // First attempt: EnableDCSync
-    try {
-        const dcsyncCypher = buildEnableDCSyncCypher(primarySearch, secondarySearch);
-    const res = await apiClient.cypherSearch(dcsyncCypher, { signal }, includeProperties);
-        const nodes = (res?.data as any)?.data?.nodes ?? {};
-        const edges = (res?.data as any)?.data?.edges ?? [];
-        if (Object.keys(nodes).length > 0 || (Array.isArray(edges) && edges.length > 0)) {
-            return { ...(res.data as any), deepSniff: true, deepSniffVariant: 'EnableDCSync' } as any;
+    const wantDCSync = !variantsPref || variantsPref.includes('EnableDCSync');
+    const wantESC3 = !variantsPref || variantsPref.includes('EnableADCSESC3');
+
+    // Execution ordering: always try DCSync first if selected, else ESC3
+    if (wantDCSync) {
+        try {
+            const dcsyncCypher = buildEnableDCSyncCypher(primarySearch, secondarySearch);
+            const res = await apiClient.cypherSearch(dcsyncCypher, { signal }, includeProperties);
+            const nodes = (res?.data as any)?.data?.nodes ?? {};
+            const edges = (res?.data as any)?.data?.edges ?? [];
+            if (Object.keys(nodes).length > 0 || (Array.isArray(edges) && edges.length > 0)) {
+                return { ...(res.data as any), deepSniff: true, deepSniffVariant: 'EnableDCSync' } as any;
+            }
+        } catch (err: any) {
+            if (err?.response?.status !== 404) throw err; // propagate non-404
         }
-        // fall through to second variant if empty
-    } catch (err: any) {
-        if (err?.response?.status !== 404) {
-            // Non-404 error: rethrow
-            throw err;
-        }
-        // 404 -> try second variant
     }
-    // Second attempt: EnableADCSESC3
-    const esc3Cypher = buildEnableADCSESC3Cypher(primarySearch, secondarySearch);
-    const esc3Res = await apiClient.cypherSearch(esc3Cypher, { signal }, includeProperties);
-    return { ...(esc3Res.data as any), deepSniff: true, deepSniffVariant: 'EnableADCSESC3' } as any;
+    if (wantESC3) {
+        const esc3Cypher = buildEnableADCSESC3Cypher(primarySearch, secondarySearch);
+        const esc3Res = await apiClient.cypherSearch(esc3Cypher, { signal }, includeProperties);
+        return { ...(esc3Res.data as any), deepSniff: true, deepSniffVariant: 'EnableADCSESC3' } as any;
+    }
+    // If no variants actually selected (shouldn't happen due to UI validation) throw not found equivalent
+    const error: any = new Error('No deep sniff variants selected');
+    error.response = { status: 404 };
+    throw error;
 };
 
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { searchType, primarySearch, secondarySearch, pathFilters } = paramOptions;
+    const { searchType, primarySearch, secondarySearch, pathFilters, pathSearchMode, deepSniffVariants } = paramOptions;
 
     // Query should occur whether or not pathFilters exist
     if (!primarySearch || !searchType || !secondarySearch) {
@@ -129,20 +135,45 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
 
     const filter = pathFilters?.length ? createPathFilterString(pathFilters) : DEFAULT_FILTERS;
 
+    const mode: 'hybrid' | 'path' | 'deepsniff' =
+        pathSearchMode === 'path' || pathSearchMode === 'deepsniff' ? pathSearchMode : 'hybrid';
+
     return {
         ...sharedGraphQueryOptions,
-        queryKey: [ExploreGraphQueryKey, searchType, primarySearch, secondarySearch, filter],
+        queryKey: [
+            ExploreGraphQueryKey,
+            searchType,
+            primarySearch,
+            secondarySearch,
+            filter,
+            mode,
+            deepSniffVariants?.join(',') ?? 'all',
+        ],
         queryFn: ({ signal }) => {
+            // Deep sniff only mode: skip shortest path entirely
+            if (mode === 'deepsniff') {
+                return runDeepSniffWithPreferences(primarySearch, secondarySearch, signal, deepSniffVariants ?? null);
+            }
+            // Path only mode: do not fall back to deep sniff
+            if (mode === 'path') {
+                return apiClient
+                    .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
+                    .then((res) => res.data);
+            }
+            // Hybrid: attempt path then deep sniff fallback
             return apiClient
                 .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
                 .then((res) => res.data)
                 .catch((error) => {
                     const statusCode = error?.response?.status;
-                    // Fallback: if no shortest path, attempt Deep Sniff sequence (EnableDCSync then EnableADCSESC3)
-                    if (statusCode === 404 && primarySearch && secondarySearch) {
-                        return runDeepSniffSequence(primarySearch, secondarySearch, signal);
+                    if (statusCode === 404) {
+                        return runDeepSniffWithPreferences(
+                            primarySearch,
+                            secondarySearch,
+                            signal,
+                            deepSniffVariants ?? null
+                        );
                     }
-                    // Propagate other errors
                     throw error;
                 });
         },

@@ -57,9 +57,10 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
                             An ADCS ESC3 attack enables impersonation of principals of a domain by first obtaining an
                             enrollement agent certificate and then using that to enroll on behalf of a given target in a
                             template that enables authentication. Execute the attack paths that result in obtaining
-                            enrollement rights for an enrollement agent certificate template and the CA its published to,
-                            and enrollment rights for a certificate template that enables domain authentication and allows
-                            enroll-on-behalf-of. Then, perform the ADCS ESC3 attack and continue on to the target.
+                            enrollement rights for an enrollement agent certificate template and the CA its published
+                            to, and enrollment rights for a certificate template that enables domain authentication and
+                            allows enroll-on-behalf-of. Then, perform the ADCS ESC3 attack and continue on to the
+                            target.
                         </Typography>
                         <Typography variant='body2'>
                             For details on performing an ADCS ESC3 attack, refer to the{' '}
@@ -83,8 +84,8 @@ const DeepSniffInfoPane: React.FC<DeepSniffInfoPaneProps> = ({ sx }) => {
                         </Typography>
                         <Typography variant='body2' sx={{ mb: 2 }}>
                             A DCSync attack requires both the GetChanges and GetChangesAll permissions. Execute the
-                            attack paths that result in obtaining these permissions on the domain, and continue on to the
-                            target.
+                            attack paths that result in obtaining these permissions on the domain, and continue on to
+                            the target.
                         </Typography>
                         <Typography variant='body2'>
                             For details on performing a DCSync attack, refer to the{' '}

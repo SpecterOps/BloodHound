@@ -34,6 +34,10 @@ export type ExploreQueryParams = {
     relationshipQueryType: EntityRelationshipQueryTypes | null;
     relationshipQueryItemId: string | null;
     pathFilters: EdgeCheckboxType['edgeType'][] | null;
+    // Added: User-configurable pathfinding search mode (hybrid shortest-path + deep sniff fallback | path only | deep sniff only)
+    pathSearchMode: 'hybrid' | 'path' | 'deepsniff' | null;
+    // Added: Selected deep sniff variants (EnableDCSync, EnableADCSESC3). Null implies default (all variants)
+    deepSniffVariants: ('EnableDCSync' | 'EnableADCSESC3')[] | null;
 };
 
 export const acceptedExploreSearchTabs = {
@@ -88,6 +92,19 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
         relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
+        pathSearchMode: ((): 'hybrid' | 'path' | 'deepsniff' | null => {
+            const val = searchParams.get('pathSearchMode');
+            if (val === 'hybrid' || val === 'path' || val === 'deepsniff') return val;
+            return null;
+        })(),
+        deepSniffVariants: ((): ('EnableDCSync' | 'EnableADCSESC3')[] | null => {
+            const values = searchParams.getAll('deepSniffVariants');
+            if (!values.length) return null; // treat absence as default (all)
+            const filtered = values.filter(
+                (v): v is 'EnableDCSync' | 'EnableADCSESC3' => v === 'EnableDCSync' || v === 'EnableADCSESC3'
+            );
+            return filtered.length ? filtered : null;
+        })(),
         setExploreParams: useCallback(
             (updatedParams: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) =>
                 setParamsFactory(
@@ -103,6 +120,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                         'relationshipQueryType',
                         'relationshipQueryItemId',
                         'pathFilters',
+                        'pathSearchMode',
+                        'deepSniffVariants',
                     ],
                     navigateOpts
                 )(updatedParams),

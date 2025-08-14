@@ -27,13 +27,28 @@ export type PathfindingFilterState = {
     handleApplyFilters: () => void;
     handleUpdateFilters: (checked: EdgeCheckboxType[]) => void;
     handleCancelFilters: () => void;
+    // New path search mode state (local UI state prior to Apply)
+    localPathSearchMode: 'hybrid' | 'path' | 'deepsniff';
+    setLocalPathSearchMode: (m: 'hybrid' | 'path' | 'deepsniff') => void;
+    // Deep sniff variant selection (local UI state)
+    localDeepSniffVariants: ('EnableDCSync' | 'EnableADCSESC3')[];
+    setLocalDeepSniffVariants: (v: ('EnableDCSync' | 'EnableADCSESC3')[]) => void;
 };
 
 export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState: PathfindingFilterState }) => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
-    const { selectedFilters, initialize, handleApplyFilters, handleUpdateFilters, handleCancelFilters } =
-        pathfindingFilterState;
+    const {
+        selectedFilters,
+        initialize,
+        handleApplyFilters,
+        handleUpdateFilters,
+        handleCancelFilters,
+        localPathSearchMode,
+        setLocalPathSearchMode,
+        localDeepSniffVariants,
+        setLocalDeepSniffVariants,
+    } = pathfindingFilterState;
 
     return (
         <>
@@ -49,6 +64,10 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
             <EdgeFilteringDialog
                 isOpen={isOpenDialog}
                 selectedFilters={selectedFilters}
+                localPathSearchMode={localPathSearchMode}
+                setLocalPathSearchMode={setLocalPathSearchMode}
+                localDeepSniffVariants={localDeepSniffVariants}
+                setLocalDeepSniffVariants={setLocalDeepSniffVariants}
                 handleApply={() => {
                     setIsOpenDialog(false);
                     handleApplyFilters();

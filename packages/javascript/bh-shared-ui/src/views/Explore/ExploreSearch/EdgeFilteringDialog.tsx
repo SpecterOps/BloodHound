@@ -47,6 +47,11 @@ interface EdgeFilteringDialogProps {
     handleApply: () => void;
     handleUpdate: (checked: EdgeCheckboxType[]) => void;
     handleCancel: () => void;
+    // New props for path search configuration
+    localPathSearchMode: 'hybrid' | 'path' | 'deepsniff';
+    setLocalPathSearchMode: (m: 'hybrid' | 'path' | 'deepsniff') => void;
+    localDeepSniffVariants: ('EnableDCSync' | 'EnableADCSESC3')[];
+    setLocalDeepSniffVariants: (v: ('EnableDCSync' | 'EnableADCSESC3')[]) => void;
 }
 
 const EdgeFilteringDialog = ({
@@ -55,9 +60,13 @@ const EdgeFilteringDialog = ({
     handleApply,
     handleUpdate,
     handleCancel,
+    localPathSearchMode,
+    setLocalPathSearchMode,
+    localDeepSniffVariants,
+    setLocalDeepSniffVariants,
 }: EdgeFilteringDialogProps) => {
-    const title = 'Path Edge Filtering';
-    const description = 'Select the edge types to include in your pathfinding search.';
+    const title = 'Path Search Configuration';
+    const description = 'Configure pathfinding behavior and edge type filtering.';
 
     return (
         <Dialog open={isOpen} fullWidth maxWidth={'md'}>
@@ -68,6 +77,86 @@ const EdgeFilteringDialog = ({
             </Typography>
 
             <DialogContent>
+                <Box mb={3}>
+                    <Typography variant='subtitle2' gutterBottom>
+                        Search Mode
+                    </Typography>
+                    <List disablePadding>
+                        {[
+                            { label: 'Hybrid (Shortest Path then Deep Sniff)', value: 'hybrid' },
+                            { label: 'Shortest Path Only', value: 'path' },
+                            { label: 'Deep Sniff Only', value: 'deepsniff' },
+                        ].map((opt) => (
+                            <ListItem key={opt.value} disableGutters>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={localPathSearchMode === opt.value}
+                                            onChange={() => setLocalPathSearchMode(opt.value as any)}
+                                        />
+                                    }
+                                    label={opt.label}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
+
+                {(localPathSearchMode === 'hybrid' || localPathSearchMode === 'deepsniff') && (
+                    <Box mb={3}>
+                        <Typography variant='subtitle2' gutterBottom>
+                            Deep Sniff Variants
+                        </Typography>
+                        <Typography variant='body2' color='text.secondary' mb={1}>
+                            Choose which deep sniff queries to run. If both are selected, they execute sequentially
+                            until one returns results.
+                        </Typography>
+                        <List disablePadding>
+                            {[
+                                { label: 'Enable DCSync', value: 'EnableDCSync' },
+                                { label: 'Enable ADCS ESC3', value: 'EnableADCSESC3' },
+                            ].map((variant) => {
+                                const checked = localDeepSniffVariants.includes(variant.value as any);
+                                return (
+                                    <ListItem key={variant.value} disableGutters>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={checked}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setLocalDeepSniffVariants([
+                                                                ...localDeepSniffVariants,
+                                                                variant.value as any,
+                                                            ]);
+                                                        } else {
+                                                            setLocalDeepSniffVariants(
+                                                                localDeepSniffVariants.filter(
+                                                                    (v) => v !== variant.value
+                                                                )
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                            }
+                                            label={variant.label}
+                                        />
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                        {localDeepSniffVariants.length === 0 && (
+                            <Typography variant='caption' color='error'>
+                                At least one variant must be selected.
+                            </Typography>
+                        )}
+                    </Box>
+                )}
+
+                <Divider sx={{ mb: 2 }} />
+                <Typography variant='subtitle2' gutterBottom>
+                    Edge Type Filters
+                </Typography>
                 <CategoryList selectedFilters={selectedFilters} handleUpdate={handleUpdate} />
             </DialogContent>
 
