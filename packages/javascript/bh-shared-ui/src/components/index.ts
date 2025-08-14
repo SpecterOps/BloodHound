@@ -102,6 +102,8 @@ export { default as FileUploadDialog } from './FileUploadDialog';
 export * from './FinishedIngestLog';
 export { default as FinishedIngestLog } from './FinishedIngestLog';
 
+export * from './FinishedJobsTable';
+
 export * from './GenericErrorBoundaryFallback';
 export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryFallback';
 
@@ -178,6 +180,8 @@ export * from './SourceKindsCheckboxes';
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
 
+export * from './StatusIndicator';
+
 export * from './TextWithFallback';
 export { default as TextWithFallback } from './TextWithFallback';
 
@@ -200,6 +204,7 @@ export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './AppIcon';
+
 export * from './Navigation';
 
 export * from './ExploreTable';

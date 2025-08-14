@@ -24,6 +24,7 @@ export * from './copyToClipboard';
 export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './exportGraphData';
+export * from './finishedJobs';
 export * from './icons';
 export * from './parseItemId';
 export * from './passwd';
