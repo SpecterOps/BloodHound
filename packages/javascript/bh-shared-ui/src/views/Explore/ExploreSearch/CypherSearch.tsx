@@ -25,7 +25,6 @@ import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
     useGetSelectedQuery,
-    usePrivilegeZoneAnalysis,
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
@@ -37,12 +36,12 @@ import CypherSearchMessage from './CypherSearchMessage';
 import SaveQueryActionMenu from './SaveQueryActionMenu';
 import SaveQueryDialog from './SaveQueryDialog';
 import TagToZoneLabel from './TagToZoneLabel';
+
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
     performSearch: (query?: string) => void;
 };
-
 type SelectedType = {
     query: string;
     id?: number;
@@ -59,55 +58,36 @@ const CypherSearch = ({
     setAutoRun: (autoRunQueries: boolean) => void;
     onRunSearchClick?: () => void;
 }) => {
-    // Still using the MUI theme here to check for dark mode -- we need a better solution for this
-    const theme = useTheme();
-
-    const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
-
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
-    const createSavedQueryMutation = useCreateSavedQuery();
-    const updateSavedQueryMutation = useUpdateSavedQuery();
-    const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
-
+    const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-
     const [messageState, setMessageState] = useState({
         showMessage: false,
         message: '',
     });
-
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
 
-    const cypherEditorRef = useRef<CypherEditor | null>(null);
-
+    // Still using the MUI theme here to check for dark mode -- we need a better solution for this
+    const theme = useTheme();
+    const createSavedQueryMutation = useCreateSavedQuery();
+    const updateSavedQueryMutation = useUpdateSavedQuery();
     const updateQueryPermissionsMutation = useUpdateQueryPermissions();
-
     const kindsQuery = useQuery({
         queryKey: ['graph-kinds'],
         queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
     });
-
     const { addNotification } = useNotifications();
+    const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
 
-    const handleCypherSearch = () => {
-        if (cypherQuery) {
-            performSearch();
-        }
-
-        if (typeof onRunSearchClick === 'function') {
-            onRunSearchClick();
-        }
-    };
-    const handleSavedSearch = (query: string) => {
-        if (autoRun) {
-            performSearch(query);
-        }
-    };
-
+    const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
+
+    const isAdminOrPowerUser = getSelf.data.roles.some((obj: any) => {
+        return obj.name === 'Administrator' || obj.name === 'Power User';
+    });
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
     useEffect(() => {
         //Setting the selected query once on load
@@ -117,14 +97,25 @@ const CypherSearch = ({
         }
     }, [cypherQuery]);
 
+    const handleCypherSearch = () => {
+        if (cypherQuery) {
+            performSearch();
+        }
+        if (typeof onRunSearchClick === 'function') {
+            onRunSearchClick();
+        }
+    };
+    const handleSavedSearch = (query: string) => {
+        if (autoRun) {
+            performSearch(query);
+        }
+    };
     const handleSetSelected = (query: string, id?: number) => {
         setSelected({ query: query, id: id });
     };
-
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);
     };
-
     const updateQueryPermissions = (id: number) => {
         updateQueryPermissionsMutation.mutate(
             {
@@ -287,12 +278,11 @@ const CypherSearch = ({
                         </div>
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        {privilegeZoneAnalysisEnabled && (
+                        {isAdminOrPowerUser && (
                             <TagToZoneLabel
                                 selectedQuery={selectedQuery}
                                 cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                         )}
-
                         <Button
                             variant='secondary'
                             onClick={() => {
