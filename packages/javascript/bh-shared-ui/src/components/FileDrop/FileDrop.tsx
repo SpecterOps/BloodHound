@@ -89,8 +89,7 @@ const FileDrop: React.FC<{
                 accept={formatAcceptList()}
             />
             <FontAwesomeIcon icon={isDragActive ? faArrowDown : faInbox} size='3x' />
-            <p>Click here or drag and drop to upload files</p>
-
+            <p className='size'>Click here or drag and drop to upload JSON or zip/compressed JSON files</p>
             <Box
                 position='absolute'
                 width='100%'
