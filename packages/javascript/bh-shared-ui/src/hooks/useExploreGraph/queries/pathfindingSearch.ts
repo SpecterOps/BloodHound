@@ -31,17 +31,15 @@ const DEFAULT_FILTERS = createPathFilterString(INITIAL_FILTER_TYPES);
 
 // Build the Deep Sniff Cypher query using source and destination object IDs
 const buildDeepSniffCypher = (sourceNodeId: string, destinationNodeId: string) => {
-    return (
-        'MATCH p_changes = (x1:Base)-[:GetChanges]->(d:Domain) ' +
-        'MATCH p_changesall = (x2:Base)-[:GetChangesAll]->(d) ' +
-        'MATCH p_tochanges = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x1)) ' +
-        `WHERE n.objectid = "${sourceNodeId}" ` +
-        'MATCH p_tochangesall = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2)) ' +
-        `WHERE n.objectid = "${sourceNodeId}" ` +
-        'MATCH p_totarget = (d)-[:Contains|GenericAll|AddMember|MemberOf*0..]->(target) ' +
-        `WHERE target.objectid = "${destinationNodeId}" ` +
-        'RETURN p_changes,p_tochanges,p_changesall,p_tochangesall,p_totarget'
-    );
+    return `MATCH p_changes = (x1:Base)-[:GetChanges]->(d:Domain)
+MATCH p_changesall = (x2:Base)-[:GetChangesAll]->(d)
+WHERE x1:Group OR x2:Group
+MATCH p_tochanges = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x1))
+WHERE n.objectid = "${sourceNodeId}"
+MATCH p_tochangesall = shortestpath((n)-[:GenericAll|AddMember|MemberOf*0..]->(x2))
+MATCH p_totarget = (d)-[:Contains*0..]->(target)
+WHERE target.objectid = "${destinationNodeId}"
+RETURN p_changes,p_tochanges,p_changesall,p_tochangesall,p_totarget`;
 };
 
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
