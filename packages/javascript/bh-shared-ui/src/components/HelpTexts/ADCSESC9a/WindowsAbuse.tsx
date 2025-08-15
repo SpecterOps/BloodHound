@@ -139,12 +139,12 @@ const WindowsAbuse: FC = () => {
                 <b>Step 4: </b>Enroll certificate as victim.
                 <br />
                 <br />
-                Use Certify as the victim principal to request enrollment in the affected template, specifying the
+                Use Certify (2.0) as the victim principal to request enrollment in the affected template, specifying the
                 affected EnterpriseCA:
             </Typography>
-            <Typography component={'pre'}>{'Certify.exe request /ca:SERVER\\CA-NAME /template:TEMPLATE'}</Typography>
-            <Typography variant='body2' className={classes.containsCodeEl}>
-                Save the certificate as <code>cert.pem</code> and the private key as <code>cert.key</code>.
+            <Typography component={'pre'}>{'Certify.exe request --ca SERVER\\CA-NAME --template TEMPLATE'}</Typography>
+            <Typography variant='body2'>
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
         </>
     );
@@ -152,15 +152,7 @@ const WindowsAbuse: FC = () => {
     const step5 = (
         <>
             <Typography variant='body2'>
-                <b>Step 5: </b>Convert the emitted certificate to PFX format:
-            </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
-        </>
-    );
-    const step6 = (
-        <>
-            <Typography variant='body2'>
-                <b>Step 6: </b>Set UPN of victim to arbitrary value.
+                <b>Step 5: </b>Set UPN of victim to arbitrary value.
                 <br />
                 <br />
                 Set the UPN of the victim principal using PowerView:
@@ -170,18 +162,18 @@ const WindowsAbuse: FC = () => {
             </Typography>
         </>
     );
-    const step7 = (
+    const step6 = (
         <>
             <Typography variant='body2'>
-                <b>Step 7: </b>Perform Kerberos authentication as targeted principal against affected DC using
+                <b>Step 6: </b>Perform Kerberos authentication as targeted principal against affected DC using
                 certificate.
                 <br />
                 <br />
                 Use Rubeus to request a ticket granting ticket (TGT) from an affected DC, specifying the target identity
-                to impersonate and the PFX-formatted certificate created in Step 5:
+                to impersonate and the PFX-formatted certificate obtained in Step 4:
             </Typography>
             <Typography component={'pre'}>
-                {'Rubeus.exe asktgt /certificate:cert.pfx /user:TARGET /domain:DOMAIN /dc:DOMAIN_CONTROLLER'}
+                {'Rubeus.exe asktgt /certificate:<cert base64> /user:TARGET /domain:DOMAIN /dc:DOMAIN_CONTROLLER'}
             </Typography>
         </>
     );
@@ -195,7 +187,6 @@ const WindowsAbuse: FC = () => {
             {step4}
             {step5}
             {step6}
-            {step7}
         </>
     );
 };

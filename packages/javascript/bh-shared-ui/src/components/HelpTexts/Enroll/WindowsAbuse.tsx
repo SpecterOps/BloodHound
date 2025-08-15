@@ -21,7 +21,7 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>Certify can be used to enroll a certificate:</Typography>
-            <Typography component={'pre'}>{'Certify.exe request /ca:SERVER\\CA-NAME /template:TEMPLATE'}</Typography>
+            <Typography component={'pre'}>{'Certify.exe request --ca SERVER\\CA-NAME --template TEMPLATE'}</Typography>
             <Typography variant='body2'>
                 The following requirements must be met for a principal to be able to enroll a certificate:
                 <br />
