@@ -362,6 +362,23 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
+		// eTAC
+		etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag)
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
+		if etacFeatureFlag.Enabled {
+			if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
+				if len(createUserRequest.UpdateUserRequest.EnvironmentControlList.Environments) != 0 && createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "when all_environments is set to true, we cannot process an environment list, please check the request", request), response)
+					return
+				}
+				userTemplate.AllEnvironments = createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments
+			}
+		}
+
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
 			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
@@ -371,6 +388,22 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
+			// eTAC
+			if etacFeatureFlag.Enabled {
+				if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
+					// If the user isn't granting access to all environments, give them access to each environment requested
+					if createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
+						if err := s.db.DeleteEnvironmentListForUser(request.Context(), newUser); err != nil {
+							api.HandleDatabaseError(request, response, err)
+						}
+					} else {
+						if err := s.db.UpdateEnvironmentListForUser(request.Context(), newUser, createUserRequest.EnvironmentControlList.Environments); err != nil {
+							api.HandleDatabaseError(request, response, err)
+						}
+					}
+				}
+			}
+
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
 
@@ -482,6 +515,40 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			return
 		} else if updateUserRequest.Roles != nil {
 			user.Roles = roles
+		}
+
+		// eTAC
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if etacFeatureFlag.Enabled {
+			if updateUserRequest.EnvironmentControlList != nil {
+				if len(updateUserRequest.EnvironmentControlList.Environments) != 0 && updateUserRequest.EnvironmentControlList.AllEnvironments {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "when all_environments is set to true, we cannot process an environment list, please check the request", request), response)
+					return
+				}
+
+				// Delete the user's environment entries before setting them to the new request
+				if err := s.db.DeleteEnvironmentListForUser(request.Context(), user); err != nil {
+					api.HandleDatabaseError(request, response, err)
+				}
+
+				user.AllEnvironments = updateUserRequest.EnvironmentControlList.AllEnvironments
+
+				// If the user isn't granting access to all environments, give them access to each environment requested
+				if updateUserRequest.EnvironmentControlList.AllEnvironments {
+					user.EnvironmentAccessControl = make([]*model.EnvironmentAccess, 0)
+				} else {
+					environments := make([]*model.EnvironmentAccess, 0)
+					for _, environment := range updateUserRequest.EnvironmentControlList.Environments {
+						newEnvironment := model.EnvironmentAccess{
+							UserID:      user.ID.String(),
+							Environment: environment,
+						}
+						environments = append(environments, &newEnvironment)
+					}
+					user.EnvironmentAccessControl = environments
+				}
+			}
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
