@@ -51,6 +51,7 @@ import (
 const (
 	assetGroupPreviewSelectorDefaultLimit = 200
 	assetGroupTagsSearchLimit             = 20
+	assetGroupTagQueryLimitMin            = 3
 
 	includeProperties = true
 	excludeProperties = false
@@ -798,7 +799,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if !validateAssetGroupTagType(reqBody.TagType) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
-	} else if len(reqBody.Query) < 3 {
+	} else if len(reqBody.Query) < assetGroupTagQueryLimitMin {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
 	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil && !errors.Is(err, database.ErrNotFound) {
 		api.HandleDatabaseError(request, response, err)
@@ -861,7 +862,7 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
-	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 100); err != nil {
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 50); err != nil {
 		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else {
 		var sort model.Sort
@@ -900,16 +901,14 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 
 		if query != "" {
 			if sqlFilter.SQLString != "" {
-				sqlFilter.SQLString = sqlFilter.SQLString + " AND"
+				sqlFilter.SQLString = sqlFilter.SQLString + " AND (actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
+			} else {
+				sqlFilter.SQLString = " actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?"
 			}
 
-			sqlFilter.SQLString = sqlFilter.SQLString + " (actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
-			sqlFilter.Params = append(sqlFilter.Params, []any{
-				"%" + query + "%",
-				"%" + query + "%",
-				"%" + query + "%",
-				"%" + query + "%",
-			}...)
+			for range 4 {
+				sqlFilter.Params = append(sqlFilter.Params, []any{"%" + query + "%"})
+			}
 		}
 
 		if historyRecs, count, err := s.DB.GetAssetGroupHistoryRecords(rCtx, sqlFilter, sort, skip, limit); err != nil && !errors.Is(err, database.ErrNotFound) {
@@ -931,7 +930,7 @@ func (s *Resources) SearchAssetGroupTagHistory(response http.ResponseWriter, req
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if len(reqBody.Query) < 3 {
+	} else if len(reqBody.Query) < assetGroupTagQueryLimitMin {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsQueryTooShort, request), response)
 	} else {
 		s.assetGroupTagHistoryImplementation(response, request, reqBody.Query)

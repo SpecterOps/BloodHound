@@ -34,7 +34,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -42,6 +44,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -49,6 +52,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -2821,167 +2825,322 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 		})
 }
 
-func TestDatabase_SearchAssetGroupTagHistory(t *testing.T) {
-	var (
-		mockCtrl  = gomock.NewController(t)
-		mockDB    = mocks_db.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{
-			DB: mockDB,
-		}
-		handler  = http.HandlerFunc(resources.SearchAssetGroupTagHistory)
-		endpoint = "/api/v2/asset-group-tags-history"
-	)
+func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
+	t.Parallel()
 
-	type WrappedResponse struct {
-		Count int                      `json:"count"`
-		Limit int                      `json:"limit"`
-		Skip  int                      `json:"skip"`
-		Data  v2.AssetGroupHistoryResp `json:"data"`
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
 	}
 
-	defer mockCtrl.Finish()
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
 
-	userId, err := uuid2.NewV4()
-	require.Nil(t, err)
+	type testData struct {
+		name         string
+		buildRequest func(testName string) *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
 
-	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, nil)
-	require.Nil(t, err)
-	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-	t.Run("cannot decode request body error", func(t *testing.T) {
-		reqBody := `{"query":`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusBadRequest, response.Code)
-	})
-
-	t.Run("query less than 3 characters error", func(t *testing.T) {
-
-		reqBody := `{"query": ""}`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), "search query must be at least 3 characters long")
-	})
-
-	t.Run("get asset group history records db error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupHistory{}, 0, errors.New("entity not found"))
-
-		reqBody := `{"query": "test"}`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Equal(t, database.ErrNotFound, errors.New("entity not found"))
-	})
-
-	t.Run("success - query by action", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-			[]model.AssetGroupHistory{
-				{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag, AssetGroupTagId: 1},
-			},
-			1,
-			nil)
-
-		reqBody := `{"query": "UpdateTag"}`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		expected := WrappedResponse{
-			Count: 1,
-			Limit: 100,
-			Skip:  0,
-			Data: v2.AssetGroupHistoryResp{
-				Records: []model.AssetGroupHistory{
-					{
-						ID:              2,
-						CreatedAt:       time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC),
-						Actor:           "UUID2",
-						Email:           null.StringFrom("user2@domain.com"),
-						Action:          model.AssetGroupHistoryActionUpdateTag,
-						Target:          "",
-						AssetGroupTagId: 1,
-						EnvironmentId:   null.String{},
-						Note:            null.String{},
+	tt := []testData{
+		{
+			name: "cannot decode request body error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
 					},
-				},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`Not real json`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
 			},
-		}
 
-		// verify the records are as expected
-		wrappedResp := WrappedResponse{}
-		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
-		require.NoError(t, err)
-		require.Equal(t, expected, wrappedResp)
-		require.Equal(t, http.StatusOK, response.Code)
+			setupMocks: func(t *testing.T, mock *mock) {
 
-		// verify count, limit, skip
-		require.Equal(t, expected.Count, wrappedResp.Count)
-		require.Equal(t, expected.Limit, wrappedResp.Limit)
-		require.Equal(t, expected.Skip, wrappedResp.Skip)
-	})
-
-	t.Run("success - query by email sort by created_at", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, gomock.Any(), gomock.Any()).Return(
-			[]model.AssetGroupHistory{
-				{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
-				{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
-				{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
-				{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
 			},
-			4,
-			nil)
-
-		reqBody := `{"query": "user1@domain.com"}`
-
-		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, req)
-
-		expected := WrappedResponse{
-			Count: 4,
-			Limit: 100,
-			Skip:  0,
-			Data: v2.AssetGroupHistoryResp{
-				Records: []model.AssetGroupHistory{
-					{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
-					{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
-					{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
-					{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
-				},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"error unmarshalling JSON payload"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-		}
+		},
+		{
+			name: "query less than 3 characters error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
 
-		// verify the records are as expected
-		wrappedResp := WrappedResponse{}
-		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
-		require.NoError(t, err)
-		require.Equal(t, expected, wrappedResp)
-		require.Equal(t, http.StatusOK, response.Code)
+				request.Body = io.NopCloser(strings.NewReader(`{"query": ""}`))
 
-		// verify count, limit, skip
-		require.Equal(t, expected.Count, wrappedResp.Count)
-		require.Equal(t, expected.Limit, wrappedResp.Limit)
-		require.Equal(t, expected.Skip, wrappedResp.Skip)
-	})
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"search query must be at least 3 characters long"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "get asset group history records db error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": "test"}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupHistory{}, 0, errors.New("entity not found"))
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],
+									"http_status":500,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success - query by action",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": "UpdateTag"}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+					if !strings.Contains(
+						sqlFilter.SQLString,
+						"actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?",
+					) {
+						return false
+					}
+
+					for _, v := range sqlFilter.Params {
+						param := v.([]any)
+						if param[0] == "%UpdateTag%" {
+							return true
+						}
+					}
+
+					return false
+				}), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					[]model.AssetGroupHistory{
+						{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag, AssetGroupTagId: 1},
+					},
+					1,
+					nil)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `
+					{
+							"count": 1,
+							"limit": 50,
+							"skip": 0,
+							"data": {
+								"records": [
+								{
+									"action": "UpdateTag",
+									"actor": "UUID2",
+									"asset_group_tag_id": 1,
+									"created_at": "2025-06-11T00:00:00Z",
+									"email": "user2@domain.com",
+									"environment_id": null,
+									"id": 2,
+									"note": null,
+									"target": ""
+								}
+							]
+						}
+					}
+				`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success - query by email sort by created_at",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": "user1@domain.com"}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+					if !strings.Contains(
+						sqlFilter.SQLString,
+						"actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?",
+					) {
+						return false
+					}
+
+					for _, v := range sqlFilter.Params {
+						param := v.([]any)
+						if param[0] == "%user1@domain.com%" {
+							return true
+						}
+					}
+
+					return false
+				}), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, gomock.Any(), gomock.Any()).Return(
+					[]model.AssetGroupHistory{
+						{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
+						{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
+						{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
+						{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
+					},
+					4,
+					nil)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `
+					{
+							"count": 4,
+							"limit": 50,
+							"skip": 0,
+							"data": {
+								"records": [
+								{
+									"action": "DeleteSelector",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-12T02:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 4,
+									"note": null,
+									"target": ""
+								},
+								{
+									"action": "CreateSelector",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-12T00:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 3,
+									"note": null,
+									"target": ""
+								},
+								{
+									"action": "UpdateTag",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-11T00:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 2,
+									"note": null,
+									"target": ""
+								},
+								{
+									"action": "CreateTag",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-10T00:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 1,
+									"note": null,
+									"target": ""
+								}
+							]
+						}
+					}
+				`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest(t.Name())
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				DB:         mocks.mockDatabase,
+				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/asset-group-tags-history", resources.SearchAssetGroupTagHistory).Methods("POST")
+
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
 }
