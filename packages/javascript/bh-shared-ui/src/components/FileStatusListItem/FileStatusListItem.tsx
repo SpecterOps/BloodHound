@@ -16,41 +16,44 @@
 
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, IconButton, useTheme } from '@mui/material';
+import { IconButton } from '@mui/material';
+import { cn } from '../../utils';
 import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
-import FileValidationStatus from '../FileValidationStatus';
 
 const FileStatusListItem: React.FC<{
     file: FileForIngest;
     onRemove: () => void;
-}> = ({ file, onRemove }) => {
-    const theme = useTheme();
+    percentCompleted: number;
+}> = ({ file, onRemove, percentCompleted }) => {
+    const hasErrors = file?.errors?.length;
+    const progressBarWidth = hasErrors ? '100%' : `${percentCompleted}%`;
+
     return (
-        <Grid container width='100%' minHeight={32} fontSize={12} border={1} borderColor={theme.palette.color.primary}>
-            <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', paddingLeft: '4px' }}>
-                {file.file.name}
-            </Grid>
-            <Grid item xs={5} sx={{ display: 'flex', alignItems: 'center' }}>
-                <FileValidationStatus file={file} />
-            </Grid>
-            {file.status === FileStatus.READY && (
-                <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'end' }}>
+        <div className='mb-2 relative flex flex-row h-8 justify-between'>
+            <div
+                className={cn('absolute bg-purple-300 h-8 opacity-40 rounded-lg transition-all', {
+                    'bg-purple-300': !hasErrors,
+                    'bg-red-300': hasErrors,
+                })}
+                style={{ maxWidth: '600px', width: progressBarWidth }}
+            />
+            <div className='pl-3 flex items-center'>
+                <span className='pr-2'>{file.file.name}</span>
+                {percentCompleted && !hasErrors && (
+                    <span>{percentCompleted && !hasErrors && `${percentCompleted}%`}</span>
+                )}
+                {hasErrors && <span className='text-error'>Failed to Upload</span>}
+            </div>
+            <div>
+                {file.status === FileStatus.READY && (
                     <IconButton
                         onClick={onRemove}
-                        sx={{
-                            '&:hover': {
-                                backgroundColor: theme.palette.neutral.quinary,
-                            },
-                            borderRadius: '2px',
-                            width: 28,
-                            height: 28,
-                            margin: '2px',
-                        }}>
+                        className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
                         <FontAwesomeIcon size='xs' icon={faTimes} />
                     </IconButton>
-                </Grid>
-            )}
-        </Grid>
+                )}
+            </div>
+        </div>
     );
 };
 

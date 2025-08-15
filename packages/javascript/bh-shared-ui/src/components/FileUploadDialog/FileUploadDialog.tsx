@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Dialog, DialogActions, DialogContent, useTheme } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { ErrorResponse } from 'js-client-library';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     useEndFileIngestJob,
     useListFileTypesForIngest,
@@ -29,17 +30,21 @@ import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { FileForIngest, FileStatus, FileUploadStep } from './types';
 
+const makeProgressCacheKey = (jobId: string, fileName: string) => `job-${jobId}-file-${fileName}`;
+
 const FileUploadDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-}> = ({ open, onClose }) => {
-    const theme = useTheme();
-
+    headerText: ReactNode;
+    description: ReactNode;
+}> = ({ open, onClose, headerText = 'Upload Files', description }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
     const [uploadDialogDisabled, setUploadDialogDisabled] = useState<boolean>(false);
     const [uploadMessage, setUploadMessage] = useState<string>('');
+    const [currentIngestJobId, setCurrentIngestJobId] = useState('');
+    const [progressCache, setProgressCache] = useState({});
 
     const { addNotification } = useNotifications();
     const listFileTypesForIngest = useListFileTypesForIngest();
@@ -104,23 +109,27 @@ const FileUploadDialog: React.FC<{
 
         try {
             const response = await startUpload();
-            const currentIngestJobId = response?.data?.id?.toString();
+            const jobId = response?.data?.id?.toString();
 
+            setCurrentIngestJobId(jobId);
             // Counting errors manually here to avoid race conditions with react state updates
             let errorCount = 0;
 
-            if (currentIngestJobId) {
+            if (jobId) {
+                const promises = [];
                 for (const ingestFile of filesForIngest) {
                     // Separate error handling so we can continue on when a file fails
                     try {
-                        await uploadFile(currentIngestJobId, ingestFile);
+                        promises.push(uploadFile(jobId, ingestFile));
                     } catch (error) {
                         errorCount += 1;
                     }
                     setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
                 }
+
+                await Promise.all(promises);
             }
-            await finishUpload(currentIngestJobId);
+            await finishUpload(jobId);
 
             logFinishedIngestJob(errorCount);
         } catch (error) {
@@ -139,7 +148,21 @@ const FileUploadDialog: React.FC<{
 
     const uploadFile = async (jobId: string, ingestFile: FileForIngest) => {
         return uploadFileToIngestJob.mutateAsync(
-            { jobId, fileContents: ingestFile.file, contentType: ingestFile.file.type },
+            {
+                jobId,
+                fileContents: ingestFile.file,
+                contentType: ingestFile.file.type,
+                options: {
+                    onUploadProgress: (progressEvent) => {
+                        const { loaded, total = 0 } = progressEvent;
+                        const percentCompleted = Math.floor((loaded * 100) / total);
+                        setProgressCache((prevProgressCache) => ({
+                            ...prevProgressCache,
+                            [makeProgressCacheKey(jobId, ingestFile?.file?.name)]: percentCompleted,
+                        }));
+                    },
+                },
+            },
             {
                 onError: (error: any) => {
                     const apiError = error?.response?.data as ErrorResponse;
@@ -213,8 +236,8 @@ const FileUploadDialog: React.FC<{
                 },
             }}>
             <DialogContent>
-                <div className='pb-2 font-bold'>Upload Files</div>
-
+                <div className='pb-2 font-bold'>{headerText}</div>
+                <div>{description}</div>
                 <>
                     {fileUploadStep === FileUploadStep.ADD_FILES && (
                         <FileDrop
@@ -224,26 +247,25 @@ const FileUploadDialog: React.FC<{
                         />
                     )}
                     {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
-                        <Box fontSize={20} marginBottom={5}>
-                            {uploadMessage}
-                        </Box>
+                        <Box marginBottom={5}>{uploadMessage}</Box>
                     )}
+                    <Link to='/administration/file-ingest' onClick={onClose}>
+                        <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
+                            View File Ingest History
+                        </div>
+                    </Link>
 
                     {filesForIngest.length > 0 && (
                         <Box sx={{ my: '8px' }}>
-                            <Box
-                                sx={{
-                                    backgroundColor: theme.palette.neutral.tertiary,
-                                    color: theme.palette.color.primary,
-                                    fontWeight: 'bold',
-                                    padding: '4px',
-                                }}>
-                                Files
-                            </Box>
                             {filesForIngest.map((file, index) => {
                                 return (
                                     <FileStatusListItem
                                         file={file}
+                                        percentCompleted={
+                                            progressCache[
+                                                makeProgressCacheKey(currentIngestJobId, file?.file?.name)
+                                            ] as number
+                                        }
                                         key={index}
                                         onRemove={() => handleRemoveFile(index)}
                                     />
@@ -252,6 +274,12 @@ const FileUploadDialog: React.FC<{
                         </Box>
                     )}
                 </>
+                {fileUploadStep === FileUploadStep.UPLOAD && !uploadMessage && (
+                    <div>
+                        <p>Upload in progress.</p>
+                        <p>You can continue using the platform&mdash;we will alert you once the upload is complete.</p>
+                    </div>
+                )}
             </DialogContent>
             <DialogActions>
                 {fileUploadStep === FileUploadStep.ADD_FILES && (

@@ -16,7 +16,6 @@
 
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton } from '@mui/material';
 import { FC, ReactNode, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
@@ -208,17 +207,11 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <div className='h-full min-h-[625px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
                     <MainNavListItem key={0} hoverActive={!isMouseDragging}>
-                        <div className='cursor-pointer flex flex-row'>
+                        <div
+                            className='cursor-pointer flex flex-row items-center relative top-1'
+                            onClick={() => setShowFileIngestDialog(true)}>
                             <MainNavItemLabel
-                                icon={
-                                    <IconButton
-                                        size='small'
-                                        color='inherit'
-                                        className='pl-1 pr-2'
-                                        onClick={() => setShowFileIngestDialog(true)}>
-                                        <FontAwesomeIcon icon={faUpload} />
-                                    </IconButton>
-                                }
+                                icon={<FontAwesomeIcon size='lg' icon={faUpload} className='pr-2.5 pb-1' />}
                                 label='Quick Ingest'
                                 hoverActive={!isMouseDragging}
                             />

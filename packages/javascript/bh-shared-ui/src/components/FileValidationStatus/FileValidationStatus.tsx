@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCheck, faSync, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faSync, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Avatar, Box } from '@mui/material';
 import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
@@ -65,14 +65,7 @@ const FileValidationStatus: React.FC<{ file: FileForIngest }> = ({ file }) => {
             </Box>
         );
     }
-    return (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar sx={{ bgcolor: 'green', width: 24, height: 24 }}>
-                <FontAwesomeIcon icon={faCheck} transform='shrink-1' size='xs' color='white' />
-            </Avatar>
-            <Box>{file.status === FileStatus.READY ? 'Ready' : 'Done'}</Box>
-        </Box>
-    );
+    return <div />;
 };
 
 export default FileValidationStatus;

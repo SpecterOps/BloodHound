@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
@@ -716,13 +716,24 @@ class BHEAPIClient {
     listFileTypesForIngest = () =>
         this.baseClient.get<ListFileTypesForIngestResponse>('/api/v2/file-upload/accepted-types');
 
-    startFileIngest = () => this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
+    startFileIngest = () => {
+        return this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
+    };
 
-    uploadFileToIngestJob = (ingestId: string, json: any, contentType: string) => {
+    uploadFileToIngestJob = (
+        ingestId: string,
+        json: any,
+        contentType: string,
+        options: AxiosRequestConfig<any> = {}
+    ) => {
         const headers = {
             'Content-Type': contentType,
         };
-        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, { headers });
+
+        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, {
+            headers,
+            ...options,
+        });
     };
 
     endFileIngest = (ingestId: string) =>
