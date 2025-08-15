@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { QueryClient } from 'react-query';
+import { QueryClient, QueryKey } from 'react-query';
 
 /**
  * Tests interacting with a codemirror editor can output unwanted errors relating to missing DOM methods; running this
@@ -54,7 +54,7 @@ export const mockCodemirrorLayoutMethods = () => {
  * @param  stateMaps These maps are looped over for hydrating the queryClient with the state that is required for the test(s) the queryClient is being used for
  *
  */
-export const setUpQueryClient = (stateMaps: { key: string; data: any }[]) => {
+export const setUpQueryClient = (stateMaps: { key: QueryKey; data: any }[]) => {
     const queryClient = new QueryClient({
         defaultOptions: {
             queries: {
