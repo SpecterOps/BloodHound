@@ -28,12 +28,14 @@ export const uploadFileToIngestJob = ({
     jobId,
     fileContents,
     contentType = 'application/json',
+    options,
 }: {
     jobId: string;
     fileContents: any;
     contentType?: string;
+    options: Parameters<typeof apiClient.uploadFileToIngestJob>[2];
 }) => {
-    return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType).then((res) => res.data);
+    return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType, options).then((res) => res.data);
 };
 
 export const endFileIngestJob = ({ jobId }: { jobId: string }) =>
