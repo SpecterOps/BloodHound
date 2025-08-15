@@ -64,6 +64,8 @@ export * from './useMatchingPaths';
 
 export * from './useInitialEnvironment';
 
+export * from './useListDisplayRoles';
+
 export * from './usePreviousValue';
 
 export * from './useCustomNodeKinds';
