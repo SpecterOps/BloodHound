@@ -88,6 +88,16 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
 export const SeedTypeObjectId = 1 as const;
 export const SeedTypeCypher = 2 as const;
 
+export const SeedExpansionMethodNone = 0 as const;
+export const SeedExpansionMethodAll = 1 as const;
+export const SeedExpansionMethodChild = 2 as const;
+export const SeedExpansionMethodParent = 3 as const;
+export type SeedExpansionMethod =
+    | typeof SeedExpansionMethodNone
+    | typeof SeedExpansionMethodAll
+    | typeof SeedExpansionMethodChild
+    | typeof SeedExpansionMethodParent;
+
 export type SeedTypes = typeof SeedTypeObjectId | typeof SeedTypeCypher;
 
 export const SeedTypesMap = {
