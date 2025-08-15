@@ -108,7 +108,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys": ["apple", "ball", "key", "zebra"], "edge_keys": ["apple", "ball", "key", "zebra"], "nodes":{"1":{"label":"label","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"node_keys": ["apple", "ball", "key", "zebra"], "edge_keys": ["apple", "ball", "key", "zebra"], "nodes":{"1":{"label":"label","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","kinds":null, "objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -324,7 +324,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"node_keys": ["key"], "nodes":{"1":{"label":"label","properties": {"key": "value"},"kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"node_keys": ["key"], "nodes":{"1":{"label":"label","properties": {"key": "value"},"kind":"","objectId":"","kinds":null, "isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
