@@ -13,6 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-export * from './bloodHoundUsers';
-export { default as zoneHandlers } from './zoneHandlers';
+export { default as FilterDialog } from './FilterDialog';
