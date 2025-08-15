@@ -734,15 +734,15 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 	}
 }
 
-func validateAssetGroupExpansionMethodWithFallback(maybeMethod *model.AssetGroupExpansionMethod) model.AssetGroupExpansionMethod {
+func validateAssetGroupExpansionMethodWithFallback(maybeMethod *model.AssetGroupExpansionMethod) (model.AssetGroupExpansionMethod, error) {
 	if maybeMethod == nil {
-		return model.AssetGroupExpansionMethodAll
+		return model.AssetGroupExpansionMethodAll, nil
 	}
 	switch *maybeMethod {
 	case model.AssetGroupExpansionMethodNone, model.AssetGroupExpansionMethodAll, model.AssetGroupExpansionMethodChildren, model.AssetGroupExpansionMethodParents:
-		return *maybeMethod
+		return *maybeMethod, nil
 	default:
-		return model.AssetGroupExpansionMethodAll
+		return 0, fmt.Errorf("invalid expansion method")
 	}
 }
 
@@ -768,11 +768,10 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, body.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if expansion, err := validateAssetGroupExpansionMethodWithFallback(body.Expansion); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		var (
-			expansion = validateAssetGroupExpansionMethodWithFallback(body.Expansion)
-			nodes     = datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
-		)
+		nodes := datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, body.Seeds, expansion, limit)
 		for _, node := range nodes {
 			if node.Node != nil {
 				members = append(members, nodeToAssetGroupMember(node.Node, excludeProperties))
