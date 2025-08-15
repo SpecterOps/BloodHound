@@ -17,8 +17,6 @@ import { useDebouncedValue } from '../../../hooks';
 
 type SearchBarProps = {
     selected: string | undefined;
-    selectorId: string | undefined;
-    labelId: string | undefined;
 };
 
 type SectorKey = 'tags' | 'selectors' | 'members';
@@ -33,7 +31,7 @@ const sectorMap: Record<Sector, SectorKey> = {
     Objects: 'members',
 };
 
-const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ selected }) => {
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
     const [results, setResults] = useState<AssetGroupSearch>({
@@ -103,17 +101,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
             url = `/zone-management/details/${base}/${selector.asset_group_tag_id}/selector/${selector.id}`;
         } else if (sector === 'Objects') {
             const member = item as AssetGroupMember;
-            if (selectorId) {
-                url = `/zone-management/details/${base}/${labelId}/selector/${selectorId}/member/${member.object_id}`;
-            } else {
-                url = `/zone-management/details/${base}/${member.asset_group_tag_id}/member/${member.object_id}`;
-            }
+            url = `/zone-management/details/${base}/${member.asset_group_tag_id}/member/${member.id}`;
         }
         navigate(url);
     };
 
     return (
-        <div className='relative' ref={inputRef}>
+        <div className='relative w-4/6' ref={inputRef}>
             <div className='flex items-center border-b-2 border-neutral-dark-1 dark:border-neutral-light-1'>
                 <AppIcon.MagnifyingGlass />
                 <Input
@@ -135,20 +129,24 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected, selectorId }) => {
                             <p className='font-bold'>{sector}</p>
                             {results[sectorMap[sector]].length > 0 ? (
                                 <ul>
-                                    {results[sectorMap[sector]].map((item: SearchItem, index: number) => (
-                                        <li
-                                            className={cn('flex max-w-lg min-w-0', {
-                                                'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
-                                            })}
-                                            key={index}>
-                                            <Button
-                                                className='overflow-hidden'
-                                                variant={'text'}
-                                                onClick={() => handleClick(sector, item)}>
-                                                <span className='truncate'>{item.name}</span>
-                                            </Button>
-                                        </li>
-                                    ))}
+                                    {results[sectorMap[sector]]
+                                        .sort((a, b) =>
+                                            a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+                                        )
+                                        .map((item: SearchItem, index: number) => (
+                                            <li
+                                                className={cn('flex max-w-lg min-w-0', {
+                                                    'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
+                                                })}
+                                                key={index}>
+                                                <Button
+                                                    className='overflow-hidden'
+                                                    variant={'text'}
+                                                    onClick={() => handleClick(sector, item)}>
+                                                    <span className='truncate'>{item.name}</span>
+                                                </Button>
+                                            </li>
+                                        ))}
                                 </ul>
                             ) : (
                                 <p>No results</p>
