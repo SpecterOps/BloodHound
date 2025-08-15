@@ -51,6 +51,7 @@ func NewUnifiedGraph() UnifiedGraph {
 type UnifiedNode struct {
 	Label         string         `json:"label"`
 	Kind          string         `json:"kind"`
+	Kinds         []string       `json:"kinds"`
 	ObjectId      string         `json:"objectId"`
 	IsTierZero    bool           `json:"isTierZero"`
 	IsOwnedObject bool           `json:"isOwnedObject"`
@@ -91,6 +92,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 	return UnifiedNode{
 		Label:         label,
 		Kind:          kind,
+		Kinds:         node.Kinds.Strings(),
 		ObjectId:      objectId,
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),
