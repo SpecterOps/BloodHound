@@ -678,6 +678,20 @@ func (mr *MockDatabaseMockRecorder) DeleteCustomNodeKind(ctx, kindName any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteCustomNodeKind), ctx, kindName)
 }
 
+// DeleteEnvironmentListForUser mocks base method.
+func (m *MockDatabase) DeleteEnvironmentListForUser(ctx context.Context, user model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEnvironmentListForUser", ctx, user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteEnvironmentListForUser indicates an expected call of DeleteEnvironmentListForUser.
+func (mr *MockDatabaseMockRecorder) DeleteEnvironmentListForUser(ctx, user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEnvironmentListForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteEnvironmentListForUser), ctx, user)
+}
+
 // DeleteIngestTask mocks base method.
 func (m *MockDatabase) DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error {
 	m.ctrl.T.Helper()
@@ -1360,10 +1374,10 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 }
 
 // GetEnvironmentAccessListForUser mocks base method.
-func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]database.EnvironmentAccess, error) {
+func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]model.EnvironmentAccess, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEnvironmentAccessListForUser", ctx, user)
-	ret0, _ := ret[0].([]database.EnvironmentAccess)
+	ret0, _ := ret[0].([]model.EnvironmentAccess)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2276,22 +2290,17 @@ func (mr *MockDatabaseMockRecorder) UpdateCustomNodeKind(ctx, customNodeKind any
 }
 
 // UpdateEnvironmentListForUser mocks base method.
-func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error {
+func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, user}
-	for _, a := range environments {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "UpdateEnvironmentListForUser", varargs...)
+	ret := m.ctrl.Call(m, "UpdateEnvironmentListForUser", ctx, user, environments)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateEnvironmentListForUser indicates an expected call of UpdateEnvironmentListForUser.
-func (mr *MockDatabaseMockRecorder) UpdateEnvironmentListForUser(ctx, user any, environments ...any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateEnvironmentListForUser(ctx, user, environments any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, user}, environments...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEnvironmentListForUser", reflect.TypeOf((*MockDatabase)(nil).UpdateEnvironmentListForUser), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEnvironmentListForUser", reflect.TypeOf((*MockDatabase)(nil).UpdateEnvironmentListForUser), ctx, user, environments)
 }
 
 // UpdateIngestJob mocks base method.
