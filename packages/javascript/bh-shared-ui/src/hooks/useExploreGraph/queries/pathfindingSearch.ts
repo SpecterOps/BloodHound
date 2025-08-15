@@ -64,12 +64,8 @@ WHERE ct2.authenticationenabled = true
 AND ct2.requiresmanagerapproval = false
 
 MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
-
 MATCH p4 = (x3:Base)-[:Enroll]->(eca1)
-WHERE x1:Group OR x3:Group
-
 MATCH p5 = (x4:Base)-[:Enroll]->(eca2)
-WHERE x2:Group OR x4:Group
 
 MATCH p6 = (eca1)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
 MATCH p7 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
