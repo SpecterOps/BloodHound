@@ -182,7 +182,6 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 		return query.Kind(query.Node(), ad.Domain)
 	}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for node := range cursor.Chan() {
-			node.Kinds.ContainsOneOf()
 			if domainObjectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
 				slog.Error(fmt.Sprintf("Domain node %d does not have a valid object ID", node.ID))
 			} else if domainName, err := node.Properties.Get(common.Name.String()).String(); err != nil {
