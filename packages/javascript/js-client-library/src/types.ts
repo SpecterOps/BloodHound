@@ -92,7 +92,7 @@ export const SeedExpansionMethodNone = 0 as const;
 export const SeedExpansionMethodAll = 1 as const;
 export const SeedExpansionMethodChild = 2 as const;
 export const SeedExpansionMethodParent = 3 as const;
-export type SeedExpansionMethods =
+export type SeedExpansionMethod =
     | typeof SeedExpansionMethodNone
     | typeof SeedExpansionMethodAll
     | typeof SeedExpansionMethodChild

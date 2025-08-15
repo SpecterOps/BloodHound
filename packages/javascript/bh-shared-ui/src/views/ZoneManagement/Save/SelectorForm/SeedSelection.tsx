@@ -25,10 +25,10 @@ import {
     Skeleton,
 } from '@bloodhoundenterprise/doodleui';
 import {
+    SeedExpansionMethod,
     SeedExpansionMethodAll,
     SeedExpansionMethodChild,
     SeedExpansionMethodNone,
-    SeedExpansionMethods,
     SeedTypeObjectId,
 } from 'js-client-library';
 import { FC, useContext } from 'react';
@@ -42,16 +42,23 @@ import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
+const getSelectorExpansionMethod = (
+    tagId: string,
+    tagKind: 'label' | 'tier',
+    ownedId: string | undefined
+): SeedExpansionMethod => {
+    // Owned is a specific label that does not expansion
+    if (tagId === ownedId) return SeedExpansionMethodNone;
+
+    return tagKind === 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+};
+
 const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
     const { tagKind, tagId } = useZonePathParams();
     const ownedId = useOwnedTagId();
 
-    let expansion: SeedExpansionMethods = tagKind == 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
-    // Owned is a specific label that does not expand
-    if (tagId == ownedId?.toString()) {
-        expansion = SeedExpansionMethodNone;
-    }
+    const expansion = getSelectorExpansionMethod(tagId, tagKind, ownedId?.toString());
 
     const previewQuery = useQuery({
         queryKey: ['zone-management', 'preview-selectors', selectorType, seeds, expansion],
