@@ -53,3 +53,16 @@ CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_name ON asset_group_tag_select
 
 ALTER TABLE asset_group_tags
         ADD COLUMN IF NOT EXISTS glyph TEXT UNIQUE;
+
+-- File Ingest Details
+ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS provided_file_name text NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS completed_tasks (
+    id BIGSERIAL PRIMARY KEY,
+    ingest_job_id BIGINT NOT NULL REFERENCES ingest_jobs(id) ON DELETE CASCADE,
+    file_name TEXT NOT NULL,
+    parent_file_name TEXT NOT NULL,
+    errors TEXT[] NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+CREATE INDEX IF NOT EXISTS idx_completed_tasks_ingest_job_id ON completed_tasks USING btree (ingest_job_id);

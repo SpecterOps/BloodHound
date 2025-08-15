@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util"
 )
 
 type endpointKey struct {
@@ -159,7 +158,7 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 	} else {
 		var (
 			updates []graph.RelationshipUpdate
-			errs    = util.NewErrorCollector()
+			errs    = newGraphifyErrorBuilder()
 		)
 
 		for _, rel := range rels {
@@ -202,7 +201,7 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 			updates = append(updates, update)
 		}
 
-		return updates, errs.Combined()
+		return updates, errs.Build()
 	}
 }
 
