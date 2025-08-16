@@ -114,6 +114,8 @@ post:
           properties:
             query:
               type: string
+              minLength: 3
+              example: UpdateTag
           required:
             - query    
   parameters:
@@ -124,9 +126,9 @@ post:
       description:
         Sortable columns are `created_at`.
       schema:
-        $ref: './../schemas/api.params.query.sort-by.yaml'
-        enum:
-          - created_at
+        allOf:
+          - $ref: './../schemas/api.params.query.sort-by.yaml'
+          - enum: [created_at]
     - name: actor
       in: query
       description: Filter by actor

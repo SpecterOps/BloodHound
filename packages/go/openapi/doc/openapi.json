@@ -6371,7 +6371,9 @@
                 "type": "object",
                 "properties": {
                   "query": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3,
+                    "example": "UpdateTag"
                   }
                 },
                 "required": [
@@ -6393,9 +6395,15 @@
             "in": "query",
             "description": "Sortable columns are `created_at`.",
             "schema": {
-              "$ref": "#/components/schemas/api.params.query.sort-by",
-              "enum": [
-                "created_at"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "created_at"
+                  ]
+                }
               ]
             }
           },
