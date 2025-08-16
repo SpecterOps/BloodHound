@@ -2707,7 +2707,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
-							100).
+							50).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2759,7 +2759,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							10,
-							100).
+							50).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2785,7 +2785,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}},
 							0,
-							100).
+							50).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2817,7 +2817,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 
 					// verify skip, limit and count
 					require.Equal(t, 0, wrapper.Skip)
-					require.Equal(t, 100, wrapper.Limit)
+					require.Equal(t, 50, wrapper.Limit)
 					require.Equal(t, len(expectedHistoryRecs), wrapper.Count)
 
 					// verify the records are as expected
