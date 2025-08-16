@@ -16,7 +16,8 @@
 
 import { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
-import { JOB_STATUS_MAP, toCollected, toFormatted, toMins, useFinishedJobsQuery } from '../../utils';
+import { useFinishedJobs } from '../../hooks';
+import { JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 
@@ -54,7 +55,7 @@ export const FinishedJobsTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const { data, isLoading } = useFinishedJobsQuery({ page, rowsPerPage });
+    const { data, isLoading } = useFinishedJobs({ page, rowsPerPage });
 
     const finishedJobs = data?.data ?? [];
     const count = data?.count ?? 0;

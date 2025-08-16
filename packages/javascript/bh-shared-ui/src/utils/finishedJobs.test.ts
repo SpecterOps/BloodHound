@@ -15,46 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { type ScheduledJobDisplay } from 'js-client-library';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
 
-import { renderHook, waitFor } from '../test-utils';
-import {
-    FETCH_ERROR_KEY,
-    FETCH_ERROR_MESSAGE,
-    NO_PERMISSION_KEY,
-    NO_PERMISSION_MESSAGE,
-    PERSIST_NOTIFICATION,
-    toCollected,
-    toFormatted,
-    toMins,
-    useFinishedJobsQuery,
-} from './finishedJobs';
-
-const addNotificationMock = vi.fn();
-const dismissNotificationMock = vi.fn();
-const checkPermissionMock = vi.fn();
-
-vi.mock('../providers', async () => {
-    const actual = await vi.importActual('../providers');
-    return {
-        ...actual,
-        useNotifications: () => ({
-            addNotification: addNotificationMock,
-            dismissNotification: dismissNotificationMock,
-        }),
-    };
-});
-
-vi.mock('../hooks/usePermissions', async () => {
-    const actual = await vi.importActual('../hooks');
-    return {
-        ...actual,
-        usePermissions: () => ({
-            checkPermission: checkPermissionMock,
-        }),
-    };
-});
+import { toCollected, toFormatted, toMins } from './finishedJobs';
 
 const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     id: 22,
@@ -78,27 +40,6 @@ const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     domains: [],
     domain_results: [],
 };
-
-const MOCK_FINISHED_JOBS_RESPONSE = {
-    count: 20,
-    data: new Array(10).fill(MOCK_FINISHED_JOB).map((item, index) => ({
-        ...item,
-        id: index,
-        status: (index % 10) - 1,
-    })),
-    limit: 10,
-    skip: 10,
-};
-
-const server = setupServer(
-    rest.get('/api/v2/jobs/finished', (req, res, ctx) => {
-        return res(ctx.json(MOCK_FINISHED_JOBS_RESPONSE));
-    })
-);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 describe('toCollected', () => {
     it('shows the collection methods for the given job', () => {
@@ -144,43 +85,5 @@ describe('toFormatted', () => {
 describe('toMins', () => {
     it('shows an interval in mins', () => {
         expect(toMins('2024-01-01T15:30:00.500Z', '2024-01-02T03:00:00.000Z')).toBe('689 Min');
-    });
-});
-
-describe('useFinishedJobsQuery', () => {
-    it('requests finished jobs', async () => {
-        checkPermissionMock.mockImplementation(() => true);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        expect(result.current.data.data.length).toBe(10);
-    });
-
-    it('shows "no permission" notification if lacking permission', async () => {
-        checkPermissionMock.mockImplementation(() => false);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        expect(addNotificationMock).toHaveBeenCalledWith(
-            NO_PERMISSION_MESSAGE,
-            NO_PERMISSION_KEY,
-            PERSIST_NOTIFICATION
-        );
-    });
-
-    it('does not request finished jobs if lacking permission', async () => {
-        checkPermissionMock.mockImplementation(() => false);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-        expect(result.current.data).toBeUndefined();
-    });
-
-    it('shows an error notification if there is an error fetching', async () => {
-        server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
-        checkPermissionMock.mockImplementation(() => true);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        expect(addNotificationMock).toHaveBeenCalledWith(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY);
     });
 });
