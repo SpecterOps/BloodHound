@@ -397,13 +397,13 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 }
 
 // fetchOldSelectedNodes - fetches the currently selected nodes and assembles a map lookup for minimal memory footprint
-func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId int) (map[graph.ID]model.AssetGroupCertification, error) {
-	oldSelectedNodesMap := make(map[graph.ID]model.AssetGroupCertification)
+func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId int) (map[graph.ID]model.AssetGroupSelectorNode, error) {
+	oldSelectedNodesMap := make(map[graph.ID]model.AssetGroupSelectorNode)
 	if oldSelectedNodes, err := db.GetSelectorNodesBySelectorIds(ctx, selectorId); err != nil {
 		return oldSelectedNodesMap, err
 	} else {
 		for _, node := range oldSelectedNodes {
-			oldSelectedNodesMap[node.NodeId] = node.Certified
+			oldSelectedNodesMap[node.NodeId] = node
 		}
 		return oldSelectedNodesMap, nil
 	}
@@ -417,11 +417,10 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		certified   = model.AssetGroupCertificationNone
 		certifiedBy null.String
 
-		nodeIdsToDelete []graph.ID
-		nodeIdsToUpdate []graph.ID
+		nodesToUpdate []model.AssetGroupSelectorNode
 	)
 
-	if selector.AutoCertify.Bool {
+	if selector.AutoCertify.ValueOrZero() {
 		certified = model.AssetGroupCertificationAuto
 		certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 	}
@@ -434,15 +433,20 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
+			primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node.Node)
 			// Missing, insert the record
-			if oldCert, ok := oldSelectedNodesByNodeId[id]; !ok {
-				if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy, node.Source); err != nil {
+			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
+				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
 					return err
 				}
 				countInserted++
-				// Auto certify is enabled but this node hasn't been certified, certify it
-			} else if selector.AutoCertify.Bool && oldCert == model.AssetGroupCertificationNone {
-				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
+				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
+			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationNone) ||
+				oldNode.NodeName != displayName ||
+				oldNode.NodePrimaryKind != primaryKind ||
+				oldNode.NodeEnvironmentId != envId ||
+				oldNode.NodeObjectId != objectId {
+				nodesToUpdate = append(nodesToUpdate, oldNode)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
 				delete(oldSelectedNodesByNodeId, id)
@@ -450,10 +454,21 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		}
 
 		// Update the selected nodes that need updating
-		if len(nodeIdsToUpdate) > 0 {
-			for _, nodeId := range nodeIdsToUpdate {
-				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.ID, certified, certifiedBy, nodeId); err != nil {
-					return err
+		if len(nodesToUpdate) > 0 {
+			for _, oldSelectorNode := range nodesToUpdate {
+				// Protect property updates from overwriting existing certification
+				if oldSelectorNode.Certified != model.AssetGroupCertificationNone {
+					certified = oldSelectorNode.Certified
+					certifiedBy = oldSelectorNode.CertifiedBy
+				}
+				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
+					// todo: maybe grab it from graph manually in this case?
+					slog.Warn("AGT: selected node for update missing graph node...skipping update to protect data integrity", "node", oldSelectorNode.NodeId)
+				} else {
+					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(graphNode.Node)
+					if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, oldSelectorNode.NodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -467,7 +482,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			}
 		}
 
-		slog.Info("AGT: Completed selecting", "selector", selector.Name, "countTotal", len(nodesWithSrcSet), "countInserted", countInserted, "countUpdated", len(nodeIdsToUpdate), "countDeleted", len(nodeIdsToDelete))
+		slog.Info("AGT: Completed selecting", "selector", selector.Name, "countTotal", len(nodesWithSrcSet), "countInserted", countInserted, "countUpdated", len(nodesToUpdate), "countDeleted", len(oldSelectedNodesByNodeId))
 	}
 	return nil
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -69,8 +70,8 @@ func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
 	domains := model.DomainSelectors{}
 	for _, node := range nodes {
 		var (
-			name, _      = node.Properties.GetOrDefault(common.Name.String(), "NO NAME").String()
-			objectID, _  = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+			name, _      = node.Properties.GetOrDefault(common.Name.String(), graphschema.DefaultMissingName).String()
+			objectID, _  = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 			collected, _ = node.Properties.GetOrDefault(common.Collected.String(), false).Bool()
 			domainType   = "active-directory"
 		)

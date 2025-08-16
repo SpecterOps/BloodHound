@@ -25,10 +25,11 @@ import {
     useExploreSelectedItem,
     useNotifications,
     usePermissions,
+    useTagsQuery,
 } from 'bh-shared-ui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation } from 'react-query';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -44,9 +45,7 @@ const ContextMenu: FC<{
 
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
 
-    const getAssetGroupTagsQuery = useQuery(['getAssetGroupTags'], ({ signal }) =>
-        apiClient.getAssetGroupTags({ signal }).then((res) => res.data.data)
-    );
+    const getAssetGroupTagsQuery = useTagsQuery();
 
     const createAssetGroupTagSelectorMutation = useMutation({
         mutationFn: ({ assetGroupId, node }: { assetGroupId: string | number; node: NodeResponse }) => {
@@ -109,11 +108,11 @@ const ContextMenu: FC<{
         );
     };
 
-    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.tags.find((value) => {
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
         return value.position === 1;
     });
 
-    const ownedAssetGroup = getAssetGroupTagsQuery.data?.tags.find((value) => {
+    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
         return value.type === 3;
     });
 

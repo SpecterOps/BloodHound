@@ -1879,16 +1879,18 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 					expected := v2.GetAssetGroupMembersResponse{
 						Members: []v2.AssetGroupMember{
 							{
-								NodeId:      1,
-								ObjectID:    "OID-1",
-								PrimaryKind: "User",
-								Name:        "node1",
+								NodeId:          1,
+								ObjectID:        "OID-1",
+								PrimaryKind:     "User",
+								Name:            "node1",
+								AssetGroupTagId: 1,
 							},
 							{
-								NodeId:      2,
-								ObjectID:    "OID-2",
-								PrimaryKind: "Group",
-								Name:        "node2",
+								NodeId:          2,
+								ObjectID:        "OID-2",
+								PrimaryKind:     "Group",
+								Name:            "node2",
+								AssetGroupTagId: 1,
 							},
 						},
 					}
