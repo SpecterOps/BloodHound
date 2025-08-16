@@ -36,7 +36,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -2831,7 +2830,7 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDatabase *mocks.MockDatabase
+		mockDatabase *mocks_db.MockDatabase
 	}
 
 	type expected struct {
@@ -3120,7 +3119,7 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockDatabase: mocks_db.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest(t.Name())
