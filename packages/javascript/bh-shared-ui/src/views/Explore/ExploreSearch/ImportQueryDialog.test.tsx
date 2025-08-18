@@ -1,16 +1,9 @@
-// import { rest } from 'msw';
-// import { setupServer } from 'msw/node';
-// import FileIngest from '.';
-// import { createAuthStateWithPermissions } from '../../mocks';
-// import { fireEvent, render, screen, waitFor } from '../../test-utils';
-
 import { fireEvent, render, screen, waitFor } from '../../../test-utils';
 import ImportQueryDialog from './ImportQueryDialog';
 
 describe('ImportQueryDialog', () => {
     const testHandleClose = vi.fn();
 
-    const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
     it('renders the Import Query Dialog', () => {
