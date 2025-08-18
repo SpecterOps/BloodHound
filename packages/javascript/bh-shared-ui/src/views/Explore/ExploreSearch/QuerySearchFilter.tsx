@@ -49,8 +49,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         queryFilterHandler(searchTerm, val, categoryFilter, source);
     };
 
-    console.log(selectedQuery);
-
     const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
         const {
             target: { value },
