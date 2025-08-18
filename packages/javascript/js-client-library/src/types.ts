@@ -118,12 +118,6 @@ export interface AssetGroupTagSelectorSeed {
     value: string;
 }
 
-export interface AssetGroupSearch {
-    tags: AssetGroupTag[];
-    selectors: AssetGroupTagSelector[];
-    members: AssetGroupMember[];
-}
-
 export const AssetGroupTagCertifiedMap = {
     '-1': 'Manually not certified (revoked)',
     0: 'No certification (only automatically tagged if certify is enabled)',
@@ -138,7 +132,8 @@ export const NodeSourceChild = 2 as const;
 export const NodeSourceParent = 3 as const;
 
 export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
-export interface AssetGroupTagNode {
+export interface AssetGroupTagMember {
+    asset_group_tag_id: number;
     id: number; // uint64 graphID
     primary_kind: string;
     object_id: string;

@@ -36,9 +36,6 @@ const InfoHeader: FC = () => {
                     </Button>
                 </div>
             </div>
-            <div className='flex justify-start basis-1/3'>
-                <input type='text' placeholder='search' className='hidden' />
-            </div>
         </div>
     );
 };
