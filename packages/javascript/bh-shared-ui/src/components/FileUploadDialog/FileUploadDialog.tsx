@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { ErrorResponse } from 'js-client-library';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     useEndFileIngestJob,
@@ -37,7 +37,7 @@ const FileUploadDialog: React.FC<{
     onClose: () => void;
     headerText: ReactNode;
     description: ReactNode;
-}> = ({ open, onClose, headerText = 'Upload Files', description }) => {
+}> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
@@ -51,6 +51,11 @@ const FileUploadDialog: React.FC<{
     const startFileIngestJob = useStartFileIngestJob();
     const uploadFileToIngestJob = useUploadFileToIngestJob();
     const endFileIngestJob = useEndFileIngestJob();
+
+    const onClose = useCallback(() => {
+        setProgressCache({});
+        onCloseProp();
+    }, [onCloseProp]);
 
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
@@ -224,6 +229,7 @@ const FileUploadDialog: React.FC<{
         }
     };
 
+    console.log({ progressCache });
     return (
         <Dialog
             open={open}
