@@ -150,7 +150,7 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if fileData, err := s.extractIngestFiles(task.FileName, task.ProvidedFileName, task.FileType); err != nil {
+	if fileData, err := s.extractIngestFiles(task.StoredFileName, task.OriginalFileName, task.FileType); err != nil {
 		return []IngestFileData{}, err
 	} else {
 		errs := newGraphifyErrorBuilder()
@@ -231,9 +231,9 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		fileData, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
 
 		if errors.Is(err, fs.ErrNotExist) {
-			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))
+			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.StoredFileName, err))
 		} else if err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.FileName, err))
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.StoredFileName, err))
 		}
 
 		updateJob(task.JobId.ValueOrZero(), fileData)

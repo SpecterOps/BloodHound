@@ -33,8 +33,8 @@ type IngestTaskParams struct {
 
 func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
-		FileName:         params.Filename,
-		ProvidedFileName: params.ProvidedFileName,
+		StoredFileName:   params.Filename,
+		OriginalFileName: params.ProvidedFileName,
 		RequestGUID:      params.RequestID,
 		JobId:            null.Int64From(params.JobID),
 		FileType:         params.FileType,

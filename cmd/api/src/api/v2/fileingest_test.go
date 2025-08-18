@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"database/sql"
@@ -660,7 +661,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: file uploaded - Accepted",
+			name: "Success: file uploaded - Accepted Unknown Json File",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -676,7 +677,83 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
-				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
+					return x.OriginalFileName == "UnknownFileName.json"
+				})).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Success: file uploaded - Accepted Named Json File",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1",
+					},
+					Method: http.MethodPost,
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))),
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+						v2.FileUploadFileNameHeader:  []string{"Testing.json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
+					return x.OriginalFileName == "Testing.json"
+				})).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseHeader: http.Header{},
+			},
+		},
+		{
+			name: "Success: file uploaded - Accepted Named Zip File",
+			buildRequest: func() *http.Request {
+				buf := new(bytes.Buffer)
+				zipWriter := zip.NewWriter(buf)
+
+				zipFile, err := zipWriter.Create("example.json")
+				if err != nil {
+					t.Fatalf("error creating zip file: %v", err)
+				}
+
+				_, err = zipFile.Write([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))
+				if err != nil {
+					t.Fatalf("error creating zip file: %v", err)
+				}
+
+				err = zipWriter.Close()
+				if err != nil {
+					t.Fatalf("error closing zip file: %v", err)
+				}
+
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/1",
+					},
+					Method: http.MethodPost,
+					Body:   io.NopCloser(buf),
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/zip"},
+						v2.FileUploadFileNameHeader:  []string{"Testing.zip"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
+					return x.OriginalFileName == "Testing.zip"
+				})).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{

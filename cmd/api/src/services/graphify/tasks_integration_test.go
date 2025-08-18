@@ -53,7 +53,7 @@ func TestVersion5IngestJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -89,7 +89,7 @@ func TestVersion5IngestZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -137,7 +137,7 @@ func TestVersion6ADCSJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -173,7 +173,7 @@ func TestVersion6ADCSZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -221,7 +221,7 @@ func TestVersion6AllJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -257,7 +257,7 @@ func TestVersion6AllZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -300,7 +300,7 @@ func TestVersion6IngestJSON(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -336,7 +336,7 @@ func TestVersion6IngestZIP(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeZip}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0

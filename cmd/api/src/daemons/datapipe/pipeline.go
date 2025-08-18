@@ -146,7 +146,7 @@ func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 		expectedFiles := make([]string, len(ingestTasks))
 
 		for idx, ingestTask := range ingestTasks {
-			expectedFiles[idx] = ingestTask.FileName
+			expectedFiles[idx] = ingestTask.StoredFileName
 		}
 
 		go s.orphanedFileSweeper.Clear(ctx, expectedFiles)

@@ -47,7 +47,7 @@ func TestDeleteAllData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -94,7 +94,7 @@ func TestDeleteAllData_Alternative(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -138,7 +138,7 @@ func TestDeleteSourcelessData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
@@ -181,7 +181,7 @@ func TestDeleteSourceKindsData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
 
 		failed := 0
