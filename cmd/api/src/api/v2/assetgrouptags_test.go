@@ -2706,7 +2706,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
-							50).
+							v2.AssetGroupTagQueryParameterLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2758,7 +2758,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							10,
-							50).
+							v2.AssetGroupTagQueryParameterLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2784,7 +2784,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}},
 							0,
-							50).
+							v2.AssetGroupTagQueryParameterLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2964,9 +2964,17 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 					}
 
 					for _, v := range sqlFilter.Params {
-						param := v.([]any)
-						if param[0] == "%UpdateTag%" {
-							return true
+						switch p := v.(type) {
+						case string:
+							if p == "%UpdateTag%" {
+								return true
+							}
+						case []any:
+							for _, inner := range p {
+								if s, ok := inner.(string); ok && s == "%UpdateTag%" {
+									return true
+								}
+							}
 						}
 					}
 
@@ -3034,9 +3042,17 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 					}
 
 					for _, v := range sqlFilter.Params {
-						param := v.([]any)
-						if param[0] == "%user1@domain.com%" {
-							return true
+						switch p := v.(type) {
+						case string:
+							if p == "%user1@domain.com%" {
+								return true
+							}
+						case []any:
+							for _, inner := range p {
+								if s, ok := inner.(string); ok && s == "%user1@domain.com%" {
+									return true
+								}
+							}
 						}
 					}
 

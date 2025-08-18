@@ -49,6 +49,7 @@ import (
 
 const (
 	assetGroupPreviewSelectorDefaultLimit = 200
+	AssetGroupTagQueryParameterLimit      = 50
 	assetGroupTagsSearchLimit             = 20
 	assetGroupTagQueryLimitMin            = 3
 
@@ -866,25 +867,20 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 	var (
 		rCtx        = request.Context()
 		queryParams = request.URL.Query()
+		sort        model.Sort
+		sqlFilter   model.SQLFilter
 	)
 
 	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
-	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 50); err != nil {
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagQueryParameterLimit); err != nil {
 		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+	} else if sort, err = api.ParseSortParameters(model.AssetGroupHistory{}, queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
+		return
 	} else {
-		var sort model.Sort
-		var sqlFilter model.SQLFilter
-
-		if query == "" {
-			if sort, err = api.ParseSortParameters(model.AssetGroupHistory{}, queryParams); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-				return
-			}
-		}
-
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupHistory{}, name); err != nil {
 				api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
@@ -910,14 +906,16 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
+			querySql := "actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?"
+
 			if sqlFilter.SQLString != "" {
-				sqlFilter.SQLString = sqlFilter.SQLString + " AND (actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
-			} else {
-				sqlFilter.SQLString = " actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?"
+				querySql = fmt.Sprintf(" AND (%s)", querySql)
 			}
 
+			sqlFilter.SQLString += querySql
+
 			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, []any{"%" + query + "%"})
+				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
 			}
 		}
 
