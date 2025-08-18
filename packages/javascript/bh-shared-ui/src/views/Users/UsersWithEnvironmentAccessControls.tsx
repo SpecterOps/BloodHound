@@ -19,7 +19,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
 import { FC, useState } from 'react';
-import { useMutation } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import {
     ConfirmationDialog,
     CreateUserDialog,
@@ -27,16 +27,14 @@ import {
     DocumentationLinks,
     PageWithTitle,
     PasswordDialog,
-    UpdateUserDialog,
     UserTokenManagementDialog,
 } from '../../components';
 import { useMountEffect, usePermissions, useToggle } from '../../hooks';
-import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
 
-const Users: FC = () => {
+const UsersWithEnvironmentAccessControls: FC = () => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');
@@ -75,11 +73,17 @@ const Users: FC = () => {
 
     useMountEffect(effect);
 
-    const getSelfQuery = useSelf();
-    const listUsersQuery = useBloodHoundUsers();
+    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
+        apiClient.getSelf({ signal }).then((res) => res.data?.data)
+    );
 
     const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
-    const isSelfSSOUser = !!getSelfQuery.data?.sso_provider_id;
+
+    const listUsersQuery = useQuery(
+        ['listUsers'],
+        ({ signal }) => apiClient.listUsers({ signal }).then((res) => res.data?.data?.users),
+        { enabled: hasPermission }
+    );
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
         onSuccess: () => {
@@ -193,7 +197,7 @@ const Users: FC = () => {
                         }
                     />
                     */}
-                    <Dialog>
+                    <Dialog open={createUserDialogOpen} onOpenChange={toggleCreateUserDialog}>
                         <DialogTrigger asChild>
                             <Button
                                 disabled={!hasPermission}
@@ -207,13 +211,15 @@ const Users: FC = () => {
                         </DialogTrigger>
                         <DialogPortal>
                             <CreateUserDialog
+                                createUser={true}
+                                updateUser={false}
                                 error={createUserMutation.error}
                                 isLoading={createUserMutation.isLoading}
                                 onClose={toggleCreateUserDialog}
                                 onExited={createUserMutation.reset}
                                 onSave={createUserMutation.mutateAsync}
                                 open={createUserDialogOpen}
-                                showEnvironmentAccessControls={false}
+                                showEnvironmentAccessControls={true}
                             />
                         </DialogPortal>
                     </Dialog>
@@ -233,6 +239,24 @@ const Users: FC = () => {
                 </Paper>
             </PageWithTitle>
 
+            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
+                <DialogPortal>
+                    <CreateUserDialog
+                        createUser={false}
+                        updateUser={true}
+                        error={updateUserMutation.error}
+                        isLoading={updateUserMutation.isLoading}
+                        onClose={toggleUpdateUserDialog}
+                        onExited={updateUserMutation.reset}
+                        onSave={updateUserMutation.mutateAsync}
+                        open={updateUserDialogOpen}
+                        showEnvironmentAccessControls={true}
+                        userId={selectedUserId!}
+                        hasSelectedSelf={hasSelectedSelf}
+                    />
+                </DialogPortal>
+            </Dialog>
+            {/*
             <UpdateUserDialog
                 open={updateUserDialogOpen}
                 onClose={toggleUpdateUserDialog}
@@ -243,12 +267,16 @@ const Users: FC = () => {
                 isLoading={updateUserMutation.isLoading}
                 error={updateUserMutation.error}
             />
+            */}
             <ConfirmationDialog
                 open={enableUserDialogOpen}
                 text={'Are you sure you want to enable this user?'}
                 title={'Enable User'}
                 onConfirm={() => {
-                    disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: false });
+                    disableEnableUserMutation.mutate({
+                        userId: selectedUserId!,
+                        disable: false,
+                    });
                     toggleEnableUserDialog();
                 }}
                 onCancel={toggleEnableUserDialog}
@@ -258,7 +286,10 @@ const Users: FC = () => {
                 text={'Are you sure you want to disable this user?'}
                 title={'Disable User'}
                 onConfirm={() => {
-                    disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: true });
+                    disableEnableUserMutation.mutate({
+                        userId: selectedUserId!,
+                        disable: true,
+                    });
                     toggleDisableUserDialog();
                 }}
                 onCancel={toggleDisableUserDialog}
@@ -299,7 +330,7 @@ const Users: FC = () => {
                     setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
-                onSave={(secret?: string) => {
+                onSave={(secret: string) => {
                     setDisable2FAError('');
                     apiClient
                         .disenrollMFA(selectedUserId!, { secret })
@@ -309,24 +340,14 @@ const Users: FC = () => {
                             setDisable2FASecret('');
                             listUsersQuery.refetch();
                         })
-                        .catch((err) => {
-                            if (!isSelfSSOUser && err.status === 400) {
-                                setDisable2FAError('Unable to verify password. Please try again.');
-                            } else {
-                                setDisable2FADialogOpen(false);
-                                addNotification('Unknown error disabling MFA for user', 'disableUserMfaUnknownError');
-                            }
+                        .catch(() => {
+                            setDisable2FAError('Unable to verify password. Please try again.');
                         });
                 }}
                 error={disable2FAError}
                 secret={disable2FASecret}
                 onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
-                showPasswordConfirmation={!isSelfSSOUser}
-                contentText={
-                    isSelfSSOUser
-                        ? 'Are you sure you want to disable MFA for this user?'
-                        : 'Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
-                }
+                contentText='Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}
@@ -349,4 +370,4 @@ const Users: FC = () => {
     );
 };
 
-export default Users;
+export default UsersWithEnvironmentAccessControls;
