@@ -2,7 +2,7 @@ import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundente
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../components';
 import { QueryLineItem } from '../../../types';
-import TagToZoneDialog from './TagToZoneLabelDialog';
+import TagToZoneLabelDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {
     selectedQuery: QueryLineItem | undefined;
@@ -52,7 +52,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                     </div>
                 </PopoverContent>
             </Popover>
-            <TagToZoneDialog
+            <TagToZoneLabelDialog
                 dialogOpen={tagToZoneOpen}
                 setDialogOpen={handleSetOpen}
                 isLabel={isLabel}

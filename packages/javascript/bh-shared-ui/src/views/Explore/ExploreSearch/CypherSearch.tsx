@@ -86,7 +86,7 @@ const CypherSearch = ({
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
 
-    const isAdminOrPowerUser = getSelf.data.roles.some((obj: any) => {
+    const isAdminOrPowerUser = getSelf.data?.roles?.some((obj: any) => {
         return obj.name === 'Administrator' || obj.name === 'Power User';
     });
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);

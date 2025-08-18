@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTagsQuery } from '../../../hooks';
 import { QueryLineItem } from '../../../types';
 
-type TagToZoneDialogProps = {
+type TagToZoneLabelDialogProps = {
     dialogOpen: boolean;
     selectedQuery: QueryLineItem | undefined;
     isLabel: boolean;
@@ -28,7 +28,7 @@ type TagToZoneDialogProps = {
     setDialogOpen: (isOpen: boolean) => void;
 };
 
-const TagToZoneDialog = (props: TagToZoneDialogProps) => {
+const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useNavigate();
 
@@ -37,6 +37,8 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
 
     const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
     const zones = tiersQuery.data;
+
+    // console.log(zones);
 
     const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
     const labels = labelsQuery.data;
@@ -58,7 +60,7 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
         }
     };
 
-    const title = isLabel ? 'label' : 'zone';
+    const title = isLabel ? 'Label' : 'Zone';
 
     const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
 
@@ -72,9 +74,7 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
                         blurBackground: false,
                     }}
                     maxWidth='sm'>
-                    <DialogTitle>
-                        Tag Results to {title} {isLabel.toString()}
-                    </DialogTitle>
+                    <DialogTitle>Tag Results to {title}</DialogTitle>
 
                     <DialogDescription>{description}</DialogDescription>
 
@@ -119,4 +119,4 @@ const TagToZoneDialog = (props: TagToZoneDialogProps) => {
     );
 };
 
-export default TagToZoneDialog;
+export default TagToZoneLabelDialog;

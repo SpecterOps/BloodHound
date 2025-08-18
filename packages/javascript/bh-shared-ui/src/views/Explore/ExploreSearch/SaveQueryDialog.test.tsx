@@ -99,7 +99,6 @@ describe('SaveQueryDialog', () => {
         const testSetSharedIds = vitest.fn();
         const testSetIsPublic = vitest.fn();
 
-        const testIsLoading = false;
         const testError = undefined;
         const testCypherSearchState = {
             cypherQuery: '',
@@ -112,12 +111,12 @@ describe('SaveQueryDialog', () => {
                 open
                 onSave={testOnSave}
                 onClose={testOnClose}
-                isLoading={testIsLoading}
                 error={testError}
                 cypherSearchState={testCypherSearchState}
                 selectedQuery={undefined}
                 sharedIds={[]}
                 isPublic={false}
+                saveAction={''}
                 onUpdate={testOnUpdate}
                 setSharedIds={testSetSharedIds}
                 setIsPublic={testSetIsPublic}
@@ -139,7 +138,6 @@ describe('SaveQueryDialog', () => {
         const testSetSharedIds = vitest.fn();
         const testSetIsPublic = vitest.fn();
 
-        const testIsLoading = false;
         const testError = undefined;
         const testCypherSearchState = {
             cypherQuery: '',
@@ -154,12 +152,12 @@ describe('SaveQueryDialog', () => {
                 open
                 onSave={testOnSave}
                 onClose={testOnClose}
-                isLoading={testIsLoading}
                 error={testError}
                 cypherSearchState={testCypherSearchState}
                 selectedQuery={undefined}
                 sharedIds={[]}
                 isPublic={false}
+                saveAction={''}
                 onUpdate={testOnUpdate}
                 setSharedIds={testSetSharedIds}
                 setIsPublic={testSetIsPublic}
@@ -181,7 +179,6 @@ describe('SaveQueryDialog', () => {
         const testSetSharedIds = vitest.fn();
         const testSetIsPublic = vitest.fn();
 
-        const testIsLoading = false;
         const testError = undefined;
         const testCypherSearchState = {
             cypherQuery: '',
@@ -194,12 +191,12 @@ describe('SaveQueryDialog', () => {
                 open
                 onSave={testOnSave}
                 onClose={testOnClose}
-                isLoading={testIsLoading}
                 error={testError}
                 cypherSearchState={testCypherSearchState}
                 selectedQuery={undefined}
                 sharedIds={[]}
                 isPublic={false}
+                saveAction={''}
                 onUpdate={testOnUpdate}
                 setSharedIds={testSetSharedIds}
                 setIsPublic={testSetIsPublic}
@@ -219,7 +216,6 @@ describe('SaveQueryDialog', () => {
         const testSetSharedIds = vitest.fn();
         const testSetIsPublic = vitest.fn();
 
-        const testIsLoading = false;
         const testError = undefined;
         const testCypherSearchState = {
             cypherQuery: '',
@@ -233,12 +229,12 @@ describe('SaveQueryDialog', () => {
                 open
                 onSave={testOnSave}
                 onClose={testOnClose}
-                isLoading={testIsLoading}
                 error={testError}
                 cypherSearchState={testCypherSearchState}
                 selectedQuery={undefined}
                 sharedIds={[]}
                 isPublic={false}
+                saveAction={''}
                 onUpdate={testOnUpdate}
                 setSharedIds={testSetSharedIds}
                 setIsPublic={testSetIsPublic}
@@ -259,7 +255,6 @@ describe('SaveQueryDialog', () => {
         const testSetSharedIds = vitest.fn();
         const testSetIsPublic = vitest.fn();
 
-        const testIsLoading = false;
         const testError = true;
         const testCypherSearchState = {
             cypherQuery: '',
@@ -272,12 +267,12 @@ describe('SaveQueryDialog', () => {
                 open
                 onSave={testOnSave}
                 onClose={testOnClose}
-                isLoading={testIsLoading}
                 error={testError}
                 cypherSearchState={testCypherSearchState}
                 selectedQuery={undefined}
                 sharedIds={[]}
                 isPublic={false}
+                saveAction={''}
                 onUpdate={testOnUpdate}
                 setSharedIds={testSetSharedIds}
                 setIsPublic={testSetIsPublic}
@@ -296,7 +291,6 @@ describe('SaveQueryDialog', () => {
         const testSetSharedIds = vitest.fn();
         const testSetIsPublic = vitest.fn();
 
-        const testIsLoading = false;
         const testError = true;
         const testCypherSearchState = {
             cypherQuery: '',
@@ -318,12 +312,12 @@ describe('SaveQueryDialog', () => {
                     open
                     onSave={testOnSave}
                     onClose={testOnClose}
-                    isLoading={testIsLoading}
                     error={testError}
                     cypherSearchState={testCypherSearchState}
                     selectedQuery={testSelectedQuery}
                     sharedIds={[]}
                     isPublic={false}
+                    saveAction={''}
                     onUpdate={testOnUpdate}
                     setSharedIds={testSetSharedIds}
                     setIsPublic={testSetIsPublic}
