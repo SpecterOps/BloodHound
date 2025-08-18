@@ -36,12 +36,7 @@ describe('CypherSearch', () => {
         const testOnRunSearchClick = vi.fn();
 
         const screen = await render(
-            <CypherSearch
-                cypherSearchState={state}
-                autoRun={autoRun}
-                setAutoRun={handleAutoRun}
-                onRunSearchClick={testOnRunSearchClick}
-            />
+            <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
         );
         const user = await userEvent.setup();
 
@@ -140,16 +135,5 @@ describe('CypherSearch', () => {
         await user.type(searchbox[0], CYPHER);
         expect(state.setCypherQuery).toBeCalled();
         expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
-    });
-
-    it('should call performSearch when a value is in the searchbox and the "Run" button is clicked', async () => {
-        const { screen, user, testOnRunSearchClick } = await setup();
-        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-        const searchbox = screen.getAllByRole('textbox');
-        const run = screen.getByRole('button', { name: /run/i });
-
-        await user.type(searchbox[0], CYPHER);
-        await user.click(run);
-        expect(testOnRunSearchClick).toBeCalled();
     });
 });

@@ -51,12 +51,10 @@ const CypherSearch = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
-    onRunSearchClick,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
-    onRunSearchClick?: () => void;
 }) => {
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
@@ -92,6 +90,7 @@ const CypherSearch = ({
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
     useEffect(() => {
         //Setting the selected query once on load
+        //check for flag
         if (!getCypherValueOnLoadRef.current && cypherQuery) {
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
@@ -101,9 +100,6 @@ const CypherSearch = ({
     const handleCypherSearch = () => {
         if (cypherQuery) {
             performSearch();
-        }
-        if (typeof onRunSearchClick === 'function') {
-            onRunSearchClick();
         }
     };
     const handleSavedSearch = (query: string) => {
