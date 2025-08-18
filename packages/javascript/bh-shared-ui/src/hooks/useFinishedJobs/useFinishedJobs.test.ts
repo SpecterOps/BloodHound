@@ -48,6 +48,8 @@ vi.mock('../usePermissions', async () => {
         ...actual,
         usePermissions: () => ({
             checkPermission: checkPermissionMock,
+            // Treat permissions as loaded in tests unless explicitly overridden
+            isSuccess: true,
         }),
     };
 });
