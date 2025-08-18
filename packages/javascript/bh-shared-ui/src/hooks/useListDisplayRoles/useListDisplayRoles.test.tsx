@@ -16,8 +16,8 @@
 import { Role } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { SetUpQueryClient, renderHook, waitFor } from '../../test-utils';
-import { useListDisplayRoles } from './useListDisplayRoles';
+import { renderHook, waitFor } from '../../test-utils';
+import { hiddenRoles, useListDisplayRoles } from './useListDisplayRoles';
 
 const MockRoles: Role[] = [
     {
@@ -343,39 +343,19 @@ afterAll(() => server.close());
 
 describe('useListDisplayRoles', () => {
     it('List Display Roles Hook is Loading', async () => {
-        const mockState = [
-            {
-                key: ['getRoles'],
-                data: MockRoles,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
+        const { result } = renderHook(() => useListDisplayRoles());
 
-        // set setQueryData
-        const queryClient = SetUpQueryClient(mockState);
-
-        const { result } = renderHook(() => useListDisplayRoles(), {
-            queryClient: queryClient,
-        });
-
-        await waitFor(() => expect(result.current.isLoading).toEqual(true));
+        expect(result.current.isLoading).toEqual(true);
     });
     it('Validate Client Tasking Roles is not on List Display Roles', async () => {
-        const mockState = [
-            {
-                key: ['getRoles'],
-                data: MockRoles,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
+        const { result } = renderHook(() => useListDisplayRoles());
 
-        // set setQueryData
-        const queryClient = SetUpQueryClient(mockState);
-
-        const { result } = renderHook(() => useListDisplayRoles(), {
-            queryClient: queryClient,
+        await waitFor(() => {
+            result.current.data.forEach((role: Role) => {
+                hiddenRoles.forEach((hiddenRole: string) => {
+                    expect(role?.name).not.toBe(hiddenRole);
+                });
+            });
         });
-
-        await waitFor(() => expect(result.current.data));
     });
 });

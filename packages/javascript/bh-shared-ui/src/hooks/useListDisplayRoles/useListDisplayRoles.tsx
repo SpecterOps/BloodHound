@@ -18,14 +18,14 @@ import { Role } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 
+export const hiddenRoles = ['Client-Tasking'];
 export const useListDisplayRoles = () => {
-    const hiddenRoles = ['Client-Tasking'];
     return useQuery({
         queryKey: ['roles'],
         queryFn: ({ signal }) => apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles),
         select: (data: Role[]) =>
             data.map((dataItem: Role) => {
-                if (!hiddenRoles.includes(dataItem.name)) {
+                if (!hiddenRoles?.includes(dataItem.name)) {
                     return dataItem;
                 }
             }) as Role[],
