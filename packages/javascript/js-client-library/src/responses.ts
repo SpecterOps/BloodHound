@@ -211,6 +211,8 @@ export type AssetGroup = TimestampFields & {
 
 export type AssetGroupMember = {
     asset_group_id: number;
+    asset_group_tag_id: number;
+    id: number;
     custom_member: boolean;
     environment_id: string;
     environment_kind: string;
