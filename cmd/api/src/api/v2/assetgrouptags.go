@@ -906,13 +906,13 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySql := "actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?"
+			querySQL := "(actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
 
 			if sqlFilter.SQLString != "" {
-				querySql = fmt.Sprintf(" AND (%s)", querySql)
+				querySQL = "AND" + querySQL
 			}
 
-			sqlFilter.SQLString += querySql
+			sqlFilter.SQLString += querySQL
 
 			for range 4 {
 				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
