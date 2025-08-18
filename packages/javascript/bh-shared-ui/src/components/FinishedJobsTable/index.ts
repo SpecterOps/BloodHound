@@ -14,5 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './bloodHoundUsers';
-export { default as zoneHandlers } from './zoneHandlers';
+export * from './FinishedJobsTable';
