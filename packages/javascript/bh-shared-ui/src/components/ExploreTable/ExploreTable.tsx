@@ -15,11 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import fileDownload from 'js-file-download';
+import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { useToggle } from '../../hooks';
+import { useExploreGraph, useExploreSelectedItem, useToggle } from '../../hooks';
 import { cn } from '../../utils';
 import TableControls from './TableControls';
-import { ExploreTableProps, MungedTableRowWithId, requiredColumns } from './explore-table-utils';
+import {
+    DEFAULT_PINNED_COLUMN_KEYS,
+    ExploreTableProps,
+    MungedTableRowWithId,
+    createColumnStateFromKeys,
+    defaultColumns,
+    getExploreTableData,
+    shimGraphSpecificKeys,
+} from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
 const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
@@ -52,16 +62,14 @@ const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
 };
 
 const ExploreTable = ({
-    data,
-    selectedNode,
     onClose,
-    onRowClick,
-    onDownloadClick,
     onKebabMenuClick,
     onManageColumnsChange,
-    allColumnKeys,
-    selectedColumns = requiredColumns,
+    selectedColumns = defaultColumns,
 }: ExploreTableProps) => {
+    const { data: graphData } = useExploreGraph();
+    const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
+
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
@@ -72,13 +80,22 @@ const ExploreTable = ({
         [setSearchInput]
     );
 
+    const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
+    const shimmedColumns = useMemo(() => shimGraphSpecificKeys(selectedColumns), [selectedColumns]);
+
     const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount } = useExploreTableRowsAndColumns({
         onKebabMenuClick,
         searchInput,
-        allColumnKeys,
-        selectedColumns,
-        data,
+        selectedColumns: shimmedColumns,
+        exploreTableData,
     });
+
+    // Just a hardcoded list of pinned columns for now
+    const [columnPinning, setColumnPinning] = useState<NonNullable<DataTableProps['columnPinning']>>({
+        left: DEFAULT_PINNED_COLUMN_KEYS,
+    });
+
+    const leftPinnedColumns = columnPinning.left && createColumnStateFromKeys(columnPinning.left);
 
     const searchInputProps = useMemo(
         () => ({
@@ -89,20 +106,57 @@ const ExploreTable = ({
         [handleSearchInputChange, searchInput]
     );
 
+    const handleRowClick = useCallback(
+        (row: MungedTableRowWithId) => {
+            if (row.id !== selectedItem) {
+                setSelectedItem(row.id);
+            } else {
+                clearSelectedItem();
+            }
+        },
+        [setSelectedItem, selectedItem, clearSelectedItem]
+    );
+
+    const handleDownloadClick = useCallback(() => {
+        try {
+            const nodes = exploreTableData?.nodes;
+            if (nodes) {
+                const nodeValues = Object.values(nodes)?.map((node) => {
+                    const nodeClone = Object.assign({}, node);
+                    const flattenedNodeClone = Object.assign(nodeClone, node.properties);
+
+                    delete flattenedNodeClone.properties;
+
+                    return flattenedNodeClone;
+                });
+
+                const csv = json2csv(nodeValues, {
+                    keys: exploreTableData.node_keys,
+                    emptyFieldValue: '',
+                    preventCsvInjection: true,
+                });
+
+                fileDownload(csv, 'nodes.csv');
+            }
+        } catch (err) {
+            console.error('Failed to export CSV:', err);
+        }
+    }, [exploreTableData]);
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
             className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2', {
                 'h-1/2': !isExpanded,
                 'h-[calc(100%-72px)]': isExpanded,
-                'w-[calc(100%-450px)]': selectedNode,
+                'w-[calc(100%-450px)]': selectedItem,
             })}>
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}
-                    selectedColumns={selectedColumns}
-                    pinnedColumns={requiredColumns}
-                    onDownloadClick={onDownloadClick}
+                    selectedColumns={shimmedColumns}
+                    pinnedColumns={leftPinnedColumns}
+                    onDownloadClick={handleDownloadClick}
                     onExpandClick={toggleIsExpanded}
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
@@ -116,8 +170,10 @@ const ExploreTable = ({
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}
                     TableCellProps={tableCellProps}
-                    onRowClick={onRowClick}
-                    selectedRow={selectedNode || undefined}
+                    columnPinning={columnPinning}
+                    onColumnPinningChange={setColumnPinning}
+                    onRowClick={handleRowClick}
+                    selectedRow={selectedItem || undefined}
                     data={sortedFilteredRows}
                     columns={tableColumns as DataTableProps['columns']}
                     tableOptions={tableOptions}

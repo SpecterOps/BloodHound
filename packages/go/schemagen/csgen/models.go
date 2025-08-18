@@ -113,8 +113,9 @@ func (s Type) NodeType() string {
 type Modifier int
 
 const (
-	ModifierStatic Modifier = 1
-	ModifierConst  Modifier = 2
+	ModifierStatic   Modifier = 1
+	ModifierConst    Modifier = 2
+	ModifierReadonly Modifier = 3
 )
 
 func (s Modifier) String() string {
@@ -123,6 +124,8 @@ func (s Modifier) String() string {
 		return "static"
 	case ModifierConst:
 		return "const"
+	case ModifierReadonly:
+		return "readonly"
 	}
 	return ""
 }
@@ -247,10 +250,11 @@ func (s Namespace) Exit() string {
 }
 
 type Class struct {
-	Modifiers  Modifiers
-	Visibility Visibility
-	Name       string
-	Nodes      []SyntaxNode
+	Modifiers   Modifiers
+	Visibility  Visibility
+	Name        string
+	Nodes       []SyntaxNode
+	Annotations []Annotation
 }
 
 func (s Class) NodeType() string {
@@ -267,4 +271,29 @@ func (s Class) Enter() string {
 
 func (s Class) Exit() string {
 	return "\n}"
+}
+
+type Annotation struct {
+	HasContent        bool
+	AnnotationType    string
+	AnnotationContent []string
+}
+
+func (s Annotation) NodeType() string {
+	return "annotation"
+}
+
+func (s Annotation) Children() []SyntaxNode {
+	return []SyntaxNode{}
+}
+
+func (s Annotation) String() string {
+	if s.HasContent {
+		if len(s.AnnotationContent) > 0 {
+			quotedAndCommaSep := "\"" + strings.Join(s.AnnotationContent, "\", \"") + "\""
+			return fmt.Sprintf("[%s(%s)]\n", s.AnnotationType, quotedAndCommaSep)
+		}
+		return fmt.Sprintf("[%s]\n", s.AnnotationType)
+	}
+	return ""
 }

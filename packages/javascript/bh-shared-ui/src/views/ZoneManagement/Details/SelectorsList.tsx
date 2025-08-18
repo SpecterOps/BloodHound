@@ -103,7 +103,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
                         onSelect(item.id);
                     }}>
                     <div className='flex items-center'>
-                        <div
+                        <span
                             className={cn(
                                 'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
                                 {
@@ -112,7 +112,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
                             )}
                             title={isDisabled ? `Disabled: ${item.name}` : item.name}>
                             {item.name}
-                        </div>
+                        </span>
                     </div>
                     {item.counts && <span className='text-base'>{item.counts.members.toLocaleString()}</span>}
                 </Button>

@@ -6924,7 +6924,14 @@
             "name": "scope",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.contains"
+              "type": "string",
+              "enum": [
+                "all",
+                "owned",
+                "shared",
+                "public"
+              ],
+              "default": "owned"
             }
           }
         ],
@@ -6944,7 +6951,19 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.saved-query"
+                            "allOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              {
+                                "$ref": "#/components/schemas/model.saved-query"
+                              }
+                            ]
                           }
                         }
                       }
@@ -12261,7 +12280,7 @@
       "post": {
         "operationId": "DeleteBloodHoundDatabase",
         "summary": "Delete your BloodHound data",
-        "description": "Wipes your Bloodhound data permanently.  Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
+        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
         "tags": [
           "Database",
           "Community",
@@ -16754,6 +16773,10 @@
               "eula_accepted": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "all_environments": {
+                "type": "boolean",
+                "readOnly": true
               }
             }
           }
@@ -18196,6 +18219,9 @@
           },
           "analysis_enabled": {
             "$ref": "#/components/schemas/null.boolean"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
           }
         }
       },
@@ -18216,6 +18242,9 @@
           },
           "position": {
             "type": "integer"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
           }
         }
       },

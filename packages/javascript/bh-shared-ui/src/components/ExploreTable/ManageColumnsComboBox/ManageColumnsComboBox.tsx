@@ -17,9 +17,9 @@ import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
-import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
+import { defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
@@ -43,16 +43,13 @@ export const ManageColumnsComboBox = ({
 
     useOnClickOutside(ref, () => setIsOpen(false));
 
-    const initialColumns = useMemo(
+    const selectedColumns = useMemo(
         () => allColumns.filter((item) => selectedColumnsProp[item.id]),
         [allColumns, selectedColumnsProp]
     );
-    useEffect(() => {
-        setSelectedColumns(initialColumns);
-    }, [initialColumns]);
 
     const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
-    const [selectedColumns, setSelectedColumns] = useState<ManageColumnsComboBoxOption[]>(initialColumns);
+    const initialColumns = useMemo(() => allColumns.filter((item) => defaultColumns[item.id]), [allColumns]);
     const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
 
     const unselectedColumns = useMemo(() => {
@@ -65,10 +62,9 @@ export const ManageColumnsComboBox = ({
         });
     }, [allColumns, selectedColumnMap, inputValue]);
 
-    const handleResetDefault = useCallback(() => {
-        setSelectedColumns([...pinnedColumns]);
-        onChange([...pinnedColumns]);
-    }, [onChange, pinnedColumns]);
+    const handleResetDefault = () => {
+        onChange([...initialColumns]);
+    };
 
     const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
 
@@ -77,7 +73,6 @@ export const ManageColumnsComboBox = ({
         selectedItems: selectedColumns,
         onStateChange({ selectedItems: newSelectedColumns, type }) {
             if (type !== useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace && newSelectedColumns?.length) {
-                setSelectedColumns(newSelectedColumns || []);
                 onChange(newSelectedColumns || []);
             } else {
                 handleResetDefault();
@@ -95,7 +90,6 @@ export const ManageColumnsComboBox = ({
             switch (type) {
                 case useCombobox.stateChangeTypes.ItemClick:
                     if (newSelectedItem) {
-                        setSelectedColumns([...selectedColumns, newSelectedItem]);
                         setInputValue('');
                     }
                     break;
@@ -113,7 +107,6 @@ export const ManageColumnsComboBox = ({
     const handleSelectAll = () => {
         if (shouldSelectAll) {
             handleResetDefault();
-            setSelectedColumns([...allColumns]);
             onChange([...allColumns]);
         } else {
             handleResetDefault();
@@ -132,7 +125,7 @@ export const ManageColumnsComboBox = ({
                     disabled={disabled}
                     onClick={handleManageColumnsClick}
                     className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'>
-                    Manage Columns
+                    Columns
                 </Button>
             </div>
 
@@ -163,7 +156,7 @@ export const ManageColumnsComboBox = ({
 
                                 return (
                                     <ManageColumnsListItem
-                                        isSelected={selectedColumnMap[column.id]}
+                                        isSelected={!!selectedColumnMap[column.id]}
                                         key={`${column?.id}-${index}`}
                                         item={column}
                                         onClick={isSelected ? removeSelectedItem : addSelectedItem}
@@ -188,6 +181,7 @@ export const ManageColumnsComboBox = ({
                             }, [] as ReactNode[]),
                             ...unselectedColumns.map((column, index) => (
                                 <ManageColumnsListItem
+                                    isSelected={false}
                                     key={`${column?.id}-${index}`}
                                     item={column}
                                     onClick={addSelectedItem}

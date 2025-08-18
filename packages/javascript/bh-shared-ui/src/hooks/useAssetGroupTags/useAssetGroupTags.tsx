@@ -66,9 +66,10 @@ export const zoneManagementKeys = {
     selectorDetail: (tagId: string | number, selectorId: string | number) =>
         [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
     members: () => [...zoneManagementKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number) => [...zoneManagementKeys.members(), 'tag', tagId] as const,
-    membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined) =>
-        [...zoneManagementKeys.membersByTag(tagId), 'selector', selectorId] as const,
+    membersByTag: (tagId: string | number, sortOrder: SortOrder) =>
+        [...zoneManagementKeys.members(), 'tag', tagId, sortOrder] as const,
+    membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined, sortOrder: SortOrder) =>
+        ['tag', tagId, 'selector', selectorId, sortOrder] as const,
 };
 
 export const getAssetGroupTags = () =>
@@ -110,8 +111,10 @@ export const useSelectorsInfiniteQuery = (tagId: string | number | undefined) =>
         nextPageParam?: PageParam;
     }>({
         queryKey: zoneManagementKeys.selectorsByTag(tagId!),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupTagSelectors(tagId!, pageParam.skip, pageParam.limit),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID provided for selectors request');
+            return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
     });
@@ -134,16 +137,18 @@ export const useTagMembersInfiniteQuery = (tagId: number | string | undefined, s
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTag(tagId!),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupTagMembers(tagId!, pageParam.skip, pageParam.limit, sortOrder),
+        queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID provided for tag members request');
+            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
     });
 
 export const getAssetGroupSelectorMembers = (
     tagId: number | string,
-    selectorId: number | string | undefined = undefined,
+    selectorId: number | string,
     skip: number = 0,
     limit: number = PAGE_SIZE,
     sortOrder: SortOrder = 'asc'
@@ -152,7 +157,7 @@ export const getAssetGroupSelectorMembers = (
         () =>
             apiClient.getAssetGroupTagSelectorMembers(
                 tagId,
-                selectorId!,
+                selectorId,
                 skip,
                 limit,
                 sortOrder === 'asc' ? 'name' : '-name'
@@ -171,9 +176,12 @@ export const useSelectorMembersInfiniteQuery = (
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupSelectorMembers(tagId!, selectorId, pageParam.skip, pageParam.limit, sortOrder),
+        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID available to get selector members');
+            if (!selectorId) return Promise.reject('No selector ID available to get selector members');
+            return getAssetGroupSelectorMembers(tagId, selectorId, pageParam.skip, pageParam.limit, sortOrder);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined && selectorId !== undefined,
     });
@@ -203,11 +211,11 @@ export const patchSelector = async (params: PatchSelectorParams, options?: Reque
     return res.data.data;
 };
 
-export const usePatchSelector = (tagId: string | number | undefined) => {
+export const usePatchSelector = (tagId: string | number) => {
     const queryClient = useQueryClient();
     return useMutation(patchSelector, {
         onSettled: async () => {
-            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId!));
+            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId));
         },
     });
 };
@@ -219,7 +227,8 @@ export const useDeleteSelector = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteSelector, {
         onSettled: async (_data, _error, variables) => {
-            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(variables.tagId));
+            queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(variables.tagId));
+            queryClient.invalidateQueries(zoneManagementKeys.selectorDetail(variables.tagId, variables.selectorId));
         },
     });
 };
@@ -276,8 +285,8 @@ export const useDeleteAssetGroupTag = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteAssetGroupTag, {
         onSettled: async (_data, _error, tagId) => {
-            await queryClient.invalidateQueries(zoneManagementKeys.tags());
-            await queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
+            queryClient.invalidateQueries(zoneManagementKeys.tags());
+            queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
         },
     });
 };
@@ -299,10 +308,7 @@ export const useAssetGroupTags = () => {
 
     return useQuery({
         queryKey: zoneManagementKeys.tags(),
-        queryFn: async ({ signal }) => {
-            const response = await apiClient.getAssetGroupTags({ signal });
-            return response.data.data.tags;
-        },
+        queryFn: getAssetGroupTags,
         enabled: queryEnabled,
     });
 };

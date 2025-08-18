@@ -25,7 +25,7 @@ import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
 
-type DetailsListProps = {
+type TagListProps = {
     title: 'Tiers' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string | undefined;
@@ -40,7 +40,7 @@ type DetailsListProps = {
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
  * @returns The component that displays a list of entities for the zone management page
  */
-export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
+export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     return (
@@ -121,13 +121,13 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 {isTag(listItem) && !listItem?.analysis_enabled && (
                                                     <ZoneAnalysisIcon size={18} tooltip />
                                                 )}
-                                                <div
+                                                <span
                                                     className={cn(
                                                         'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]'
                                                     )}
                                                     title={listItem.name}>
                                                     {listItem.name}
-                                                </div>
+                                                </span>
                                             </div>
                                             {listItem.counts && (
                                                 <span className='text-base ml-4'>

@@ -139,7 +139,7 @@ func WorkspaceGenerate(modPath string, env environment.Environment) error {
 	go parallelGenerateModulePackages(jobC, waitGroup, env, addErr)
 
 	// For each known module path attempt generation of each module package
-	if modulePackages, err := moduleListPackages(modPath); err != nil {
+	if modulePackages, err := moduleListPackages(modPath, env); err != nil {
 		return fmt.Errorf("getting module packages for %s: %w", modPath, err)
 	} else {
 		for _, modulePackage := range modulePackages {
