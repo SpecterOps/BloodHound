@@ -49,6 +49,8 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         queryFilterHandler(searchTerm, val, categoryFilter, source);
     };
 
+    console.log(selectedQuery);
+
     const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
         const {
             target: { value },
@@ -105,6 +107,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             Export
                         </Button>
                         <Button
+                            aria-label='delete'
                             disabled={!exportEnabled}
                             className='ml-2'
                             variant='icon'
