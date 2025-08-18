@@ -31,8 +31,8 @@ const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
 const checkPermissionMock = vi.fn();
 
-vi.mock('../providers', async () => {
-    const actual = await vi.importActual('../providers');
+vi.mock('../../providers', async () => {
+    const actual = await vi.importActual('../../providers');
     return {
         ...actual,
         useNotifications: () => ({
@@ -42,8 +42,8 @@ vi.mock('../providers', async () => {
     };
 });
 
-vi.mock('../hooks/usePermissions', async () => {
-    const actual = await vi.importActual('../hooks');
+vi.mock('../usePermissions', async () => {
+    const actual = await vi.importActual('../usePermissions');
     return {
         ...actual,
         usePermissions: () => ({

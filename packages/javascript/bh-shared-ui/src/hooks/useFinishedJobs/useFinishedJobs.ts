@@ -13,7 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { GetScheduledJobDisplayResponse } from 'js-client-library';
+
+import type { GetScheduledJobDisplayResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers';
@@ -31,21 +32,21 @@ import { usePermissions } from '../usePermissions';
 
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
 export const useFinishedJobs = ({ page, rowsPerPage }: FinishedJobParams) => {
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.CLIENTS_MANAGE);
+    const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
+    const hasPermission = permissionsLoaded && checkPermission(Permission.CLIENTS_MANAGE);
 
     const { addNotification, dismissNotification } = useNotifications();
 
     useEffect(() => {
-        if (!hasPermission) {
+        if (permissionsLoaded && !hasPermission) {
             addNotification(NO_PERMISSION_MESSAGE, NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
         }
 
         return () => dismissNotification(NO_PERMISSION_KEY);
-    }, [addNotification, dismissNotification, hasPermission]);
+    }, [addNotification, dismissNotification, hasPermission, permissionsLoaded]);
 
     return useQuery<GetScheduledJobDisplayResponse>({
-        enabled: hasPermission,
+        enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
         queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),
