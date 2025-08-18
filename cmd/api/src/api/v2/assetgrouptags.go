@@ -50,7 +50,6 @@ import (
 const (
 	assetGroupPreviewSelectorDefaultLimit = 200
 	AssetGroupTagDefaultLimit             = 50
-	assetGroupTagsSearchLimit             = 20
 	assetGroupTagQueryLimitMin            = 3
 
 	includeProperties = true
@@ -819,7 +818,7 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				kinds = kinds.Add(t.ToKind())
 				tagIds = append(tagIds, t.ID)
 				tagIdByKind[t.ToKind()] = t.ID
-				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < assetGroupTagsSearchLimit {
+				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) && len(matchedTags) < AssetGroupTagDefaultLimit {
 					matchedTags = append(matchedTags, t)
 				}
 			}
@@ -835,10 +834,10 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 			selectorFilter = model.SQLFilter{SQLString: "name ILIKE ? AND asset_group_tag_id IN ?", Params: []any{"%" + reqBody.Query + "%", tagIds}}
 		)
 
-		if selectors, err = s.DB.GetAssetGroupTagSelectors(request.Context(), selectorFilter, assetGroupTagsSearchLimit); err != nil && !errors.Is(err, database.ErrNotFound) {
+		if selectors, err = s.DB.GetAssetGroupTagSelectors(request.Context(), selectorFilter, AssetGroupTagDefaultLimit); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 			return
-		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, assetGroupTagsSearchLimit); err != nil {
+		} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty(common.Name.String()), Direction: query.SortDirectionAscending}}, nodeFilter, 0, AssetGroupTagDefaultLimit); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 			return
 		} else {
