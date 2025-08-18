@@ -2706,7 +2706,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
-							v2.AssetGroupTagQueryParameterLimit).
+							v2.AssetGroupTagDefaultLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2758,7 +2758,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							10,
-							v2.AssetGroupTagQueryParameterLimit).
+							v2.AssetGroupTagDefaultLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2784,7 +2784,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}},
 							0,
-							v2.AssetGroupTagQueryParameterLimit).
+							v2.AssetGroupTagDefaultLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
