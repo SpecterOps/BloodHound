@@ -44,7 +44,7 @@ const FileUploadDialog: React.FC<{
     const [uploadDialogDisabled, setUploadDialogDisabled] = useState<boolean>(false);
     const [uploadMessage, setUploadMessage] = useState<string>('');
     const [currentIngestJobId, setCurrentIngestJobId] = useState('');
-    const [progressCache, setProgressCache] = useState({});
+    const [progressCache, setProgressCache] = useState<Record<string, number>>({});
 
     const { addNotification } = useNotifications();
     const listFileTypesForIngest = useListFileTypesForIngest();
@@ -229,7 +229,6 @@ const FileUploadDialog: React.FC<{
         }
     };
 
-    console.log({ progressCache });
     return (
         <Dialog
             open={open}

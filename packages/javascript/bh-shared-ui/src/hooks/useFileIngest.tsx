@@ -35,7 +35,7 @@ export const uploadFileToIngestJob = ({
     jobId: string;
     fileContents: any;
     contentType?: string;
-    options: Parameters<typeof apiClient.uploadFileToIngestJob>[2];
+    options: Parameters<typeof apiClient.uploadFileToIngestJob>[3];
 }) => {
     return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType, options).then((res) => res.data);
 };
