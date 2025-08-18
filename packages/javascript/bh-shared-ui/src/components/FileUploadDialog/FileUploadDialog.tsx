@@ -134,6 +134,7 @@ const FileUploadDialog: React.FC<{
 
                 await Promise.all(promises);
             }
+
             await finishUpload(jobId);
 
             logFinishedIngestJob(errorCount);

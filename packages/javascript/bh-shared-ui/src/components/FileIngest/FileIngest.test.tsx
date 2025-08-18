@@ -84,9 +84,32 @@ const server = setupServer(
     })
 );
 
-beforeAll(() => server.listen());
+const OriginalXMLHttpRequest = XMLHttpRequest;
+
+beforeAll(() => {
+    server.listen();
+    class MockXMLHttpRequest extends XMLHttpRequest {
+        upload = {
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            onabort: vi.fn(),
+            onerror: vi.fn(),
+            onload: vi.fn(),
+            onloadend: vi.fn(),
+            onloadstart: vi.fn(),
+            onprogress: vi.fn(),
+            ontimeout: vi.fn(),
+            dispatchEvent: vi.fn(),
+        };
+    }
+
+    vi.stubGlobal('XMLHttpRequest', MockXMLHttpRequest);
+});
 afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+afterAll(() => {
+    server.close();
+    vi.stubGlobal('XMLHttpRequest', OriginalXMLHttpRequest);
+});
 
 describe('FileIngest', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
