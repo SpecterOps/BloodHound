@@ -28,40 +28,28 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
-import {
-    Alert,
-    Card,
-    Checkbox,
-    FormControl,
-    FormControlLabel,
-    FormHelperText,
-    Grid,
-    InputLabel,
-    TextField,
-} from '@mui/material';
-import { CreateUserRequest } from 'js-client-library';
+import { Alert, Card, Checkbox, FormControl, Grid, TextField } from '@mui/material';
+import { SSOProvider } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { apiClient } from '../../utils';
-
-export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
+import { CreateUserRequestForm } from './CreateUserForm';
 
 const CreateUserFormLeftPanel: React.FC<{
-    onCancel?: () => void;
-    onSubmit?: (user: CreateUserRequestForm) => void;
-    isLoading?: boolean;
-    error?: any;
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
     className?: any;
-    onChange?: (value: string) => void;
     disabled?: boolean;
+    error?: any;
+    isLoading?: boolean;
+    onCancel?: () => void;
+    onChange?: (value: string) => void;
+    onSubmit?: (user: CreateUserRequestForm) => void;
     value?: string;
-}> = ({ onCancel, onSubmit, isLoading, error, showEnvironmentAccessControls = true, onChange, disabled, value }) => {
+    handleSubmit?: any;
+}> = ({ onCancel, onSubmit, isLoading, error, onChange, disabled, value }) => {
     const {
         control,
-        //handleSubmit,
         setValue,
         formState: { errors },
         setError,
@@ -111,13 +99,11 @@ const CreateUserFormLeftPanel: React.FC<{
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
-    console.log();
-
     return (
-        <Card className='flex-1 p-4 rounded shadow max-w-[600px]'>
+        <Card className=' p-6 rounded shadow max-w-[600px]'>
             <DialogTitle>Create User</DialogTitle>
 
-            <DialogDescription className='flex flex-col' data-testid='environments-checkboxes'>
+            <DialogDescription className='flex flex-col' data-testid='create-user-dialog'>
                 <Grid container spacing={2} className='min-h-[650px]'>
                     <Grid item xs={12}>
                         <Controller
@@ -264,9 +250,8 @@ const CreateUserFormLeftPanel: React.FC<{
                             <FormControl>
                                 <Label className='text-base font-bold'>Authentication Method</Label>
                                 <Select
-                                    //onValueChange={(e) => setAuthenticationMethod(e.target.value as string)}
-                                    onValueChange={(value) => setAuthenticationMethod(value as string)}
                                     data-testid='create-user-dialog_select-authentication-method'
+                                    onValueChange={(value) => setAuthenticationMethod(value as string)}
                                     value={authenticationMethod}>
                                     <SelectTrigger>
                                         <SelectValue placeholder={getRolesQuery.data![2].name} />
@@ -340,6 +325,20 @@ const CreateUserFormLeftPanel: React.FC<{
                                     />
                                 </Grid>
                                 <Grid item xs={12}>
+                                    <Checkbox
+                                        //checked={}
+                                        className=''
+                                        data-testid={'create-user-dialog_checkbox-needs-password-reset'}
+                                        id={'create-user-dialog_checkbox-needs-password-reset'}
+                                        //onClick={}
+                                        value={value}
+                                    />
+                                    <label
+                                        className='mr-3 w-full cursor-pointer'
+                                        htmlFor={'create-user-dialog_checkbox-needs-password-reset'}>
+                                        Force Password Reset?
+                                    </label>
+                                    {/*
                                     <Controller
                                         name='needsPasswordReset'
                                         control={control}
@@ -358,45 +357,33 @@ const CreateUserFormLeftPanel: React.FC<{
                                             />
                                         )}
                                     />
+                                    */}
                                 </Grid>
                             </>
                         ) : (
                             <Grid item xs={12}>
-                                <Controller
-                                    name='SSOProviderId'
-                                    control={control}
-                                    rules={{
-                                        required: 'SSO Provider is required',
-                                    }}
-                                    render={({ field: { onChange, onBlur, value, ref } }) => (
-                                        <FormControl error={!!errors.SSOProviderId}>
-                                            <InputLabel id='SSOProviderId-label' sx={{ ml: '-14px', mt: '8px' }}>
-                                                SSO Provider
-                                            </InputLabel>
-                                            {/*
-                                            <Select
-                                                onChange={onChange as (event: SelectChangeEvent<string>) => void}
-                                                defaultValue={''}
-                                                onBlur={onBlur}
-                                                value={value}
-                                                ref={ref}
-                                                labelId='SSOProviderId-label'
-                                                id='SSOProviderId'
-                                                name='SSOProviderId'
-                                                variant='standard'
-                                                fullWidth
-                                                data-testid='create-user-dialog_select-sso-provider'>
+                                <FormControl>
+                                    <Label id='SSOProviderId-label' className='text-base font-bold'>
+                                        SSO Provider
+                                    </Label>
+                                    <Select
+                                        data-testid='create-user-dialog_select-authentication-method'
+                                        onValueChange={(value) => setAuthenticationMethod(value as string)}
+                                        value={authenticationMethod}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder='SSO Provider' />
+                                        </SelectTrigger>
+                                        <SelectPortal>
+                                            <SelectContent>
                                                 {listSSOProvidersQuery.data?.map((SSOProvider: SSOProvider) => (
-                                                    <MenuItem value={SSOProvider.id} key={SSOProvider.id}>
+                                                    <SelectItem value={SSOProvider.id} key={SSOProvider.id}>
                                                         {SSOProvider.name}
-                                                    </MenuItem>
+                                                    </SelectItem>
                                                 ))}
-                                            </Select>
-                                            */}
-                                            <FormHelperText>{errors.SSOProviderId?.message}</FormHelperText>
-                                        </FormControl>
-                                    )}
-                                />
+                                            </SelectContent>
+                                        </SelectPortal>
+                                    </Select>
+                                </FormControl>
                             </Grid>
                         )}
                     </>
@@ -421,45 +408,6 @@ const CreateUserFormLeftPanel: React.FC<{
                                 </SelectContent>
                             </SelectPortal>
                         </Select>
-                        {/*
-                        <Controller
-                            name='roles.0'
-                            control={control}
-                            defaultValue={1}
-                            rules={{
-                                required: 'Role is required',
-                            }}
-                            render={({ field }) => (
-                                <FormControl>
-                                    <InputLabel id='role-label' sx={{ ml: '-14px', mt: '8px' }}>
-                                        Role
-                                    </InputLabel>
-                                    <Select
-                                        data-testid='create-user-dialog_select-role'
-                                        fullWidth
-                                        id='role'
-                                        labelId='role-label'
-                                        name='role'
-                                        onChange={(e) => {
-                                            const output = parseInt(e.target.value as string, 10);
-                                            field.onChange(isNaN(output) ? 1 : output);
-                                        }}
-                                        value={isNaN(field.value) ? '' : field.value.toString()}
-                                        variant='standard'>
-                                        {getRolesQuery.isLoading ? (
-                                            <MenuItem value={1}>Loading...</MenuItem>
-                                        ) : (
-                                            getRolesQuery.data?.map((role: any) => (
-                                                <MenuItem key={role.id} value={role.id.toString()}>
-                                                    {role.name}
-                                                </MenuItem>
-                                            ))
-                                        )}
-                                    </Select>
-                                </FormControl>
-                            )}
-                        />
-                        */}
                     </Grid>
                     {!!errors.root?.generic && (
                         <Grid item xs={12}>

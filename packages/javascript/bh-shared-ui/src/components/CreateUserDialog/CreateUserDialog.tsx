@@ -21,14 +21,29 @@ import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
-    open: boolean;
+    createUser: boolean;
+    updateUser: boolean;
+    error: any;
+    isLoading: boolean;
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: CreateUserRequest) => Promise<any>;
-    isLoading: boolean;
-    error: any;
+    open: boolean;
+    userId: string;
+    hasSelectedSelf?: boolean;
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
-}> = ({ open, onClose, onExited, onSave, isLoading, error, showEnvironmentAccessControls = true }) => {
+}> = ({
+    open,
+    onClose,
+    onExited,
+    onSave,
+    isLoading,
+    error,
+    showEnvironmentAccessControls,
+    createUser,
+    updateUser,
+    userId,
+}) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
@@ -47,12 +62,55 @@ const CreateUserDialog: React.FC<{
 
     return (
         <DialogContent maxWidth='lg' className='!bg-transparent'>
-            <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
+            <CreateUserForm
+                createUser={createUser}
+                error={error}
+                isLoading={isLoading}
+                onCancel={onClose}
+                onSubmit={handleOnSave}
+                open={open}
+                showEnvironmentAccessControls={true}
+                updateUser={updateUser}
+                userId={userId}
+            />
         </DialogContent>
     );
 };
 
 export default CreateUserDialog;
+
+/*
+        <>
+            {showEnvironmentAccessControls ? (
+                <DialogContent maxWidth='lg' className='!bg-transparent'>
+                    <CreateUserForm
+                        createUser={createUser}
+                        error={error}
+                        isLoading={isLoading}
+                        onCancel={onClose}
+                        onSubmit={handleOnSave}
+                        open={open}
+                        showEnvironmentAccessControls={true}
+                        updateUser={updateUser}
+                        userId={userId}
+                    />
+                </DialogContent>
+            ) : (
+                <DialogContent maxWidth='lg' className=''>
+                    <CreateUserForm
+                        //createUser={createUser} //TODO: NEEDED FOR BHCE?
+                        //updateUser={updateUser} //TODO: NEEDED FOR BHCE?
+                        error={error}
+                        isLoading={isLoading}
+                        onCancel={onClose}
+                        onSubmit={handleOnSave}
+                        showEnvironmentAccessControls={false}
+                        userId={userId}
+                    />
+                </DialogContent>
+            )}
+        </>
+*/
 
 {
     /*
