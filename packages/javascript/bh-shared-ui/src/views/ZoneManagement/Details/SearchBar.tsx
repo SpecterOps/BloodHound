@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import {
-    AssetGroupMember,
-    AssetGroupSearch,
+    AssetGroupTagSearchResponse,
     AssetGroupTag,
     AssetGroupTagSelector,
+    AssetGroupTagMember,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
 } from 'js-client-library';
@@ -38,7 +38,7 @@ type SectorKey = 'tags' | 'selectors' | 'members';
 
 type Sector = 'Tiers' | 'Selectors' | 'Objects';
 
-type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupMember;
+type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
 const sectorMap: Record<Sector, SectorKey> = {
     Tiers: 'tags',
@@ -49,7 +49,7 @@ const sectorMap: Record<Sector, SectorKey> = {
 const SearchBar: React.FC<SearchBarProps> = ({ selected }) => {
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
-    const [results, setResults] = useState<AssetGroupSearch>({
+    const [results, setResults] = useState<AssetGroupTagSearchResponse>({
         tags: [],
         selectors: [],
         members: [],
@@ -59,12 +59,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected }) => {
     const { labelId } = useParams();
     const inputRef = React.useRef<HTMLDivElement>(null);
 
+    const scope = labelId ? 'label' : 'tier';
     const searchQuery = useQuery({
-        queryKey: ['zone-management', 'search', debouncedInputValue, selected],
+        queryKey: ['zone-management', 'search', debouncedInputValue, selected, scope],
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
-                tag_type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                tag_type: scope ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
@@ -115,7 +116,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected }) => {
             const selector = item as AssetGroupTagSelector;
             url = `/zone-management/details/${base}/${selector.asset_group_tag_id}/selector/${selector.id}`;
         } else if (sector === 'Objects') {
-            const member = item as AssetGroupMember;
+            const member = item as AssetGroupTagMember;
             url = `/zone-management/details/${base}/${member.asset_group_tag_id}/member/${member.id}`;
         }
         navigate(url);
@@ -144,16 +145,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ selected }) => {
                             <p className='font-bold'>{sector}</p>
                             {results[sectorMap[sector]].length > 0 ? (
                                 <ul>
-                                    {results[sectorMap[sector]]
+                                    {[...results[sectorMap[sector]]]
                                         .sort((a, b) =>
                                             a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
                                         )
-                                        .map((item: SearchItem, index: number) => (
+                                        .map((item: SearchItem) => (
                                             <li
                                                 className={cn('flex max-w-lg min-w-0', {
-                                                    'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
+                                                    'bg-neutral-light-4 dark:bg-neutral-dark-4':
+                                                        (item.id as number) % 2 === 0,
                                                 })}
-                                                key={index}>
+                                                key={item.id}>
                                                 <Button
                                                     className='overflow-hidden'
                                                     variant={'text'}

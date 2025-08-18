@@ -31,12 +31,12 @@ const mockResults = {
 };
 
 const server = setupServer(
-    rest.post('/api/v2/zone-management/search', async (_req, res, ctx) => {
+    rest.post('/api/v2/asset-group-tags/search', async (_req, res, ctx) => {
         return res(ctx.json(mockResults));
     })
 );
 
-beforeAll(() => server.listen());
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
