@@ -60,7 +60,7 @@ describe('TagToZoneLabel', () => {
         expect(screen.getByText('Tag Results to Zone')).toBeInTheDocument();
     });
 
-    it('does fires TagToLabelDialog when the Zone option is clicked', async () => {
+    it('does fires TagToLabelDialog when the Label option is clicked', async () => {
         const user = userEvent.setup();
 
         render(<TagToZoneLabel selectedQuery={testSelectedQuery} cypherQuery={''}></TagToZoneLabel>);
