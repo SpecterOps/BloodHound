@@ -38,8 +38,6 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
     const zones = tiersQuery.data;
 
-    // console.log(zones);
-
     const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
     const labels = labelsQuery.data;
 
