@@ -35,8 +35,8 @@ const makeProgressCacheKey = (jobId: string, fileName: string) => `job-${jobId}-
 const FileUploadDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-    headerText: ReactNode;
-    description: ReactNode;
+    headerText?: ReactNode;
+    description?: ReactNode;
 }> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
@@ -242,7 +242,7 @@ const FileUploadDialog: React.FC<{
             }}>
             <DialogContent>
                 <div className='pb-2 font-bold'>{headerText}</div>
-                <div>{description}</div>
+                {description && <div>{description}</div>}
                 <>
                     {fileUploadStep === FileUploadStep.ADD_FILES && (
                         <FileDrop
