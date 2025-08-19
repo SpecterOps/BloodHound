@@ -55,7 +55,8 @@ ALTER TABLE asset_group_tags
         ADD COLUMN IF NOT EXISTS glyph TEXT UNIQUE;
 
 -- File Ingest Details
-ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS provided_file_name text NOT NULL DEFAULT '';
+ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS original_file_name text NOT NULL DEFAULT '';
+ALTER TABLE ingest_tasks RENAME COLUMN file_name TO stored_file_name;
 CREATE TABLE IF NOT EXISTS completed_tasks (
     id BIGSERIAL PRIMARY KEY,
     ingest_job_id BIGINT NOT NULL REFERENCES ingest_jobs(id) ON DELETE CASCADE,
