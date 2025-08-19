@@ -16,7 +16,7 @@
 
 export { default as LoadContainer } from './LoadContainer';
 
-export * from './DataSelector';
+export * from './SimpleEnvironmentSelector';
 
 export * from './DomainInfo';
 

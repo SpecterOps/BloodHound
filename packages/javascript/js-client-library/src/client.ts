@@ -227,21 +227,19 @@ class BHEAPIClient {
         skip: number | string,
         limit: number,
         sort_by: string,
+        environments?: string[],
         options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${assetGroupTagId}/members`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        sort_by,
-                    },
-                },
-                options
-            )
-        );
+        this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
+            ...options,
+            params: {
+                environments,
+                skip,
+                limit,
+                sort_by,
+            },
+            paramsSerializer: { indexes: null },
+        });
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
@@ -249,27 +247,29 @@ class BHEAPIClient {
         skip: number,
         limit: number,
         sort_by: string,
+        environments?: string[],
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
             `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        sort_by,
-                    },
+            {
+                ...options,
+                params: {
+                    environments,
+                    skip,
+                    limit,
+                    sort_by,
                 },
-                options
-            )
+                paramsSerializer: { indexes: null },
+            }
         );
 
-    getAssetGroupTagMembersCount = (tagId: string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupMemberCountsResponse>(
-            `/api/v2/asset-group-tags/${tagId}/members/counts`,
-            options
-        );
+    getAssetGroupTagMembersCount = (tagId: string, environments?: string[], options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(`/api/v2/asset-group-tags/${tagId}/members/counts`, {
+            ...options,
+            params: { environments },
+            paramsSerializer: { indexes: null },
+        });
 
     assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(

@@ -14,8 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AppLink, getTagUrlValue, useHighestPrivilegeTagId } from 'bh-shared-ui';
-import { FC } from 'react';
+import {
+    AD_PLATFORM,
+    AZ_PLATFORM,
+    AppLink,
+    SelectedEnvironment,
+    SimpleEnvironmentSelector,
+    getTagUrlValue,
+    useEnvironmentParams,
+    useHighestPrivilegeTagId,
+    useInitialEnvironment,
+} from 'bh-shared-ui';
+import { FC, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 const InfoHeader: FC = () => {
@@ -23,18 +33,38 @@ const InfoHeader: FC = () => {
     const { tierId = topTagId?.toString(), labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
+    const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
+    const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | undefined>(initialEnvironment);
+    const { setEnvironmentParams } = useEnvironmentParams();
+
+    const handleSelect = (environment: SelectedEnvironment) => {
+        const { id, type } = environment;
+        const aggregation = type === AD_PLATFORM ? 'active-directory' : type === AZ_PLATFORM ? 'azure' : null;
+
+        setEnvironmentParams({ environmentId: id, environmentAggregation: aggregation });
+
+        setSelectedEnvironment(environment);
+    };
+
     return (
         <div className='flex justify-around basis-2/3'>
             <div className='flex justify-start gap-4 items-center basis-2/3'>
-                <div className='flex items-center align-middle'>
-                    <Button variant='primary' disabled={!tagId} asChild>
-                        <AppLink
-                            data-testid='zone-management_create-selector-link'
-                            to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
-                            Create Selector
-                        </AppLink>
-                    </Button>
-                </div>
+                <SimpleEnvironmentSelector
+                    selected={{
+                        type: selectedEnvironment?.type ?? null,
+                        id: selectedEnvironment?.id ?? null,
+                    }}
+                    errorMessage={''}
+                    buttonPrimary={false}
+                    onSelect={handleSelect}
+                />
+                <Button variant='primary' disabled={!tagId} asChild>
+                    <AppLink
+                        data-testid='zone-management_create-selector-link'
+                        to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                        Create Selector
+                    </AppLink>
+                </Button>
             </div>
             <div className='flex justify-start basis-1/3'>
                 <input type='text' placeholder='search' className='hidden' />

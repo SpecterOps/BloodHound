@@ -19,11 +19,11 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
-    DataSelector,
     DomainInfo,
     LoadingOverlay,
     PageWithTitle,
     SelectedEnvironment,
+    SimpleEnvironmentSelector,
     TenantInfo,
     useInitialEnvironment,
 } from 'bh-shared-ui';
@@ -103,13 +103,14 @@ const QualityAssurance: React.FC = () => {
                 data-testid='data-quality'
                 pageDescription={<QualityAssuranceDescription />}>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    <DataSelector
-                        value={{
+                    <SimpleEnvironmentSelector
+                        selected={{
                             type: environment?.type ?? null,
                             id: environment?.id ?? null,
                         }}
                         errorMessage={environmentErrorMessage}
-                        onChange={(selection) => setSelectedEnvironment(selection)}
+                        buttonPrimary={false}
+                        onSelect={(selection) => setSelectedEnvironment(selection)}
                     />
                 </Box>
                 <Alert severity='info'>
@@ -127,10 +128,11 @@ const QualityAssurance: React.FC = () => {
             data-testid='data-quality'
             pageDescription={<QualityAssuranceDescription />}>
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                <DataSelector
-                    value={selectedEnvironment || initialEnvironment || { type: null, id: null }}
+                <SimpleEnvironmentSelector
+                    selected={selectedEnvironment || initialEnvironment || { type: null, id: null }}
                     errorMessage={environmentErrorMessage}
-                    onChange={(selection) => setSelectedEnvironment({ ...selection })}
+                    buttonPrimary={false}
+                    onSelect={(selection) => setSelectedEnvironment({ ...selection })}
                 />
             </Box>
             {dataError && (

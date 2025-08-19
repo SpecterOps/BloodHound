@@ -17,8 +17,8 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { SimpleEnvironmentSelector } from '.';
 import { render, screen, within } from '../../../test-utils';
-import { DataSelector } from './';
 
 const server = setupServer(
     rest.get(`/api/v2/available-domains`, (req, res, ctx) => {
@@ -265,7 +265,7 @@ describe('Context Selector', () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
         const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' } as const;
-        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
         expect(contextSelector).toBeInTheDocument();
@@ -290,7 +290,7 @@ describe('Context Selector', () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
         const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' } as const;
-        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
         await user.click(contextSelector);
@@ -339,7 +339,7 @@ describe('Context Selector', () => {
         const user = userEvent.setup();
         const testOnChange = vi.fn();
         const testValue = { type: 'azure', id: 'd1993a1b-55c1-4668-9393-ddfffb6ab639' } as const;
-        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={errorMessage} />);
+        render(<SimpleEnvironmentSelector selected={testValue} onSelect={testOnChange} errorMessage={errorMessage} />);
 
         const contextSelector = await screen.findByTestId('data-quality_context-selector');
 
@@ -370,7 +370,13 @@ describe('Context Selector Error', () => {
         const testOnChange = vi.fn();
         const testErrorMessage = 'test error message';
         const testValue = { type: 'active-directory', id: '6b55e74d-f24e-418a-bfd1-4769e93517c7' } as const;
-        render(<DataSelector value={testValue} onChange={testOnChange} errorMessage={<>{testErrorMessage}</>} />);
+        render(
+            <SimpleEnvironmentSelector
+                selected={testValue}
+                onSelect={testOnChange}
+                errorMessage={<>{testErrorMessage}</>}
+            />
+        );
 
         expect(await screen.findByText(testErrorMessage)).toBeInTheDocument();
     });
