@@ -28,6 +28,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
+import { ROUTE_ZONE_MANAGEMENT_DETAILS, ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -74,7 +75,9 @@ const Details: FC = () => {
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
-    const environments = useEnvironmentIdList(['zone-management']);
+    const environments = useEnvironmentIdList([
+        { path: ROUTE_ZONE_MANAGEMENT_ROOT + ROUTE_ZONE_MANAGEMENT_DETAILS, caseSensitive: false, end: false },
+    ]);
 
     const tagId = labelId === undefined ? tierId : labelId;
 

@@ -25,7 +25,7 @@ import {
     useHighestPrivilegeTagId,
     useInitialEnvironment,
 } from 'bh-shared-ui';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 const InfoHeader: FC = () => {
@@ -34,7 +34,9 @@ const InfoHeader: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
 
     const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
+
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | undefined>(initialEnvironment);
+
     const { setEnvironmentParams } = useEnvironmentParams();
 
     const handleSelect = (environment: SelectedEnvironment) => {
@@ -45,6 +47,10 @@ const InfoHeader: FC = () => {
 
         setSelectedEnvironment(environment);
     };
+
+    useEffect(() => {
+        initialEnvironment && setSelectedEnvironment(initialEnvironment);
+    }, [initialEnvironment]);
 
     return (
         <div className='flex justify-around basis-2/3'>
