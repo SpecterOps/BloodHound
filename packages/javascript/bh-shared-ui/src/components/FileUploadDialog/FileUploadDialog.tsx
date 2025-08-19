@@ -17,11 +17,12 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { ErrorResponse } from 'js-client-library';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     useEndFileIngestJob,
     useListFileTypesForIngest,
+    useOnClickOutside,
     useStartFileIngestJob,
     useUploadFileToIngestJob,
 } from '../../hooks';
@@ -56,6 +57,9 @@ const FileUploadDialog: React.FC<{
         setProgressCache({});
         onCloseProp();
     }, [onCloseProp]);
+
+    const dialogRef = useRef<HTMLDivElement>(null);
+    useOnClickOutside(dialogRef, onClose);
 
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
@@ -241,75 +245,79 @@ const FileUploadDialog: React.FC<{
                     setFilesForIngest([]);
                 },
             }}>
-            <DialogContent>
-                <div className='pb-2 font-bold'>{headerText}</div>
-                {description && <div>{description}</div>}
-                <>
-                    {fileUploadStep === FileUploadStep.ADD_FILES && (
-                        <FileDrop
-                            onDrop={handleFileDrop}
-                            disabled={listFileTypesForIngest.isLoading}
-                            accept={listFileTypesForIngest.data?.data}
-                        />
-                    )}
-                    {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
-                        <Box marginBottom={5}>{uploadMessage}</Box>
-                    )}
-                    <Link to='/administration/file-ingest' onClick={onClose}>
-                        <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
-                            View File Ingest History
-                        </div>
-                    </Link>
-
-                    {filesForIngest.length > 0 && (
-                        <Box sx={{ my: '8px' }}>
-                            {filesForIngest.map((file, index) => {
-                                return (
-                                    <FileStatusListItem
-                                        file={file}
-                                        percentCompleted={
-                                            progressCache[
-                                                makeProgressCacheKey(currentIngestJobId, file?.file?.name)
-                                            ] as number
-                                        }
-                                        key={index}
-                                        onRemove={() => handleRemoveFile(index)}
-                                    />
-                                );
-                            })}
-                        </Box>
-                    )}
-                </>
-                {fileUploadStep === FileUploadStep.UPLOAD && !uploadMessage && (
-                    <div>
-                        <p>Upload in progress.</p>
-                        <p>You can continue using the platform&mdash;we will alert you once the upload is complete.</p>
-                    </div>
-                )}
-            </DialogContent>
-            <DialogActions>
-                {fileUploadStep === FileUploadStep.ADD_FILES && (
+            <div ref={dialogRef}>
+                <DialogContent>
+                    <div className='pb-2 font-bold'>{headerText}</div>
+                    {description && <div>{description}</div>}
                     <>
-                        <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
-                            Cancel
-                        </Button>
-                        <Button
-                            disabled={submitDialogDisabled}
-                            onClick={handleSubmit}
-                            data-testid='confirmation-dialog_button-yes'>
-                            Upload
-                        </Button>
+                        {fileUploadStep === FileUploadStep.ADD_FILES && (
+                            <FileDrop
+                                onDrop={handleFileDrop}
+                                disabled={listFileTypesForIngest.isLoading}
+                                accept={listFileTypesForIngest.data?.data}
+                            />
+                        )}
+                        {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
+                            <Box marginBottom={5}>{uploadMessage}</Box>
+                        )}
+                        <Link to='/administration/file-ingest' onClick={onClose}>
+                            <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
+                                View File Ingest History
+                            </div>
+                        </Link>
+
+                        {filesForIngest.length > 0 && (
+                            <Box sx={{ my: '8px' }}>
+                                {filesForIngest.map((file, index) => {
+                                    return (
+                                        <FileStatusListItem
+                                            file={file}
+                                            percentCompleted={
+                                                progressCache[
+                                                    makeProgressCacheKey(currentIngestJobId, file?.file?.name)
+                                                ] as number
+                                            }
+                                            key={index}
+                                            onRemove={() => handleRemoveFile(index)}
+                                        />
+                                    );
+                                })}
+                            </Box>
+                        )}
                     </>
-                )}
-                {fileUploadStep === FileUploadStep.UPLOAD && (
-                    <Button
-                        onClick={onClose}
-                        disabled={uploadDialogDisabled}
-                        data-testid='confirmation-dialog_button-yes'>
-                        {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
-                    </Button>
-                )}
-            </DialogActions>
+                    {fileUploadStep === FileUploadStep.UPLOAD && !uploadMessage && (
+                        <div>
+                            <p>Upload in progress.</p>
+                            <p>
+                                You can continue using the platform&mdash;we will alert you once the upload is complete.
+                            </p>
+                        </div>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    {fileUploadStep === FileUploadStep.ADD_FILES && (
+                        <>
+                            <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
+                                Cancel
+                            </Button>
+                            <Button
+                                disabled={submitDialogDisabled}
+                                onClick={handleSubmit}
+                                data-testid='confirmation-dialog_button-yes'>
+                                Upload
+                            </Button>
+                        </>
+                    )}
+                    {fileUploadStep === FileUploadStep.UPLOAD && (
+                        <Button
+                            onClick={onClose}
+                            disabled={uploadDialogDisabled}
+                            data-testid='confirmation-dialog_button-yes'>
+                            {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
+                        </Button>
+                    )}
+                </DialogActions>
+            </div>
         </Dialog>
     );
 };
