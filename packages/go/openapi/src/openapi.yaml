@@ -282,6 +282,8 @@ paths:
     $ref: './paths/collection-uploads.file-upload.start.yaml'
   /api/v2/file-upload/{file_upload_job_id}:
     $ref: './paths/collection-uploads.file-upload.id.yaml'
+  /api/v2/file-upload/{file_upload_job_id}/completed-tasks:
+    $ref: './paths/collection-uploads.file-upload.id.completed-tasks.yaml'
   /api/v2/file-upload/{file_upload_job_id}/end:
     $ref: './paths/collection-uploads.file-upload.id.end.yaml'
   /api/v2/file-upload/accepted-types:

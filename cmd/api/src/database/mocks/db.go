@@ -295,6 +295,21 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(ctx, stats any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), ctx, stats)
 }
 
+// CreateCompletedTask mocks base method.
+func (m *MockDatabase) CreateCompletedTask(ctx context.Context, task model.CompletedTask) (model.CompletedTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCompletedTask", ctx, task)
+	ret0, _ := ret[0].(model.CompletedTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCompletedTask indicates an expected call of CreateCompletedTask.
+func (mr *MockDatabaseMockRecorder) CreateCompletedTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCompletedTask", reflect.TypeOf((*MockDatabase)(nil).CreateCompletedTask), ctx, task)
+}
+
 // CreateCompositionInfo mocks base method.
 func (m *MockDatabase) CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
 	m.ctrl.T.Helper()
@@ -1282,6 +1297,21 @@ func (m *MockDatabase) GetAzureDataQualityStats(ctx context.Context, tenantId st
 func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(ctx, tenantId, start, end, sort_by, limit, skip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityStats), ctx, tenantId, start, end, sort_by, limit, skip)
+}
+
+// GetCompletedTasks mocks base method.
+func (m *MockDatabase) GetCompletedTasks(ctx context.Context, ingestJobId int64) ([]model.CompletedTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCompletedTasks", ctx, ingestJobId)
+	ret0, _ := ret[0].([]model.CompletedTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCompletedTasks indicates an expected call of GetCompletedTasks.
+func (mr *MockDatabaseMockRecorder) GetCompletedTasks(ctx, ingestJobId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompletedTasks", reflect.TypeOf((*MockDatabase)(nil).GetCompletedTasks), ctx, ingestJobId)
 }
 
 // GetConfigurationParameter mocks base method.
