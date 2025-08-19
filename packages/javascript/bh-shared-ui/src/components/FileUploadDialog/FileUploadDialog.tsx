@@ -168,8 +168,9 @@ const FileUploadDialog: React.FC<{
                 contentType: ingestFile.file.type,
                 options: {
                     onUploadProgress: (progressEvent) => {
-                        const { loaded, total = 0 } = progressEvent;
-                        const percentCompleted = Math.floor((loaded * 100) / total);
+                        const { loaded, total } = progressEvent;
+                        const rawPercent = typeof total === 'number' && total > 0 ? (loaded * 100) / total : 0;
+                        const percentCompleted = Math.max(0, Math.min(100, Math.floor(rawPercent)));
                         setProgressCache((prevProgressCache) => ({
                             ...prevProgressCache,
                             [makeProgressCacheKey(jobId, ingestFile?.file?.name)]: percentCompleted,

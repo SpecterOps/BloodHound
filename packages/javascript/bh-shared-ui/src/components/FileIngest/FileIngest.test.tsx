@@ -91,8 +91,8 @@ const OriginalXMLHttpRequest = XMLHttpRequest;
 
 beforeAll(() => {
     server.listen();
-    class MockXMLHttpRequest extends XMLHttpRequest {
-        upload = {
+    class MockXMLHttpRequest extends OriginalXMLHttpRequest {
+        private __upload = {
             addEventListener: vi.fn(),
             removeEventListener: vi.fn(),
             onabort: vi.fn(),
@@ -104,10 +104,13 @@ beforeAll(() => {
             ontimeout: vi.fn(),
             dispatchEvent: vi.fn(),
         };
+        get upload() {
+            return this.__upload as any;
+        }
     }
-
     vi.stubGlobal('XMLHttpRequest', MockXMLHttpRequest);
 });
+
 afterEach(() => server.resetHandlers());
 afterAll(() => {
     server.close();
