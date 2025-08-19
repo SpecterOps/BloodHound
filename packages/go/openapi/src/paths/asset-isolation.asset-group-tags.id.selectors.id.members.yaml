@@ -40,6 +40,13 @@ get:
     - Community
     - Enterprise
   parameters:
+    - name: environments
+      description: Environment IDs
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
     - name: sort_by
