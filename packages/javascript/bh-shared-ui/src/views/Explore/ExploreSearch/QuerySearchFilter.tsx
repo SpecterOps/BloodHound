@@ -39,12 +39,9 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
     const handleInput = (val: string) => {
-        doFuzzySearch(val);
+        queryFilterHandler(val, platform, categoryFilter, source);
     };
 
-    const doFuzzySearch = (term: string) => {
-        queryFilterHandler(term, platform, categoryFilter, source);
-    };
     const handlePlatformFilter = (val: string) => {
         queryFilterHandler(searchTerm, val, categoryFilter, source);
     };
@@ -91,7 +88,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         />
                         <AppIcon.MagnifyingGlass size={16} className='absolute right-2 top-[50%] -mt-[8px]' />
                     </div>
-
                     <div className='flex items-center ml-4'>
                         <Button variant='secondary' size='medium' onClick={importHandler}>
                             Import
@@ -131,7 +127,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                     </FormControl>
                     <FormControl size='small' className='w-full ml-2'>
                         <InputLabel id='category-filter-label'>Categories</InputLabel>
-
                         <Select
                             labelId='category-filter-label'
                             id='category-filter'
@@ -152,7 +147,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                     </FormControl>
                     <FormControl size='small' className='w-full ml-2'>
                         <InputLabel id='source-filter-label'>Source</InputLabel>
-
                         <Select
                             labelId='source-filter-label'
                             id='source-filter'
