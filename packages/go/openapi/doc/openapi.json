@@ -5344,7 +5344,7 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
+            "description": "Sortable columns are `node_id`, `node_object_id`, and `node_name`.\n",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
@@ -5530,7 +5530,7 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
+            "description": "Sortable columns are `node_id`, `node_object_id`, and `node_name`.\n",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
