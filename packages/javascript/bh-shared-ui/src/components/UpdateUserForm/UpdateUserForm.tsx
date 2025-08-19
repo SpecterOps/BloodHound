@@ -61,7 +61,6 @@ const UpdateUserForm: React.FC<{
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
-
     if (getUserQuery.isLoading || getListDisplayRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
             <>

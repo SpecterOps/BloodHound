@@ -21,10 +21,10 @@ import { apiClient } from '../../utils';
 export const hiddenRoles = ['Client-Tasking'];
 export const useListDisplayRoles = () => {
     return useQuery({
-        queryKey: ['roles'],
+        queryKey: ['getRoles'],
         queryFn: ({ signal }) => apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles),
         select: (data: Role[]) =>
-            data.map((dataItem: Role) => {
+            data.filter((dataItem: Role) => {
                 if (!hiddenRoles?.includes(dataItem.name)) {
                     return dataItem;
                 }
