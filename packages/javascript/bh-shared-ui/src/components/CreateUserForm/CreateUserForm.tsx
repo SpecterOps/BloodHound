@@ -35,8 +35,8 @@ import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useListDisplayRoles } from '../../hooks';
 import { apiClient } from '../../utils';
-import {useListDisplayRoles} from '../../hooks'
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 

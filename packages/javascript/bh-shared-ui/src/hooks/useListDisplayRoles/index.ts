@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './useListDisplayRoles'
+export * from './useListDisplayRoles';
