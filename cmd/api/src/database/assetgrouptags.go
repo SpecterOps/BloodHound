@@ -764,7 +764,7 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx con
 
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at FROM %s WHERE selector_id IN ? %s %s %s", model.AssetGroupSelectorNode{}.TableName(), sqlFilter.SQLString, orderSQL, skipLimitSQL), append([]any{selectorIds}, sqlFilter.Params...)...).Find(&nodes); result.Error != nil {
 		return nodes, 0, CheckError(result)
-	} else if s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE selector_id IN ?%s", model.AssetGroupSelectorNode{}.TableName(), sqlFilter.SQLString), append([]any{selectorIds}, sqlFilter.Params...)...).Find(&count); result.Error != nil {
+	} else if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE selector_id IN ? %s", model.AssetGroupSelectorNode{}.TableName(), sqlFilter.SQLString), append([]any{selectorIds}, sqlFilter.Params...)...).Scan(&count); result.Error != nil {
 		return nodes, 0, CheckError(result)
 	}
 
