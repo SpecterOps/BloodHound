@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useState } from 'react';
-const FileUploadDialogContext = createContext<{
+
+export const FileUploadDialogContext = createContext<{
     setShowFileIngestDialog: React.Dispatch<React.SetStateAction<boolean>>;
     showFileIngestDialog: boolean;
 }>({

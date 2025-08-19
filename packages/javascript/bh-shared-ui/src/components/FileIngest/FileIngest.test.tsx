@@ -16,10 +16,13 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import FileIngest from '.';
+import { useState } from 'react';
+import { FileUploadDialogContext } from '../../hooks';
 import { createAuthStateWithPermissions } from '../../mocks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
+import FileUploadDialog from '../FileUploadDialog';
+import FileIngest from './FileIngest';
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -113,12 +116,29 @@ afterAll(() => {
     server.resetHandlers();
 });
 
+const Wrapper = () => {
+    const [showFileIngestDialog, setShowFileIngestDialog] = useState(false);
+
+    const value = {
+        showFileIngestDialog,
+        setShowFileIngestDialog,
+    };
+
+    return (
+        <>
+            <FileUploadDialogContext.Provider value={value}>
+                <FileIngest />
+            </FileUploadDialogContext.Provider>
+            <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+        </>
+    );
+};
 describe('FileIngest', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
-    it('accepts a valid file and allows the user to continue through the upload process', async () => {
-        render(<FileIngest />);
+    it.only('accepts a valid file and allows the user to continue through the upload process', async () => {
+        render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
         await waitFor(() => expect(openButton).toBeEnabled());
@@ -139,7 +159,7 @@ describe('FileIngest', () => {
     });
 
     it('prevents a user from proceeding if the file is not valid', async () => {
-        render(<FileIngest />);
+        render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
         await waitFor(() => expect(openButton).toBeEnabled());
@@ -156,7 +176,7 @@ describe('FileIngest', () => {
     });
 
     it('displays a table of completed ingest logs', async () => {
-        render(<FileIngest />);
+        render(<Wrapper />);
         await waitFor(() => screen.getByText('test_email@specterops.io'));
 
         expect(screen.getByText('test_email@specterops.io')).toBeInTheDocument();
@@ -164,7 +184,7 @@ describe('FileIngest', () => {
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
-        render(<FileIngest />);
+        render(<Wrapper />);
 
         expect(screen.queryByText('test_email@specterops.io')).toBeNull();
         expect(screen.queryByText('1 minute')).toBeNull();

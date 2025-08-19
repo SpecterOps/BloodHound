@@ -116,8 +116,6 @@ const FileUploadDialog: React.FC<{
         );
     };
 
-    console.log(progressCache);
-
     const handleUploadAllFiles = async () => {
         updateStatusOfReadyFiles(FileStatus.UPLOADING);
 
@@ -233,6 +231,7 @@ const FileUploadDialog: React.FC<{
                 }
             });
 
+            setUploadMessage('');
             setProgressCache({});
             setCurrentIngestJobId('');
             // remove from lists items already attempted
@@ -268,9 +267,7 @@ const FileUploadDialog: React.FC<{
                             disabled={listFileTypesForIngest.isLoading}
                             accept={listFileTypesForIngest.data?.data}
                         />
-                        {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
-                            <Box className='mt-2 mb-2'>{uploadMessage}</Box>
-                        )}
+                        {uploadMessage && <Box className='mt-2 mb-2'>{uploadMessage}</Box>}
                         <Link to='/administration/file-ingest' onClick={onClose}>
                             <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
                                 View File Ingest History
