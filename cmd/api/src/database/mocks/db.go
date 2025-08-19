@@ -2290,11 +2290,12 @@ func (mr *MockDatabaseMockRecorder) UpdateCustomNodeKind(ctx, customNodeKind any
 }
 
 // UpdateEnvironmentListForUser mocks base method.
-func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) error {
+func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) ([]model.EnvironmentAccess, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEnvironmentListForUser", ctx, user, environments)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].([]model.EnvironmentAccess)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateEnvironmentListForUser indicates an expected call of UpdateEnvironmentListForUser.

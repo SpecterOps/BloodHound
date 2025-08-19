@@ -390,15 +390,21 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		} else {
 			// eTAC
 			if etacFeatureFlag.Enabled {
+				// In order to properly create the environment access rows for the new user, we need to wait for the user to be created
+				// to obtain the user's id to link the user to the new etac list
 				if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
 					// If the user isn't granting access to all environments, give them access to each environment requested
 					if createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
 						if err := s.db.DeleteEnvironmentListForUser(request.Context(), newUser); err != nil {
 							api.HandleDatabaseError(request, response, err)
+							return
 						}
 					} else {
-						if err := s.db.UpdateEnvironmentListForUser(request.Context(), newUser, createUserRequest.EnvironmentControlList.Environments); err != nil {
+						if environments, err := s.db.UpdateEnvironmentListForUser(request.Context(), newUser, createUserRequest.EnvironmentControlList.Environments); err != nil {
 							api.HandleDatabaseError(request, response, err)
+							return
+						} else {
+							newUser.EnvironmentAccessControl = environments
 						}
 					}
 				}
@@ -536,15 +542,15 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 
 				// If the user isn't granting access to all environments, give them access to each environment requested
 				if updateUserRequest.EnvironmentControlList.AllEnvironments {
-					user.EnvironmentAccessControl = make([]*model.EnvironmentAccess, 0)
+					user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
 				} else {
-					environments := make([]*model.EnvironmentAccess, 0)
+					environments := make([]model.EnvironmentAccess, 0)
 					for _, environment := range updateUserRequest.EnvironmentControlList.Environments {
 						newEnvironment := model.EnvironmentAccess{
 							UserID:      user.ID.String(),
 							Environment: environment,
 						}
-						environments = append(environments, &newEnvironment)
+						environments = append(environments, newEnvironment)
 					}
 					user.EnvironmentAccessControl = environments
 				}

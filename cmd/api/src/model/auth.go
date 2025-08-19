@@ -429,19 +429,19 @@ func UserAssociations() []string {
 }
 
 type User struct {
-	SSOProvider              *SSOProvider         `json:"-" `
-	SSOProviderID            null.Int32           `json:"sso_provider_id,omitempty"`
-	AuthSecret               *AuthSecret          `gorm:"constraint:OnDelete:CASCADE;"`
-	AuthTokens               AuthTokens           `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
-	Roles                    Roles                `json:"roles" gorm:"many2many:users_roles"`
-	FirstName                null.String          `json:"first_name"`
-	LastName                 null.String          `json:"last_name"`
-	EmailAddress             null.String          `json:"email_address"`
-	PrincipalName            string               `json:"principal_name" gorm:"unique;index"`
-	LastLogin                time.Time            `json:"last_login"`
-	IsDisabled               bool                 `json:"is_disabled"`
-	AllEnvironments          bool                 `json:"all_environments"`
-	EnvironmentAccessControl []*EnvironmentAccess `json:"environment_access_control"`
+	SSOProvider              *SSOProvider        `json:"-" `
+	SSOProviderID            null.Int32          `json:"sso_provider_id,omitempty"`
+	AuthSecret               *AuthSecret         `gorm:"constraint:OnDelete:CASCADE;"`
+	AuthTokens               AuthTokens          `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
+	Roles                    Roles               `json:"roles" gorm:"many2many:users_roles"`
+	FirstName                null.String         `json:"first_name"`
+	LastName                 null.String         `json:"last_name"`
+	EmailAddress             null.String         `json:"email_address"`
+	PrincipalName            string              `json:"principal_name" gorm:"unique;index"`
+	LastLogin                time.Time           `json:"last_login"`
+	IsDisabled               bool                `json:"is_disabled"`
+	AllEnvironments          bool                `json:"all_environments"`
+	EnvironmentAccessControl []EnvironmentAccess `json:"environment_access_control"`
 
 	// EULA Acceptance does not pertain to Bloodhound Community Edition; this flag is used for Bloodhound Enterprise users.
 	// This value is automatically set to true for Bloodhound Community Edition in the patchEULAAcceptance and CreateUser functions.

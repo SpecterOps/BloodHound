@@ -31,7 +31,7 @@ const (
 
 type EnvironmentAccessControlData interface {
 	GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]model.EnvironmentAccess, error)
-	UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) error
+	UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) ([]model.EnvironmentAccess, error)
 	DeleteEnvironmentListForUser(ctx context.Context, user model.User) error
 }
 
@@ -44,17 +44,18 @@ func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, user
 }
 
 // UpdateEnvironmentListForUser will remove all entries in the access control list for a user and add a new entry for each environment provided
-func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) error {
+func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) ([]model.EnvironmentAccess, error) {
 	var (
 		auditData = model.AuditData{
 			"userUuid":     user.ID.String(),
 			"environments": environments,
 		}
-		auditEntry, err = model.NewAuditEntry(model.AuditLogActionUpdateEnvironmentAccessList, model.AuditLogStatusIntent, auditData)
+		auditEntry, err       = model.NewAuditEntry(model.AuditLogActionUpdateEnvironmentAccessList, model.AuditLogStatusIntent, auditData)
+		availableEnvironments = make([]model.EnvironmentAccess, 0, len(environments))
 	)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -68,8 +69,6 @@ func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user mo
 		if len(environments) == 0 {
 			return nil
 		}
-
-		availableEnvironments := make([]model.EnvironmentAccess, 0, len(environments))
 
 		for _, environment := range environments {
 			newAccessControl := model.EnvironmentAccess{
@@ -92,7 +91,7 @@ func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user mo
 		return s.UpdateUser(ctx, user)
 	})
 
-	return err
+	return availableEnvironments, err
 }
 
 // DeleteEnvironmentListForUser will remove all rows associated with a user in the environment_access_control table
@@ -106,7 +105,6 @@ func (s *BloodhoundDB) DeleteEnvironmentListForUser(ctx context.Context, user mo
 	if err != nil {
 		return fmt.Errorf("error creating AuditLogActionDeleteEnvironmentAccessList audit entry: %w", err)
 	}
-
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).Delete(&model.EnvironmentAccess{}, "user_id = ?", user.ID.String())
