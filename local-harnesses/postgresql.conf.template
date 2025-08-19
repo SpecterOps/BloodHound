@@ -617,7 +617,7 @@ log_statement = 'ddl'			# none, ddl, mod, all
 #log_temp_files = -1			# log temporary files equal or larger
 					# than the specified size in kilobytes;
 					# -1 disables, 0 logs all temp files
-log_timezone = 'US/Pacific'
+# log_# timezone = 'US/Pacific'
 
 # - Process Title -
 
@@ -733,7 +733,7 @@ log_timezone = 'US/Pacific'
 
 datestyle = 'iso, mdy'
 #intervalstyle = 'postgres'
-timezone = 'US/Pacific'
+# timezone = 'US/Pacific'
 #timezone_abbreviations = 'Default'	# Select the set of available time zone
 					# abbreviations.  Currently, there are
 					#   Default

@@ -71,6 +71,7 @@ import {
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
     GetEnterpriseCollectorsResponse,
+    GetScheduledJobDisplayResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -721,8 +722,8 @@ class BHEAPIClient {
         hydrateOUs?: boolean,
         options?: RequestOptions
     ) =>
-        this.baseClient.get(
-            `/api/v2/jobs/finished`,
+        this.baseClient.get<GetScheduledJobDisplayResponse>(
+            '/api/v2/jobs/finished',
             Object.assign(
                 {
                     params: {

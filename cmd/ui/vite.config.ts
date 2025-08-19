@@ -49,6 +49,7 @@ export default defineConfig(({ mode }) => {
                 '@fortawesome/fontawesome-svg-core',
                 '@fortawesome/free-solid-svg-icons',
                 '@fortawesome/react-fontawesome',
+                '@mona-health/react-input-mask',
                 '@mui/material',
                 '@mui/styles',
                 '@mui/lab',

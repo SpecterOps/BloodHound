@@ -10,7 +10,7 @@
   "default_admin": {
     "principal_name": "admin",
     "password": "admin",
-    "first_name": "Bloodhound",
+    "first_name": "BloodHound",
     "last_name": "Admin"
   }
 }

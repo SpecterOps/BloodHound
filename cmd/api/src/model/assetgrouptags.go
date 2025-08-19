@@ -22,6 +22,11 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -72,6 +77,11 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
+const (
+	TierZeroGlyph = "gem"
+	OwnedGlyph    = "skull"
+)
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
@@ -87,6 +97,7 @@ type AssetGroupTag struct {
 	Position        null.Int32        `json:"position"`
 	RequireCertify  null.Bool         `json:"require_certify"`
 	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
+	Glyph           null.String       `json:"glyph"`
 }
 
 type AssetGroupTags []AssetGroupTag
@@ -105,6 +116,7 @@ func (s AssetGroupTag) AuditData() AuditData {
 		"position":         s.Position,
 		"require_certify":  s.RequireCertify,
 		"analysis_enabled": s.AnalysisEnabled,
+		"glyph":            s.Glyph,
 	}
 }
 
@@ -117,7 +129,7 @@ func (s AssetGroupTag) KindName() string {
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
-	return filter == "name" || filter == "description"
+	return filter == "name" || filter == "description" || filter == "glyph"
 }
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
@@ -133,6 +145,7 @@ func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 		"deleted_by":       {Equals, NotEquals},
 		"require_certify":  {Equals, NotEquals},
 		"analysis_enabled": {Equals, NotEquals},
+		"glyph":            {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
@@ -242,15 +255,31 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
-	SelectorId  int                          `json:"selector_id"`
-	NodeId      graph.ID                     `json:"node_id"`
-	Certified   AssetGroupCertification      `json:"certified"`
-	CertifiedBy null.String                  `json:"certified_by"`
-	Source      AssetGroupSelectorNodeSource `json:"source"`
-	CreatedAt   time.Time                    `json:"created_at"`
-	UpdatedAt   time.Time                    `json:"updated_at"`
+	SelectorId        int                          `json:"selector_id"`
+	NodeId            graph.ID                     `json:"node_id"`
+	Certified         AssetGroupCertification      `json:"certified"`
+	CertifiedBy       null.String                  `json:"certified_by"`
+	Source            AssetGroupSelectorNodeSource `json:"source"`
+	CreatedAt         time.Time                    `json:"created_at"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
+	NodePrimaryKind   string                       `json:"node_primary_kind"`
+	NodeEnvironmentId string                       `json:"node_environment_id"`
+	NodeObjectId      string                       `json:"node_object_id"`
+	NodeName          string                       `json:"node_name"`
 }
 
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
+}
+
+/*
+These are the relevant properties for asset group tags. This method serves to keep consistency across the feature
+*/
+func GetAssetGroupMemberProperties(node *graph.Node) (primaryKind, displayName, objectId, envId string) {
+	primaryKind = analysis.GetNodeKindDisplayLabel(node)
+	displayName, _ = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+	objectId, _ = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
+	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
+
+	return primaryKind, displayName, objectId, envId
 }
