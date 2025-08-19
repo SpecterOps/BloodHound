@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 // Adapted from the example provided here
 // https://github.com/mui/material-ui-pickers/issues/1626#issuecomment-612031743
 // Using this class instead of LuxonUtils with DateTimePicker will cause the DateTimePicker to use Sunday as the first
@@ -22,14 +21,14 @@
 import LuxonUtils from '@date-io/luxon';
 import { DateTime } from 'luxon';
 
-class CustomLuxonUtils extends LuxonUtils {
+export class CustomLuxonUtils extends LuxonUtils {
     dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-    getWeekdays() {
+    getWeekdays = () => {
         return this.dayNames;
-    }
+    };
 
-    getWeekArray(date: DateTime) {
+    getWeekArray = (date: DateTime) => {
         const endDate = date.endOf('month').plus({ days: 1 }).endOf('week');
         const startDate = date.startOf('month').startOf('week').minus({ days: 1 });
 
@@ -54,7 +53,5 @@ class CustomLuxonUtils extends LuxonUtils {
         // or the last day of the month is Sunday (May 2020 or Jan 2021 is one example)
         // so we're only including weeks where ANY day is in the correct month to handle that
         return weeks.filter((w) => w.some((d) => d.month === date.month));
-    }
+    };
 }
-
-export default CustomLuxonUtils;

@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { SetUpQueryClient, render, screen } from '../../test-utils';
+import { render, screen } from '../../test-utils';
+import { setUpQueryClient } from '../../utils';
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
@@ -372,7 +373,7 @@ describe('UpdateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
-        const queryClient = SetUpQueryClient(mockState);
+        const queryClient = setUpQueryClient(mockState);
 
         render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
@@ -419,7 +420,7 @@ describe('UpdateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
-        const queryClient = SetUpQueryClient(mockState);
+        const queryClient = setUpQueryClient(mockState);
 
         render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
@@ -450,7 +451,7 @@ describe('UpdateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
-        const queryClient = SetUpQueryClient(mockState);
+        const queryClient = setUpQueryClient(mockState);
 
         render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
