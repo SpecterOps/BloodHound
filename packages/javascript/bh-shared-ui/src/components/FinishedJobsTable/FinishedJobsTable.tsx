@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ScheduledJobDisplay } from 'js-client-library';
+import type { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
-import { JOB_STATUS_MAP, toCollected, toFormatted, toMins, useFinishedJobsQuery } from '../../utils';
+import { useFinishedJobs } from '../../hooks';
+import { JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 
@@ -54,7 +55,7 @@ export const FinishedJobsTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const { data, isLoading } = useFinishedJobsQuery({ page, rowsPerPage });
+    const { data, isLoading } = useFinishedJobs({ page, rowsPerPage });
 
     const finishedJobs = data?.data ?? [];
     const count = data?.count ?? 0;
@@ -69,7 +70,7 @@ export const FinishedJobsTable: FC = () => {
                 rowsPerPage,
                 count,
                 onPageChange: (_event, page) => setPage(page),
-                onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value, 10)),
             }}
             showPaginationControls
         />

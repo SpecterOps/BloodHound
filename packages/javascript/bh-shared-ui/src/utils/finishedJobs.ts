@@ -14,17 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { GetScheduledJobDisplayResponse, ScheduledJobDisplay } from 'js-client-library';
+import type { ScheduledJobDisplay } from 'js-client-library';
 import { DateTime, Interval } from 'luxon';
 import type { OptionsObject } from 'notistack';
-import { useEffect } from 'react';
-import { useQuery } from 'react-query';
 import type { StatusType } from '../components';
-import { usePermissions } from '../hooks/usePermissions';
-import { useNotifications } from '../providers';
-import { apiClient } from './api';
 import { LuxonFormat } from './datetime';
-import { Permission } from './permissions';
 
 export interface FinishedJobParams {
     page: number;
@@ -74,30 +68,6 @@ export const NO_PERMISSION_KEY = 'finished-jobs-permission';
 
 export const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
 export const FETCH_ERROR_KEY = 'finished-jobs-error';
-
-/** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
-export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) => {
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.CLIENTS_MANAGE);
-
-    const { addNotification, dismissNotification } = useNotifications();
-
-    useEffect(() => {
-        if (!hasPermission) {
-            addNotification(NO_PERMISSION_MESSAGE, NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
-        }
-
-        return () => dismissNotification(NO_PERMISSION_KEY);
-    }, [addNotification, dismissNotification, hasPermission]);
-
-    return useQuery<GetScheduledJobDisplayResponse>({
-        enabled: hasPermission,
-        keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
-        onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
-        queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),
-        queryKey: ['finished-jobs', { page, rowsPerPage }],
-    });
-};
 
 /** Returns the duration, in mins, between 2 given ISO datetime strings */
 export const toMins = (start: string, end: string) =>

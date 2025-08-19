@@ -67,3 +67,16 @@ CREATE TABLE IF NOT EXISTS completed_tasks (
     updated_at timestamp with time zone
 );
 CREATE INDEX IF NOT EXISTS idx_completed_tasks_ingest_job_id ON completed_tasks USING btree (ingest_job_id);
+
+-- Add FinishedJobsLog rework feature flag
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (
+  current_timestamp,
+  current_timestamp,
+  'finished_jobs_log_v2',
+  'Finished Jobs Log Update',
+  'An updated Finished Jobs Log with filtering and more info.',
+  false,
+  false
+)
+ON CONFLICT DO NOTHING;
