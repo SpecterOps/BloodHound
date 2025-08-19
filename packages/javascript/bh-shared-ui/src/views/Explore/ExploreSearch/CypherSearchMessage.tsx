@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { Transition } from 'react-transition-group';
+import { SNACKBAR_DURATION } from '../../../constants';
 type CypherSearchMessageProps = {
     // message?: string;
     // showMessage: boolean;
@@ -34,7 +35,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
     const handleEntered = () => {
         setTimeout(() => {
             clearMessage();
-        }, 5000);
+        }, SNACKBAR_DURATION);
     };
 
     return (

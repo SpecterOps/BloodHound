@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import {
     Button,
     Dialog,
@@ -9,13 +7,11 @@ import {
     DialogPortal,
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
-import FileDrop from '../../../components/FileDrop';
-
-import FileStatusListItem from '../../../components/FileStatusListItem';
-
-import { FileForIngest, FileStatus, FileUploadStep } from '../../../components/FileUploadDialog/types';
-
 import { ErrorResponse } from 'js-client-library';
+import { useEffect, useState } from 'react';
+import FileDrop from '../../../components/FileDrop';
+import FileStatusListItem from '../../../components/FileStatusListItem';
+import { FileForIngest, FileStatus, FileUploadStep } from '../../../components/FileUploadDialog/types';
 import { useImportSavedQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 
