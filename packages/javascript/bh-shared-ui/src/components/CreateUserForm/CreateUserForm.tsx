@@ -73,7 +73,21 @@ const CreateUserForm: React.FC<{
     open,
     roles,
 }) => {
-    const { data, isLoading, isError } = useQuery(
+    const [authenticationMethod, setAuthenticationMethod] = useState<string>('password');
+    const [selectedRole, setSelectedRole] = useState<number>(3);
+
+    const [initialFormData, setInitialFormData] = useState({
+        emailAddress: '',
+        principal: '',
+        firstName: '',
+        lastName: '',
+        password: '',
+        needsPasswordReset: false,
+        roles: [1],
+        SSOProviderId: '',
+    });
+
+    const { data, isLoading, isSuccess } = useQuery(
         ['getUser', userId],
         ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
         {
@@ -81,34 +95,27 @@ const CreateUserForm: React.FC<{
         }
     );
 
-    if (!isLoading && !isError) {
-        console.log(data.email_address);
-    }
+    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
+        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
+    );
 
-    const loadInitialValue = !isLoading && !isError && !createUser;
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
+    );
+
+    const selectedRoleToString = selectedRole.toString() === '2' || selectedRole.toString() === '3';
 
     const {
         control,
         formState: { errors },
         handleSubmit,
+        reset,
         setError,
         setValue,
         //watch,
     } = useForm<CreateUserRequestForm>({
-        defaultValues: {
-            emailAddress: loadInitialValue ? data.email_address : '',
-            principal: '',
-            firstName: '',
-            lastName: '',
-            password: '',
-            needsPasswordReset: false,
-            roles: [1],
-            SSOProviderId: '',
-        },
+        defaultValues: initialFormData,
     });
-
-    const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
-    const [selectedRole, setSelectedRole] = useState<number>(3);
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
@@ -131,17 +138,22 @@ const CreateUserForm: React.FC<{
                 });
             }
         }
-    }, [authenticationMethod, setValue, error, setError]);
 
-    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
-    );
-
-    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
-        apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
-    );
-
-    const selectedRoleToString = selectedRole.toString() === '2' || selectedRole.toString() === '3';
+        if (updateUser) {
+            reset(initialFormData);
+            if (isSuccess) {
+                let defaults = {
+                    emailAddress: data.email_address || '',
+                    principal: data.principal_name || '',
+                    firstName: data.first_name || '',
+                    lastName: data.last_name || '',
+                    roles: data.roles?.map((role: any) => role.id) || [],
+                    SSOProviderId: data.sso_provider_id?.toString() || '',
+                };
+                reset(defaults);
+            }
+        }
+    }, [authenticationMethod, setValue, error, setError, reset]);
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
