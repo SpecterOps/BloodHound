@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -40,7 +41,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = newGraphifyErrorBuilder()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -80,7 +81,7 @@ func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, so
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = newGraphifyErrorBuilder()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -123,7 +124,7 @@ func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedGroupData{}
 		count         = 0
-		errs          = newGraphifyErrorBuilder()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -161,7 +162,7 @@ func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
-		errs          = newGraphifyErrorBuilder()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -198,7 +199,7 @@ func decodeAzureData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
-		errs          = newGraphifyErrorBuilder()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {

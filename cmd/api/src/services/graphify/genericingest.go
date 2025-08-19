@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -158,7 +159,7 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 	} else {
 		var (
 			updates []graph.RelationshipUpdate
-			errs    = newGraphifyErrorBuilder()
+			errs    = errorlist.NewBuilder()
 		)
 
 		for _, rel := range rels {

@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -69,7 +70,7 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 		return []IngestFileData{}, err
 	} else {
 		var (
-			errs     = newGraphifyErrorBuilder()
+			errs     = errorlist.NewBuilder()
 			fileData = make([]IngestFileData, 0)
 		)
 
@@ -153,7 +154,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 	if fileData, err := s.extractIngestFiles(task.StoredFileName, task.OriginalFileName, task.FileType); err != nil {
 		return []IngestFileData{}, err
 	} else {
-		errs := newGraphifyErrorBuilder()
+		errs := errorlist.NewBuilder()
 		return fileData, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
@@ -165,7 +166,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 				}
 
 				if err := processSingleFile(ctx, data, timestampedBatch, readOpts); err != nil {
-					var graphifyError GraphifyError
+					var graphifyError errorlist.Error
 					if ok := errors.As(err, &graphifyError); ok {
 						fileData[i].Errors = append(fileData[i].Errors, graphifyError.AsStrings()...)
 					} else {

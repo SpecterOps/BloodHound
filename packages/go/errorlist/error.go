@@ -13,23 +13,23 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package graphify
+package errorlist
 
 import (
 	"errors"
 	"strings"
 )
 
-func newGraphifyErrorBuilder() graphifyErrorBuilder {
-	return graphifyErrorBuilder{}
+func NewBuilder() ErrorBuilder {
+	return ErrorBuilder{}
 }
 
-type graphifyErrorBuilder struct {
+type ErrorBuilder struct {
 	Errors []error
 }
 
-func (s *graphifyErrorBuilder) Add(e error) {
-	var graphifyError GraphifyError
+func (s *ErrorBuilder) Add(e error) {
+	var graphifyError Error
 	if ok := errors.As(e, &graphifyError); ok {
 		s.Errors = append(s.Errors, graphifyError.Errors...)
 	} else if e != nil {
@@ -37,19 +37,19 @@ func (s *graphifyErrorBuilder) Add(e error) {
 	}
 }
 
-func (s graphifyErrorBuilder) Build() error {
+func (s ErrorBuilder) Build() error {
 	if len(s.Errors) == 0 {
 		return nil
 	} else {
-		return GraphifyError(s)
+		return Error(s)
 	}
 }
 
-type GraphifyError struct {
+type Error struct {
 	Errors []error
 }
 
-func (s GraphifyError) AsStrings() []string {
+func (s Error) AsStrings() []string {
 	errStrings := make([]string, len(s.Errors))
 
 	for i, err := range s.Errors {
@@ -59,6 +59,6 @@ func (s GraphifyError) AsStrings() []string {
 	return errStrings
 }
 
-func (s GraphifyError) Error() string {
+func (s Error) Error() string {
 	return strings.Join(s.AsStrings(), "; ")
 }
