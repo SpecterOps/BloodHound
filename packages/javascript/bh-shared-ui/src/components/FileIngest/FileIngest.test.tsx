@@ -137,7 +137,7 @@ describe('FileIngest', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
-    it.only('accepts a valid file and allows the user to continue through the upload process', async () => {
+    it('accepts a valid file and allows the user to continue through the upload process', async () => {
         render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
