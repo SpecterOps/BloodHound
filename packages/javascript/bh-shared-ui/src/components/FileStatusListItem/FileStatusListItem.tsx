@@ -39,9 +39,9 @@ const FileStatusListItem: React.FC<{
             />
             <div className='pl-3 flex items-center'>
                 <span className='pr-2'>{file.file.name}</span>
-                {percentCompleted && !hasErrors && (
+                {percentCompleted && !hasErrors ? (
                     <span>{percentCompleted && !hasErrors && `${percentCompleted}%`}</span>
-                )}
+                ) : null}
                 {hasErrors && <span className='text-error'>Failed to Upload</span>}
             </div>
             <div>

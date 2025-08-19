@@ -16,11 +16,11 @@
 
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
+import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
 import { cn } from '../../utils';
-import FileUploadDialog from '../FileUploadDialog';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
@@ -183,7 +183,7 @@ const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ c
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-    const [showFileIngestDialog, setShowFileIngestDialog] = useState(false);
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     return (
         <nav
@@ -275,7 +275,6 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <MainNavPoweredBy hoverActive={!isMouseDragging}>
                 <MainNavLogoTextImage mainNavLogoData={mainNavData.logo.specterOps} />
             </MainNavPoweredBy>
-            <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
         </nav>
     );
 };

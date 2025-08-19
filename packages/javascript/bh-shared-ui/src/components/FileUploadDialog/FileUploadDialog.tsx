@@ -75,7 +75,10 @@ const FileUploadDialog: React.FC<{
     };
 
     const handleAppendFiles = (files: FileForIngest[]) => {
-        setFilesForIngest((prevFiles) => [...prevFiles, ...files]);
+        setFilesForIngest((prevFiles) => {
+            const unfinishedPreviousFiles = prevFiles.filter((file) => file.status === FileStatus.READY);
+            return [...unfinishedPreviousFiles, ...files];
+        });
     };
 
     const updateStatusOfReadyFiles = (status: FileStatus) => {
@@ -112,6 +115,8 @@ const FileUploadDialog: React.FC<{
             })
         );
     };
+
+    console.log(progressCache);
 
     const handleUploadAllFiles = async () => {
         updateStatusOfReadyFiles(FileStatus.UPLOADING);
@@ -197,6 +202,9 @@ const FileUploadDialog: React.FC<{
                 onError: () => {
                     addNotification('Failed to close out ingest job', 'EndFileIngestFail');
                 },
+                onSettled: () => {
+                    setFileUploadStep(FileUploadStep.ADD_FILES);
+                },
             }
         );
     };
@@ -223,6 +231,10 @@ const FileUploadDialog: React.FC<{
                     return { file, errors: ['invalid file type'], status: FileStatus.READY };
                 }
             });
+
+            setProgressCache({});
+            setCurrentIngestJobId('');
+            // remove from lists items already attempted
             handleAppendFiles(validatedFiles);
         }
     };
@@ -250,15 +262,13 @@ const FileUploadDialog: React.FC<{
                     <div className='pb-2 font-bold'>{headerText}</div>
                     {description && <div>{description}</div>}
                     <>
-                        {fileUploadStep === FileUploadStep.ADD_FILES && (
-                            <FileDrop
-                                onDrop={handleFileDrop}
-                                disabled={listFileTypesForIngest.isLoading}
-                                accept={listFileTypesForIngest.data?.data}
-                            />
-                        )}
+                        <FileDrop
+                            onDrop={handleFileDrop}
+                            disabled={listFileTypesForIngest.isLoading}
+                            accept={listFileTypesForIngest.data?.data}
+                        />
                         {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
-                            <Box marginBottom={5}>{uploadMessage}</Box>
+                            <Box className='mt-2 mb-2'>{uploadMessage}</Box>
                         )}
                         <Link to='/administration/file-ingest' onClick={onClose}>
                             <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
@@ -275,7 +285,7 @@ const FileUploadDialog: React.FC<{
                                             percentCompleted={
                                                 progressCache[
                                                     makeProgressCacheKey(currentIngestJobId, file?.file?.name)
-                                                ] as number
+                                                ] || 0
                                             }
                                             key={index}
                                             onRemove={() => handleRemoveFile(index)}
@@ -295,27 +305,19 @@ const FileUploadDialog: React.FC<{
                     )}
                 </DialogContent>
                 <DialogActions>
-                    {fileUploadStep === FileUploadStep.ADD_FILES && (
-                        <>
-                            <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
-                                Cancel
-                            </Button>
-                            <Button
-                                disabled={submitDialogDisabled}
-                                onClick={handleSubmit}
-                                data-testid='confirmation-dialog_button-yes'>
-                                Upload
-                            </Button>
-                        </>
-                    )}
-                    {fileUploadStep === FileUploadStep.UPLOAD && (
-                        <Button
-                            onClick={onClose}
-                            disabled={uploadDialogDisabled}
-                            data-testid='confirmation-dialog_button-yes'>
-                            {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
-                        </Button>
-                    )}
+                    <Button
+                        variant='tertiary'
+                        onClick={onClose}
+                        disabled={uploadDialogDisabled}
+                        data-testid='confirmation-dialog_button-yes'>
+                        {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
+                    </Button>
+                    <Button
+                        disabled={submitDialogDisabled}
+                        onClick={handleSubmit}
+                        data-testid='confirmation-dialog_button-yes'>
+                        Upload
+                    </Button>
                 </DialogActions>
             </div>
         </Dialog>

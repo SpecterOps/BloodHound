@@ -40,6 +40,8 @@ export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
+export * from './useFileUploadDialogContext';
+
 export * from './useGraphItem';
 
 export * from './useMountEffect';
