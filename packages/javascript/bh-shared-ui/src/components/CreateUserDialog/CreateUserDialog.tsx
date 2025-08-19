@@ -29,7 +29,7 @@ const CreateUserDialog: React.FC<{
     onExited?: () => void;
     onSave: (user: CreateUserRequest) => Promise<any>;
     open: boolean;
-    userId: string;
+    userId?: string;
     hasSelectedSelf?: boolean;
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
 }> = ({
@@ -69,9 +69,9 @@ const CreateUserDialog: React.FC<{
                 onCancel={onClose}
                 onSubmit={handleOnSave}
                 open={open}
-                showEnvironmentAccessControls={true}
+                showEnvironmentAccessControls={showEnvironmentAccessControls}
                 updateUser={updateUser}
-                userId={userId}
+                userId={userId!}
             />
         </DialogContent>
     );
