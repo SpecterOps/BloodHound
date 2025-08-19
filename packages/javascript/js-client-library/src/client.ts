@@ -233,6 +233,7 @@ class BHEAPIClient {
         this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
             ...options,
             params: {
+                ...options?.params,
                 environments,
                 skip,
                 limit,
@@ -255,6 +256,7 @@ class BHEAPIClient {
             {
                 ...options,
                 params: {
+                    ...options?.params,
                     environments,
                     skip,
                     limit,
@@ -267,7 +269,7 @@ class BHEAPIClient {
     getAssetGroupTagMembersCount = (tagId: string, environments?: string[], options?: RequestOptions) =>
         this.baseClient.get<AssetGroupMemberCountsResponse>(`/api/v2/asset-group-tags/${tagId}/members/counts`, {
             ...options,
-            params: { environments },
+            params: { ...options?.params, environments },
             paramsSerializer: { indexes: null },
         });
 

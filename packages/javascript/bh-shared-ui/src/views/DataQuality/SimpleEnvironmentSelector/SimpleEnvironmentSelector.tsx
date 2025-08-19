@@ -79,7 +79,6 @@ const SimpleEnvironmentSelector: React.FC<{
 
     return (
         <Popover
-            data-testid='data-selector'
             open={open}
             onOpenChange={() => {
                 setOpen((prev) => !prev);
@@ -106,7 +105,7 @@ const SimpleEnvironmentSelector: React.FC<{
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                onEscapeKeyDown={handleClose}
+                data-testid='data-quality_context-selector-popover'
                 align='start'
                 className='flex flex-col gap-2 p-4 border border-neutral-light-5 w-80'>
                 <div className='flex px-0 mb-2'>
