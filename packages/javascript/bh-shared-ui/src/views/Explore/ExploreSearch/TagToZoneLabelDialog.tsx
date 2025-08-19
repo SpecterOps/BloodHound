@@ -16,9 +16,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
-import { useNavigate } from 'react-router-dom';
 import { useTagsQuery } from '../../../hooks';
 import { QueryLineItem } from '../../../types';
+import { useAppNavigate } from '../../../utils';
 
 type TagToZoneLabelDialogProps = {
     dialogOpen: boolean;
@@ -30,7 +30,7 @@ type TagToZoneLabelDialogProps = {
 
 const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
 
     const AssetGroupTagTypeTier = 1 as const;
     const AssetGroupTagTypeLabel = 2 as const;

@@ -46,6 +46,7 @@ type SelectedType = {
     query: string;
     id?: number;
 };
+type SaveAction = 'edit' | 'save-as' | undefined;
 
 const CypherSearch = ({
     cypherSearchState,
@@ -67,7 +68,7 @@ const CypherSearch = ({
     });
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
-    const [saveAction, setSaveAction] = useState<string | undefined>(undefined);
+    const [saveAction, setSaveAction] = useState<SaveAction>(undefined);
 
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
@@ -95,7 +96,7 @@ const CypherSearch = ({
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
         }
-    }, [cypherQuery]);
+    }, [cypherQuery]); //TODO - Try empty array here - do I need the listener
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
@@ -213,7 +214,7 @@ const CypherSearch = ({
 
     const handleSaveAs = () => {
         setSelected({ query: '' });
-        setSaveAction('saveas');
+        setSaveAction('save-as'); // TODO - Create an ENUM for this or String Literal Type.
         setShowSaveQueryDialog(true);
     };
 

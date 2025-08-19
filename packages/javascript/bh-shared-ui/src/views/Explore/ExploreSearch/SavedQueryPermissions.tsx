@@ -57,6 +57,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         | undefined;
 
     useEffect(() => {
+        //TODO - unfuck this
         // manually setting data on error.
         // api returns error for empty state.
         queryClient.setQueryData(['permissions'], (oldData: PermissionsData) => {
@@ -160,7 +161,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     return (
         <>
             {isLoading && <div>Loading ...</div>}
-            {usersList?.length && (
+            {usersList?.length ? (
                 <div>
                     <div className='flex-grow relative mb-2'>
                         <AppIcon.MagnifyingGlass size={16} className='absolute left-5 top-[50%] -mt-[8px]' />
@@ -185,9 +186,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         />
                     </div>
                 </div>
-            )}
-
-            {!usersList?.length && (
+            ) : (
                 <div className='flex flex-col  py-8'>There are currently no users on this account.</div>
             )}
         </>

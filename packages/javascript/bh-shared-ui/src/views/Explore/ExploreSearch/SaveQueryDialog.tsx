@@ -140,7 +140,7 @@ const SaveQueryDialog: React.FC<{
     };
 
     const cardTitle =
-        saveAction === 'edit' ? 'Edit Saved Query' : saveAction === 'saveas' ? 'Save As New Query' : 'Save Query';
+        saveAction === 'edit' ? 'Edit Saved Query' : saveAction === 'save-as' ? 'Save As New Query' : 'Save Query';
 
     return (
         <>
