@@ -207,6 +207,8 @@ const Users: FC = () => {
                         </DialogTrigger>
                         <DialogPortal>
                             <CreateUserDialog
+                                createUser={true}
+                                updateUser={false}
                                 error={createUserMutation.error}
                                 isLoading={createUserMutation.isLoading}
                                 onClose={toggleCreateUserDialog}
