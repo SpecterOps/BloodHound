@@ -6070,7 +6070,6 @@
                   },
                   "expansion": {
                     "description": "Determine which expansion approach to use for member seeds. 0 - No expansion, 1 - Expand all, 2 - Expand containing members, 3 - Expand containing members and members containing the seed. Default fallback will be 1 - Expand all",
-                    "required": false,
                     "type": "integer",
                     "enum": [
                       0,
@@ -6079,7 +6078,10 @@
                       3
                     ]
                   }
-                }
+                },
+                "required": [
+                  "seeds"
+                ]
               }
             }
           }
