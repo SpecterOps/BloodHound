@@ -208,7 +208,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
                     <MainNavListItem key={0} hoverActive={!isMouseDragging}>
                         <div
-                            className='cursor-pointer flex flex-row items-center relative top-1'
+                            className='cursor-pointer flex flex-row items-center relative top-1 left-[2px]'
                             onClick={() => setShowFileIngestDialog(true)}>
                             <MainNavItemLabel
                                 icon={<FontAwesomeIcon size='lg' icon={faUpload} className='pr-2.5 pb-1' />}

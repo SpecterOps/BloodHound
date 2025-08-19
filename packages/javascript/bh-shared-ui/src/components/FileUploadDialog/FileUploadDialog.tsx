@@ -64,8 +64,9 @@ const FileUploadDialog: React.FC<{
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
         const filesAreUploading = filesForIngest.filter((file) => file.status === FileStatus.UPLOADING).length > 0;
+        const noFilesAreReady = filesForIngest.every((file) => file.status !== FileStatus.READY);
 
-        const shouldDisableSubmit = filesHaveErrors || !filesForIngest.length;
+        const shouldDisableSubmit = filesHaveErrors || !filesForIngest.length || noFilesAreReady;
         setSubmitDialogDisabled(shouldDisableSubmit);
         setUploadDialogDisabled(filesAreUploading);
     }, [filesForIngest]);
@@ -232,6 +233,7 @@ const FileUploadDialog: React.FC<{
                 }
             });
 
+            setSubmitDialogDisabled(false);
             setUploadMessage('');
             setProgressCache({});
             setCurrentIngestJobId('');
@@ -241,6 +243,7 @@ const FileUploadDialog: React.FC<{
     };
 
     const handleSubmit = () => {
+        setSubmitDialogDisabled(true);
         if (fileUploadStep === FileUploadStep.ADD_FILES) {
             setFileUploadStep(FileUploadStep.UPLOAD);
             handleUploadAllFiles();
