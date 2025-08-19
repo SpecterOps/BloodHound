@@ -109,6 +109,8 @@ afterEach(() => server.resetHandlers());
 afterAll(() => {
     server.close();
     vi.stubGlobal('XMLHttpRequest', OriginalXMLHttpRequest);
+    vi.clearAllMocks();
+    server.resetHandlers();
 });
 
 describe('FileIngest', () => {

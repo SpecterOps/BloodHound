@@ -25,23 +25,23 @@ const FileStatusListItem: React.FC<{
     onRemove: () => void;
     percentCompleted: number;
 }> = ({ file, onRemove, percentCompleted }) => {
-    const hasErrors = file?.errors?.length;
+    const hasErrors = !!file?.errors?.length;
+    const clampedPercent = Math.max(0, Math.min(100, Math.round(percentCompleted ?? 0)));
     const progressBarWidth = hasErrors ? '100%' : `${percentCompleted}%`;
 
     return (
         <div className='mb-2 relative flex flex-row h-8 justify-between'>
             <div
-                className={cn('absolute bg-purple-300 h-8 opacity-40 rounded-lg transition-all', {
+                className={cn('absolute h-8 opacity-40 rounded-lg transition-all', {
                     'bg-purple-300': !hasErrors,
                     'bg-red-300': hasErrors,
                 })}
                 style={{ maxWidth: '600px', width: progressBarWidth }}
             />
+
             <div className='pl-3 flex items-center'>
-                <span className='pr-2'>{file.file.name}</span>
-                {percentCompleted && !hasErrors ? (
-                    <span>{percentCompleted && !hasErrors && `${percentCompleted}%`}</span>
-                ) : null}
+                <span className='pr-2'>{file.file.name}</span>+{' '}
+                {percentCompleted && !hasErrors && <span>{clampedPercent}%</span>}
                 {hasErrors && <span className='text-error'>Failed to Upload</span>}
             </div>
             <div>

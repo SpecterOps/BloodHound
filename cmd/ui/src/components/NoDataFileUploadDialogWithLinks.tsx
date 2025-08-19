@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FileUploadDialog } from 'bh-shared-ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
 type NoDataFileUploadDialogWithLinksProps = {
@@ -25,14 +25,14 @@ type NoDataFileUploadDialogWithLinksProps = {
 const linkStyles = 'text-secondary dark:text-secondary-variant-2 hover:underline';
 
 export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWithLinksProps> = ({ open }) => {
-    const [showDialog, shouldShowDialog] = useState(open);
+    const [showDialog, setShowDialog] = useState(open);
 
-    if (!showDialog) return null;
+    useEffect(() => setShowDialog(open), [open]);
 
     return (
         <FileUploadDialog
             open={showDialog}
-            onClose={() => shouldShowDialog(false)}
+            onClose={() => setShowDialog(false)}
             headerText='Upload Data to Start Mapping Your Environment'
             description={
                 <div>
@@ -46,7 +46,7 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
                             className={linkStyles}
                             href='https://bloodhound.specterops.io/get-started/quickstart/ce-ingest-sample-data'
                             target='_blank'
-                            rel='noreferrer'>
+                            rel='noreferrer noopener'>
                             sample dataset
                         </a>{' '}
                         to get a quick sense of how the platform works.
@@ -68,7 +68,7 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
                             className={linkStyles}
                             href='https://bloodhound.specterops.io/collect-data/ce-collection/overview'
                             target='_blank'
-                            rel='noreferrer'>
+                            rel='noreferrer noopener'>
                             Getting Started Guide
                         </a>
                     </p>
@@ -77,17 +77,3 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
         />
     );
 };
-
-// export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWithLinksProps> = ({ open }) => {
-//     return (
-//         <NoDataDialog open={open}>
-//             To explore your environment, start by uploading your data on the{' '}
-//             <Link {...fileIngestLinkProps}>file ingest</Link> page.
-//             <br className='mb-4' />
-//             Need help? Check out the <a {...gettingStartedLinkProps}>Getting Started</a> guide for instructions.
-//             <br className='mb-4' />
-//             If you want to test BloodHound with sample data, you may download some from our{' '}
-//             <a {...sampleCollectionLinkProps}>Sample Collection</a> GitHub page.
-//         </NoDataDialog>
-//     );
-// };

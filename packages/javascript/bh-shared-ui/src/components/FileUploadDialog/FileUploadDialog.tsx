@@ -130,21 +130,22 @@ const FileUploadDialog: React.FC<{
             let errorCount = 0;
 
             if (jobId) {
-                const promises = [];
-                for (const ingestFile of filesForIngest) {
-                    // Separate error handling so we can continue on when a file fails
-                    try {
-                        promises.push(uploadFile(jobId, ingestFile));
-                    } catch (error) {
-                        errorCount += 1;
-                    }
-                    setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
-                }
-
-                await Promise.all(promises);
+                const uploadPromises = filesForIngest.map((ingestFile) =>
+                    uploadFile(jobId, ingestFile)
+                        .then(() => {
+                            setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
+                        })
+                        .catch(() => {
+                            // onError handler already sets failure/error state; we just count it here
+                            errorCount += 1;
+                        })
+                );
+                await Promise.allSettled(uploadPromises);
             }
 
-            await finishUpload(jobId);
+            if (jobId) {
+                await finishUpload(jobId);
+            }
 
             logFinishedIngestJob(errorCount);
         } catch (error) {
@@ -305,11 +306,7 @@ const FileUploadDialog: React.FC<{
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button
-                        variant='tertiary'
-                        onClick={onClose}
-                        disabled={uploadDialogDisabled}
-                        data-testid='confirmation-dialog_button-yes'>
+                    <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
                         {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
                     </Button>
                     <Button

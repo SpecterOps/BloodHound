@@ -726,14 +726,15 @@ class BHEAPIClient {
         contentType: string,
         options: AxiosRequestConfig<any> = {}
     ) => {
-        const headers = {
-            'Content-Type': contentType,
+        const mergedOptions: AxiosRequestConfig<any> = {
+            ...options,
+            headers: {
+                ...(options?.headers ?? {}),
+                'Content-Type': contentType,
+            },
         };
 
-        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, {
-            headers,
-            ...options,
-        });
+        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, mergedOptions);
     };
 
     endFileIngest = (ingestId: string) =>
