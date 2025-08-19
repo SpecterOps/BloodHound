@@ -22,7 +22,7 @@ import (
 
 const (
 	RoleUploadOnly    = "Upload-Only"
-	RoleClientTasking = "Client Tasking"
+	RoleClientTasking = "Client-Tasking"
 	RoleReadOnly      = "Read-Only"
 	RoleUser          = "User"
 	RolePowerUser     = "Power User"
