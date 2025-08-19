@@ -6352,6 +6352,128 @@
             "$ref": "#/components/responses/internal-server-error"
           }
         }
+      },
+      "post": {
+        "operationId": "SearchAssetGroupTagHistory",
+        "summary": "Search history records",
+        "description": "Retrieves history records via search string input and filtering by action, asset_group_tag_id, email, and actor",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "requestBody": {
+          "description": "The request body for searching asset group tag history records",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "minLength": 3,
+                    "example": "UpdateTag"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `created_at`.",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "created_at"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "description": "Filter by actor",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Filter by email",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "description": "Filter by action",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "description": "Filter by asset_group_tag_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-history"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
       }
     },
     "/api/v2/graphs/kinds": {
