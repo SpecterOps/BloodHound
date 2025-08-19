@@ -2818,7 +2818,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/model.file-upload-job"
+                        "$ref": "#/components/schemas/model.file-upload-job.completed-tasks"
                       }
                     }
                   }
@@ -17731,6 +17731,33 @@
               },
               "failed_files": {
                 "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "model.file-upload-job.completed-tasks": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "parent_file_name": {
+                "type": "string"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }

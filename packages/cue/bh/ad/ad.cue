@@ -292,13 +292,6 @@ AdminCount: types.#StringEnum & {
 	representation: "admincount"
 }
 
-AdminSDHolderProtected: types.#StringEnum & {
-	symbol:         "AdminSDHolderProtected"
-	schema:         "ad"
-	name:           "AdminSDHolder Protected"
-	representation: "adminsdholderprotected"
-}
-
 DontRequirePreAuth: types.#StringEnum & {
 	symbol:         "DontRequirePreAuth"
 	schema:         "ad"
@@ -1133,7 +1126,6 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
-	AdminSDHolderProtected,
 ]
 
 // Kinds

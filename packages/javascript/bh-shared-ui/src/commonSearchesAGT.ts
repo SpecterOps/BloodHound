@@ -271,10 +271,6 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'Tier Zero / High Value users with non-expiring passwords',
                 cypher: `MATCH (u:User)\nWHERE (u:${TAG_TIER_ZERO_AGT}) AND u.enabled = true\nAND u.pwdneverexpires = true\nRETURN u\nLIMIT 100`,
             },
-            {
-                description: 'Tier Zero principals without AdminSDHolder protection',
-                cypher: `MATCH (n:Base)\nWHERE (n:${TAG_TIER_ZERO_AGT})\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
-            },
         ],
     },
     {
