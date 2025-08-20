@@ -70,7 +70,7 @@ export const Cypher: FC<{
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
     return (
-        <Card>
+        <Card className={cn({ 'min-h-[36rem] max-h-[36rem]': !preview })}>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Search'}</CardTitle>
@@ -82,6 +82,7 @@ export const Cypher: FC<{
                         </Button>
                         {!preview && (
                             <Button
+                                data-testid='zone-management_save_selector-form_update-results-button'
                                 variant={'text'}
                                 className={cn(
                                     'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
@@ -104,7 +105,7 @@ export const Cypher: FC<{
                     </p>
                 )}
             </CardHeader>
-            <CardContent className='px-6'>
+            <CardContent className='px-6' data-testid='zone-management_cypher-container'>
                 <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                     <CypherEditor
                         className={cn(
@@ -112,6 +113,7 @@ export const Cypher: FC<{
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
+                                'md:min-h-[20rem] md:max-h-[20rem] h-[24rem] max-h-[24rem]': !preview,
                             }
                         )}
                         ref={cypherEditorRef}

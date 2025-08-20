@@ -38,17 +38,17 @@ const CopyMenuItem = () => {
 
     const { selectedItemQuery } = useExploreSelectedItem();
 
-    const handleCopyDisplayName = () => {
+    const handleCopyName = () => {
         if (selectedItemQuery.data) {
             navigator.clipboard.writeText(selectedItemQuery.data.label);
-            addNotification(`Display name copied to clipboard`, 'copyToClipboard');
+            addNotification(`Name copied to clipboard`, 'copyToClipboard');
         }
     };
 
     const handleCopyObjectId = () => {
         if (selectedItemQuery.data) {
             navigator.clipboard.writeText((selectedItemQuery.data as NodeResponse).objectId);
-            addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
+            addNotification(`Object ID copied to clipboard`, 'copyToClipboard');
         }
     };
 
@@ -66,7 +66,7 @@ const CopyMenuItem = () => {
                 placement='right'
                 title={
                     <>
-                        <MenuItem onClick={handleCopyDisplayName}>Display Name</MenuItem>
+                        <MenuItem onClick={handleCopyName}>Name</MenuItem>
                         <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
                         <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>
                     </>

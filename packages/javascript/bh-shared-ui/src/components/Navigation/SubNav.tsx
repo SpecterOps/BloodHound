@@ -21,7 +21,7 @@ import { AppLink } from './AppLink';
 
 const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
     return (
-        <li className={'flex items-center mx-2 mb-1 px-2 text-neutral-dark-0 dark:text-neutral-light-1 font-medium'}>
+        <li className={'flex items-center mx-2 mb-1 px-2 text-neutral-dark-1 dark:text-neutral-light-1 font-medium'}>
             {children}
         </li>
     );
@@ -35,7 +35,7 @@ const SubNavListItem: FC<{ children: ReactNode; route?: string }> = ({ children,
         <li
             className={cn('h-auto flex items-center mx-2 mb-1 px-2 rounded hover:underline', {
                 'text-primary hover:text-primary bg-neutral-light-4': isActiveRoute,
-                'text-neutral-dark-0 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2':
+                'text-neutral-dark-1 dark:text-neutral-light-1 hover:text-secondary dark:hover:text-secondary-variant-2':
                     !isActiveRoute,
             })}>
             {children}
@@ -62,7 +62,9 @@ interface SubNavProps {
 
 const SubNav: React.FC<SubNavProps> = ({ sections }) => {
     return (
-        <nav className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'>
+        <nav
+            className='z-[nav - 1] w-subnav-width h-full flex flex-col gap-10 fixed top-0 left-nav-width bg-neutral-light-2 pt-6 border-x border-solid border-neutral-light-5 dark:bg-neutral-dark-2 overflow-x-hidden overflow-y-auto'
+            data-testid='administration-nav'>
             {sections.map((section, sectionIndex) => (
                 <ul key={sectionIndex}>
                     <SubNavListTitle>

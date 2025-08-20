@@ -44,33 +44,58 @@ func ConvertSessionObject(session Session) IngestibleSession {
 }
 
 func ConvertObjectToNode(item IngestBase, itemType graph.Kind, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-	itemProps[common.LastCollected.String()] = ingestTime
-
-	if itemType == ad.Domain {
-		convertInvalidDomainProperties(itemProps)
-	}
-
-	convertOwnsEdgeToProperty(item, itemProps)
-
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
-		PropertyMap: itemProps,
+		PropertyMap: getBaseProperties(item, ingestTime),
 		Labels:      []graph.Kind{itemType},
 	}
 }
 
-func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-	itemProps[common.LastCollected.String()] = ingestTime
+func ConvertDomainToNode(item Domain, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+	convertInvalidDomainProperties(itemProps)
 
-	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Domain},
+	}
+}
+
+func ConvertOUToNode(item OU, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.OU},
+	}
+}
+
+func ConvertContainerToNode(item Container, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Container},
+	}
+}
+
+func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
 	if item.IsWebClientRunning.Collected {
 		itemProps[ad.WebClientRunning.String()] = item.IsWebClientRunning.Result
@@ -81,22 +106,51 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	}
 
 	if item.NTLMRegistryData.Collected {
+		// If a registry value doesn't exist, assign its item prop to nil to clear it from the node
+		itemProps[ad.RestrictOutboundNTLM.String()] = nil
+		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
+		itemProps[ad.RequireSecuritySignature.String()] = nil
+		itemProps[ad.EnableSecuritySignature.String()] = nil
+		itemProps[ad.NTLMMinClientSec.String()] = nil
+		itemProps[ad.NTLMMinServerSec.String()] = nil
+		itemProps[ad.LMCompatibilityLevel.String()] = nil
+		itemProps[ad.UseMachineID.String()] = nil
+		itemProps[ad.ClientAllowedNTLMServers.String()] = nil
+
 		/*
-			RestrictSendingNtlmTraffic is sent to us as an uint
+			RestrictSendingNtlmTraffic is sent to us as an uint if sent at all
 			The possible values are
 				0: Allow All
 				1: Audit All
 				2: Deny All
 		*/
-		itemProps[ad.RestrictOutboundNTLM.String()] = item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
-		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
-		itemProps[ad.RequireSecuritySignature.String()] = item.NTLMRegistryData.Result.RequireSecuritySignature != 0
-		itemProps[ad.EnableSecuritySignature.String()] = item.NTLMRegistryData.Result.EnableSecuritySignature != 0
-		itemProps[ad.NTLMMinClientSec.String()] = item.NTLMRegistryData.Result.NtlmMinClientSec
-		itemProps[ad.NTLMMinServerSec.String()] = item.NTLMRegistryData.Result.NtlmMinServerSec
-		itemProps[ad.LMCompatibilityLevel.String()] = item.NTLMRegistryData.Result.LmCompatibilityLevel
-		itemProps[ad.UseMachineID.String()] = item.NTLMRegistryData.Result.UseMachineId != 0
-		itemProps[ad.ClientAllowedNTLMServers.String()] = item.NTLMRegistryData.Result.ClientAllowedNTLMServers
+		if item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic != nil {
+			itemProps[ad.RestrictOutboundNTLM.String()] = *item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
+		}
+		if item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic != nil {
+			itemProps[ad.RestrictReceivingNTLMTraffic.String()] = *item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
+		}
+		if item.NTLMRegistryData.Result.RequireSecuritySignature != nil {
+			itemProps[ad.RequireSecuritySignature.String()] = *item.NTLMRegistryData.Result.RequireSecuritySignature != 0
+		}
+		if item.NTLMRegistryData.Result.EnableSecuritySignature != nil {
+			itemProps[ad.EnableSecuritySignature.String()] = *item.NTLMRegistryData.Result.EnableSecuritySignature != 0
+		}
+		if item.NTLMRegistryData.Result.NtlmMinClientSec != nil {
+			itemProps[ad.NTLMMinClientSec.String()] = *item.NTLMRegistryData.Result.NtlmMinClientSec
+		}
+		if item.NTLMRegistryData.Result.NtlmMinServerSec != nil {
+			itemProps[ad.NTLMMinServerSec.String()] = *item.NTLMRegistryData.Result.NtlmMinServerSec
+		}
+		if item.NTLMRegistryData.Result.LmCompatibilityLevel != nil {
+			itemProps[ad.LMCompatibilityLevel.String()] = *item.NTLMRegistryData.Result.LmCompatibilityLevel
+		}
+		if item.NTLMRegistryData.Result.UseMachineId != nil {
+			itemProps[ad.UseMachineID.String()] = *item.NTLMRegistryData.Result.UseMachineId != 0
+		}
+		if item.NTLMRegistryData.Result.ClientAllowedNTLMServers != nil {
+			itemProps[ad.ClientAllowedNTLMServers.String()] = *item.NTLMRegistryData.Result.ClientAllowedNTLMServers
+		}
 	}
 
 	if ldapEnabled, ok := itemProps["ldapenabled"]; ok {
@@ -117,12 +171,7 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 }
 
 func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-
-	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
 	var (
 		httpEndpoints    = make([]string, 0)
@@ -166,6 +215,19 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) Ingestib
 		PropertyMap: itemProps,
 		Labels:      []graph.Kind{ad.EnterpriseCA},
 	}
+}
+
+func getBaseProperties(item IngestBase, ingestTime time.Time) map[string]any {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	itemProps[common.LastCollected.String()] = ingestTime
+
+	convertOwnsEdgeToProperty(item, itemProps)
+
+	return itemProps
 }
 
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
@@ -233,18 +295,10 @@ func stringToInt(itemProps map[string]any, keyName string) {
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp IngestibleNode) []IngestibleRelationship {
-	isConfigurationNC := false
-	if itemType.Is(ad.Container) {
-		if dn, ok := baseNodeProp.PropertyMap[ad.DistinguishedName.String()].(string); ok {
-			isConfigurationNC = strings.HasPrefix(dn, "CN=CONFIGURATION,DC=")
-		}
-	}
-
-	rels := make([]IngestibleRelationship, 0)
+func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelationship {
 	containingPrincipal := item.ContainedBy
 	if containingPrincipal.ObjectIdentifier != "" {
-		rels = append(rels, NewIngestibleRelationship(
+		return NewIngestibleRelationship(
 			IngestibleEndpoint{
 				Value: containingPrincipal.ObjectIdentifier,
 				Kind:  containingPrincipal.Kind(),
@@ -257,27 +311,11 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp Ing
 				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
-		))
-
-		if !item.IsACLProtected && !isConfigurationNC { // The Configuration NC is it's own partition and does not inherit ACEs
-			rels = append(rels, NewIngestibleRelationship(
-				IngestibleEndpoint{
-					Value: containingPrincipal.ObjectIdentifier,
-					Kind:  containingPrincipal.Kind(),
-				},
-				IngestibleEndpoint{
-					Value: item.ObjectIdentifier,
-					Kind:  itemType,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): false},
-					RelType:  ad.PropagatesACEsTo,
-				},
-			))
-		}
+		)
 	}
 
-	return rels
+	// TODO: Decide if we even want empty rels in the first place
+	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
 func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid string) IngestibleRelationship {
@@ -302,25 +340,28 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 }
 
-func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID string) IngestibleRelationship {
-	if domainSID == "" {
-		return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+// ParseGroupMiscData parses HasSIDHistory
+func ParseGroupMiscData(group Group) []IngestibleRelationship {
+	data := make([]IngestibleRelationship, 0)
+
+	for _, target := range group.HasSIDHistory {
+		data = append(data, NewIngestibleRelationship(
+			IngestibleEndpoint{
+				Value: group.ObjectIdentifier,
+				Kind:  ad.Group,
+			},
+			IngestibleEndpoint{
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.HasSIDHistory,
+			},
+		))
 	}
 
-	return NewIngestibleRelationship(
-		IngestibleEndpoint{
-			Value: domainSID,
-			Kind:  ad.Domain,
-		},
-		IngestibleEndpoint{
-			Value: item.ObjectIdentifier,
-			Kind:  itemType,
-		},
-		IngestibleRel{
-			RelProps: map[string]any{ad.IsACL.String(): false},
-			RelType:  ad.ContainsIdentity,
-		},
-	)
+	return data
 }
 
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
@@ -363,8 +404,9 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 }
 
 type WriteOwnerLimitedPrincipal struct {
-	SourceData  IngestibleEndpoint
-	IsInherited bool
+	SourceData      IngestibleEndpoint
+	IsInherited     bool
+	InheritanceHash string
 }
 
 // getFromPropertyMap attempts to look up a given key in the given properties map. If the value does not exist this
@@ -438,8 +480,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					Kind:  targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
-					RelType:  rightKind,
+					RelProps: map[string]any{
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): ace.IsInherited,
+						ad.InheritanceHash.String(): ace.InheritanceHash,
+					},
+					RelType: rightKind,
 				},
 			))
 		}
@@ -479,8 +525,13 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
-						RelType:  ad.WriteOwnerLimitedRights,
+						RelProps: map[string]any{
+							ad.IsACL.String():           true,
+							common.IsInherited.String(): limitedPrincipal.IsInherited,
+							ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+							"privileges":                writeOwnerLimitedPrivs,
+						},
+						RelType: ad.WriteOwnerLimitedRights,
 					},
 				))
 			}
@@ -506,8 +557,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 						Kind:  targetType,
 					},
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-						RelType:  ad.WriteOwnerRaw,
+						RelProps: map[string]any{
+							ad.IsACL.String():           true,
+							common.IsInherited.String(): limitedPrincipal.IsInherited,
+							ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+						},
+						RelType: ad.WriteOwnerRaw,
 					},
 				))
 			}
@@ -533,8 +588,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 							Kind:  targetType,
 						},
 						IngestibleRel{
-							RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-							RelType:  ad.WriteOwnerRaw,
+							RelProps: map[string]any{
+								ad.IsACL.String():           true,
+								common.IsInherited.String(): limitedPrincipal.IsInherited,
+								ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+							},
+							RelType: ad.WriteOwnerRaw,
 						},
 					))
 				}
@@ -573,8 +632,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					Kind:  targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-					RelType:  ad.WriteOwnerRaw,
+					RelProps: map[string]any{
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): limitedPrincipal.IsInherited,
+						ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+					},
+					RelType: ad.WriteOwnerRaw,
 				},
 			))
 		}

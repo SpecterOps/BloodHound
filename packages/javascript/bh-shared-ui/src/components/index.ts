@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+export { default as AnalyzeNowConfiguration } from './AnalyzeNowConfiguration';
 
 export * from './AppNotifications';
 export { default as AppNotifications } from './AppNotifications';
@@ -79,6 +80,13 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 export * from './EnterpriseIcon';
 export { default as EnterpriseIcon } from './EnterpriseIcon';
 
+export * from './EntityInfo';
+export { default as EntityInfoPanel } from './EntityInfo';
+
+export * from './EntityInfoDataTable';
+
+export * from './EntityInfoDataTableGraphed';
+
 export * from './ExploreSearchCombobox';
 export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';
 
@@ -93,6 +101,8 @@ export { default as FileUploadDialog } from './FileUploadDialog';
 
 export * from './FinishedIngestLog';
 export { default as FinishedIngestLog } from './FinishedIngestLog';
+
+export * from './FinishedJobsTable';
 
 export * from './GenericErrorBoundaryFallback';
 export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryFallback';
@@ -130,6 +140,8 @@ export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 export * from './LoginForm';
 export { default as LoginForm } from './LoginForm';
 
+export * from './MaskedInput';
+
 export * from './MenuItem';
 export { default as MenuItem } from './MenuItem';
 
@@ -165,8 +177,12 @@ export { default as SearchCurrentNodes } from './SearchCurrentNodes';
 export * from './SearchResultItem';
 export { default as SearchResultItem } from './SearchResultItem';
 
+export * from './SourceKindsCheckboxes';
+
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
+
+export * from './StatusIndicator';
 
 export * from './TextWithFallback';
 export { default as TextWithFallback } from './TextWithFallback';
@@ -190,6 +206,7 @@ export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './AppIcon';
+
 export * from './Navigation';
 
 export * from './ExploreTable';

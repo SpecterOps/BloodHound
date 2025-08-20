@@ -63,6 +63,7 @@ import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
 import AZResetPassword from './AZResetPassword/AZResetPassword';
 import AZRoleApprover from './AZRoleApprover/AZRoleApprover';
+import AZRoleEligible from './AZRoleEligible/AZRoleEligible';
 import AZRunsAs from './AZRunsAs/AZRunsAs';
 import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessAdministrator';
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
@@ -77,16 +78,15 @@ import AdminTo from './AdminTo/AdminTo';
 import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
 import AllowedToAct from './AllowedToAct/AllowedToAct';
 import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
-import CanApplyGPO from './CanApplyGPO/CanApplyGPO';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
+import ClaimSpecialIdentity from './ClaimSpecialIdentity/ClaimSpecialIdentity';
 import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRelayNTLMToLDAPS';
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
 import CoerceToTGT from './CoerceToTGT/CoerceToTGT';
 import Contains from './Contains/Contains';
-import ContainsIdentity from './ContainsIdentity/ContainsIdentity';
 import CrossForestTrust from './CrossForestTrust/CrossForestTrust';
 import DCFor from './DCFor/DCFor';
 import DCSync from './DCSync/DCSync';
@@ -99,7 +99,6 @@ import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ExtendedByPolicy from './ExtendedByPolicy/ExtendedByPolicy';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
 import GPLink from './GPLink/GPLink';
-import GPOAppliesTo from './GPOAppliesTo/GPOAppliesTo';
 import GenericAll from './GenericAll/GenericAll';
 import GenericWrite from './GenericWrite/GenericWrite';
 import GetChanges from './GetChanges/GetChanges';
@@ -118,7 +117,6 @@ import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
 import OwnsLimitedRights from './OwnsLimitedRights/OwnsLimitedRights';
 import OwnsRaw from './OwnsRaw/OwnsRaw';
-import PropagatesACEsTo from './PropagatesACEsTo/PropagatesACEsTo';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
@@ -237,6 +235,7 @@ const EdgeInfoComponents = {
     AZLogicAppContributor: AZLogicAppContributor,
     AZNodeResourceGroup: AZNodeResourceGroup,
     AZRoleApprover: AZRoleApprover,
+    AZRoleEligible: AZRoleEligible,
     Enroll: Enroll,
     EnterpriseCAFor: EnterpriseCAFor,
     RootCAFor: RootCAFor,
@@ -271,10 +270,7 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
-    ContainsIdentity: ContainsIdentity,
-    PropagatesACEsTo: PropagatesACEsTo,
-    CanApplyGPO: CanApplyGPO,
-    GPOAppliesTo: GPOAppliesTo,
+    ClaimSpecialIdentity: ClaimSpecialIdentity,
     HasTrustKeys: HasTrustKeys,
 };
 

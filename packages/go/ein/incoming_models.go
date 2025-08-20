@@ -52,10 +52,11 @@ func (s TypedPrincipal) Kind() graph.Kind {
 }
 
 type ACE struct {
-	PrincipalSID  string
-	PrincipalType string
-	RightName     string
-	IsInherited   bool
+	PrincipalSID    string
+	PrincipalType   string
+	RightName       string
+	IsInherited     bool
+	InheritanceHash string
 }
 
 type SPNTarget struct {
@@ -74,7 +75,8 @@ func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
 			Value: s.PrincipalSID,
 			Kind:  s.Kind(),
 		},
-		IsInherited: s.IsInherited,
+		IsInherited:     s.IsInherited,
+		InheritanceHash: s.InheritanceHash,
 	}
 }
 
@@ -207,7 +209,8 @@ type Session struct {
 
 type Group struct {
 	IngestBase
-	Members []TypedPrincipal
+	Members       []TypedPrincipal
+	HasSIDHistory []TypedPrincipal
 }
 
 type User struct {
@@ -222,7 +225,8 @@ type User struct {
 
 type Container struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
+	ChildObjects      []TypedPrincipal
+	InheritanceHashes []string
 }
 
 type Trust struct {
@@ -243,10 +247,11 @@ type GPLink struct {
 
 type Domain struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
-	Trusts       []Trust
-	Links        []GPLink
-	GPOChanges   GPOChanges
+	ChildObjects      []TypedPrincipal
+	Trusts            []Trust
+	Links             []GPLink
+	GPOChanges        GPOChanges
+	InheritanceHashes []string
 }
 
 type SessionAPIResult struct {
@@ -304,15 +309,15 @@ type NTLMRegistryDataAPIResult struct {
 }
 
 type NTLMRegistryInfo struct {
-	RestrictSendingNtlmTraffic   uint
-	RequireSecuritySignature     uint
-	EnableSecuritySignature      uint
-	RestrictReceivingNTLMTraffic uint
-	NtlmMinServerSec             uint
-	NtlmMinClientSec             uint
-	LmCompatibilityLevel         uint
-	UseMachineId                 uint
-	ClientAllowedNTLMServers     []string
+	RestrictSendingNtlmTraffic   *uint
+	RequireSecuritySignature     *uint
+	EnableSecuritySignature      *uint
+	RestrictReceivingNTLMTraffic *uint
+	NtlmMinServerSec             *uint
+	NtlmMinClientSec             *uint
+	LmCompatibilityLevel         *uint
+	UseMachineId                 *uint
+	ClientAllowedNTLMServers     *[]string
 }
 
 type Computer struct {
@@ -347,9 +352,14 @@ type GPOChanges struct {
 
 type OU struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
-	Links        []GPLink
-	GPOChanges   GPOChanges
+	ChildObjects      []TypedPrincipal
+	Links             []GPLink
+	GPOChanges        GPOChanges
+	InheritanceHashes []string
+}
+
+type GenericMetadata struct {
+	SourceKind string `json:"source_kind"`
 }
 
 type GenericNode struct {

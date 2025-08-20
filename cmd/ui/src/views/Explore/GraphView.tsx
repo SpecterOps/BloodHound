@@ -21,28 +21,32 @@ import {
     FeatureFlag,
     GraphControls,
     GraphProgress,
+    GraphViewErrorAlert,
+    ManageColumnsComboBoxOption,
+    NodeClickInfo,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
     isNode,
     isWebGLEnabled,
+    makeStoreMapFromColumnOptions,
     transformFlatGraphResponse,
     useCustomNodeKinds,
+    useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
-    useFeatureFlag,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
+
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes } from 'js-client-library';
-import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { type GraphNodes } from 'js-client-library';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout, setIsExploreTableSelected } from 'src/ducks/global/actions';
+import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -59,45 +63,35 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
+    const { searchType } = useExploreParams();
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
-    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
+    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+    const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
-    if (!tableViewFeatureFlag?.enabled) {
-        isExploreTableSelected = false;
-    }
+    const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
 
-    const includeProperties = !!isExploreTableSelected;
-
-    const graphQuery = useSigmaExploreGraph(includeProperties);
+    const graphQuery = useSigmaExploreGraph();
+    // TODO: incorporate into larger hook with auto display table logic
+    const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
-
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
-
     const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
 
-    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
-
-    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-        enabled: !exploreLayout,
-    });
-    const displayTable = autoDisplayTable || !!isExploreTableSelected;
+    const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -105,8 +99,7 @@ const GraphView: FC = () => {
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
-        // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
+        items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
@@ -128,6 +121,32 @@ const GraphView: FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedItem]);
 
+    /* useCallback Event Handlers must appear before return statement */
+    const selectItem = useCallback(
+        (id: string) => {
+            setSelectedItem(id);
+            setHighlightedItem(id);
+        },
+        [setSelectedItem]
+    );
+
+    const handleContextMenu = useCallback(
+        (event: SigmaNodeEventPayload) => {
+            selectItem(event.node);
+            setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        },
+        [contextMenu, selectItem, setContextMenu]
+    );
+
+    /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
+    const handleKebabMenuClick = useCallback(
+        (nodeInfo: NodeClickInfo) => {
+            if (!nodeInfo.id) return;
+            handleContextMenu({ event: { x: nodeInfo.x, y: nodeInfo.y }, node: nodeInfo.id } as SigmaNodeEventPayload);
+        },
+        [handleContextMenu]
+    );
+
     if (isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -136,29 +155,23 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError) throw new Error();
+    if (isError) return <GraphViewErrorAlert />;
 
-    if (!isWebGLEnabled()) {
-        return <WebGLDisabledAlert />;
-    }
+    if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
     /* Event Handlers */
-    const selectItem = (id: string) => {
-        setSelectedItem(id);
-        setHighlightedItem(id);
-    };
-
     const cancelHighlight = () => {
         setHighlightedItem(null);
     };
 
-    const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        selectItem(event.node);
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-    };
-
     const handleCloseContextMenu = () => {
         setContextMenu(null);
+    };
+
+    const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
+        const newItems = makeStoreMapFromColumnOptions(columnOptions);
+
+        dispatch(setSelectedExploreTableColumns(newItems));
     };
 
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
@@ -197,6 +210,7 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
+                    isExploreTableSelected={isExploreTableSelected}
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
@@ -232,10 +246,11 @@ const GraphView: FC = () => {
 
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            {tableViewFeatureFlag?.enabled && (
+            {displayTable && (
                 <ExploreTable
-                    data={graphQuery.data}
-                    open={displayTable}
+                    selectedColumns={selectedColumns}
+                    onManageColumnsChange={handleManageColumnsChange}
+                    onKebabMenuClick={handleKebabMenuClick}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

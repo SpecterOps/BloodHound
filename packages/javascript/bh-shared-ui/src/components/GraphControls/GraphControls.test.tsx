@@ -162,12 +162,6 @@ describe('GraphControls', () => {
             expect(onLayoutChangeFn).toBeCalledWith(selectedLayout);
         });
         it('displays active styles for the selected layout when explore table is enabled', async () => {
-            server.use(
-                rest.get('/api/v2/features', async (_req, res, ctx) => {
-                    return res(ctx.json({ data: [{ key: 'explore_table_view', enabled: true }] }));
-                })
-            );
-
             const { user } = setup();
 
             const layoutMenu = screen.getByText('Layout');
@@ -224,12 +218,12 @@ describe('GraphControls', () => {
         it('shows Popper when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
 
             const searchResultsMenu = screen.getByText('Search Current Results');
             await user.click(searchResultsMenu);
 
-            expect(screen.getByTestId('explore_graph-controls')).toBeInTheDocument();
+            expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
         });
 
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
@@ -249,7 +243,8 @@ describe('GraphControls', () => {
             });
 
             expect(onSearchedNodeClickFn).toBeCalled();
-            expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();
+
+            expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
         });
     });
 });

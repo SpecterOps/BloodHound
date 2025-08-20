@@ -72,6 +72,14 @@ export const setIsExploreTableSelected = (isExploreTableSelected: boolean): type
     };
 };
 
+export const setSelectedExploreTableColumns = (
+    selectedExploreTableColumns: Record<string, boolean>
+): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
+        selectedExploreTableColumns,
+    };
+};
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

@@ -422,7 +422,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 
 	endpoint := "/api/v2/permissions"
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = ?", Params: []any{"foo"}}).Return(model.Permissions{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'foo'"}).Return(model.Permissions{}, fmt.Errorf("foo"))
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -473,7 +473,7 @@ func TestManagementResource_ListPermissions(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = ?", Params: []any{"a"}}).Return(model.Permissions{perm1, perm2}, nil)
+	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Permissions{perm1, perm2}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -815,7 +815,7 @@ func TestManagementResource_ListRoles_Filtered(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{SQLString: "name = ?", Params: []any{"a"}}).Return(model.Roles{role1}, nil)
+	mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Roles{role1}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -1262,7 +1262,7 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 	}
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", model.SQLFilter{SQLString: "first_name = ?", Params: []any{"a"}}).Return(model.Users{user1}, nil)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", model.SQLFilter{SQLString: "first_name = 'a'"}).Return(model.Users{user1}, nil)
 
 	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
@@ -2187,7 +2187,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000001","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000001","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z","all_environments":false}}`,
 			},
 		},
 	}
@@ -2270,7 +2270,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":[{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"The big boy.","id":0,"name":"Big Boy","permissions":[],"updated_at":"0001-01-01T00:00:00Z"}],"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":[{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"The big boy.","id":0,"name":"Big Boy","permissions":[],"updated_at":"0001-01-01T00:00:00Z"}],"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z","all_environments":false}}`,
 			},
 		},
 		{
@@ -2292,7 +2292,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":null,"eula_accepted":false,"first_name":null,"id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":null,"principal_name":"","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":null,"eula_accepted":false,"first_name":null,"id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":null,"principal_name":"","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z","all_environments":false}}`,
 			},
 		},
 	}
@@ -2825,7 +2825,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = ?", Params: []any{user.ID.String()}}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -3062,7 +3062,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = ?", Params: []any{user.ID.String()}}).Return(user.AuthTokens, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -3138,8 +3138,8 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 	// The filters are stored in a map before parsing, which means we don't know what order the resulted SQLFilter will be in.
 	// Mock out both possibilities to catch both cases.
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = ? AND user_id = ?", Params: []any{"a", user.ID.String()}}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = ? AND name = ?", Params: []any{user.ID.String(), "a"}}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a' and user_id = '" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "' and name = 'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)

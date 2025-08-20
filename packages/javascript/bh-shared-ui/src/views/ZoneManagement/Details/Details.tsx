@@ -15,17 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
-import { FC, useContext } from 'react';
-import { UseQueryResult, useQuery } from 'react-query';
+import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeTier } from 'js-client-library';
+import { FC, useContext, useState } from 'react';
+import { UseQueryResult } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { apiClient, useAppNavigate } from '../../../utils';
+import { useHighestPrivilegeTagId } from '../../../hooks';
+import {
+    useSelectorMembersInfiniteQuery,
+    useSelectorsInfiniteQuery,
+    useTagMembersInfiniteQuery,
+    useTagsQuery,
+} from '../../../hooks/useAssetGroupTags';
+import { SortOrder } from '../../../types';
+import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
-import { DetailsList } from './DetailsList';
+import { getTagUrlValue } from '../utils';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
+import { SelectorsList } from './SelectorsList';
+import { TagList } from './TagList';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -43,39 +52,28 @@ export const getSavePath = (
     return savePath;
 };
 
-const getItemCount = (
-    tagId: string | undefined,
-    tagsQuery: UseQueryResult<AssetGroupTag[]>,
-    selectorId: string | undefined,
-    selectorsQuery: UseQueryResult<AssetGroupTagSelector[]>
+export const getEditButtonState = (
+    memberId?: string,
+    selectorsQuery?: UseQueryResult,
+    tiersQuery?: UseQueryResult,
+    labelsQuery?: UseQueryResult
 ) => {
-    if (selectorId !== undefined) {
-        const selectedSelector = selectorsQuery.data?.find((selector) => {
-            return selectorId === selector.id.toString();
-        });
-        return selectedSelector?.counts?.members || 0;
-    } else if (tagId !== undefined) {
-        const selectedTag = tagsQuery.data?.find((tag) => {
-            return tagId === tag.id.toString();
-        });
-        return selectedTag?.counts?.members || 0;
-    } else {
-        return 0;
-    }
-};
-
-export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
     return (
         !!memberId ||
-        (selectorsQuery?.isLoading && tagsQuery?.isLoading) ||
-        (selectorsQuery?.isError && tagsQuery?.isError)
+        (selectorsQuery?.isLoading && tiersQuery?.isLoading && labelsQuery?.isLoading) ||
+        (selectorsQuery?.isError && tiersQuery?.isError && labelsQuery?.isError)
     );
 };
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+
+    const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
+
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);
@@ -84,26 +82,19 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tagsQuery = useQuery({
-        queryKey: ['zone-management', 'tags'],
-        queryFn: async () => {
-            return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
-                return res.data.data['tags'];
-            });
-        },
-    });
+    const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
 
-    const selectorsQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId, 'selectors'],
-        queryFn: async () => {
-            if (!tagId) return [];
-            return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
-                return res.data.data['selectors'];
-            });
-        },
-    });
+    const labelsQuery = useTagsQuery(
+        (tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned
+    );
 
-    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
+    const selectorsQuery = useSelectorsInfiniteQuery(tagId);
+
+    const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder);
+
+    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder);
+
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
 
     return (
         <div>
@@ -119,35 +110,56 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
-                    <DetailsList
-                        title={location.pathname.includes('label') ? 'Labels' : 'Tiers'}
-                        listQuery={tagsQuery}
-                        selected={tagId}
-                        onSelect={(id) => {
-                            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
-                        }}
-                    />
-                    <DetailsList
-                        title='Selectors'
+                    {location.pathname.includes('label') ? (
+                        <TagList
+                            title={'Labels'}
+                            listQuery={labelsQuery}
+                            selected={tagId}
+                            onSelect={(id) => {
+                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
+                            }}
+                        />
+                    ) : (
+                        <TagList
+                            title={'Tiers'}
+                            listQuery={tiersQuery}
+                            selected={tagId}
+                            onSelect={(id) => {
+                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
+                            }}
+                        />
+                    )}
+
+                    <SelectorsList
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
                             navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
                         }}
                     />
-                    <MembersList
-                        itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
-                        onClick={(id) => {
-                            if (selectorId) {
+                    {selectorId !== undefined ? (
+                        <MembersList
+                            listQuery={selectorMembersQuery}
+                            selected={memberId}
+                            onClick={(id) => {
                                 navigate(
                                     `/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
                                 );
-                            } else {
+                            }}
+                            sortOrder={membersListSortOrder}
+                            onChangeSortOrder={setMembersListSortOrder}
+                        />
+                    ) : (
+                        <MembersList
+                            listQuery={tagMembersQuery}
+                            selected={memberId}
+                            onClick={(id) => {
                                 navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
-                            }
-                        }}
-                        selected={memberId}
-                    />
+                            }}
+                            sortOrder={membersListSortOrder}
+                            onChangeSortOrder={setMembersListSortOrder}
+                        />
+                    )}
                 </div>
                 <div className='basis-1/3'>
                     <SelectedDetails />

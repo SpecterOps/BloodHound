@@ -13,10 +13,10 @@ export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhou
 
 set positional-arguments
 
-# generate generic ingestible file with default CLI arguments
+# generate generic graph files
 [no-cd]
-graphify-ingest path="" outfile="":
-  @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outfile={{outfile}}
+bh-graphify path="":
+  @go run github.com/specterops/bloodhound/packages/go/graphify --path={{path}}
 
 # run st bernard directly
 stbernard *ARGS:
@@ -39,9 +39,9 @@ generate *FLAGS:
 show *FLAGS:
   @just stbernard show {{FLAGS}}
 
-# Run all analyzers (requires jq to be installed locally)
-analyze:
-  just stbernard analysis | jq 'sort_by(.severity) | .[] | {"severity": .severity, "description": .description, "location": "\(.location.path):\(.location.lines.begin)"}'
+# Run all analyzers
+analyze *FLAGS:
+  @just stbernard analysis {{FLAGS}}
 
 # Run tests
 test *FLAGS:
@@ -51,19 +51,13 @@ test *FLAGS:
 build *FLAGS:
   @just stbernard build {{FLAGS}}
 
-# prepare for code review (requires jq)
+# prepare for code review
 prepare-for-codereview:
-  @(test -e tmp && rm -r tmp) || echo "skip rm tmp"
-  @mkdir -p tmp
-  -@just _prep-steps
-  @ echo "For more details, see output files in {{absolute_path('./tmp')}}"
-
-_prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
-  @just show > tmp/repo-status.txt
-  @just analyze > tmp/analysis-report.txt
+  @just analyze
+  @just show
 
 # check license is applied to source files
 check-license *ARGS:
@@ -175,6 +169,13 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
   @just build-bhce-container {{platform}} {{tag}} {{version}} {{ARGS}}
   @cd examples/docker-compose && BLOODHOUND_TAG={{tag}} docker compose up
 
+# remove all node modules forcefully
+reset-node-modules:
+  @cd packages/javascript/js-client-library && rm -r node_modules
+  @cd packages/javascript/bh-shared-ui && rm -r node_modules
+  @cd cmd/ui && rm -r node_modules
+  @rm -r node_modules
+  @just ensure-deps
 
 # Initialize your dev environment (use "just init clean" to reset your config files)
 init wipe="":

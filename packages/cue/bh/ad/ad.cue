@@ -194,6 +194,20 @@ IsACLProtected: types.#StringEnum & {
 	representation: "isaclprotected"
 }
 
+InheritanceHashes: types.#StringEnum & {
+	symbol:         "InheritanceHashes"
+	schema:         "ad"
+	name:           "ACL Inheritance Hashes"
+	representation: "inheritancehashes"
+}
+
+InheritanceHash: types.#StringEnum & {
+	symbol:         "InheritanceHash"
+	schema:         "ad"
+	name:           "ACL Inheritance Hash"
+	representation: "inheritancehash"
+}
+
 IsDeleted: types.#StringEnum & {
 	symbol:         "IsDeleted"
 	schema:         "ad"
@@ -276,6 +290,13 @@ AdminCount: types.#StringEnum & {
 	schema:         "ad"
 	name:           "Admin Count"
 	representation: "admincount"
+}
+
+AdminSDHolderProtected: types.#StringEnum & {
+	symbol:         "AdminSDHolderProtected"
+	schema:         "ad"
+	name:           "AdminSDHolder Protected"
+	representation: "adminsdholderprotected"
 }
 
 DontRequirePreAuth: types.#StringEnum & {
@@ -873,6 +894,13 @@ IsDC: types.#StringEnum & {
 	representation: "isdc"
 }
 
+IsReadOnlyDC: types.#StringEnum & {
+	symbol: "IsReadOnlyDC"
+	schema: "ad"
+	name: "Read-Only DC"
+	representation: "isreadonlydc"
+}
+
 HTTPEnrollmentEndpoints: types.#StringEnum & {
 	symbol: "HTTPEnrollmentEndpoints"
 	schema: "ad"
@@ -996,6 +1024,8 @@ Properties: [
 	BlocksInheritance,
 	IsACL,
 	IsACLProtected,
+	InheritanceHash,
+	InheritanceHashes,
 	IsDeleted,
 	Enforced,
 	Department,
@@ -1088,6 +1118,7 @@ Properties: [
 	LDAPSAvailable,
 	LDAPSEPA,
 	IsDC,
+	IsReadOnlyDC,
 	HTTPEnrollmentEndpoints,
 	HTTPSEnrollmentEndpoints,
 	HasVulnerableEndpoint,
@@ -1102,6 +1133,7 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	AdminSDHolderProtected,
 ]
 
 // Kinds
@@ -1608,8 +1640,14 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
+	schema: "active_directory"
+}
+
+ClaimSpecialIdentity: types.#Kind & {
+	symbol: "ClaimSpecialIdentity"
 	schema: "active_directory"
 }
 
@@ -1712,6 +1750,7 @@ RelationshipKinds: [
 	WriteOwnerRaw,
 	OwnsLimitedRights,
 	OwnsRaw,
+	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	ContainsIdentity,
@@ -1801,6 +1840,7 @@ SharedRelationshipKinds: [
 	CoerceAndRelayNTLMToADCS,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	ContainsIdentity,

@@ -140,7 +140,9 @@ const ExploreSearch: React.FC = () => {
             params.exploreSearchTab = 'pathfinding';
         }
         if (tab === 'cypher') {
-            params.searchType = 'cypher';
+            if (cypherSearchState.cypherQuery) {
+                params.searchType = 'cypher';
+            }
             params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
             params.exploreSearchTab = 'cypher';
         }
@@ -149,11 +151,15 @@ const ExploreSearch: React.FC = () => {
 
     return (
         <div
+            data-testid='explore_search-container'
             className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
                 'w-[600px]': activeTab === 'cypher' && showSearchWidget,
             })}>
-            <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'>
+            <div
+                className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                data-testid='explore_search-container_header'>
                 <Icon
+                    data-testid='explore_search-container_header_expand-collapse-button'
                     className={classes.icon}
                     click={() => {
                         setShowSearchWidget((v) => !v);
@@ -214,6 +220,7 @@ const getTabsContent = (matches: boolean) => {
 
     return tabs.map(({ label, icon }) => (
         <Tab
+            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
             label={matches ? '' : label}
             key={label}
             icon={<FontAwesomeIcon icon={icon} />}

@@ -352,6 +352,10 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
   /api/v2/asset-group-tags/preview-selectors:
     $ref: './paths/asset-isolation.preview-selectors.yaml'
+  /api/v2/asset-group-tags/search:
+    $ref: './paths/asset-isolation.asset-group-tags.search.yaml'
+  /api/v2/asset-group-tags-history:
+    $ref: './paths/asset-isolation.asset-group-tags-history.yaml'
 
   # graph
   /api/v2/graphs/kinds:
@@ -366,6 +370,8 @@ paths:
     $ref: './paths/graph.graphs.edge-composition.yaml'
   /api/v2/graphs/relay-targets:
     $ref: './paths/graph.graphs.relay-targets.yaml'
+  /api/v2/graphs/acl-inheritance:
+    $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
   # cypher
   /api/v2/saved-queries:
@@ -374,12 +380,13 @@ paths:
     $ref: './paths/cypher.saved-queries.id.yaml'
   /api/v2/saved-queries/{saved_query_id}/permissions:
     $ref: './paths/cypher.saved-queries.id.permissions.yaml'
-  /api/v2/saved-queries/{saved_query_id}/export:
-    $ref: './paths/cypher.saved-queries.export.yaml'
-  /api/v2/saved-queries/import:
-    $ref: './paths/cypher.saved-queries.import.yaml'
-  /api/v2/saved-queries/export:
-    $ref: './paths/cypher.saved-queries.export.multiple.yaml'
+  # Below endpoints will be uncommented once saved queries is fully ready for release
+  #/api/v2/saved-queries/{saved_query_id}/export:
+  #  $ref: './paths/cypher.saved-queries.export.yaml'
+  #/api/v2/saved-queries/import:
+  #  $ref: './paths/cypher.saved-queries.import.yaml'
+  #/api/v2/saved-queries/export:
+  #  $ref: './paths/cypher.saved-queries.export.multiple.yaml'
   /api/v2/graphs/cypher:
     $ref: './paths/cypher.graphs.cypher.yaml'
 
@@ -466,6 +473,8 @@ paths:
     $ref: './paths/domains.domains.id.outbound-trusts.yaml'
   /api/v2/domains/{object_id}/users:
     $ref: './paths/domains.domains.id.users.yaml'
+  /api/v2/domains/{object_id}/adcs-escalations:
+    $ref: './paths/domains.domains.id.adcs-escalations.yaml'
 
   # gpos
   /api/v2/gpos/{object_id}:
@@ -486,30 +495,42 @@ paths:
     $ref: './paths/aiacas.aiaca.id.yaml'
   /api/v2/aiacas/{object_id}/controllers:
     $ref: './paths/aiacas.aiaca.id.controllers.yaml'
+  /api/v2/aiacas/{object_id}/pki-hierarchy:
+    $ref: './paths/aiacas.aiaca.id.pki-hierarchy.yaml'
 
   # root cas
   /api/v2/rootcas/{object_id}:
     $ref: './paths/rootcas.rootcas.id.yaml'
   /api/v2/rootcas/{object_id}/controllers:
     $ref: './paths/rootcas.rootcas.id.controllers.yaml'
+  /api/v2/rootcas/{object_id}/pki-hierarchy:
+    $ref: './paths/rootcas.rootcas.id.pki-hierarchy.yaml'
 
   # enterprise cas
   /api/v2/enterprisecas/{object_id}:
-    $ref: './paths/enterprisecas.enterprisecas.id.controllers.yaml'
-  /api/v2/enterprisecas/{object_id}/controllers:
     $ref: './paths/enterprisecas.enterprisecas.id.yaml'
+  /api/v2/enterprisecas/{object_id}/controllers:
+    $ref: './paths/enterprisecas.enterprisecas.id.controllers.yaml'
+  /api/v2/enterprisecas/{object_id}/pki-hierarchy:
+    $ref: './paths/enterprisecas.enterprisecas.id.pki-hierarchy.yaml'
+  /api/v2/enterprisecas/{object_id}/published-templates:
+    $ref: './paths/enterprisecas.enterprisecas.id.published-templates.yaml'
 
   # nt auth stores
   /api/v2/ntauthstores/{object_id}:
     $ref: './paths/ntauthstores.ntauthstores.id.yaml'
   /api/v2/ntauthstores/{object_id}/controllers:
     $ref: './paths/ntauthstores.ntauthstores.id.controllers.yaml'
+  /api/v2/ntauthstores/{object_id}/trusted-cas:
+    $ref: './paths/ntauthstores.ntauthstores.id.trusted-cas.yaml'
 
   # cert templates
   /api/v2/certtemplates/{object_id}:
     $ref: './paths/certtemplate.certtemplates.id.yaml'
   /api/v2/certtemplates/{object_id}/controllers:
     $ref: './paths/certtemplate.certtemplates.id.controllers.yaml'
+  /api/v2/certtemplates/{object_id}/published-to-cas:
+    $ref: './paths/certtemplate.certtemplates.id.published-to-cas.yaml'
 
   # ous
   /api/v2/ous/{object_id}:
@@ -694,6 +715,8 @@ paths:
     $ref: './paths/attack-paths.attack-path-types.yaml'
   /api/v2/attack-paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
+  /api/v2/attack-paths/details:
+    $ref: './paths/attack-paths.attack-paths-details.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:

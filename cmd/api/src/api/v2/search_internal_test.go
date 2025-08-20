@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -90,8 +91,8 @@ func Test_SetNodeProperties(t *testing.T) {
 			expected: model.DomainSelectors{
 				{
 					Type:      "active-directory",
-					Name:      "NO NAME",
-					ObjectID:  "NO OBJECT ID",
+					Name:      graphschema.DefaultMissingName,
+					ObjectID:  graphschema.DefaultMissingObjectId,
 					Collected: false,
 				},
 			},

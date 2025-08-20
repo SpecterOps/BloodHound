@@ -192,18 +192,18 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(ctx, actorId, 
 }
 
 // CreateAssetGroupTag mocks base method.
-func (m *MockDatabase) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
+func (m *MockDatabase) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupTag", ctx, tagType, user, name, description, position, requireCertify)
+	ret := m.ctrl.Call(m, "CreateAssetGroupTag", ctx, tagType, user, name, description, position, requireCertify, glyph)
 	ret0, _ := ret[0].(model.AssetGroupTag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAssetGroupTag indicates an expected call of CreateAssetGroupTag.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(ctx, tagType, user, name, description, position, requireCertify any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(ctx, tagType, user, name, description, position, requireCertify, glyph any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), ctx, tagType, user, name, description, position, requireCertify)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), ctx, tagType, user, name, description, position, requireCertify, glyph)
 }
 
 // CreateAssetGroupTagSelector mocks base method.
@@ -772,6 +772,20 @@ func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesBySelectorIds(ctx any, se
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesBySelectorIds), varargs...)
 }
 
+// DeleteSourceKindsByName mocks base method.
+func (m *MockDatabase) DeleteSourceKindsByName(ctx context.Context, kinds graph.Kinds) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSourceKindsByName", ctx, kinds)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSourceKindsByName indicates an expected call of DeleteSourceKindsByName.
+func (mr *MockDatabaseMockRecorder) DeleteSourceKindsByName(ctx, kinds any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSourceKindsByName", reflect.TypeOf((*MockDatabase)(nil).DeleteSourceKindsByName), ctx, kinds)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(ctx context.Context, user model.User) error {
 	m.ctrl.T.Helper()
@@ -1072,18 +1086,19 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(ctx, assetGroupID, 
 }
 
 // GetAssetGroupHistoryRecords mocks base method.
-func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
+func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", ctx)
+	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", ctx, sqlFilter, sortItems, skip, limit)
 	ret0, _ := ret[0].([]model.AssetGroupHistory)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetAssetGroupHistoryRecords indicates an expected call of GetAssetGroupHistoryRecords.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(ctx any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(ctx, sqlFilter, sortItems, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), ctx, sqlFilter, sortItems, skip, limit)
 }
 
 // GetAssetGroupSelector mocks base method.
@@ -1161,19 +1176,35 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorCounts(ctx, tagIds a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorCounts", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorCounts), ctx, tagIds)
 }
 
-// GetAssetGroupTagSelectorsByTagId mocks base method.
-func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
+// GetAssetGroupTagSelectors mocks base method.
+func (m *MockDatabase) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter)
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectors", ctx, sqlFilter, limit)
 	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAssetGroupTagSelectorsByTagId indicates an expected call of GetAssetGroupTagSelectorsByTagId.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter any) *gomock.Call {
+// GetAssetGroupTagSelectors indicates an expected call of GetAssetGroupTagSelectors.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectors(ctx, sqlFilter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagId", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagId), ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectors", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectors), ctx, sqlFilter, limit)
+}
+
+// GetAssetGroupTagSelectorsByTagId mocks base method.
+func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, skip, limit)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAssetGroupTagSelectorsByTagId indicates an expected call of GetAssetGroupTagSelectorsByTagId.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagId", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagId), ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, skip, limit)
 }
 
 // GetAssetGroupTags mocks base method.
@@ -1326,6 +1357,21 @@ func (m *MockDatabase) GetDatapipeStatus(ctx context.Context) (model.DatapipeSta
 func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), ctx)
+}
+
+// GetEnvironmentAccessListForUser mocks base method.
+func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]database.EnvironmentAccess, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentAccessListForUser", ctx, user)
+	ret0, _ := ret[0].([]database.EnvironmentAccess)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEnvironmentAccessListForUser indicates an expected call of GetEnvironmentAccessListForUser.
+func (mr *MockDatabaseMockRecorder) GetEnvironmentAccessListForUser(ctx, user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentAccessListForUser", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentAccessListForUser), ctx, user)
 }
 
 // GetFlag mocks base method.
@@ -1583,6 +1629,21 @@ func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(ctx, id any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), ctx, id)
 }
 
+// GetSavedQueriesOwnedBy mocks base method.
+func (m *MockDatabase) GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueriesOwnedBy", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueriesOwnedBy indicates an expected call of GetSavedQueriesOwnedBy.
+func (mr *MockDatabaseMockRecorder) GetSavedQueriesOwnedBy(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesOwnedBy", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesOwnedBy), ctx, userID)
+}
+
 // GetSavedQuery mocks base method.
 func (m *MockDatabase) GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
@@ -1596,6 +1657,21 @@ func (m *MockDatabase) GetSavedQuery(ctx context.Context, savedQueryID int64) (m
 func (mr *MockDatabaseMockRecorder) GetSavedQuery(ctx, savedQueryID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetSavedQuery), ctx, savedQueryID)
+}
+
+// GetSavedQueryPermissions mocks base method.
+func (m *MockDatabase) GetSavedQueryPermissions(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueryPermissions", ctx, queryID)
+	ret0, _ := ret[0].([]model.SavedQueriesPermissions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueryPermissions indicates an expected call of GetSavedQueryPermissions.
+func (mr *MockDatabaseMockRecorder) GetSavedQueryPermissions(ctx, queryID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueryPermissions", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueryPermissions), ctx, queryID)
 }
 
 // GetScopeForSavedQuery mocks base method.
@@ -1661,6 +1737,21 @@ func (m *MockDatabase) GetSharedSavedQueries(ctx context.Context, userID uuid.UU
 func (mr *MockDatabaseMockRecorder) GetSharedSavedQueries(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedSavedQueries", reflect.TypeOf((*MockDatabase)(nil).GetSharedSavedQueries), ctx, userID)
+}
+
+// GetSourceKinds mocks base method.
+func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]database.SourceKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSourceKinds", ctx)
+	ret0, _ := ret[0].([]database.SourceKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSourceKinds indicates an expected call of GetSourceKinds.
+func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKinds), ctx)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
@@ -1738,11 +1829,12 @@ func (mr *MockDatabaseMockRecorder) HasAnalysisRequest(ctx any) *gomock.Call {
 }
 
 // HasCollectedGraphDataDeletionRequest mocks base method.
-func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) bool {
+func (m *MockDatabase) HasCollectedGraphDataDeletionRequest(ctx context.Context) (model.AnalysisRequest, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasCollectedGraphDataDeletionRequest", ctx)
-	ret0, _ := ret[0].(bool)
-	return ret0
+	ret0, _ := ret[0].(model.AnalysisRequest)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
 }
 
 // HasCollectedGraphDataDeletionRequest indicates an expected call of HasCollectedGraphDataDeletionRequest.
@@ -1782,17 +1874,17 @@ func (mr *MockDatabaseMockRecorder) InitializeSecretAuth(ctx, adminUser, authSec
 }
 
 // InsertSelectorNode mocks base method.
-func (m *MockDatabase) InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error {
+func (m *MockDatabase) InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertSelectorNode", ctx, selectorId, nodeId, certified, certifiedBy, source)
+	ret := m.ctrl.Call(m, "InsertSelectorNode", ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InsertSelectorNode indicates an expected call of InsertSelectorNode.
-func (mr *MockDatabaseMockRecorder) InsertSelectorNode(ctx, selectorId, nodeId, certified, certifiedBy, source any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) InsertSelectorNode(ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSelectorNode", reflect.TypeOf((*MockDatabase)(nil).InsertSelectorNode), ctx, selectorId, nodeId, certified, certifiedBy, source)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSelectorNode", reflect.TypeOf((*MockDatabase)(nil).InsertSelectorNode), ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, name)
 }
 
 // IsSavedQueryPublic mocks base method.
@@ -1857,19 +1949,19 @@ func (mr *MockDatabaseMockRecorder) ListAuditLogs(ctx, before, after, offset, li
 }
 
 // ListSavedQueries mocks base method.
-func (m *MockDatabase) ListSavedQueries(ctx context.Context, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) (model.SavedQueries, int, error) {
+func (m *MockDatabase) ListSavedQueries(ctx context.Context, scope string, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) ([]model.ScopedSavedQuery, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSavedQueries", ctx, userID, order, filter, skip, limit)
-	ret0, _ := ret[0].(model.SavedQueries)
+	ret := m.ctrl.Call(m, "ListSavedQueries", ctx, scope, userID, order, filter, skip, limit)
+	ret0, _ := ret[0].([]model.ScopedSavedQuery)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
 // ListSavedQueries indicates an expected call of ListSavedQueries.
-func (mr *MockDatabaseMockRecorder) ListSavedQueries(ctx, userID, order, filter, skip, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ListSavedQueries(ctx, scope, userID, order, filter, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), ctx, userID, order, filter, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSavedQueries", reflect.TypeOf((*MockDatabase)(nil).ListSavedQueries), ctx, scope, userID, order, filter, skip, limit)
 }
 
 // LookupActiveSessionsByUser mocks base method.
@@ -1916,6 +2008,20 @@ func (mr *MockDatabaseMockRecorder) Migrate(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockDatabase)(nil).Migrate), ctx)
 }
 
+// RegisterSourceKind mocks base method.
+func (m *MockDatabase) RegisterSourceKind(ctx context.Context) func(graph.Kind) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterSourceKind", ctx)
+	ret0, _ := ret[0].(func(graph.Kind) error)
+	return ret0
+}
+
+// RegisterSourceKind indicates an expected call of RegisterSourceKind.
+func (mr *MockDatabaseMockRecorder) RegisterSourceKind(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSourceKind", reflect.TypeOf((*MockDatabase)(nil).RegisterSourceKind), ctx)
+}
+
 // RequestAnalysis mocks base method.
 func (m *MockDatabase) RequestAnalysis(ctx context.Context, requester string) error {
 	m.ctrl.T.Helper()
@@ -1931,17 +2037,17 @@ func (mr *MockDatabaseMockRecorder) RequestAnalysis(ctx, requester any) *gomock.
 }
 
 // RequestCollectedGraphDataDeletion mocks base method.
-func (m *MockDatabase) RequestCollectedGraphDataDeletion(ctx context.Context, requester string) error {
+func (m *MockDatabase) RequestCollectedGraphDataDeletion(ctx context.Context, request model.AnalysisRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", ctx, requester)
+	ret := m.ctrl.Call(m, "RequestCollectedGraphDataDeletion", ctx, request)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RequestCollectedGraphDataDeletion indicates an expected call of RequestCollectedGraphDataDeletion.
-func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, requester any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, request any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, requester)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, request)
 }
 
 // SavedQueryBelongsToUser mocks base method.
@@ -1974,17 +2080,17 @@ func (mr *MockDatabaseMockRecorder) SetConfigurationParameter(ctx, configuration
 }
 
 // SetDatapipeStatus mocks base method.
-func (m *MockDatabase) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus, updateAnalysisTime bool) error {
+func (m *MockDatabase) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetDatapipeStatus", ctx, status, updateAnalysisTime)
+	ret := m.ctrl.Call(m, "SetDatapipeStatus", ctx, status)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetDatapipeStatus indicates an expected call of SetDatapipeStatus.
-func (mr *MockDatabaseMockRecorder) SetDatapipeStatus(ctx, status, updateAnalysisTime any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetDatapipeStatus(ctx, status any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeStatus), ctx, status, updateAnalysisTime)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).SetDatapipeStatus), ctx, status)
 }
 
 // SetFlag mocks base method.
@@ -1999,6 +2105,20 @@ func (m *MockDatabase) SetFlag(ctx context.Context, value appcfg.FeatureFlag) er
 func (mr *MockDatabaseMockRecorder) SetFlag(ctx, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFlag", reflect.TypeOf((*MockDatabase)(nil).SetFlag), ctx, value)
+}
+
+// SetLastAnalysisStartTime mocks base method.
+func (m *MockDatabase) SetLastAnalysisStartTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLastAnalysisStartTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLastAnalysisStartTime indicates an expected call of SetLastAnalysisStartTime.
+func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetLastAnalysisStartTime), ctx)
 }
 
 // SetUserSessionFlag mocks base method.
@@ -2155,6 +2275,25 @@ func (mr *MockDatabaseMockRecorder) UpdateCustomNodeKind(ctx, customNodeKind any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateCustomNodeKind), ctx, customNodeKind)
 }
 
+// UpdateEnvironmentListForUser mocks base method.
+func (m *MockDatabase) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, user}
+	for _, a := range environments {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateEnvironmentListForUser", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateEnvironmentListForUser indicates an expected call of UpdateEnvironmentListForUser.
+func (mr *MockDatabaseMockRecorder) UpdateEnvironmentListForUser(ctx, user any, environments ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, user}, environments...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEnvironmentListForUser", reflect.TypeOf((*MockDatabase)(nil).UpdateEnvironmentListForUser), varargs...)
+}
+
 // UpdateIngestJob mocks base method.
 func (m *MockDatabase) UpdateIngestJob(ctx context.Context, job model.IngestJob) error {
 	m.ctrl.T.Helper()
@@ -2167,6 +2306,20 @@ func (m *MockDatabase) UpdateIngestJob(ctx context.Context, job model.IngestJob)
 func (mr *MockDatabaseMockRecorder) UpdateIngestJob(ctx, job any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIngestJob", reflect.TypeOf((*MockDatabase)(nil).UpdateIngestJob), ctx, job)
+}
+
+// UpdateLastAnalysisCompleteTime mocks base method.
+func (m *MockDatabase) UpdateLastAnalysisCompleteTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLastAnalysisCompleteTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateLastAnalysisCompleteTime indicates an expected call of UpdateLastAnalysisCompleteTime.
+func (mr *MockDatabaseMockRecorder) UpdateLastAnalysisCompleteTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastAnalysisCompleteTime", reflect.TypeOf((*MockDatabase)(nil).UpdateLastAnalysisCompleteTime), ctx)
 }
 
 // UpdateOIDCProvider mocks base method.
@@ -2230,17 +2383,17 @@ func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(ctx, savedQuery any) *gomoc
 }
 
 // UpdateSelectorNodesByNodeId mocks base method.
-func (m *MockDatabase) UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
+func (m *MockDatabase) UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSelectorNodesByNodeId", ctx, selectorId, certified, certifiedBy, nodeId)
+	ret := m.ctrl.Call(m, "UpdateSelectorNodesByNodeId", ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, primaryKind, environmentId, objectId, name)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSelectorNodesByNodeId indicates an expected call of UpdateSelectorNodesByNodeId.
-func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId, certified, certifiedBy, nodeId any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, primaryKind, environmentId, objectId, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).UpdateSelectorNodesByNodeId), ctx, selectorId, certified, certifiedBy, nodeId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).UpdateSelectorNodesByNodeId), ctx, assetGroupTagId, selectorId, nodeId, certified, certifiedBy, primaryKind, environmentId, objectId, name)
 }
 
 // UpdateUser mocks base method.

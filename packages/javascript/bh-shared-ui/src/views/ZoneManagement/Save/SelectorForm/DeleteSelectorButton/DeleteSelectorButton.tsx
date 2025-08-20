@@ -32,7 +32,7 @@ const DeleteSelectorButton: FC<{
     if (selectorData.is_default) return null;
 
     return (
-        <Button variant={'text'} onClick={onClick}>
+        <Button data-testid='zone-management_save_selector-form_delete-button' variant={'text'} onClick={onClick}>
             <span>
                 <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
             </span>

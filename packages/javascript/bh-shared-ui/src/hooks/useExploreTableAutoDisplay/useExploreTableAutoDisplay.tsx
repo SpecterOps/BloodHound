@@ -18,23 +18,13 @@ import isEmpty from 'lodash/isEmpty';
 import { useEffect, useMemo, useState } from 'react';
 import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
-import { useFeatureFlag } from '../useFeatureFlags';
-
-interface UseExploreTableAutoDisplayParams {
-    /**
-     * If preconditions are met that disable the auto-display, we should be able
-     * to disable any expensive calculations in this hook if the auto-display isnt required
-     */
-    enabled: boolean;
-}
 
 // This should be able to detect when the Explore Table should display automatically and when NOT to display it.
 // Auto display when current search is cypher and returned data contains nodes but not edges.
 // And dont auto display if the auto display has been closed.
-export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDisplayParams) => {
+export const useExploreTableAutoDisplay = (enabled: boolean) => {
     const { data: graphData, isFetching } = useExploreGraph();
     const { searchType } = useExploreParams();
-    const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
     // Tracks if the current query has triggered the table.
     // Resets when the query fetches, which includes initial fetch and fetches from the cache
@@ -70,7 +60,7 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
     // checks if current query is a candidate to auto display the table
     // if it is, and the query is nodes only then call setAutoDisplayTable.
     useEffect(() => {
-        if (!featureFlag?.enabled || !enabled || hasTriggered) return;
+        if (!enabled || hasTriggered) return;
 
         const shouldAutoDisplay = autoDisplayTableQueryCandidate && emptyEdges && containsNodes;
 
@@ -80,15 +70,7 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
         }
         // This will automatically open/close the table
         setAutoDisplayTable(shouldAutoDisplay);
-    }, [
-        autoDisplayTableQueryCandidate,
-        containsNodes,
-        emptyEdges,
-        enabled,
-        featureFlag?.enabled,
-        hasTriggered,
-        setAutoDisplayTable,
-    ]);
+    }, [autoDisplayTableQueryCandidate, containsNodes, emptyEdges, enabled, hasTriggered, setAutoDisplayTable]);
 
     return [autoDisplayTable, setAutoDisplayTable] as const;
 };

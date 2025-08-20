@@ -1239,43 +1239,44 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 								targetNodeName = "<unknown>"
 							}
 
-							if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID {
+							switch targetNode.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID:
 								// Domain1_User101_Owner -[Owns]-> Domain1_User1_NoOwnerRights_OwnerIsLowPriv
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User101_Owner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_Computer2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_Computer2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_Computer2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_MSA2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_MSA2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_MSA2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_GMSA2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_User2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_Computer3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_Computer3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_Computer3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_MSA3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_MSA3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_MSA3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_GMSA3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_User3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer1_NoOwnerRights.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer1_NoOwnerRights.ID:
 								// Domain2_User1_Owner -[Owns]-> Domain2_Computer1_NoOwnerRights
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User1_Owner.ID, startNode.ID)
 
@@ -1283,23 +1284,23 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 								// Below here are the expected false positives present after post-processing data from the prior collector versions
 								//
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.ID:
 								// Domain1_User101_Owner -[Owns]-> Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User101_Owner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User8_OnlyNonabusableOwnerRightsInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User8_OnlyNonabusableOwnerRightsInherited.ID:
 								// Domain1_User101_Owner -[Owns]-> Domain1_User8_OnlyNonabusableOwnerRightsInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User101_Owner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.ID:
 								// Domain2_User1_Owner -[Owns]-> Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User1_Owner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited.ID:
 								// Domain2_User1_Owner -[Owns]-> Domain2_Computer6_OnlyNonabusableOwnerRightsInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User1_Owner.ID, startNode.ID)
 
-							} else {
+							default:
 								t.Fatalf("unexpected edge in integration test: %s -[Owns]-> %s", startNodeName, targetNodeName)
 							}
 						}
@@ -1333,35 +1334,36 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 								targetNodeName = "<unknown>"
 							}
 
-							if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID {
+							switch targetNode.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User1_NoOwnerRights_OwnerIsLowPriv
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User4_AbusableOwnerRightsNoneInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User4_AbusableOwnerRightsNoneInherited.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User4_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer1_NoOwnerRights.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer1_NoOwnerRights.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer1_NoOwnerRights
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer2_AbusableOwnerRightsNoneInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer2_AbusableOwnerRightsNoneInherited.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer2_AbusableOwnerRightsNoneInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User2_WriteOwner.ID, startNode.ID)
 
@@ -1369,23 +1371,23 @@ func TestOwnsWriteOwnerPriorCollectorVersions(t *testing.T) {
 								// Below here are the expected false positives present after post-processing data from the prior collector versions
 								//
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited.ID:
 								// Domain1_User101_Owner -[WriteOwner]-> Domain1_User6_AbusableOwnerRightsOnlyNonabusableInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User8_OnlyNonabusableOwnerRightsInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User8_OnlyNonabusableOwnerRightsInherited.ID:
 								// Domain1_User101_Owner -[WriteOwner]-> Domain1_User8_OnlyNonabusableOwnerRightsInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer4_AbusableOwnerRightsOnlyNonabusableInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited.ID {
+							case harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_Computer6_OnlyNonabusableOwnerRightsInherited.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer6_OnlyNonabusableOwnerRightsInherited
 								require.Equal(t, harness.OwnsWriteOwnerPriorCollectorVersions.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else {
+							default:
 								t.Fatalf("unexpected edge in integration test: %s -[Owns]-> %s", startNodeName, targetNodeName)
 							}
 						}
@@ -1440,47 +1442,48 @@ func TestOwnsWriteOwner(t *testing.T) {
 								targetNodeName = "<unknown>"
 							}
 
-							if targetNode.ID == harness.OwnsWriteOwner.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID {
+							switch targetNode.ID {
+							case harness.OwnsWriteOwner.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID:
 								// Domain1_User101_Owner -[Owns]-> Domain1_User1_NoOwnerRights_OwnerIsLowPriv
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User101_Owner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_Computer2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwner.Domain1_Computer2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_Computer2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_MSA2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwner.Domain1_MSA2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_MSA2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwner.Domain1_GMSA2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_GMSA2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwner.Domain1_User2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User102_DomainAdmin -[Owns]-> Domain1_User2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User102_DomainAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_Computer3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwner.Domain1_Computer3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_Computer3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_MSA3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwner.Domain1_MSA3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_MSA3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwner.Domain1_GMSA3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_GMSA3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwner.Domain1_User3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User103_EnterpriseAdmin -[Owns]-> Domain1_User3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User103_EnterpriseAdmin.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain2_Computer1_NoOwnerRights.ID {
+							case harness.OwnsWriteOwner.Domain2_Computer1_NoOwnerRights.ID:
 								// Domain2_User1_Owner -[Owns]-> Domain2_Computer1_NoOwnerRights
 								require.Equal(t, harness.OwnsWriteOwner.Domain2_User1_Owner.ID, startNode.ID)
 
-							} else {
+							default:
 								t.Fatalf("unexpected edge in integration test: %s -[Owns]-> %s", startNodeName, targetNodeName)
 							}
 						}
@@ -1514,39 +1517,40 @@ func TestOwnsWriteOwner(t *testing.T) {
 								targetNodeName = "<unknown>"
 							}
 
-							if targetNode.ID == harness.OwnsWriteOwner.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID {
+							switch targetNode.ID {
+							case harness.OwnsWriteOwner.Domain1_User1_NoOwnerRights_OwnerIsLowPriv.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User1_NoOwnerRights_OwnerIsLowPriv
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User2_NoOwnerRights_OwnerIsDA.ID {
+							case harness.OwnsWriteOwner.Domain1_User2_NoOwnerRights_OwnerIsDA.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User2_NoOwnerRights_OwnerIsDA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User3_NoOwnerRights_OwnerIsEA.ID {
+							case harness.OwnsWriteOwner.Domain1_User3_NoOwnerRights_OwnerIsEA.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User3_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User4_AbusableOwnerRightsNoneInherited.ID {
+							case harness.OwnsWriteOwner.Domain1_User4_AbusableOwnerRightsNoneInherited.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User4_NoOwnerRights_OwnerIsEA
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.ID {
+							case harness.OwnsWriteOwner.Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited.ID:
 								// Domain1_User104_WriteOwner -[WriteOwner]-> Domain1_User7_OnlyNonabusableOwnerRightsAndNoneInherited
 								require.Equal(t, harness.OwnsWriteOwner.Domain1_User104_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain2_Computer1_NoOwnerRights.ID {
+							case harness.OwnsWriteOwner.Domain2_Computer1_NoOwnerRights.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer1_NoOwnerRights
 								require.Equal(t, harness.OwnsWriteOwner.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain2_Computer2_AbusableOwnerRightsNoneInherited.ID {
+							case harness.OwnsWriteOwner.Domain2_Computer2_AbusableOwnerRightsNoneInherited.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer2_AbusableOwnerRightsNoneInherited
 								require.Equal(t, harness.OwnsWriteOwner.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else if targetNode.ID == harness.OwnsWriteOwner.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.ID {
+							case harness.OwnsWriteOwner.Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited.ID:
 								// Domain2_User2_WriteOwner -[WriteOwner]-> Domain2_Computer5_OnlyNonabusableOwnerRightsAndNoneInherited
 								require.Equal(t, harness.OwnsWriteOwner.Domain2_User2_WriteOwner.ID, startNode.ID)
 
-							} else {
+							default:
 								t.Fatalf("unexpected edge in integration test: %s -[Owns]-> %s", startNodeName, targetNodeName)
 							}
 						}
@@ -1557,130 +1561,6 @@ func TestOwnsWriteOwner(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestGPOAppliesTo(t *testing.T) {
-	var (
-		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-		graphDB = testCtx.Graph.Database
-	)
-
-	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/GPOAppliesToHarness.json")
-	require.NoError(t, err)
-
-	// Split edges into test edges and the other edges
-	testEdges := []arrows.Edge{}
-	otherEdges := []arrows.Edge{}
-	for _, edge := range fixture.Relationships {
-		if edge.Type == ad.GPOAppliesTo.String() {
-			testEdges = append(testEdges, edge)
-		} else {
-			otherEdges = append(otherEdges, edge)
-		}
-	}
-	fixture.Relationships = otherEdges
-
-	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
-	require.NoError(t, err)
-
-	if _, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB); err != nil {
-		t.Fatalf("error creating GPOAppliesTo edges in integration test; %v", err)
-	}
-
-	err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.GPOAppliesTo)
-		})); err != nil {
-			t.Fatalf("error fetching GPOAppliesTo edges in integration test; %v", err)
-		} else {
-			require.Equal(t, len(testEdges), len(results))
-		}
-
-		for _, testEdge := range testEdges {
-			if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
-				t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
-			} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
-				t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
-			} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
-			})); err != nil || len(fromGraphNodeId) != 1 {
-				t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
-			} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
-			})); err != nil || len(toGraphNodeId) != 1 {
-				t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
-			} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.GPOAppliesTo); err != nil {
-				t.Fatalf("error fetching GPOAppliesTo edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
-			} else {
-				require.NotNil(t, edge)
-			}
-		}
-
-		return nil
-	})
-	require.NoError(t, err)
-}
-
-func TestCanApplyGPO(t *testing.T) {
-	var (
-		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-		graphDB = testCtx.Graph.Database
-	)
-
-	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/CanApplyGPOHarness.json")
-	require.NoError(t, err)
-
-	// Split edges into test edges and the other edges
-	testEdges := []arrows.Edge{}
-	otherEdges := []arrows.Edge{}
-	for _, edge := range fixture.Relationships {
-		if edge.Type == ad.CanApplyGPO.String() {
-			testEdges = append(testEdges, edge)
-		} else {
-			otherEdges = append(otherEdges, edge)
-		}
-	}
-	fixture.Relationships = otherEdges
-
-	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
-	require.NoError(t, err)
-
-	if _, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB); err != nil {
-		t.Fatalf("error creating CanApplyGPO edges in integration test; %v", err)
-	}
-
-	err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.CanApplyGPO)
-		})); err != nil {
-			t.Fatalf("error fetching CanApplyGPO edges in integration test; %v", err)
-		} else {
-			require.Equal(t, len(testEdges), len(results))
-		}
-
-		for _, testEdge := range testEdges {
-			if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
-				t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
-			} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
-				t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
-			} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
-			})); err != nil || len(fromGraphNodeId) != 1 {
-				t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
-			} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
-			})); err != nil || len(toGraphNodeId) != 1 {
-				t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
-			} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.CanApplyGPO); err != nil {
-				t.Fatalf("error fetching CanApplyGPO edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
-			} else {
-				require.NotNil(t, edge)
-			}
-		}
-
-		return nil
-	})
-	require.NoError(t, err)
 }
 
 func TestHasTrustKeys(t *testing.T) {

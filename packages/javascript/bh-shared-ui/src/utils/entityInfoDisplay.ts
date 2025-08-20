@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { GraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
@@ -27,7 +28,14 @@ import {
     CommonKindProperties,
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
+import { MappedStringLiteral } from '../types';
 import { LuxonFormat } from './datetime';
+
+export const formatPotentiallyUnknownLabel = (propKey: string) => {
+    const { kind, isKnownProperty } = validateProperty(propKey);
+
+    return isKnownProperty ? getFieldLabel(kind!, propKey) : `${startCase(propKey)}`;
+};
 
 export const formatObjectInfoFields = (props: any): EntityField[] => {
     let mappedFields: EntityField[] = [];
@@ -44,23 +52,14 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
         )
             continue;
 
-        const { kind, isKnownProperty } = validateProperty(propKeys[i]);
+        const { kind } = validateProperty(propKeys[i]);
 
-        if (isKnownProperty) {
-            mappedFields.push({
-                kind: kind,
-                label: getFieldLabel(kind!, propKeys[i]),
-                value: value,
-                keyprop: propKeys[i],
-            });
-        } else {
-            mappedFields.push({
-                kind: kind,
-                label: `${startCase(propKeys[i])}:`,
-                value: value,
-                keyprop: propKeys[i],
-            });
-        }
+        mappedFields.push({
+            kind: kind,
+            label: `${formatPotentiallyUnknownLabel(propKeys[i])}:`,
+            value: value,
+            keyprop: propKeys[i],
+        });
     }
 
     mappedFields = mappedFields.sort((a, b) => {
@@ -91,17 +90,42 @@ export const makeFormattedObjectInfoFieldsMap = (props: any) => {
     }
 };
 
+// Convert *KindProperties enums to a map to for quick lookup and defined outside of the typeguard so we perform enumerations once
+const activeDirectoryKindPropertiesMap = Object.fromEntries(
+    Object.values(ActiveDirectoryKindProperties).map((value) => [value, true])
+);
 const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
-    return Object.values(ActiveDirectoryKindProperties).includes(enumValue);
+    return !!activeDirectoryKindPropertiesMap[enumValue];
 };
 
+const azureKindPropertiesMap = Object.fromEntries(Object.values(AzureKindProperties).map((value) => [value, true]));
 const isAzureProperty = (enumValue: AzureKindProperties): boolean => {
-    return Object.values(AzureKindProperties).includes(enumValue);
+    return !!azureKindPropertiesMap[enumValue];
 };
 
+const commonKindPropertiesMap = Object.fromEntries(Object.values(CommonKindProperties).map((value) => [value, true]));
 const isCommonProperty = (enumValue: CommonKindProperties): boolean => {
-    return Object.values(CommonKindProperties).includes(enumValue);
+    return commonKindPropertiesMap[enumValue];
 };
+
+export type KnownNodeProperties = keyof Omit<GraphNode, 'properties'> | 'nodeType';
+/**
+ * The intent is to standardize keys and their display label in the UI.
+ * The keys below are either deduped with their property bag counterpart, or are assigned a label for standardization across the UI.
+ */
+export const KnownNodePropertiesToDisplay = {
+    /**
+     * nodeType is actually a prop defined on EntityInfoContentProps, but we include it with other node properties in BasicObjectInfoFieldsProps.
+     * In theory we could refactor this prop to be "kind", however, that seems out of scope for this refactor.
+     */
+    nodeType: 'Node Type',
+    kind: 'Node Type',
+    isTierZero: 'Tier Zero',
+    isOwnedObject: 'Is Owned',
+    label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,
+    objectId: CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID)!,
+    lastSeen: CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen)!,
+} as const satisfies MappedStringLiteral<KnownNodeProperties, string>;
 
 export type ValidatedProperty = {
     isKnownProperty: boolean;
@@ -113,10 +137,11 @@ export const validateProperty = (enumValue: string): ValidatedProperty => {
         return { isKnownProperty: true, kind: 'ad' };
     if (isAzureProperty(enumValue as AzureKindProperties)) return { isKnownProperty: true, kind: 'az' };
     if (isCommonProperty(enumValue as CommonKindProperties)) return { isKnownProperty: true, kind: 'cm' };
+    if (enumValue in KnownNodePropertiesToDisplay) return { isKnownProperty: true, kind: 'ov' };
     return { isKnownProperty: false, kind: null };
 };
 
-const getFieldLabel = (kind: string, key: string): string => {
+const getFieldLabel = (kind: EntityPropertyKind, key: string): string => {
     let label: string;
 
     switch (kind) {
@@ -129,14 +154,17 @@ const getFieldLabel = (kind: string, key: string): string => {
         case 'cm':
             label = CommonKindPropertiesToDisplay(key as CommonKindProperties)!;
             break;
+        case 'ov':
+            label = KnownNodePropertiesToDisplay[key as KnownNodeProperties]!;
+            break;
         default:
             label = key;
     }
 
-    return `${label}:`;
+    return label;
 };
 
-export type EntityPropertyKind = 'ad' | 'az' | 'cm' | null;
+export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
 
 export type EntityField = {
     label: string | JSX.Element;
@@ -165,24 +193,23 @@ const BitwiseInts = new Map([['certificatemappingmethodsraw', 2]]);
 //Here is some related documentation:
 //https://learn.microsoft.com/en-us/windows/win32/adschema/a-lastlogon
 //https://social.technet.microsoft.com/wiki/contents/articles/22461.understanding-the-ad-account-attributes-lastlogon-lastlogontimestamp-and-lastlogondate.aspx
+export const AD_NEVER_VALUE = 'NEVER';
+export const AD_UNKNOWN_VALUE = 'UNKNOWN';
 export const formatADSpecificTime = (timeValue: number, keyprop: ADSpecificTimeProperties): string => {
-    const unknownValue = 'UNKNOWN';
-    const neverValue = 'NEVER';
-
     switch (keyprop) {
         case ADSpecificTimeProperties.WHEN_CREATED: {
-            if (timeValue === 0 || timeValue === -1) return unknownValue;
+            if (timeValue === 0 || timeValue === -1) return AD_UNKNOWN_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
         case ADSpecificTimeProperties.LAST_LOGON: //fallthrough
         case ADSpecificTimeProperties.LAST_LOGON_TIMESTAMP: {
-            if (timeValue === 0) return unknownValue;
-            if (timeValue === -1) return neverValue;
+            if (timeValue === 0) return AD_UNKNOWN_VALUE;
+            if (timeValue === -1) return AD_NEVER_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         }
         case ADSpecificTimeProperties.PASSWORD_LAST_SET:
             if (timeValue === 0) return 'ACCOUNT CREATED BUT NO PASSWORD SET';
-            if (timeValue === -1) return neverValue;
+            if (timeValue === -1) return AD_NEVER_VALUE;
             return DateTime.fromSeconds(timeValue).toFormat(LuxonFormat.DATETIME);
         default:
             return '';

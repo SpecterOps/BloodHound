@@ -22,6 +22,8 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
+import { SortOrder } from '../../types';
+import { apiClient } from '../../utils';
 import * as agtHook from './useAssetGroupTags';
 
 const handlers = [
@@ -37,6 +39,25 @@ const handlers = [
                         { position: 777, id: 3, type: AssetGroupTagTypeTier },
                     ],
                 },
+            })
+        );
+    }),
+    rest.get('/api/v2/asset-group-tags/:tagId/members', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
             })
         );
     }),
@@ -67,14 +88,14 @@ describe('the useAssetGroupTags utilities', () => {
         const { result } = renderHook(() => agtHook.useOrderedTags());
 
         await waitFor(() => {
-            expect(result.current).toHaveLength(5);
+            expect(result.current.orderedTags).toHaveLength(5);
         });
 
-        expect(result.current[0].position).toBe(1);
-        expect(result.current[1].position).toBe(2);
-        expect(result.current[2].position).toBe(3);
-        expect(result.current[3].position).toBe(7);
-        expect(result.current[4].position).toBe(777);
+        expect(result.current.orderedTags[0].position).toBe(1);
+        expect(result.current.orderedTags[1].position).toBe(2);
+        expect(result.current.orderedTags[2].position).toBe(3);
+        expect(result.current.orderedTags[3].position).toBe(7);
+        expect(result.current.orderedTags[4].position).toBe(777);
     });
 
     it('enables correctly returning the tag associated with Tier Zero (position value of 1) from the list of tags', async () => {
@@ -98,7 +119,7 @@ describe('the useAssetGroupTags utilities', () => {
         const { result } = renderHook(() => agtHook.useHighestPrivilegeTag());
 
         await waitFor(() => {
-            expect(result.current.position).toBe(1);
+            expect(result.current.tag.position).toBe(1);
         });
     });
 
@@ -126,5 +147,39 @@ describe('the useAssetGroupTags utilities', () => {
         });
 
         expect(result.current.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);
+    });
+
+    test('tag members refetches on sort change', async () => {
+        const tagMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagMembers');
+
+        const { rerender } = renderHook((sortOrder: SortOrder) => agtHook.useTagMembersInfiniteQuery(1, sortOrder));
+
+        await waitFor(() => {
+            expect(tagMembersSpy).toHaveBeenCalledTimes(1);
+        });
+
+        rerender('desc');
+
+        await waitFor(() => {
+            expect(tagMembersSpy).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    test('selector members refetches on sort change', async () => {
+        const selectorMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagSelectorMembers');
+
+        const { rerender } = renderHook((sortOrder: SortOrder) =>
+            agtHook.useSelectorMembersInfiniteQuery(1, 1, sortOrder)
+        );
+
+        await waitFor(() => {
+            expect(selectorMembersSpy).toHaveBeenCalledTimes(1);
+        });
+
+        rerender('desc');
+
+        await waitFor(() => {
+            expect(selectorMembersSpy).toHaveBeenCalledTimes(2);
+        });
     });
 });

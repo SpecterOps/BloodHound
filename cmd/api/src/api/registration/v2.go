@@ -174,6 +174,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// Asset group management API
 		// tags
 		routerInst.GET("/api/v2/asset-group-tags", resources.GetAssetGroupTags).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
+		routerInst.POST("/api/v2/asset-group-tags/search", resources.SearchAssetGroupTags).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}", api.URIPathVariableAssetGroupTagID), resources.GetAssetGroupTag).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/members", api.URIPathVariableAssetGroupTagID), resources.GetAssetGroupMembersByTag).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/members/counts", api.URIPathVariableAssetGroupTagID), resources.GetAssetGroupTagMemberCountsByKind).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
@@ -188,14 +189,20 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.POST("/api/v2/asset-group-tags/preview-selectors", resources.PreviewSelectors).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}/members", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID), resources.GetAssetGroupMembersBySelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 
+		// history
+		routerInst.GET("/api/v2/asset-group-tags-history", resources.GetAssetGroupTagHistory).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
+		routerInst.POST("/api/v2/asset-group-tags-history", resources.SearchAssetGroupTagHistory).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
+
 		// QA API
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
 
 		routerInst.GET("/api/v2/pathfinding", resources.GetPathfindingResult).Queries("start_node", "{start_node}", "end_node", "{end_node}").RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/kinds", resources.ListKinds).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graphs/source-kinds", resources.ListSourceKinds).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/edge-composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/relay-targets", resources.GetEdgeRelayTargets).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graphs/acl-inheritance", resources.GetEdgeACLInheritancePath).RequirePermissions(permissions.GraphDBRead),
 
 		// TODO discuss if this should be a post endpoint
 		routerInst.GET("/api/v2/graph-search", resources.GetSearchResult).RequirePermissions(permissions.GraphDBRead),
@@ -204,8 +211,10 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherQuery).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/saved-queries", resources.ListSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.POST("/api/v2/saved-queries", resources.CreateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.GetSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.UpdateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.DeleteSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.GetSavedQueryPermissions).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.DeleteSavedQueryPermissions).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.ShareSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}/export", api.URIPathVariableSavedQueryID), resources.ExportSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
@@ -259,6 +268,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/dc-syncers", api.URIPathVariableObjectID), resources.ListADDomainDCSyncers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/linked-gpos", api.URIPathVariableObjectID), resources.ListADEntityLinkedGPOs).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/adcs-escalations", api.URIPathVariableObjectID), resources.ListADCSEscalations).RequirePermissions(permissions.GraphDBRead),
 
 		// GPO Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}", api.URIPathVariableObjectID), resources.GetGPOEntityInfo).RequirePermissions(permissions.GraphDBRead),
@@ -271,22 +281,28 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// AIACA Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/aiacas/{%s}", api.URIPathVariableObjectID), resources.GetAIACAEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/aiacas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/aiacas/{%s}/pki-hierarchy", api.URIPathVariableObjectID), resources.ListCAPKIHierarchy).RequirePermissions(permissions.GraphDBRead),
 
 		// RootCA Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/rootcas/{%s}", api.URIPathVariableObjectID), resources.GetRootCAEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/rootcas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/rootcas/{%s}/pki-hierarchy", api.URIPathVariableObjectID), resources.ListRootCAPKIHierarchy).RequirePermissions(permissions.GraphDBRead),
 
 		// EnterpriseCA Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/enterprisecas/{%s}", api.URIPathVariableObjectID), resources.GetEnterpriseCAEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/enterprisecas/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/enterprisecas/{%s}/pki-hierarchy", api.URIPathVariableObjectID), resources.ListCAPKIHierarchy).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/enterprisecas/{%s}/published-templates", api.URIPathVariableObjectID), resources.ListPublishedTemplates).RequirePermissions(permissions.GraphDBRead),
 
 		// NTAuthStore Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/ntauthstores/{%s}", api.URIPathVariableObjectID), resources.GetNTAuthStoreEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/ntauthstores/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/ntauthstores/{%s}/trusted-cas", api.URIPathVariableObjectID), resources.ListTrustedCAs).RequirePermissions(permissions.GraphDBRead),
 
 		// CertTemplate Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/certtemplates/{%s}", api.URIPathVariableObjectID), resources.GetCertTemplateEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/certtemplates/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/certtemplates/{%s}/published-to-cas", api.URIPathVariableObjectID), resources.ListPublishedToCAs).RequirePermissions(permissions.GraphDBRead),
 
 		// OU Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/ous/{%s}", api.URIPathVariableObjectID), resources.GetOUEntityInfo).RequirePermissions(permissions.GraphDBRead),

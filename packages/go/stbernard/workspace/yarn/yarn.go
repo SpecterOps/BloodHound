@@ -58,12 +58,12 @@ type Workspace struct {
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
 func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"install"}
 	)
 
 	for _, path := range jsPaths {
-		if err := cmdrunner.Run(command, args, path, env); err != nil {
+		if _, err := cmdrunner.Run(command, args, path, env); err != nil {
 			return fmt.Errorf("yarn install at %v: %w", path, err)
 		}
 	}
@@ -74,11 +74,11 @@ func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environm
 // Format runs yarn format on current workspace
 func Format(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"format"}
 	)
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("running yarn format: %w", err)
 	} else {
 		return nil
@@ -88,11 +88,11 @@ func Format(cwd string, env environment.Environment) error {
 // BuildWorkspace runs yarn build for the current working directory
 func BuildWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"build"}
 	)
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("yarn build at %v: %w", cwd, err)
 	} else {
 		return nil
@@ -102,11 +102,11 @@ func BuildWorkspace(cwd string, env environment.Environment) error {
 // TestWorkspace runs yarn tests for all yarn workspaces
 func TestWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"test", "--coverage", "--run"}
 	)
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("yarn test at %v: %w", cwd, err)
 	} else {
 		return nil

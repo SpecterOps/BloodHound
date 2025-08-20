@@ -15,9 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    Button,
     Card,
     CardContent,
     CardHeader,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
     Input,
     Label,
     Select,
@@ -28,39 +35,31 @@ import {
     SelectValue,
     Skeleton,
     Switch,
+    Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useContext, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { FC, useCallback, useContext, useState } from 'react';
+import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
-import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
+import { DeleteConfirmationDialog } from '../../../../components';
+import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
+import { useNotifications } from '../../../../providers';
+import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
+import { getTagUrlValue } from '../../utils';
+import { handleError } from '../utils';
+import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
-/**
- * selectorStatus takes in the selectorId from the path param in the url and the selector's data.
- * It returns a boolean value associated with whether the selector is enabled or not.
- */
-const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
-    if (id === '') return true;
-    if (data === undefined) return true;
-    if (data.disabled_at !== null) return false;
-    return true;
-};
-
-const BasicInfo: FC = () => {
+const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const location = useLocation();
+    const navigate = useAppNavigate();
+
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
-
-    const {
-        formState: { errors },
-        register,
-        setValue,
-    } = useFormContext<SelectorFormInputs>();
 
     const tagQuery = useQuery({
         queryKey: ['zone-management', 'tags', tagId],
@@ -71,110 +70,176 @@ const BasicInfo: FC = () => {
         enabled: tagId !== '',
     });
 
-    const [enabled, setEnabled] = useState(selectorStatus(selectorId, selectorQuery.data));
-
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
+
+    const { addNotification } = useNotifications();
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    const deleteSelectorMutation = useDeleteSelector();
+
+    const handleDeleteSelector = useCallback(async () => {
+        try {
+            if (!tagId || !selectorId)
+                throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
+
+            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
+
+            addNotification('Selector was deleted successfully!', undefined, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
+
+            setDeleteDialogOpen(false);
+
+            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+        } catch (error) {
+            handleError(error, 'deleting', 'selector', addNotification);
+        }
+    }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (isLoading) return <Skeleton />;
     if (isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
-        <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 h-[30rem]'}>
-            <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
-            <CardContent>
-                {selectorId === '' ? null : (
-                    <div className='mb-4'>
-                        <Label htmlFor='disabled' className='text-base font-bold'>
-                            Selector Status
-                        </Label>
-                        <div className='flex gap-2 items-center mt-2'>
-                            <Switch
-                                id='disabled'
-                                checked={enabled}
-                                disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
-                                {...register('disabled')}
-                                onCheckedChange={(checked: boolean) => {
-                                    setEnabled((prev) => !prev);
-                                    if (checked) {
-                                        setValue('disabled', false);
-                                    } else {
-                                        setValue('disabled', true);
-                                    }
+        <div className={'max-lg:w-full w-96 h-[36rem] '}>
+            <Card className={'p-3'}>
+                <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
+                <CardContent>
+                    {selectorId !== '' && (
+                        <div className='mb-4'>
+                            <FormField
+                                control={control}
+                                name='disabled'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Selector Status</FormLabel>
+                                        <FormControl>
+                                            <Switch
+                                                {...field}
+                                                value={''}
+                                                data-testid='zone-management_save_selector-form_disable-switch'
+                                                disabled={
+                                                    selectorQuery.data === undefined
+                                                        ? false
+                                                        : !selectorQuery.data.allow_disable
+                                                }
+                                                checked={!field.value}
+                                                onCheckedChange={(checked: boolean) => {
+                                                    field.onChange(!checked);
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>{!field.value ? 'Enabled' : 'Disabled'}</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    )}
+                    <p className='font-bold'>
+                        {location.pathname.includes('label') ? 'Label' : 'Tier'}:{' '}
+                        <span className='font-normal'>{tagQuery.data?.name}</span>
+                    </p>
+                    <div className='flex flex-col gap-6 mt-6'>
+                        <div className='flex flex-col gap-6'>
+                            <FormField
+                                control={control}
+                                name='name'
+                                rules={{
+                                    required: `Please provide a name for the Selector`,
                                 }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                type='text'
+                                                autoComplete='off'
+                                                data-testid='zone-management_save_selector-form_name-input'
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                            <p className='flex items-center ml-2'>{enabled ? 'Enabled' : 'Disabled'}</p>
+                            <FormField
+                                control={control}
+                                name='description'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Description</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                onChange={field.onChange}
+                                                value={field.value}
+                                                data-testid='zone-management_save_selector-form_description-input'
+                                                placeholder='Description Input'
+                                                rows={3}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <div>
+                                <Label className='text-base font-bold'>Selector Type</Label>
+                                <Select
+                                    data-testid='zone-management_save_selector-form_type-select'
+                                    value={selectorType.toString()}
+                                    onValueChange={(value: string) => {
+                                        if (value === SeedTypeObjectId.toString()) {
+                                            dispatch({ type: 'set-selector-type', selectorType: SeedTypeObjectId });
+                                        } else if (value === SeedTypeCypher.toString()) {
+                                            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+                                        }
+                                    }}>
+                                    <SelectTrigger aria-label='select selector seed type'>
+                                        <SelectValue placeholder='Choose a Selector Type' />
+                                    </SelectTrigger>
+                                    <SelectPortal>
+                                        <SelectContent>
+                                            {Object.entries(SeedTypesMap).map(([seedType, displayValue]) => (
+                                                <SelectItem key={seedType} value={seedType}>
+                                                    {displayValue}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </SelectPortal>
+                                </Select>
+                            </div>
                         </div>
                     </div>
-                )}
-                <p className='font-bold'>
-                    {location.pathname.includes('label') ? 'Label' : 'Tier'}:{' '}
-                    <span className='font-normal'>{tagQuery.data?.name}</span>
-                </p>
-                <div className='flex flex-col gap-6 mt-6'>
-                    <div className='flex flex-col gap-6'>
-                        <div>
-                            <Label className='text-base font-bold' htmlFor='name'>
-                                Name
-                            </Label>
-                            <Input
-                                id='name'
-                                {...register('name', { required: true, value: selectorQuery.data?.name })}
-                                autoComplete='off'
-                                className={
-                                    'pointer-events-auto rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
-                                }
-                            />
-                            {errors.name && (
-                                <p className='text-sm text-[#B44641] dark:text-[#E9827C]'>
-                                    Please provide a name for the selector
-                                </p>
-                            )}
-                        </div>
-                        <div>
-                            <Label htmlFor='description' className='text-base font-bold block'>
-                                Description
-                            </Label>
-                            <textarea
-                                id='description'
-                                {...register('description', { value: selectorQuery.data?.description })}
-                                rows={3}
-                                className={
-                                    'resize-none rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
-                                }
-                                placeholder='Description Input'
-                            />
-                        </div>
-                        <div>
-                            <Label className='text-base font-bold'>Selector Type</Label>
-                            <Select
-                                value={selectorType.toString()}
-                                onValueChange={(value: string) => {
-                                    if (value === SeedTypeObjectId.toString()) {
-                                        dispatch({ type: 'set-selector-type', selectorType: SeedTypeObjectId });
-                                    } else if (value === SeedTypeCypher.toString()) {
-                                        dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
-                                    }
-                                }}>
-                                <SelectTrigger
-                                    className='focus-visible:outline-secondary focus:outline-secondary focus:outline-1 focus:ring-secondary dark:focus-visible:outline-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus:outline-1 dark:focus:ring-secondary-variant-2 hover:border-b-2'
-                                    aria-label='select selector seed type'>
-                                    <SelectValue placeholder='Choose a Selector Type' />
-                                </SelectTrigger>
-                                <SelectPortal>
-                                    <SelectContent>
-                                        {Object.entries(SeedTypesMap).map(([seedType, displayValue]) => (
-                                            <SelectItem key={seedType} value={seedType}>
-                                                {displayValue}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </SelectPortal>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+            <div className='flex justify-end gap-2 mt-6'>
+                <DeleteSelectorButton
+                    selectorId={selectorId}
+                    selectorData={selectorQuery.data}
+                    onClick={() => {
+                        setDeleteDialogOpen(true);
+                    }}
+                />
+                <Button
+                    data-testid='zone-management_save_selector-form_cancel-button'
+                    variant={'secondary'}
+                    onClick={() => navigate(-1)}>
+                    Cancel
+                </Button>
+                <Button data-testid='zone-management_save_selector-form_save-button' variant={'primary'} type='submit'>
+                    {selectorId === '' ? 'Save' : 'Save Edits'}
+                </Button>
+            </div>
+            <DeleteConfirmationDialog
+                open={deleteDialogOpen}
+                itemName={selectorQuery.data?.name || 'Selector'}
+                itemType='selector'
+                onConfirm={handleDeleteSelector}
+                onCancel={handleCancel}
+            />
+        </div>
     );
 };
 
