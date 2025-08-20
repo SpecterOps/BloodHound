@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { ErrorResponse } from 'js-client-library';
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     useEndFileIngestJob,
@@ -264,6 +264,11 @@ const FileUploadDialog: React.FC<{
         }
     };
 
+    const currentlyUploading = useMemo(
+        () => fileUploadStep === FileUploadStep.UPLOAD && !uploadMessage,
+        [fileUploadStep, uploadMessage]
+    );
+
     return (
         <Dialog
             open={open}
@@ -282,7 +287,7 @@ const FileUploadDialog: React.FC<{
                     <>
                         <FileDrop
                             onDrop={handleFileDrop}
-                            disabled={listFileTypesForIngest.isLoading}
+                            disabled={currentlyUploading || listFileTypesForIngest.isLoading}
                             accept={listFileTypesForIngest.data?.data ?? []}
                         />
                         {uploadMessage && <Box className='mt-2 mb-2'>{uploadMessage}</Box>}
@@ -312,7 +317,7 @@ const FileUploadDialog: React.FC<{
                             </Box>
                         )}
                     </>
-                    {fileUploadStep === FileUploadStep.UPLOAD && !uploadMessage && (
+                    {currentlyUploading && (
                         <div>
                             <p>Upload in progress.</p>
                             <p>

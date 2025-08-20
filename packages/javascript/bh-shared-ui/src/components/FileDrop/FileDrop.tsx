@@ -61,7 +61,7 @@ const FileDrop: React.FC<{
     return (
         <Box
             sx={{
-                cursor: 'pointer',
+                cursor: disabled ? 'default' : 'pointer',
                 height: 300,
                 borderRadius: 1,
                 border: 2,
@@ -74,8 +74,11 @@ const FileDrop: React.FC<{
                 alignItems: 'center',
                 justifyContent: 'center',
                 bgcolor:
-                    isHoverActive || isDragActive ? theme.palette.neutral.tertiary : theme.palette.neutral.secondary,
+                    isHoverActive || isDragActive || disabled
+                        ? theme.palette.neutral.tertiary
+                        : theme.palette.neutral.secondary,
                 color: theme.palette.color.primary,
+                opacity: disabled ? 0.5 : 1,
                 borderColor: theme.palette.color.primary,
                 fontWeight: 'bold',
                 textAlign: 'center',

@@ -49,7 +49,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
 
     return (
         <li
-            onClick={typeof onClick === 'function' ? onClick : () => {}}
+            onClick={onClick}
             className={cn(
                 'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-1 dark:text-neutral-light-1',
                 {
