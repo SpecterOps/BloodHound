@@ -28,6 +28,7 @@ import {
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
+import { useSelf } from '../../../hooks/useSelf';
 import { useNotifications } from '../../../providers';
 import { QueryLineItem } from '../../../types';
 import { apiClient, cn } from '../../../utils';
@@ -80,23 +81,20 @@ const CypherSearch = ({
         queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
     });
     const { addNotification } = useNotifications();
-    const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
+    const { isAdminOrPowerUser } = useSelf();
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
-
-    const isAdminOrPowerUser = getSelf.data?.roles?.some((obj: any) => {
-        return obj.name === 'Administrator' || obj.name === 'Power User';
-    });
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
     useEffect(() => {
         //Setting the selected query once on load
+        //The cypherQuery dependency is required
         //check for flag
         if (!getCypherValueOnLoadRef.current && cypherQuery) {
             getCypherValueOnLoadRef.current = true;
             setSelected({ query: cypherQuery, id: undefined });
         }
-    }, [cypherQuery]); //TODO - Try empty array here - do I need the listener
+    }, [cypherQuery]);
 
     const handleCypherSearch = () => {
         if (cypherQuery) {

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useQueryPermissions } from '../../../hooks';
+import { useSelf } from '../../../hooks/useSelf';
 import { apiClient } from '../../../utils';
 
 type SavedQueryPermissionsProps = {
@@ -24,7 +25,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<ListUser[]>([]);
 
-    const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
+    const { getSelfId } = useSelf();
+    const { data: selfId } = getSelfId;
 
     const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
@@ -34,7 +36,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     function idMap() {
         return listUsersQuery.data
-            ?.filter((user: User) => user.id !== getSelf.data.id)
+            ?.filter((user: User) => user.id !== selfId)
             .map((user: User) => {
                 return {
                     name: user.principal_name,
