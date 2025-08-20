@@ -36,7 +36,7 @@ import { useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
 
-const Users: FC = () => {
+const Users: FC<{ showEnvironmentAccessControls: boolean }> = ({ showEnvironmentAccessControls = false }) => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');
@@ -207,15 +207,13 @@ const Users: FC = () => {
                         </DialogTrigger>
                         <DialogPortal>
                             <CreateUserDialog
-                                createUser={true}
-                                updateUser={false}
                                 error={createUserMutation.error}
                                 isLoading={createUserMutation.isLoading}
                                 onClose={toggleCreateUserDialog}
                                 onExited={createUserMutation.reset}
                                 onSave={createUserMutation.mutateAsync}
                                 open={createUserDialogOpen}
-                                showEnvironmentAccessControls={false}
+                                showEnvironmentAccessControls={showEnvironmentAccessControls}
                             />
                         </DialogPortal>
                     </Dialog>
@@ -235,16 +233,21 @@ const Users: FC = () => {
                 </Paper>
             </PageWithTitle>
 
-            <UpdateUserDialog
-                open={updateUserDialogOpen}
-                onClose={toggleUpdateUserDialog}
-                onExited={updateUserMutation.reset}
-                userId={selectedUserId!}
-                hasSelectedSelf={hasSelectedSelf}
-                onSave={updateUserMutation.mutateAsync}
-                isLoading={updateUserMutation.isLoading}
-                error={updateUserMutation.error}
-            />
+            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
+                <DialogPortal>
+                    <UpdateUserDialog
+                        error={updateUserMutation.error}
+                        hasSelectedSelf={hasSelectedSelf}
+                        isLoading={updateUserMutation.isLoading}
+                        onClose={toggleUpdateUserDialog}
+                        onExited={updateUserMutation.reset}
+                        onSave={updateUserMutation.mutateAsync}
+                        //open={updateUserDialogOpen}
+                        showEnvironmentAccessControls={showEnvironmentAccessControls}
+                        userId={selectedUserId!}
+                    />
+                </DialogPortal>
+            </Dialog>
             <ConfirmationDialog
                 open={enableUserDialogOpen}
                 text={'Are you sure you want to enable this user?'}
