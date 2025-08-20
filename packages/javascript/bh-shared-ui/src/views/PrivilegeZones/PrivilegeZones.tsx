@@ -30,6 +30,7 @@ import {
     ROUTE_PZ_ZONE_SELECTOR_DETAILS,
     ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
     ROUTE_PZ_ZONE_SUMMARY,
+    ROUTE_PZ_HISTORY,
     Routable,
     detailsPath,
     labelsPath,
@@ -44,6 +45,7 @@ import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
+const History = React.lazy(() => import('./History/History'));
 
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
@@ -57,6 +59,7 @@ const detailsPaths = [
 ];
 
 const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
+const historyPaths = [ROUTE_PZ_HISTORY];
 
 const PrivilegeZones: FC = () => {
     const navigate = useAppNavigate();
@@ -80,6 +83,9 @@ const PrivilegeZones: FC = () => {
         }),
         ...summaryPaths.map((path) => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
+        }),
+        ...historyPaths.map((path) => {
+            return { path, component: History, authenticationRequired: true, navigation: true };
         }),
     ];
 
@@ -108,6 +114,9 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
+                            </TabsTrigger>
+                            <TabsTrigger value='history' data-testid='zone-management_tab-list_history-tab'>
+                                History
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>

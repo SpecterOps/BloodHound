@@ -18,6 +18,8 @@ import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
     AssetGroupTagMember,
+    AssetGroupTagHistoryRecord,
+    AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
     CollectorManifest,
@@ -174,6 +176,8 @@ export type NewAuthToken = AuthToken & {
 };
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
+
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
 
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
 
