@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle, Box, CircularProgress, Grid, Switch, Typography } from '@mui/material';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation } from 'react-query';
 
 import {
     Disable2FADialog,
@@ -29,6 +29,7 @@ import {
     UserTokenManagementDialog,
 } from '../../components';
 import useApiVersion from '../../hooks/useApiVersion';
+import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
 
@@ -44,9 +45,7 @@ const UserProfile = () => {
     const [disable2FAError, setDisable2FAError] = useState('');
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
-    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
-        apiClient.getSelf({ signal }).then((res) => res.data.data)
-    );
+    const getSelfQuery = useSelf();
 
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;

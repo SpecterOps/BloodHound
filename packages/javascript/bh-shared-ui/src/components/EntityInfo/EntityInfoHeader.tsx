@@ -13,28 +13,27 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';
-import { useExploreParams } from '../../hooks';
+import { useExploreParams, useExploreSelectedItem } from '../../hooks';
 import { EntityKinds } from '../../utils/content';
 import { useHeaderStyles } from '../../views/Explore/InfoStyles';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers';
 
 export interface HeaderProps {
-    expanded: boolean;
     name: string;
-    onToggleExpanded: (expanded: boolean) => void;
     nodeType?: EntityKinds;
 }
 
-const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {
+const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -48,13 +47,13 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
 
     return (
         <Box className={styles.header}>
-            <Icon
-                className={styles.icon}
-                click={() => {
-                    onToggleExpanded(!expanded);
-                }}>
-                <FontAwesomeIcon icon={expanded ? faMinus : faPlus} />
-            </Icon>
+            {selectedItem ? (
+                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
+                    <FontAwesomeIcon icon={faRemove} />
+                </Icon>
+            ) : (
+                <div className='w-3' />
+            )}
 
             {nodeType && <NodeIcon nodeType={nodeType} />}
 

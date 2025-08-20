@@ -14,7 +14,7 @@
   "collectors_base_path": "/etc/bloodhound/collectors",
   "default_admin": {
     "principal_name": "admin",
-    "first_name": "Bloodhound",
+    "first_name": "BloodHound",
     "last_name": "Admin",
     "email_address": "spam@example.com"
   }

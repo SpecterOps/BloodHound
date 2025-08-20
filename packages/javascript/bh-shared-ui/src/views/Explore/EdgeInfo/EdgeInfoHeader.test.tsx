@@ -19,10 +19,21 @@ import { act, render } from '../../../test-utils';
 import { ObjectInfoPanelContext } from '../providers';
 import EdgeInfoHeader, { HeaderProps } from './EdgeInfoHeader';
 
+const mockClearSelectedItem = vi.fn();
+
+vi.mock('../../../hooks', async () => {
+    const actual = await vi.importActual('../../../hooks');
+
+    return {
+        ...actual,
+        useExploreSelectedItem: () => ({
+            clearSelectedItem: mockClearSelectedItem,
+            selectedItem: '123',
+        }),
+    };
+});
 const testProps: HeaderProps = {
-    expanded: true,
     name: 'testName',
-    onToggleExpanded: vi.fn(),
 };
 
 const setIsObjectInfoPanelOpen = (newValue: boolean) => {
@@ -55,7 +66,7 @@ describe('EdgeInfoHeader', async () => {
     it('should render', async () => {
         const { screen } = await setup();
 
-        const collapsePanelButton = screen.getByRole('button', { name: /minus/i });
+        const collapsePanelButton = screen.getByRole('button', { name: /Clear selected item/i });
         const edgeTitle = screen.getByRole('heading');
         const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
 
@@ -72,5 +83,13 @@ describe('EdgeInfoHeader', async () => {
 
         expect(window.location.search).not.toContain('expandedPanelSections');
         expect(mockContextValue.isObjectInfoPanelOpen).toBe(false);
+    });
+    it('should on clicking remove call clearSelectedItem', async () => {
+        const { screen, user } = await setup();
+        const removeButton = screen.getByRole('button', { name: /Clear selected item/i });
+
+        await user.click(removeButton);
+
+        expect(mockClearSelectedItem).toBeCalled();
     });
 });

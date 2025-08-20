@@ -13,25 +13,24 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Typography } from '@mui/material';
 import React from 'react';
 import Icon from '../../../components/Icon';
-import { useExploreParams } from '../../../hooks';
+import { useExploreParams, useExploreSelectedItem } from '../../../hooks';
 import { useHeaderStyles } from '../InfoStyles';
 import { useObjectInfoPanelContext } from '../providers';
 
 export interface HeaderProps {
     name: string;
-    expanded: boolean;
-    onToggleExpanded: (expanded: boolean) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpanded, expanded }) => {
+const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
+    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -42,13 +41,13 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpande
 
     return (
         <div className={styles.header}>
-            <Icon
-                className={styles.icon}
-                click={() => {
-                    onToggleExpanded(!expanded);
-                }}>
-                <FontAwesomeIcon icon={expanded ? faMinus : faPlus} />
-            </Icon>
+            {selectedItem ? (
+                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
+                    <FontAwesomeIcon icon={faRemove} />
+                </Icon>
+            ) : (
+                <div className='w-3' />
+            )}
 
             <Typography
                 data-testid='explore_edge-information-pane_header-text'

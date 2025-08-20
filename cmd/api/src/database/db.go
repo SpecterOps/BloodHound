@@ -49,6 +49,7 @@ var (
 	ErrDuplicateEmail              = errors.New("duplicate user email address")
 	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
 	ErrDuplicateKindName           = errors.New("duplicate kind name")
+	ErrDuplicateGlyph              = errors.New("duplicate glyph")
 	ErrPositionOutOfRange          = errors.New("position out of range")
 )
 

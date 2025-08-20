@@ -17,7 +17,8 @@
 import { RequestOptions } from 'js-client-library';
 import { useCallback } from 'react';
 import { useQuery } from 'react-query';
-import { apiClient, Permission, PERMISSIONS } from '../../utils';
+import { apiClient } from '../../utils/api';
+import { Permission, PERMISSIONS } from '../../utils/permissions';
 
 export type PermissionsFns = {
     getUserPermissions: () => Permission[];
@@ -31,7 +32,7 @@ const formatKey = (p: { authority: string; name: string }) => `${p.authority}-${
 const getSelf = (options?: RequestOptions) => apiClient.getSelf(options).then((res) => res.data.data);
 
 export const usePermissions = () => {
-    const getSelfQuery = useQuery(['getSelf'], ({ signal }) => getSelf({ signal }), {
+    const getSelfQuery = useQuery(['getSelf', 'permissions'], ({ signal }) => getSelf({ signal }), {
         cacheTime: Number.POSITIVE_INFINITY,
         select: (data) => {
             const userPermissions = data?.roles.map((role: any) => role.permissions).flat() || [];

@@ -16,9 +16,10 @@
 
 import { useState } from 'react';
 import { EdgeCheckboxType } from '../../edgeTypes';
+import { areArraysSimilar } from '../../utils';
 import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
-import { compareEdgeTypes, extractEdgeTypes, mapParamsToFilters } from './utils';
+import { extractEdgeTypes, mapParamsToFilters } from './utils';
 
 export const usePathfindingFilters = () => {
     const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
@@ -46,7 +47,7 @@ export const usePathfindingFilters = () => {
         if (selectedEdgeTypes.length === 0) {
             // query string stores a value indicating an empty set if every option is unselected
             setExploreParams({ pathFilters: [EMPTY_FILTER_VALUE] });
-        } else if (compareEdgeTypes(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
+        } else if (areArraysSimilar(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
             // query string is not set if user selects the default
             setExploreParams({ pathFilters: null });
         } else {
@@ -54,15 +55,10 @@ export const usePathfindingFilters = () => {
         }
     };
 
-    // In our new implementation, these two functions are equivalent. Once we no longer need to support the old approach,
-    // we can consider removing this.
-    const handleCancelFilters = () => initialize();
-
     return {
         selectedFilters,
         initialize,
         handleApplyFilters,
         handleUpdateFilters,
-        handleCancelFilters,
     };
 };

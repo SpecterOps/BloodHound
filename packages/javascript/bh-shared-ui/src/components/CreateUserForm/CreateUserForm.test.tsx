@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { SetUpQueryClient, render, screen } from '../../test-utils';
+import { render, screen } from '../../test-utils';
+import { setUpQueryClient } from '../../utils';
 import CreateUserForm from './CreateUserForm';
 const DEFAULT_PROPS = {
     onCancel: () => null,
@@ -97,7 +98,7 @@ describe('CreateUserForm', () => {
             { key: ['listSSOProviders'], data: null },
         ];
 
-        const queryClient = SetUpQueryClient(mockState);
+        const queryClient = setUpQueryClient(mockState);
 
         render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
@@ -125,7 +126,7 @@ describe('CreateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
-        const queryClient = SetUpQueryClient(mockState);
+        const queryClient = setUpQueryClient(mockState);
 
         render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
@@ -172,7 +173,7 @@ describe('CreateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
-        const queryClient = SetUpQueryClient(mockState);
+        const queryClient = setUpQueryClient(mockState);
 
         render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 

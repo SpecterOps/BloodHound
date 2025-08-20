@@ -31,10 +31,10 @@ import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
-import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
+import { TagList } from './TagList';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -111,7 +111,7 @@ const Details: FC = () => {
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
                     {location.pathname.includes('label') ? (
-                        <DetailsList
+                        <TagList
                             title={'Labels'}
                             listQuery={labelsQuery}
                             selected={tagId}
@@ -120,7 +120,7 @@ const Details: FC = () => {
                             }}
                         />
                     ) : (
-                        <DetailsList
+                        <TagList
                             title={'Tiers'}
                             listQuery={tiersQuery}
                             selected={tagId}
