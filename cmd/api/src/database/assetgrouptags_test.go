@@ -1127,3 +1127,142 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		require.GreaterOrEqual(t, len(items), 2)
 	})
 }
+
+func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx             = context.Background()
+		testAssetGroupTagId = 1
+		testSelectorId      = 1
+		testMemberId1       = 1
+		testNodeId1         = uint64(testMemberId1)
+		testCertifiedBy     = "testy"
+		certifiedBy         = null.StringFrom(testCertifiedBy)
+		source              = 1
+		isDefault           = false
+		allowDisable        = true
+		autoCertify         = null.BoolFrom(false)
+		testHistoryNote     = null.StringFrom("test history note")
+		test1Selector       = model.AssetGroupTagSelector{
+			Name:            "test selector name",
+			Description:     "test description",
+			AssetGroupTagId: 1,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+	_, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, testAssetGroupTagId, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	require.NoError(t, err)
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId, testSelectorId, graph.ID(testNodeId1), model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	t.Run("updates certification by selector node, certified", func(t *testing.T) {
+		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testAssetGroupTagId, testSelectorId, model.AssetGroupCertificationManual, testCertifiedBy, graph.ID(testNodeId1), test1Selector.Name, testHistoryNote)
+		require.NoError(t, err)
+		// confirm selector was updated
+		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
+		require.NoError(t, err)
+		require.Equal(t, len(selector), 1)
+		require.Equal(t, selector[0].Certified, model.AssetGroupCertificationManual)
+
+		// confirm history record was created
+		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, rowCountBefore+1, rowCountAfter)
+	})
+
+	t.Run("updates certification by selector node, pending", func(t *testing.T) {
+		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testAssetGroupTagId, testSelectorId, model.AssetGroupCertificationPending, testCertifiedBy, graph.ID(testNodeId1), test1Selector.Name, testHistoryNote)
+		require.NoError(t, err)
+		// confirm selector was updated
+		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
+		require.NoError(t, err)
+		require.Equal(t, len(selector), 1)
+		require.Equal(t, selector[0].Certified, model.AssetGroupCertificationPending)
+		// confirm history record was not created
+		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
+		require.Equal(t, rowCountBefore, rowCountAfter)
+	})
+}
+
+func TestDatabase_GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx         = context.Background()
+		testActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testName        = "test selector name"
+		testDescription = "test description"
+		certifiedBy     = null.StringFrom("testy")
+		testObjectId1   = 1
+		testObjectId2   = 2
+		testNodeId1     = uint64(testObjectId1)
+		testNodeId2     = uint64(testObjectId2)
+		source          = 1
+		isDefault       = false
+		allowDisable    = true
+		autoCertify     = null.BoolFrom(false)
+		testSeeds       = []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+		}
+	)
+
+	tierTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false), null.String{})
+	require.NoError(t, err)
+
+	labelTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label", testDescription, null.Int32{}, null.Bool{}, null.String{})
+	require.NoError(t, err)
+
+	selector, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tierTag.ID, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId2), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	err = suite.BHDatabase.InsertSelectorNode(testCtx, labelTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
+	require.NoError(t, err)
+
+	tests := map[string]struct {
+		Input          []int
+		ExpectedLength int
+	}{
+		"returns all selected nodes, ignores tags and auto certified nodes": {
+			Input:          []int{testObjectId1, testObjectId2},
+			ExpectedLength: 2,
+		},
+		"returns empty slice if no nodes found": {
+			Input:          []int{3},
+			ExpectedLength: 0,
+		},
+		"returns empty slice if no node IDs passed in": {
+			Input:          nil,
+			ExpectedLength: 0,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got, err := suite.BHDatabase.GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(testCtx, test.Input...); err != nil {
+				t.Fatalf("error getting selector node expanded ignore autocertify: %v", err)
+			} else if len(got) != test.ExpectedLength {
+				t.Fatalf("got %d expected %d", len(got), test.ExpectedLength)
+			}
+		})
+	}
+}

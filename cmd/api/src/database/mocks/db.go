@@ -106,20 +106,6 @@ func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), ctx)
 }
 
-// CertifyOrDecertifyNodeWithHistory mocks base method.
-func (m *MockDatabase) CertifyOrDecertifyNodeWithHistory(ctx context.Context, userID, email string, nodeID, selectorID, action, assetTagID int, note string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CertifyOrDecertifyNodeWithHistory", ctx, userID, email, nodeID, selectorID, action, assetTagID, note)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CertifyOrDecertifyNodeWithHistory indicates an expected call of CertifyOrDecertifyNodeWithHistory.
-func (mr *MockDatabaseMockRecorder) CertifyOrDecertifyNodeWithHistory(ctx, userID, email, nodeID, selectorID, action, assetTagID, note any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CertifyOrDecertifyNodeWithHistory", reflect.TypeOf((*MockDatabase)(nil).CertifyOrDecertifyNodeWithHistory), ctx, userID, email, nodeID, selectorID, action, assetTagID, note)
-}
-
 // Close mocks base method.
 func (m *MockDatabase) Close(ctx context.Context) {
 	m.ctrl.T.Helper()
@@ -1145,6 +1131,26 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(ctx, id any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelector), ctx, id)
 }
 
+// GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify mocks base method.
+func (m *MockDatabase) GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range nodeIds {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify", varargs...)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNodeExpanded)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify indicates an expected call of GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(ctx any, nodeIds ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, nodeIds...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify), varargs...)
+}
+
 // GetAssetGroupTag mocks base method.
 func (m *MockDatabase) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
@@ -1718,26 +1724,6 @@ func (mr *MockDatabaseMockRecorder) GetScopeForSavedQuery(ctx, queryID, userID a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeForSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetScopeForSavedQuery), ctx, queryID, userID)
 }
 
-// GetSelectorNodesByNodeIds mocks base method.
-func (m *MockDatabase) GetSelectorNodesByNodeIds(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNode, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx}
-	for _, a := range nodeIds {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetSelectorNodesByNodeIds", varargs...)
-	ret0, _ := ret[0].([]model.AssetGroupSelectorNode)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSelectorNodesByNodeIds indicates an expected call of GetSelectorNodesByNodeIds.
-func (mr *MockDatabaseMockRecorder) GetSelectorNodesByNodeIds(ctx any, nodeIds ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, nodeIds...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodesByNodeIds", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodesByNodeIds), varargs...)
-}
-
 // GetSelectorNodesBySelectorIds mocks base method.
 func (m *MockDatabase) GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error) {
 	m.ctrl.T.Helper()
@@ -1801,26 +1787,6 @@ func (m *MockDatabase) GetSourceKinds(ctx context.Context) ([]database.SourceKin
 func (mr *MockDatabaseMockRecorder) GetSourceKinds(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSourceKinds", reflect.TypeOf((*MockDatabase)(nil).GetSourceKinds), ctx)
-}
-
-// GetTagsByKindId mocks base method.
-func (m *MockDatabase) GetTagsByKindId(ctx context.Context, kindIds ...int) (model.AssetGroupTags, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx}
-	for _, a := range kindIds {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetTagsByKindId", varargs...)
-	ret0, _ := ret[0].(model.AssetGroupTags)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTagsByKindId indicates an expected call of GetTagsByKindId.
-func (mr *MockDatabaseMockRecorder) GetTagsByKindId(ctx any, kindIds ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, kindIds...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsByKindId", reflect.TypeOf((*MockDatabase)(nil).GetTagsByKindId), varargs...)
 }
 
 // GetTimeRangedAssetGroupCollections mocks base method.
@@ -2327,6 +2293,20 @@ func (m *MockDatabase) UpdateAuthToken(ctx context.Context, authToken model.Auth
 func (mr *MockDatabaseMockRecorder) UpdateAuthToken(ctx, authToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), ctx, authToken)
+}
+
+// UpdateCertificationBySelectorNode mocks base method.
+func (m *MockDatabase) UpdateCertificationBySelectorNode(ctx context.Context, assetGroupTagId, selectorId int, certified model.AssetGroupCertification, certifiedBy string, nodeId graph.ID, displayName string, historyNote null.String) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCertificationBySelectorNode", ctx, assetGroupTagId, selectorId, certified, certifiedBy, nodeId, displayName, historyNote)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateCertificationBySelectorNode indicates an expected call of UpdateCertificationBySelectorNode.
+func (mr *MockDatabaseMockRecorder) UpdateCertificationBySelectorNode(ctx, assetGroupTagId, selectorId, certified, certifiedBy, nodeId, displayName, historyNote any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCertificationBySelectorNode", reflect.TypeOf((*MockDatabase)(nil).UpdateCertificationBySelectorNode), ctx, assetGroupTagId, selectorId, certified, certifiedBy, nodeId, displayName, historyNote)
 }
 
 // UpdateCustomNodeKind mocks base method.

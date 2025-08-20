@@ -284,7 +284,8 @@ func GetAssetGroupMemberProperties(node *graph.Node) (primaryKind, displayName, 
 	return primaryKind, displayName, objectId, envId
 }
 
-type AssetGroupSelectorNodeWithZoneId struct {
+type AssetGroupSelectorNodeExpanded struct {
 	AssetGroupSelectorNode
-	ZoneId int `json:"zone_id"`
+	AssetGroupTagId int `json:"asset_group_tag_id"`
+	Position        int `json:"position"`
 }

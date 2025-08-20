@@ -83,6 +83,7 @@ const (
 	ErrorResponseInvalidTagGlyph                    = "the glyph specified is invalid"
 	ErrorResponseAssetGroupTagDuplicateGlyph        = "asset group tag glyph must be unique"
 	ErrorResponseAssetGroupMemberIDsRequired        = "asset group member IDs are required"
+	ErrorResponseUnknownUser                        = "unknown user"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
