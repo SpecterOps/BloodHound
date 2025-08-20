@@ -14,21 +14,32 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogTitle } from '@mui/material';
+import { DialogContent } from '@bloodhoundenterprise/doodleui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
 import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const UpdateUserDialog: React.FC<{
-    open: boolean;
+    error: any;
+    hasSelectedSelf: boolean;
+    isLoading: boolean;
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
+    //open: boolean;
+    showEnvironmentAccessControls?: boolean; //TODO: required or not?
     userId: string;
-    hasSelectedSelf: boolean;
-    isLoading: boolean;
-    error: any;
-}> = ({ open, onClose, onExited, userId, onSave, hasSelectedSelf, isLoading, error }) => {
+}> = ({
+    error,
+    hasSelectedSelf,
+    isLoading,
+    onClose,
+    onExited,
+    onSave,
+    //open,
+    showEnvironmentAccessControls,
+    userId,
+}) => {
     const handleOnSave = (user: UpdateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
@@ -46,31 +57,48 @@ const UpdateUserDialog: React.FC<{
     };
 
     return (
-        <Dialog
-            open={open}
-            fullWidth={true}
-            maxWidth={'sm'}
-            onClose={onClose}
-            disableEscapeKeyDown
-            keepMounted={false}
-            PaperProps={{
-                // @ts-ignore
-                'data-testid': 'update-user-dialog',
-            }}
-            TransitionProps={{
-                onExited,
-            }}>
-            <DialogTitle>{'Update User'}</DialogTitle>
+        <DialogContent maxWidth='lg' className='!bg-transparent'>
             <UpdateUserForm
+                error={error}
+                isLoading={isLoading}
                 onCancel={onClose}
                 onSubmit={handleOnSave}
-                userId={userId}
                 hasSelectedSelf={hasSelectedSelf}
-                isLoading={isLoading}
-                error={error}
+                //open={open}
+                //showEnvironmentAccessControls={showEnvironmentAccessControls}
+                userId={userId!}
             />
-        </Dialog>
+        </DialogContent>
     );
 };
 
 export default UpdateUserDialog;
+
+{
+    /*
+<Dialog
+        open={open}
+        fullWidth={true}
+        maxWidth={'sm'}
+        onClose={onClose}
+        disableEscapeKeyDown
+        keepMounted={false}
+        PaperProps={{
+            // @ts-ignore
+            'data-testid': 'update-user-dialog',
+        }}
+        TransitionProps={{
+            onExited,
+        }}>
+        <DialogTitle>{'Update User'}</DialogTitle>
+        <UpdateUserForm
+            onCancel={onClose}
+            onSubmit={handleOnSave}
+            userId={userId}
+            hasSelectedSelf={hasSelectedSelf}
+            isLoading={isLoading}
+            error={error}
+        />
+</Dialog>
+*/
+}

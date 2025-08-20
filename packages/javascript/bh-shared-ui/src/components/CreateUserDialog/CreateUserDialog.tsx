@@ -14,24 +14,30 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//import { Dialog, DialogTitle } from '@mui/material';
 import { DialogContent } from '@bloodhoundenterprise/doodleui';
 import { CreateUserRequest } from 'js-client-library';
 import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
-    createUser: boolean;
-    updateUser: boolean;
+    open: boolean;
+    onClose: () => void;
+    onExited?: () => void;
+    onSave: (user: CreateUserRequest) => Promise<any>;
+    isLoading: boolean;
     error: any;
+    showEnvironmentAccessControls: boolean;
+    /*
+    error: any;
+    hasSelectedSelf?: boolean;
     isLoading: boolean;
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: CreateUserRequest) => Promise<any>;
     open: boolean;
-    userId?: string;
-    hasSelectedSelf?: boolean;
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
+    userId?: string;
+    */
 }> = ({
     open,
     onClose,
@@ -40,9 +46,7 @@ const CreateUserDialog: React.FC<{
     isLoading,
     error,
     showEnvironmentAccessControls,
-    createUser,
-    updateUser,
-    userId,
+    //open, onClose, onExited, onSave, isLoading, error, showEnvironmentAccessControls, userId
 }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
@@ -63,54 +67,19 @@ const CreateUserDialog: React.FC<{
     return (
         <DialogContent maxWidth='lg' className='!bg-transparent'>
             <CreateUserForm
-                createUser={createUser}
                 error={error}
                 isLoading={isLoading}
                 onCancel={onClose}
                 onSubmit={handleOnSave}
                 open={open}
                 showEnvironmentAccessControls={showEnvironmentAccessControls}
-                updateUser={updateUser}
-                userId={userId!}
+                //userId={userId!}
             />
         </DialogContent>
     );
 };
 
 export default CreateUserDialog;
-
-/*
-        <>
-            {showEnvironmentAccessControls ? (
-                <DialogContent maxWidth='lg' className='!bg-transparent'>
-                    <CreateUserForm
-                        createUser={createUser}
-                        error={error}
-                        isLoading={isLoading}
-                        onCancel={onClose}
-                        onSubmit={handleOnSave}
-                        open={open}
-                        showEnvironmentAccessControls={true}
-                        updateUser={updateUser}
-                        userId={userId}
-                    />
-                </DialogContent>
-            ) : (
-                <DialogContent maxWidth='lg' className=''>
-                    <CreateUserForm
-                        //createUser={createUser} //TODO: NEEDED FOR BHCE?
-                        //updateUser={updateUser} //TODO: NEEDED FOR BHCE?
-                        error={error}
-                        isLoading={isLoading}
-                        onCancel={onClose}
-                        onSubmit={handleOnSave}
-                        showEnvironmentAccessControls={false}
-                        userId={userId}
-                    />
-                </DialogContent>
-            )}
-        </>
-*/
 
 {
     /*
