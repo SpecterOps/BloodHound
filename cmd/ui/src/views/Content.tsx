@@ -27,7 +27,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
-import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
+import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -45,6 +45,7 @@ const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
+    const isAuthExpired = useAppSelector(authExpiredSelector);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
 
@@ -57,6 +58,7 @@ const Content: React.FC = () => {
 
     // Redirect to file ingest when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
+        condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired,
         acceptedTypes: ['application/json', 'application/zip'],
     });
 
