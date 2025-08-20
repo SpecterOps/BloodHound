@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faRefresh, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton } from '@mui/material';
 import { cn } from '../../utils';
@@ -23,8 +23,9 @@ import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
 const FileStatusListItem: React.FC<{
     file: FileForIngest;
     onRemove: () => void;
+    onRefresh: (file: FileForIngest) => void;
     percentCompleted: number;
-}> = ({ file, onRemove, percentCompleted }) => {
+}> = ({ file, onRemove, onRefresh, percentCompleted }) => {
     const hasErrors = !!file?.errors?.length;
     const clampedPercent = Math.max(0, Math.min(100, Math.round(percentCompleted ?? 0)));
     const progressBarWidth = hasErrors ? '100%' : `${percentCompleted}%`;
@@ -43,6 +44,7 @@ const FileStatusListItem: React.FC<{
                 <span className='pr-2'>{file.file.name}</span>{' '}
                 {!!percentCompleted && !hasErrors && <span>{clampedPercent}%</span>}
                 {hasErrors && <span className='text-error'>Failed to Upload</span>}
+                <span className='text-error'>Failed to Upload</span>
             </div>
             <div>
                 {file.status === FileStatus.READY && (
@@ -50,6 +52,13 @@ const FileStatusListItem: React.FC<{
                         onClick={onRemove}
                         className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
                         <FontAwesomeIcon size='xs' icon={faTimes} />
+                    </IconButton>
+                )}
+                {file.status === FileStatus.FAILURE && (
+                    <IconButton
+                        onClick={() => onRefresh(file)}
+                        className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
+                        <FontAwesomeIcon size='xs' icon={faRefresh} />
                     </IconButton>
                 )}
             </div>

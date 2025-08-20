@@ -161,6 +161,15 @@ const FileUploadDialog: React.FC<{
         });
     };
 
+    const retryUploadSingleFile = async (file: FileForIngest) => {
+        try {
+            await uploadFile(currentIngestJobId, file);
+            setNewFileStatus(file.file.name, FileStatus.DONE);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     const uploadFile = async (jobId: string, ingestFile: FileForIngest) => {
         return uploadFileToIngestJob.mutateAsync(
             {
@@ -237,7 +246,6 @@ const FileUploadDialog: React.FC<{
             setUploadMessage('');
             setProgressCache({});
             setCurrentIngestJobId('');
-            // remove from lists items already attempted
             handleAppendFiles(validatedFiles);
         }
     };
@@ -291,6 +299,7 @@ const FileUploadDialog: React.FC<{
                                             }
                                             key={index}
                                             onRemove={() => handleRemoveFile(index)}
+                                            onRefresh={retryUploadSingleFile}
                                         />
                                     );
                                 })}
