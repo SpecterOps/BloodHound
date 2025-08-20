@@ -1,4 +1,4 @@
-# Copyright 2024 Specter Ops, Inc.
+# Copyright 2025 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.object-id.yaml'
 get:
-  operationId: GetEnterpriseCaEntityControllers
-  summary: Get Enterprise CA entity controllers
-  description: Get a list, graph, or count of the principals that can control this Enterprise CA.
+  operationId: GetDomainEntityAdcsEscalations
+  summary: Get ADCS escalations of Domain entity
+  description: Get a list, graph, or count of the ADCS escalations of this Domain.
   tags:
-    - Enterprise CAs
+    - Domains
     - Community
     - Enterprise
   parameters:
