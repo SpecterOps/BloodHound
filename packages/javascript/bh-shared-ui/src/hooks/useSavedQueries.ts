@@ -62,7 +62,7 @@ export const getQueryPermissions = async (id: number, options?: RequestOptions):
     try {
         return await apiClient.getUserQueryPermissions(id, options).then((response) => response.data.data);
     } catch (error: any) {
-        if (error.status === 404) {
+        if (error.status === 404 || error.status === 400) {
             return { query_id: undefined, public: false, shared_to_user_ids: [] };
         }
         return error;

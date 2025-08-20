@@ -16,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag } from 'js-client-library';
 import { useTagsQuery } from '../../../hooks';
 import { QueryLineItem } from '../../../types';
 import { useAppNavigate } from '../../../utils';
@@ -35,17 +36,26 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const AssetGroupTagTypeTier = 1 as const;
     const AssetGroupTagTypeLabel = 2 as const;
 
-    const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
-    const zones = tiersQuery.data;
-
-    const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
-    const labels = labelsQuery.data;
+    let zoneLabelList: AssetGroupTag[] | undefined = [];
+    if (isLabel) {
+        const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
+        zoneLabelList = labelsQuery.data;
+    } else {
+        const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
+        zoneLabelList = tiersQuery.data;
+    }
 
     const [zone, setZone] = useState('');
     const [label, setLabel] = useState('');
 
     const handleValueChange = (val: string) => {
-        isLabel ? setLabel(val) : setZone(val);
+        if (isLabel) {
+            setLabel(val);
+            setZone('');
+        } else {
+            setZone(val);
+            setLabel('');
+        }
     };
 
     const stateToPass = cypherQuery ? { query: cypherQuery } : selectedQuery;
@@ -83,7 +93,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
                         <SelectPortal>
                             <SelectContent>
                                 {!isLabel &&
-                                    zones?.map((zone) => {
+                                    zoneLabelList?.map((zone) => {
                                         return (
                                             <SelectItem key={zone.id} value={zone.id.toString()}>
                                                 {zone.name}
@@ -91,7 +101,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
                                         );
                                     })}
                                 {isLabel &&
-                                    labels?.map((label) => {
+                                    zoneLabelList?.map((label) => {
                                         return (
                                             <SelectItem key={label.id} value={label.id.toString()}>
                                                 {label.name}
