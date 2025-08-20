@@ -546,7 +546,7 @@ func UserSessionAssociations() []string {
 		"User.AuthSecret",
 		"User.AuthTokens",
 		"User.Roles.Permissions",
-		"EnvironmentAccessControl",
+		"User.EnvironmentAccessControl",
 	}
 }
 
