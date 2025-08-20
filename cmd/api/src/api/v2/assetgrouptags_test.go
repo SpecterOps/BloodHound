@@ -1082,6 +1082,17 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				},
 			},
 			{
+				Name: "Fail with non-sortable column",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "invalidColumn")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseDetailsNotSortable)
+				},
+			},
+			{
 				Name: "DB error - GetAssetGroupTag",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
@@ -1116,22 +1127,31 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Name: "Success",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.BodyStruct(input, model.AssetGroupTagSelector{
-						Name:        "TestSelector",
-						Description: "Test selector description",
-						Seeds: []model.SelectorSeed{
-							{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
-						},
-						IsDefault:   false,
-						AutoCertify: null.BoolFrom(false),
-					})
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, 1, nil).Times(1)
+						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), model.Sort{}, 0, v2.AssetGroupTagDefaultLimit).
+						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, 1, nil)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTag{}, nil).Times(1)
+						Return(model.AssetGroupTag{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "Test1")
+				},
+			},
+			{
+				Name: "Success with sort",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "-name")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), model.Sort{{Direction: model.DescendingSortDirection, Column: "name"}}, 0, v2.AssetGroupTagDefaultLimit).
+						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, 1, nil)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -1158,15 +1178,12 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil).Times(1)
-
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(agtSelectors, 0, nil).Times(1)
-
 					mockDB.EXPECT().
 						GetSelectorNodesBySelectorIds(gomock.Any(), agtSelectors[0].ID).
 						Return(agtSelectorNodes, nil).Times(1)
-
 					mockGraphDb.EXPECT().
 						CountFilteredNodes(gomock.Any(), query.And(
 							query.KindIn(query.Node(), assetGroupTag.ToKind()),
@@ -1649,7 +1666,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, api.ErrorResponseDetailsColumnNotFilterable)
+					apitest.BodyContains(output, api.ErrorResponseDetailsNotSortable)
 				},
 			},
 			{
