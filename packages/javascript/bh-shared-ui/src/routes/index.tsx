@@ -39,6 +39,8 @@ export const ROUTE_ZONE_MANAGEMENT_TIER_CREATE_SELECTOR = '/save/tier/:tierId/se
 export const ROUTE_ZONE_MANAGEMENT_LABEL_UPDATE_SELECTOR = '/save/label/:labelId/selector/:selectorId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_CREATE_SELECTOR = '/save/label/:labelId/selector';
 
+export const ROUTE_ZONE_MANAGEMENT_HISTORY = '/history';
+
 export type Routable = {
     path: string;
     component: React.LazyExoticComponent<React.FC>;
