@@ -5502,7 +5502,7 @@
         },
         {
           "name": "asset_group_tag_selector_id",
-          "description": "ID of an asset group selector",
+          "description": "ID of an asset group tag selector",
           "in": "path",
           "required": true,
           "schema": {
@@ -10625,6 +10625,9 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
