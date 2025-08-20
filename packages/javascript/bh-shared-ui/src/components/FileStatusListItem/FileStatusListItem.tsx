@@ -31,20 +31,20 @@ const FileStatusListItem: React.FC<{
     const progressBarWidth = hasErrors ? '100%' : `${percentCompleted}%`;
 
     return (
-        <div className='mb-2 relative flex flex-row h-8 justify-between'>
-            <div
-                className={cn('absolute h-8 opacity-40 rounded-lg transition-all', {
-                    'bg-purple-300': !hasErrors,
-                    'bg-red-500': hasErrors,
-                })}
-                style={{ maxWidth: '600px', width: progressBarWidth }}
-            />
-
-            <div className='pl-3 flex items-center'>
+        <div className='mb-2 relative flex flex-row h-8 justify-between text-sm'>
+            <div className='pl-3 flex items-center z-10'>
                 <span className='pr-2'>{file.file.name}</span>{' '}
                 {!!percentCompleted && !hasErrors && <span>{clampedPercent}%</span>}
                 {hasErrors && <span className='text-error'>Failed to Upload</span>}
             </div>
+            <div
+                className={cn('absolute h-8 rounded-lg transition-all', {
+                    'bg-purple-300 opacity-20': !hasErrors,
+                    'bg-red-500 opacity-10': hasErrors,
+                })}
+                style={{ maxWidth: '600px', width: progressBarWidth }}
+            />
+
             <div>
                 {file.status === FileStatus.READY && (
                     <IconButton
