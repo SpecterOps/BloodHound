@@ -58,8 +58,15 @@ export const deleteSavedQuery = (id: number): Promise<void> => {
     return apiClient.deleteUserQuery(id).then((response) => response.data);
 };
 
-export const getQueryPermissions = (id: number, options?: RequestOptions): Promise<any> => {
-    return apiClient.getUserQueryPermissions(id, options).then((response) => response.data.data);
+export const getQueryPermissions = async (id: number, options?: RequestOptions): Promise<any> => {
+    try {
+        return await apiClient.getUserQueryPermissions(id, options).then((response) => response.data.data);
+    } catch (error: any) {
+        if (error.status === 404) {
+            return { query_id: undefined, public: false, shared_to_user_ids: [] };
+        }
+        return error;
+    }
 };
 
 export const useQueryPermissions = (id: number) =>

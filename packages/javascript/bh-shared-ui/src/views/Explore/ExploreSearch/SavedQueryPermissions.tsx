@@ -2,7 +2,7 @@ import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doo
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { User } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useQueryPermissions } from '../../../hooks';
 import { apiClient } from '../../../utils';
@@ -30,7 +30,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
     );
 
-    const { data, isLoading, error, isError } = useQueryPermissions(queryId as number);
+    const { data, isLoading } = useQueryPermissions(queryId as number);
 
     function idMap() {
         return listUsersQuery.data
@@ -46,25 +46,28 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const usersList = useMemo(() => idMap(), [listUsersQuery.data]);
     const allUserIds = useMemo(() => usersList?.map((x) => x.id), [listUsersQuery.data]);
 
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
 
-    type PermissionsData =
-        | {
-              query_id: number | undefined;
-              public: boolean;
-              shared_to_user_ids: string[];
-          }
-        | undefined;
+    // type PermissionsData =
+    //     | {
+    //           query_id: number | undefined;
+    //           public: boolean;
+    //           shared_to_user_ids: string[];
+    //       }
+    //     | undefined;
 
-    useEffect(() => {
-        //TODO - unfuck this
-        // manually setting data on error.
-        // api returns error for empty state.
-        queryClient.setQueryData(['permissions'], (oldData: PermissionsData) => {
-            return { ...oldData, query_id: undefined, public: false, shared_to_user_ids: [] };
-        });
-    }, [error, isError]);
-
+    // useEffect(() => {
+    //TODO - unfuck this
+    // manually setting data on error.
+    // api returns error for empty state.
+    // queryClient.setQueryData(['permissions'], (oldData: PermissionsData) => {
+    //     return { ...oldData, query_id: undefined, public: false, shared_to_user_ids: [] };
+    // });
+    // console.log('error');
+    // console.log(error);
+    // }, [error]);
+    // console.log('data');
+    // console.log(data);
     useEffect(() => {
         if (data?.shared_to_user_ids.length) {
             setSharedIds(data?.shared_to_user_ids);
