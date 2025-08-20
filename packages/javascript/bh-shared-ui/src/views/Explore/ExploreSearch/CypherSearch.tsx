@@ -133,6 +133,7 @@ const CypherSearch = ({
     };
 
     const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
+        console.log('handle save');
         return createSavedQueryMutation.mutate(
             { name: data.name, description: data.description, query: data.localCypherQuery },
             {

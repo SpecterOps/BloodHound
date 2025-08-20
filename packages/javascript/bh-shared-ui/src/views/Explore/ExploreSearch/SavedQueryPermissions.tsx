@@ -46,31 +46,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const usersList = useMemo(() => idMap(), [listUsersQuery.data]);
     const allUserIds = useMemo(() => usersList?.map((x) => x.id), [listUsersQuery.data]);
 
-    // const queryClient = useQueryClient();
-
-    // type PermissionsData =
-    //     | {
-    //           query_id: number | undefined;
-    //           public: boolean;
-    //           shared_to_user_ids: string[];
-    //       }
-    //     | undefined;
-
-    // useEffect(() => {
-    //TODO - unfuck this
-    // manually setting data on error.
-    // api returns error for empty state.
-    // queryClient.setQueryData(['permissions'], (oldData: PermissionsData) => {
-    //     return { ...oldData, query_id: undefined, public: false, shared_to_user_ids: [] };
-    // });
-    // console.log('error');
-    // console.log(error);
-    // }, [error]);
-    // console.log('data');
-    // console.log(data);
     useEffect(() => {
         if (data?.shared_to_user_ids.length) {
-            setSharedIds(data?.shared_to_user_ids);
+            setSharedIds([...data?.shared_to_user_ids]);
         } else {
             setSharedIds([]);
         }
