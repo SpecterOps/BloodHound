@@ -26,7 +26,7 @@ import { apiClient } from './api';
 import { LuxonFormat } from './datetime';
 import { Permission } from './permissions';
 
-export interface FinishedJobParams {
+interface FinishedJobParams {
     page: number;
     rowsPerPage: number;
 }
@@ -68,12 +68,12 @@ export const PERSIST_NOTIFICATION: OptionsObject = {
     anchorOrigin: { vertical: 'top', horizontal: 'right' },
 };
 
-export const NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the finished jobs details. Please
+const NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the finished jobs details. Please
     contact your administrator for details.`;
-export const NO_PERMISSION_KEY = 'finished-jobs-permission';
+const NO_PERMISSION_KEY = 'finished-jobs-permission';
 
-export const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
-export const FETCH_ERROR_KEY = 'finished-jobs-error';
+const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
+const FETCH_ERROR_KEY = 'finished-jobs-error';
 
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
 export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) => {

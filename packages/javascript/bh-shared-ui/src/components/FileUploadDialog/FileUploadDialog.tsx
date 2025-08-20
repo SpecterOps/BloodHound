@@ -20,7 +20,7 @@ import { ErrorResponse } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import {
     useEndFileIngestJob,
-    useListFileTypesForIngest,
+    useGetFileUploadAcceptedTypesQuery,
     useStartFileIngestJob,
     useUploadFileToIngestJob,
 } from '../../hooks';
@@ -42,7 +42,7 @@ const FileUploadDialog: React.FC<{
     const [uploadMessage, setUploadMessage] = useState<string>('');
 
     const { addNotification } = useNotifications();
-    const listFileTypesForIngest = useListFileTypesForIngest();
+    const listFileTypesForIngest = useGetFileUploadAcceptedTypesQuery();
     const startFileIngestJob = useStartFileIngestJob();
     const uploadFileToIngestJob = useUploadFileToIngestJob();
     const endFileIngestJob = useEndFileIngestJob();
