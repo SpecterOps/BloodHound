@@ -2256,8 +2256,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 			Graph:      mockGraphDb,
 			GraphQuery: mockGraphQuery,
 		}
-		user    = setupUser()
-		userCtx = setupUserCtx(user)
+		user              = setupUser()
+		userCtx           = setupUserCtx(user)
+		badExpansionValue = model.AssetGroupExpansionMethod(5)
 	)
 
 	defer mockCtrl.Finish()
@@ -2279,6 +2280,24 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.BodyString(input, `{"seeds":["BadRequest"]}`)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Bad Request - Invalid Expansion Method",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.BodyStruct(input, v2.PreviewSelectorBody{
+						Seeds:     model.SelectorSeeds{{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"}},
+						Expansion: &badExpansionValue,
+					})
+				},
+				Setup: func() {
+					mockGraphQuery.EXPECT().
+						PrepareCypherQuery(gomock.Any(), gomock.Any()).
+						Return(queries.PreparedQuery{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
