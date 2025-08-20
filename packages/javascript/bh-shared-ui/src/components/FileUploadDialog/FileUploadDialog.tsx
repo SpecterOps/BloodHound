@@ -130,7 +130,7 @@ const FileUploadDialog: React.FC<{
 
         try {
             const response = await startUpload();
-            const jobId = response?.data?.id?.toString();
+            const jobId = response?.data?.id?.toString() ?? '';
 
             setCurrentIngestJobId(jobId);
             // Counting errors manually here to avoid race conditions with react state updates
@@ -283,7 +283,7 @@ const FileUploadDialog: React.FC<{
                         <FileDrop
                             onDrop={handleFileDrop}
                             disabled={listFileTypesForIngest.isLoading}
-                            accept={listFileTypesForIngest.data?.data}
+                            accept={listFileTypesForIngest.data?.data ?? []}
                         />
                         {uploadMessage && <Box className='mt-2 mb-2'>{uploadMessage}</Box>}
                         <Link to='/administration/file-ingest' onClick={onClose}>
