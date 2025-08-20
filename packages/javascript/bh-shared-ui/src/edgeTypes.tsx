@@ -41,6 +41,7 @@ export const AllEdgeTypes: Category[] = [
                 name: 'Active Directory Structure',
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.Contains,
+                    ActiveDirectoryRelationshipKind.DCFor,
                     ActiveDirectoryRelationshipKind.GPLink,
                     ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
