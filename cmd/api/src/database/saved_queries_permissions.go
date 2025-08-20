@@ -83,7 +83,7 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionsToUsers(ctx context.Context, q
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := CheckError(tx.Table("saved_queries_permissions").Where("query_id = ? AND public = false", queryID).Delete(&model.SavedQueriesPermissions{})); err != nil {
 			return err
-		} else if err = CheckError(tx.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&newPermissions, 100)); err != nil {
+		} else if err = CheckError(tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&newPermissions, 100)); err != nil {
 			return err
 		}
 		return nil
