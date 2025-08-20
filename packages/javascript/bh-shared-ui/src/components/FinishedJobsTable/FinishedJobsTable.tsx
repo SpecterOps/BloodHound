@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Card } from '@bloodhoundenterprise/doodleui';
 import type { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useFinishedJobs } from '../../hooks';
 import { JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
+import { FinishedJobsFilter } from './FinishedJobsFilter';
 
 const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'Data Collected'];
 
@@ -61,18 +63,23 @@ export const FinishedJobsTable: FC = () => {
     const count = data?.count ?? 0;
 
     return (
-        <DataTable
-            data={finishedJobs.map(getRow)}
-            headers={getHeaders(HEADERS)}
-            isLoading={isLoading}
-            paginationProps={{
-                page,
-                rowsPerPage,
-                count,
-                onPageChange: (_event, page) => setPage(page),
-                onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value, 10)),
-            }}
-            showPaginationControls
-        />
+        <>
+            <FinishedJobsFilter />
+            <Card>
+                <DataTable
+                    data={finishedJobs.map(getRow)}
+                    headers={getHeaders(HEADERS)}
+                    isLoading={isLoading}
+                    paginationProps={{
+                        page,
+                        rowsPerPage,
+                        count,
+                        onPageChange: (_event, page) => setPage(page),
+                        onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value, 10)),
+                    }}
+                    showPaginationControls
+                />
+            </Card>
+        </>
     );
 };
