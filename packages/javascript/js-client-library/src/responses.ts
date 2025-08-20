@@ -16,6 +16,7 @@
 
 import {
     AssetGroupTag,
+    AssetGroupTagHistoryRecord,
     AssetGroupTagNode,
     AssetGroupTagSelector,
     CollectorManifest,
@@ -171,6 +172,8 @@ export type NewAuthToken = AuthToken & {
 };
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
+
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
 
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
 
