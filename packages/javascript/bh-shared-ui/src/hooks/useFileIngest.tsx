@@ -37,6 +37,11 @@ export const uploadFileToIngestJob = ({
     contentType?: string;
     options?: Parameters<typeof apiClient.uploadFileToIngestJob>[3];
 }) => {
+    const random = Math.random();
+    console.log(random);
+    if (random > 0.9) {
+        return new Promise((res, rej) => rej(new Error('oooohohonoooo')));
+    }
     return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType, options).then((res) => res.data);
 };
 

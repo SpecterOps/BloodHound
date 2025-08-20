@@ -135,6 +135,7 @@ const FileUploadDialog: React.FC<{
                             setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
                         })
                         .catch(() => {
+                            setNewFileStatus(ingestFile.file.name, FileStatus.FAILURE);
                             // onError handler already sets failure/error state; we just count it here
                             errorCount += 1;
                         })

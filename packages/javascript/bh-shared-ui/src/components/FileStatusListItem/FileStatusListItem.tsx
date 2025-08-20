@@ -26,7 +26,7 @@ const FileStatusListItem: React.FC<{
     onRefresh: (file: FileForIngest) => void;
     percentCompleted: number;
 }> = ({ file, onRemove, onRefresh, percentCompleted }) => {
-    const hasErrors = !!file?.errors?.length;
+    const hasErrors = !!file?.errors?.length || file.status === FileStatus.FAILURE;
     const clampedPercent = Math.max(0, Math.min(100, Math.round(percentCompleted ?? 0)));
     const progressBarWidth = hasErrors ? '100%' : `${percentCompleted}%`;
 
@@ -35,7 +35,7 @@ const FileStatusListItem: React.FC<{
             <div
                 className={cn('absolute h-8 opacity-40 rounded-lg transition-all', {
                     'bg-purple-300': !hasErrors,
-                    'bg-red-300': hasErrors,
+                    'bg-red-500': hasErrors,
                 })}
                 style={{ maxWidth: '600px', width: progressBarWidth }}
             />
