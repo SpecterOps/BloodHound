@@ -19,14 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
 import { renderHook, waitFor } from '../../test-utils';
-import { PERSIST_NOTIFICATION } from '../../utils';
-import {
-    FETCH_ERROR_KEY,
-    FETCH_ERROR_MESSAGE,
-    NO_PERMISSION_KEY,
-    NO_PERMISSION_MESSAGE,
-    useFinishedJobsQuery,
-} from './finishedJobs';
+import { useFinishedJobsQuery } from './useFinishedJobsQuery';
 
 const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
@@ -112,9 +105,15 @@ describe('useFinishedJobsQuery', () => {
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(
-            NO_PERMISSION_MESSAGE,
-            NO_PERMISSION_KEY,
-            PERSIST_NOTIFICATION
+            'Your user role does not grant permission to view the finished jobs details. Please contact your administrator for details.',
+            'finished-jobs-permission',
+            {
+                anchorOrigin: {
+                    horizontal: 'right',
+                    vertical: 'top',
+                },
+                persist: true,
+            }
         );
     });
 
@@ -132,6 +131,9 @@ describe('useFinishedJobsQuery', () => {
         const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(addNotificationMock).toHaveBeenCalledWith(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY);
+        expect(addNotificationMock).toHaveBeenCalledWith(
+            'Unable to fetch jobs. Please try again.',
+            'finished-jobs-error'
+        );
     });
 });

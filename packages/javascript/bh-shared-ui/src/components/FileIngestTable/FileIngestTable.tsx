@@ -18,7 +18,7 @@ import { Card } from '@bloodhoundenterprise/doodleui';
 import { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
-import { JOB_STATUS_MAP, toFormatted, toMins } from '../../utils';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 
@@ -28,7 +28,10 @@ const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verti
 
 const getRow = (job: FileIngestJob) => {
     const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
-    const statusProps = JOB_STATUS_MAP[job.status];
+    const statusProps = {
+        ...JOB_STATUS_INDICATORS[job.status],
+        label: JOB_STATUS_MAP[job.status],
+    };
 
     return [
         <div className='min-w-32 space-y-2' key={`status-${job.id}`}>

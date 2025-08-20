@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ScheduledJobDisplay } from 'js-client-library';
+import { Card } from '@bloodhoundenterprise/doodleui';
+import type { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useFinishedJobsQuery } from '../../hooks';
-import { JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
+import { FinishedJobsFilter } from './FinishedJobsFilter';
 
 const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'Data Collected'];
 
@@ -27,7 +29,10 @@ const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verti
 
 const getRow = (job: ScheduledJobDisplay) => {
     const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
-    const statusProps = JOB_STATUS_MAP[job.status];
+    const statusProps = {
+        ...JOB_STATUS_INDICATORS[job.status],
+        label: JOB_STATUS_MAP[job.status],
+    };
 
     return [
         <div className='min-w-32 space-y-2' key={`status-${job.id}`}>
@@ -55,24 +60,32 @@ export const FinishedJobsTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
+    // TODO: BED-6407
+    const [/* filters */, setFilters] = useState({});
+
     const { data, isLoading } = useFinishedJobsQuery({ page, rowsPerPage });
 
     const finishedJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
     return (
-        <DataTable
-            data={finishedJobs.map(getRow)}
-            headers={getHeaders(HEADERS)}
-            isLoading={isLoading}
-            paginationProps={{
-                page,
-                rowsPerPage,
-                count,
-                onPageChange: (_event, page) => setPage(page),
-                onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
-            }}
-            showPaginationControls
-        />
+        <>
+            <FinishedJobsFilter onConfirm={setFilters} />
+            <Card>
+                <DataTable
+                    data={finishedJobs.map(getRow)}
+                    headers={getHeaders(HEADERS)}
+                    isLoading={isLoading}
+                    paginationProps={{
+                        page,
+                        rowsPerPage,
+                        count,
+                        onPageChange: (_event, page) => setPage(page),
+                        onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value, 10)),
+                    }}
+                    showPaginationControls
+                />
+            </Card>
+        </>
     );
 };

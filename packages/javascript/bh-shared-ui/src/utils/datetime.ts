@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DateTime } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 
 export const LUXON_DATETIME_REGEX = /(\d\d\d\d)-(\d||\d\d)-(\d||\d\d) (\d||\d\d):\d\d ..T \(GMT-\d\d\d\d\)/;
 
@@ -49,4 +49,18 @@ export const calculateJobDuration = (start: ISO_DATE_STRING, end: ISO_DATE_STRIN
         return `${minutes} minute`;
     }
     return `${minutes} minutes`;
+};
+
+/** Returns the given ISO datetime string formatted with the the timezone */
+export const toFormatted = (dateStr: string) => DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);
+
+/** Returns the duration, in mins, between 2 given ISO datetime strings */
+export const toMins = (start: string, end: string) => {
+    const interval = Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end));
+
+    if (!interval.isValid) {
+        return '';
+    }
+
+    return Math.floor(interval.length('minutes')) + ' Min';
 };

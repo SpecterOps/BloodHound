@@ -13,4 +13,5 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export { useFinishedJobsQuery } from './finishedJobs';
+
+export { useFinishedJobsQuery } from './useFinishedJobsQuery';
