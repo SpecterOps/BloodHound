@@ -19151,11 +19151,20 @@
           "kind": {
             "type": "string"
           },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "objectId": {
             "type": "string"
           },
           "isTierZero": {
-            "type": "string"
+            "type": "boolean"
+          },
+          "isOwnedObject": {
+            "type": "boolean"
           },
           "lastSeen": {
             "type": "string",
@@ -20485,6 +20494,12 @@
                           },
                           "label": {
                             "type": "string"
+                          },
+                          "kinds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
                           }
                         }
                       }
