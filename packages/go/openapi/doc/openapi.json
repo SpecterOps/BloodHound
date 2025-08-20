@@ -5700,6 +5700,14 @@
             "$ref": "#/components/parameters/query.limit"
           },
           {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `name`, and `created_at`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
             "name": "auto_certify",
             "in": "query",
             "required": false,
