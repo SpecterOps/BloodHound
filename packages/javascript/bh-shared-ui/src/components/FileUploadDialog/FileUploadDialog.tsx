@@ -53,8 +53,16 @@ const FileUploadDialog: React.FC<{
     const uploadFileToIngestJob = useUploadFileToIngestJob();
     const endFileIngestJob = useEndFileIngestJob();
 
-    const onClose = useCallback(() => {
+    const resetModal = () => {
+        setSubmitDialogDisabled(false);
+        setUploadMessage('');
         setProgressCache({});
+        setCurrentIngestJobId('');
+    };
+
+    const onClose = useCallback(() => {
+        resetModal();
+
         onCloseProp();
     }, [onCloseProp]);
 
@@ -243,10 +251,7 @@ const FileUploadDialog: React.FC<{
                 }
             });
 
-            setSubmitDialogDisabled(false);
-            setUploadMessage('');
-            setProgressCache({});
-            setCurrentIngestJobId('');
+            resetModal();
             handleAppendFiles(validatedFiles);
         }
     };

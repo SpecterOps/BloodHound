@@ -25,16 +25,18 @@ const FileStatusListItem: React.FC<{
     onRemove: () => void;
     onRefresh: (file: FileForIngest) => void;
     percentCompleted: number;
-}> = ({ file, onRemove, onRefresh, percentCompleted }) => {
+}> = ({ file, onRemove, onRefresh, percentCompleted = 0 }) => {
+    const percentWithFallback = file.status === FileStatus.DONE ? 100 : percentCompleted;
     const hasErrors = !!file?.errors?.length || file.status === FileStatus.FAILURE;
-    const clampedPercent = Math.max(0, Math.min(100, Math.round(percentCompleted ?? 0)));
-    const progressBarWidth = hasErrors ? '100%' : `${percentCompleted}%`;
+    const clampedPercent = Math.max(0, Math.min(100, Math.round(percentWithFallback ?? 0)));
+    const shouldBeFullWidth = hasErrors || [FileStatus.DONE, FileStatus.FAILURE].includes(file.status);
+    const progressBarWidth = shouldBeFullWidth ? '100%' : `${percentCompleted}%`;
 
     return (
         <div className='mb-2 relative flex flex-row h-8 justify-between text-sm'>
             <div className='pl-3 flex items-center z-10'>
                 <span className='pr-2'>{file.file.name}</span>{' '}
-                {!!percentCompleted && !hasErrors && <span>{clampedPercent}%</span>}
+                {!!percentWithFallback && !hasErrors && <span>{clampedPercent}%</span>}
                 {hasErrors && <span className='text-error'>Failed to Upload</span>}
             </div>
             <div
