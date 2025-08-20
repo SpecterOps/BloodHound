@@ -14,11 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    DialogActions,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from '@bloodhoundenterprise/doodleui';
 import {
     Alert,
-    DialogActions,
-    DialogContent,
+    Card,
     DialogContentText,
     FormControl,
     FormHelperText,
@@ -31,11 +37,12 @@ import {
     TextField,
 } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { apiClient } from '../../utils';
+import UserFormEnvironmentSelector from '../CreateUserForm/UserFormEnvironmentSelector';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
@@ -109,8 +116,6 @@ const UpdateUserForm: React.FC<{
 
     return (
         <UpdateUserFormInner
-            onCancel={onCancel}
-            onSubmit={onSubmit}
             initialData={{
                 emailAddress: getUserQuery.data.email_address || '',
                 principal: getUserQuery.data.principal_name || '',
@@ -119,25 +124,40 @@ const UpdateUserForm: React.FC<{
                 SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
                 roles: getUserQuery.data.roles?.map((role: any) => role.id) || [],
             }}
-            roles={getRolesQuery.data}
-            SSOProviders={listSSOProvidersQuery.data}
+            error={error}
             hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}
-            error={error}
+            onCancel={onCancel}
+            onSubmit={onSubmit}
+            roles={getRolesQuery.data}
+            SSOProviders={listSSOProvidersQuery.data}
         />
     );
 };
 
 const UpdateUserFormInner: React.FC<{
-    onCancel: () => void;
-    onSubmit: (user: UpdateUserRequestForm) => void;
-    initialData: UpdateUserRequestForm;
-    roles?: Role[];
-    SSOProviders?: SSOProvider[];
-    hasSelectedSelf: boolean;
-    isLoading: boolean;
     error: any;
-}> = ({ onCancel, onSubmit, initialData, roles, SSOProviders, hasSelectedSelf, isLoading, error }) => {
+    hasSelectedSelf: boolean;
+    initialData: UpdateUserRequestForm;
+    isLoading: boolean;
+    onCancel: () => void;
+    open?: boolean;
+    onSubmit: (user: UpdateUserRequestForm) => void;
+    roles?: Role[];
+    showEnvironmentAccessControls?: boolean; //TODO: required or not?
+    SSOProviders?: SSOProvider[];
+}> = ({
+    error,
+    hasSelectedSelf,
+    initialData,
+    isLoading,
+    onCancel,
+    onSubmit,
+    open,
+    roles,
+    showEnvironmentAccessControls,
+    SSOProviders,
+}) => {
     const {
         control,
         handleSubmit,
@@ -189,295 +209,318 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [authenticationMethod, setValue, error, setError]);
 
+    const [selectedRole, setSelectedRole] = useState<number>(3);
+
+    const selectedRoleToString = selectedRole.toString() === '2' || selectedRole.toString() === '3';
+
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-            <DialogContent>
-                <Grid container spacing={1}>
-                    <Grid item xs={12}>
-                        <Controller
-                            name='emailAddress'
-                            control={control}
-                            rules={{
-                                required: 'Email Address is required',
-                                maxLength: {
-                                    value: MAX_EMAIL_LENGTH,
-                                    message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
-                                },
-                                pattern: {
-                                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                    message: 'Please follow the example@domain.com format',
-                                },
-                            }}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    variant='standard'
-                                    id='emailAddress'
-                                    label='Email Address'
-                                    type='email'
-                                    fullWidth
-                                    error={!!errors.emailAddress}
-                                    helperText={errors.emailAddress?.message}
-                                    data-testid='update-user-dialog_input-email-address'
-                                />
-                            )}
-                        />
-                    </Grid>
+            <div className='flex gap-x-4 justify-center'>
+                <Card className=' p-6 rounded shadow max-w-[600px]'>
+                    <DialogTitle>{'Edit User'}</DialogTitle>
 
-                    <Grid item xs={12}>
-                        <Controller
-                            name='principal'
-                            control={control}
-                            rules={{
-                                required: 'Principal Name is required',
-                                maxLength: {
-                                    value: MAX_NAME_LENGTH,
-                                    message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                },
-                                minLength: {
-                                    value: MIN_NAME_LENGTH,
-                                    message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                },
-                                validate: (value) => {
-                                    const trimmed = value.trim();
-                                    if (value !== trimmed) {
-                                        return 'Principal Name does not allow leading or trailing spaces';
-                                    }
-                                    return true;
-                                },
-                            }}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    variant='standard'
-                                    id='principal'
-                                    label='Principal Name'
-                                    fullWidth
-                                    error={!!errors.principal}
-                                    helperText={errors.principal?.message}
-                                    data-testid='update-user-dialog_input-principal-name'
-                                />
-                            )}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Controller
-                            name='firstName'
-                            control={control}
-                            rules={{
-                                required: 'First Name is required',
-                                maxLength: {
-                                    value: MAX_NAME_LENGTH,
-                                    message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                },
-                                minLength: {
-                                    value: MIN_NAME_LENGTH,
-                                    message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                },
-                                validate: (value) => {
-                                    const trimmed = value.trim();
-                                    if (value !== trimmed) {
-                                        return 'First Name does not allow leading or trailing spaces';
-                                    }
-                                    return true;
-                                },
-                            }}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    variant='standard'
-                                    id='firstName'
-                                    label='First Name'
-                                    fullWidth
-                                    error={!!errors.firstName}
-                                    helperText={errors.firstName?.message}
-                                    data-testid='update-user-dialog_input-first-name'
-                                />
-                            )}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Controller
-                            name='lastName'
-                            control={control}
-                            rules={{
-                                required: 'Last Name is required',
-                                maxLength: {
-                                    value: MAX_NAME_LENGTH,
-                                    message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                },
-                                minLength: {
-                                    value: MIN_NAME_LENGTH,
-                                    message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                },
-                                validate: (value) => {
-                                    const trimmed = value.trim();
-                                    if (value !== trimmed) {
-                                        return 'Last Name does not allow leading or trailing spaces';
-                                    }
-                                    return true;
-                                },
-                            }}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    variant='standard'
-                                    id='lastName'
-                                    label='Last Name'
-                                    fullWidth
-                                    error={!!errors.lastName}
-                                    helperText={errors.lastName?.message}
-                                    data-testid='update-user-dialog_input-last-name'
-                                />
-                            )}
-                        />
-                    </Grid>
-
-                    <>
-                        <Grid item xs={12}>
-                            <Controller
-                                name='authenticationMethod'
-                                control={control}
-                                rules={{
-                                    required: 'Authentication Method is required',
-                                }}
-                                render={({ field: { onChange, onBlur, value, ref } }) => (
-                                    <FormControl>
-                                        <InputLabel
-                                            id='authenticationMethod-label'
-                                            sx={{ ml: '-14px', mt: '8px' }}
-                                            hidden={hasSelectedSelf}>
-                                            Authentication Method
-                                        </InputLabel>
-                                        <Select
-                                            onChange={onChange as (event: SelectChangeEvent<string>) => void}
-                                            onBlur={onBlur}
-                                            value={value}
-                                            ref={ref}
-                                            labelId='authenticationMethod-label'
-                                            id='authenticationMethod'
-                                            name='authenticationMethod'
-                                            variant='standard'
-                                            fullWidth
-                                            data-testid='update-user-dialog_select-authentication-method'
-                                            hidden={hasSelectedSelf}>
-                                            <MenuItem value='password'>Username / Password</MenuItem>
-                                            {SSOProviders && SSOProviders.length > 0 && (
-                                                <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
-                                            )}
-                                        </Select>
-                                    </FormControl>
-                                )}
-                            />
-                        </Grid>
-
-                        {authenticationMethod === 'sso' && (
+                    <DialogDescription className='flex flex-col' data-testid='update-user-dialog_dialog-content'>
+                        <Grid container spacing={2} className='min-h-[650px]'>
                             <Grid item xs={12}>
                                 <Controller
-                                    name='SSOProviderId'
+                                    name='emailAddress'
                                     control={control}
                                     rules={{
-                                        required: 'SSO Provider is required',
+                                        required: 'Email Address is required',
+                                        maxLength: {
+                                            value: MAX_EMAIL_LENGTH,
+                                            message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
+                                        },
+                                        pattern: {
+                                            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                            message: 'Please follow the example@domain.com format',
+                                        },
                                     }}
-                                    render={({ field: { onChange, onBlur, value, ref } }) => (
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            variant='standard'
+                                            id='emailAddress'
+                                            label='Email Address'
+                                            type='email'
+                                            fullWidth
+                                            error={!!errors.emailAddress}
+                                            helperText={errors.emailAddress?.message}
+                                            data-testid='update-user-dialog_input-email-address'
+                                        />
+                                    )}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <Controller
+                                    name='principal'
+                                    control={control}
+                                    rules={{
+                                        required: 'Principal Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Principal Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            variant='standard'
+                                            id='principal'
+                                            label='Principal Name'
+                                            fullWidth
+                                            error={!!errors.principal}
+                                            helperText={errors.principal?.message}
+                                            data-testid='update-user-dialog_input-principal-name'
+                                        />
+                                    )}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Controller
+                                    name='firstName'
+                                    control={control}
+                                    rules={{
+                                        required: 'First Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'First Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            variant='standard'
+                                            id='firstName'
+                                            label='First Name'
+                                            fullWidth
+                                            error={!!errors.firstName}
+                                            helperText={errors.firstName?.message}
+                                            data-testid='update-user-dialog_input-first-name'
+                                        />
+                                    )}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Controller
+                                    name='lastName'
+                                    control={control}
+                                    rules={{
+                                        required: 'Last Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Last Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            variant='standard'
+                                            id='lastName'
+                                            label='Last Name'
+                                            fullWidth
+                                            error={!!errors.lastName}
+                                            helperText={errors.lastName?.message}
+                                            data-testid='update-user-dialog_input-last-name'
+                                        />
+                                    )}
+                                />
+                            </Grid>
+
+                            <>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name='authenticationMethod'
+                                        control={control}
+                                        rules={{
+                                            required: 'Authentication Method is required',
+                                        }}
+                                        render={({ field: { onChange, onBlur, value, ref } }) => (
+                                            <FormControl>
+                                                <InputLabel
+                                                    id='authenticationMethod-label'
+                                                    sx={{ ml: '-14px', mt: '8px' }}
+                                                    hidden={hasSelectedSelf}>
+                                                    Authentication Method
+                                                </InputLabel>
+                                                <Select
+                                                    onChange={onChange as (event: SelectChangeEvent<string>) => void}
+                                                    onBlur={onBlur}
+                                                    value={value}
+                                                    ref={ref}
+                                                    labelId='authenticationMethod-label'
+                                                    id='authenticationMethod'
+                                                    name='authenticationMethod'
+                                                    variant='standard'
+                                                    fullWidth
+                                                    data-testid='update-user-dialog_select-authentication-method'
+                                                    hidden={hasSelectedSelf}>
+                                                    <MenuItem value='password'>Username / Password</MenuItem>
+                                                    {SSOProviders && SSOProviders.length > 0 && (
+                                                        <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
+                                                    )}
+                                                </Select>
+                                            </FormControl>
+                                        )}
+                                    />
+                                </Grid>
+
+                                {authenticationMethod === 'sso' && (
+                                    <Grid item xs={12}>
+                                        <Controller
+                                            name='SSOProviderId'
+                                            control={control}
+                                            rules={{
+                                                required: 'SSO Provider is required',
+                                            }}
+                                            render={({ field: { onChange, onBlur, value, ref } }) => (
+                                                <FormControl>
+                                                    <InputLabel
+                                                        id='SSOProviderId-label'
+                                                        sx={{ ml: '-14px', mt: '8px' }}
+                                                        hidden={hasSelectedSelf}>
+                                                        SSO Provider
+                                                    </InputLabel>
+                                                    <Select
+                                                        onChange={
+                                                            onChange as (event: SelectChangeEvent<string>) => void
+                                                        }
+                                                        onBlur={onBlur}
+                                                        value={value?.toString()}
+                                                        ref={ref}
+                                                        defaultValue={''}
+                                                        labelId='SSOProviderId-label'
+                                                        id='SSOProviderId'
+                                                        name='SSOProviderId'
+                                                        variant='standard'
+                                                        fullWidth
+                                                        data-testid='update-user-dialog_select-sso-provider'
+                                                        hidden={hasSelectedSelf}>
+                                                        {SSOProviders?.map((SSOProvider: SSOProvider) => (
+                                                            <MenuItem
+                                                                value={SSOProvider.id.toString()}
+                                                                key={SSOProvider.id}>
+                                                                {SSOProvider.name}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            )}
+                                        />
+                                    </Grid>
+                                )}
+                            </>
+
+                            <Grid item xs={12}>
+                                <Controller
+                                    name='roles.0'
+                                    control={control}
+                                    defaultValue={1}
+                                    rules={{
+                                        required: 'Role is required',
+                                    }}
+                                    render={({ field }) => (
                                         <FormControl>
                                             <InputLabel
-                                                id='SSOProviderId-label'
+                                                id='role-label'
                                                 sx={{ ml: '-14px', mt: '8px' }}
                                                 hidden={hasSelectedSelf}>
-                                                SSO Provider
+                                                Role
                                             </InputLabel>
                                             <Select
-                                                onChange={onChange as (event: SelectChangeEvent<string>) => void}
-                                                onBlur={onBlur}
-                                                value={value?.toString()}
-                                                ref={ref}
-                                                defaultValue={''}
-                                                labelId='SSOProviderId-label'
-                                                id='SSOProviderId'
-                                                name='SSOProviderId'
+                                                labelId='role-label'
+                                                id='role'
+                                                name='role'
+                                                onChange={(e) => {
+                                                    const output = parseInt(e.target.value as string, 10);
+                                                    field.onChange(isNaN(output) ? 1 : output);
+                                                }}
+                                                value={isNaN(field.value) ? '' : field.value.toString()}
                                                 variant='standard'
                                                 fullWidth
-                                                data-testid='update-user-dialog_select-sso-provider'
+                                                disabled={selectedSSOProviderHasRoleProvisionEnabled}
+                                                data-testid='update-user-dialog_select-role'
                                                 hidden={hasSelectedSelf}>
-                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
-                                                    <MenuItem value={SSOProvider.id.toString()} key={SSOProvider.id}>
-                                                        {SSOProvider.name}
+                                                {roles?.map((role: Role) => (
+                                                    <MenuItem key={role.id} value={role.id.toString()}>
+                                                        {role.name}
                                                     </MenuItem>
                                                 ))}
                                             </Select>
+                                            {selectedSSOProviderHasRoleProvisionEnabled && (
+                                                <FormHelperText id='role-helper-text'>
+                                                    SSO Provider has enabled role provision.
+                                                </FormHelperText>
+                                            )}
                                         </FormControl>
                                     )}
                                 />
                             </Grid>
-                        )}
-                    </>
-
-                    <Grid item xs={12}>
-                        <Controller
-                            name='roles.0'
-                            control={control}
-                            defaultValue={1}
-                            rules={{
-                                required: 'Role is required',
-                            }}
-                            render={({ field }) => (
-                                <FormControl>
-                                    <InputLabel
-                                        id='role-label'
-                                        sx={{ ml: '-14px', mt: '8px' }}
-                                        hidden={hasSelectedSelf}>
-                                        Role
-                                    </InputLabel>
-                                    <Select
-                                        labelId='role-label'
-                                        id='role'
-                                        name='role'
-                                        onChange={(e) => {
-                                            const output = parseInt(e.target.value as string, 10);
-                                            field.onChange(isNaN(output) ? 1 : output);
-                                        }}
-                                        value={isNaN(field.value) ? '' : field.value.toString()}
-                                        variant='standard'
-                                        fullWidth
-                                        disabled={selectedSSOProviderHasRoleProvisionEnabled}
-                                        data-testid='update-user-dialog_select-role'
-                                        hidden={hasSelectedSelf}>
-                                        {roles?.map((role: Role) => (
-                                            <MenuItem key={role.id} value={role.id.toString()}>
-                                                {role.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                    {selectedSSOProviderHasRoleProvisionEnabled && (
-                                        <FormHelperText id='role-helper-text'>
-                                            SSO Provider has enabled role provision.
-                                        </FormHelperText>
-                                    )}
-                                </FormControl>
+                            {!!errors.root?.generic && (
+                                <Grid item xs={12}>
+                                    <Alert severity='error'>{errors.root.generic.message}</Alert>
+                                </Grid>
                             )}
-                        />
-                    </Grid>
-                    {!!errors.root?.generic && (
-                        <Grid item xs={12}>
-                            <Alert severity='error'>{errors.root.generic.message}</Alert>
                         </Grid>
-                    )}
-                </Grid>
-            </DialogContent>
-            <DialogActions>
-                <Button
-                    type='button'
-                    variant={'tertiary'}
-                    onClick={onCancel}
-                    disabled={isLoading}
-                    data-testid='update-user-dialog_button-close'>
-                    Cancel
-                </Button>
-                <Button type='submit' disabled={isLoading} data-testid='update-user-dialog_button-save'>
-                    Save
-                </Button>
-            </DialogActions>
+                    </DialogDescription>
+                    <DialogActions className='mt-8 flex justify-end gap-4'>
+                        <DialogClose asChild>
+                            <Button
+                                type='button'
+                                disabled={isLoading}
+                                variant='tertiary'
+                                data-testid='create-user-dialog_button-close'>
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            type='submit'
+                            disabled={isLoading}
+                            data-testid='create-user-dialog_button-save'
+                            //onClick={handleSubmit(onSubmit)}
+                            onClick={() => {
+                                open;
+                            }}>
+                            Save
+                        </Button>
+                    </DialogActions>
+                </Card>
+                {showEnvironmentAccessControls && selectedRoleToString && <UserFormEnvironmentSelector />}
+            </div>
         </form>
     );
 };
