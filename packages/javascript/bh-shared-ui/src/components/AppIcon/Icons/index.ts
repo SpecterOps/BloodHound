@@ -32,6 +32,7 @@ export * from './FilterOutline';
 export * from './Findings';
 export * from './Info';
 export * from './LineChart';
+export * from './LinedPaper';
 export * from './Logout';
 export * from './MagnifyingGlass';
 export * from './Shield';
