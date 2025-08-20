@@ -34,7 +34,6 @@ export const usePrebuiltQueries = () => {
 
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
     const queryList = usePrebuiltQueries();
-
     for (const item of queryList) {
         let result = null;
         result = item.queries.find((query) => {

@@ -1,6 +1,6 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../../test-utils';
+import { render, screen, waitFor } from '../../../../test-utils';
 import SavedQueryPermissions from './SavedQueryPermissions';
 const testUsers = [
     {

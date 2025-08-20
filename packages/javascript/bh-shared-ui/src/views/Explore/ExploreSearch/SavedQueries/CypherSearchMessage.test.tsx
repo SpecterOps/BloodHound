@@ -1,4 +1,4 @@
-import { render, screen } from '../../../test-utils';
+import { render, screen } from '../../../../test-utils';
 import CypherSearchMessage from './CypherSearchMessage';
 
 const testMessageText = 'this is a test message';

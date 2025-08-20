@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen, waitFor } from '../../../test-utils';
+import { act, render, screen, waitFor } from '../../../../test-utils';
 import SaveQueryDialog from './SaveQueryDialog';
 const testUsers = [
     {

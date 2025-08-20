@@ -1,7 +1,7 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, useState } from 'react';
-import { AppIcon } from '../../../components';
-import { QueryLineItem } from '../../../types';
+import { AppIcon } from '../../../../components';
+import { QueryLineItem } from '../../../../types';
 import TagToZoneLabelDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {

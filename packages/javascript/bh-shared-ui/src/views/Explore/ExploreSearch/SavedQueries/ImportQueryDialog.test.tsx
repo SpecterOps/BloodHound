@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '../../../test-utils';
+import { fireEvent, render, screen, waitFor } from '../../../../test-utils';
 import ImportQueryDialog from './ImportQueryDialog';
 
 describe('ImportQueryDialog', () => {

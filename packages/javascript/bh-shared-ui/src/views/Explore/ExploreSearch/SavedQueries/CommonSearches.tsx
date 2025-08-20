@@ -21,14 +21,14 @@ import { Box } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
-import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
-import FeatureFlag from '../../../components/FeatureFlag';
-import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
-import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../hooks';
-import { useNotifications } from '../../../providers';
-import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../types';
-import { apiClient, cn } from '../../../utils';
+import { CommonSearches as prebuiltSearchListAGI } from '../../../../commonSearchesAGI';
+import { CommonSearches as prebuiltSearchListAGT } from '../../../../commonSearchesAGT';
+import FeatureFlag from '../../../../components/FeatureFlag';
+import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
+import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
+import { useNotifications } from '../../../../providers';
+import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../../types';
+import { apiClient, cn } from '../../../../utils';
 import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
@@ -37,6 +37,7 @@ type CommonSearchesProps = {
     onSetSelected: (query: string, id?: number) => void;
     onToggleCommonQueries: () => void;
     onEditQuery: (id: number) => void;
+    onRunQuery: (query: string, id: number) => void;
     selected: { query: string; id?: number };
     showCommonQueries: boolean;
     selectedQuery: QueryLineItem | undefined;
@@ -48,6 +49,7 @@ const InnerCommonSearches = ({
     onSetSelected,
     onToggleCommonQueries,
     onEditQuery,
+    onRunQuery,
     selected,
     showCommonQueries,
     selectedQuery,
@@ -203,6 +205,7 @@ const InnerCommonSearches = ({
                     clearFiltersHandler={handleClearFilters}
                     selectedQuery={selectedQuery}
                     editHandler={onEditQuery}
+                    runHandler={onRunQuery}
                     showCommonQueries={showCommonQueries}
                 />
             </div>

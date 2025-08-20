@@ -6,8 +6,8 @@ import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
-import { AppIcon } from '../../../components';
-import { QueryLineItem } from '../../../types';
+import { AppIcon } from '../../../../components';
+import { QueryLineItem } from '../../../../types';
 import ImportQueryDialog from './ImportQueryDialog';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[], source: string) => void;

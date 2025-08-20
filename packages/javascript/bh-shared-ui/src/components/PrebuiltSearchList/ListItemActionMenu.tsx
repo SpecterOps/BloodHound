@@ -4,19 +4,26 @@ import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/d
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
     id?: number;
+    query?: string;
     deleteQuery: (id: number) => void;
     editQuery: (id: number) => void;
+    runQuery: (query: string, id: number) => void;
 }
 
-const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery, editQuery }) => {
-    const handleDelete = (event: MouseEvent) => {
+const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuery, editQuery, runQuery }) => {
+    const handleRun = (event: MouseEvent) => {
         event.stopPropagation();
-        deleteQuery(id as number);
+        runQuery(query as string, id as number);
     };
 
     const handleEdit = (event: MouseEvent) => {
         event.stopPropagation();
         editQuery(id as number);
+    };
+
+    const handleDelete = (event: MouseEvent) => {
+        event.stopPropagation();
+        deleteQuery(id as number);
     };
 
     //on click run - event bubbles up the line item click event which fires Run
@@ -33,7 +40,9 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, deleteQuery, edit
                     <VerticalEllipsis size={24} />
                 </PopoverTrigger>
                 <PopoverContent className='p-0' data-testid='saved-query-action-menu'>
-                    <div className={listItemStyles}>Run</div>
+                    <div className={listItemStyles} onClick={handleRun}>
+                        Run
+                    </div>
                     <div className={listItemStyles} onClick={handleEdit}>
                         Edit/Share
                     </div>

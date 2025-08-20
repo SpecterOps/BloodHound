@@ -17,9 +17,9 @@ import {
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag } from 'js-client-library';
-import { useTagsQuery } from '../../../hooks';
-import { QueryLineItem } from '../../../types';
-import { useAppNavigate } from '../../../utils';
+import { useTagsQuery } from '../../../../hooks';
+import { QueryLineItem } from '../../../../types';
+import { useAppNavigate } from '../../../../utils';
 
 type TagToZoneLabelDialogProps = {
     dialogOpen: boolean;

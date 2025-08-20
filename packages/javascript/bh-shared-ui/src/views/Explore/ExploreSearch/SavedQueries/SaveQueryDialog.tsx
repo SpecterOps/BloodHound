@@ -40,9 +40,9 @@ import { useMediaQuery, useTheme } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { graphSchema } from '../../../constants';
-import { QueryLineItem } from '../../../types';
-import { apiClient, cn } from '../../../utils';
+import { graphSchema } from '../../../../constants';
+import { QueryLineItem } from '../../../../types';
+import { apiClient, cn } from '../../../../utils';
 import ConfirmUpdateQueryDialog from './ConfirmUpdateQueryDialog';
 import SavedQueryPermissions from './SavedQueryPermissions';
 type CypherSearchState = {

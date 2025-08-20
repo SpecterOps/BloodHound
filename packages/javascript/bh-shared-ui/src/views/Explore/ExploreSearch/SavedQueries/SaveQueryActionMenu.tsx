@@ -1,6 +1,6 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, MouseEvent } from 'react';
-import { AppIcon } from '../../../components';
+import { AppIcon } from '../../../../components';
 interface SaveQueryActionMenuProps {
     saveAs: () => void;
 }

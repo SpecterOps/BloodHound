@@ -32,11 +32,11 @@ import { useSelf } from '../../../hooks/useSelf';
 import { useNotifications } from '../../../providers';
 import { QueryLineItem } from '../../../types';
 import { apiClient, cn } from '../../../utils';
-import CommonSearches from './CommonSearches';
-import CypherSearchMessage from './CypherSearchMessage';
-import SaveQueryActionMenu from './SaveQueryActionMenu';
-import SaveQueryDialog from './SaveQueryDialog';
-import TagToZoneLabel from './TagToZoneLabel';
+import CommonSearches from './SavedQueries/CommonSearches';
+import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
+import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
+import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
+import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
 
 type CypherSearchState = {
     cypherQuery: string;
@@ -131,7 +131,6 @@ const CypherSearch = ({
     };
 
     const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
-        console.log('handle save');
         return createSavedQueryMutation.mutate(
             { name: data.name, description: data.description, query: data.localCypherQuery },
             {
@@ -185,6 +184,11 @@ const CypherSearch = ({
         setSaveAction('edit');
         setShowSaveQueryDialog(true);
     };
+    const handleRunQuery = (query: string, id: number) => {
+        setSelected({ query, id });
+        setCypherQuery(query);
+        performSearch(query);
+    };
 
     const handleClearMessage = () => {
         setMessageState((prevState) => ({
@@ -213,7 +217,7 @@ const CypherSearch = ({
 
     const handleSaveAs = () => {
         setSelected({ query: '' });
-        setSaveAction('save-as'); // TODO - Create an ENUM for this or String Literal Type.
+        setSaveAction('save-as');
         setShowSaveQueryDialog(true);
     };
 
@@ -231,6 +235,7 @@ const CypherSearch = ({
                         selected={selected}
                         selectedQuery={selectedQuery}
                         onEditQuery={handleEditQuery}
+                        onRunQuery={handleRunQuery}
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}

@@ -3,10 +3,10 @@ import { CheckedState } from '@radix-ui/react-checkbox';
 import { User } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';
-import { AppIcon } from '../../../components';
-import { useQueryPermissions } from '../../../hooks';
-import { useSelf } from '../../../hooks/useSelf';
-import { apiClient } from '../../../utils';
+import { AppIcon } from '../../../../components';
+import { useQueryPermissions } from '../../../../hooks';
+import { useSelf } from '../../../../hooks/useSelf';
+import { apiClient } from '../../../../utils';
 
 type SavedQueryPermissionsProps = {
     queryId?: number;

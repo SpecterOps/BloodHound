@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from '../../../test-utils';
+import { render, screen } from '../../../../test-utils';
 import TagToZoneLabel from './TagToZoneLabel';
 
 const testSelectedQuery = {
