@@ -44,7 +44,6 @@ const FileStatusListItem: React.FC<{
                 <span className='pr-2'>{file.file.name}</span>{' '}
                 {!!percentCompleted && !hasErrors && <span>{clampedPercent}%</span>}
                 {hasErrors && <span className='text-error'>Failed to Upload</span>}
-                <span className='text-error'>Failed to Upload</span>
             </div>
             <div>
                 {file.status === FileStatus.READY && (
