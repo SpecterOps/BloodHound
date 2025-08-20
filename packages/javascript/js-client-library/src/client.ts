@@ -271,10 +271,10 @@ class BHEAPIClient {
             options
         );
 
-    assetGroupTagsPreviewSelectors = (seeds: PreviewSelectorsRequest, options: RequestOptions) => {
+    assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
             '/api/v2/asset-group-tags/preview-selectors',
-            { ...seeds },
+            payload,
             options
         );
     };
