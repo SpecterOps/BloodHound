@@ -1912,7 +1912,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 		}
 		assetGroupSelector = model.AssetGroupTagSelector{ID: 1, AssetGroupTagId: 1, Name: "Enterprise Domain Controllers"}
 		assetGroupTag      = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
-		defaultSort        = model.Sort{model.SortItem{Column: "id", Direction: model.AscendingSortDirection}}
+		defaultSort        = model.Sort{model.SortItem{Column: "node_id", Direction: model.AscendingSortDirection}}
 	)
 	defer mockCtrl.Finish()
 
@@ -2067,7 +2067,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "objectid", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "node_object_id", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2092,7 +2092,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "name", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "node_name", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
