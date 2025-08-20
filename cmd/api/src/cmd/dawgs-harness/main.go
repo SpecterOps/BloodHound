@@ -37,7 +37,7 @@ import (
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/size"
-	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
 func fatalf(format string, args ...any) {
