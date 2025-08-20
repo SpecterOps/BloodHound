@@ -1695,11 +1695,11 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				Name: "Success with sort by id",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.AddQueryParam(input, "sort_by", "node_id")
+					apitest.AddQueryParam(input, "sort_by", "id")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "node_id")
+					params.Add("sort_by", "id")
 
 					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
@@ -1722,11 +1722,11 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				Name: "Success with sort by objectid",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.AddQueryParam(input, "sort_by", "node_object_id")
+					apitest.AddQueryParam(input, "sort_by", "objectid")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "node_object_id")
+					params.Add("sort_by", "objectid")
 
 					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
@@ -1749,11 +1749,11 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				Name: "Success with sort by name",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.AddQueryParam(input, "sort_by", "node_name")
+					apitest.AddQueryParam(input, "sort_by", "name")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "node_name")
+					params.Add("sort_by", "name")
 
 					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
@@ -1912,7 +1912,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 		}
 		assetGroupSelector = model.AssetGroupTagSelector{ID: 1, AssetGroupTagId: 1, Name: "Enterprise Domain Controllers"}
 		assetGroupTag      = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
-		defaultSort        = model.Sort{model.SortItem{Column: "node_id", Direction: model.AscendingSortDirection}}
+		defaultSort        = model.Sort{model.SortItem{Column: "id", Direction: model.AscendingSortDirection}}
 	)
 	defer mockCtrl.Finish()
 
@@ -2029,11 +2029,11 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
-					apitest.AddQueryParam(input, "sort_by", "node_id")
+					apitest.AddQueryParam(input, "sort_by", "id")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "node_id")
+					params.Add("sort_by", "id")
 
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
@@ -2054,11 +2054,11 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
-					apitest.AddQueryParam(input, "sort_by", "node_object_id")
+					apitest.AddQueryParam(input, "sort_by", "objectid")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "node_object_id")
+					params.Add("sort_by", "objectid")
 
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
@@ -2067,7 +2067,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "node_object_id", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "objectid", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2079,11 +2079,11 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
-					apitest.AddQueryParam(input, "sort_by", "node_name")
+					apitest.AddQueryParam(input, "sort_by", "name")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "node_name")
+					params.Add("sort_by", "name")
 
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
@@ -2092,7 +2092,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "node_name", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "name", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
 						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {

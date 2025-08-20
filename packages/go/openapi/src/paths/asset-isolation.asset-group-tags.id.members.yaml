@@ -45,7 +45,7 @@ get:
     - name: sort_by
       in: query
       description: >
-        Sortable columns are `node_id`, `node_object_id`, and `node_name`.
+        Sortable columns are `id`, `objectid`, and `name`.
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
 

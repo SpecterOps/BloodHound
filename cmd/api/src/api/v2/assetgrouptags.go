@@ -577,7 +577,7 @@ func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroup
 
 func (s AssetGroupMember) IsSortable(criteria string) bool {
 	switch criteria {
-	case "node_id", "node_object_id", "node_name":
+	case "id", "objectid", "name":
 		return true
 	default:
 		return false
@@ -699,6 +699,18 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 	} else {
 		if len(sort) == 0 {
 			sort = model.Sort{{Column: "node_id", Direction: model.AscendingSortDirection}}
+		} else {
+			// sort items must be translated to the respective columns on the selector nodes table
+			for i, sortItem := range sort {
+				switch sortItem.Column {
+				case "id":
+					sort[i].Column = "node_id"
+				case "objectid":
+					sort[i].Column = "node_object_id"
+				case "name":
+					sort[i].Column = "node_name"
+				}
+			}
 		}
 
 		if len(environmentIds) > 0 {
