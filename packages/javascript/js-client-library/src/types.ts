@@ -62,6 +62,18 @@ interface Disabled {
     disabled_by: string | null;
 }
 
+export interface AssetGroupTagHistoryRecord {
+    id: number;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    asset_group_tag_id: number;
+    environment_id: string | null;
+    note: string | null;
+}
+
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;

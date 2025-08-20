@@ -50,6 +50,8 @@ export const ROUTE_PZ_LABEL_CREATE_SELECTOR = `/${labelsPath}/:labelId/${selecto
 export const ROUTE_PZ_ZONE_UPDATE_SELECTOR = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${savePath}`;
 export const ROUTE_PZ_LABEL_UPDATE_SELECTOR = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${savePath}`;
 
+export const ROUTE_PZ_HISTORY = '/history';
+
 export type Routable = {
     path: string;
     component: React.LazyExoticComponent<React.FC>;

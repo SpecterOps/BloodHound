@@ -14,5 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './FilterDialog';
-export { default as FilterDialog } from './FilterDialog';
+import { useState } from 'react';
+import { HistoryTableContext } from './HistoryTableContext';
+
+const HistoryTableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [currentNote, setCurrentNote] = useState(null);
+    const [showNoteDetails, setShowNoteDetails] = useState(false);
+
+    const contextValue = {
+        currentNote,
+        setCurrentNote,
+        showNoteDetails,
+        setShowNoteDetails,
+    };
+    return <HistoryTableContext.Provider value={contextValue}>{children}</HistoryTableContext.Provider>;
+};
+
+export default HistoryTableProvider;

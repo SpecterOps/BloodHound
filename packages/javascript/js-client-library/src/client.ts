@@ -60,6 +60,7 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
@@ -254,6 +255,66 @@ class BHEAPIClient {
     getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);
 
     /* asset group tags (AGT) */
+
+    getAssetGroupTagHistory = (
+        {
+            action,
+            created_at,
+            limit,
+            skip,
+        }: {
+            action?: string;
+            created_at?: { lte?: string; gte?: string };
+            limit: number;
+            skip: number;
+        },
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupTagsHistory>(`/api/v2/asset-group-tags-history`, {
+            params: omitUndefined({
+                limit,
+                skip,
+                created_at: created_at
+                    ? Object.entries(created_at).map(([key, value]) => prefixValue(key, value))
+                    : undefined,
+                action: prefixValue('eq', action),
+            }),
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+
+    searchAssetGroupTagHistory = ({
+        action,
+        created_at,
+        limit,
+        query,
+        skip,
+    }: {
+        action?: string;
+        created_at?: { gte?: string; lte?: string };
+        limit: number;
+        query: string;
+        skip: number;
+    }) =>
+        this.baseClient.post<AssetGroupTagsHistory>(
+            `/api/v2/asset-group-tags-history`,
+            { query },
+            {
+                params: omitUndefined({
+                    skip,
+                    limit,
+                    created_at: created_at
+                        ? Object.entries(created_at).map(([key, value]) => prefixValue(key, value))
+                        : undefined,
+                    action: prefixValue('eq', action),
+                }),
+                paramsSerializer: {
+                    indexes: null,
+                },
+            }
+        );
 
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
