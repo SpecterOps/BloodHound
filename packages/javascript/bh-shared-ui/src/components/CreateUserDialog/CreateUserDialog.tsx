@@ -20,34 +20,14 @@ import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
-    open: boolean;
+    error: any;
+    isLoading: boolean;
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: CreateUserRequest) => Promise<any>;
-    isLoading: boolean;
-    error: any;
+    open: boolean;
     showEnvironmentAccessControls: boolean;
-    /*
-    error: any;
-    hasSelectedSelf?: boolean;
-    isLoading: boolean;
-    onClose: () => void;
-    onExited?: () => void;
-    onSave: (user: CreateUserRequest) => Promise<any>;
-    open: boolean;
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
-    userId?: string;
-    */
-}> = ({
-    open,
-    onClose,
-    onExited,
-    onSave,
-    isLoading,
-    error,
-    showEnvironmentAccessControls,
-    //open, onClose, onExited, onSave, isLoading, error, showEnvironmentAccessControls, userId
-}) => {
+}> = ({ error, isLoading, onClose, onExited, onSave, open, showEnvironmentAccessControls }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
@@ -76,7 +56,6 @@ const CreateUserDialog: React.FC<{
                 onSubmit={handleOnSave}
                 open={open}
                 showEnvironmentAccessControls={showEnvironmentAccessControls}
-                //userId={userId!}
             />
         </DialogContent>
     );
