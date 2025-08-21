@@ -49,6 +49,8 @@ const QualityAssurance: React.FC = () => {
 
     const environment = selectedEnvironment ?? initialEnvironment;
 
+    const handleSelect: (environment: SelectedEnvironment) => void = (selection) => setSelectedEnvironment(selection);
+
     useEffect(() => {
         setDataError(false);
     }, [environment?.type, environment?.id]);
@@ -109,8 +111,7 @@ const QualityAssurance: React.FC = () => {
                             id: environment?.id ?? null,
                         }}
                         errorMessage={environmentErrorMessage}
-                        buttonPrimary={false}
-                        onSelect={(selection) => setSelectedEnvironment(selection)}
+                        onSelect={handleSelect}
                     />
                 </Box>
                 <Alert severity='info'>
@@ -131,7 +132,7 @@ const QualityAssurance: React.FC = () => {
                 <SimpleEnvironmentSelector
                     selected={selectedEnvironment || initialEnvironment || { type: null, id: null }}
                     errorMessage={environmentErrorMessage}
-                    onSelect={(selection) => setSelectedEnvironment({ ...selection })}
+                    onSelect={handleSelect}
                 />
             </Box>
             {dataError && (
