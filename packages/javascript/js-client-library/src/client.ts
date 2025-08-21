@@ -67,6 +67,7 @@ import {
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
     GetEnterpriseCollectorsResponse,
+    GetScheduledJobDisplayResponse,
     GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
@@ -270,10 +271,10 @@ class BHEAPIClient {
             options
         );
 
-    assetGroupTagsPreviewSelectors = (seeds: PreviewSelectorsRequest, options: RequestOptions) => {
+    assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
             '/api/v2/asset-group-tags/preview-selectors',
-            { ...seeds },
+            payload,
             options
         );
     };
@@ -650,8 +651,8 @@ class BHEAPIClient {
         hydrateOUs?: boolean,
         options?: RequestOptions
     ) =>
-        this.baseClient.get(
-            `/api/v2/jobs/finished`,
+        this.baseClient.get<GetScheduledJobDisplayResponse>(
+            '/api/v2/jobs/finished',
             Object.assign(
                 {
                     params: {
@@ -1551,6 +1552,21 @@ class BHEAPIClient {
             )
         );
 
+    getDomainADCSEscalationsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/domains/${id}/adcs-escalations`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getGPOV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}`,
@@ -2085,6 +2101,21 @@ class BHEAPIClient {
             )
         );
 
+    getAIACAPKIHierarchyV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/aiacas/${id}/pki-hierarchy`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getRootCAV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/rootcas/${id}`,
@@ -2101,6 +2132,21 @@ class BHEAPIClient {
     getRootCAControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/rootcas/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getRootCAPKIHierarchyV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/rootcas/${id}/pki-hierarchy`,
             Object.assign(
                 {
                     params: {
@@ -2147,6 +2193,48 @@ class BHEAPIClient {
             )
         );
 
+    getEnterpriseCAPKIHierarchyV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}/pki-hierarchy`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getEnterpriseCAPublishedTemplatesV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/enterprisecas/${id}/published-templates`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getNTAuthStoreV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ntauthstores/${id}`,
@@ -2181,6 +2269,21 @@ class BHEAPIClient {
             )
         );
 
+    getNTAuthStoreTrustedCAsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/ntauthstores/${id}/trusted-cas`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getCertTemplateV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}`,
@@ -2203,6 +2306,27 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getCertTemplatePublishedToCAsV2 = (
+        id: string,
+        skip?: number,
+        limit?: number,
+        type?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get(
+            `/api/v2/certtemplates/${id}/published-to-cas`,
             Object.assign(
                 {
                     params: {

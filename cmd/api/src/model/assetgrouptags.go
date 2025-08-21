@@ -77,6 +77,11 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
+const (
+	TierZeroGlyph = "gem"
+	OwnedGlyph    = "skull"
+)
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
@@ -92,6 +97,7 @@ type AssetGroupTag struct {
 	Position        null.Int32        `json:"position"`
 	RequireCertify  null.Bool         `json:"require_certify"`
 	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
+	Glyph           null.String       `json:"glyph"`
 }
 
 type AssetGroupTags []AssetGroupTag
@@ -110,6 +116,7 @@ func (s AssetGroupTag) AuditData() AuditData {
 		"position":         s.Position,
 		"require_certify":  s.RequireCertify,
 		"analysis_enabled": s.AnalysisEnabled,
+		"glyph":            s.Glyph,
 	}
 }
 
@@ -122,7 +129,7 @@ func (s AssetGroupTag) KindName() string {
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
-	return filter == "name" || filter == "description"
+	return filter == "name" || filter == "description" || filter == "glyph"
 }
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
@@ -138,6 +145,7 @@ func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 		"deleted_by":       {Equals, NotEquals},
 		"require_certify":  {Equals, NotEquals},
 		"analysis_enabled": {Equals, NotEquals},
+		"glyph":            {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 

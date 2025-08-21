@@ -20,6 +20,7 @@ export const LUXON_DATETIME_REGEX = /(\d\d\d\d)-(\d||\d\d)-(\d||\d\d) (\d||\d\d)
 
 export enum LuxonFormat {
     DATETIME = "yyyy-MM-dd T ZZZZ '(GMT'ZZZ')'",
+    DATE_WITHOUT_GMT = 'yyyy-MM-dd HH:mm ZZZZ',
     DATETIME_WITHOUT_TIMEZONE = 'yyyy-MM-dd T',
     ISO_8601 = 'yyyy-MM-dd',
     YEAR_MONTH_DAY_SLASHES = 'yyyy/MM/dd',
