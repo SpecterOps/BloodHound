@@ -16,27 +16,34 @@
 
 import { Box, ListItem, ListItemText } from '@mui/material';
 import { FC } from 'react';
+import { cn } from '../../utils';
 import HighlightedText from '../HighlightedText';
 import NodeIcon from '../NodeIcon';
 
-type NodeSearchResult = {
+export type NodeSearchResult = {
     label: string;
     objectId: string;
     kind: string;
+    id?: string;
 };
 
 const SearchResultItem: FC<{
     item: NodeSearchResult;
     index: number;
-    highlightedIndex?: number;
     keyword: string;
     getItemProps: (options: any) => any;
-}> = ({ item, index, highlightedIndex, keyword, getItemProps }) => {
+    highlightedIndex?: number;
+    style?: React.CSSProperties | undefined;
+}> = ({ style, item, index, highlightedIndex, keyword, getItemProps }) => {
     return (
         <ListItem
             button
             dense
-            selected={highlightedIndex === index}
+            style={style}
+            className={cn({
+                'bg-secondary text-neutral-light-1 dark:bg-secondary-variant-2 dark:text-neutral-dark-1':
+                    highlightedIndex === index,
+            })}
             key={item.objectId}
             data-testid='explore_search_result-list-item'
             {...getItemProps({ item, index })}>

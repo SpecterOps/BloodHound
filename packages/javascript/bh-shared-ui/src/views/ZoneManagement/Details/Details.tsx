@@ -88,11 +88,12 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
+    const tiersQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
 
-    const labelsQuery = useTagsQuery(
-        (tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned
-    );
+    const labelsQuery = useTagsQuery({
+        select: (tags) =>
+            tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
+    });
 
     const selectorsQuery = useSelectorsInfiniteQuery(tagId);
 

@@ -13,24 +13,34 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { findIconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { IconName } from '@fortawesome/free-solid-svg-icons';
 import {
     AssetGroupTag,
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypes,
     AssetGroupTagTypeTier,
+    AssetGroupTagTypes,
     CreateAssetGroupTagRequest,
     CreateSelectorRequest,
     RequestOptions,
     UpdateAssetGroupTagRequest,
     UpdateSelectorRequest,
 } from 'js-client-library';
+import { useCallback } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { SortOrder } from '../../types';
-import { apiClient } from '../../utils';
-import { createPaginatedFetcher, PageParam } from '../../utils/paginatedFetcher';
+import {
+    DEFAULT_GLYPH_BACKGROUND_COLOR,
+    DEFAULT_GLYPH_COLOR,
+    GLYPH_SCALE,
+    GenericQueryOptions,
+    apiClient,
+    getModifiedSvgUrlFromIcon,
+} from '../../utils';
+import { PageParam, createPaginatedFetcher } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
 
 interface CreateAssetGroupTagParams {
@@ -76,22 +86,65 @@ export const zoneManagementKeys = {
     ) => ['tag', tagId, 'selector', selectorId, sortOrder, ...environments] as const,
 };
 
-export const getAssetGroupTags = () =>
+const getAssetGroupTags = (options: RequestOptions) =>
     apiClient
         .getAssetGroupTags({
+            ...options,
             params: {
                 counts: true,
             },
         })
-        .then((res) => {
-            return res.data.data['tags'];
+        .then((res) => res.data.data.tags);
+
+export const useTagGlyphMap = () => {
+    const tagsGlyphSelect = useCallback((tags: AssetGroupTag[]) => {
+        const glyphModifiedTags = tags?.map((tag) => {
+            const newTag = tag;
+
+            if (tag.glyph !== null && !tag.glyph.includes('http')) {
+                const glyphIconUrl = getModifiedSvgUrlFromIcon(
+                    findIconDefinition({ prefix: 'fas', iconName: tag.glyph as IconName }),
+                    {
+                        styles: {
+                            'transform-origin': 'center',
+                            scale: GLYPH_SCALE,
+                            color: DEFAULT_GLYPH_COLOR,
+                            'background-color': DEFAULT_GLYPH_BACKGROUND_COLOR,
+                        },
+                    }
+                );
+
+                newTag.glyph = glyphIconUrl;
+            }
+
+            return newTag;
         });
 
-export const useTagsQuery = (filter?: (value: AssetGroupTag, index: number, array: AssetGroupTag[]) => boolean) =>
+        return glyphModifiedTags;
+    }, []);
+
+    const {
+        isLoading,
+        isError,
+        data: tags,
+    } = useTagsQuery({ queryKey: [...zoneManagementKeys.tags(), 'glyphs'], select: tagsGlyphSelect });
+
+    const glyphMap: Record<string, string> = {};
+
+    tags?.forEach((tag) => {
+        if (tag.glyph !== null) {
+            glyphMap[`Tag_${tag.name}`] = tag.glyph;
+        }
+    });
+
+    return { isLoading, isError, data: glyphMap };
+};
+
+export const useTagsQuery = (queryOptions?: GenericQueryOptions<AssetGroupTag[]>) =>
     useQuery({
-        queryKey: zoneManagementKeys.tags(),
-        queryFn: () => getAssetGroupTags(),
-        select: (data) => (filter ? data.filter(filter) : data),
+        queryKey: zoneManagementKeys.tags() as unknown as string[],
+        queryFn: ({ signal }) => getAssetGroupTags({ signal }),
+        ...queryOptions,
     });
 
 export const getAssetGroupTagSelectors = (tagId: string | number, skip: number = 0, limit: number = PAGE_SIZE) =>
@@ -156,7 +209,7 @@ export const useTagMembersInfiniteQuery = (
         enabled: tagId !== undefined,
     });
 
-export const getAssetGroupSelectorMembers = (
+export const getAssetGroupTagSelectorMembers = (
     tagId: number | string,
     selectorId: number | string,
     skip: number = 0,
@@ -193,7 +246,7 @@ export const useSelectorMembersInfiniteQuery = (
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID available to get selector members');
             if (!selectorId) return Promise.reject('No selector ID available to get selector members');
-            return getAssetGroupSelectorMembers(
+            return getAssetGroupTagSelectorMembers(
                 tagId,
                 selectorId,
                 pageParam.skip,

@@ -14,43 +14,54 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { icon } from '@fortawesome/fontawesome-svg-core';
-import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { GLYPHS, GetIconInfo, GlyphDictionary, IconDictionary, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
+import {
+    DEFAULT_GLYPH_COLOR,
+    DEFAULT_ICON_COLOR,
+    GLYPHS,
+    GLYPH_SCALE,
+    GetIconInfo,
+    GlyphDictionary,
+    IconDictionary,
+    NODE_ICONS,
+    NODE_SCALE,
+    UNKNOWN_ICON,
+    getModifiedSvgUrlFromIcon,
+} from 'bh-shared-ui';
 
-const NODE_SCALE = '0.6';
-const DEFAULT_ICON_COLOR = '#000000';
-const GLYPH_SCALE = '0.5';
-
-// Adds object URLs to all icon and glyph definitions so that our fontawesome icons can be used by sigmajs node programs
-const appendSvgUrls = (icons: IconDictionary | GlyphDictionary, scale: string): void => {
+// Adds object URLs to all icon definitions so that our fontawesome icons can be used by sigmajs node programs
+const appendIconSvgUrls = (icons: IconDictionary): void => {
     Object.entries(icons).forEach(([type, value]) => {
         if (value.url) return;
 
-        const color = (icons[type] as any).iconColor || DEFAULT_ICON_COLOR;
-        icons[type].url = getModifiedSvgUrlFromIcon(value.icon, scale, color);
+        icons[type].url = getModifiedSvgUrlFromIcon(value.icon, {
+            styles: { color: DEFAULT_ICON_COLOR, scale: NODE_SCALE, 'background-color': value.color },
+        });
     });
 };
 
-const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string, color: string): string => {
-    const modifiedIcon = icon(iconDefinition, {
-        styles: { 'transform-origin': 'center', scale, color },
-    });
+// Adds object URLs to all glyph definitions so that our fontawesome icons can be used by sigmajs node programs
+const appendGlyphSvgUrls = (icons: GlyphDictionary): void => {
+    Object.entries(icons).forEach(([type, value]) => {
+        if (value.url) return;
 
-    const svgString = modifiedIcon.html[0].replace(/<svg/, '<svg width="200" height="200"');
-    const svg = new Blob([svgString], { type: 'image/svg+xml' });
-    return URL.createObjectURL(svg);
+        icons[type].url = getModifiedSvgUrlFromIcon(value.icon, {
+            styles: {
+                color: value.iconColor ?? DEFAULT_GLYPH_COLOR,
+                scale: GLYPH_SCALE,
+            },
+        });
+    });
 };
 
-// Append URLs for nodes, glyphs, and any additional utility icons
-appendSvgUrls(NODE_ICON, NODE_SCALE);
-appendSvgUrls(GLYPHS, GLYPH_SCALE);
-UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, NODE_SCALE, DEFAULT_ICON_COLOR);
-
-export { GLYPHS, GetIconInfo, NODE_ICON, UNKNOWN_ICON };
-
-export function transformIconDictionary(icons: IconDictionary): IconDictionary {
-    appendSvgUrls(icons, NODE_SCALE);
+function transformIconDictionary(icons: IconDictionary): IconDictionary {
+    appendIconSvgUrls(icons);
 
     return icons;
 }
+
+// Append URLs for nodes, glyphs, and any additional utility icons
+appendIconSvgUrls(NODE_ICONS);
+appendGlyphSvgUrls(GLYPHS);
+UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon);
+
+export { GLYPHS, GetIconInfo, NODE_ICONS, UNKNOWN_ICON, transformIconDictionary };

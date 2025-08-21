@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { MultiDirectedGraph } from 'graphology';
 import * as layoutDagre from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { initGraph } from './utils';
 
@@ -31,8 +30,10 @@ describe('Explore utils', () => {
             },
         };
         it('calls sequentialLayout as the default graph layout', () => {
-            const graph = new MultiDirectedGraph();
-            initGraph(graph, { nodes: {}, edges: [] }, mockTheme as Theme, false, {}, false);
+            initGraph(
+                { nodes: {}, edges: [] },
+                { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
+            );
 
             expect(layoutDagreSpy).toBeCalled();
         });

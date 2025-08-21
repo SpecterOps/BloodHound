@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
+import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -23,7 +23,6 @@ import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
-import { GLYPHS } from './svgIcons';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
     forceAtlas2.assign(graph, {
@@ -49,15 +48,20 @@ export const sequentialLayout = (graph: MultiDirectedGraph) => {
     assignDagre();
 };
 
-export const initGraph = (
-    graph: MultiDirectedGraph,
-    items: GraphData,
-    theme: Theme,
-    darkMode: boolean,
-    customIcons: IconDictionary,
-    hideNodes: boolean
-) => {
+type GraphOptions = {
+    theme: Theme;
+    darkMode: boolean;
+    customIcons: IconDictionary;
+    hideNodes: boolean;
+    tagGlyphMap: Record<string, string>;
+    themedOptions?: ThemedOptions;
+};
+
+export const initGraph = (items: GraphData, options: GraphOptions) => {
+    const graph = new MultiDirectedGraph();
+
     const { nodes, edges } = items;
+    const { theme, darkMode } = options;
 
     const themedOptions = {
         labels: {
@@ -77,22 +81,36 @@ export const initGraph = (
         },
     };
 
-    initGraphNodes(graph, nodes, themedOptions, customIcons, hideNodes);
+    initGraphNodes(graph, nodes, { ...options, themedOptions });
     initGraphEdges(graph, edges, themedOptions);
 
     random.assign(graph, { scale: 1000 });
 
     // RUN DEFAULT LAYOUT
     sequentialLayout(graph);
+
+    return graph;
+};
+
+const getGlyphImage = (kinds: string[], tagGlyphMap: Record<string, string>): string | null => {
+    for (let index = kinds.length - 1; index > -1; index--) {
+        const kind = kinds[index];
+        if (!kind.includes('Tag_')) continue;
+
+        if (tagGlyphMap[kind] !== null) {
+            return tagGlyphMap[kind];
+        }
+    }
+    return null;
 };
 
 const initGraphNodes = (
     graph: MultiDirectedGraph,
     nodes: GraphNodes,
-    themedOptions: ThemedOptions,
-    customIcons: IconDictionary,
-    hideNodes: boolean
+    options: GraphOptions & { themedOptions: ThemedOptions }
 ) => {
+    const { themedOptions, customIcons, hideNodes, tagGlyphMap } = options;
+
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
@@ -104,10 +122,20 @@ const initGraphNodes = (
             ...themedOptions.labels,
         };
 
-        const icon = GetIconInfo(node.kind, customIcons);
-        nodeParams.color = icon.color;
-        nodeParams.image = icon.url || '';
+        const iconInfo = GetIconInfo(node.kind, customIcons);
+        nodeParams.color = iconInfo.color;
+        nodeParams.image = iconInfo.url || '';
         nodeParams.glyphs = [];
+
+        const glyphImage = getGlyphImage(node.kinds, tagGlyphMap);
+        if (glyphImage) {
+            nodeParams.type = 'glyphs';
+            nodeParams.glyphs.push({
+                location: GlyphLocation.TOP_RIGHT,
+                image: glyphImage,
+                ...themedOptions.glyph.colors,
+            });
+        }
 
         // Tier zero nodes should be marked with a gem glyph
         if (node.isTierZero) {
@@ -118,6 +146,7 @@ const initGraphNodes = (
                 ...themedOptions.glyph.colors,
             });
         }
+
         if (node.isOwnedObject) {
             nodeParams.type = 'glyphs';
             nodeParams.glyphs.push({

@@ -30,18 +30,16 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
-    transformFlatGraphResponse,
     useCustomNodeKinds,
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useGraphHasData,
+    useTagGlyphMap,
     useToggle,
 } from 'bh-shared-ui';
-
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { type GraphNodes } from 'js-client-library';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
@@ -63,79 +61,61 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
+    const graphQuery = useSigmaExploreGraph();
+
+    const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
+    const { data: tagGlyphMap } = useTagGlyphMap();
+
     const { searchType } = useExploreParams();
+    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
 
-    const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
-    const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
+    const sigmaChartRef = useRef<any>(null);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
-    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
-
-    const graphQuery = useSigmaExploreGraph();
     // TODO: incorporate into larger hook with auto display table logic
     const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
 
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
-    const [exportJsonData, setExportJsonData] = useState();
-
-    const sigmaChartRef = useRef<any>(null);
 
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
-    useEffect(() => {
-        let items: any = graphQuery.data;
-
-        if (!items && !graphQuery.isError) return;
-        if (!items) items = {};
-
-        items = transformFlatGraphResponse(items);
-
-        const graph = new MultiDirectedGraph();
-
-        const hideNodes = displayTable;
-        if (!hideNodes) initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
-        setExportJsonData(items);
-
-        setCurrentNodes(items.nodes);
-
-        setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
-
-    // Changes highlighted item when browser back/forward is used
-    useEffect(() => {
-        if (selectedItem && selectedItem !== highlightedItem) {
-            setHighlightedItem(selectedItem);
-        }
-        // NOTE: Do not include `highlightedItem` as it will override ability to unselect highlights
+    const graphOptions = useMemo(() => {
+        return { theme, darkMode, customIcons: customIconsQuery?.data ?? {}, hideNodes: displayTable, tagGlyphMap };
+        // NOTE: Do not include `tagGlyphMap` ... or else !!
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedItem]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable]);
+
+    // Initialize graph data for rendering with sigmajs
+    useEffect(() => {
+        if (!graphQuery.data) return;
+
+        const graphData = graphQuery.data;
+
+        if (graphOptions.hideNodes) {
+            setGraphologyGraph(undefined);
+        } else {
+            const graph = initGraph(graphData, graphOptions);
+            setGraphologyGraph(graph);
+        }
+    }, [graphQuery.data, graphOptions]);
 
     /* useCallback Event Handlers must appear before return statement */
-    const selectItem = useCallback(
-        (id: string) => {
-            setSelectedItem(id);
-            setHighlightedItem(id);
-        },
-        [setSelectedItem]
-    );
-
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
-            selectItem(event.node);
+            setSelectedItem(event.node);
             setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
         },
-        [contextMenu, selectItem, setContextMenu]
+        [contextMenu, setContextMenu, setSelectedItem]
     );
 
     /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
@@ -147,7 +127,7 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    if (isLoading) {
+    if (isLoading || graphQuery.isLoading || customIconsQuery.isLoading || tagGlyphMap.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />
@@ -155,15 +135,12 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError) return <GraphViewErrorAlert />;
+    if (isError || graphQuery.isError || customIconsQuery.isError || tagGlyphMap.isError)
+        return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
     /* Event Handlers */
-    const cancelHighlight = () => {
-        setHighlightedItem(null);
-    };
-
     const handleCloseContextMenu = () => {
         setContextMenu(null);
     };
@@ -183,11 +160,9 @@ const GraphView: FC = () => {
         dispatch(setExploreLayout(layout));
         dispatch(setIsExploreTableSelected(false));
 
-        if (layout === 'standard') {
-            sigmaChartRef.current?.runStandardLayout();
-        } else if (layout === 'sequential') {
-            sigmaChartRef.current?.runSequentialLayout();
-        }
+        if (layout === 'standard') sigmaChartRef.current?.runStandardLayout();
+
+        if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
     };
 
     return (
@@ -197,10 +172,10 @@ const GraphView: FC = () => {
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
                 graph={graphologyGraph}
-                highlightedItem={highlightedItem}
-                onClickEdge={selectItem}
-                onClickNode={selectItem}
-                onClickStage={cancelHighlight}
+                highlightedItem={selectedItem}
+                onClickEdge={setSelectedItem}
+                onClickNode={setSelectedItem}
+                onClickStage={clearSelectedItem}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
@@ -218,11 +193,11 @@ const GraphView: FC = () => {
                     onToggleNodeLabels={toggleShowNodeLabels}
                     showEdgeLabels={showEdgeLabels}
                     onToggleEdgeLabels={toggleShowEdgeLabels}
-                    jsonData={exportJsonData}
+                    jsonData={{ nodes: graphQuery.data?.nodes, edges: graphQuery.data?.edges }}
                     onReset={() => sigmaChartRef.current?.resetCamera()}
-                    currentNodes={currentNodes}
+                    currentNodes={graphQuery.data?.nodes ?? {}}
                     onSearchedNodeClick={(node) => {
-                        selectItem(node.id);
+                        node.id && setSelectedItem(node.id);
                         sigmaChartRef?.current?.zoomTo(node.id);
                     }}
                 />
