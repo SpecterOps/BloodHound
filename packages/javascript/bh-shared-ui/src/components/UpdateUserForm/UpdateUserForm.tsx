@@ -48,9 +48,9 @@ const UpdateUserForm: React.FC<{
     hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
-    //open?: boolean;
-    //showEnvironmentAccessControls?: boolean;
-}> = ({ onCancel, onSubmit, userId, hasSelectedSelf, isLoading, error }) => {
+    open?: boolean;
+    showEnvironmentAccessControls?: boolean;
+}> = ({ onCancel, onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
     const getUserQuery = useQuery(
         ['getUser', userId],
         ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
@@ -128,6 +128,7 @@ const UpdateUserForm: React.FC<{
             onSubmit={onSubmit}
             roles={getRolesQuery.data}
             SSOProviders={listSSOProvidersQuery.data}
+            showEnvironmentAccessControls={showEnvironmentAccessControls}
         />
     );
 };
@@ -148,11 +149,11 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf,
     initialData,
     isLoading,
-    onCancel,
+    //onCancel,
     onSubmit,
-    open,
+    //open,
     roles,
-    showEnvironmentAccessControls = true,
+    showEnvironmentAccessControls,
     SSOProviders,
 }) => {
     const {
@@ -169,6 +170,11 @@ const UpdateUserFormInner: React.FC<{
             authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',
         },
     });
+
+    const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
+
+    const roleInputValue = watch('roles');
+    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     const authenticationMethod = watch('authenticationMethod');
 
@@ -206,11 +212,6 @@ const UpdateUserFormInner: React.FC<{
             }
         }
     }, [authenticationMethod, setValue, error, setError]);
-
-    const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
-
-    const roleInputValue = watch('roles');
-    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
