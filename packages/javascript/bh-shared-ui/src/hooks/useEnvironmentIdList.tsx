@@ -34,7 +34,8 @@ export const getEnvironmentAggregationIds = (
         }
     });
 
-    return aggregationIds;
+    // Sort IDs to guarantee a stable order for cache keys
+    return aggregationIds.sort((a, b) => String(a).localeCompare(String(b)));
 };
 
 export const useEnvironmentIdList = (
