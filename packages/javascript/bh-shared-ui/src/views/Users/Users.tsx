@@ -192,7 +192,7 @@ const Users: FC<{ showEnvironmentAccessControls: boolean }> = ({ showEnvironment
                         }
                     />
                     */}
-                    <Dialog>
+                    <Dialog open={createUserDialogOpen} onOpenChange={toggleCreateUserDialog}>
                         <DialogTrigger asChild>
                             <Button
                                 disabled={!hasPermission}
