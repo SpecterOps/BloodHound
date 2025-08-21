@@ -1,0 +1,9 @@
+name: Run Static Analysis
+description: Run St Bernard Tooling
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        go tool stbernard deps
