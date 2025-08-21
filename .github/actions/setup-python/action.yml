@@ -10,8 +10,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup Python
-      uses: actions/setup-go@v5
+    - uses: actions/setup-go@v5
       with:
         python-version: ${{ inputs.python-version }}
         cache: pip
