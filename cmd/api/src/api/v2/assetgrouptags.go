@@ -81,23 +81,21 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 		rCtx           = request.Context()
 		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
 	)
-
-	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	} else if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specified for include counts", request), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
-		if etacFlag, err := s.DB.GetFlagByKey(request.Context()); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else if etacFlag.Enabled && len(environmentIds) > 0 {
-			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-				slog.Error("Unable to get user from auth context")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-			} else if hasAccess, err := api.CheckUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); !hasAccess {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "", request), response)
-			} else if err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "", request), response)
-			}
+		if hasAccess, err := checkUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+			return
+		} else if !hasAccess {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseForbidden, request), response)
+			return
 		}
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupTag{}, name); err != nil {
@@ -138,9 +136,14 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 			}
 
 			for _, tag := range tags {
+				filters := []graph.Criteria{}
 				tview := AssetGroupTagView{AssetGroupTag: tag}
 				if paramIncludeCounts {
-					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {
+					filters = append(filters, query.Or(
+						query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+						query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+					))
+					if n, err := s.GraphQuery.CountNodesByKind(rCtx, filters, tag.ToKind()); err != nil {
 						api.HandleDatabaseError(request, response, err)
 						return
 					} else {
@@ -508,20 +511,18 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 	var (
 		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
 	)
-	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if len(environmentIds) > 0 {
-			if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-				slog.Error("Unable to get user from auth context")
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-			} else if hasAccess, err := api.CheckUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); !hasAccess {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "", request), response)
-			} else if err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "", request), response)
-			}
+		if hasAccess, err := checkUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		} else if !hasAccess {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseForbidden, request), response)
 		}
 		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.CreatedBy)); err == nil {
 			assetGroupTag.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
@@ -922,7 +923,13 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 	}
 }
 
-func checkUserAccessToEnvironments(ctx context.Context, user model.User, environmentIds ...string) (bool, error) {
+func checkUserAccessToEnvironments(ctx context.Context, db database.Database, user model.User, environmentIds ...string) (bool, error) {
+	// eTAC feature flag
+	if flag, err := db.GetFlagByKey(ctx, appcfg.FeatureEnvironmentAccessControl); err != nil {
+		return false, fmt.Errorf("unable to get feature flag: %w", err)
+	} else if !flag.Enabled {
+		return true, nil
+	}
 
-	return true, nil
+	return api.CheckUserAccessToEnvironments(ctx, db, user, environmentIds...)
 }
