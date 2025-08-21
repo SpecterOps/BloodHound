@@ -33,7 +33,13 @@ type ZoneAnalysisIconProps = {
     analysisEnabled?: boolean | null;
 };
 
-export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses, analysisEnabled }) => {
+export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
+    iconClasses,
+    size = 24,
+    tooltip,
+    wrapperClasses,
+    analysisEnabled,
+}) => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const isLabelPage = location.pathname.includes('/label');
     const iconProps = {
@@ -56,7 +62,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 <TooltipRoot>
                     <TooltipTrigger>
                         <div className={clsx(wrapperClasses)}>
-                            <AppIcon.DataAlert {...iconProps} data-testid="analysis_upgrade_icon" />
+                            <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />
                         </div>
                     </TooltipTrigger>
                     <TooltipPortal>
@@ -67,8 +73,8 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 </TooltipRoot>
             </TooltipProvider>
         ) : (
-            <AppIcon.DataAlert {...iconProps} data-testid="analysis_upgrade_icon" />
-        )
+            <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />
+        );
     }
 
     if (privilegeZoneAnalysisEnabled && !analysisEnabled) {
@@ -77,7 +83,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 <TooltipRoot>
                     <TooltipTrigger>
                         <div className={clsx(wrapperClasses)}>
-                            <AppIcon.Disabled {...iconProps} data-testid="analysis_disabled_icon" />
+                            <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />
                         </div>
                     </TooltipTrigger>
                     <TooltipPortal>
@@ -88,7 +94,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 </TooltipRoot>
             </TooltipProvider>
         ) : (
-            <AppIcon.Disabled {...iconProps} data-testid="analysis_disabled_icon" />
+            <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />
         );
     }
 };

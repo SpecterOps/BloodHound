@@ -19,12 +19,12 @@ import { AssetGroupTag } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
-import { useHighestPrivilegeTagId } from '../../../hooks';
 
 type TagListProps = {
     title: 'Tiers' | 'Labels';
@@ -121,7 +121,11 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                             }}>
                                             <div className='flex items-center'>
                                                 {isTag(listItem) && listItem.id !== topTagId && (
-                                                    <ZoneAnalysisIcon size={18} tooltip analysisEnabled={listItem?.analysis_enabled} />
+                                                    <ZoneAnalysisIcon
+                                                        size={18}
+                                                        tooltip
+                                                        analysisEnabled={listItem?.analysis_enabled}
+                                                    />
                                                 )}
                                                 <span
                                                     className={cn(

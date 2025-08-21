@@ -21,11 +21,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
-import { useHighestPrivilegeTagId } from '../../../hooks';
 
 type SummaryCardProps = {
     title: string;
