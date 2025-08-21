@@ -56,7 +56,7 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
-    // Redirect to file ingest when a processable file is dragged into the browser client
+    // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
         condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired,
         acceptedTypes: ['application/json', 'application/zip'],
