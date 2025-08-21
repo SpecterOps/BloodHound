@@ -1,16 +1,17 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../../components';
-import { QueryLineItem } from '../../../../types';
+import { useSavedQueriesContext } from '../../providers';
 import TagToZoneLabelDialog from './TagToZoneLabelDialog';
 
 type TagToZoneLabelProps = {
-    selectedQuery: QueryLineItem | undefined;
     cypherQuery: string;
 };
 
 const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
-    const { selectedQuery, cypherQuery } = props;
+    const { cypherQuery } = props;
+
+    const { selectedQuery } = useSavedQueriesContext();
 
     const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 

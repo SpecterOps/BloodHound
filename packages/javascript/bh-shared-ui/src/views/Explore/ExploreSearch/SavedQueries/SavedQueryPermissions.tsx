@@ -7,9 +7,9 @@ import { AppIcon } from '../../../../components';
 import { useQueryPermissions } from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
 import { apiClient } from '../../../../utils';
+import { useSavedQueriesContext } from '../../providers';
 
 type SavedQueryPermissionsProps = {
-    queryId?: number;
     sharedIds: string[];
     isPublic: boolean;
     setSharedIds: (ids: string[]) => void;
@@ -21,7 +21,10 @@ type ListUser = {
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
-    const { isPublic, queryId, sharedIds, setSharedIds, setIsPublic } = props;
+    const { isPublic, sharedIds, setSharedIds, setIsPublic } = props;
+    const { selectedQuery } = useSavedQueriesContext();
+    const queryId = selectedQuery?.id;
+
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<ListUser[]>([]);
 

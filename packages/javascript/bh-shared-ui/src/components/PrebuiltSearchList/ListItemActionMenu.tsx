@@ -1,16 +1,18 @@
 import { FC, MouseEvent } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { useSavedQueriesContext } from '../../views';
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
     id?: number;
     query?: string;
     deleteQuery: (id: number) => void;
     editQuery: (id: number) => void;
-    runQuery: (query: string, id: number) => void;
 }
 
-const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuery, editQuery, runQuery }) => {
+const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuery, editQuery }) => {
+    const { runQuery } = useSavedQueriesContext();
+
     const handleRun = (event: MouseEvent) => {
         event.stopPropagation();
         runQuery(query as string, id as number);

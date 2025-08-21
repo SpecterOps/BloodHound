@@ -18,16 +18,15 @@ import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTit
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
 import { FC, useEffect, useRef, useState } from 'react';
-import { QueryLineItem, QueryListSection } from '../../types';
+import { QueryListSection } from '../../types';
+import { useSavedQueriesContext } from '../../views';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
-    selectedQuery: QueryLineItem | undefined;
     showCommonQueries: boolean;
     clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
     editHandler: (id: number) => void;
-    runHandler: (query: string, id: number) => void;
     clearFiltersHandler: () => void;
 }
 
@@ -49,14 +48,14 @@ const useStyles = makeStyles((theme) => ({
 
 const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     listSections,
-    selectedQuery,
     showCommonQueries,
     clickHandler,
     deleteHandler,
     editHandler,
-    runHandler,
     clearFiltersHandler,
 }) => {
+    const { selectedQuery } = useSavedQueriesContext();
+
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
 
@@ -76,10 +75,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 
     const handleEdit = (id: number) => {
         editHandler(id);
-    };
-
-    const handleRun = (query: string, id: number) => {
-        runHandler(query, id);
     };
 
     const testMatch = (name: string, id?: number) => {
@@ -148,7 +143,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             query={query}
                                                             deleteQuery={() => handleDelete(id as number)}
                                                             editQuery={() => handleEdit(id as number)}
-                                                            runQuery={() => handleRun(query, id as number)}
                                                         />
                                                     )}
                                                 </li>

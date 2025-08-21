@@ -51,6 +51,7 @@ describe('PrebuiltSearchList', () => {
         const testDeleteHandler = vitest.fn();
         const testEditHandler = vitest.fn();
         const testClearFiltersHandler = vitest.fn();
+        const testRunHandler = vitest.fn();
 
         render(
             <PrebuiltSearchList
@@ -61,6 +62,7 @@ describe('PrebuiltSearchList', () => {
                 deleteHandler={testDeleteHandler}
                 editHandler={testEditHandler}
                 clearFiltersHandler={testClearFiltersHandler}
+                runHandler={testRunHandler}
             />
         );
         expect(screen.getAllByText(/subheader/i)[0]).toBeInTheDocument();
@@ -77,6 +79,7 @@ describe('PrebuiltSearchList', () => {
         const testDeleteHandler = vitest.fn();
         const testEditHandler = vitest.fn();
         const testClearFiltersHandler = vitest.fn();
+        const testRunHandler = vitest.fn();
 
         render(
             <PrebuiltSearchList
@@ -87,6 +90,7 @@ describe('PrebuiltSearchList', () => {
                 deleteHandler={testDeleteHandler}
                 editHandler={testEditHandler}
                 clearFiltersHandler={testClearFiltersHandler}
+                runHandler={testRunHandler}
             />
         );
 
@@ -106,6 +110,7 @@ describe('PrebuiltSearchList', () => {
         const testDeleteHandler = vitest.fn();
         const testEditHandler = vitest.fn();
         const testClearFiltersHandler = vitest.fn();
+        const testRunHandler = vitest.fn();
 
         render(
             <PrebuiltSearchList
@@ -116,6 +121,7 @@ describe('PrebuiltSearchList', () => {
                 deleteHandler={testDeleteHandler}
                 editHandler={testEditHandler}
                 clearFiltersHandler={testClearFiltersHandler}
+                runHandler={testRunHandler}
             />
         );
 
@@ -136,6 +142,7 @@ describe('PrebuiltSearchList', () => {
         const testDeleteHandler = vitest.fn();
         const testEditHandler = vitest.fn();
         const testClearFiltersHandler = vitest.fn();
+        const testRunHandler = vitest.fn();
 
         render(
             <PrebuiltSearchList
@@ -146,6 +153,7 @@ describe('PrebuiltSearchList', () => {
                 deleteHandler={testDeleteHandler}
                 editHandler={testEditHandler}
                 clearFiltersHandler={testClearFiltersHandler}
+                runHandler={testRunHandler}
             />
         );
 
@@ -170,6 +178,7 @@ describe('PrebuiltSearchList', () => {
         const testDeleteHandler = vitest.fn();
         const testEditHandler = vitest.fn();
         const testClearFiltersHandler = vitest.fn();
+        const testRunHandler = vitest.fn();
 
         render(
             <PrebuiltSearchList
@@ -180,6 +189,7 @@ describe('PrebuiltSearchList', () => {
                 deleteHandler={testDeleteHandler}
                 editHandler={testEditHandler}
                 clearFiltersHandler={testClearFiltersHandler}
+                runHandler={testRunHandler}
             />
         );
 

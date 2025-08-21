@@ -29,31 +29,26 @@ import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQuerie
 import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../../types';
 import { apiClient, cn } from '../../../../utils';
+import { useSavedQueriesContext } from '../../providers';
 import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
-    onSetSelected: (query: string, id?: number) => void;
     onToggleCommonQueries: () => void;
     onEditQuery: (id: number) => void;
-    onRunQuery: (query: string, id: number) => void;
-    selected: { query: string; id?: number };
     showCommonQueries: boolean;
-    selectedQuery: QueryLineItem | undefined;
 };
 
 const InnerCommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
-    onSetSelected,
     onToggleCommonQueries,
     onEditQuery,
-    onRunQuery,
-    selected,
     showCommonQueries,
-    selectedQuery,
 }: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
+    const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
+
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
@@ -82,11 +77,11 @@ const InnerCommonSearches = ({
     const handleClick = (query: string, id: number | undefined) => {
         if (selected.query === query && selected.id === id) {
             //deselect
-            onSetSelected('', undefined);
+            setSelected({ query: '', id: undefined });
             onSetCypherQuery('');
             onPerformCypherSearch('');
         } else {
-            onSetSelected(query, id);
+            setSelected({ query, id });
             onSetCypherQuery(query);
             onPerformCypherSearch(query);
         }
@@ -174,7 +169,6 @@ const InnerCommonSearches = ({
             fileDownload(res.data, filename);
         });
     };
-
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
@@ -193,8 +187,7 @@ const InnerCommonSearches = ({
                     searchTerm={searchTerm}
                     platform={platform}
                     categoryFilter={categoryFilter}
-                    source={source}
-                    selectedQuery={selectedQuery}></QuerySearchFilter>
+                    source={source}></QuerySearchFilter>
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
@@ -203,9 +196,7 @@ const InnerCommonSearches = ({
                     clickHandler={handleClick}
                     deleteHandler={handleDeleteQuery}
                     clearFiltersHandler={handleClearFilters}
-                    selectedQuery={selectedQuery}
                     editHandler={onEditQuery}
-                    runHandler={onRunQuery}
                     showCommonQueries={showCommonQueries}
                 />
             </div>

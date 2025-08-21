@@ -5,15 +5,30 @@ import ListItemActionMenu from './ListItemActionMenu';
 describe('ListItemActionMenu', () => {
     const testDeleteHandler = vitest.fn();
     const testEditHandler = vitest.fn();
+    const testOnRunHandler = vitest.fn();
     const user = userEvent.setup();
     it('renders a ListItemActionMenu component', async () => {
-        render(<ListItemActionMenu id={1} deleteQuery={testDeleteHandler} editQuery={testEditHandler} />);
+        render(
+            <ListItemActionMenu
+                id={1}
+                deleteQuery={testDeleteHandler}
+                editQuery={testEditHandler}
+                runQuery={testOnRunHandler}
+            />
+        );
 
         expect(screen.getByTestId('saved-query-action-menu-trigger')).toBeInTheDocument();
     });
 
     it('renders the popup content with run, edit/share, and delete when the menu trigger', async () => {
-        render(<ListItemActionMenu id={1} deleteQuery={testDeleteHandler} editQuery={testEditHandler} />);
+        render(
+            <ListItemActionMenu
+                id={1}
+                deleteQuery={testDeleteHandler}
+                editQuery={testEditHandler}
+                runQuery={testOnRunHandler}
+            />
+        );
 
         expect(screen.getByTestId('saved-query-action-menu-trigger')).toBeInTheDocument();
 
@@ -24,7 +39,14 @@ describe('ListItemActionMenu', () => {
     });
 
     it('fires edit when edit is clicked', async () => {
-        render(<ListItemActionMenu id={1} deleteQuery={testDeleteHandler} editQuery={testEditHandler} />);
+        render(
+            <ListItemActionMenu
+                id={1}
+                deleteQuery={testDeleteHandler}
+                editQuery={testEditHandler}
+                runQuery={testOnRunHandler}
+            />
+        );
 
         expect(screen.getByTestId('saved-query-action-menu-trigger')).toBeInTheDocument();
 
@@ -35,7 +57,14 @@ describe('ListItemActionMenu', () => {
     });
 
     it('fires delete when edit is clicked', async () => {
-        render(<ListItemActionMenu id={1} deleteQuery={testDeleteHandler} editQuery={testEditHandler} />);
+        render(
+            <ListItemActionMenu
+                id={1}
+                deleteQuery={testDeleteHandler}
+                editQuery={testEditHandler}
+                runQuery={testOnRunHandler}
+            />
+        );
 
         expect(screen.getByTestId('saved-query-action-menu-trigger')).toBeInTheDocument();
 
@@ -46,7 +75,14 @@ describe('ListItemActionMenu', () => {
     });
 
     it('closes', async () => {
-        render(<ListItemActionMenu id={1} deleteQuery={testDeleteHandler} editQuery={testEditHandler} />);
+        render(
+            <ListItemActionMenu
+                id={1}
+                deleteQuery={testDeleteHandler}
+                editQuery={testEditHandler}
+                runQuery={testOnRunHandler}
+            />
+        );
 
         expect(screen.getByTestId('saved-query-action-menu-trigger')).toBeInTheDocument();
 

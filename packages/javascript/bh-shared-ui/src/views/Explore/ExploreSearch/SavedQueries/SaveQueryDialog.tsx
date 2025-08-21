@@ -41,8 +41,8 @@ import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../../../constants';
-import { QueryLineItem } from '../../../../types';
 import { apiClient, cn } from '../../../../utils';
+import { useSavedQueriesContext } from '../../providers';
 import ConfirmUpdateQueryDialog from './ConfirmUpdateQueryDialog';
 import SavedQueryPermissions from './SavedQueryPermissions';
 type CypherSearchState = {
@@ -55,7 +55,6 @@ const SaveQueryDialog: React.FC<{
     open: boolean;
     error?: any;
     cypherSearchState: CypherSearchState;
-    selectedQuery: QueryLineItem | undefined;
     sharedIds: string[];
     isPublic: boolean;
     saveAction: string | undefined;
@@ -68,7 +67,6 @@ const SaveQueryDialog: React.FC<{
     open,
     error = undefined,
     cypherSearchState,
-    selectedQuery,
     sharedIds,
     isPublic,
     saveAction,
@@ -79,6 +77,7 @@ const SaveQueryDialog: React.FC<{
     setIsPublic,
 }) => {
     const theme = useTheme();
+    const { selectedQuery } = useSavedQueriesContext();
 
     const lgDown = useMediaQuery(theme.breakpoints.down('lg'));
 
@@ -229,7 +228,6 @@ const SaveQueryDialog: React.FC<{
                                 </CardHeader>
                                 <CardContent>
                                     <SavedQueryPermissions
-                                        queryId={selectedQuery?.id}
                                         sharedIds={sharedIds}
                                         isPublic={isPublic}
                                         setSharedIds={setSharedIds}

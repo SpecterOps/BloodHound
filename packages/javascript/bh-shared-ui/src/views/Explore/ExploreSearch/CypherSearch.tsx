@@ -22,16 +22,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
-import {
-    useCreateSavedQuery,
-    useGetSelectedQuery,
-    useUpdateQueryPermissions,
-    useUpdateSavedQuery,
-} from '../../../hooks';
+import { useCreateSavedQuery, useUpdateQueryPermissions, useUpdateSavedQuery } from '../../../hooks';
 import { useSelf } from '../../../hooks/useSelf';
 import { useNotifications } from '../../../providers';
-import { QueryLineItem } from '../../../types';
 import { apiClient, cn } from '../../../utils';
+import { useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
@@ -43,10 +38,7 @@ type CypherSearchState = {
     setCypherQuery: (query: string) => void;
     performSearch: (query?: string) => void;
 };
-type SelectedType = {
-    query: string;
-    id?: number;
-};
+
 type SaveAction = 'edit' | 'save-as' | undefined;
 
 const CypherSearch = ({
@@ -58,9 +50,10 @@ const CypherSearch = ({
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
 }) => {
+    const { selectedQuery, setSelected } = useSavedQueriesContext();
+
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
-    const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [messageState, setMessageState] = useState({
@@ -85,7 +78,7 @@ const CypherSearch = ({
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
-    const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
+
     useEffect(() => {
         //Setting the selected query once on load
         //The cypherQuery dependency is required
@@ -105,9 +98,6 @@ const CypherSearch = ({
         if (autoRun) {
             performSearch(query);
         }
-    };
-    const handleSetSelected = (query: string, id?: number) => {
-        setSelected({ query: query, id: id });
     };
     const handleToggleCommonQueries = () => {
         setShowCommonQueries((v) => !v);
@@ -184,11 +174,6 @@ const CypherSearch = ({
         setSaveAction('edit');
         setShowSaveQueryDialog(true);
     };
-    const handleRunQuery = (query: string, id: number) => {
-        setSelected({ query, id });
-        setCypherQuery(query);
-        performSearch(query);
-    };
 
     const handleClearMessage = () => {
         setMessageState((prevState) => ({
@@ -229,13 +214,9 @@ const CypherSearch = ({
                     <CommonSearches
                         onSetCypherQuery={setCypherQuery}
                         onPerformCypherSearch={handleSavedSearch}
-                        onSetSelected={handleSetSelected}
                         onToggleCommonQueries={handleToggleCommonQueries}
                         showCommonQueries={showCommonQueries}
-                        selected={selected}
-                        selectedQuery={selectedQuery}
                         onEditQuery={handleEditQuery}
-                        onRunQuery={handleRunQuery}
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
@@ -285,9 +266,7 @@ const CypherSearch = ({
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
                         {isAdminOrPowerUser && (
-                            <TagToZoneLabel
-                                selectedQuery={selectedQuery}
-                                cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
+                            <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                         )}
                         <Button
                             variant='secondary'
@@ -327,7 +306,6 @@ const CypherSearch = ({
                 open={showSaveQueryDialog}
                 error={createSavedQueryMutation.error}
                 cypherSearchState={cypherSearchState}
-                selectedQuery={selectedQuery}
                 sharedIds={sharedIds}
                 isPublic={isPublic}
                 saveAction={saveAction}

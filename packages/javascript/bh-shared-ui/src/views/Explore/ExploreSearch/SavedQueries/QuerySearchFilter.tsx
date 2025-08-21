@@ -7,7 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
 import { AppIcon } from '../../../../components';
-import { QueryLineItem } from '../../../../types';
+import { useSavedQueriesContext } from '../../providers';
 import ImportQueryDialog from './ImportQueryDialog';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[], source: string) => void;
@@ -18,7 +18,6 @@ interface QuerySearchProps {
     platform: string;
     categoryFilter: string[];
     source: string;
-    selectedQuery: QueryLineItem | undefined;
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
@@ -30,9 +29,10 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         searchTerm,
         platform,
         categoryFilter,
-        selectedQuery,
         source,
     } = props;
+    const { selectedQuery } = useSavedQueriesContext();
+
     const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
     const [sourcesOpen, setSourcesOpen] = useState<boolean>(false);
 
