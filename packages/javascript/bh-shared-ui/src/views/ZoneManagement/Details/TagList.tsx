@@ -24,6 +24,7 @@ import { cn } from '../../../utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 
 type TagListProps = {
     title: 'Tiers' | 'Labels';
@@ -42,6 +43,7 @@ type TagListProps = {
  */
 export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
@@ -118,8 +120,8 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                {isTag(listItem) && !listItem?.analysis_enabled && (
-                                                    <ZoneAnalysisIcon size={18} tooltip />
+                                                {isTag(listItem) && listItem.id !== topTagId && (
+                                                    <ZoneAnalysisIcon size={18} tooltip analysisEnabled={listItem?.analysis_enabled} />
                                                 )}
                                                 <span
                                                     className={cn(

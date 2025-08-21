@@ -30,9 +30,10 @@ type ZoneAnalysisIconProps = {
     size?: number;
     tooltip?: boolean;
     wrapperClasses?: string;
+    analysisEnabled?: boolean | null;
 };
 
-export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
+export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses, analysisEnabled }) => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const isLabelPage = location.pathname.includes('/label');
     const iconProps = {
@@ -70,7 +71,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
         )
     }
 
-    if (privilegeZoneAnalysisEnabled) {
+    if (privilegeZoneAnalysisEnabled && !analysisEnabled) {
         return tooltip ? (
             <TooltipProvider>
                 <TooltipRoot>
