@@ -991,19 +991,20 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		lastSeenNodeId := graph.ID(0)
 		dbInputs := CreateInputsForUpdateCertificationBySelectorNode(nodes, reqBody.Action)
 		if err := s.DB.BeginTransaction(requestContext, func(tx *gorm.DB) error {
+			transaction := database.NewBloodhoundDB(tx, auth.NewIdentityResolver())
 			for _, input := range dbInputs {
-				if err := s.DB.UpdateCertificationBySelectorNode(requestContext, input.SelectorId, input.CertificationStatus, userEmailAddress, input.NodeId); err != nil {
+				if err := transaction.UpdateCertificationBySelectorNode(requestContext, input.SelectorId, input.CertificationStatus, userEmailAddress, input.NodeId); err != nil {
 					return err
 				} else if input.NodeId != lastSeenNodeId && input.CertificationStatus != model.AssetGroupCertificationPending {
-					if err := s.DB.CreateAssetGroupHistoryRecord(requestContext, model.AssetGroupActorSystem, userEmailAddress, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, note); err != nil {
+					if err := transaction.CreateAssetGroupHistoryRecord(requestContext, model.AssetGroupActorSystem, userEmailAddress, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, note); err != nil {
 						return err
 					}
 				}
 				lastSeenNodeId = input.NodeId
+
 			}
 			return err
 		}); err != nil {
-			// TODO -- return prettier error response if the transaction fails
 			api.HandleDatabaseError(request, response, err)
 			return
 		} else {
