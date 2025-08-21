@@ -1610,7 +1610,7 @@ func TestCreateUser_Success_ETAC2(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
-				assert.Contains(t, body, `when all_environments is set to true, we cannot process an environment list, please check the request`)
+				assert.Contains(t, body, api.ErrorResponseETACBadRequest)
 			},
 		},
 	}
@@ -2887,7 +2887,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
-				assert.Contains(t, body, "when all_environments is set to true, we cannot process an environment list")
+				assert.Contains(t, body, api.ErrorResponseETACBadRequest)
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
 				// no DeleteEnvironmentListForUser or UpdateUser expected here
