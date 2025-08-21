@@ -95,7 +95,7 @@ const Details: FC = () => {
             tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
     });
 
-    const selectorsQuery = useSelectorsInfiniteQuery(tagId);
+    const selectorsQuery = useSelectorsInfiniteQuery(tagId, environments);
 
     const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
 
