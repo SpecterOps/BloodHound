@@ -880,13 +880,6 @@ RelayableToDCLDAPS: types.#StringEnum & {
 	representation: "replayabletodcldaps"
 }
 
-WebClientRunning: types.#StringEnum & {
-	symbol: "WebClientRunning"
-	schema: "ad"
-	name: "WebClient Running"
-	representation: "webclientrunning"
-}
-
 IsDC: types.#StringEnum & {
 	symbol: "IsDC"
 	schema: "ad"
