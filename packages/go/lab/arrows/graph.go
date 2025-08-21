@@ -150,12 +150,13 @@ func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
 func processProperties(props map[string]string) (*graph.Properties, error) {
 	var out = graph.NewProperties()
 	for k, v := range props {
+		kLowercase := strings.ToLower(k)
 		switch {
 		case strings.HasPrefix(v, "NOW()"):
 			if ts, err := processTimeFunctionProperty(v); err != nil {
 				return nil, fmt.Errorf("could not process time function `%s`: %w", v, err)
 			} else {
-				out.Set(k, ts)
+				out.Set(kLowercase, ts)
 			}
 		case strings.HasPrefix(v, "BOOL:"):
 			_, val, found := strings.Cut(v, "BOOL:")
@@ -164,7 +165,7 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			} else if boolVal, err := strconv.ParseBool(val); err != nil {
 				return nil, fmt.Errorf("could not process bool value `%s`: %w", v, err)
 			} else {
-				out.Set(k, boolVal)
+				out.Set(kLowercase, boolVal)
 			}
 		case strings.HasPrefix(v, "STRLIST:"):
 			_, val, found := strings.Cut(v, "STRLIST:")
@@ -187,7 +188,7 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 				out.Set(kLowercase, floatVal)
 			}
 		default:
-			out.Set(k, v)
+			out.Set(kLowercase, v)
 		}
 	}
 	return out, nil
