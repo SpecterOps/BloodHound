@@ -1508,7 +1508,7 @@ func TestCreateUser_Success(t *testing.T) {
 	}
 }
 
-func TestCreateUser_Success_ETAC2(t *testing.T) {
+func TestCreateUser_Success_ETAC(t *testing.T) {
 	endpoint := "/api/v2/auth/users"
 
 	tests := []struct {
@@ -1517,6 +1517,7 @@ func TestCreateUser_Success_ETAC2(t *testing.T) {
 		createReq      v2.CreateUserRequest
 		expectMocks    func(mockDB *mocks.MockDatabase, goodUser model.User)
 		expectedStatus int
+		returnedRoles  model.Roles
 		assertBody     func(t *testing.T, body string)
 	}{
 		{
@@ -1585,6 +1586,36 @@ func TestCreateUser_Success_ETAC2(t *testing.T) {
 			},
 		},
 		{
+			name: "error setting etac for ineligible role",
+			goodUser: model.User{
+				PrincipalName: "good user",
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+					EnvironmentControlList: &v2.UpdateUserETACListRequest{
+						Environments: []string{"12345", "54321"},
+					},
+					Roles: []int32{1},
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			returnedRoles: []model.Role{
+				{
+					Name: authz.RoleAdministrator,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACInvalidRoles)
+			},
+		},
+		{
 			name: "Error setting both environment list and all environments to true",
 			goodUser: model.User{
 				PrincipalName: "good user",
@@ -1617,6 +1648,8 @@ func TestCreateUser_Success_ETAC2(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -1629,7 +1662,7 @@ func TestCreateUser_Success_ETAC2(t *testing.T) {
 					Duration: appcfg.DefaultPasswordExpirationWindow,
 				}),
 			}, nil)
-			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
+			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(tc.returnedRoles, nil)
 			mockDB.EXPECT().GetFlagByKey(gomock.Any(), database.EnvironmentAccessControlFeatureFlag).
 				Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
@@ -1646,7 +1679,7 @@ func TestCreateUser_Success_ETAC2(t *testing.T) {
 			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 			router := mux.NewRouter()
-			router.HandleFunc(endpoint, resources.CreateUser).Methods("POST")
+			router.HandleFunc(endpoint, resources.CreateUser).Methods(http.MethodPost)
 
 			rr := httptest.NewRecorder()
 			router.ServeHTTP(rr, req)
@@ -2819,6 +2852,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 		setupUser      func(uuid.UUID) model.User
 		updateRequest  v2.UpdateUserRequest
 		expectedStatus int
+		returnedRoles  model.Roles
 		assertBody     func(t *testing.T, body string)
 		expectMocks    func(mockDB *mocks.MockDatabase, goodUser model.User)
 	}
@@ -2867,6 +2901,33 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
 				mockDB.EXPECT().DeleteEnvironmentListForUser(gomock.Any(), gomock.Any())
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name: "error setting etac for ineligible role",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled: &isDisabled,
+				EnvironmentControlList: &v2.UpdateUserETACListRequest{
+					Environments:    []string{"12345"},
+					AllEnvironments: false,
+				},
+			},
+			returnedRoles: model.Roles{
+				{
+					Name: authz.RoleAdministrator,
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACInvalidRoles)
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
 			},
 		},
 		{
@@ -2920,11 +2981,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			mockDB.EXPECT().GetFlagByKey(gomock.Any(), database.EnvironmentAccessControlFeatureFlag).Return(appcfg.FeatureFlag{Enabled: true}, nil).AnyTimes()
 			mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
-			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{model.Role{
-				Name:        "admin",
-				Description: "admin",
-				Permissions: model.Permissions{model.Permission{Authority: "admin", Name: "admin"}},
-			}}, nil)
+			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(tc.returnedRoles, nil)
 			mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, nil)
 
 			// case-specific expectations
