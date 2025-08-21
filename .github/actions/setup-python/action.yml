@@ -1,11 +1,14 @@
 name: Setup Python
-description: Installs Python for workflows
+description: Installs Python and dependencies for workflows
 
 inputs:
   python-version:
     description: Version of Python to install
     required: false
     default: 3.x
+  requirements:
+    description: Path to requirements.txt file
+    required: true
 
 runs:
   using: composite
@@ -14,3 +17,9 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
         cache: 'pip'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r "${{ inputs.requirements }}"
+      shell: bash
