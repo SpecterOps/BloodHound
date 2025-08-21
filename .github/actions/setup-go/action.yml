@@ -1,0 +1,18 @@
+name: Setup Go
+description: Install Go for workflows
+
+inputs:
+  go-version:
+      description: Version of Go to install
+      required: false
+      default: ~1.24.4
+
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache: true
