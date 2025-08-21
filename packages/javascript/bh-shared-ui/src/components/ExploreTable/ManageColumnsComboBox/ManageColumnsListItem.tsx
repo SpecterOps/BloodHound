@@ -39,7 +39,10 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
         }}>
         <div className="w-full text-left flex justify-between items-center'">
             <div>
-                <Checkbox className={cn('mr-2', { '*:bg-blue-800': isSelected })} checked={isSelected} />
+                <Checkbox
+                    className={cn('mr-2', { '*:bg-blue-800 dark:*:bg-neutral-500': isSelected })}
+                    checked={isSelected}
+                />
                 <span>{item.value}</span>
             </div>
             {item.isPinned && (
