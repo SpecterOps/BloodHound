@@ -18,7 +18,9 @@ import {
     AD_PLATFORM,
     AZ_PLATFORM,
     AppLink,
+    EnvironmentAggregation,
     SelectedEnvironment,
+    SelectorValueTypes,
     SimpleEnvironmentSelector,
     getTagUrlValue,
     useEnvironmentParams,
@@ -27,6 +29,17 @@ import {
 } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+
+const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {
+    switch (type) {
+        case AD_PLATFORM:
+            return 'active-directory';
+        case AZ_PLATFORM:
+            return 'azure';
+        default:
+            return null;
+    }
+};
 
 const InfoHeader: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -41,7 +54,8 @@ const InfoHeader: FC = () => {
 
     const handleSelect = (environment: SelectedEnvironment) => {
         const { id, type } = environment;
-        const aggregation = type === AD_PLATFORM ? 'active-directory' : type === AZ_PLATFORM ? 'azure' : null;
+
+        const aggregation = aggregationFromType(type);
 
         setEnvironmentParams({ environmentId: id, environmentAggregation: aggregation });
 
@@ -60,8 +74,6 @@ const InfoHeader: FC = () => {
                         type: selectedEnvironment?.type ?? null,
                         id: selectedEnvironment?.id ?? null,
                     }}
-                    errorMessage={''}
-                    buttonPrimary={false}
                     onSelect={handleSelect}
                 />
                 <Button variant='primary' disabled={!tagId} asChild>

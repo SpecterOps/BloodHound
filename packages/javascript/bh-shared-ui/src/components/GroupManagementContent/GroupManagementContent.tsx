@@ -118,6 +118,8 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
         setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
     };
 
+    const handleSelect = (selection: SelectedEnvironment) => setSelectedEnvironment({ ...selection });
+
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
         const filterDomain = selectedEnvironment || globalEnvironment;
@@ -157,9 +159,8 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 <SimpleEnvironmentSelector
                                     selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    onSelect={(selection: SelectedEnvironment) =>
-                                        setSelectedEnvironment({ ...selection })
-                                    }
+                                    buttonPrimary
+                                    onSelect={handleSelect}
                                 />
                             </Grid>
                         </Grid>

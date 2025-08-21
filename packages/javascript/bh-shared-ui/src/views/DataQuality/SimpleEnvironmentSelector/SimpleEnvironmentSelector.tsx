@@ -56,10 +56,10 @@ const selectedText = (selected: SelectedEnvironment, environments: Environment[]
 
 const SimpleEnvironmentSelector: React.FC<{
     selected: SelectedEnvironment;
-    errorMessage: ReactNode;
+    errorMessage?: ReactNode;
     buttonPrimary?: boolean;
     onSelect?: (newValue: { type: SelectorValueTypes; id: string | null }) => void;
-}> = ({ selected, errorMessage, buttonPrimary = true, onSelect = () => {} }) => {
+}> = ({ selected, errorMessage = '', buttonPrimary = false, onSelect = () => {} }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
@@ -70,6 +70,11 @@ const SimpleEnvironmentSelector: React.FC<{
 
     const handleClose = () => setOpen(false);
 
+    const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
+
+    const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) =>
+        setSearchInput(e.target.value);
+
     const filteredEnvironments = data?.filter(
         (environment: Environment) =>
             environment.name.toLowerCase().includes(searchInput.toLowerCase()) && environment.collected
@@ -78,16 +83,12 @@ const SimpleEnvironmentSelector: React.FC<{
     const selectedEnvironmentName = selectedText(selected, data);
 
     return (
-        <Popover
-            open={open}
-            onOpenChange={() => {
-                setOpen((prev) => !prev);
-            }}>
+        <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button
                     variant={'primary'}
                     className={cn({
-                        'bg-transparent rounded-md border uppercase shadow-outer-0 hover:bg-neutral-3 text-black dark:text-white hover:text-white truncate':
+                        'bg-transparent rounded-md border uppercase shadow-outer-0 hover:bg-neutral-3 text-black dark:text-white truncate':
                             !buttonPrimary,
                         'w-full': buttonPrimary,
                     })}
@@ -112,9 +113,7 @@ const SimpleEnvironmentSelector: React.FC<{
                     <TextField
                         autoFocus={true}
                         value={searchInput}
-                        onChange={(e) => {
-                            setSearchInput(e.target.value);
-                        }}
+                        onChange={handleChange}
                         variant='standard'
                         fullWidth
                         label='Search'

@@ -131,7 +131,6 @@ const QualityAssurance: React.FC = () => {
                 <SimpleEnvironmentSelector
                     selected={selectedEnvironment || initialEnvironment || { type: null, id: null }}
                     errorMessage={environmentErrorMessage}
-                    buttonPrimary={false}
                     onSelect={(selection) => setSelectedEnvironment({ ...selection })}
                 />
             </Box>
