@@ -36,7 +36,6 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -2845,7 +2844,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 	require.Nil(t, err)
 
 	type mock struct {
-		mockDatabase *mocks.MockDatabase
+		mockDatabase *mocks_db.MockDatabase
 	}
 
 	type expected struct {
@@ -2866,11 +2865,10 @@ func TestResources_CertifyMembers(t *testing.T) {
 	}
 
 	type testData struct {
-		name        string
-		request     *http.Request
-		requestBody string
-		setupMocks  func(t *testing.T, mock *mock)
-		expected    expected
+		name       string
+		request    *http.Request
+		setupMocks func(t *testing.T, mock *mock)
+		expected   expected
 	}
 
 	tt := []testData{
@@ -2943,15 +2941,32 @@ func TestResources_CertifyMembers(t *testing.T) {
 					fakeTx := &gorm.DB{}
 					return fn(fakeTx)
 				})
-				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode: http.StatusInternalServerError,
 				responseBody: api.ErrorResponseDetailsInternalServerError,
 			}},
-
 		{
-			name:    "success - manual cert action",
+			name:    "get asset group tag selector nodes multiple db update certification error",
+			request: httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1,2,3], "action": %d}`, model.AssetGroupCertificationManual))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{
+					mockAssetGroupSelectorNodeExpanded, mockAssetGroupSelectorNodeExpanded, mockAssetGroupSelectorNodeExpanded}, nil)
+				mock.mockDatabase.EXPECT().BeginTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(tx *gorm.DB) error) error {
+					fakeTx := &gorm.DB{}
+					return fn(fakeTx)
+				})
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Return(errors.New("error 1")).Return(errors.New("error 2"))
+
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: api.ErrorResponseDetailsInternalServerError,
+			}},
+		{
+			name:    "get asset group tag selector nodes db create history record error",
 			request: httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1,2,3], "action": %d}`, model.AssetGroupCertificationManual))),
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
@@ -2961,7 +2976,63 @@ func TestResources_CertifyMembers(t *testing.T) {
 					fakeTx := &gorm.DB{}
 					return fn(fakeTx)
 				})
-				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				mock.mockDatabase.EXPECT().CreateAssetGroupHistoryRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: api.ErrorResponseDetailsInternalServerError,
+			}},
+
+		{
+			name:    "success - manual cert action",
+			request: httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d}`, model.AssetGroupCertificationManual))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{
+					mockAssetGroupSelectorNodeExpanded}, nil)
+				mock.mockDatabase.EXPECT().BeginTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(tx *gorm.DB) error) error {
+					fakeTx := &gorm.DB{}
+					return fn(fakeTx)
+				})
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), mockAssetGroupSelectorNodeExpanded.SelectorId, model.AssetGroupCertificationManual, gomock.Any(), mockAssetGroupSelectorNodeExpanded.NodeId)
+				mock.mockDatabase.EXPECT().CreateAssetGroupHistoryRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: "",
+			}},
+		{
+			name:    "success - revoke cert action",
+			request: httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d}`, model.AssetGroupCertificationRevoked))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{
+					mockAssetGroupSelectorNodeExpanded}, nil)
+				mock.mockDatabase.EXPECT().BeginTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(tx *gorm.DB) error) error {
+					fakeTx := &gorm.DB{}
+					return fn(fakeTx)
+				})
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), mockAssetGroupSelectorNodeExpanded.SelectorId, model.AssetGroupCertificationRevoked, gomock.Any(), mockAssetGroupSelectorNodeExpanded.NodeId)
+				mock.mockDatabase.EXPECT().CreateAssetGroupHistoryRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: "",
+			}},
+		{
+			name:    "success - update 3 entries, but only create one history record",
+			request: httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d}`, model.AssetGroupCertificationManual))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{
+					mockAssetGroupSelectorNodeExpanded, mockAssetGroupSelectorNodeExpanded, mockAssetGroupSelectorNodeExpanded}, nil)
+				mock.mockDatabase.EXPECT().BeginTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(tx *gorm.DB) error) error {
+					fakeTx := &gorm.DB{}
+					return fn(fakeTx)
+				})
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), mockAssetGroupSelectorNodeExpanded.SelectorId, model.AssetGroupCertificationManual, gomock.Any(), mockAssetGroupSelectorNodeExpanded.NodeId).Times(3)
+				mock.mockDatabase.EXPECT().CreateAssetGroupHistoryRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,
@@ -2974,7 +3045,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 			mocks := &mock{
-				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockDatabase: mocks_db.NewMockDatabase(ctrl),
 			}
 			testCase.request.Header.Set("Content-Type", "application/json")
 			testCase.setupMocks(t, mocks)
@@ -3073,6 +3144,22 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			AssetGroupTagId: assetGroupTag1,
 			Position:        lowestPosition,
 		}
+		assetGroupSelectorNode1AlreadyCertified = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+			SelectorId:        selectorId1,
+			NodeId:            nodeId1,
+			Certified:         model.AssetGroupCertificationManual,
+			CertifiedBy:       null.String{},
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			NodePrimaryKind:   "",
+			NodeEnvironmentId: "",
+			NodeObjectId:      "",
+			NodeName:          "",
+		},
+			AssetGroupTagId: assetGroupTag1,
+			Position:        lowestPosition,
+		}
 		assetGroupSelectorNode2 = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
 			SelectorId:        selectorId2,
 			NodeId:            nodeId2,
@@ -3151,6 +3238,40 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			NodeId:              nodeId1,
 			NodeName:            "",
 		}, {
+			AssetGroupTagId:     assetGroupTag1,
+			SelectorId:          selectorId1,
+			CertificationStatus: model.AssetGroupCertificationPending,
+			NodeId:              nodeId1,
+			NodeName:            "",
+		}, {
+			AssetGroupTagId:     assetGroupTag1,
+			SelectorId:          selectorId1,
+			CertificationStatus: model.AssetGroupCertificationPending,
+			NodeId:              nodeId1,
+			NodeName:            "",
+		},
+		}},
+		{name: "same node, skip already certified node in between other nodes", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1HighPriority, assetGroupSelectorNode1AlreadyCertified, assetGroupSelectorNode1MedPriority, assetGroupSelectorNode1LowPriority}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
+			AssetGroupTagId:     assetGroupTag1,
+			SelectorId:          selectorId1,
+			CertificationStatus: model.AssetGroupCertificationManual,
+			NodeId:              nodeId1,
+			NodeName:            "",
+		}, {
+			AssetGroupTagId:     assetGroupTag1,
+			SelectorId:          selectorId1,
+			CertificationStatus: model.AssetGroupCertificationPending,
+			NodeId:              nodeId1,
+			NodeName:            "",
+		}, {
+			AssetGroupTagId:     assetGroupTag1,
+			SelectorId:          selectorId1,
+			CertificationStatus: model.AssetGroupCertificationPending,
+			NodeId:              nodeId1,
+			NodeName:            "",
+		},
+		}},
+		{name: "same node, skip already certified node if first node", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1AlreadyCertified, assetGroupSelectorNode1MedPriority, assetGroupSelectorNode1LowPriority}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,

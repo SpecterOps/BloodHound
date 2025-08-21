@@ -932,20 +932,32 @@ func isValidCertType(certType model.AssetGroupCertification) bool {
 	}
 }
 
-// Visible for Testing
+func nodeShouldBeUpdated(node model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
+	if node.NodeId != lastProcessedNodeId {
+		return true
+	} else if node.Position == highestPriority {
+		return true
+	}
+	return false
+}
+
+// CreateInputsForUpdateCertificationBySelectorNode Visible for Testing
 func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification) []UpdateCertificationBySelectorNodeInput {
 	var (
 		certificationStatus model.AssetGroupCertification
 		inputs              []UpdateCertificationBySelectorNodeInput
 	)
-	// ONLY update the nodes with the lowest position. set nodes with higher position to pending
-	lastProcessedNodeId, highestPositionForNodeId := graph.ID(0), -1
+	// Only update the node with the highest priority for a given nodeID
+	lastProcessedNodeId, highestPriorityForGivenNode := graph.ID(0), -1
 	for _, node := range nodes {
 		certificationStatus = model.AssetGroupCertificationPending
-		// nodeId is different -- new set of nodes to process
-		if (node.NodeId != lastProcessedNodeId) || (node.NodeId == lastProcessedNodeId && node.Position == highestPositionForNodeId) {
+		if nodeShouldBeUpdated(node, lastProcessedNodeId, highestPriorityForGivenNode) {
 			certificationStatus = requestAction
-			highestPositionForNodeId = node.Position
+			highestPriorityForGivenNode = node.Position
+			// skip nodes that are already manually certified
+			if node.Certified == model.AssetGroupCertificationManual {
+				continue
+			}
 		}
 		inputs = append(inputs, UpdateCertificationBySelectorNodeInput{node.AssetGroupTagId, node.SelectorId, certificationStatus, node.NodeId, node.NodeName})
 		lastProcessedNodeId = node.NodeId
@@ -975,12 +987,19 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		if user.EmailAddress.Valid {
 			userEmailAddress = user.EmailAddress.String
 		}
+		note := null.StringFrom(reqBody.Note)
+		lastSeenNodeId := graph.ID(0)
 		dbInputs := CreateInputsForUpdateCertificationBySelectorNode(nodes, reqBody.Action)
 		if err := s.DB.BeginTransaction(requestContext, func(tx *gorm.DB) error {
 			for _, input := range dbInputs {
-				if err := s.DB.UpdateCertificationBySelectorNode(requestContext, input.AssetGroupTagId, input.SelectorId, input.CertificationStatus, userEmailAddress, input.NodeId, input.NodeName, null.StringFrom(reqBody.Note)); err != nil {
+				if err := s.DB.UpdateCertificationBySelectorNode(requestContext, input.SelectorId, input.CertificationStatus, userEmailAddress, input.NodeId); err != nil {
 					return err
+				} else if input.NodeId != lastSeenNodeId && input.CertificationStatus != model.AssetGroupCertificationPending {
+					if err := s.DB.CreateAssetGroupHistoryRecord(requestContext, model.AssetGroupActorSystem, userEmailAddress, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, note); err != nil {
+						return err
+					}
 				}
+				lastSeenNodeId = input.NodeId
 			}
 			return err
 		}); err != nil {

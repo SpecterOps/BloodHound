@@ -1145,11 +1145,9 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 		isDefault           = false
 		allowDisable        = true
 		autoCertify         = null.BoolFrom(false)
-		testHistoryNote     = null.StringFrom("test history note")
 		test1Selector       = model.AssetGroupTagSelector{
-			Name:            "test selector name",
-			Description:     "test description",
-			AssetGroupTagId: 1,
+			Name:        "test selector name",
+			Description: "test description",
 			Seeds: []model.SelectorSeed{
 				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			},
@@ -1161,34 +1159,23 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("updates certification by selector node, certified", func(t *testing.T) {
-		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
-		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testAssetGroupTagId, testSelectorId, model.AssetGroupCertificationManual, testCertifiedBy, graph.ID(testNodeId1), test1Selector.Name, testHistoryNote)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationManual, testCertifiedBy, graph.ID(testNodeId1))
 		require.NoError(t, err)
 		// confirm selector was updated
 		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
 		require.NoError(t, err)
 		require.Equal(t, len(selector), 1)
 		require.Equal(t, selector[0].Certified, model.AssetGroupCertificationManual)
-
-		// confirm history record was created
-		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
-		require.NoError(t, err)
-		require.Equal(t, rowCountBefore+1, rowCountAfter)
 	})
 
 	t.Run("updates certification by selector node, pending", func(t *testing.T) {
-		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
-		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testAssetGroupTagId, testSelectorId, model.AssetGroupCertificationPending, testCertifiedBy, graph.ID(testNodeId1), test1Selector.Name, testHistoryNote)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationPending, testCertifiedBy, graph.ID(testNodeId1))
 		require.NoError(t, err)
 		// confirm selector was updated
 		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
 		require.NoError(t, err)
 		require.Equal(t, len(selector), 1)
 		require.Equal(t, selector[0].Certified, model.AssetGroupCertificationPending)
-		// confirm history record was not created
-		_, rowCountAfter, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
-		require.NoError(t, err)
-		require.Equal(t, rowCountBefore, rowCountAfter)
 	})
 }
 
