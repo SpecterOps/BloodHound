@@ -385,12 +385,15 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
-		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		queryParams = request.URL.Query()
+
+		assetTagIdStr  = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		environmentIds = queryParams[api.QueryParameterEnvironments]
+
 		selectorQueryFilter      = make(model.QueryParameterFilterMap)
 		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
 		selectorSeed             = model.SelectorSeed{}
 		assetGroupTagSelector    = model.AssetGroupTagSelector{}
-		queryParams              = request.URL.Query()
 	)
 
 	if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
@@ -466,10 +469,18 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 							}
 
 							// only count nodes that are actually tagged
-							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
+							filters := []graph.Criteria{
 								query.KindIn(query.Node(), assetGroupTag.ToKind()),
 								query.InIDs(query.NodeID(), nodeIds...),
-							)); err != nil {
+							}
+							if len(environmentIds) > 0 {
+								filters = append(filters, query.Or(
+									query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+									query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+								))
+							}
+
+							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 							} else {
 								memberCount = count
