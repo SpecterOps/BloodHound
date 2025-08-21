@@ -242,7 +242,7 @@ const Users: FC<{ showEnvironmentAccessControls: boolean }> = ({ showEnvironment
                         onClose={toggleUpdateUserDialog}
                         onExited={updateUserMutation.reset}
                         onSave={updateUserMutation.mutateAsync}
-                        //open={updateUserDialogOpen}
+                        open={updateUserDialogOpen}
                         showEnvironmentAccessControls={showEnvironmentAccessControls}
                         userId={selectedUserId!}
                     />
