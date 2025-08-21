@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DialogContent } from '@bloodhoundenterprise/doodleui';
+import { DialogContent, DialogTitle, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import { CreateUserRequest } from 'js-client-library';
 import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
@@ -66,6 +66,9 @@ const CreateUserDialog: React.FC<{
 
     return (
         <DialogContent maxWidth='lg' className='!bg-transparent'>
+            <VisuallyHidden asChild>
+                <DialogTitle>Create User</DialogTitle>
+            </VisuallyHidden>
             <CreateUserForm
                 error={error}
                 isLoading={isLoading}
