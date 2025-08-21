@@ -1,0 +1,17 @@
+name: Setup Python
+description: Installs Python for workflows
+
+inputs:
+  python-version:
+      description: Version of Python to install
+      required: false
+      default: 3.x
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: actions/setup-go@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
