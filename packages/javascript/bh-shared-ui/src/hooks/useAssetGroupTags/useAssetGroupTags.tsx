@@ -72,8 +72,8 @@ export const zoneManagementKeys = {
     tags: () => [...zoneManagementKeys.all, 'tags'] as const,
     tagDetail: (tagId: string | number) => [...zoneManagementKeys.tags(), 'tagId', tagId] as const,
     selectors: () => [...zoneManagementKeys.all, 'selectors'] as const,
-    selectorsByTag: (tagId: string | number, environments: string[] = []) =>
-        [...zoneManagementKeys.selectors(), 'tag', tagId, ...environments] as const,
+    selectorsByTag: (tagId: string | number, sortOrder: SortOrder = undefined, environments: string[] = []) =>
+        [...zoneManagementKeys.selectors(), 'tag', tagId, sortOrder, ...environments] as const,
     selectorDetail: (tagId: string | number, selectorId: string | number) =>
         [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
     members: () => [...zoneManagementKeys.all, 'members'] as const,
@@ -182,24 +182,37 @@ export const getAssetGroupTagSelectors = (
     tagId: string | number,
     skip: number = 0,
     limit: number = PAGE_SIZE,
+    sortOrder: SortOrder = 'asc',
     environments: string[] = []
 ) =>
     createPaginatedFetcher(
-        () => apiClient.getAssetGroupTagSelectors(tagId, skip, limit, environments, { params: { counts: true } }),
+        () =>
+            apiClient.getAssetGroupTagSelectors(
+                tagId,
+                skip,
+                limit,
+                sortOrder === 'asc' ? 'name' : '-name',
+                environments,
+                { params: { counts: true } }
+            ),
         'selectors',
         skip,
         limit
     );
 
-export const useSelectorsInfiniteQuery = (tagId: string | number | undefined, environments: string[] = []) =>
+export const useSelectorsInfiniteQuery = (
+    tagId: string | number | undefined,
+    sortOrder: SortOrder,
+    environments: string[] = []
+) =>
     useInfiniteQuery<{
         items: AssetGroupTagSelector[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.selectorsByTag(tagId!, environments),
+        queryKey: zoneManagementKeys.selectorsByTag(tagId!, sortOrder, environments),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID provided for selectors request');
-            return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit, environments);
+            return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit, sortOrder, environments);
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
