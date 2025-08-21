@@ -24,25 +24,47 @@ import {
     Input,
     Skeleton,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeObjectId } from 'js-client-library';
+import {
+    SeedExpansionMethod,
+    SeedExpansionMethodAll,
+    SeedExpansionMethodChild,
+    SeedExpansionMethodNone,
+    SeedTypeObjectId,
+} from 'js-client-library';
 import { FC, useContext } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
+import { useOwnedTagId, useZonePathParams } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
+const getSelectorExpansionMethod = (
+    tagId: string,
+    tagKind: 'label' | 'tier',
+    ownedId: string | undefined
+): SeedExpansionMethod => {
+    // Owned is a specific label that does not expansion
+    if (tagId === ownedId) return SeedExpansionMethodNone;
+
+    return tagKind === 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+};
+
 const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { tagKind, tagId } = useZonePathParams();
+    const ownedId = useOwnedTagId();
+
+    const expansion = getSelectorExpansionMethod(tagId, tagKind, ownedId?.toString());
 
     const previewQuery = useQuery({
-        queryKey: ['zone-management', 'preview-selectors', selectorType, seeds],
+        queryKey: ['zone-management', 'preview-selectors', selectorType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
-                .assetGroupTagsPreviewSelectors({ seeds: seeds }, { signal })
+                .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })
                 .then((res) => res.data.data['members']);
         },
         retry: false,
