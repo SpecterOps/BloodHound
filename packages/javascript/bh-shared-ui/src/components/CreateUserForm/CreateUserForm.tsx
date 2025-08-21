@@ -27,9 +27,10 @@ import {
     SelectPortal,
     SelectTrigger,
     SelectValue,
+    Tooltip,
 } from '@bloodhoundenterprise/doodleui';
 import { Alert, Card, Checkbox, FormControl, FormControlLabel, Grid, TextField } from '@mui/material';
-import { CreateUserRequest, SSOProvider } from 'js-client-library';
+import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -40,54 +41,16 @@ import UserFormEnvironmentSelector from './UserFormEnvironmentSelector';
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
 const CreateUserForm: React.FC<{
-    onCancel: () => void;
-    onSubmit: (user: CreateUserRequestForm) => void;
-    isLoading: boolean;
     error: any;
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
-    open?: boolean;
-    /*
-    className?: any;
-    createUser?: boolean;
-    disabled?: boolean;
-    error: any;
-    handleSubmit?: any;
-    hasSelectedSelf?: boolean;
-    initialData?: CreateUserRequestForm;
     isLoading: boolean;
     onCancel: () => void;
-    onChange?: (value: string) => void;
     onSubmit: (user: CreateUserRequestForm) => void;
     open?: boolean;
-    roles?: Role[];
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
-    userId: string;
-    value?: string;
-    */
-}> = ({
-    //onCancel,
-    onSubmit,
-    isLoading,
-    error,
-    showEnvironmentAccessControls,
-    open,
-    /*
-    disabled,
-    error,
-    isLoading,
-    onCancel,
-    onChange,
-    onSubmit,
-    open,
-    roles,
-    showEnvironmentAccessControls,
-    userId,
-    value,
-    */
-}) => {
+}> = ({ error, isLoading, onSubmit, open, showEnvironmentAccessControls }) => {
     const {
         control,
-        formState: { errors, isSubmitSuccessful },
+        formState: { errors },
         handleSubmit,
         setError,
         setValue,
@@ -107,6 +70,10 @@ const CreateUserForm: React.FC<{
     });
 
     const [authenticationMethod, setAuthenticationMethod] = useState<string>('password');
+    const [selectedRoleValue, setSelectedRoleValue] = useState([3]);
+
+    const roleInputValue = watch('roles');
+    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
@@ -139,16 +106,9 @@ const CreateUserForm: React.FC<{
         }
     }, [authenticationMethod, setValue, error, setError]);
 
-    //console.log(selectedRole);
-
-    const roleInputValue = watch('roles');
-    //console.log(roleInputValue);
-
-    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
-
-    console.log(errors);
-
-    console.log(isSubmitSuccessful);
+    if (error) {
+        console.log(error);
+    }
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
@@ -157,8 +117,8 @@ const CreateUserForm: React.FC<{
                     <Card className=' p-6 rounded shadow max-w-[600px]'>
                         <DialogTitle>{'Create User'}</DialogTitle>
 
-                        <DialogDescription className='flex flex-col' data-testid='create-user-dialog'>
-                            <Grid container spacing={2} className='min-h-[650px]'>
+                        <DialogDescription className='flex flex-col' data-testid='create-user-dialog_content'>
+                            <Grid container spacing={2} className='min-h-[650px] mt-4'>
                                 <Grid item xs={12}>
                                     <Controller
                                         name='emailAddress'
@@ -175,17 +135,20 @@ const CreateUserForm: React.FC<{
                                             },
                                         }}
                                         render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                variant='standard'
-                                                id='emailAddress'
-                                                label='Email Address'
-                                                type='email'
-                                                fullWidth
-                                                error={!!errors.emailAddress}
-                                                helperText={errors.emailAddress?.message}
-                                                data-testid='create-user-dialog_input-email-address'
-                                            />
+                                            <>
+                                                <Label size='small'>Email Address</Label>
+                                                <TextField
+                                                    {...field}
+                                                    data-testid='create-user-dialog_input-email-address'
+                                                    error={!!errors.emailAddress}
+                                                    fullWidth
+                                                    helperText={errors.emailAddress?.message}
+                                                    id='emailAddress'
+                                                    label='Email Address'
+                                                    type='email'
+                                                    variant='standard'
+                                                />
+                                            </>
                                         )}
                                     />
                                 </Grid>
@@ -213,16 +176,19 @@ const CreateUserForm: React.FC<{
                                             },
                                         }}
                                         render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                variant='standard'
-                                                id='principal'
-                                                label='Principal Name'
-                                                fullWidth
-                                                error={!!errors.principal}
-                                                helperText={errors.principal?.message}
-                                                data-testid='create-user-dialog_input-principal-name'
-                                            />
+                                            <>
+                                                <Label size='small'>Principal Name</Label>
+                                                <TextField
+                                                    {...field}
+                                                    data-testid='create-user-dialog_input-principal-name'
+                                                    error={!!errors.principal}
+                                                    fullWidth
+                                                    helperText={errors.principal?.message}
+                                                    id='principal'
+                                                    label='Principal Name'
+                                                    variant='standard'
+                                                />
+                                            </>
                                         )}
                                     />
                                 </Grid>
@@ -249,16 +215,19 @@ const CreateUserForm: React.FC<{
                                             },
                                         }}
                                         render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                variant='standard'
-                                                id='firstName'
-                                                label='First Name'
-                                                fullWidth
-                                                error={!!errors.firstName}
-                                                helperText={errors.firstName?.message}
-                                                data-testid='create-user-dialog_input-first-name'
-                                            />
+                                            <>
+                                                <Label size='small'>First Name</Label>
+                                                <TextField
+                                                    {...field}
+                                                    data-testid='create-user-dialog_input-first-name'
+                                                    error={!!errors.firstName}
+                                                    fullWidth
+                                                    helperText={errors.firstName?.message}
+                                                    id='firstName'
+                                                    label='First Name'
+                                                    variant='standard'
+                                                />
+                                            </>
                                         )}
                                     />
                                 </Grid>
@@ -285,16 +254,19 @@ const CreateUserForm: React.FC<{
                                             },
                                         }}
                                         render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                variant='standard'
-                                                id='lastName'
-                                                label='Last Name'
-                                                fullWidth
-                                                error={!!errors.lastName}
-                                                helperText={errors.lastName?.message}
-                                                data-testid='create-user-dialog_input-last-name'
-                                            />
+                                            <>
+                                                <Label size='small'>Last Name</Label>
+                                                <TextField
+                                                    {...field}
+                                                    data-testid='create-user-dialog_input-last-name'
+                                                    error={!!errors.lastName}
+                                                    fullWidth
+                                                    helperText={errors.lastName?.message}
+                                                    id='lastName'
+                                                    label='Last Name'
+                                                    variant='standard'
+                                                />
+                                            </>
                                         )}
                                     />
                                 </Grid>
@@ -302,7 +274,7 @@ const CreateUserForm: React.FC<{
                                 <>
                                     <Grid item xs={12}>
                                         <FormControl>
-                                            <Label className='text-base font-bold'>Authentication Method</Label>
+                                            <Label size='small'>Authentication Method</Label>
                                             <Select
                                                 data-testid='create-user-dialog_select-authentication-method'
                                                 onValueChange={(value) => setAuthenticationMethod(value as string)}
@@ -314,29 +286,31 @@ const CreateUserForm: React.FC<{
                                                     <SelectContent>
                                                         <SelectItem value='password'>Username / Password</SelectItem>
                                                         <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
-                                                        {/* TODO: NEEDS TO BE IMPLEMENTED 
-                                                                listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
-                                                                    <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
-                                                                )*/}
+                                                        {listSSOProvidersQuery.data &&
+                                                            listSSOProvidersQuery.data?.length > 0 && (
+                                                                <SelectItem value='sso'>
+                                                                    Single Sign-On (SSO)
+                                                                </SelectItem>
+                                                            )}
                                                     </SelectContent>
                                                 </SelectPortal>
                                             </Select>
                                             {/* TODO: REMOVE
-                                                        <Select
-                                                            labelId='authenticationMethod-label'
-                                                            id='authenticationMethod'
-                                                            name='authenticationMethod'
-                                                            onChange={(e) => setAuthenticationMethod(e.target.value as string)}
-                                                            value={authenticationMethod}
-                                                            variant='standard'
-                                                            fullWidth
-                                                            data-testid='create-user-dialog_select-authentication-method'>
-                                                            <MenuItem value='password'>Username / Password</MenuItem>
-                                                            {listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
-                                                                <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
-                                                            )}
-                                                        </Select>
-                                                        */}
+                                            <Select
+                                                labelId='authenticationMethod-label'
+                                                id='authenticationMethod'
+                                                name='authenticationMethod'
+                                                onChange={(e) => setAuthenticationMethod(e.target.value as string)}
+                                                value={authenticationMethod}
+                                                variant='standard'
+                                                fullWidth
+                                                data-testid='create-user-dialog_select-authentication-method'>
+                                                <MenuItem value='password'>Username / Password</MenuItem>
+                                                {listSSOProvidersQuery.data && listSSOProvidersQuery.data?.length > 0 && (
+                                                    <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
+                                                )}
+                                            </Select>
+                                            */}
                                         </FormControl>
                                     </Grid>
 
@@ -364,17 +338,20 @@ const CreateUserForm: React.FC<{
                                                         },
                                                     }}
                                                     render={({ field }) => (
-                                                        <TextField
-                                                            {...field}
-                                                            variant='standard'
-                                                            id='password'
-                                                            label='Initial Password'
-                                                            type='password'
-                                                            fullWidth
-                                                            error={!!errors.password}
-                                                            helperText={errors.password?.message}
-                                                            data-testid='create-user-dialog_input-password'
-                                                        />
+                                                        <>
+                                                            <Label size='small'>Password</Label>
+                                                            <TextField
+                                                                {...field}
+                                                                data-testid='create-user-dialog_input-password'
+                                                                error={!!errors.password}
+                                                                fullWidth
+                                                                helperText={errors.password?.message}
+                                                                id='password'
+                                                                label='Initial Password'
+                                                                type='password'
+                                                                variant='standard'
+                                                            />
+                                                        </>
                                                     )}
                                                 />
                                             </Grid>
@@ -388,9 +365,9 @@ const CreateUserForm: React.FC<{
                                                             control={
                                                                 <Checkbox
                                                                     {...field}
-                                                                    onChange={(e, checked) => field.onChange(checked)}
                                                                     color='primary'
                                                                     data-testid='create-user-dialog_checkbox-needs-password-reset'
+                                                                    onChange={(e, checked) => field.onChange(checked)}
                                                                 />
                                                             }
                                                             label='Force Password Reset?'
@@ -402,11 +379,9 @@ const CreateUserForm: React.FC<{
                                     ) : (
                                         <Grid item xs={12}>
                                             <FormControl>
-                                                <Label id='SSOProviderId-label' className='text-base font-bold'>
-                                                    SSO Provider
-                                                </Label>
+                                                <Label size='small'>SSO Provider</Label>
                                                 <Select
-                                                    data-testid='create-user-dialog_select-authentication-method'
+                                                    data-testid='create-user-dialog_sso-provider'
                                                     onValueChange={(value) => setAuthenticationMethod(value as string)}
                                                     value={authenticationMethod}>
                                                     <SelectTrigger>
@@ -441,11 +416,25 @@ const CreateUserForm: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <>
-                                                <Label className='text-base font-bold'>Role</Label>
+                                                <div className='flex row'>
+                                                    <Label className='mr-2' size='small'>
+                                                        Role
+                                                    </Label>
+                                                    <Tooltip
+                                                        tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                        contentProps={{
+                                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                        }}
+                                                    />
+                                                </div>
                                                 <Select
-                                                    onValueChange={field.onChange}
-                                                    value={isNaN(field.value) ? '' : field.value.toString()}
-                                                    {...register('roles')}>
+                                                    {...register('roles')}
+                                                    data-testid='create-user-dialog_role'
+                                                    onValueChange={(field) => {
+                                                        setValue('roles', [Number(field)]);
+                                                        setSelectedRoleValue([Number([field])]);
+                                                    }}
+                                                    value={String(selectedRoleValue)}>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder={field.value} />
                                                     </SelectTrigger>
@@ -454,8 +443,9 @@ const CreateUserForm: React.FC<{
                                                             {getRolesQuery.isLoading ? (
                                                                 <SelectItem value={''}>Loading...</SelectItem>
                                                             ) : (
-                                                                getRolesQuery.data?.map((role: any) => (
+                                                                getRolesQuery.data?.map((role: Role) => (
                                                                     <SelectItem
+                                                                        className='hover:cursor-pointer'
                                                                         key={role.id}
                                                                         value={role.id.toString()}>
                                                                         {role.name}
@@ -482,18 +472,11 @@ const CreateUserForm: React.FC<{
                                     type='button'
                                     disabled={isLoading}
                                     variant='tertiary'
-                                    data-testid='create-user-dialog_button-close'>
+                                    data-testid='create-user-dialog_button-cancel'>
                                     Cancel
                                 </Button>
                             </DialogClose>
-                            <Button
-                                type='submit'
-                                disabled={isLoading}
-                                data-testid='create-user-dialog_button-save'
-                                //onClick={handleSubmit(onSubmit)}
-                                onClick={() => {
-                                    open;
-                                }}>
+                            <Button type='submit' disabled={isLoading} data-testid='create-user-dialog_button-save'>
                                 Save
                             </Button>
                         </DialogActions>

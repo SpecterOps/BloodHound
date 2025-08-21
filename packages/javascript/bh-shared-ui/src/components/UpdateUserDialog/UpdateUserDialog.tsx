@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DialogContent } from '@bloodhoundenterprise/doodleui';
+import { DialogContent, DialogTitle, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
 import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
@@ -26,8 +26,8 @@ const UpdateUserDialog: React.FC<{
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
-    //open: boolean;
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
+    open: boolean;
+    showEnvironmentAccessControls: boolean; //TODO: required or not?
     userId: string;
 }> = ({
     error,
@@ -36,7 +36,7 @@ const UpdateUserDialog: React.FC<{
     onClose,
     onExited,
     onSave,
-    //open,
+    open,
     showEnvironmentAccessControls,
     userId,
 }) => {
@@ -58,14 +58,17 @@ const UpdateUserDialog: React.FC<{
 
     return (
         <DialogContent maxWidth='lg' className='!bg-transparent'>
+            <VisuallyHidden asChild>
+                <DialogTitle>Edit User</DialogTitle>
+            </VisuallyHidden>
             <UpdateUserForm
                 error={error}
                 isLoading={isLoading}
                 onCancel={onClose}
                 onSubmit={handleOnSave}
                 hasSelectedSelf={hasSelectedSelf}
-                //open={open}
-                //showEnvironmentAccessControls={showEnvironmentAccessControls}
+                open={open}
+                showEnvironmentAccessControls={showEnvironmentAccessControls}
                 userId={userId!}
             />
         </DialogContent>

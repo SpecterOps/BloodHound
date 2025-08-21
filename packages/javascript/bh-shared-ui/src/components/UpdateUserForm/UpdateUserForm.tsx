@@ -21,21 +21,16 @@ import {
     DialogContent,
     DialogDescription,
     DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
-import {
-    Alert,
-    Card,
-    DialogContentText,
-    FormControl,
-    FormHelperText,
-    Grid,
-    InputLabel,
-    MenuItem,
+    Label,
     Select,
-    SelectChangeEvent,
-    Skeleton,
-    TextField,
-} from '@mui/material';
+    SelectContent,
+    SelectItem,
+    SelectPortal,
+    SelectTrigger,
+    SelectValue,
+    Tooltip,
+} from '@bloodhoundenterprise/doodleui';
+import { Alert, Card, DialogContentText, FormControl, Grid, Skeleton, TextField } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -53,6 +48,8 @@ const UpdateUserForm: React.FC<{
     hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
+    //open?: boolean;
+    //showEnvironmentAccessControls?: boolean;
 }> = ({ onCancel, onSubmit, userId, hasSelectedSelf, isLoading, error }) => {
     const getUserQuery = useQuery(
         ['getUser', userId],
@@ -155,15 +152,16 @@ const UpdateUserFormInner: React.FC<{
     onSubmit,
     open,
     roles,
-    showEnvironmentAccessControls,
+    showEnvironmentAccessControls = true,
     SSOProviders,
 }) => {
     const {
         control,
-        handleSubmit,
-        setValue,
         formState: { errors },
+        handleSubmit,
+        register,
         setError,
+        setValue,
         watch,
     } = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
         defaultValues: {
@@ -209,9 +207,10 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [authenticationMethod, setValue, error, setError]);
 
-    const [selectedRole, setSelectedRole] = useState<number>(3);
+    const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
 
-    const selectedRoleToString = selectedRole.toString() === '2' || selectedRole.toString() === '3';
+    const roleInputValue = watch('roles');
+    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     return (
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
@@ -220,7 +219,7 @@ const UpdateUserFormInner: React.FC<{
                     <DialogTitle>{'Edit User'}</DialogTitle>
 
                     <DialogDescription className='flex flex-col' data-testid='update-user-dialog_dialog-content'>
-                        <Grid container spacing={2} className='min-h-[650px]'>
+                        <Grid container spacing={2} className='min-h-[650px] mt-4'>
                             <Grid item xs={12}>
                                 <Controller
                                     name='emailAddress'
@@ -371,28 +370,49 @@ const UpdateUserFormInner: React.FC<{
                                         }}
                                         render={({ field: { onChange, onBlur, value, ref } }) => (
                                             <FormControl>
-                                                <InputLabel
+                                                <Label
                                                     id='authenticationMethod-label'
-                                                    sx={{ ml: '-14px', mt: '8px' }}
+                                                    //sx={{ ml: '-14px', mt: '8px' }}
                                                     hidden={hasSelectedSelf}>
                                                     Authentication Method
-                                                </InputLabel>
+                                                </Label>
                                                 <Select
+                                                    data-testid='update-user-dialog_select-authentication-method'
+                                                    onValueChange={
+                                                        onChange as (event: SelectChangeEvent<string>) => void
+                                                    }
+                                                    value={value}
+
+                                                    /*
                                                     onChange={onChange as (event: SelectChangeEvent<string>) => void}
                                                     onBlur={onBlur}
-                                                    value={value}
-                                                    ref={ref}
-                                                    labelId='authenticationMethod-label'
-                                                    id='authenticationMethod'
-                                                    name='authenticationMethod'
-                                                    variant='standard'
-                                                    fullWidth
                                                     data-testid='update-user-dialog_select-authentication-method'
-                                                    hidden={hasSelectedSelf}>
-                                                    <MenuItem value='password'>Username / Password</MenuItem>
-                                                    {SSOProviders && SSOProviders.length > 0 && (
-                                                        <MenuItem value='sso'>Single Sign-On (SSO)</MenuItem>
-                                                    )}
+                                                    fullWidth
+                                                    hidden={hasSelectedSelf}
+                                                    id='authenticationMethod'
+                                                    labelId='authenticationMethod-label'
+                                                    name='authenticationMethod'
+                                                    ref={ref}
+                                                    value={value}
+                                                    variant='standard'
+                                                */
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder={value} />
+                                                    </SelectTrigger>
+                                                    <SelectPortal>
+                                                        <SelectContent>
+                                                            <SelectItem value='password'>
+                                                                Username / Password
+                                                            </SelectItem>
+                                                            <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
+                                                            {SSOProviders && SSOProviders.length > 0 && (
+                                                                <SelectItem value='sso'>
+                                                                    Single Sign-On (SSO)
+                                                                </SelectItem>
+                                                            )}
+                                                        </SelectContent>
+                                                    </SelectPortal>
                                                 </Select>
                                             </FormControl>
                                         )}
@@ -409,13 +429,14 @@ const UpdateUserFormInner: React.FC<{
                                             }}
                                             render={({ field: { onChange, onBlur, value, ref } }) => (
                                                 <FormControl>
-                                                    <InputLabel
+                                                    <Label
                                                         id='SSOProviderId-label'
-                                                        sx={{ ml: '-14px', mt: '8px' }}
+                                                        //sx={{ ml: '-14px', mt: '8px' }}
                                                         hidden={hasSelectedSelf}>
                                                         SSO Provider
-                                                    </InputLabel>
+                                                    </Label>
                                                     <Select
+                                                    /*
                                                         onChange={
                                                             onChange as (event: SelectChangeEvent<string>) => void
                                                         }
@@ -429,14 +450,23 @@ const UpdateUserFormInner: React.FC<{
                                                         variant='standard'
                                                         fullWidth
                                                         data-testid='update-user-dialog_select-sso-provider'
-                                                        hidden={hasSelectedSelf}>
-                                                        {SSOProviders?.map((SSOProvider: SSOProvider) => (
-                                                            <MenuItem
-                                                                value={SSOProvider.id.toString()}
-                                                                key={SSOProvider.id}>
-                                                                {SSOProvider.name}
-                                                            </MenuItem>
-                                                        ))}
+                                                    hidden={hasSelectedSelf}
+                                                        */
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder='SSO Provider' />
+                                                        </SelectTrigger>
+                                                        <SelectPortal>
+                                                            <SelectContent>
+                                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
+                                                                    <SelectItem
+                                                                        value={SSOProvider.id.toString()}
+                                                                        key={SSOProvider.id}>
+                                                                        {SSOProvider.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </SelectPortal>
                                                     </Select>
                                                 </FormControl>
                                             )}
@@ -454,39 +484,44 @@ const UpdateUserFormInner: React.FC<{
                                         required: 'Role is required',
                                     }}
                                     render={({ field }) => (
-                                        <FormControl>
-                                            <InputLabel
-                                                id='role-label'
-                                                sx={{ ml: '-14px', mt: '8px' }}
-                                                hidden={hasSelectedSelf}>
-                                                Role
-                                            </InputLabel>
+                                        <>
+                                            <div className='flex row'>
+                                                <Label className='mr-2' size='small'>
+                                                    Role
+                                                </Label>
+                                                <Tooltip
+                                                    tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                    contentProps={{
+                                                        className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                    }}
+                                                />
+                                            </div>
                                             <Select
-                                                labelId='role-label'
-                                                id='role'
-                                                name='role'
-                                                onChange={(e) => {
-                                                    const output = parseInt(e.target.value as string, 10);
-                                                    field.onChange(isNaN(output) ? 1 : output);
-                                                }}
-                                                value={isNaN(field.value) ? '' : field.value.toString()}
-                                                variant='standard'
-                                                fullWidth
+                                                {...register('roles')}
                                                 disabled={selectedSSOProviderHasRoleProvisionEnabled}
-                                                data-testid='update-user-dialog_select-role'
-                                                hidden={hasSelectedSelf}>
-                                                {roles?.map((role: Role) => (
-                                                    <MenuItem key={role.id} value={role.id.toString()}>
-                                                        {role.name}
-                                                    </MenuItem>
-                                                ))}
+                                                data-testid='create-user-dialog_role'
+                                                onValueChange={(field) => {
+                                                    setValue('roles', [Number(field)]);
+                                                    setSelectedRoleValue([Number([field])]);
+                                                }}
+                                                value={String(selectedRoleValue)}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder={field.value} />
+                                                </SelectTrigger>
+                                                <SelectPortal>
+                                                    <SelectContent>
+                                                        {roles?.map((role: Role) => (
+                                                            <SelectItem
+                                                                className='hover:cursor-pointer'
+                                                                key={role.id}
+                                                                value={role.id.toString()}>
+                                                                {role.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </SelectPortal>
                                             </Select>
-                                            {selectedSSOProviderHasRoleProvisionEnabled && (
-                                                <FormHelperText id='role-helper-text'>
-                                                    SSO Provider has enabled role provision.
-                                                </FormHelperText>
-                                            )}
-                                        </FormControl>
+                                        </>
                                     )}
                                 />
                             </Grid>
@@ -503,23 +538,16 @@ const UpdateUserFormInner: React.FC<{
                                 type='button'
                                 disabled={isLoading}
                                 variant='tertiary'
-                                data-testid='create-user-dialog_button-close'>
+                                data-testid='create-user-dialog_button-cancel'>
                                 Cancel
                             </Button>
                         </DialogClose>
-                        <Button
-                            type='submit'
-                            disabled={isLoading}
-                            data-testid='create-user-dialog_button-save'
-                            //onClick={handleSubmit(onSubmit)}
-                            onClick={() => {
-                                open;
-                            }}>
+                        <Button type='submit' disabled={isLoading} data-testid='create-user-dialog_button-save'>
                             Save
                         </Button>
                     </DialogActions>
                 </Card>
-                {showEnvironmentAccessControls && selectedRoleToString && <UserFormEnvironmentSelector />}
+                {showEnvironmentAccessControls && selectedRole && <UserFormEnvironmentSelector />}
             </div>
         </form>
     );
