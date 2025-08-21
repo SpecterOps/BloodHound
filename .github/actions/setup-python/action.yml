@@ -3,14 +3,14 @@ description: Installs Python for workflows
 
 inputs:
   python-version:
-      description: Version of Python to install
-      required: false
-      default: 3.x
+    description: Version of Python to install
+    required: false
+    default: 3.x
 
 runs:
   using: composite
   steps:
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-        cache: pip
+        cache: 'pip'
