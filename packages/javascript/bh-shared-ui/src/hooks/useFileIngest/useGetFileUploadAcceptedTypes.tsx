@@ -28,7 +28,6 @@ export const useGetFileUploadAcceptedTypesQuery = () => {
     const { addNotification } = useNotifications();
 
     return useQuery<ListFileTypesForIngestResponse>({
-        keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
         queryFn: () => apiClient.listFileTypesForIngest().then((res) => res.data),
         queryKey: fileUploadKeys.listFileTypes(),

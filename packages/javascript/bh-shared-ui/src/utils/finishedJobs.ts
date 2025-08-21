@@ -100,8 +100,15 @@ export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) =
 };
 
 /** Returns the duration, in mins, between 2 given ISO datetime strings */
-export const toMins = (start: string, end: string) =>
-    Math.floor(Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end)).length('minutes')) + ' Min';
+export const toMins = (start: string, end: string) => {
+    const interval = Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end));
+
+    if (!interval.isValid) {
+        return '';
+    }
+
+    return Math.floor(interval.length('minutes')) + ' Min';
+}
 
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: ScheduledJobDisplay) =>
