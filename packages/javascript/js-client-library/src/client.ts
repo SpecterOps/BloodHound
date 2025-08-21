@@ -208,6 +208,7 @@ class BHEAPIClient {
         tagId: number | string,
         skip: number | string,
         limit: number,
+        sort_by: string,
         environments?: string[],
         options?: RequestOptions
     ) =>
@@ -218,6 +219,7 @@ class BHEAPIClient {
                 skip,
                 limit,
                 environments,
+                sort_by,
             },
             paramsSerializer: { indexes: null },
         });
