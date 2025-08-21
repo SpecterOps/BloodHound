@@ -58,51 +58,53 @@ const UserFormEnvironmentSelector: React.FC<{
         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
             <DialogTitle>Environmental Access Control</DialogTitle>
             <DialogDescription
-                className='flex flex-col'
-                data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                <Box className={'ml-4 w-[90%] flex items-center uppercase'}>
-                    <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
-                    <TextField
-                        autoFocus
-                        className={'w-full ml-3'}
-                        label='Search'
-                        onChange={(e) => {
-                            setSearchInput(e.target.value);
-                        }}
-                        variant='standard'
-                    />
-                </Box>
-                <div
-                    className='flex flex-row mt-6 mb-2 items-center'
-                    data-testid='create-user-dialog_environments-checkboxes-select-all'>
-                    <Checkbox checked={isAllSelected} id='selectAll' onCheckedChange={handleSelectAllChange} />
-                    <label htmlFor={''} className='ml-3 w-full cursor-pointer'>
-                        Select All Environments
-                    </label>
-                </div>
-                <div className='flex flex-col' data-testid='create-user-dialog_environments-checkboxes'>
-                    {filteredEnvironments &&
-                        filteredEnvironments?.map((item) => {
-                            return (
-                                <div
-                                    className='flex justify-start items-center'
-                                    data-testid='create-user-dialog_environments-checkbox'>
-                                    <Checkbox
-                                        checked={selectedItems.includes(item.id)}
-                                        className='m-3'
-                                        id={item.id}
-                                        onCheckedChange={(checked) => handleItemChange(item.id, checked)}
-                                        value={item.name}
-                                    />
-                                    <label
-                                        htmlFor={``}
-                                        className='mr-3 w-full cursor-pointer'
+                className=''
+                data-testid=' flex flex-colcreate-user-dialog_environments-checkboxes-dialog'>
+                <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-16rem)] overflow-scroll h-full'>
+                    <Box className={'ml-4 mt-2 flex items-center'}>
+                        <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
+                        <TextField
+                            autoFocus
+                            className={'w-full ml-3'}
+                            label='Search'
+                            onChange={(e) => {
+                                setSearchInput(e.target.value);
+                            }}
+                            variant='standard'
+                        />
+                    </Box>
+                    <div
+                        className='flex flex-row ml-4 mt-6 mb-2 items-center'
+                        data-testid='create-user-dialog_environments-checkboxes-select-all'>
+                        <Checkbox checked={isAllSelected} id='selectAll' onCheckedChange={handleSelectAllChange} />
+                        <label htmlFor={''} className='ml-3 w-full cursor-pointer'>
+                            Select All Environments
+                        </label>
+                    </div>
+                    <div className='flex flex-col' data-testid='create-user-dialog_environments-checkboxes'>
+                        {filteredEnvironments &&
+                            filteredEnvironments?.map((item) => {
+                                return (
+                                    <div
+                                        className='flex justify-start items-center ml-5'
                                         data-testid='create-user-dialog_environments-checkbox'>
-                                        {item.name}
-                                    </label>
-                                </div>
-                            );
-                        })}
+                                        <Checkbox
+                                            checked={selectedItems.includes(item.id)}
+                                            className='m-3'
+                                            id={item.id}
+                                            onCheckedChange={(checked) => handleItemChange(item.id, checked)}
+                                            value={item.name}
+                                        />
+                                        <label
+                                            htmlFor={``}
+                                            className='mr-3 w-full cursor-pointer'
+                                            data-testid='create-user-dialog_environments-checkbox'>
+                                            {item.name}
+                                        </label>
+                                    </div>
+                                );
+                            })}
+                    </div>
                 </div>
             </DialogDescription>
         </Card>
