@@ -35,6 +35,7 @@ get:
   parameters:
   - $ref: './../parameters/query.skip.yaml'
   - $ref: './../parameters/query.limit.yaml'
+  - $ref: './../parameters/query.environments.yaml'
   - name: sort_by
     in: query
     description: >
