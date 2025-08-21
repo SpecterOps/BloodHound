@@ -3096,6 +3096,7 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 		highestPosition                     = 1
 		mediumPosition                      = 2
 		lowestPosition                      = 3
+		userEmailAddress                    = null.StringFrom("test@testy.com")
 		assetGroupSelectorNode1HighPriority = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
 			SelectorId:        selectorId1,
 			NodeId:            nodeId1,
@@ -3158,7 +3159,7 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			NodeName:          "",
 		},
 			AssetGroupTagId: assetGroupTag1,
-			Position:        lowestPosition,
+			Position:        highestPosition,
 		}
 		assetGroupSelectorNode2 = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
 			SelectorId:        selectorId2,
@@ -3201,6 +3202,7 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			CertificationStatus: model.AssetGroupCertificationManual,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		},
 		}},
 		{name: "one node decertified", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1HighPriority}, certification: model.AssetGroupCertificationRevoked}, want: []v2.UpdateCertificationBySelectorNodeInput{{
@@ -3209,6 +3211,7 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			CertificationStatus: model.AssetGroupCertificationRevoked,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		},
 		}},
 		{name: "three nodes certified", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1HighPriority, assetGroupSelectorNode2, assetGroupSelectorNode3}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
@@ -3217,18 +3220,21 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			CertificationStatus: model.AssetGroupCertificationManual,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		}, {
 			AssetGroupTagId:     assetGroupTag2,
 			SelectorId:          selectorId2,
 			CertificationStatus: model.AssetGroupCertificationManual,
 			NodeId:              nodeId2,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		}, {
 			AssetGroupTagId:     assetGroupTag3,
 			SelectorId:          selectorId3,
 			CertificationStatus: model.AssetGroupCertificationManual,
 			NodeId:              nodeId3,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		},
 		}},
 		{name: "same node, only highest priority certified", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1HighPriority, assetGroupSelectorNode1MedPriority, assetGroupSelectorNode1LowPriority}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
@@ -3237,18 +3243,21 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			CertificationStatus: model.AssetGroupCertificationManual,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		}, {
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         null.String{},
 		}, {
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         null.String{},
 		},
 		}},
 		{name: "same node, skip already certified node in between other nodes", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1HighPriority, assetGroupSelectorNode1AlreadyCertified, assetGroupSelectorNode1MedPriority, assetGroupSelectorNode1LowPriority}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
@@ -3257,32 +3266,37 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			CertificationStatus: model.AssetGroupCertificationManual,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         userEmailAddress,
 		}, {
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         null.String{},
 		}, {
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         null.String{},
 		},
 		}},
-		{name: "same node, skip already certified node if first node", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1AlreadyCertified, assetGroupSelectorNode1MedPriority, assetGroupSelectorNode1LowPriority}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
+		{name: "same node, skip already certified node if first node, and do not update lower priority nodes with same node ID", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1AlreadyCertified, assetGroupSelectorNode1MedPriority, assetGroupSelectorNode1LowPriority}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{{
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         null.String{},
 		}, {
 			AssetGroupTagId:     assetGroupTag1,
 			SelectorId:          selectorId1,
 			CertificationStatus: model.AssetGroupCertificationPending,
 			NodeId:              nodeId1,
 			NodeName:            "",
+			CertifiedBy:         null.String{},
 		},
 		}},
 	}
@@ -3290,7 +3304,7 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			got := v2.CreateInputsForUpdateCertificationBySelectorNode(testCase.input.nodes, testCase.input.certification)
+			got := v2.CreateInputsForUpdateCertificationBySelectorNode(testCase.input.nodes, testCase.input.certification, userEmailAddress)
 			require.Equal(t, testCase.want, got)
 		})
 

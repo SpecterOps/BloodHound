@@ -63,7 +63,7 @@ type AssetGroupTagSelectorData interface {
 type AssetGroupTagSelectorNodeData interface {
 	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error
 	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error
-	UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy string, nodeId graph.ID) error
+	UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
@@ -717,7 +717,7 @@ func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGro
 	})
 }
 
-func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy string, nodeId graph.ID) error {
+func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, selectorId, nodeId); result.Error != nil {
 			return CheckError(result)
@@ -823,7 +823,7 @@ func (s *BloodhoundDB) GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(ctx co
 				JOIN %s s ON n.selector_id = s.id
 				JOIN %s t ON s.asset_group_tag_id = t.id
 				WHERE n.node_id IN ? AND t.type = ? AND n.certified != ?
-				ORDER BY n.node_id DESC, position DESC`,
+				ORDER BY n.node_id DESC, position ASC`,
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 		model.AssetGroupTag{}.TableName()),
