@@ -66,7 +66,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 </TooltipRoot>
             </TooltipProvider>
         ) : (
-            <AppIcon.DataAlert {...iconProps} />
+            <AppIcon.DataAlert {...iconProps} data-testid="analysis_upgrade_icon" />
         )
     }
 
@@ -87,7 +87,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size 
                 </TooltipRoot>
             </TooltipProvider>
         ) : (
-            <AppIcon.Disabled {...iconProps} />
+            <AppIcon.Disabled {...iconProps} data-testid="analysis_disabled_icon" />
         );
     }
 };
