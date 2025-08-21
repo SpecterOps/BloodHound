@@ -1,0 +1,5 @@
+name: environments
+description: Environment IDs to filter response by
+in: query
+schema:
+  $ref: './../schemas/api.params.query.environments.yaml'
