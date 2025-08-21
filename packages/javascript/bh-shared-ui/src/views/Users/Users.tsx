@@ -19,7 +19,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
 import { FC, useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation } from 'react-query';
 import {
     ConfirmationDialog,
     CreateUserDialog,
@@ -31,6 +31,7 @@ import {
     UserTokenManagementDialog,
 } from '../../components';
 import { useMountEffect, usePermissions, useToggle } from '../../hooks';
+import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
@@ -74,17 +75,10 @@ const Users: FC = () => {
 
     useMountEffect(effect);
 
-    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
-        apiClient.getSelf({ signal }).then((res) => res.data?.data)
-    );
+    const getSelfQuery = useSelf();
+    const listUsersQuery = useBloodHoundUsers();
 
     const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
-
-    const listUsersQuery = useQuery(
-        ['listUsers'],
-        ({ signal }) => apiClient.listUsers({ signal }).then((res) => res.data?.data?.users),
-        { enabled: hasPermission }
-    );
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
         onSuccess: () => {

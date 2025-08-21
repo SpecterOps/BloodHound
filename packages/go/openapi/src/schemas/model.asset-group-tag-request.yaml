@@ -26,3 +26,5 @@ properties:
     type: boolean
   position:
     type: integer
+  glyph:
+    $ref: './null.string.yaml'

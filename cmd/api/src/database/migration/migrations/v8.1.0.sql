@@ -50,3 +50,6 @@ CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_primary_kind ON asset_group_ta
 CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_environment_id ON asset_group_tag_selector_nodes USING btree (node_environment_id);
 CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_object_id ON asset_group_tag_selector_nodes USING btree (node_object_id);
 CREATE INDEX IF NOT EXISTS idx_agt_selector_nodes_name ON asset_group_tag_selector_nodes USING btree (node_name);
+
+ALTER TABLE asset_group_tags
+        ADD COLUMN IF NOT EXISTS glyph TEXT UNIQUE;
