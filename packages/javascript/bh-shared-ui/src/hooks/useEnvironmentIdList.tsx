@@ -23,20 +23,18 @@ export const getEnvironmentAggregationIds = (
     environmentAggregation: EnvironmentAggregation,
     environments: Environment[]
 ) => {
-export const getEnvironmentAggregationIds = (
-    environmentAggregation: EnvironmentAggregation,
-    environments: Environment[]
-) => {
-    const aggregationIds: string[]  = [];
+    const aggregationIds: string[] = [];
 
     environments.forEach((environment) => {
-        if (environment.collected && (environmentAggregation === 'all' || environment.type === environmentAggregation)) {
-            aggregationIds.push(environment.id)
+        if (
+            environment.collected &&
+            (environmentAggregation === 'all' || environment.type === environmentAggregation)
+        ) {
+            aggregationIds.push(environment.id);
         }
     });
 
     return aggregationIds;
-};
 };
 
 export const useEnvironmentIdList = (
