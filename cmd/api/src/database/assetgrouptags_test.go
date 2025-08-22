@@ -1175,6 +1175,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify}
 		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputCertify.NodeId}}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
 		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selector was updated
@@ -1193,6 +1194,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputPending}
 		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputPending.NodeId}}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
 		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selectors were updated
@@ -1211,6 +1213,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify, updateInputPending}
 		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputCertify.NodeId}}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
 		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selectors were updated
@@ -1229,6 +1232,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 	t.Run("updates certification by selector node, 2 nodes", func(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify, updateInputNode2}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
+		require.NoError(t, err)
 		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selectors were updated
