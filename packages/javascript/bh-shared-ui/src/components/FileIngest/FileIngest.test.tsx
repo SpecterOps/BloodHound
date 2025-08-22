@@ -135,14 +135,14 @@ describe('FileIngest', () => {
         await waitFor(() => screen.getByText('test_email@specterops.io'));
 
         expect(screen.getByText('test_email@specterops.io')).toBeInTheDocument();
-        expect(screen.getByText('1 minute')).toBeInTheDocument();
+        expect(screen.getByText('1 Min')).toBeInTheDocument();
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
         render(<FileIngest />);
 
         expect(screen.queryByText('test_email@specterops.io')).toBeNull();
-        expect(screen.queryByText('1 minute')).toBeNull();
+        expect(screen.queryByText('1 Min')).toBeNull();
 
         expect(screen.getByTestId('file-ingest_button-upload-files')).toBeDisabled();
     });
