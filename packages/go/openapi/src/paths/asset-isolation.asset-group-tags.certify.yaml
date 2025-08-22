@@ -20,7 +20,6 @@ post:
   description: Manually certify/decertify objects as belonging to the Zone they're aligned to
   tags:
     - Asset Isolation
-    - Community
     - Enterprise
   requestBody:
     description: The request body for certifying or decertifying objects. 
@@ -32,7 +31,11 @@ post:
           properties:
             member_ids:
               type: array 
-              items: integer
+              items: 
+                type: integer
+                format: int64
+              minItems: 1 
+              uniqueItems: true
             action:
               type: integer
               enum:
@@ -40,6 +43,7 @@ post:
                 - 2 # certify 
             note: 
               type: string
+          additionalProperties: false
           required:
             - member_ids
             - action

@@ -6520,7 +6520,9 @@
                 "properties": {
                   "member_ids": {
                     "type": "array",
-                    "items": "integer"
+                    "items": {"type": "integer", "format": "int64"},
+                    "minItems": 1,
+                    "uniqueItems": true
                   },
                   "action": {
                     "type": "integer",
