@@ -78,7 +78,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
         );
     }
 
-    if (privilegeZoneAnalysisEnabled && analysisEnabled === false) {
+    if (privilegeZoneAnalysisEnabled && !analysisEnabled) {
         return tooltip ? (
             <TooltipProvider>
                 <TooltipRoot>
