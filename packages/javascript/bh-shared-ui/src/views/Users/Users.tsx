@@ -36,7 +36,7 @@ import { useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
 
-const Users: FC<{ showEnvironmentAccessControls: boolean }> = ({ showEnvironmentAccessControls = false }) => {
+const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmentAccessControls = false }) => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');

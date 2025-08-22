@@ -26,20 +26,10 @@ const UpdateUserDialog: React.FC<{
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
-    open: boolean;
-    showEnvironmentAccessControls: boolean; //TODO: required or not?
+    open?: boolean;
+    showEnvironmentAccessControls?: boolean; //TODO: required or not?
     userId: string;
-}> = ({
-    error,
-    hasSelectedSelf,
-    isLoading,
-    onClose,
-    onExited,
-    onSave,
-    open,
-    showEnvironmentAccessControls,
-    userId,
-}) => {
+}> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
     const handleOnSave = (user: UpdateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
