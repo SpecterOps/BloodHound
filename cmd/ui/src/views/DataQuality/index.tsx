@@ -14,5 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './FileValidationStatus';
-export { default } from './FileValidationStatus';
+import DataQuality from './DataQuality';
+
+export default DataQuality;

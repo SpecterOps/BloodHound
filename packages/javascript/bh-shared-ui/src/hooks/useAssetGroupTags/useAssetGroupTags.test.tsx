@@ -22,6 +22,8 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
+import { SortOrder } from '../../types';
+import { apiClient } from '../../utils';
 import * as agtHook from './useAssetGroupTags';
 
 const handlers = [
@@ -39,6 +41,13 @@ const handlers = [
                 },
             })
         );
+    }),
+    rest.get('/api/v2/asset-group-tags/:tagId/members', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members', async (_, res, ctx) => {
+        return res(ctx.status(200));
     }),
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
@@ -138,5 +147,75 @@ describe('the useAssetGroupTags utilities', () => {
         });
 
         expect(result.current.filter((tag: AssetGroupTag) => tag.position !== null)).toHaveLength(0);
+    });
+
+    test('tag members refetches on sort change', async () => {
+        const tagMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagMembers');
+
+        const { rerender } = renderHook((sortOrder: SortOrder) => agtHook.useTagMembersInfiniteQuery(1, sortOrder));
+
+        await waitFor(() => {
+            expect(tagMembersSpy).toHaveBeenCalledTimes(1);
+        });
+
+        rerender('desc');
+
+        await waitFor(() => {
+            expect(tagMembersSpy).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    test('tag members refetches on environment change', async () => {
+        const tagMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagMembers');
+
+        const { rerender } = renderHook((environments: string[]) =>
+            agtHook.useTagMembersInfiniteQuery(1, 'asc', environments)
+        );
+
+        await waitFor(() => {
+            expect(tagMembersSpy).toHaveBeenCalledTimes(1);
+        });
+
+        rerender(['1']);
+
+        await waitFor(() => {
+            expect(tagMembersSpy).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    test('selector members refetches on sort change', async () => {
+        const selectorMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagSelectorMembers');
+
+        const { rerender } = renderHook((sortOrder: SortOrder) =>
+            agtHook.useSelectorMembersInfiniteQuery(1, 1, sortOrder)
+        );
+
+        await waitFor(() => {
+            expect(selectorMembersSpy).toHaveBeenCalledTimes(1);
+        });
+
+        rerender('desc');
+
+        await waitFor(() => {
+            expect(selectorMembersSpy).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    test('selector members refetches on envrionment change', async () => {
+        const selectorMembersSpy = vi.spyOn(apiClient, 'getAssetGroupTagSelectorMembers');
+
+        const { rerender } = renderHook((environments: string[]) =>
+            agtHook.useSelectorMembersInfiniteQuery(1, 1, 'asc', environments)
+        );
+
+        await waitFor(() => {
+            expect(selectorMembersSpy).toHaveBeenCalledTimes(1);
+        });
+
+        rerender(['1']);
+
+        await waitFor(() => {
+            expect(selectorMembersSpy).toHaveBeenCalledTimes(2);
+        });
     });
 });

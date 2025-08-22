@@ -66,9 +66,14 @@ export const zoneManagementKeys = {
     selectorDetail: (tagId: string | number, selectorId: string | number) =>
         [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
     members: () => [...zoneManagementKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number) => [...zoneManagementKeys.members(), 'tag', tagId] as const,
-    membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined) =>
-        [...zoneManagementKeys.membersByTag(tagId), 'selector', selectorId] as const,
+    membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
+        [...zoneManagementKeys.members(), 'tag', tagId, sortOrder, ...environments] as const,
+    membersByTagAndSelector: (
+        tagId: string | number,
+        selectorId: string | number | undefined,
+        sortOrder: SortOrder,
+        environments: string[] = []
+    ) => ['tag', tagId, 'selector', selectorId, sortOrder, ...environments] as const,
 };
 
 export const getAssetGroupTags = () =>
@@ -110,8 +115,10 @@ export const useSelectorsInfiniteQuery = (tagId: string | number | undefined) =>
         nextPageParam?: PageParam;
     }>({
         queryKey: zoneManagementKeys.selectorsByTag(tagId!),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupTagSelectors(tagId!, pageParam.skip, pageParam.limit),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID provided for selectors request');
+            return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
     });
@@ -120,42 +127,52 @@ export const getAssetGroupTagMembers = (
     tagId: number | string,
     skip = 0,
     limit = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = 'asc',
+    environments?: string[]
 ) =>
     createPaginatedFetcher<AssetGroupTagMemberListItem>(
-        () => apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name'),
+        () =>
+            apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name', environments),
         'members',
         skip,
         limit
     );
 
-export const useTagMembersInfiniteQuery = (tagId: number | string | undefined, sortOrder: SortOrder) =>
+export const useTagMembersInfiniteQuery = (
+    tagId: number | string | undefined,
+    sortOrder: SortOrder,
+    environments?: string[]
+) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTag(tagId!),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupTagMembers(tagId!, pageParam.skip, pageParam.limit, sortOrder),
+        queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder, environments),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID provided for tag members request');
+            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder, environments);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
     });
 
 export const getAssetGroupSelectorMembers = (
     tagId: number | string,
-    selectorId: number | string | undefined = undefined,
+    selectorId: number | string,
     skip: number = 0,
     limit: number = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = 'asc',
+    environments?: string[]
 ) =>
     createPaginatedFetcher(
         () =>
             apiClient.getAssetGroupTagSelectorMembers(
                 tagId,
-                selectorId!,
+                selectorId,
                 skip,
                 limit,
-                sortOrder === 'asc' ? 'name' : '-name'
+                sortOrder === 'asc' ? 'name' : '-name',
+                environments
             ),
         'members',
         skip,
@@ -165,15 +182,26 @@ export const getAssetGroupSelectorMembers = (
 export const useSelectorMembersInfiniteQuery = (
     tagId: number | string | undefined,
     selectorId: number | string | undefined,
-    sortOrder: SortOrder
+    sortOrder: SortOrder,
+    environments?: string[]
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupSelectorMembers(tagId!, selectorId, pageParam.skip, pageParam.limit, sortOrder),
+        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder, environments),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID available to get selector members');
+            if (!selectorId) return Promise.reject('No selector ID available to get selector members');
+            return getAssetGroupSelectorMembers(
+                tagId,
+                selectorId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments
+            );
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined && selectorId !== undefined,
     });

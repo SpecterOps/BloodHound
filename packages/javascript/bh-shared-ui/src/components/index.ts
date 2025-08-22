@@ -182,6 +182,8 @@ export * from './SourceKindsCheckboxes';
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
 
+export * from './SimpleEnvironmentSelector';
+
 export * from './StatusIndicator';
 
 export * from './TextWithFallback';
