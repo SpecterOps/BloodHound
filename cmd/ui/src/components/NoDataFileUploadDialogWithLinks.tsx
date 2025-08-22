@@ -56,10 +56,6 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
                         <RouterLink className={linkStyles} to='/download-collectors'>
                             download a collector
                         </RouterLink>{' '}
-                        then{' '}
-                        <RouterLink className={linkStyles} to='/administration/clients'>
-                            schedule your collector clients
-                        </RouterLink>
                         .
                     </p>
                     <p className='pb-3'>
