@@ -54,6 +54,6 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage }: FileUploadParams) 
         queryFn: () => apiClient.listFileIngestJobs(rowsPerPage * page, rowsPerPage, '-id').then((res) => res.data),
         queryKey: fileUploadKeys.listJobsPaginated(page, rowsPerPage),
         refetchInterval: 5000,
-        enabled: true,
+        enabled: hasPermission,
     });
 };
