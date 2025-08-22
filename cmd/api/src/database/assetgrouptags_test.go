@@ -306,7 +306,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[2].Action)
 	})
 
-	t.Run("Non existant tag errors out", func(t *testing.T) {
+	t.Run("Non existent tag errors out", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
@@ -721,7 +721,7 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[1].Action)
 	})
 
-	t.Run("Non existant asset group tag errors out", func(t *testing.T) {
+	t.Run("Non existent asset group tag errors out", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
@@ -1139,8 +1139,7 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 		testSelectorId      = 1
 		testMemberId1       = 1
 		testNodeId1         = uint64(testMemberId1)
-		testCertifiedBy     = "testy"
-		certifiedBy         = null.StringFrom(testCertifiedBy)
+		certifiedBy         = null.StringFrom("testy")
 		source              = 1
 		isDefault           = false
 		allowDisable        = true
@@ -1159,7 +1158,7 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("updates certification by selector node, certified", func(t *testing.T) {
-		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationManual, testCertifiedBy, graph.ID(testNodeId1))
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationManual, certifiedBy, graph.ID(testNodeId1))
 		require.NoError(t, err)
 		// confirm selector was updated
 		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
@@ -1169,7 +1168,7 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	})
 
 	t.Run("updates certification by selector node, pending", func(t *testing.T) {
-		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationPending, testCertifiedBy, graph.ID(testNodeId1))
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationPending, certifiedBy, graph.ID(testNodeId1))
 		require.NoError(t, err)
 		// confirm selector was updated
 		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)

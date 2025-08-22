@@ -2296,7 +2296,7 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(ctx, authToken any) *gomock.
 }
 
 // UpdateCertificationBySelectorNode mocks base method.
-func (m *MockDatabase) UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy string, nodeId graph.ID) error {
+func (m *MockDatabase) UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCertificationBySelectorNode", ctx, selectorId, certified, certifiedBy, nodeId)
 	ret0, _ := ret[0].(error)

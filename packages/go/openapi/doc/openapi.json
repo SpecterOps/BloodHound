@@ -6354,6 +6354,69 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/members/certification": {
+      "post": {
+        "operationId": "CertifyOrDecertifyObjects",
+        "summary": "Certify or Decertify Objects",
+        "description": "Manually certify/decertify objects as belonging to the Zone they're aligned to",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for certifying or decertifying objects.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "member_ids": {
+                    "type": "array",
+                    "items": "integer"
+                  },
+                  "action": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "member_ids",
+                  "action"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
