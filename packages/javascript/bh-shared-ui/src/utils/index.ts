@@ -36,4 +36,3 @@ export * from './searchParams';
 export * from './testHelpers';
 export * from './theme';
 export * from './user';
-export * from './fileIngest';

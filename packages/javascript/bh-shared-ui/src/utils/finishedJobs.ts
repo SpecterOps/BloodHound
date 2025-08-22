@@ -44,15 +44,7 @@ export const JOB_STATUS_MAP: Record<number, { label: string; status: StatusType;
     8: { label: 'Partially Completed', status: 'pending' },
 };
 
-export const FINISHED_JOBS_LOG_HEADERS = [
-    { label: 'ID / Client / Status', width: '240px' },
-    { label: 'Status Message', width: '240px' },
-    { label: 'Start Time', width: '110px' },
-    { label: 'Duration', width: '85px' },
-    { label: 'Data Collected', width: '240px' },
-];
-
-export const COLLECTION_MAP = new Map(
+const COLLECTION_MAP = new Map(
     Object.entries({
         session_collection: 'Sessions',
         local_group_collection: 'Local Groups',
@@ -108,7 +100,7 @@ export const toMins = (start: string, end: string) => {
     }
 
     return Math.floor(interval.length('minutes')) + ' Min';
-}
+};
 
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: ScheduledJobDisplay) =>

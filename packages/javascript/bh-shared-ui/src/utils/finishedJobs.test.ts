@@ -19,13 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
 import { renderHook, waitFor } from '../test-utils';
-import {
-    PERSIST_NOTIFICATION,
-    toCollected,
-    toFormatted,
-    toMins,
-    useFinishedJobsQuery,
-} from './finishedJobs';
+import { PERSIST_NOTIFICATION, toCollected, toFormatted, toMins, useFinishedJobsQuery } from './finishedJobs';
 
 const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
@@ -178,6 +172,9 @@ describe('useFinishedJobsQuery', () => {
         const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(addNotificationMock).toHaveBeenCalledWith('Unable to fetch jobs. Please try again.', 'finished-jobs-error');
+        expect(addNotificationMock).toHaveBeenCalledWith(
+            'Unable to fetch jobs. Please try again.',
+            'finished-jobs-error'
+        );
     });
 });
