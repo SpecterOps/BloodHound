@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
@@ -143,15 +144,18 @@ describe('UpdateUserDialog', () => {
         };
 
         render(
-            <UpdateUserDialog
-                userId={'1'}
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={options?.renderLoading || false}
-                error={options?.renderErrors}
-                hasSelectedSelf={false}
-            />
+            <Dialog open={true}>
+                <UpdateUserDialog
+                    showEnvironmentAccessControls={false}
+                    userId={'1'}
+                    //open={testOnOpen}
+                    onClose={testOnClose}
+                    onSave={testOnSave}
+                    isLoading={options?.renderLoading || false}
+                    error={options?.renderErrors}
+                    hasSelectedSelf={false}
+                />
+            </Dialog>
         );
 
         return {
@@ -165,19 +169,19 @@ describe('UpdateUserDialog', () => {
     it('should render an update user form', async () => {
         setup();
 
-        expect(screen.getByText('Update User')).toBeInTheDocument();
+        expect(screen.getByText('Edit User')).toBeInTheDocument();
 
-        expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
+        expect(await screen.findByTestId('update-user-dialog_label-email-address')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('Principal Name')).toBeInTheDocument();
+        expect(await screen.findByTestId('update-user-dialog_label-principal-name')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('First Name')).toBeInTheDocument();
+        expect(await screen.findByTestId('update-user-dialog_label-first-name')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('Last Name')).toBeInTheDocument();
+        expect(await screen.findByTestId('update-user-dialog_label-last-name')).toBeInTheDocument();
 
-        expect(await screen.findByLabelText('Authentication Method')).toBeInTheDocument();
+        expect(await screen.findByTestId('update-user-dialog_label-authentication-method')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('Role')).toBeInTheDocument();
+        expect(await screen.findByTestId('update-user-dialog_label-role')).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
@@ -211,10 +215,27 @@ describe('UpdateUserDialog', () => {
     it('should call onSave when Save button is clicked and form input is valid', async () => {
         const { user, testUser, testOnSave } = setup();
 
-        expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
+        //expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
-        await user.clear(screen.getByLabelText('Email Address'));
-        await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
+        expect(await screen.findByTestId('update-user-dialog_label-email-address')).toBeInTheDocument();
+
+        const emailAddressInput = screen.getByTestId('update-user-dialog_input-email-address');
+        await user.clear(emailAddressInput);
+        await user.type(emailAddressInput, testUser.emailAddress);
+
+        const principalNameInput = screen.getByTestId('update-user-dialog_input-principal-name');
+        await user.clear(principalNameInput);
+        await user.type(principalNameInput, testUser.principalName);
+
+        const firstNameInput = screen.getByTestId('update-user-dialog_input-first-name');
+        await user.clear(firstNameInput);
+        await user.type(firstNameInput, testUser.firstName);
+
+        const lastNameInput = screen.getByTestId('update-user-dialog_input-last-name');
+        await user.clear(lastNameInput);
+        await user.type(lastNameInput, testUser.lastName);
+
+        /*
 
         await user.clear(screen.getByLabelText('Principal Name'));
         await user.type(screen.getByLabelText('Principal Name'), testUser.principalName);
@@ -225,6 +246,8 @@ describe('UpdateUserDialog', () => {
         await user.clear(screen.getByLabelText('Last Name'));
         await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
 
+        */
+
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
         await waitFor(() => expect(testOnSave).toHaveBeenCalled(), { timeout: 30000 });
@@ -233,7 +256,7 @@ describe('UpdateUserDialog', () => {
     it('should display all available roles', async () => {
         const { user } = setup();
 
-        await user.click(await screen.findByLabelText('Role'));
+        await user.click(await screen.findByTestId('update-user-dialog_input-role'));
 
         for (const role of testRoles) {
             expect(await screen.findByRole('option', { name: role.name })).toBeInTheDocument();
@@ -279,6 +302,7 @@ describe('UpdateUserDialog', () => {
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
+        /*
         await user.clear(screen.getByLabelText('Email Address'));
         await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
 
@@ -290,6 +314,23 @@ describe('UpdateUserDialog', () => {
 
         await user.clear(screen.getByLabelText('Last Name'));
         await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
+        */
+
+        const emailAddressInput = screen.getByTestId('update-user-dialog_input-email-address');
+        await user.clear(emailAddressInput);
+        await user.type(emailAddressInput, testUser.emailAddress);
+
+        const principalNameInput = screen.getByTestId('update-user-dialog_input-principal-name');
+        await user.clear(principalNameInput);
+        await user.type(principalNameInput, testUser.principalName);
+
+        const firstNameInput = screen.getByTestId('update-user-dialog_input-first-name');
+        await user.clear(firstNameInput);
+        await user.type(firstNameInput, testUser.firstName);
+
+        const lastNameInput = screen.getByTestId('update-user-dialog_input-last-name');
+        await user.clear(lastNameInput);
+        await user.type(lastNameInput, testUser.lastName);
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
