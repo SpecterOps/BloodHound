@@ -31,16 +31,19 @@ export const useStartFileIngestJob = () => {
     });
 };
 
+export type AcceptedIngestType = 'application/json' | 'application/zip';
+
 interface UploadFileIngestJobParams {
     jobId: string;
     fileContents: any;
     contentType?: string;
+    options?: Parameters<typeof apiClient.uploadFileToIngestJob>[3];
 }
 
 export const useUploadFileToIngestJob = () => {
     return useMutation({
-        mutationFn: ({ jobId, fileContents, contentType = 'application/json' }: UploadFileIngestJobParams) =>
-            apiClient.uploadFileToIngestJob(jobId, fileContents, contentType).then((res) => res.data),
+        mutationFn: ({ jobId, fileContents, contentType = 'application/json', options }: UploadFileIngestJobParams) =>
+            apiClient.uploadFileToIngestJob(jobId, fileContents, contentType, options).then((res) => res.data),
     });
 };
 
