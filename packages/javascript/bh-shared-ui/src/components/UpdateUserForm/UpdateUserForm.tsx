@@ -21,6 +21,7 @@ import {
     DialogContent,
     DialogDescription,
     DialogTitle,
+    Input,
     Label,
     Select,
     SelectContent,
@@ -30,7 +31,7 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Alert, Card, DialogContentText, FormControl, Grid, Skeleton, TextField } from '@mui/material';
+import { Alert, Card, DialogContentText, FormControl, Grid, Skeleton } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -237,17 +238,25 @@ const UpdateUserFormInner: React.FC<{
                                         },
                                     }}
                                     render={({ field }) => (
-                                        <TextField
-                                            {...field}
-                                            variant='standard'
-                                            id='emailAddress'
-                                            label='Email Address'
-                                            type='email'
-                                            fullWidth
-                                            error={!!errors.emailAddress}
-                                            helperText={errors.emailAddress?.message}
-                                            data-testid='update-user-dialog_input-email-address'
-                                        />
+                                        <FormControl hiddenLabel>
+                                            <Label data-testid='update-user-dialog_label-email-address' size='small'>
+                                                Email Address
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                //variant='standard'
+                                                id='emailAddress'
+                                                //label='Email Address'
+                                                type='email'
+                                                //fullWidth
+                                                //error={!!errors.emailAddress}
+                                                //helperText={errors.emailAddress?.message}
+                                                data-testid='update-user-dialog_input-email-address'
+                                            />
+                                            <p className='text-sm text-neutral-dark-1 dark:text-neutral-light-1 opacity-50'>
+                                                {errors.emailAddress?.message}
+                                            </p>
+                                        </FormControl>
                                     )}
                                 />
                             </Grid>
@@ -275,16 +284,24 @@ const UpdateUserFormInner: React.FC<{
                                         },
                                     }}
                                     render={({ field }) => (
-                                        <TextField
-                                            {...field}
-                                            variant='standard'
-                                            id='principal'
-                                            label='Principal Name'
-                                            fullWidth
-                                            error={!!errors.principal}
-                                            helperText={errors.principal?.message}
-                                            data-testid='update-user-dialog_input-principal-name'
-                                        />
+                                        <>
+                                            <Label data-testid='update-user-dialog_label-principal-name' size='small'>
+                                                Principal Name
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                //variant='standard'
+                                                id='principal'
+                                                //label='Principal Name'
+                                                //fullWidth
+                                                //error={!!errors.principal}
+                                                //helperText={errors.principal?.message}
+                                                data-testid='update-user-dialog_input-principal-name'
+                                            />
+                                            <p className='text-sm text-neutral-dark-1 dark:text-neutral-light-1 opacity-50'>
+                                                {errors.principal?.message}
+                                            </p>
+                                        </>
                                     )}
                                 />
                             </Grid>
@@ -311,16 +328,24 @@ const UpdateUserFormInner: React.FC<{
                                         },
                                     }}
                                     render={({ field }) => (
-                                        <TextField
-                                            {...field}
-                                            variant='standard'
-                                            id='firstName'
-                                            label='First Name'
-                                            fullWidth
-                                            error={!!errors.firstName}
-                                            helperText={errors.firstName?.message}
-                                            data-testid='update-user-dialog_input-first-name'
-                                        />
+                                        <>
+                                            <Label data-testid='update-user-dialog_label-first-name' size='small'>
+                                                First Name
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                //variant='standard'
+                                                id='firstName'
+                                                //label='First Name'
+                                                //fullWidth
+                                                //error={!!errors.firstName}
+                                                //helperText={errors.firstName?.message}
+                                                data-testid='update-user-dialog_input-first-name'
+                                            />
+                                            <p className='text-sm text-neutral-dark-1 dark:text-neutral-light-1 opacity-50'>
+                                                {errors.firstName?.message}
+                                            </p>
+                                        </>
                                     )}
                                 />
                             </Grid>
@@ -347,16 +372,24 @@ const UpdateUserFormInner: React.FC<{
                                         },
                                     }}
                                     render={({ field }) => (
-                                        <TextField
-                                            {...field}
-                                            variant='standard'
-                                            id='lastName'
-                                            label='Last Name'
-                                            fullWidth
-                                            error={!!errors.lastName}
-                                            helperText={errors.lastName?.message}
-                                            data-testid='update-user-dialog_input-last-name'
-                                        />
+                                        <>
+                                            <Label data-testid='update-user-dialog_label-last-name' size='small'>
+                                                Last Name
+                                            </Label>
+                                            <Input
+                                                {...field}
+                                                //variant='standard'
+                                                id='lastName'
+                                                //label='Last Name'
+                                                //fullWidth
+                                                //error={!!errors.lastName}
+                                                //helperText={errors.lastName?.message}
+                                                data-testid='update-user-dialog_input-last-name'
+                                            />
+                                            <p className='text-sm text-neutral-dark-1 dark:text-neutral-light-1 opacity-50'>
+                                                {errors.lastName?.message}
+                                            </p>
+                                        </>
                                     )}
                                 />
                             </Grid>
@@ -370,18 +403,18 @@ const UpdateUserFormInner: React.FC<{
                                             required: 'Authentication Method is required',
                                         }}
                                         render={({ field: { onChange, onBlur, value, ref } }) => (
-                                            <FormControl>
+                                            <>
                                                 <Label
-                                                    id='authenticationMethod-label'
+                                                    data-testid='update-user-dialog_label-authentication-method'
+                                                    size='small'
                                                     //sx={{ ml: '-14px', mt: '8px' }}
-                                                    hidden={hasSelectedSelf}>
+                                                    //hidden={hasSelectedSelf}
+                                                    className='mb-4'>
                                                     Authentication Method
                                                 </Label>
                                                 <Select
                                                     data-testid='update-user-dialog_select-authentication-method'
-                                                    onValueChange={
-                                                        onChange as (event: SelectChangeEvent<string>) => void
-                                                    }
+                                                    onValueChange={onChange as (event: any) => void}
                                                     value={value}
 
                                                     /*
@@ -398,7 +431,7 @@ const UpdateUserFormInner: React.FC<{
                                                     variant='standard'
                                                 */
                                                 >
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className='mt-3'>
                                                         <SelectValue placeholder={value} />
                                                     </SelectTrigger>
                                                     <SelectPortal>
@@ -415,7 +448,7 @@ const UpdateUserFormInner: React.FC<{
                                                         </SelectContent>
                                                     </SelectPortal>
                                                 </Select>
-                                            </FormControl>
+                                            </>
                                         )}
                                     />
                                 </Grid>
@@ -433,7 +466,8 @@ const UpdateUserFormInner: React.FC<{
                                                     <Label
                                                         id='SSOProviderId-label'
                                                         //sx={{ ml: '-14px', mt: '8px' }}
-                                                        hidden={hasSelectedSelf}>
+                                                        //hidden={hasSelectedSelf}
+                                                    >
                                                         SSO Provider
                                                     </Label>
                                                     <Select
@@ -454,7 +488,7 @@ const UpdateUserFormInner: React.FC<{
                                                     hidden={hasSelectedSelf}
                                                         */
                                                     >
-                                                        <SelectTrigger>
+                                                        <SelectTrigger className='mt-3'>
                                                             <SelectValue placeholder='SSO Provider' />
                                                         </SelectTrigger>
                                                         <SelectPortal>
@@ -487,7 +521,10 @@ const UpdateUserFormInner: React.FC<{
                                     render={({ field }) => (
                                         <>
                                             <div className='flex row'>
-                                                <Label className='mr-2' size='small'>
+                                                <Label
+                                                    data-testid='update-user-dialog_label-role'
+                                                    className='mr-2'
+                                                    size='small'>
                                                     Role
                                                 </Label>
                                                 <Tooltip
@@ -499,14 +536,14 @@ const UpdateUserFormInner: React.FC<{
                                             </div>
                                             <Select
                                                 {...register('roles')}
+                                                data-testid='update-user-dialog_input-role'
                                                 disabled={selectedSSOProviderHasRoleProvisionEnabled}
-                                                data-testid='create-user-dialog_role'
                                                 onValueChange={(field) => {
                                                     setValue('roles', [Number(field)]);
                                                     setSelectedRoleValue([Number([field])]);
                                                 }}
                                                 value={String(selectedRoleValue)}>
-                                                <SelectTrigger>
+                                                <SelectTrigger className='mt-3'>
                                                     <SelectValue placeholder={field.value} />
                                                 </SelectTrigger>
                                                 <SelectPortal>
@@ -515,6 +552,7 @@ const UpdateUserFormInner: React.FC<{
                                                             <SelectItem
                                                                 className='hover:cursor-pointer'
                                                                 key={role.id}
+                                                                role='option'
                                                                 value={role.id.toString()}>
                                                                 {role.name}
                                                             </SelectItem>
@@ -536,14 +574,19 @@ const UpdateUserFormInner: React.FC<{
                     <DialogActions className='mt-8 flex justify-end gap-4'>
                         <DialogClose asChild>
                             <Button
-                                type='button'
+                                data-testid='update-user-dialog_button-cancel'
                                 disabled={isLoading}
-                                variant='tertiary'
-                                data-testid='create-user-dialog_button-cancel'>
+                                role='button'
+                                type='button'
+                                variant='tertiary'>
                                 Cancel
                             </Button>
                         </DialogClose>
-                        <Button type='submit' disabled={isLoading} data-testid='create-user-dialog_button-save'>
+                        <Button
+                            data-testid='update-user-dialog_button-save'
+                            disabled={isLoading}
+                            role='button'
+                            type='submit'>
                             Save
                         </Button>
                     </DialogActions>
