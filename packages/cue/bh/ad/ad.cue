@@ -1843,13 +1843,13 @@ SharedRelationshipKinds: [
 ]
 
 // Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds])
+InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
 
 // Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[DCFor]])
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
 
 // Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
 
 EdgeCompositionRelationships: [
 	GoldenCert,
