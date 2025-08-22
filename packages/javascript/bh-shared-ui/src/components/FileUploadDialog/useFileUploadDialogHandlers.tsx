@@ -17,7 +17,7 @@ import { ErrorResponse } from 'js-client-library';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     useEndFileIngestJob,
-    useListFileTypesForIngest,
+    useGetFileUploadAcceptedTypesQuery,
     useOnClickOutside,
     useStartFileIngestJob,
     useUploadFileToIngestJob,
@@ -43,7 +43,7 @@ export const useFileUploadDialogHandlers = ({
     const [progressCache, setProgressCache] = useState<Record<string, number>>({});
 
     const { addNotification } = useNotifications();
-    const listFileTypesForIngest = useListFileTypesForIngest();
+    const getFileUploadAcceptedTypes = useGetFileUploadAcceptedTypesQuery();
     const startFileIngestJob = useStartFileIngestJob();
     const uploadFileToIngestJob = useUploadFileToIngestJob();
     const endFileIngestJob = useEndFileIngestJob();
@@ -238,7 +238,7 @@ export const useFileUploadDialogHandlers = ({
     const handleFileDrop = (files: FileList | null) => {
         if (files && files.length > 0) {
             const validatedFiles: FileForIngest[] = [...files].map((file) => {
-                if (listFileTypesForIngest.data?.data.includes(file.type)) {
+                if (getFileUploadAcceptedTypes.data?.data.includes(file.type)) {
                     return { file, status: FileStatus.READY };
                 } else {
                     return { file, errors: ['invalid file type'], status: FileStatus.READY };
@@ -268,7 +268,7 @@ export const useFileUploadDialogHandlers = ({
         setFileUploadStep,
         handleFileDrop,
         currentlyUploading,
-        listFileTypesForIngest,
+        getFileUploadAcceptedTypes,
         uploadMessage,
         onClose,
         filesForIngest,
