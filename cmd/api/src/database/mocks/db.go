@@ -2330,6 +2330,20 @@ func (mr *MockDatabaseMockRecorder) UpdateCertificationBySelectorNode(ctx, selec
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCertificationBySelectorNode", reflect.TypeOf((*MockDatabase)(nil).UpdateCertificationBySelectorNode), ctx, selectorId, certified, certifiedBy, nodeId)
 }
 
+// UpdateCertificationBySelectorNodeTransaction mocks base method.
+func (m *MockDatabase) UpdateCertificationBySelectorNodeTransaction(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCertificationBySelectorNodeTransaction", ctx, input)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateCertificationBySelectorNodeTransaction indicates an expected call of UpdateCertificationBySelectorNodeTransaction.
+func (mr *MockDatabaseMockRecorder) UpdateCertificationBySelectorNodeTransaction(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCertificationBySelectorNodeTransaction", reflect.TypeOf((*MockDatabase)(nil).UpdateCertificationBySelectorNodeTransaction), ctx, input)
+}
+
 // UpdateCustomNodeKind mocks base method.
 func (m *MockDatabase) UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error) {
 	m.ctrl.T.Helper()

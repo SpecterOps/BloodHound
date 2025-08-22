@@ -6540,11 +6540,6 @@
                   "member_ids",
                   "action"
                 ]
-              },
-              "example": {
-                  "member_ids": [1, 2, 3],
-                  "action": 2,
-                  "note": "certify these members"
               }
             }
           }
