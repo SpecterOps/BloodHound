@@ -42,9 +42,10 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
 }) => {
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const isLabelPage = location.pathname.includes('/label');
+    const ariaLabel = privilegeZoneAnalysisEnabled === false ? 'Upgrade available' : 'Analysis disabled';
     const iconProps = {
         size,
-        'aria-label': 'Analysis disabled for this tier',
+        'aria-label': ariaLabel,
         role: 'img',
         className: clsx(
             iconClasses,
@@ -77,7 +78,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
         );
     }
 
-    if (privilegeZoneAnalysisEnabled && !analysisEnabled) {
+    if (privilegeZoneAnalysisEnabled && analysisEnabled === false) {
         return tooltip ? (
             <TooltipProvider>
                 <TooltipRoot>

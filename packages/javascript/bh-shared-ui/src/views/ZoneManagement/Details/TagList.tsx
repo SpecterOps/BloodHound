@@ -120,7 +120,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                {isTag(listItem) && listItem.id !== topTagId && (
+                                                {isTag(listItem) && title === 'Tiers' && listItem.id !== topTagId && (
                                                     <ZoneAnalysisIcon
                                                         size={18}
                                                         tooltip
