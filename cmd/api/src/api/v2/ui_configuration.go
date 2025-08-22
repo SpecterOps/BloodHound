@@ -22,6 +22,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
+type UIConfigurationResponse struct {
+	EnableUserAnalytics bool `json:"enable_user_analytics"`
+}
+
 func (s Resources) GetUIConfiguration(response http.ResponseWriter, request *http.Request) {
-	api.WriteJSONResponse(request.Context(), s.Config.UI, http.StatusOK, response)
+	resp := UIConfigurationResponse{
+		EnableUserAnalytics: s.Config.UI.EnableUserAnalytics,
+	}
+	api.WriteJSONResponse(request.Context(), resp, http.StatusOK, response)
 }
