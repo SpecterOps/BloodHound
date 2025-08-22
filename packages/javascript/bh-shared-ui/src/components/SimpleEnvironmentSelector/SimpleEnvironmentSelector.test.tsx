@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { SimpleEnvironmentSelector } from '.';
-import { render, screen, within } from '../../../test-utils';
+import { render, screen, within } from '../../test-utils';
 
 const server = setupServer(
     rest.get(`/api/v2/available-domains`, (req, res, ctx) => {

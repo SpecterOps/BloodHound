@@ -16,8 +16,6 @@
 
 export { default as LoadContainer } from './LoadContainer';
 
-export * from './SimpleEnvironmentSelector';
-
 export * from './DomainInfo';
 
 export * from './TenantInfo';

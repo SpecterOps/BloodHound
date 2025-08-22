@@ -22,12 +22,12 @@ import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils/api';
-import { SelectedEnvironment, SimpleEnvironmentSelector } from '../../views/DataQuality/SimpleEnvironmentSelector';
 import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
+import { SelectedEnvironment, SimpleEnvironmentSelector } from '../SimpleEnvironmentSelector';
 
 interface GroupManagementContentProps {
     globalEnvironment: SelectedEnvironment | null;

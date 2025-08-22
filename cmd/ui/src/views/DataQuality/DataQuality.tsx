@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle, Box, Grid, Link, Typography } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import {
     ActiveDirectoryPlatformInfo,
     AzurePlatformInfo,
@@ -30,52 +29,50 @@ import {
 import { useEffect, useState } from 'react';
 import { dataCollectionMessage } from './utils';
 
-const useStyles = makeStyles((theme) => ({
-    container: {
-        '& div:first-child': {
-            backgroundColor: theme.palette.neutral.tertiary,
-        },
-    },
-}));
+const getStatsComponent = (selectedEnvironment: SelectedEnvironment | null, dataErrorHandler: () => void) => {
+    const contextType = selectedEnvironment?.type;
+    const contextId = selectedEnvironment?.id;
+    switch (contextType) {
+        case 'active-directory':
+            if (!contextId) return null;
+            return <DomainInfo contextId={contextId} onDataError={dataErrorHandler} />;
+        case 'active-directory-platform':
+            return <ActiveDirectoryPlatformInfo onDataError={dataErrorHandler} />;
+        case 'azure':
+            if (!contextId) return null;
+            return <TenantInfo contextId={contextId} onDataError={dataErrorHandler} />;
+        case 'azure-platform':
+            return <AzurePlatformInfo onDataError={dataErrorHandler} />;
+        default:
+            return null;
+    }
+};
 
-const QualityAssurance: React.FC = () => {
+const DataQuality: React.FC = () => {
     const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
         initialEnvironment ?? null
     );
-    const [dataError, setDataError] = useState(false);
-    const classes = useStyles();
 
     const environment = selectedEnvironment ?? initialEnvironment;
+    const noIdSetForEnvironment =
+        !environment?.id && (environment?.type === 'active-directory' || environment?.type === 'azure');
 
     const handleSelect: (environment: SelectedEnvironment) => void = (selection) => setSelectedEnvironment(selection);
 
+    const [dataError, setDataError] = useState(false);
+
+    useEffect(() => {
+        initialEnvironment && setSelectedEnvironment(initialEnvironment);
+    }, [initialEnvironment]);
+
     useEffect(() => {
         setDataError(false);
-    }, [environment?.type, environment?.id]);
+    }, [environment]);
 
     const dataErrorHandler = () => {
         setDataError(true);
-    };
-
-    const getStatsComponent = () => {
-        const contextId = environment?.id;
-
-        switch (environment?.type) {
-            case 'active-directory':
-                if (!contextId) return null;
-                return <DomainInfo contextId={contextId} onDataError={dataErrorHandler} />;
-            case 'active-directory-platform':
-                return <ActiveDirectoryPlatformInfo onDataError={dataErrorHandler} />;
-            case 'azure':
-                if (!contextId) return null;
-                return <TenantInfo contextId={contextId} onDataError={dataErrorHandler} />;
-            case 'azure-platform':
-                return <AzurePlatformInfo onDataError={dataErrorHandler} />;
-            default:
-                return null;
-        }
     };
 
     const environmentErrorMessage = <>Environments unavailable. {dataCollectionMessage}</>;
@@ -95,10 +92,7 @@ const QualityAssurance: React.FC = () => {
         );
     }
 
-    if (
-        !environment?.type ||
-        (!environment?.id && (environment?.type === 'active-directory' || environment?.type === 'azure'))
-    ) {
+    if (!environment?.type || noIdSetForEnvironment) {
         return (
             <PageWithTitle
                 title='Data Quality'
@@ -106,6 +100,7 @@ const QualityAssurance: React.FC = () => {
                 pageDescription={<QualityAssuranceDescription />}>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                     <SimpleEnvironmentSelector
+                        align='end'
                         selected={{
                             type: environment?.type ?? null,
                             id: environment?.id ?? null,
@@ -130,7 +125,11 @@ const QualityAssurance: React.FC = () => {
             pageDescription={<QualityAssuranceDescription />}>
             <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
                 <SimpleEnvironmentSelector
-                    selected={selectedEnvironment || initialEnvironment || { type: null, id: null }}
+                    align='end'
+                    selected={{
+                        type: selectedEnvironment?.type ?? null,
+                        id: selectedEnvironment?.id ?? null,
+                    }}
                     errorMessage={environmentErrorMessage}
                     onSelect={handleSelect}
                 />
@@ -140,7 +139,9 @@ const QualityAssurance: React.FC = () => {
                     <Alert severity='warning'>
                         <AlertTitle>Data Quality Warning</AlertTitle>
                         It looks like data is incomplete or has not been collected yet. See the{' '}
-                        <Link target='_blank' href={'https://bloodhound.specterops.io/collect-data/overview'}>
+                        <Link
+                            target='_blank'
+                            href={'https://bloodhound.specterops.io/collect-data/overview#bloodhound-ce-collection'}>
                             Data Collection
                         </Link>{' '}
                         page to view instructions on how to begin data collection.
@@ -148,15 +149,15 @@ const QualityAssurance: React.FC = () => {
                 </Box>
             )}
             <Grid container spacing={2}>
-                <Grid item xs={12} data-testid='data-quality_statistics' classes={classes.container}>
-                    {getStatsComponent()}
+                <Grid item xs={12} data-testid='data-quality_statistics'>
+                    {getStatsComponent(environment, dataErrorHandler)}
                 </Grid>
             </Grid>
         </PageWithTitle>
     );
 };
 
-export default QualityAssurance;
+export default DataQuality;
 
 const QualityAssuranceDescription = () => (
     <Typography variant='body2' paragraph>

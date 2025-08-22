@@ -31,10 +31,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, TextField } from '@mui/material';
 import clsx from 'clsx';
 import { Environment } from 'js-client-library';
-import React, { ReactNode, useState } from 'react';
-import { AppIcon } from '../../../components/AppIcon';
-import { useAvailableEnvironments } from '../../../hooks/useAvailableEnvironments';
-import { cn } from '../../../utils/theme';
+import React, { ReactNode, useCallback, useMemo, useState } from 'react';
+import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
+import { cn } from '../../utils/theme';
+import { AppIcon } from '../AppIcon';
 import { SelectedEnvironment, SelectorValueTypes } from './types';
 
 const selectedText = (selected: SelectedEnvironment, environments: Environment[] | undefined): string => {
@@ -56,13 +56,40 @@ const selectedText = (selected: SelectedEnvironment, environments: Environment[]
 
 const SimpleEnvironmentSelector: React.FC<{
     selected: SelectedEnvironment;
+    align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
     buttonPrimary?: boolean;
     onSelect?: (newValue: { type: SelectorValueTypes; id: string | null }) => void;
-}> = ({ selected, errorMessage = '', buttonPrimary = false, onSelect = () => {} }) => {
+}> = ({ selected, align = 'start', errorMessage = '', buttonPrimary = false, onSelect = () => {} }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
+
+    const disableADPlatform = useMemo(() => {
+        return !data?.filter((env) => env.type === 'active-directory').length;
+    }, [data]);
+
+    const disableAZPlatform = useMemo(() => {
+        return !data?.filter((env) => env.type === 'azure').length;
+    }, [data]);
+
+    const handleADPlatformClick = useCallback(() => {
+        onSelect({ type: 'active-directory-platform', id: null });
+        handleClose();
+    }, [onSelect]);
+
+    const handleAzurePlatformClick = useCallback(() => {
+        onSelect({ type: 'azure-platform', id: null });
+        handleClose();
+    }, [onSelect]);
+
+    const handleEnvironmentClick = useCallback(
+        (environment: SelectedEnvironment) => {
+            onSelect({ type: environment.type!, id: environment.id });
+            handleClose();
+        },
+        [onSelect]
+    );
 
     if (isLoading) return <Skeleton className='rounded-md w-10' />;
 
@@ -107,7 +134,7 @@ const SimpleEnvironmentSelector: React.FC<{
             </PopoverTrigger>
             <PopoverContent
                 data-testid='data-quality_context-selector-popover'
-                align='start'
+                align={align}
                 className='flex flex-col gap-2 p-4 border border-neutral-light-5 w-80'>
                 <div className='flex px-0 mb-2'>
                     <TextField
@@ -137,8 +164,7 @@ const SimpleEnvironmentSelector: React.FC<{
                                         variant={'text'}
                                         className='flex justify-between items-center gap-2 w-full'
                                         onClick={() => {
-                                            onSelect({ type: environment.type, id: environment.id });
-                                            handleClose();
+                                            handleEnvironmentClick(environment);
                                         }}>
                                         <TooltipProvider>
                                             <TooltipRoot>
@@ -164,27 +190,21 @@ const SimpleEnvironmentSelector: React.FC<{
                                 </li>
                             );
                         })}
-                    <li>
+                    <li key='active-directory-platform'>
                         <Button
                             className='flex justify-between items-center gap-2 w-full'
-                            onClick={() => {
-                                onSelect({ type: 'active-directory-platform', id: null });
-                                handleClose();
-                            }}
-                            disabled={!data?.filter((env) => env.type === 'active-directory').length}
+                            onClick={handleADPlatformClick}
+                            disabled={disableADPlatform}
                             variant={'text'}>
                             All Active Directory Domains
                             <FontAwesomeIcon icon={faGlobe} size='sm' />
                         </Button>
                     </li>
-                    <li>
+                    <li key='azure-platform'>
                         <Button
-                            onClick={() => {
-                                onSelect({ type: 'azure-platform', id: null });
-                                handleClose();
-                            }}
+                            onClick={handleAzurePlatformClick}
                             variant={'text'}
-                            disabled={!data?.filter((env) => env.type === 'azure').length}
+                            disabled={disableAZPlatform}
                             className='flex justify-between items-center gap-2 w-full'>
                             All Azure Tenants
                             <FontAwesomeIcon icon={faCloud} size='sm' />
