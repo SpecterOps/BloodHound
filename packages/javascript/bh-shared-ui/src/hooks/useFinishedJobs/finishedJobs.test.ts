@@ -32,8 +32,8 @@ const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
 const checkPermissionMock = vi.fn();
 
-vi.mock('../providers', async () => {
-    const actual = await vi.importActual('../providers');
+vi.mock('../../providers', async () => {
+    const actual = await vi.importActual('../../providers');
     return {
         ...actual,
         useNotifications: () => ({
@@ -43,8 +43,8 @@ vi.mock('../providers', async () => {
     };
 });
 
-vi.mock('../hooks/usePermissions', async () => {
-    const actual = await vi.importActual('../hooks');
+vi.mock('../../hooks/usePermissions', async () => {
+    const actual = await vi.importActual('../../hooks');
     return {
         ...actual,
         usePermissions: () => ({
@@ -90,7 +90,7 @@ const MOCK_FINISHED_JOBS_RESPONSE = {
 const server = setupServer(
     rest.get('/api/v2/jobs/finished', (req, res, ctx) => {
         return res(ctx.json(MOCK_FINISHED_JOBS_RESPONSE));
-    })
+    }),
 );
 
 beforeAll(() => server.listen());

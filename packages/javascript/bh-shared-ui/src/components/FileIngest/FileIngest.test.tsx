@@ -187,7 +187,6 @@ describe('FileIngest', () => {
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
-        render(<Wrapper />);
         server.use(
             rest.get('/api/v2/self', (req, res, ctx) => {
                 return res(
