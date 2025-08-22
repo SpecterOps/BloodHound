@@ -90,7 +90,7 @@ const MOCK_FINISHED_JOBS_RESPONSE = {
 const server = setupServer(
     rest.get('/api/v2/jobs/finished', (req, res, ctx) => {
         return res(ctx.json(MOCK_FINISHED_JOBS_RESPONSE));
-    }),
+    })
 );
 
 beforeAll(() => server.listen());

@@ -17,11 +17,11 @@
 import type { GetScheduledJobDisplayResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { usePermissions } from '../usePermissions';
 import { useNotifications } from '../../providers';
+import { PERSIST_NOTIFICATION } from '../../utils';
 import { apiClient } from '../../utils/api';
 import { Permission } from '../../utils/permissions';
-import { PERSIST_NOTIFICATION } from '../../utils';
+import { usePermissions } from '../usePermissions';
 
 interface FinishedJobParams {
     page: number;

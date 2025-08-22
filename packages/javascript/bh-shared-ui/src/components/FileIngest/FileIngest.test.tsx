@@ -37,7 +37,7 @@ const server = setupServer(
             ctx.json({
                 data: [
                     {
-                        key: 'finished_jobs_log_v2',
+                        key: 'file_ingest_log_v2',
                         enabled: true,
                     },
                 ],
