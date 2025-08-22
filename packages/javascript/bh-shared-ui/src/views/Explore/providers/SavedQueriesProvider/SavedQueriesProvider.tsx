@@ -6,11 +6,7 @@ type SelectedType = {
     id?: number;
 };
 type SaveAction = 'edit' | 'save-as' | undefined;
-// type CypherSearchState = {
-//     cypherQuery: string;
-//     setCypherQuery: (query: string) => void;
-//     performSearch: (query?: string) => void;
-// };
+
 interface SavedQueriesContextType {
     selected: SelectedType;
     selectedQuery: QueryLineItem | undefined;

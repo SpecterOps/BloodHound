@@ -32,14 +32,7 @@ import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
 import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
-
-type CypherSearchState = {
-    cypherQuery: string;
-    setCypherQuery: (query: string) => void;
-    performSearch: (query?: string) => void;
-};
-
-// type SaveAction = 'edit' | 'save-as' | undefined;
+import { CypherSearchState } from './types';
 
 const CypherSearch = ({
     cypherSearchState,
@@ -55,7 +48,6 @@ const CypherSearch = ({
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
-    // const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [messageState, setMessageState] = useState({
         showMessage: false,
@@ -63,7 +55,6 @@ const CypherSearch = ({
     });
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
-    // const [saveAction, setSaveAction] = useState<SaveAction>(undefined);
 
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();

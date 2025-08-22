@@ -43,13 +43,9 @@ import { useQuery } from 'react-query';
 import { graphSchema } from '../../../../constants';
 import { apiClient, cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
+import { CypherSearchState } from '../types';
 import ConfirmUpdateQueryDialog from './ConfirmUpdateQueryDialog';
 import SavedQueryPermissions from './SavedQueryPermissions';
-type CypherSearchState = {
-    cypherQuery: string;
-    setCypherQuery: (query: string) => void;
-    performSearch: (query?: string) => void;
-};
 
 const SaveQueryDialog: React.FC<{
     open: boolean;
