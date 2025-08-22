@@ -15,191 +15,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Dialog, DialogActions, DialogContent, useTheme } from '@mui/material';
-import { ErrorResponse } from 'js-client-library';
-import { useEffect, useState } from 'react';
-import {
-    useEndFileIngestJob,
-    useListFileTypesForIngest,
-    useStartFileIngestJob,
-    useUploadFileToIngestJob,
-} from '../../hooks';
-import { useNotifications } from '../../providers';
+import { Box, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { ReactNode, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
-import { FileForIngest, FileStatus, FileUploadStep } from './types';
+import { FileUploadStep } from './types';
+import { makeProgressCacheKey, useFileUploadDialogHandlers } from './useFileUploadDialogHandlers';
 
 const FileUploadDialog: React.FC<{
     open: boolean;
     onClose: () => void;
-}> = ({ open, onClose }) => {
-    const theme = useTheme();
+    headerText?: ReactNode;
+    description?: ReactNode;
+}> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
+    const dialogRef = useRef<HTMLDivElement>(null);
 
-    const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
-    const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
-    const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
-    const [uploadDialogDisabled, setUploadDialogDisabled] = useState<boolean>(false);
-    const [uploadMessage, setUploadMessage] = useState<string>('');
-
-    const { addNotification } = useNotifications();
-    const listFileTypesForIngest = useListFileTypesForIngest();
-    const startFileIngestJob = useStartFileIngestJob();
-    const uploadFileToIngestJob = useUploadFileToIngestJob();
-    const endFileIngestJob = useEndFileIngestJob();
-
-    useEffect(() => {
-        const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
-        const filesAreUploading = filesForIngest.filter((file) => file.status === FileStatus.UPLOADING).length > 0;
-
-        const shouldDisableSubmit = filesHaveErrors || !filesForIngest.length;
-        setSubmitDialogDisabled(shouldDisableSubmit);
-        setUploadDialogDisabled(filesAreUploading);
-    }, [filesForIngest]);
-
-    const handleRemoveFile = (index: number) => {
-        setFilesForIngest((prevFiles) => prevFiles.filter((_file, i) => i !== index));
-    };
-
-    const handleAppendFiles = (files: FileForIngest[]) => {
-        setFilesForIngest((prevFiles) => [...prevFiles, ...files]);
-    };
-
-    const updateStatusOfReadyFiles = (status: FileStatus) => {
-        setFilesForIngest((prevFiles) =>
-            prevFiles.map((file) => {
-                return {
-                    ...file,
-                    status: file.status === FileStatus.READY ? status : file.status,
-                };
-            })
-        );
-    };
-
-    const setNewFileStatus = (name: string, status: FileStatus) => {
-        setFilesForIngest((prevFiles) =>
-            prevFiles.map((file) => {
-                if (file.file.name === name) {
-                    return { ...file, status };
-                }
-                return file;
-            })
-        );
-    };
-
-    const setUploadFailureError = (name: string, error: string) => {
-        setNewFileStatus(name, FileStatus.FAILURE);
-
-        setFilesForIngest((prevFiles) =>
-            prevFiles.map((file) => {
-                if (file.file.name === name) {
-                    return { ...file, errors: [error] };
-                }
-                return file;
-            })
-        );
-    };
-
-    const handleUploadAllFiles = async () => {
-        updateStatusOfReadyFiles(FileStatus.UPLOADING);
-
-        try {
-            const response = await startUpload();
-            const currentIngestJobId = response?.data?.id?.toString();
-
-            // Counting errors manually here to avoid race conditions with react state updates
-            let errorCount = 0;
-
-            if (currentIngestJobId) {
-                for (const ingestFile of filesForIngest) {
-                    // Separate error handling so we can continue on when a file fails
-                    try {
-                        await uploadFile(currentIngestJobId, ingestFile);
-                    } catch (error) {
-                        errorCount += 1;
-                    }
-                    setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
-                }
-            }
-            await finishUpload(currentIngestJobId);
-
-            logFinishedIngestJob(errorCount);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const startUpload = async () => {
-        return startFileIngestJob.mutateAsync(undefined, {
-            onError: () => {
-                addNotification('Failed to start ingest process', 'StartFileIngestFail');
-                setFilesForIngest((prevFiles) => prevFiles.map((file) => ({ ...file, status: FileStatus.READY })));
-            },
-        });
-    };
-
-    const uploadFile = async (jobId: string, ingestFile: FileForIngest) => {
-        return uploadFileToIngestJob.mutateAsync(
-            { jobId, fileContents: ingestFile.file, contentType: ingestFile.file.type },
-            {
-                onError: (error: any) => {
-                    const apiError = error?.response?.data as ErrorResponse;
-
-                    if (apiError?.errors?.length && apiError.errors[0].message?.length) {
-                        const { message } = apiError.errors[0];
-                        addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
-                        setUploadFailureError(ingestFile.file.name, message);
-                    } else {
-                        addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
-                        setUploadFailureError(ingestFile.file.name, 'Upload Failed');
-                    }
-                },
-            }
-        );
-    };
-
-    const finishUpload = async (jobId: string) => {
-        return endFileIngestJob.mutateAsync(
-            { jobId },
-            {
-                onError: () => {
-                    addNotification('Failed to close out ingest job', 'EndFileIngestFail');
-                },
-            }
-        );
-    };
-
-    const logFinishedIngestJob = (errorCount: number) => {
-        const uploadMessage =
-            errorCount > 0
-                ? 'Some files have failed to upload and have not been included for ingest.'
-                : 'All files have successfully been uploaded for ingest.';
-        setUploadMessage(uploadMessage);
-
-        addNotification(
-            `Successfully uploaded ${filesForIngest.length - errorCount} files for ingest`,
-            'FileIngestSuccess'
-        );
-    };
-
-    const handleFileDrop = (files: FileList | null) => {
-        if (files && files.length > 0) {
-            const validatedFiles: FileForIngest[] = [...files].map((file) => {
-                if (listFileTypesForIngest.data?.data.includes(file.type)) {
-                    return { file, status: FileStatus.READY };
-                } else {
-                    return { file, errors: ['invalid file type'], status: FileStatus.READY };
-                }
-            });
-            handleAppendFiles(validatedFiles);
-        }
-    };
-
-    const handleSubmit = () => {
-        if (fileUploadStep === FileUploadStep.ADD_FILES) {
-            setFileUploadStep(FileUploadStep.UPLOAD);
-            handleUploadAllFiles();
-        }
-    };
+    const {
+        currentlyUploading,
+        listFileTypesForIngest,
+        progressCache,
+        currentIngestJobId,
+        filesForIngest,
+        setFilesForIngest,
+        setFileUploadStep,
+        handleFileDrop,
+        retryUploadSingleFile,
+        uploadMessage,
+        uploadDialogDisabled,
+        submitDialogDisabled,
+        handleSubmit,
+        handleRemoveFile,
+        onClose,
+    } = useFileUploadDialogHandlers({ onCloseProp, dialogRef });
 
     return (
         <Dialog
@@ -212,68 +60,64 @@ const FileUploadDialog: React.FC<{
                     setFilesForIngest([]);
                 },
             }}>
-            <DialogContent>
-                <>
-                    {fileUploadStep === FileUploadStep.ADD_FILES && (
+            <div ref={dialogRef}>
+                <DialogContent>
+                    <div className='pb-2 font-bold'>{headerText}</div>
+                    {description && <div>{description}</div>}
+                    <>
                         <FileDrop
                             onDrop={handleFileDrop}
-                            disabled={listFileTypesForIngest.isLoading}
-                            accept={listFileTypesForIngest.data?.data}
+                            disabled={currentlyUploading || listFileTypesForIngest.isLoading}
+                            accept={listFileTypesForIngest.data?.data ?? []}
                         />
-                    )}
-                    {fileUploadStep === FileUploadStep.UPLOAD && uploadMessage && (
-                        <Box fontSize={20} marginBottom={5}>
-                            {uploadMessage}
-                        </Box>
-                    )}
+                        {uploadMessage && <Box className='mt-2 mb-2'>{uploadMessage}</Box>}
+                        <Link to='/administration/file-ingest' onClick={onClose}>
+                            <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
+                                View File Ingest History
+                            </div>
+                        </Link>
 
-                    {filesForIngest.length > 0 && (
-                        <Box sx={{ my: '8px' }}>
-                            <Box
-                                sx={{
-                                    backgroundColor: theme.palette.neutral.tertiary,
-                                    color: theme.palette.color.primary,
-                                    fontWeight: 'bold',
-                                    padding: '4px',
-                                }}>
-                                Files
+                        {filesForIngest.length > 0 && (
+                            <Box sx={{ my: '8px' }}>
+                                {filesForIngest.map((file, index) => {
+                                    return (
+                                        <FileStatusListItem
+                                            file={file}
+                                            percentCompleted={
+                                                progressCache[
+                                                    makeProgressCacheKey(currentIngestJobId, file?.file?.name)
+                                                ] || 0
+                                            }
+                                            key={index}
+                                            onRemove={() => handleRemoveFile(index)}
+                                            onRefresh={retryUploadSingleFile}
+                                        />
+                                    );
+                                })}
                             </Box>
-                            {filesForIngest.map((file, index) => {
-                                return (
-                                    <FileStatusListItem
-                                        file={file}
-                                        key={index}
-                                        onRemove={() => handleRemoveFile(index)}
-                                    />
-                                );
-                            })}
-                        </Box>
-                    )}
-                </>
-            </DialogContent>
-            <DialogActions>
-                {fileUploadStep === FileUploadStep.ADD_FILES && (
-                    <>
-                        <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
-                            Cancel
-                        </Button>
-                        <Button
-                            disabled={submitDialogDisabled}
-                            onClick={handleSubmit}
-                            data-testid='confirmation-dialog_button-yes'>
-                            Upload
-                        </Button>
+                        )}
                     </>
-                )}
-                {fileUploadStep === FileUploadStep.UPLOAD && (
-                    <Button
-                        onClick={onClose}
-                        disabled={uploadDialogDisabled}
-                        data-testid='confirmation-dialog_button-yes'>
+                    {currentlyUploading && (
+                        <div>
+                            <p>Upload in progress.</p>
+                            <p>
+                                You can continue using the platform&mdash;we will alert you once the upload is complete.
+                            </p>
+                        </div>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
                         {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
                     </Button>
-                )}
-            </DialogActions>
+                    <Button
+                        disabled={submitDialogDisabled}
+                        onClick={handleSubmit}
+                        data-testid='confirmation-dialog_button-yes'>
+                        Upload
+                    </Button>
+                </DialogActions>
+            </div>
         </Dialog>
     );
 };
