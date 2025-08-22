@@ -55,7 +55,7 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
                         To get started with collecting data,{' '}
                         <RouterLink className={linkStyles} to='/download-collectors'>
                             download a collector
-                        </RouterLink>{' '}
+                        </RouterLink>
                         .
                     </p>
                     <p className='pb-3'>
