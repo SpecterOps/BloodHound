@@ -6374,7 +6374,10 @@
                 "properties": {
                   "member_ids": {
                     "type": "array",
-                    "items": "integer"
+                    "items": {
+                      "type": "integer"
+                    }
+
                   },
                   "action": {
                     "type": "integer",
@@ -6391,6 +6394,11 @@
                   "member_ids",
                   "action"
                 ]
+              },
+              "example": {
+                  "member_ids": [1, 2, 3],
+                  "action": 2,
+                  "note": "certify these members"
               }
             }
           }
