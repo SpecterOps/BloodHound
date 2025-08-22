@@ -22,7 +22,10 @@ import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogConte
 import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
+import FeatureFlag from '../FeatureFlag';
 import { FileIngestTable } from '../FileIngestTable';
+import LegacyFileIngestTable from '../LegacyFileIngestTable/LegacyFileIngestTable';
+import LoadingOverlay from '../LoadingOverlay';
 import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
@@ -78,9 +81,16 @@ const FileIngest: FC = () => {
                     Upload File(s)
                 </Button>
             </Box>
-            <Card>
-                <FileIngestTable />
-            </Card>
+            <FeatureFlag
+                flagKey='finished_jobs_log_v2'
+                loadingFallback={<LoadingOverlay loading />}
+                enabled={
+                    <Card>
+                        <FileIngestTable />
+                    </Card>
+                }
+                disabled={<LegacyFileIngestTable />}
+            />
         </>
     );
 };

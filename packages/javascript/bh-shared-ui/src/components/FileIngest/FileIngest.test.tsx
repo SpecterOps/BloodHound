@@ -32,6 +32,18 @@ const server = setupServer(
             })
         );
     }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'finished_jobs_log_v2',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
     rest.post('/api/v2/file-upload/start', (req, res, ctx) => {
         return res(
             ctx.json({
