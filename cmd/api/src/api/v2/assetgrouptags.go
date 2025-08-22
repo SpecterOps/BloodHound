@@ -1071,3 +1071,92 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		response.WriteHeader(http.StatusOK)
 	}
 }
+
+type AssetGroupMemberWithCertification struct {
+	AssetGroupMember
+	CreatedAt     time.Time                     `json:"created_at"`
+	CertifiedBy   string                        `json:"certified_by"`
+	Certification model.AssetGroupCertification `json:"certification"`
+}
+
+func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.FilterOperator {
+	return map[string][]model.FilterOperator{
+		"node_environment_id": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"asset_group_tag_id":  {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"node_primary_kind":   {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"certified":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"certified_by":        {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"created_at":          {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+	}
+}
+
+func (AssetGroupMemberWithCertification) IsStringColumn(filter string) bool {
+	return filter == "node_environment_id" || filter == "node_primary_kind" || filter == "certified_by"
+}
+
+type GetAssetGroupMembersWithCertificationResponse struct {
+	Members []AssetGroupMemberWithCertification `json:"members"`
+}
+
+func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter, request *http.Request) {
+	var (
+		requestContext                    = request.Context()
+		defaultSkip                       = 0
+		defaultLimit                      = 100
+		assetGroupMemberWithCertification = AssetGroupMemberWithCertification{}
+		queryParams                       = request.URL.Query()
+	)
+	// Parse Query Parameters
+	if skip, err := ParseSkipQueryParameter(queryParams, defaultSkip); err != nil {
+		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, defaultLimit); err != nil {
+		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(assetGroupMemberWithCertification, name); err != nil {
+				api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = assetGroupMemberWithCertification.IsStringColumn(filter.Name)
+				}
+			}
+
+		}
+
+		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+			return
+		} else if selectorNodes, count, err := s.DB.GetSelectorNodes(requestContext, sqlFilter, skip, limit); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// return paginated AssetGroupMemberWithCertification of matches and also a count
+			var members []AssetGroupMemberWithCertification
+			for _, selNode := range selectorNodes {
+				member := AssetGroupMemberWithCertification{
+					AssetGroupMember: AssetGroupMember{
+						NodeId:        selNode.NodeId,
+						ObjectID:      selNode.NodeObjectId,
+						EnvironmentID: selNode.NodeEnvironmentId,
+						PrimaryKind:   selNode.NodePrimaryKind,
+						Name:          selNode.NodeName,
+					},
+					CreatedAt:     selNode.CreatedAt,
+					CertifiedBy:   selNode.CertifiedBy.ValueOrZero(),
+					Certification: selNode.Certified,
+				}
+
+				members = append(members, member)
+			}
+			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersWithCertificationResponse{Members: members}, limit, skip, count, http.StatusOK, response)
+
+		}
+	}
+}

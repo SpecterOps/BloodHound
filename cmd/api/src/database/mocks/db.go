@@ -1755,6 +1755,22 @@ func (mr *MockDatabaseMockRecorder) GetScopeForSavedQuery(ctx, queryID, userID a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeForSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetScopeForSavedQuery), ctx, queryID, userID)
 }
 
+// GetSelectorNodes mocks base method.
+func (m *MockDatabase) GetSelectorNodes(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNode, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSelectorNodes", ctx, sqlFilter, skip, limit)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNode)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetSelectorNodes indicates an expected call of GetSelectorNodes.
+func (mr *MockDatabaseMockRecorder) GetSelectorNodes(ctx, sqlFilter, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodes", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodes), ctx, sqlFilter, skip, limit)
+}
+
 // GetSelectorNodesBySelectorIds mocks base method.
 func (m *MockDatabase) GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error) {
 	m.ctrl.T.Helper()
