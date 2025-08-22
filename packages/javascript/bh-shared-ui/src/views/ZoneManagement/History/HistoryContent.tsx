@@ -79,10 +79,10 @@ const NoteComponent = ({ row }: any) => {
     return (
         <div>
             {author === 'System' ? (
-                <p className='pl-4'>-</p>
+                <p className='pl-4 myH'>-</p>
             ) : (
                 <button
-                    className='disabled:opacity-25 pl-4'
+                    className='disabled:opacity-25 pl-4 myH'
                     onClick={() => handleOnClick()}
                     disabled={!row.original.note}>
                     <AppIcon.LinedPaper size={18} />
@@ -93,15 +93,15 @@ const NoteComponent = ({ row }: any) => {
 };
 
 const HISTORY_COLS = [
-    ({ row }: any) => <div className='pl-4'>{row.original.target}</div>,
-    ({ row }: any) => <div className='pl-4'>{row.original.action}</div>,
-    ({ row }: any) => <div className='pl-4'>{row.original.date}</div>,
-    ({ row }: any) => <div className='pl-4'>{row.original.tagName}</div>,
-    ({ row }: any) => <div className='pl-4'>{row.original.email || row.original.actor}</div>,
+    ({ row }: any) => <div className='pl-4 myH'>{row.original.target}</div>,
+    ({ row }: any) => <div className='pl-4 myH'>{row.original.action}</div>,
+    ({ row }: any) => <div className='pl-4 myH'>{row.original.date}</div>,
+    ({ row }: any) => <div className='pl-4 myH'>{row.original.tagName}</div>,
+    ({ row }: any) => <div className='pl-4 myH'>{row.original.email || row.original.actor}</div>,
     ({ row }: any) => <NoteComponent row={row} />,
 ];
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 /** Generates an array of column data in the success or loading states */
 const getColumns = (isLoading: boolean) => {
@@ -111,15 +111,27 @@ const getColumns = (isLoading: boolean) => {
     }));
 };
 
-const useInfiniteQueriesPage = () => {
+const useInfiniteQueriesPage = (query: string) => {
+    const doSearch = query.length >= 3;
+
     const getPaginatedHistory = (skip: number = 0, limit: number = PAGE_SIZE) =>
-        createPaginatedFetcher(() => apiClient.getAssetGroupTagHistory(limit, skip), 'records', skip, limit);
+        createPaginatedFetcher(
+            () =>
+                doSearch
+                    ? apiClient.searchAssetGroupTagHistory(limit, skip, query)
+                    : apiClient.getAssetGroupTagHistory(limit, skip),
+            'records',
+            skip,
+            limit
+        );
+
+    const queryKey = doSearch ? query : 'static';
 
     return useInfiniteQuery<{
         items: AssetGroupTagHistoryRecord[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: ['asset-group-tag-history'],
+        queryKey: ['asset-group-tag-history', queryKey],
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
             getPaginatedHistory(pageParam.skip, pageParam.limit),
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
@@ -129,7 +141,7 @@ const useInfiniteQueriesPage = () => {
 const HistoryContent = () => {
     const [search, setSearch] = useState('');
 
-    const { data, isLoading } = useInfiniteQueriesPage();
+    const { data, isLoading } = useInfiniteQueriesPage(search);
 
     const tagsQuery = useTagsQuery();
 
@@ -139,7 +151,7 @@ const HistoryContent = () => {
 
     tableData.forEach((record) => {
         const name = tagsQuery.data?.find((tag) => tag.id === record.asset_group_tag_id)?.name;
-        const formattedDate = DateTime.fromISO(record.created_at).toFormat('dd/MM/yyyy');
+        const formattedDate = DateTime.fromISO(record.created_at).toFormat('MM-dd-yyyy');
         record.date = formattedDate;
 
         if (name !== undefined) {
@@ -147,15 +159,46 @@ const HistoryContent = () => {
         }
     });
 
+    type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+    const tableProps: DataTableProps['TableProps'] = {
+        className: 'table-fixed',
+        disableDefaultOverflowAuto: true,
+    };
+
+    const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+        className: 'sticky top-0 z-10 shadow-sm',
+    };
+
+    const tableHeadProps: DataTableProps['TableHeadProps'] = {
+        className: 'pr-2 text-center',
+    };
+
+    const tableCellProps: DataTableProps['TableCellProps'] = {
+        className: 'truncate group relative',
+    };
     return (
-        <div className='flex gap-8 mt-6 w-full '>
-            <Card className='  min-h-[200px] '>
+        <div className='flex gap-8 mt-6 h-full'>
+            <Card className='h-full w-full grid grid-rows-[72px,1fr] overflow-hidden'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
                     <SearchInput value={search} onInputChange={setSearch} />
                 </CardHeader>
-
-                <DataTable className='pl-2 pr-2 ' data={tableData ?? []} columns={getColumns(isLoading)} />
+                <DataTable
+                    className='w-auto h-auto overflow-auto'
+                    data={tableData ?? []}
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
+                    columns={getColumns(isLoading)}
+                    // virtualizationOptions={{
+                    //     rangeExtractor: (range) => {
+                    //         console.log('rangeExtractor', range);
+                    //         return new Array(range.count).fill(0).map((_, index) => range.startIndex + index);
+                    //     },
+                    // }}
+                />
             </Card>
             <HistoryNotes />
         </div>
