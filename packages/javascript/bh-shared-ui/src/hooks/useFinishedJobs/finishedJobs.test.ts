@@ -126,6 +126,7 @@ describe('useFinishedJobsQuery', () => {
     });
 
     it('shows an error notification if there is an error fetching', async () => {
+        console.error = vi.fn();
         server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
         checkPermissionMock.mockImplementation(() => true);
         const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));

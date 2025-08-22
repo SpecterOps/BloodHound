@@ -16,5 +16,10 @@
 
 import { Environment } from 'js-client-library';
 
-export type DomainPlatforms = 'active-directory-platform' | 'azure-platform';
-export type DataSelectorValueTypes = Environment['type'] | DomainPlatforms;
+export const AD_PLATFORM = 'active-directory-platform' as const;
+export const AZ_PLATFORM = 'azure-platform' as const;
+
+export type EnvironmentPlatform = typeof AD_PLATFORM | typeof AZ_PLATFORM;
+export type SelectorValueTypes = Environment['type'] | EnvironmentPlatform;
+
+export type SelectedEnvironment = { type: SelectorValueTypes | null; id: string | null };
