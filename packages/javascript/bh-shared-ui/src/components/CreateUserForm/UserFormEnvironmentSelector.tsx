@@ -27,7 +27,11 @@ const UserFormEnvironmentSelector: React.FC<{
     disabled?: boolean;
     //onChange: (checked: any[]) => void;
 }> = ({}) => {
-    const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
+    const {
+        data: availableEnvironments,
+        //isLoading,
+        //isError
+    } = useAvailableEnvironments();
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
 

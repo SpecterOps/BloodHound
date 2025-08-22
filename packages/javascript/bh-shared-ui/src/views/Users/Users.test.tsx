@@ -29,7 +29,7 @@ afterAll(() => server.close());
 
 describe('Users', () => {
     test('The password reset dialog is opened when switching a user from SAML based authentication to username/password based authentication', async () => {
-        render(<Users />);
+        render(<Users showEnvironmentAccessControls={false} />);
 
         expect(screen.getByText('Manage Users')).toBeInTheDocument();
 
@@ -70,7 +70,7 @@ describe('Users', () => {
     });
 
     it('disables the create user button and does not populate a table if the user lacks the permission', async () => {
-        render(<Users />);
+        render(<Users showEnvironmentAccessControls={false} />);
 
         expect(screen.getByTestId('manage-users_button-create-user')).toBeDisabled();
 
