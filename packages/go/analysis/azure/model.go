@@ -82,6 +82,7 @@ func FromGraphNodes(nodes []*graph.Node) []Node {
 func FromGraphNode(node *graph.Node) Node {
 	return Node{
 		Kind:          analysis.GetNodeKindDisplayLabel(node),
+		Kinds:         node.Kinds.Strings(),
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),
 		Properties:    node.Properties.Map,
@@ -91,6 +92,7 @@ func FromGraphNode(node *graph.Node) Node {
 // Node is a serializable version of *graph.Node
 type Node struct {
 	Kind          string         `json:"kind"`
+	Kinds         []string       `json:"kinds"`
 	IsTierZero    bool           `json:"isTierZero"`
 	IsOwnedObject bool           `json:"isOwnedObject"`
 	Properties    map[string]any `json:"props"`
