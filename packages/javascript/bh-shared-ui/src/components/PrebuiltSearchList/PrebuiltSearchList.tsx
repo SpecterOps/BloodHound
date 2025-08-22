@@ -26,7 +26,6 @@ interface PrebuiltSearchListProps {
     showCommonQueries: boolean;
     clickHandler: (query: string, id?: number) => void;
     deleteHandler?: (id: number) => void;
-    editHandler: (id: number) => void;
     clearFiltersHandler: () => void;
 }
 
@@ -51,7 +50,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     showCommonQueries,
     clickHandler,
     deleteHandler,
-    editHandler,
     clearFiltersHandler,
 }) => {
     const { selectedQuery } = useSavedQueriesContext();
@@ -71,10 +69,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     const handleDelete = (id: number) => {
         setQueryId(id);
         setOpen(true);
-    };
-
-    const handleEdit = (id: number) => {
-        editHandler(id);
     };
 
     const testMatch = (name: string, id?: number) => {
@@ -142,7 +136,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             id={id as number}
                                                             query={query}
                                                             deleteQuery={() => handleDelete(id as number)}
-                                                            editQuery={() => handleEdit(id as number)}
                                                         />
                                                     )}
                                                 </li>

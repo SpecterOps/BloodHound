@@ -36,7 +36,6 @@ type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
     onToggleCommonQueries: () => void;
-    onEditQuery: (id: number) => void;
     showCommonQueries: boolean;
 };
 
@@ -44,7 +43,6 @@ const InnerCommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
     onToggleCommonQueries,
-    onEditQuery,
     showCommonQueries,
 }: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
     const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
@@ -196,7 +194,6 @@ const InnerCommonSearches = ({
                     clickHandler={handleClick}
                     deleteHandler={handleDeleteQuery}
                     clearFiltersHandler={handleClearFilters}
-                    editHandler={onEditQuery}
                     showCommonQueries={showCommonQueries}
                 />
             </div>

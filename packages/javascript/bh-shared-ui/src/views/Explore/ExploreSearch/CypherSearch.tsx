@@ -39,7 +39,7 @@ type CypherSearchState = {
     performSearch: (query?: string) => void;
 };
 
-type SaveAction = 'edit' | 'save-as' | undefined;
+// type SaveAction = 'edit' | 'save-as' | undefined;
 
 const CypherSearch = ({
     cypherSearchState,
@@ -50,11 +50,12 @@ const CypherSearch = ({
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
 }) => {
-    const { selectedQuery, setSelected } = useSavedQueriesContext();
+    const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
+        useSavedQueriesContext();
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
 
-    const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
+    // const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [messageState, setMessageState] = useState({
         showMessage: false,
@@ -62,7 +63,7 @@ const CypherSearch = ({
     });
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
-    const [saveAction, setSaveAction] = useState<SaveAction>(undefined);
+    // const [saveAction, setSaveAction] = useState<SaveAction>(undefined);
 
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
@@ -169,12 +170,6 @@ const CypherSearch = ({
         }
     };
 
-    const handleEditQuery = (id: number) => {
-        setSelected({ query: '', id: id });
-        setSaveAction('edit');
-        setShowSaveQueryDialog(true);
-    };
-
     const handleClearMessage = () => {
         setMessageState((prevState) => ({
             ...prevState,
@@ -216,7 +211,6 @@ const CypherSearch = ({
                         onPerformCypherSearch={handleSavedSearch}
                         onToggleCommonQueries={handleToggleCommonQueries}
                         showCommonQueries={showCommonQueries}
-                        onEditQuery={handleEditQuery}
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}

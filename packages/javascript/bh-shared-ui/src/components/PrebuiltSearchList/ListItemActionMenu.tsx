@@ -7,11 +7,10 @@ interface ListItemActionMenuProps {
     id?: number;
     query?: string;
     deleteQuery: (id: number) => void;
-    editQuery: (id: number) => void;
 }
 
-const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuery, editQuery }) => {
-    const { runQuery } = useSavedQueriesContext();
+const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuery }) => {
+    const { runQuery, editQuery } = useSavedQueriesContext();
 
     const handleRun = (event: MouseEvent) => {
         event.stopPropagation();
