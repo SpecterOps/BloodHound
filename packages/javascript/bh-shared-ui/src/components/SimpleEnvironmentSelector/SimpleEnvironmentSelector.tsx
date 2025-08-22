@@ -65,6 +65,13 @@ const SimpleEnvironmentSelector: React.FC<{
     const [searchInput, setSearchInput] = useState<string>('');
     const { data, isLoading, isError } = useAvailableEnvironments();
 
+    const handleClose = () => setOpen(false);
+
+    const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
+
+    const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) =>
+        setSearchInput(e.target.value);
+
     const disableADPlatform = useMemo(() => {
         return !data?.filter((env) => env.type === 'active-directory').length;
     }, [data]);
@@ -94,13 +101,6 @@ const SimpleEnvironmentSelector: React.FC<{
     if (isLoading) return <Skeleton className='rounded-md w-10' />;
 
     if (isError) return <Alert severity='error'>{errorMessage}</Alert>;
-
-    const handleClose = () => setOpen(false);
-
-    const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
-
-    const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) =>
-        setSearchInput(e.target.value);
 
     const filteredEnvironments = data?.filter(
         (environment: Environment) =>
