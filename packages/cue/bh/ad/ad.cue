@@ -1796,6 +1796,7 @@ SharedRelationshipKinds: [
 	AllExtendedRights,
 	AddMember,
 	HasSession,
+	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
 	AllowedToAct,

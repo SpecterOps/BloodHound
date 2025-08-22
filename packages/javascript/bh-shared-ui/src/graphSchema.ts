@@ -774,6 +774,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
+        ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
         ActiveDirectoryRelationshipKind.AllowedToAct,
