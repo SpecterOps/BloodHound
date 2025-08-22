@@ -1128,6 +1128,8 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 }
 
+// TODO Integration tests for transaction
+
 func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)

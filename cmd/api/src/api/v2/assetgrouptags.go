@@ -45,7 +45,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"gorm.io/gorm"
 )
 
 const (
@@ -975,15 +974,6 @@ type CertifyMembersRequest struct {
 	Note      string                        `json:"note,omitempty"`
 }
 
-type UpdateCertificationBySelectorNodeInput struct {
-	AssetGroupTagId     int
-	SelectorId          int
-	CertifiedBy         null.String
-	CertificationStatus model.AssetGroupCertification
-	NodeId              graph.ID
-	NodeName            string
-}
-
 func isValidCertType(certType model.AssetGroupCertification) bool {
 	switch certType {
 	case model.AssetGroupCertificationManual, model.AssetGroupCertificationRevoked:
@@ -1003,12 +993,12 @@ func nodeShouldBeUpdated(node model.AssetGroupSelectorNodeExpanded, lastProcesse
 }
 
 // CreateInputsForUpdateCertificationBySelectorNode Visible for Testing
-func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String) []UpdateCertificationBySelectorNodeInput {
+func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) []database.UpdateCertificationBySelectorNodeInput {
 	var (
 		certificationStatus model.AssetGroupCertification
-		inputs              []UpdateCertificationBySelectorNodeInput
 		certifiedBy         null.String
 	)
+	inputs := []database.UpdateCertificationBySelectorNodeInput{}
 	// Only update the nodes with the highest priority for a given nodeID
 	lastProcessedNodeId, highestPriorityForGivenNode := graph.ID(0), -1
 	for _, node := range nodes {
@@ -1019,12 +1009,12 @@ func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSe
 			highestPriorityForGivenNode = node.Position
 			certifiedBy = userEmail
 			lastProcessedNodeId = node.NodeId
-			// don't actually update nodes that are already manually certified
-			if node.Certified == model.AssetGroupCertificationManual {
+			// don't actually update nodes that already match the request action
+			if node.Certified == requestAction {
 				continue
 			}
 		}
-		inputs = append(inputs, UpdateCertificationBySelectorNodeInput{node.AssetGroupTagId, node.SelectorId, certifiedBy, certificationStatus, node.NodeId, node.NodeName})
+		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: node.AssetGroupTagId, SelectorId: node.SelectorId, CertifiedBy: certifiedBy, CertificationStatus: certificationStatus, NodeId: node.NodeId, NodeName: node.NodeName, Note: note})
 		lastProcessedNodeId = node.NodeId
 	}
 	return inputs
@@ -1048,24 +1038,8 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(requestContext, reqBody.MemberIDs...); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		note := null.StringFrom(reqBody.Note)
-		lastSeenNodeId := graph.ID(0)
-		dbInputs := CreateInputsForUpdateCertificationBySelectorNode(nodes, reqBody.Action, user.EmailAddress)
-		if err := s.DB.BeginTransaction(requestContext, func(tx *gorm.DB) error {
-			transaction := database.NewBloodhoundDB(tx, auth.NewIdentityResolver())
-			for _, input := range dbInputs {
-				if err := transaction.UpdateCertificationBySelectorNode(requestContext, input.SelectorId, input.CertificationStatus, input.CertifiedBy, input.NodeId); err != nil {
-					return err
-				} else if input.NodeId != lastSeenNodeId && input.CertificationStatus != model.AssetGroupCertificationPending {
-					if err := transaction.CreateAssetGroupHistoryRecord(requestContext, model.AssetGroupActorSystem, input.CertifiedBy.String, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, note); err != nil {
-						return err
-					}
-				}
-				lastSeenNodeId = input.NodeId
-
-			}
-			return err
-		}); err != nil {
+		dbInputs := CreateInputsForUpdateCertificationBySelectorNode(nodes, reqBody.Action, user.EmailAddress, null.StringFrom(reqBody.Note))
+		if err := s.DB.UpdateCertificationBySelectorNodeTransaction(requestContext, dbInputs); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		} else {

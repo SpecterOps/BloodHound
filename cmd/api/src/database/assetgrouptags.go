@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
@@ -63,6 +64,7 @@ type AssetGroupTagSelectorData interface {
 type AssetGroupTagSelectorNodeData interface {
 	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error
 	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error
+	UpdateCertificationBySelectorNodeTransaction(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
 	UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
@@ -724,6 +726,35 @@ func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, se
 			return CheckError(result)
 		}
 		return nil
+	})
+}
+
+type UpdateCertificationBySelectorNodeInput struct {
+	AssetGroupTagId     int
+	SelectorId          int
+	CertifiedBy         null.String
+	CertificationStatus model.AssetGroupCertification
+	NodeId              graph.ID
+	NodeName            string
+	Note                null.String
+}
+
+func (s *BloodhoundDB) UpdateCertificationBySelectorNodeTransaction(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
+	lastSeenNodeId := graph.ID(0)
+	return s.BeginTransaction(ctx, func(tx *gorm.DB) error {
+		transaction := NewBloodhoundDB(tx, auth.NewIdentityResolver())
+		var err error
+		for _, input := range inputs {
+			if err = transaction.UpdateCertificationBySelectorNode(ctx, input.SelectorId, input.CertificationStatus, input.CertifiedBy, input.NodeId); err != nil {
+				return err
+			} else if input.NodeId != lastSeenNodeId && input.CertificationStatus != model.AssetGroupCertificationPending {
+				if err = transaction.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, input.CertifiedBy.String, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, input.Note); err != nil {
+					return err
+				}
+			}
+			lastSeenNodeId = input.NodeId
+		}
+		return err
 	})
 }
 

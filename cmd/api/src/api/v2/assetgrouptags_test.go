@@ -3181,6 +3181,23 @@ func TestResources_CertifyMembers(t *testing.T) {
 			AssetGroupTagId: 1,
 			Position:        1,
 		}
+		mockAssetGroupSelectorNodeExpandedAlreadyCertified = model.AssetGroupSelectorNodeExpanded{
+			AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+				SelectorId:        1,
+				NodeId:            graph.ID(1),
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				CreatedAt:         time.Now(),
+				UpdatedAt:         time.Now(),
+				NodePrimaryKind:   "",
+				NodeEnvironmentId: "",
+				NodeObjectId:      "",
+				NodeName:          "",
+			},
+			AssetGroupTagId: 1,
+			Position:        1,
+		}
 	)
 
 	userId, err := uuid2.NewV4()
@@ -3381,6 +3398,23 @@ func TestResources_CertifyMembers(t *testing.T) {
 				responseCode: http.StatusOK,
 				responseBody: "",
 			}},
+		{
+			name:    "success - no updates",
+			request: httptest.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d}`, model.AssetGroupCertificationManual))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{
+					mockAssetGroupSelectorNodeExpandedAlreadyCertified}, nil)
+				mock.mockDatabase.EXPECT().BeginTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(tx *gorm.DB) error) error {
+					fakeTx := &gorm.DB{}
+					return fn(fakeTx)
+				})
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), mockAssetGroupSelectorNodeExpanded.SelectorId, model.AssetGroupCertificationManual, gomock.Any(), mockAssetGroupSelectorNodeExpanded.NodeId).Times(0)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: "",
+			}},
 	}
 
 	for _, testCase := range tt {
@@ -3492,6 +3526,22 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			SelectorId:        selectorId1,
 			NodeId:            nodeId1,
 			Certified:         model.AssetGroupCertificationManual,
+			CertifiedBy:       null.String{},
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			NodePrimaryKind:   "",
+			NodeEnvironmentId: "",
+			NodeObjectId:      "",
+			NodeName:          "",
+		},
+			AssetGroupTagId: assetGroupTag1,
+			Position:        highestPosition,
+		}
+		assetGroupSelectorNode1AlreadyRevoked = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+			SelectorId:        selectorId1,
+			NodeId:            nodeId1,
+			Certified:         model.AssetGroupCertificationRevoked,
 			CertifiedBy:       null.String{},
 			Source:            model.AssetGroupSelectorNodeSourceSeed,
 			CreatedAt:         time.Now(),
@@ -3641,6 +3691,17 @@ func TestResources_CreateUpdateCertificationBySelectorNodeInputs(t *testing.T) {
 			NodeName:            "",
 			CertifiedBy:         null.String{},
 		},
+		}},
+		{name: "skip already decertified node if request is to revoke certification", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1AlreadyRevoked}, certification: model.AssetGroupCertificationRevoked}, want: []v2.UpdateCertificationBySelectorNodeInput{}},
+		{name: "do not skip already decertified node if request is to certify", input: testInput{nodes: []model.AssetGroupSelectorNodeExpanded{assetGroupSelectorNode1AlreadyRevoked}, certification: model.AssetGroupCertificationManual}, want: []v2.UpdateCertificationBySelectorNodeInput{
+			{
+				AssetGroupTagId:     assetGroupTag1,
+				SelectorId:          selectorId1,
+				CertificationStatus: model.AssetGroupCertificationManual,
+				NodeId:              nodeId1,
+				NodeName:            "",
+				CertifiedBy:         userEmailAddress,
+			},
 		}},
 	}
 
