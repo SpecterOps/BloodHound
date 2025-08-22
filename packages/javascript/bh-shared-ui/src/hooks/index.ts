@@ -32,6 +32,8 @@ export * from './useConfiguration';
 
 export * from './useDataQualityStats';
 
+export * from './useEnvironmentIdList';
+
 export * from './useExecuteOnFileDrag';
 
 export * from './useFeatureFlags';
