@@ -34,11 +34,15 @@ export * from './useDataQualityStats';
 
 export * from './useEnvironmentIdList';
 
+export * from './useExecuteOnFileDrag';
+
 export * from './useFeatureFlags';
 
 export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
+
+export * from './useFileUploadDialogContext';
 
 export * from './useGraphItem';
 
