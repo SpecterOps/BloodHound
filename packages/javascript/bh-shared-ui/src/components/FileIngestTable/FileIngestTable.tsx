@@ -31,7 +31,7 @@ const getRow = (job: FileIngestJob) => {
 
     return [
         <div className='min-w-32 space-y-2' key={`status-${job.id}`}>
-            <div className='text-[#33318F]'>ID {job.id}</div>
+            <div className='text-primary'>ID {job.id}</div>
             <div>{job.user_email_address}</div>
             <div className='flex items-center'>{statusProps && <StatusIndicator {...statusProps} />}</div>
         </div>,

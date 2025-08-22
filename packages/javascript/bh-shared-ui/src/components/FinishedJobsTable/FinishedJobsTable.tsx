@@ -30,7 +30,7 @@ const getRow = (job: ScheduledJobDisplay) => {
 
     return [
         <div className='min-w-32 space-y-2' key={`status-${job.id}`}>
-            <div className='text-[#33318F]'>ID {job.id}</div>
+            <div className='text-primary'>ID {job.id}</div>
             <div>{job.client_name}</div>
             <div className='flex items-center'>{statusProps && <StatusIndicator {...statusProps} />}</div>
         </div>,

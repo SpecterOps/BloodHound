@@ -21,8 +21,8 @@ import { useMountEffect, usePermissions } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
+import { FileIngestTable } from '../FileIngestTable';
 import FileUploadDialog from '../FileUploadDialog';
-import FinishedIngestLog from '../FinishedIngestLog';
 import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
@@ -73,7 +73,7 @@ const FileIngest: FC = () => {
                     Upload File(s)
                 </Button>
             </Box>
-            <FinishedIngestLog />
+            <FileIngestTable />
 
             <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>
