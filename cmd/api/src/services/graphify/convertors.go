@@ -172,6 +172,7 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime t
 func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.NodeProps = append(converted.NodeProps, ein.ParseGPOData(gpo))
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
 }
 

@@ -1528,3 +1528,51 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		Labels:      []graph.Kind{ad.Computer},
 	}
 }
+
+type GPOStatus int
+
+const (
+	GPOStatusNotExisting                             = -1
+	GPOStatusEnabled                       GPOStatus = 0
+	GPOStatusUserConfigurationDisabled     GPOStatus = 1
+	GPOStatusComputerConfigurationDisabled GPOStatus = 2
+	GPOStatusDisabled                      GPOStatus = 3
+)
+
+// Prettified definitions for GPOStatus
+const (
+	PrettyGPOStatusNotExisting                   = "GPO Status does not exist"
+	PrettyGPOStatusEnabled                       = "Enabled"
+	PrettyGPOStatusUserConfigurationDisabled     = "User Configuration Disabled"
+	PrettyGPOStatusComputerConfigurationDisabled = "Computer Configuration Disabled"
+	PrettyGPOStatusDisabled                      = "Disabled"
+)
+
+func ParseGPOData(gpo GPO) IngestibleNode {
+	var ()
+	propMap := make(map[string]any)
+
+	status, ok := gpo.Properties[ad.GPOStatus.String()]
+	if ok {
+		propMap[ad.GPOStatusRaw.String()] = status.(string)
+
+		switch propMap[ad.GPOStatusRaw.String()] {
+		case -1:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusNotExisting
+		case 0:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusEnabled
+		case 1:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusUserConfigurationDisabled
+		case 2:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusComputerConfigurationDisabled
+		case 3:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusDisabled
+		}
+	}
+
+	return IngestibleNode{
+		ObjectID:    gpo.ObjectIdentifier,
+		PropertyMap: propMap,
+		Labels:      []graph.Kind{ad.GPO},
+	}
+}
