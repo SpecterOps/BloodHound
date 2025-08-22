@@ -1744,6 +1744,27 @@ func (mr *MockDatabaseMockRecorder) GetSelectorNodesBySelectorIds(ctx any, selec
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodesBySelectorIds), varargs...)
 }
 
+// GetSelectorNodesBySelectorIdsFilteredAndPaginated mocks base method.
+func (m *MockDatabase) GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, sqlFilter, sort, skip, limit}
+	for _, a := range selectorIds {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSelectorNodesBySelectorIdsFilteredAndPaginated", varargs...)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNode)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetSelectorNodesBySelectorIdsFilteredAndPaginated indicates an expected call of GetSelectorNodesBySelectorIdsFilteredAndPaginated.
+func (mr *MockDatabaseMockRecorder) GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx, sqlFilter, sort, skip, limit any, selectorIds ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, sqlFilter, sort, skip, limit}, selectorIds...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodesBySelectorIdsFilteredAndPaginated", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodesBySelectorIdsFilteredAndPaginated), varargs...)
+}
+
 // GetSelectorsByMemberId mocks base method.
 func (m *MockDatabase) GetSelectorsByMemberId(ctx context.Context, memberId, assetGroupTagId int) (model.AssetGroupTagSelectors, error) {
 	m.ctrl.T.Helper()
