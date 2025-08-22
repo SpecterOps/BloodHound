@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Card } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import { FC, useState } from 'react';
 import { useMountEffect, usePermissions } from '../../hooks';
@@ -73,7 +73,9 @@ const FileIngest: FC = () => {
                     Upload File(s)
                 </Button>
             </Box>
-            <FileIngestTable />
+            <Card>
+                <FileIngestTable />
+            </Card>
 
             <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
         </>
