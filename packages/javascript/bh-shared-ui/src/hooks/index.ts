@@ -38,6 +38,8 @@ export * from './useFetchEntityProperties';
 
 export * from './useFileIngest';
 
+export * from './useFinishedJobs';
+
 export * from './useGraphItem';
 
 export * from './useMountEffect';

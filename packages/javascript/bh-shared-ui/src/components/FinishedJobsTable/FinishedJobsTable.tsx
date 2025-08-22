@@ -16,7 +16,8 @@
 
 import { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
-import { JOB_STATUS_MAP, toCollected, toFormatted, toMins, useFinishedJobsQuery } from '../../utils';
+import { useFinishedJobsQuery } from '../../hooks';
+import { JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 
