@@ -32,6 +32,8 @@ export * from './useConfiguration';
 
 export * from './useDataQualityStats';
 
+export * from './useEnvironmentIdList';
+
 export * from './useFeatureFlags';
 
 export * from './useFetchEntityProperties';
