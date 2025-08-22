@@ -129,6 +129,7 @@ describe('CreateUserDialog', () => {
                 onSave={testOnSave}
                 isLoading={options?.renderLoading || false}
                 error={options?.renderErrors}
+                showEnvironmentAccessControls={false}
             />
         );
 
