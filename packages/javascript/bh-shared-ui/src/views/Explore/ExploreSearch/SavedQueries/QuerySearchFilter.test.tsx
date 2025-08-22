@@ -2,6 +2,17 @@ import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../../../test-utils';
 import QuerySearchFilter from './QuerySearchFilter';
 
+const mockProvider = vi.fn();
+const mockContext = vi.fn();
+vi.mock('../../providers', async () => {
+    const actual = await vi.importActual('../../providers');
+    return {
+        ...actual,
+        SavedQueriesProvider: () => mockProvider,
+        useSavedQueriesContext: () => mockContext,
+    };
+});
+
 describe('QuerySearchFilter', () => {
     const testHandleFilter = vi.fn();
     const testHandleExport = vi.fn();
@@ -40,8 +51,7 @@ describe('QuerySearchFilter', () => {
                 searchTerm={''}
                 platform={''}
                 categoryFilter={[]}
-                source={''} //prebuilt, owned, ''
-                selectedQuery={undefined}></QuerySearchFilter>
+                source={''}></QuerySearchFilter>
         );
 
         const testSearch = screen.getByPlaceholderText('Search');
@@ -60,8 +70,7 @@ describe('QuerySearchFilter', () => {
                 searchTerm={''}
                 platform={''}
                 categoryFilter={[]}
-                source={''} //prebuilt, owned, ''
-                selectedQuery={undefined}></QuerySearchFilter>
+                source={''}></QuerySearchFilter>
         );
 
         const testPlatforms = screen.getByLabelText('Platforms');
@@ -96,8 +105,7 @@ describe('QuerySearchFilter', () => {
                 searchTerm={''}
                 platform={''}
                 categoryFilter={[]}
-                source={''} //prebuilt, owned, ''
-                selectedQuery={undefined}></QuerySearchFilter>
+                source={''}></QuerySearchFilter>
         );
 
         const testImport = screen.getByText('Import');
@@ -110,28 +118,5 @@ describe('QuerySearchFilter', () => {
         const testDelete = screen.getByRole('button', { name: 'delete' });
         expect(testDelete).toBeInTheDocument();
         expect(testDelete).toBeDisabled();
-    });
-
-    it('renders with the Export and delete buttons enabled', async () => {
-        render(
-            <QuerySearchFilter
-                queryFilterHandler={testHandleFilter}
-                exportHandler={testHandleExport}
-                deleteHandler={testHandleDeleteQuery}
-                categories={testCategories}
-                searchTerm={''}
-                platform={''}
-                categoryFilter={[]}
-                source={''} //prebuilt, owned, ''
-                selectedQuery={testSelectedQuery}></QuerySearchFilter>
-        );
-
-        const testExport = screen.getByText('Export');
-        expect(testExport).toBeInTheDocument();
-        expect(testExport).not.toBeDisabled();
-
-        const testDelete = screen.getByRole('button', { name: 'delete' });
-        expect(testDelete).toBeInTheDocument();
-        expect(testDelete).not.toBeDisabled();
     });
 });

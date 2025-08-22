@@ -16,7 +16,6 @@ export const useSelf = () => {
         cacheTime: Number.POSITIVE_INFINITY,
         select: (data) => {
             const userRoles = data?.roles.map((role: any) => role.name) || [];
-            console.log(userRoles);
             return userRoles;
         },
     });

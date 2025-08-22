@@ -77,13 +77,8 @@ describe('CommonSearches', () => {
                 <CommonSearches
                     onSetCypherQuery={vi.fn()}
                     onPerformCypherSearch={vi.fn()}
-                    onSetSelected={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
                     showCommonQueries={true}
-                    selectedQuery={undefined}
                 />
             </QueryClientProvider>
         );
@@ -102,13 +97,8 @@ describe('CommonSearches', () => {
                 <CommonSearches
                     onSetCypherQuery={vi.fn()}
                     onPerformCypherSearch={vi.fn()}
-                    onSetSelected={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
                     showCommonQueries={true}
-                    selectedQuery={undefined}
                 />
             </QueryClientProvider>
         );
@@ -129,13 +119,8 @@ describe('CommonSearches', () => {
                 <CommonSearches
                     onSetCypherQuery={vi.fn()}
                     onPerformCypherSearch={vi.fn()}
-                    onSetSelected={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
                     showCommonQueries={false}
-                    selectedQuery={undefined}
                 />
             </QueryClientProvider>
         );
@@ -166,13 +151,8 @@ describe('CommonSearches', () => {
                 <CommonSearches
                     onSetCypherQuery={vi.fn()}
                     onPerformCypherSearch={vi.fn()}
-                    onSetSelected={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
                     showCommonQueries={false}
-                    selectedQuery={undefined}
                 />
             </QueryClientProvider>
         );
@@ -206,13 +186,8 @@ describe('CommonSearches', () => {
                 <CommonSearches
                     onSetCypherQuery={vi.fn()}
                     onPerformCypherSearch={vi.fn()}
-                    onSetSelected={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
                     showCommonQueries={false}
-                    selectedQuery={undefined}
                 />
             </QueryClientProvider>
         );
@@ -235,32 +210,6 @@ describe('CommonSearches', () => {
         expect(adText).toBeNull();
     });
 
-    it('handles list item click event', async () => {
-        const user = userEvent.setup();
-        const handleSetSelected = vi.fn();
-
-        const screen = render(
-            <QueryClientProvider client={queryClient}>
-                <CommonSearches
-                    onSetCypherQuery={vi.fn()}
-                    onPerformCypherSearch={vi.fn()}
-                    onSetSelected={handleSetSelected}
-                    onToggleCommonQueries={vi.fn()}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
-                    showCommonQueries={false}
-                    selectedQuery={undefined}
-                />
-            </QueryClientProvider>
-        );
-
-        const testListItem = screen.getByText(/all domain admins/i);
-        await user.click(testListItem);
-        expect(handleSetSelected).toBeCalled;
-        expect(handleSetSelected).toBeCalledTimes(1);
-    });
-
     //Toggle switch - test visibility
     it('handles chevron click event', async () => {
         const user = userEvent.setup();
@@ -270,13 +219,8 @@ describe('CommonSearches', () => {
                 <CommonSearches
                     onSetCypherQuery={vi.fn()}
                     onPerformCypherSearch={vi.fn()}
-                    onSetSelected={vi.fn()}
                     onToggleCommonQueries={handleToggle}
-                    onEditQuery={vi.fn()}
-                    onRunQuery={vi.fn()}
-                    selected={{ query: '', id: 1 }}
                     showCommonQueries={true}
-                    selectedQuery={undefined}
                 />
             </QueryClientProvider>
         );
