@@ -6507,7 +6507,6 @@
         "description": "Manually certify/decertify objects as belonging to the Zone they're aligned to",
         "tags": [
           "Asset Isolation",
-          "Community",
           "Enterprise"
         ],
         "requestBody": {
@@ -6520,7 +6519,10 @@
                 "properties": {
                   "member_ids": {
                     "type": "array",
-                    "items": {"type": "integer", "format": "int64"},
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
                     "minItems": 1,
                     "uniqueItems": true
                   },
@@ -6535,6 +6537,7 @@
                     "type": "string"
                   }
                 },
+                "additionalProperties": false,
                 "required": [
                   "member_ids",
                   "action"
