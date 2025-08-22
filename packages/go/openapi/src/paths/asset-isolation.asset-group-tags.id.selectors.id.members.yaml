@@ -24,9 +24,9 @@ parameters:
       type: integer
       format: int32
   - name: asset_group_tag_selector_id
-    description: ID of an asset group selector 
-    in: path 
-    required: true 
+    description: ID of an asset group tag selector
+    in: path
+    required: true
     schema:
       type: integer
       format: int32
@@ -40,6 +40,13 @@ get:
     - Community
     - Enterprise
   parameters:
+    - name: environments
+      description: Environment IDs
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
     - name: sort_by
@@ -48,13 +55,13 @@ get:
         Sortable columns are `id`, `objectid`, and `name`.
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
-  
+
   responses:
     200:
       description: OK
       content:
         application/json:
-          schema: 
+          schema:
             allOf:
             - $ref: './../schemas/api.response.pagination.yaml'
             - type: object
@@ -62,12 +69,12 @@ get:
                 data:
                   type: object
                   properties:
-                    members: 
+                    members:
                       type: array
                       items:
                         $ref: './../schemas/model.asset-group-tags-member.yaml'
     400:
-      $ref: './../responses/bad-request.yaml'     
+      $ref: './../responses/bad-request.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:

@@ -79,9 +79,10 @@ type LegacyADOU struct {
 }
 
 type PagedNodeListEntry struct {
-	ObjectID string `json:"objectID"`
-	Name     string `json:"name"`
-	Label    string `json:"label"`
+	ObjectID string   `json:"objectID"`
+	Name     string   `json:"name"`
+	Label    string   `json:"label"`
+	Kinds    []string `json:"kinds"`
 }
 
 type DataType int
