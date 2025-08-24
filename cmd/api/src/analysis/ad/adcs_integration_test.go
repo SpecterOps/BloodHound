@@ -27,6 +27,7 @@ import (
 	ad2 "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/lab/arrows"
 
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -3771,4 +3772,97 @@ func TestExtendedByPolicyBinding(t *testing.T) {
 			return nil
 		})
 	})
+}
+
+func TestADCSESC16(t *testing.T) {
+	var (
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
+
+	// Create graph
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
+	require.NoError(t, err)
+
+	testEdges := []arrows.Edge{}
+	otherEdges := []arrows.Edge{}
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.ADCSESC16.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
+	require.NoError(t, err)
+
+	// Run post-processing
+	operation := analysis.NewPostRelationshipOperation(context.Background(), graphDB, "ADCS Post Process Test - ADCSESC16")
+	groupExpansions, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(graphDB)
+	require.NoError(t, err)
+
+	for _, enterpriseCA := range enterpriseCertAuthorities {
+		innerEnterpriseCA := enterpriseCA
+		targetDomains := &graph.NodeSet{}
+		for _, domain := range domains {
+			innerDomain := domain
+
+			if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+				targetDomains.Add(innerDomain)
+			}
+		}
+
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if err := ad2.PostADCSESC16(ctx, tx, outC, groupExpansions, innerEnterpriseCA, targetDomains, cache); err != nil {
+				t.Logf("failed post processing for %s: %v", ad.ADCSESC16.String(), err)
+			}
+			return nil
+		})
+	}
+	err = operation.Done()
+	require.Nil(t, err)
+
+	// Verify edges
+	if err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.ADCSESC16)
+		})); err != nil {
+			t.Fatalf("error fetching ADCSESC16 edges in integration test; %v", err)
+		} else {
+			require.Equal(t, len(testEdges), len(results))
+		}
+
+		for _, testEdge := range testEdges {
+			// Find source and destination nodes
+			fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID)
+			require.True(t, found, "source node with ID %s not found", testEdge.FromID)
+
+			toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID)
+			require.True(t, found, "destination node with ID %s not found", testEdge.ToID)
+
+			// Fetch node IDs from graph
+			fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+			}))
+			require.NoError(t, err, "error fetching node with name %s", fromNode.Caption)
+			require.Len(t, fromGraphNodeId, 1, "expected exactly one node with name %s, found %d", fromNode.Caption, len(fromGraphNodeId))
+
+			toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+			}))
+			require.NoError(t, err, "error fetching node with name %s", toNode.Caption)
+			require.Len(t, toGraphNodeId, 1, "expected exactly one node with name %s, found %d", toNode.Caption, len(toGraphNodeId))
+
+			// Verify edge exists
+			edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.ADCSESC16)
+			require.NoError(t, err, "error fetching ADCSESC16 edge from %s to %s", fromNode.Caption, toNode.Caption)
+			require.NotNil(t, edge, "ADCSESC16 edge from %s to %s should exist", fromNode.Caption, toNode.Caption)
+		}
+
+		return nil
+	}); err != nil {
+		t.Fatalf("error in ADCSESC16 integration test; %v", err)
+	}
 }
