@@ -262,7 +262,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error) {
 	var counts = make(map[int]int, len(tagIds))
-	// initalize values to 0 for any ids that end up with no rows
+	// initialize values to 0 for any ids that end up with no rows
 	for _, i := range tagIds {
 		counts[i] = 0
 	}
@@ -741,7 +741,7 @@ type UpdateCertificationBySelectorNodeInput struct {
 
 func (s *BloodhoundDB) UpdateCertificationBySelectorNodeTransaction(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
 	lastSeenNodeId := graph.ID(0)
-	return s.BeginTransaction(ctx, func(tx *gorm.DB) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		transaction := NewBloodhoundDB(tx, auth.NewIdentityResolver())
 		var err error
 		for _, input := range inputs {
