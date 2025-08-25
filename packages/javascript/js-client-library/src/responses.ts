@@ -247,6 +247,8 @@ export type FileIngestJob = TimestampFields & {
     end_time: string;
     last_ingest: string;
     id: number;
+    total_files: number;
+    failed_files: number;
 };
 
 export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
