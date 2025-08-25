@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
@@ -742,7 +741,7 @@ type UpdateCertificationBySelectorNodeInput struct {
 func (s *BloodhoundDB) UpdateCertificationBySelectorNodeTransaction(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
 	lastSeenNodeId := graph.ID(0)
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		transaction := NewBloodhoundDB(tx, auth.NewIdentityResolver())
+		transaction := NewBloodhoundDB(tx, s.idResolver)
 		var err error
 		for _, input := range inputs {
 			if err = transaction.UpdateCertificationBySelectorNode(ctx, input.SelectorId, input.CertificationStatus, input.CertifiedBy, input.NodeId); err != nil {
