@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import { FC } from 'react';
 import { useExecuteOnFileDrag, useMountEffect, usePermissions } from '../../hooks';
@@ -84,11 +84,7 @@ const FileIngest: FC = () => {
             <FeatureFlag
                 flagKey='open_graph_phase_2'
                 loadingFallback={<LoadingOverlay loading />}
-                enabled={
-                    <Card>
-                        <FileIngestTable />
-                    </Card>
-                }
+                enabled={<FileIngestTable />}
                 disabled={<LegacyFileIngestTable />}
             />
         </>

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Card } from '@bloodhoundenterprise/doodleui';
 import { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
@@ -61,18 +62,20 @@ export const FileIngestTable: FC = () => {
     const count = data?.count ?? 0;
 
     return (
-        <DataTable
-            data={fileUploadJobs.map(getRow)}
-            headers={getHeaders(HEADERS)}
-            isLoading={isLoading}
-            paginationProps={{
-                page,
-                rowsPerPage,
-                count,
-                onPageChange: (_event, page) => setPage(page),
-                onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
-            }}
-            showPaginationControls
-        />
+        <Card>
+            <DataTable
+                data={fileUploadJobs.map(getRow)}
+                headers={getHeaders(HEADERS)}
+                isLoading={isLoading}
+                paginationProps={{
+                    page,
+                    rowsPerPage,
+                    count,
+                    onPageChange: (_event, page) => setPage(page),
+                    onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                }}
+                showPaginationControls
+            />
+        </Card>
     );
 };
