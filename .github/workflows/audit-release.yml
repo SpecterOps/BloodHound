@@ -1,0 +1,38 @@
+name: Audit Release
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: Begin with commit SHA/tag/branch name
+        required: true
+        type: string
+      end:
+        description: End with commit SHA/tag/branch name
+        required: true
+        type: string
+      base:
+        description: Base branch
+        required: true
+        default: main
+        type: string
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "~1.24.4"
+          cache: true
+
+      - name: Audit Release Tags with Base
+        run: go tool stbernard audit -start ${{ inputs.start }} -end ${{ inputs.end }} -base ${{ inputs.base }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

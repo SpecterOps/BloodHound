@@ -86,6 +86,11 @@ func (s *command) Parse(cmdIndex int) error {
 		return fmt.Errorf("parsing %s command: no ending sha given", Name)
 	}
 
+	if s.baseBranch == "" {
+		cmd.Usage()
+		return fmt.Errorf("parsing %s command: no base branch given", Name)
+	}
+
 	return nil
 }
 
