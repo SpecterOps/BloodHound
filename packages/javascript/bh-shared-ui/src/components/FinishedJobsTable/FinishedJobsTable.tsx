@@ -18,7 +18,7 @@ import { Card } from '@bloodhoundenterprise/doodleui';
 import type { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useFinishedJobs } from '../../hooks';
-import { JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, toCollected, toFormatted, toMins } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 import { FinishedJobsFilter } from './FinishedJobsFilter';
@@ -29,7 +29,10 @@ const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verti
 
 const getRow = (job: ScheduledJobDisplay) => {
     const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
-    const statusProps = JOB_STATUS_MAP[job.status];
+    const statusProps = {
+        ...JOB_STATUS_INDICATORS[job.status],
+        label: JOB_STATUS_MAP[job.status],
+    };
 
     return [
         <div className='min-w-32' key={`status-${job.id}`}>
@@ -56,15 +59,16 @@ const getRow = (job: ScheduledJobDisplay) => {
 export const FinishedJobsTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [filters, setFilters] = useState({});
 
-    const { data, isLoading } = useFinishedJobs({ page, rowsPerPage });
+    const { data, isLoading } = useFinishedJobs({ page, filters, rowsPerPage });
 
     const finishedJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
     return (
         <>
-            <FinishedJobsFilter />
+            <FinishedJobsFilter onConfirm={setFilters} />
             <Card>
                 <DataTable
                     data={finishedJobs.map(getRow)}

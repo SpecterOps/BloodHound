@@ -5,75 +5,95 @@ import {
     DialogClose,
     DialogContent,
     DialogDescription,
+    DialogOverlay,
     DialogPortal,
     DialogTitle,
     DialogTrigger,
-    Form,
+    VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
 import { noop } from 'lodash';
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useObjectState } from '../../hooks';
+import { type FinishedJobsFilters } from '../../utils';
 import { AppIcon } from '../AppIcon';
-import { DataCollectedSelect } from './DataCollectedSelect';
-import { StatusSelect } from './StatusSelect';
 
-export const FinishedJobsFilter: React.FC = () => {
-    const form = useForm({});
+type Props = {
+    onConfirm: (filters: FinishedJobsFilters) => void;
+};
 
-    const applyFilter = () => {
-        console.log(form.getValues());
-    };
+export const FinishedJobsFilter: React.FC<Props> = () => {
+    const [isConfirmDisabled] = useState(true);
+    const { setState: setFilters } = useObjectState<FinishedJobsFilters>({});
+
+    const clearFilters = () => setFilters({});
 
     return (
         <Dialog>
-            <DialogTrigger asChild>
-                <div className='mb-4 text-right'>
-                    <Button
-                        variant='icon'
-                        // data-testid='posture_attack_paths-filter_dialog_trigger'
-                        // disabled={disableTrigger}
-                    >
+            <div className='mb-4 text-right'>
+                <DialogTrigger asChild>
+                    <Button variant='icon' data-testid='finished_jobs_log-open_filter_dialog'>
                         <AppIcon.FilterOutline size={22} />
                     </Button>
-                </div>
-            </DialogTrigger>
+                </DialogTrigger>
+            </div>
 
             <DialogPortal>
-                <DialogContent>
+                <DialogOverlay blurBackground />
+
+                <DialogContent aria-describedby='Finished Jobs Log dialog'>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
-                        <Button variant='text' className='font-normal py-0 h-fit' onClick={noop}>
+                        <Button variant='text' className='font-normal p-0 h-fit' onClick={clearFilters}>
                             Clear All
                         </Button>
                     </DialogTitle>
 
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(applyFilter)}>
-                            <DialogDescription asChild>
-                                <div className='flex gap-10'>
-                                    <StatusSelect control={form.control} />
-                                    <DataCollectedSelect control={form.control} />
-                                </div>
-                            </DialogDescription>
+                    <VisuallyHidden asChild>
+                        <DialogDescription>Finished Jobs Log filters</DialogDescription>
+                    </VisuallyHidden>
 
-                            <DialogActions>
-                                <DialogClose asChild>
-                                    <Button
-                                        variant='text'
-                                        className='pr-0'
-                                        // data-testid='posture_attack_paths-filter_dialog_close'
-                                    >
-                                        Cancel
-                                    </Button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                    <Button variant='text' className='text-primary' type='submit'>
-                                        Confirm
-                                    </Button>
-                                </DialogClose>
-                            </DialogActions>
-                        </form>
-                    </Form>
+                    {/* Multiple Descriptions ensures that Dialog gaps still apply */}
+                    <DialogDescription asChild>
+                        <div className='flex gap-10'>
+                            {/* TODO: BED-6404 */}
+                            <span>Status Select</span>
+                            <span>Collection Select</span>
+                        </div>
+                    </DialogDescription>
+
+                    <DialogDescription asChild>
+                        {/* TODO: BED-6405 */}
+                        <span>Date Range Inputs</span>
+                    </DialogDescription>
+
+                    <DialogDescription asChild>
+                        {/* TODO: BED-6406 */}
+                        <span>Client Select</span>
+                    </DialogDescription>
+
+                    <DialogActions>
+                        <DialogClose asChild>
+                            <Button
+                                className='pr-0'
+                                data-testid='finished_jobs_log-filter_dialog_close'
+                                type='button'
+                                variant='text'>
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <DialogClose asChild>
+                            <Button
+                                className='text-primary'
+                                data-testid='finished_jobs_log-filter_dialog_confirm'
+                                disabled={isConfirmDisabled}
+                                // TODO: BED-6407
+                                onClick={() => noop}
+                                type='submit'
+                                variant='text'>
+                                Confirm
+                            </Button>
+                        </DialogClose>
+                    </DialogActions>
                 </DialogContent>
             </DialogPortal>
         </Dialog>

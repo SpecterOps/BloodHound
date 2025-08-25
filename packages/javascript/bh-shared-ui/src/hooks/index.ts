@@ -64,6 +64,8 @@ export * from './useMatchingPaths';
 
 export * from './useMountEffect';
 
+export * from './usePartialState';
+
 export * from './usePermissions';
 
 export * from './usePreviousValue';

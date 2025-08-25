@@ -21,22 +21,36 @@ import type { StatusType } from '../components';
 import { LuxonFormat } from './datetime';
 
 export interface FinishedJobParams {
+    filters: FinishedJobsFilters;
     page: number;
     rowsPerPage: number;
 }
 
-export const JOB_STATUS_MAP: Record<number, { label: string; status: StatusType; pulse?: boolean }> = {
-    [-1]: { label: 'Invalid', status: 'bad' },
-    0: { label: 'Ready', status: 'good' },
-    1: { label: 'Running', status: 'pending', pulse: true },
-    2: { label: 'Complete', status: 'good' },
-    3: { label: 'Canceled', status: 'bad' },
-    4: { label: 'Timed Out', status: 'bad' },
-    5: { label: 'Failed', status: 'bad' },
-    6: { label: 'Ingesting', status: 'pending', pulse: true },
-    7: { label: 'Analyzing', status: 'pending' },
-    8: { label: 'Partially Completed', status: 'pending' },
-};
+export const JOB_STATUS_MAP: Record<number, string> = {
+    [-1]: 'Invalid',
+    0: 'Ready',
+    1: 'Running',
+    2: 'Complete',
+    3: 'Canceled',
+    4: 'Timed Out',
+    5: 'Failed',
+    6: 'Ingesting',
+    7: 'Analyzing',
+    8: 'Partially Completed',
+} as const;
+
+export const JOB_STATUS_INDICATORS: Record<number, { status: StatusType; pulse?: boolean }> = {
+    [-1]: { status: 'bad' },
+    0: { status: 'good' },
+    1: { status: 'pending', pulse: true },
+    2: { status: 'good' },
+    3: { status: 'bad' },
+    4: { status: 'bad' },
+    5: { status: 'bad' },
+    6: { status: 'pending', pulse: true },
+    7: { status: 'pending' },
+    8: { status: 'pending' },
+} as const;
 
 export const FINISHED_JOBS_LOG_HEADERS = [
     { label: 'ID / Client / Status', width: '240px' },
@@ -44,18 +58,45 @@ export const FINISHED_JOBS_LOG_HEADERS = [
     { label: 'Start Time', width: '110px' },
     { label: 'Duration', width: '85px' },
     { label: 'Data Collected', width: '240px' },
-];
+] as const;
 
-export const COLLECTION_MAP = new Map(
-    Object.entries({
-        session_collection: 'Sessions',
-        local_group_collection: 'Local Groups',
-        ad_structure_collection: 'AD Structure',
-        cert_services_collection: 'Certificate Services',
-        ca_registry_collection: 'CA Registry',
-        dc_registry_collection: 'DC Registry',
-    })
-);
+export type JobCollectionType =
+    | 'session_collection'
+    | 'local_group_collection'
+    | 'ad_structure_collection'
+    | 'cert_services_collection'
+    | 'ca_registry_collection'
+    | 'dc_registry_collection';
+
+export type FinishedJobsFilters = Record<string, boolean | string> & {
+    client_name?: string;
+    end_time?: string;
+    start_time?: string;
+    status?: string;
+    session_collection?: boolean;
+    local_group_collection?: boolean;
+    ad_structure_collection?: boolean;
+    cert_services_collection?: boolean;
+    ca_registry_collection?: boolean;
+    dc_registry_collection?: boolean;
+};
+
+export type EnabledCollections = {
+    session_collection?: boolean;
+    local_group_collection?: boolean;
+    ad_structure_collection?: boolean;
+    cert_services_collection?: boolean;
+    ca_registry_collection?: boolean;
+    dc_registry_collection?: boolean;
+};
+
+export const COLLECTION_MAP: Map<JobCollectionType, string> = new Map();
+COLLECTION_MAP.set('session_collection', 'Sessions');
+COLLECTION_MAP.set('local_group_collection', 'Local Groups');
+COLLECTION_MAP.set('ad_structure_collection', 'AD Structure');
+COLLECTION_MAP.set('cert_services_collection', 'Certificate Services');
+COLLECTION_MAP.set('ca_registry_collection', 'CA Registry');
+COLLECTION_MAP.set('dc_registry_collection', 'DC Registry');
 
 export const PERSIST_NOTIFICATION: OptionsObject = {
     persist: true,
@@ -69,16 +110,26 @@ export const NO_PERMISSION_KEY = 'finished-jobs-permission';
 export const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
 export const FETCH_ERROR_KEY = 'finished-jobs-error';
 
-/** Returns the duration, in mins, between 2 given ISO datetime strings */
-export const toMins = (start: string, end: string) =>
-    Math.floor(Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end)).length('minutes')) + ' Min';
+export const getCollectionState = (state: Record<string, unknown>) =>
+    Object.keys(state)
+        .filter(isCollectionKey)
+        .reduce((collections, key) => {
+            collections[key] = state[key] as boolean;
+            return collections;
+        }, {} as EnabledCollections);
+
+export const isCollectionKey = (key: string): key is JobCollectionType => key.endsWith('_collection');
 
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: ScheduledJobDisplay) =>
     Object.entries(job)
-        .filter(([key, value]) => COLLECTION_MAP.has(key) && value)
-        .map(([key]) => COLLECTION_MAP.get(key))
+        .filter(([key, value]) => COLLECTION_MAP.has(key as JobCollectionType) && value)
+        .map(([key]) => COLLECTION_MAP.get(key as JobCollectionType))
         .join(', ');
+
+/** Returns the duration, in mins, between 2 given ISO datetime strings */
+export const toMins = (start: string, end: string) =>
+    Math.floor(Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end)).length('minutes')) + ' Min';
 
 /** Returns the given ISO datetime string formatted with the the timezone */
 export const toFormatted = (dateStr: string) => DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);
