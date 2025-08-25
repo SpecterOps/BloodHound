@@ -63,14 +63,13 @@ type AssetGroupTagSelectorData interface {
 type AssetGroupTagSelectorNodeData interface {
 	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error
 	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error
-	UpdateCertificationBySelectorNodeTransaction(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
-	UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error
+	UpdateCertificationBySelectorNode(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
-	GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error)
+	GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -719,15 +718,6 @@ func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGro
 	})
 }
 
-func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, selectorId, nodeId); result.Error != nil {
-			return CheckError(result)
-		}
-		return nil
-	})
-}
-
 type UpdateCertificationBySelectorNodeInput struct {
 	AssetGroupTagId     int
 	SelectorId          int
@@ -738,20 +728,20 @@ type UpdateCertificationBySelectorNodeInput struct {
 	Note                null.String
 }
 
-func (s *BloodhoundDB) UpdateCertificationBySelectorNodeTransaction(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
-	lastSeenNodeId := graph.ID(0)
+func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
+	historyRecordForNode := make(map[graph.ID]bool)
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		transaction := NewBloodhoundDB(tx, s.idResolver)
 		var err error
 		for _, input := range inputs {
-			if err = transaction.UpdateCertificationBySelectorNode(ctx, input.SelectorId, input.CertificationStatus, input.CertifiedBy, input.NodeId); err != nil {
-				return err
-			} else if input.NodeId != lastSeenNodeId && input.CertificationStatus != model.AssetGroupCertificationPending {
+			if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), input.CertificationStatus, input.CertifiedBy, input.SelectorId, input.NodeId); result.Error != nil {
+				return CheckError(result)
+			} else if !historyRecordForNode[input.NodeId] && input.CertificationStatus != model.AssetGroupCertificationPending {
 				if err = transaction.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, input.CertifiedBy.String, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, input.Note); err != nil {
 					return err
 				}
 			}
-			lastSeenNodeId = input.NodeId
+			historyRecordForNode[input.NodeId] = true
 		}
 		return err
 	})
@@ -878,7 +868,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter 
 	return selectors, nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error) {
+func (s *BloodhoundDB) GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error) {
 	var nodes []model.AssetGroupSelectorNodeExpanded
 	if len(nodeIds) == 0 {
 		return nodes, nil
