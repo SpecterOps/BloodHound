@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
@@ -231,21 +231,20 @@ class BHEAPIClient {
         skip: number | string,
         limit: number,
         sort_by: string,
+        environments?: string[],
         options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${assetGroupTagId}/members`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        sort_by,
-                    },
-                },
-                options
-            )
-        );
+        this.baseClient.get<AssetGroupTagMembersResponse>(`/api/v2/asset-group-tags/${assetGroupTagId}/members`, {
+            ...options,
+            params: {
+                ...options?.params,
+                environments,
+                skip,
+                limit,
+                sort_by,
+            },
+            paramsSerializer: { indexes: null },
+        });
 
     getAssetGroupTagSelectorMembers = (
         tagId: number | string,
@@ -253,27 +252,30 @@ class BHEAPIClient {
         skip: number,
         limit: number,
         sort_by: string,
+        environments?: string[],
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
             `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
-            Object.assign(
-                {
-                    params: {
-                        skip,
-                        limit,
-                        sort_by,
-                    },
+            {
+                ...options,
+                params: {
+                    ...options?.params,
+                    environments,
+                    skip,
+                    limit,
+                    sort_by,
                 },
-                options
-            )
+                paramsSerializer: { indexes: null },
+            }
         );
 
-    getAssetGroupTagMembersCount = (tagId: string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupMemberCountsResponse>(
-            `/api/v2/asset-group-tags/${tagId}/members/counts`,
-            options
-        );
+    getAssetGroupTagMembersCount = (tagId: string, environments?: string[], options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(`/api/v2/asset-group-tags/${tagId}/members/counts`, {
+            ...options,
+            params: { ...options?.params, environments },
+            paramsSerializer: { indexes: null },
+        });
 
     assetGroupTagsPreviewSelectors = (payload: PreviewSelectorsRequest, options: RequestOptions) => {
         return this.baseClient.post<PreviewSelectorsResponse>(
@@ -721,13 +723,25 @@ class BHEAPIClient {
     listFileTypesForIngest = () =>
         this.baseClient.get<ListFileTypesForIngestResponse>('/api/v2/file-upload/accepted-types');
 
-    startFileIngest = () => this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
+    startFileIngest = () => {
+        return this.baseClient.post<StartFileIngestResponse>('/api/v2/file-upload/start');
+    };
 
-    uploadFileToIngestJob = (ingestId: string, json: any, contentType: string) => {
-        const headers = {
-            'Content-Type': contentType,
+    uploadFileToIngestJob = (
+        ingestId: string,
+        json: any,
+        contentType: string,
+        options: AxiosRequestConfig<any> = {}
+    ) => {
+        const mergedOptions: AxiosRequestConfig<any> = {
+            ...options,
+            headers: {
+                ...(options?.headers ?? {}),
+                'Content-Type': contentType,
+            },
         };
-        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, { headers });
+
+        return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, mergedOptions);
     };
 
     endFileIngest = (ingestId: string) =>

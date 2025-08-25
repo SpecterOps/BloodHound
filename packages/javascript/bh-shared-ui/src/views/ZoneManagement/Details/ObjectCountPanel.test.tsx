@@ -29,6 +29,13 @@ const server = setupServer(
                 },
             })
         );
+    }),
+    rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

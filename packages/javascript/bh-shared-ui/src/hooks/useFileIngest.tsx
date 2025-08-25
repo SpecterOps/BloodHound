@@ -17,6 +17,8 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils/api';
 
+export type AcceptedIngestType = 'application/json' | 'application/zip';
+
 export const listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
     apiClient.listFileIngestJobs(skip, limit, sortBy).then((res) => res.data);
 
@@ -28,12 +30,14 @@ export const uploadFileToIngestJob = ({
     jobId,
     fileContents,
     contentType = 'application/json',
+    options,
 }: {
     jobId: string;
     fileContents: any;
     contentType?: string;
+    options?: Parameters<typeof apiClient.uploadFileToIngestJob>[3];
 }) => {
-    return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType).then((res) => res.data);
+    return apiClient.uploadFileToIngestJob(jobId, fileContents, contentType, options).then((res) => res.data);
 };
 
 export const endFileIngestJob = ({ jobId }: { jobId: string }) =>

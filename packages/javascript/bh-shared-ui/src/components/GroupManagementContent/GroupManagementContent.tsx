@@ -21,14 +21,13 @@ import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { apiClient } from '../../utils';
-import { DataSelector } from '../../views/DataQuality/DataSelector';
+import { apiClient } from '../../utils/api';
 import AssetGroupEdit from '../AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';
 import DropdownSelector, { DropdownOption } from '../DropdownSelector';
-import { SelectedEnvironment } from './types';
+import { SelectedEnvironment, SimpleEnvironmentSelector } from '../SimpleEnvironmentSelector';
 
 interface GroupManagementContentProps {
     globalEnvironment: SelectedEnvironment | null;
@@ -119,6 +118,8 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
         setFilterParams((prev) => ({ ...prev, [key]: value.toString() }));
     };
 
+    const handleSelect = (selection: SelectedEnvironment) => setSelectedEnvironment({ ...selection });
+
     // Start building a filter query for members that gets passed down to AssetGroupMemberList to make the request
     useEffect(() => {
         const filterDomain = selectedEnvironment || globalEnvironment;
@@ -149,20 +150,17 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                     options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
                                     selectedText={getAssetGroupSelectorLabel()}
                                     onChange={handleAssetGroupSelectorChange}
-                                    fullWidth
                                 />
                             </Grid>
                             <Grid item xs={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Environment:</Typography>
                             </Grid>
-                            <Grid item xs={12} xl={8}>
-                                <DataSelector
-                                    value={selectedEnvironment || globalEnvironment || { type: null, id: null }}
+                            <Grid item xs={12} xl={8} padding={theme.spacing()}>
+                                <SimpleEnvironmentSelector
+                                    selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    onChange={(selection: SelectedEnvironment) =>
-                                        setSelectedEnvironment({ ...selection })
-                                    }
-                                    fullWidth={true}
+                                    buttonPrimary
+                                    onSelect={handleSelect}
                                 />
                             </Grid>
                         </Grid>
