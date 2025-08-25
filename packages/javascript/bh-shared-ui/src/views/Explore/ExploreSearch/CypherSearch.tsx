@@ -22,7 +22,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
-import { useCreateSavedQuery, useUpdateQueryPermissions, useUpdateSavedQuery } from '../../../hooks';
+import {
+    useCreateSavedQuery,
+    useQueryPermissions,
+    useUpdateQueryPermissions,
+    useUpdateSavedQuery,
+} from '../../../hooks';
 import { useSelf } from '../../../hooks/useSelf';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
@@ -70,6 +75,7 @@ const CypherSearch = ({
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
+    const { data: permissions } = useQueryPermissions(selectedQuery?.id as number);
 
     useEffect(() => {
         //Setting the selected query once on load
@@ -95,21 +101,39 @@ const CypherSearch = ({
         setShowCommonQueries((v) => !v);
     };
     const updateQueryPermissions = (id: number) => {
-        updateQueryPermissionsMutation.mutate(
-            {
+        if (permissions.public && !isPublic && sharedIds.length) {
+            const localSharedIds = [...sharedIds];
+            updateQueryPermissionsMutation.mutate({
                 id: id,
                 payload: {
-                    user_ids: isPublic ? [] : sharedIds,
+                    user_ids: [],
                     public: isPublic,
                 },
-            },
-            {
-                onSuccess: () => {
-                    setSharedIds([]);
-                    setIsPublic(false);
+            });
+            updateQueryPermissionsMutation.mutate({
+                id: id,
+                payload: {
+                    user_ids: localSharedIds,
+                    public: false,
                 },
-            }
-        );
+            });
+        } else {
+            updateQueryPermissionsMutation.mutate(
+                {
+                    id: id,
+                    payload: {
+                        user_ids: isPublic ? [] : sharedIds,
+                        public: isPublic,
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        setSharedIds([]);
+                        setIsPublic(false);
+                    },
+                }
+            );
+        }
     };
 
     const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
