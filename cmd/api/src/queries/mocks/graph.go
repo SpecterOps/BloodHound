@@ -125,21 +125,6 @@ func (mr *MockGraphMockRecorder) FetchNodeByGraphId(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodeByGraphId", reflect.TypeOf((*MockGraph)(nil).FetchNodeByGraphId), ctx, id)
 }
 
-// FetchNodesByGraphIds mocks base method.
-func (m *MockGraph) FetchNodesByGraphIds(ctx context.Context, ids []graph.ID) ([]*graph.Node, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchNodesByGraphIds", ctx, ids)
-	ret0, _ := ret[0].([]*graph.Node)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FetchNodesByGraphIds indicates an expected call of FetchNodesByGraphIds.
-func (mr *MockGraphMockRecorder) FetchNodesByGraphIds(ctx, ids any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodesByGraphIds", reflect.TypeOf((*MockGraph)(nil).FetchNodesByGraphIds), ctx, ids)
-}
-
 // FetchNodesByObjectIDs mocks base method.
 func (m *MockGraph) FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error) {
 	m.ctrl.T.Helper()

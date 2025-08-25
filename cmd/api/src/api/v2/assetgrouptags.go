@@ -1000,7 +1000,7 @@ func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSe
 		certificationStatus         model.AssetGroupCertification
 		certifiedBy                 null.String
 		lastProcessedNodeId         graph.ID = 0
-		highestPriorityForGivenNode int      = -1
+		highestPriorityForGivenNode          = -1
 	)
 	inputs := []database.UpdateCertificationBySelectorNodeInput{}
 	// Only update the nodes with the highest priority for a given nodeID

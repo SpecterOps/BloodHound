@@ -37,7 +37,6 @@ import (
 	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
-	gorm "gorm.io/gorm"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -76,20 +75,6 @@ func (m *MockDatabase) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 func (mr *MockDatabaseMockRecorder) AppendAuditLog(ctx, entry any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), ctx, entry)
-}
-
-// BeginTransaction mocks base method.
-func (m *MockDatabase) BeginTransaction(ctx context.Context, fn func(*gorm.DB) error) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BeginTransaction", ctx, fn)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// BeginTransaction indicates an expected call of BeginTransaction.
-func (mr *MockDatabaseMockRecorder) BeginTransaction(ctx, fn any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTransaction", reflect.TypeOf((*MockDatabase)(nil).BeginTransaction), ctx, fn)
 }
 
 // CancelAllIngestJobs mocks base method.
