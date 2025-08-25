@@ -52,13 +52,11 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const AssetGroupTagTypeLabel = 2 as const;
 
     let zoneLabelList: AssetGroupTag[] | undefined = [];
-    if (isLabel) {
-        const labelsQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeLabel);
-        zoneLabelList = labelsQuery.data;
-    } else {
-        const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
-        zoneLabelList = tiersQuery.data;
-    }
+
+    const tierLabelType = isLabel ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier;
+
+    const tiersQuery = useTagsQuery((tag) => tag.type === tierLabelType);
+    zoneLabelList = tiersQuery.data;
 
     const [zone, setZone] = useState('');
     const [label, setLabel] = useState('');
