@@ -984,10 +984,12 @@ func isValidCertType(certType model.AssetGroupCertification) bool {
 }
 
 func nodeShouldBeUpdated(node model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
-	if node.NodeId != lastProcessedNodeId {
-		return true
-	} else if node.Position == highestPriority {
-		return true
+	if node.Certified != model.AssetGroupCertificationAuto {
+		if node.NodeId != lastProcessedNodeId {
+			return true
+		} else if node.Position == highestPriority {
+			return true
+		}
 	}
 	return false
 }
