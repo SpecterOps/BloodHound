@@ -139,6 +139,7 @@ export const createSelectorNodes = (
 
         data.push({
             id: i,
+            asset_group_tag_id: faker.datatype.number(),
             primary_kind: 'User',
             object_id: faker.datatype.uuid(),
             name: name,
@@ -152,6 +153,7 @@ export const createSelectorNodes = (
 export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
     const data: AssetGroupTagMemberInfo = {
         id: parseInt(memberId),
+        asset_group_tag_id: faker.datatype.number(),
         name: 'member',
         primary_kind: 'User',
         object_id: faker.datatype.uuid(),
