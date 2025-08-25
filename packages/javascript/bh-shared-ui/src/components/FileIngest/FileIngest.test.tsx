@@ -37,7 +37,7 @@ const server = setupServer(
             ctx.json({
                 data: [
                     {
-                        key: 'file_ingest_log_v2',
+                        key: 'open_graph_phase_2',
                         enabled: true,
                     },
                 ],
