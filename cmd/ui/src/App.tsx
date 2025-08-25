@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, CssBaseline, ThemeProvider } from '@mui/material';
+import { Box, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
     AppNotifications,
@@ -34,6 +34,7 @@ import {
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { Helmet } from 'react-helmet';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
 import { ROUTES, ZONE_MANAGEMENT_ROUTE } from 'src/routes';
@@ -55,6 +56,8 @@ export const Inner: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
+    const isOSDarkTheme = useMediaQuery('(prefers-color-scheme: dark)');
 
     const featureFlagsRes = useFeatureFlags({
         retry: false,
@@ -93,14 +96,26 @@ export const Inner: React.FC = () => {
     }
 
     return (
-        <Box className={`${classes.applicationContainer}`} id='app-root'>
-            {showNavBar && <MainNav mainNavData={mainNavData} />}
-            <Box className={classes.applicationContent}>
-                <Content />
+        <>
+            <Helmet>
+                {
+                    // dynamically set themed favicon by os/browser theme
+                    isOSDarkTheme ? (
+                        <link rel='shortcut icon' href='/ui/favicon-dark.ico' />
+                    ) : (
+                        <link rel='shortcut icon' href='/ui/favicon-light.ico' />
+                    )
+                }
+            </Helmet>
+            <Box className={`${classes.applicationContainer}`} id='app-root'>
+                {showNavBar && <MainNav mainNavData={mainNavData} />}
+                <Box className={classes.applicationContent}>
+                    <Content />
+                </Box>
+                <AppNotifications />
+                <Notifier />
             </Box>
-            <AppNotifications />
-            <Notifier />
-        </Box>
+        </>
     );
 };
 
