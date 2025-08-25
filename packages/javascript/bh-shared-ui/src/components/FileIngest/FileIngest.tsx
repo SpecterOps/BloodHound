@@ -82,7 +82,7 @@ const FileIngest: FC = () => {
                 </Button>
             </Box>
             <FeatureFlag
-                flagKey='file_ingest_log_v2'
+                flagKey='open_graph_phase_2'
                 loadingFallback={<LoadingOverlay loading />}
                 enabled={
                     <Card>

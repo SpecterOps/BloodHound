@@ -13,14 +13,14 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
--- Add FileIngestLog rework feature flag
+-- Add OpenGraph Phase 2 feature flag
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (
            current_timestamp,
            current_timestamp,
-           'file_ingest_log_v2',
-           'File Ingest Log Update',
-           'An updated File Ingest Log with filtering and more info.',
+           'open_graph_phase_2',
+           'Open Graph Phase 2',
+           'Open Graph Phase 2 features',
            false,
            false
        )
