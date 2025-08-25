@@ -25,7 +25,7 @@ const typicalGraphResponse: GraphResponse = {
     },
 };
 
-const transformFlatGraphResponseSpy = vitest.spyOn(bhSharedUI, 'transformFlatGraphResponse');
+const transformFlatGraphResponseSpy = vi.spyOn(bhSharedUI, 'transformFlatGraphResponse');
 transformFlatGraphResponseSpy.mockReturnValue(typicalGraphResponse.data);
 
 const typicalFlatGraphResponse: FlatGraphResponse = {
@@ -61,12 +61,12 @@ describe('normalizeGraphDataForSigma', () => {
         expect(actual).toBeUndefined();
     });
 
-    it('calls transformToFlatGraphResponse when graphData matches GraphResponse interface', () => {
+    it('returns graphData as is if it doesnt match the GraphResponse interface', () => {
         normalizeGraphDataForSigma(typicalGraphResponse);
         expect(transformFlatGraphResponseSpy).not.toBeCalled();
     });
 
-    it('returns graphData as is if it doesnt match the GraphResponse interface', () => {
+    it('calls transformToFlatGraphResponse when graphData matches GraphResponse interface', () => {
         normalizeGraphDataForSigma(typicalFlatGraphResponse);
         expect(transformFlatGraphResponseSpy).toBeCalled();
     });

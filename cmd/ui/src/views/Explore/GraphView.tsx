@@ -60,11 +60,11 @@ const GraphView: FC = () => {
 
     const theme = useTheme();
 
-    const { data: graphHasData, isLoading, isError } = useGraphHasData();
+    const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
-    const { data: tagGlyphMap } = useTagGlyphMap();
+    const tagGlyphMapQuery = useTagGlyphMap();
 
     const { searchType } = useExploreParams();
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
@@ -90,7 +90,13 @@ const GraphView: FC = () => {
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
     const graphOptions = useMemo(() => {
-        return { theme, darkMode, customIcons: customIconsQuery?.data ?? {}, hideNodes: displayTable, tagGlyphMap };
+        return {
+            theme,
+            darkMode,
+            customIcons: customIconsQuery?.data ?? {},
+            hideNodes: displayTable,
+            tagGlyphMap: tagGlyphMapQuery.data,
+        };
         // NOTE: Do not include `tagGlyphMap` ... or else !!
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme, darkMode, customIconsQuery.data, displayTable]);
@@ -127,7 +133,12 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    if (isLoading || graphQuery.isLoading || customIconsQuery.isLoading || tagGlyphMap.isLoading) {
+    const isLoading =
+        graphHasDataQuery.isLoading || graphQuery.isLoading || customIconsQuery.isLoading || tagGlyphMapQuery.isLoading;
+    const isError =
+        graphHasDataQuery.isError || graphQuery.isError || customIconsQuery.isError || tagGlyphMapQuery.isError;
+
+    if (isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />
@@ -135,8 +146,7 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError || graphQuery.isError || customIconsQuery.isError || tagGlyphMap.isError)
-        return <GraphViewErrorAlert />;
+    if (isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
@@ -193,9 +203,9 @@ const GraphView: FC = () => {
                     onToggleNodeLabels={toggleShowNodeLabels}
                     showEdgeLabels={showEdgeLabels}
                     onToggleEdgeLabels={toggleShowEdgeLabels}
-                    jsonData={{ nodes: graphQuery.data?.nodes, edges: graphQuery.data?.edges }}
+                    jsonData={graphQuery.data}
                     onReset={() => sigmaChartRef.current?.resetCamera()}
-                    currentNodes={graphQuery.data?.nodes ?? {}}
+                    currentNodes={graphQuery.data?.nodes}
                     onSearchedNodeClick={(node) => {
                         node.id && setSelectedItem(node.id);
                         sigmaChartRef?.current?.zoomTo(node.id);
@@ -219,8 +229,8 @@ const GraphView: FC = () => {
                 }
             />
 
-            <GraphProgress loading={graphQuery.isLoading} />
-            <NoDataFileUploadDialogWithLinks open={!graphHasData} />
+            <GraphProgress loading={isLoading} />
+            <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
                 <ExploreTable
                     selectedColumns={selectedColumns}

@@ -28,7 +28,13 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
-    rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
+    rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
+    }),
+    rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
+        return res(ctx.json({ data: { tags: [] } }));
+    }),
+    rest.get('/api/v2/file-upload/accepted-types', async (_, res, ctx) => {
         return res(ctx.status(200));
     })
 );

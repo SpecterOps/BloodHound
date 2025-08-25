@@ -29,7 +29,7 @@ describe('Explore utils', () => {
                 common: { black: '', white: '' },
             },
         };
-        it('calls sequentialLayout as the default graph layout', () => {
+        it('uses sequentialLayout by default', () => {
             initGraph(
                 { nodes: {}, edges: [] },
                 { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
