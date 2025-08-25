@@ -66,10 +66,14 @@ export const zoneManagementKeys = {
     selectorDetail: (tagId: string | number, selectorId: string | number) =>
         [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
     members: () => [...zoneManagementKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number, sortOrder: SortOrder) =>
-        [...zoneManagementKeys.members(), 'tag', tagId, sortOrder] as const,
-    membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined, sortOrder: SortOrder) =>
-        ['tag', tagId, 'selector', selectorId, sortOrder] as const,
+    membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
+        [...zoneManagementKeys.members(), 'tag', tagId, sortOrder, ...environments] as const,
+    membersByTagAndSelector: (
+        tagId: string | number,
+        selectorId: string | number | undefined,
+        sortOrder: SortOrder,
+        environments: string[] = []
+    ) => ['tag', tagId, 'selector', selectorId, sortOrder, ...environments] as const,
 };
 
 export const getAssetGroupTags = () =>
@@ -123,24 +127,30 @@ export const getAssetGroupTagMembers = (
     tagId: number | string,
     skip = 0,
     limit = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = 'asc',
+    environments?: string[]
 ) =>
     createPaginatedFetcher<AssetGroupTagMemberListItem>(
-        () => apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name'),
+        () =>
+            apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name', environments),
         'members',
         skip,
         limit
     );
 
-export const useTagMembersInfiniteQuery = (tagId: number | string | undefined, sortOrder: SortOrder) =>
+export const useTagMembersInfiniteQuery = (
+    tagId: number | string | undefined,
+    sortOrder: SortOrder,
+    environments?: string[]
+) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder),
+        queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder, environments),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID provided for tag members request');
-            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder);
+            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder, environments);
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
@@ -151,7 +161,8 @@ export const getAssetGroupSelectorMembers = (
     selectorId: number | string,
     skip: number = 0,
     limit: number = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = 'asc',
+    environments?: string[]
 ) =>
     createPaginatedFetcher(
         () =>
@@ -160,7 +171,8 @@ export const getAssetGroupSelectorMembers = (
                 selectorId,
                 skip,
                 limit,
-                sortOrder === 'asc' ? 'name' : '-name'
+                sortOrder === 'asc' ? 'name' : '-name',
+                environments
             ),
         'members',
         skip,
@@ -170,17 +182,25 @@ export const getAssetGroupSelectorMembers = (
 export const useSelectorMembersInfiniteQuery = (
     tagId: number | string | undefined,
     selectorId: number | string | undefined,
-    sortOrder: SortOrder
+    sortOrder: SortOrder,
+    environments?: string[]
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder),
+        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder, environments),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID available to get selector members');
             if (!selectorId) return Promise.reject('No selector ID available to get selector members');
-            return getAssetGroupSelectorMembers(tagId, selectorId, pageParam.skip, pageParam.limit, sortOrder);
+            return getAssetGroupSelectorMembers(
+                tagId,
+                selectorId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments
+            );
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined && selectorId !== undefined,

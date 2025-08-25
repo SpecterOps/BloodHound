@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { matchPath, useLocation } from 'react-router-dom';
+import { matchPath, PathPattern, useLocation } from 'react-router-dom';
 
-export const useMatchingPaths = (pattern: string | string[]) => {
+export const useMatchingPaths = (pattern: string | (string | PathPattern)[]) => {
     const { pathname } = useLocation();
     if (typeof pattern === 'string') {
         const match = matchPath({ path: pattern }, pathname);
         return !!match?.pathname;
     } else {
         return pattern.reduce(
-            (match: boolean, current) => (match ? match : !!matchPath(pathname, current)?.pathname),
+            (match: boolean, pattern) => (match ? match : !!matchPath(pattern, pathname)?.pathname),
             false
         );
     }
