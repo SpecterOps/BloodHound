@@ -426,7 +426,7 @@ const UpdateUserFormInner: React.FC<{
                                                     <Select
                                                         data-testid='update-user-dialog_select-authentication-method'
                                                         //defaultValue={field.value}
-                                                        onValueChange={(field) => {
+                                                        onValueChange={(field: any) => {
                                                             form.setValue('authenticationMethod', field);
                                                             setAuthenticationMethod(field);
                                                         }}
@@ -485,7 +485,7 @@ const UpdateUserFormInner: React.FC<{
 
                                                         <Select
                                                             data-testid='update-user-dialog_sso-provider'
-                                                            onValueChange={(field) => {
+                                                            onValueChange={(field: any) => {
                                                                 form.setValue('authenticationMethod', field.value);
                                                                 setAuthenticationMethod(field.value);
                                                             }}
