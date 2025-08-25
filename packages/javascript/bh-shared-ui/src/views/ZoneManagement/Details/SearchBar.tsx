@@ -16,10 +16,10 @@
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { useCombobox } from 'downshift';
 import {
-    AssetGroupTagSearchResponse,
     AssetGroupTag,
-    AssetGroupTagSelector,
     AssetGroupTagMember,
+    AssetGroupTagSearchResponse,
+    AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
 } from 'js-client-library';

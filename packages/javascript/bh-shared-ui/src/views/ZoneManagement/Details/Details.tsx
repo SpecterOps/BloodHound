@@ -34,10 +34,10 @@ import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
 import { MembersList } from './MembersList';
+import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
-import SearchBar from './SearchBar';
 
 export const getSavePath = (
     tierId: string | undefined,
