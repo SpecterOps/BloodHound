@@ -56,8 +56,8 @@ const SearchCurrentNodes: FC<{
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
-                const label = node.label.toLowerCase();
-                const objectId = node.objectId.toLowerCase();
+                const label = node.label?.toLowerCase() || '';
+                const objectId = node.objectId?.toLowerCase() || '';
                 const lowercaseInputValue = inputValue?.toLowerCase() || '';
 
                 if (inputValue === '') return false;
