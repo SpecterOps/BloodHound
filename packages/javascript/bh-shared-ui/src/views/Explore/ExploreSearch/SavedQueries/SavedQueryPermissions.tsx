@@ -68,7 +68,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     useEffect(() => {
         if (data?.shared_to_user_ids?.length) {
-            setSharedIds([...data?.shared_to_user_ids]);
+            setSharedIds(data?.shared_to_user_ids);
         } else {
             setSharedIds([]);
         }

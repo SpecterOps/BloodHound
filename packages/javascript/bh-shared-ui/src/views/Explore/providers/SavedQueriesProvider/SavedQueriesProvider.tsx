@@ -39,7 +39,7 @@ export const SavedQueriesContext = createContext<SavedQueriesContextType>({
     selectedQuery: undefined,
     showSaveQueryDialog: false,
     saveAction: undefined,
-    setSelected: (value) => {},
+    setSelected: () => {},
     setShowSaveQueryDialog: () => {},
     runQuery: () => {},
     editQuery: () => {},
