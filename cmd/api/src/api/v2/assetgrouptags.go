@@ -397,7 +397,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagDefaultLimit); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if paramIncludeCounts, err := api.ParseOptionalBool(queryParams.Get(api.QueryParameterIncludeCounts), false); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specified for include counts", request), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
@@ -995,12 +995,13 @@ func nodeShouldBeUpdated(node model.AssetGroupSelectorNodeExpanded, lastProcesse
 // CreateInputsForUpdateCertificationBySelectorNode Visible for Testing
 func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) []database.UpdateCertificationBySelectorNodeInput {
 	var (
-		certificationStatus model.AssetGroupCertification
-		certifiedBy         null.String
+		certificationStatus         model.AssetGroupCertification
+		certifiedBy                 null.String
+		lastProcessedNodeId         graph.ID = 0
+		highestPriorityForGivenNode int      = -1
 	)
 	inputs := []database.UpdateCertificationBySelectorNodeInput{}
 	// Only update the nodes with the highest priority for a given nodeID
-	lastProcessedNodeId, highestPriorityForGivenNode := graph.ID(0), -1
 	for _, node := range nodes {
 		certificationStatus = model.AssetGroupCertificationPending
 		certifiedBy = null.String{}
