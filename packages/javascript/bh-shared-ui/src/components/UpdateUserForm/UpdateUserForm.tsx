@@ -22,6 +22,7 @@ import {
     DialogDescription,
     DialogTitle,
     Form,
+    FormControl,
     FormField,
     FormItem,
     FormLabel,
@@ -35,9 +36,9 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Card, DialogContentText, FormControl, Grid, Skeleton } from '@mui/material';
+import { Card, DialogContentText, Grid, Skeleton } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
@@ -161,87 +162,64 @@ const UpdateUserFormInner: React.FC<{
     showEnvironmentAccessControls,
     SSOProviders,
 }) => {
-    /*
-    const {
-        control,
-        formState: { errors },
-        handleSubmit,
-        register,
-        setError,
-        setValue,
-        watch,
-    } = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
+    const form = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
         defaultValues: {
             ...initialData,
             authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',
         },
     });
-    */
 
-    const defaultValues = {
-        ...initialData,
-        //authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',
-    };
-
-    const form = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({ defaultValues });
-
-    const [authenticationMethod, setAuthenticationMethod] = useState(initialData.SSOProviderId ? 'sso' : 'password');
-
-    console.log(authenticationMethod);
-
+    //const [authenticationMethod, setAuthenticationMethod] = useState(initialData.SSOProviderId ? 'sso' : 'password');
     const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
-    //console.log(selectedRoleValue);
 
     const rolesWithEnvironmentPermissions =
         selectedRoleValue.toString() === '2' || selectedRoleValue.toString() === '3';
 
+    const authenticationMethod = form.watch('authenticationMethod');
+
     /*
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
-    ({ id }) => id === Number(('SSOProviderId'))
-    */
-    /*
-    const roleInputValue = watch('roles');
-
-    const authenticationMethod = watch('authenticationMethod');
-
-
+        ({ id }) => id === Number(form.watch('SSOProviderId'))
     )?.config?.auto_provision?.role_provision;
+    */
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SSOProviderId', undefined);
+            form.setValue('SSOProviderId', undefined);
         }
 
         if (error) {
             const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
             if (error.response?.status === 400) {
                 if (errMsg.includes('role provision enabled')) {
-                    setError('root.generic', {
+                    form.setError('root.generic', {
                         type: 'custom',
                         message: 'Cannot modify user roles for role provision enabled SSO providers.',
                     });
                 }
             } else if (error.response?.status === 409) {
                 if (errMsg.includes('principal name')) {
-                    setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
                 } else if (errMsg.includes('email')) {
-                    setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
+                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
                 } else {
-                    setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
             } else {
-                setError('root.generic', {
+                form.setError('root.generic', {
                     type: 'custom',
                     message: 'An unexpected error occurred. Please try again.',
                 });
             }
         }
-    }, [authenticationMethod, setValue, error, setError]);
-    */
+    }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
     return (
         <Form {...form}>
-            <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+            //autoComplete='off'
+            //onSubmit={form.handleSubmit(onSubmit)}
+            >
                 <div className='flex gap-x-4 justify-center'>
                     <Card className=' p-6 rounded shadow max-w-[600px]'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
@@ -270,7 +248,7 @@ const UpdateUserFormInner: React.FC<{
                                                     data-testid='update-user-dialog_label-email-address'>
                                                     Email Address
                                                 </FormLabel>
-                                                <FormControl hiddenLabel>
+                                                <FormControl>
                                                     <Input
                                                         {...field}
                                                         data-testid='update-user-dialog_input-email-address'
@@ -313,7 +291,7 @@ const UpdateUserFormInner: React.FC<{
                                                     data-testid='update-user-dialog_label-email-address'>
                                                     Principal Name
                                                 </FormLabel>
-                                                <FormControl hiddenLabel>
+                                                <FormControl>
                                                     <Input
                                                         {...field}
                                                         data-testid='update-user-dialog_input-principal-name'
@@ -428,7 +406,7 @@ const UpdateUserFormInner: React.FC<{
                                                         //defaultValue={field.value}
                                                         onValueChange={(field: any) => {
                                                             form.setValue('authenticationMethod', field);
-                                                            setAuthenticationMethod(field);
+                                                            //setAuthenticationMethod(field);
                                                         }}
                                                         value={field.value}
                                                         //hidden={hasSelectedSelf}
@@ -487,7 +465,7 @@ const UpdateUserFormInner: React.FC<{
                                                             data-testid='update-user-dialog_sso-provider'
                                                             onValueChange={(field: any) => {
                                                                 form.setValue('authenticationMethod', field.value);
-                                                                setAuthenticationMethod(field.value);
+                                                                //setAuthenticationMethod(field.value);
                                                             }}
                                                             value={field.value}
                                                             //hidden={hasSelectedSelf}
@@ -579,7 +557,7 @@ const UpdateUserFormInner: React.FC<{
                             <DialogClose asChild>
                                 <Button
                                     data-testid='update-user-dialog_button-cancel'
-                                    disabled={isLoading}
+                                    //disabled={isLoading}
                                     role='button'
                                     type='button'
                                     variant='tertiary'>
@@ -588,7 +566,7 @@ const UpdateUserFormInner: React.FC<{
                             </DialogClose>
                             <Button
                                 data-testid='update-user-dialog_button-save'
-                                disabled={isLoading}
+                                //disabled={isLoading}
                                 //onSubmit={form.handleSubmit(onSubmit)}
                                 role='button'
                                 type='submit'>
