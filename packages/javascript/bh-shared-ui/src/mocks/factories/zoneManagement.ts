@@ -69,7 +69,7 @@ export const createAssetGroupTags = (count: number = 1) => {
 export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
     const data: AssetGroupTagSelector = {
         id: selectorId,
-        asset_group_tag_id: selectorId,
+        asset_group_tag_id: tagId,
         name: `tier-${tagId - 1}-selector-${selectorId}`,
         allow_disable: faker.datatype.boolean(),
         description: faker.random.words(),
@@ -139,7 +139,7 @@ export const createSelectorNodes = (
 
         data.push({
             id: i,
-            asset_group_tag_id: faker.datatype.number(),
+            asset_group_tag_id: assetGroupId,
             primary_kind: 'User',
             object_id: faker.datatype.uuid(),
             name: name,
@@ -153,7 +153,7 @@ export const createSelectorNodes = (
 export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
     const data: AssetGroupTagMemberInfo = {
         id: parseInt(memberId),
-        asset_group_tag_id: faker.datatype.number(),
+        asset_group_tag_id: parseInt(tagId, 10),
         name: 'member',
         primary_kind: 'User',
         object_id: faker.datatype.uuid(),
