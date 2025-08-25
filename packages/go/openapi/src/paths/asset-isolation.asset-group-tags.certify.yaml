@@ -15,14 +15,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 post:
-  operationId: CertifyOrDecertifyObjects
-  summary: Certify or Decertify Objects
-  description: Manually certify/decertify objects as belonging to the Zone they're aligned to
+  operationId: CertifyOrRevokeObjects
+  summary: Certify or Revoke Certification of Objects
+  description: Manually certify/revoke certification of objects as belonging to the Zone they're selected by
   tags:
     - Asset Isolation
     - Enterprise
   requestBody:
-    description: The request body for certifying or decertifying objects. 
+    description: The request body for certifying or revoking certification of objects. 
     required: true
     content:
       application/json:
@@ -39,7 +39,7 @@ post:
             action:
               type: integer
               enum:
-                - 1 # decertify
+                - 1 # revoke
                 - 2 # certify 
             note: 
               type: string
