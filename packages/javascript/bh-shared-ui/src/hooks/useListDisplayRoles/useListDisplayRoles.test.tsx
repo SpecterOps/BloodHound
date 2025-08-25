@@ -17,26 +17,9 @@ import { Role } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
-import { hiddenRoles, useListDisplayRoles } from './useListDisplayRoles';
+import { useListDisplayRoles } from './useListDisplayRoles';
 
 const MockRoles: Role[] = [
-    {
-        name: 'Client-Tasking',
-        description: 'Used for data collection clients, can post data but cannot read data',
-        permissions: [
-            {
-                authority: 'graphdb',
-                name: 'Ingest',
-                id: 30,
-            },
-            {
-                authority: 'clients',
-                name: 'Tasking',
-                id: 5,
-            },
-        ],
-        id: 2,
-    },
     {
         name: 'Upload-Only',
         description: 'Used for users to ingest files manually',
@@ -47,7 +30,7 @@ const MockRoles: Role[] = [
                 id: 30,
             },
         ],
-        id: 6,
+        id: 4,
     },
     {
         name: 'Read-Only',
@@ -84,7 +67,7 @@ const MockRoles: Role[] = [
                 id: 15,
             },
         ],
-        id: 1,
+        id: 3,
     },
     {
         name: 'User',
@@ -131,7 +114,7 @@ const MockRoles: Role[] = [
                 id: 16,
             },
         ],
-        id: 3,
+        id: 2,
     },
     {
         name: 'Power User',
@@ -320,7 +303,7 @@ const MockRoles: Role[] = [
                 id: 18,
             },
         ],
-        id: 4,
+        id: 1,
     },
 ];
 
@@ -347,15 +330,11 @@ describe('useListDisplayRoles', () => {
 
         expect(result.current.isLoading).toEqual(true);
     });
-    it('Validate Client Tasking Roles is not on List Display Roles', async () => {
+    it('Validate Displays all the Roles', async () => {
         const { result } = renderHook(() => useListDisplayRoles());
 
         await waitFor(() => {
-            result.current.data.forEach((role: Role) => {
-                hiddenRoles.forEach((hiddenRole: string) => {
-                    expect(role?.name).not.toBe(hiddenRole);
-                });
-            });
+            expect(result.current.data).toHaveLength(5);
         });
     });
 });
