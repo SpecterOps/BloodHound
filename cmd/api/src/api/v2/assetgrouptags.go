@@ -1044,7 +1044,6 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		dbInputs := CreateInputsForUpdateCertificationBySelectorNode(nodes, reqBody.Action, user.EmailAddress, null.StringFrom(reqBody.Note))
 		if err := s.DB.UpdateCertificationBySelectorNodeTransaction(requestContext, dbInputs); err != nil {
 			api.HandleDatabaseError(request, response, err)
-			return
 		} else {
 			response.WriteHeader(http.StatusOK)
 		}
