@@ -22,7 +22,6 @@ import (
 
 const (
 	RoleUploadOnly    = "Upload-Only"
-	RoleClientTasking = "Client-Tasking"
 	RoleReadOnly      = "Read-Only"
 	RoleUser          = "User"
 	RolePowerUser     = "Power User"
@@ -52,18 +51,11 @@ func Roles() map[string]RoleTemplate {
 				permissions.SavedQueriesRead,
 			},
 		},
-		RoleClientTasking: {
-			Name:        RoleClientTasking,
+		RoleUploadOnly: {
+			Name:        RoleUploadOnly,
 			Description: "Used for data collection clients, can post data but cannot read data",
 			Permissions: model.Permissions{
 				permissions.ClientsTasking,
-				permissions.GraphDBIngest,
-			},
-		},
-		RoleUploadOnly: {
-			Name:        RoleUploadOnly,
-			Description: "Used for users to manually ingest files",
-			Permissions: model.Permissions{
 				permissions.GraphDBIngest,
 			},
 		},
