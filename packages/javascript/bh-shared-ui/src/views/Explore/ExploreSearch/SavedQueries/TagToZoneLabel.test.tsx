@@ -20,15 +20,6 @@ import { render, screen, waitFor } from '../../../../test-utils';
 import { SavedQueriesProvider } from '../../providers';
 import TagToZoneLabel from './TagToZoneLabel';
 
-const testSelectedQuery = {
-    name: '10 Admins',
-    description: '10 Admins',
-    query: "MATCH p = (t:Group)<-[:MemberOf*1..]-(a)\nWHERE (a:User or a:Computer) and t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 10",
-    canEdit: true,
-    id: 1,
-    user_id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
-};
-
 const handlers = [
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(

@@ -67,7 +67,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const allUserIds = useMemo(() => usersList?.map((x) => x.id), [listUsersQuery.data]);
 
     useEffect(() => {
-        if (data?.shared_to_user_ids.length) {
+        if (data?.shared_to_user_ids?.length) {
             setSharedIds([...data?.shared_to_user_ids]);
         } else {
             setSharedIds([]);

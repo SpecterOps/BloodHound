@@ -127,7 +127,7 @@ export const useUpdateSavedQuery = () => {
 export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteSavedQuery, {
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries(savedQueryKeys.all);
         },
     });

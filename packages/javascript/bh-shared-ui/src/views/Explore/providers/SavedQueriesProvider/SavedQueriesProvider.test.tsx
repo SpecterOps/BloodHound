@@ -32,8 +32,8 @@ const TestSavedQueriesContext = {
     saveAction: undefined,
     setSelected: () => {},
     setShowSaveQueryDialog: () => {},
-    runQuery: (query: string, id: number) => {},
-    editQuery: (id: number) => {},
+    runQuery: () => {},
+    editQuery: () => {},
     setSaveAction: () => {},
 };
 

@@ -152,7 +152,7 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
-    updateUserQuery = (payload: UpdateUserQueryRequest, options?: RequestOptions) => {
+    updateUserQuery = (payload: UpdateUserQueryRequest) => {
         const headers = {
             'Content-Type': 'application/json',
         };
@@ -182,7 +182,7 @@ class BHEAPIClient {
             })
         );
 
-    importUserQuery = (payload: any, options?: RequestOptions) => {
+    importUserQuery = (payload: any) => {
         const headers = {
             'Content-Type': payload.type,
         };
