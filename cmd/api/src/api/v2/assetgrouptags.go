@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -994,15 +995,22 @@ func nodeShouldBeUpdated(node model.AssetGroupSelectorNodeExpanded, lastProcesse
 	return false
 }
 
-// CreateInputsForUpdateCertificationBySelectorNode Visible for Testing
-func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) []database.UpdateCertificationBySelectorNodeInput {
+type setSelectorNodeCertifier interface {
+	UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error
+}
+
+// certifyMembersBySelectorNodes - Note: nodes supplied must be in order of nodeId, followed by position
+func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) error {
 	var (
-		certificationStatus         model.AssetGroupCertification
-		certifiedBy                 null.String
+		certificationStatus model.AssetGroupCertification
+		certifiedBy         null.String
+
 		lastProcessedNodeId         graph.ID = 0
 		highestPriorityForGivenNode          = -1
+
+		inputs = []database.UpdateCertificationBySelectorNodeInput{}
 	)
-	inputs := []database.UpdateCertificationBySelectorNodeInput{}
+
 	// Only update the nodes with the highest priority for a given nodeID
 	for _, node := range nodes {
 		certificationStatus = model.AssetGroupCertificationPending
@@ -1020,32 +1028,32 @@ func CreateInputsForUpdateCertificationBySelectorNode(nodes []model.AssetGroupSe
 		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: node.AssetGroupTagId, SelectorId: node.SelectorId, CertifiedBy: certifiedBy, CertificationStatus: certificationStatus, NodeId: node.NodeId, NodeName: node.NodeName, Note: note})
 		lastProcessedNodeId = node.NodeId
 	}
-	return inputs
+	if len(inputs) > 0 {
+		return selectorNodeCertifier.UpdateCertificationBySelectorNode(ctx, inputs)
+	}
+	return nil
 }
 
 func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
 	var (
-		reqBody        CertifyMembersRequest
-		requestContext = request.Context()
+		reqBody    CertifyMembersRequest
+		requestCtx = request.Context()
 	)
-	defer measure.ContextMeasure(requestContext, slog.LevelDebug, "Asset Group Tag Certify Members")()
+	defer measure.ContextMeasure(requestCtx, slog.LevelDebug, "Asset Group Tag Certify Members")()
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
-		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseUnknownUser, request), response)
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseUnknownUser, request), response)
 	} else if !isValidCertType(reqBody.Action) {
-		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
 	} else if memberIds := reqBody.MemberIDs; len(memberIds) == 0 {
-		api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupMemberIDsRequired, request), response)
-	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(requestContext, reqBody.MemberIDs...); err != nil {
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupMemberIDsRequired, request), response)
+	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(requestCtx, reqBody.MemberIDs...); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, null.StringFrom(reqBody.Note)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		dbInputs := CreateInputsForUpdateCertificationBySelectorNode(nodes, reqBody.Action, user.EmailAddress, null.StringFrom(reqBody.Note))
-		if err := s.DB.UpdateCertificationBySelectorNodeTransaction(requestContext, dbInputs); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			response.WriteHeader(http.StatusOK)
-		}
+		response.WriteHeader(http.StatusOK)
 	}
 }
