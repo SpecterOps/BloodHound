@@ -1128,7 +1128,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 }
 
-func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
+func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1176,7 +1176,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputCertify.NodeId}}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
 		require.NoError(t, err)
-		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selector was updated
 		selectorNodes, count, err := suite.BHDatabase.GetSelectorNodesBySelectorIdsFilteredAndPaginated(testCtx, sqlFilter, sort, 0, 100, updateInputCertify.SelectorId)
@@ -1195,7 +1195,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputPending.NodeId}}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
 		require.NoError(t, err)
-		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selectors were updated
 		selectorNodes, count, err := suite.BHDatabase.GetSelectorNodesBySelectorIdsFilteredAndPaginated(testCtx, sqlFilter, sort, 0, 100, updateInputPending.SelectorId)
@@ -1214,7 +1214,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		sqlFilter := model.SQLFilter{SQLString: "AND node_id = ?", Params: []any{updateInputCertify.NodeId}}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
 		require.NoError(t, err)
-		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selectors were updated
 		selectorNodes, count, err := suite.BHDatabase.GetSelectorNodesBySelectorIdsFilteredAndPaginated(testCtx, sqlFilter, sort, 0, 100, updateInputCertify.SelectorId, updateInputPending.SelectorId)
@@ -1233,7 +1233,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify, updateInputNode2}
 		_, rowCountBefore, err := suite.BHDatabase.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, nil, 0, 0)
 		require.NoError(t, err)
-		err = suite.BHDatabase.UpdateCertificationBySelectorNodeTransaction(testCtx, inputs)
+		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, inputs)
 		require.NoError(t, err)
 		// confirm selectors were updated
 		selectors, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId1)
@@ -1249,57 +1249,7 @@ func TestDatabase_UpdateCertificationBySelectorNodeTransaction(t *testing.T) {
 	})
 }
 
-func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
-	t.Parallel()
-	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
-
-	var (
-		testCtx             = context.Background()
-		testAssetGroupTagId = 1
-		testSelectorId      = 1
-		testMemberId1       = 1
-		testNodeId1         = uint64(testMemberId1)
-		certifiedBy         = null.StringFrom("testy")
-		source              = 1
-		isDefault           = false
-		allowDisable        = true
-		autoCertify         = null.BoolFrom(false)
-		test1Selector       = model.AssetGroupTagSelector{
-			Name:        "test selector name",
-			Description: "test description",
-			Seeds: []model.SelectorSeed{
-				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
-			},
-		}
-	)
-	_, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, testAssetGroupTagId, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
-	require.NoError(t, err)
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId, testSelectorId, graph.ID(testNodeId1), model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	t.Run("updates certification by selector node, certified", func(t *testing.T) {
-		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationManual, certifiedBy, graph.ID(testNodeId1))
-		require.NoError(t, err)
-		// confirm selector was updated
-		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
-		require.NoError(t, err)
-		require.Equal(t, 1, len(selector))
-		require.Equal(t, model.AssetGroupCertificationManual, selector[0].Certified)
-	})
-
-	t.Run("updates certification by selector node, pending", func(t *testing.T) {
-		err = suite.BHDatabase.UpdateCertificationBySelectorNode(testCtx, testSelectorId, model.AssetGroupCertificationPending, certifiedBy, graph.ID(testNodeId1))
-		require.NoError(t, err)
-		// confirm selector was updated
-		selector, err := suite.BHDatabase.GetSelectorNodesBySelectorIds(testCtx, testSelectorId)
-		require.NoError(t, err)
-		require.Equal(t, 1, len(selector))
-		require.Equal(t, model.AssetGroupCertificationPending, selector[0].Certified)
-	})
-}
-
-func TestDatabase_GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(t *testing.T) {
+func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1365,7 +1315,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(t *testing.
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			if got, err := suite.BHDatabase.GetAssetGroupSelectorNodeExpandedIgnoreAutoCertify(testCtx, test.Input...); err != nil {
+			if got, err := suite.BHDatabase.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(testCtx, test.Input...); err != nil {
 				t.Fatalf("error getting selector node expanded ignore autocertify: %v", err)
 			} else if len(got) != test.ExpectedLength {
 				t.Fatalf("got %d expected %d", len(got), test.ExpectedLength)
