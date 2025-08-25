@@ -226,8 +226,7 @@ AND NOT n.objectid ENDS WITH "-544" // Administrators
 RETURN p\nLIMIT 1000`,
             },
             {
-                name:
-                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled (ESC6)',
+                name: 'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled (ESC6)',
                 description: '',
                 query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p\nLIMIT 1000`,
             },
