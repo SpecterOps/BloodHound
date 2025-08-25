@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	RoleUploadOnly    = "Upload-Only"
+	RoleUploadOnly     = "Upload-Only"
+	RoleUserUploadOnly = "User-Upload-Only"
 	RoleReadOnly      = "Read-Only"
 	RoleUser          = "User"
 	RolePowerUser     = "Power User"
@@ -57,6 +58,13 @@ func Roles() map[string]RoleTemplate {
 			Permissions: model.Permissions{
 				permissions.ClientsTasking,
 				permissions.GraphDBIngest,
+			},
+		},
+		RoleUserUploadOnly: {
+			Name: RoleUserUploadOnly,
+			Description: "Used for manual ingest",
+			Permissions: model.Permissions{
+				permissions.GraphDBWrite,
 			},
 		},
 		RoleUser: {
