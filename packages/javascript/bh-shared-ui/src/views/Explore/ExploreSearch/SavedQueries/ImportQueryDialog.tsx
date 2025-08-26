@@ -196,6 +196,8 @@ const ImportQueryDialog: React.FC<{
                                         file={file}
                                         key={index}
                                         onRemove={() => handleRemoveFile(index)}
+                                        onRefresh={() => {}}
+                                        percentCompleted={0}
                                     />
                                 );
                             })}

@@ -73,13 +73,11 @@ describe('SavedQueryPermissions', () => {
     it('should render an SavedQueryPermissions component', async () => {
         const testSetIsPublic = vitest.fn();
         const testSetSharedIds = vitest.fn();
-        const testSelectedQueryId = 1;
         const testSharedIds: string[] = [];
         const testIsPublic = false;
 
         render(
             <SavedQueryPermissions
-                queryId={testSelectedQueryId}
                 sharedIds={testSharedIds}
                 isPublic={testIsPublic}
                 setSharedIds={testSetSharedIds}
@@ -100,12 +98,10 @@ describe('SavedQueryPermissions', () => {
     it('should should reflect the checked state for public query', async () => {
         const testSetIsPublic = vitest.fn();
         const testSetSharedIds = vitest.fn();
-        const testSelectedQueryId = 1;
         const testSharedIds: string[] = [];
         const testIsPublic = true;
         render(
             <SavedQueryPermissions
-                queryId={testSelectedQueryId}
                 sharedIds={testSharedIds}
                 isPublic={testIsPublic}
                 setSharedIds={testSetSharedIds}
@@ -122,12 +118,10 @@ describe('SavedQueryPermissions', () => {
     it('should should reflect the NOT checked state for public query', async () => {
         const testSetIsPublic = vitest.fn();
         const testSetSharedIds = vitest.fn();
-        const testSelectedQueryId = 1;
         const testSharedIds: string[] = [];
         const testIsPublic = false;
         render(
             <SavedQueryPermissions
-                queryId={testSelectedQueryId}
                 sharedIds={testSharedIds}
                 isPublic={testIsPublic}
                 setSharedIds={testSetSharedIds}
