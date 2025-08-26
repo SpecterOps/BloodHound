@@ -1475,10 +1475,11 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)
 		require.NoError(t, err)
 
-		// verify 4 nodes returned
+		// verify 4 out of 4 nodes returned
+		require.Equal(t, 4, len(nodeCertifications))
 		require.Equal(t, 4, count)
 
-		// verify skip
+		// skip the first 2
 		nodeCertifications, count, err = dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 2, 0)
 		require.NoError(t, err)
 
@@ -1487,7 +1488,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.Equal(t, 4, count)
 		require.Equal(t, "NodeSelectedByT0_Third", nodeCertifications[0].NodeName)
 
-		// verify limit
+		// limit to 2
 		nodeCertifications, count, err = dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 2)
 		require.NoError(t, err)
 
