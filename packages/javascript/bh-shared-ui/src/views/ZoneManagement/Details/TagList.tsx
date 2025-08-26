@@ -25,6 +25,7 @@ import { cn } from '../../../utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
+import { useZonePathParams } from '../../../hooks';
 
 type TagListProps = {
     title: 'Tiers' | 'Labels';
@@ -44,6 +45,7 @@ type TagListProps = {
 export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { isTierLocation } = useZonePathParams();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
@@ -120,7 +122,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                {isTag(listItem) && title === 'Tiers' && listItem.id !== topTagId && (
+                                                {isTag(listItem) && isTierLocation && listItem.id !== topTagId && (
                                                     <ZoneAnalysisIcon
                                                         size={18}
                                                         tooltip

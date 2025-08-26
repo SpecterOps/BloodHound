@@ -24,6 +24,7 @@ import clsx from 'clsx';
 import { FC } from 'react';
 import { AppIcon } from '../../components';
 import { usePrivilegeZoneAnalysis } from '../../hooks';
+import { useZonePathParams } from '../../hooks';
 
 type ZoneAnalysisIconProps = {
     iconClasses?: string | null;
@@ -40,8 +41,8 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
     wrapperClasses,
     analysisEnabled,
 }) => {
+    const { isLabelLocation } = useZonePathParams();
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
-    const isLabelPage = location.pathname.includes('/label');
     const ariaLabel = privilegeZoneAnalysisEnabled === false ? 'Upgrade available' : 'Analysis disabled';
     const iconProps = {
         size,
@@ -55,14 +56,14 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
         ),
     };
 
-    if (isLabelPage) return null;
+    if (isLabelLocation) return null;
 
     if (privilegeZoneAnalysisEnabled === false) {
         return tooltip ? (
             <TooltipProvider>
                 <TooltipRoot>
                     <TooltipTrigger>
-                        <div className={clsx(wrapperClasses)}>
+                        <div className={wrapperClasses}>
                             <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />
                         </div>
                     </TooltipTrigger>
@@ -83,7 +84,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
             <TooltipProvider>
                 <TooltipRoot>
                     <TooltipTrigger>
-                        <div className={clsx(wrapperClasses)}>
+                        <div className={wrapperClasses}>
                             <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />
                         </div>
                     </TooltipTrigger>
