@@ -32,6 +32,18 @@ const server = setupServer(
             })
         );
     }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'open_graph_phase_2',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
     rest.post('/api/v2/file-upload/start', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -183,14 +195,23 @@ describe('FileIngest', () => {
         await waitFor(() => screen.getByText('test_email@specterops.io'));
 
         expect(screen.getByText('test_email@specterops.io')).toBeInTheDocument();
-        expect(screen.getByText('1 minute')).toBeInTheDocument();
+        expect(screen.getByText('1 Min')).toBeInTheDocument();
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
+        server.use(
+            rest.get('/api/v2/self', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: createAuthStateWithPermissions([]).user,
+                    })
+                );
+            })
+        );
         render(<Wrapper />);
 
         expect(screen.queryByText('test_email@specterops.io')).toBeNull();
-        expect(screen.queryByText('1 minute')).toBeNull();
+        expect(screen.queryByText('1 Min')).toBeNull();
 
         expect(screen.getByTestId('file-ingest_button-upload-files')).toBeDisabled();
     });

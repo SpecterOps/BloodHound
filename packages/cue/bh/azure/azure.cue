@@ -702,12 +702,6 @@ KeyVaultContributor: types.#Kind & {
 	representation: "AZKeyVaultContributor"
 }
 
-VMAdminLogin: types.#Kind & {
-	symbol:         "VMAdminLogin"
-	schema:         "azure"
-	representation: "AZVMAdminLogin"
-}
-
 AddMembers: types.#Kind & {
 	symbol:         "AddMembers"
 	schema:         "azure"
@@ -718,12 +712,6 @@ AddSecret: types.#Kind & {
 	symbol:         "AddSecret"
 	schema:         "azure"
 	representation: "AZAddSecret"
-}
-
-ExecuteCommand: types.#Kind & {
-	symbol:         "ExecuteCommand"
-	schema:         "azure"
-	representation: "AZExecuteCommand"
 }
 
 GlobalAdmin: types.#Kind & {
@@ -955,7 +943,8 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantRole,
 	SyncedToADUser,
 	AZRoleEligible,
-	AZRoleApprover
+	AZRoleApprover,
+	Contains
 ]
 
-PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])
+PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
