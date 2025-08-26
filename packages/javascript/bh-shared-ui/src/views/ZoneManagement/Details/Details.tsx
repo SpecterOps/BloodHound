@@ -107,7 +107,7 @@ const Details: FC = () => {
             <div className='flex mt-6'>
                 <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
                 <div className='w-1/3 flex justify-end'>
-                    <SearchBar selected={tagId} />
+                    <SearchBar />
                 </div>
                 <div className='w-1/3 ml-8'>
                     {showEditButton && (

@@ -25,138 +25,127 @@ import {
 } from 'js-client-library';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
 import { AppIcon } from '../../../components';
-import { useDebouncedValue } from '../../../hooks';
-import { apiClient, useAppNavigate } from '../../../utils';
-import { getTagUrlValue } from '../utils';
+import { useDebouncedValue, useZonePathParams } from '../../../hooks';
+import { apiClient, cn, useAppNavigate } from '../../../utils';
+import { isSelector, isTag } from './utils';
 
-type SearchBarProps = {
-    selected: string | undefined;
-};
-
-type Sector = 'Tiers' | 'Selectors' | 'Objects';
+type Sector = 'Tiers' | 'Selectors' | 'Members';
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
-type SearchResults = AssetGroupTagSearchResponse['data'];
-
-type FlattenedItem = {
-    sector: Sector;
-    item: SearchItem;
-};
-
-const SearchBar: React.FC<SearchBarProps> = ({ selected }) => {
+const SearchBar: React.FC = () => {
     const [query, setQuery] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
     const navigate = useAppNavigate();
-    const { labelId } = useParams();
+    const { tagId, tagKind } = useZonePathParams();
 
-    const scope = labelId ? 'label' : 'tier';
     const searchQuery = useQuery({
-        queryKey: ['zone-management', 'search', debouncedInputValue, selected, scope],
+        queryKey: ['zone-management', 'search', debouncedInputValue, tagId, tagKind],
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
-                tag_type: scope === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                tag_type: tagKind === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
         },
-        enabled: debouncedInputValue.length >= 3 && selected !== undefined,
-        select: (data) => data ?? { tags: [], selectors: [], members: [] },
+        enabled: debouncedInputValue.length >= 3 && tagId !== undefined,
     });
 
-    const results: SearchResults = searchQuery.data ?? { tags: [], selectors: [], members: [] };
+    const results = searchQuery.data ?? { tags: [], selectors: [], members: [] };
 
-    const handleClick = (sector: Sector, item: SearchItem) => {
+    const handleClick = (item: SearchItem) => {
         setQuery('');
-        const base = getTagUrlValue(labelId);
-        if (sector === 'Tiers') {
-            navigate(`/zone-management/details/${base}/${(item as AssetGroupTag).id}`);
-        } else if (sector === 'Selectors') {
-            navigate(
-                `/zone-management/details/${base}/${(item as AssetGroupTagSelector).asset_group_tag_id}/selector/${item.id}`
-            );
-        } else if (sector === 'Objects') {
-            navigate(
-                `/zone-management/details/${base}/${(item as AssetGroupTagMember).asset_group_tag_id}/member/${item.id}`
-            );
+        setIsOpen(false);
+
+        if (isTag(item)) {
+            navigate(`/zone-management/details/${tagKind}/${item.id}`);
+        } else if (isSelector(item)) {
+            navigate(`/zone-management/details/${tagKind}/${item.asset_group_tag_id}/selector/${item.id}`);
+        } else {
+            navigate(`/zone-management/details/${tagKind}/${item.asset_group_tag_id}/member/${item.id}`);
         }
     };
 
     // Flatten results with sector since useCombobox requires one flattened array of items
-    const items: FlattenedItem[] = [
-        ...results.tags.map((tag) => ({ sector: 'Tiers' as const, item: tag })),
-        ...results.selectors.map((selector) => ({ sector: 'Selectors' as const, item: selector })),
-        ...results.members.map((member) => ({ sector: 'Objects' as const, item: member })),
-    ];
+    const items: SearchItem[] = [...results.tags, ...results.selectors, ...results.members];
 
-    const { getMenuProps, getInputProps, getComboboxProps, getItemProps, isOpen, openMenu } =
-        useCombobox<FlattenedItem>({
-            items,
-            inputValue: query,
-            itemToString: (flattened) => (flattened ? flattened.item.name : ''),
-            onInputValueChange: ({ inputValue }) => {
-                setQuery(inputValue ?? '');
-            },
-            onSelectedItemChange: ({ selectedItem }) => {
-                if (selectedItem) handleClick(selectedItem.sector, selectedItem.item);
-            },
-        });
+    const { getMenuProps, getInputProps, getComboboxProps, getItemProps, highlightedIndex } = useCombobox<SearchItem>({
+        items,
+        inputValue: query,
+        isOpen,
+        scrollIntoView: (node: HTMLElement) => node.scrollIntoView({ behavior: 'smooth', block: 'nearest' }),
+        itemToString: (item) => item?.name ?? '',
+        onInputValueChange: ({ inputValue = '' }) => {
+            setQuery(inputValue);
+            if (inputValue.length >= 3 && !isOpen) setIsOpen(true);
+            if (inputValue.length < 3 && isOpen) setIsOpen(false);
+        },
+        onSelectedItemChange: ({ selectedItem }) => {
+            if (selectedItem) handleClick(selectedItem);
+        },
+    });
 
-    // group items back into separate sectors for rendering
-    const groupedSectors: Record<Sector, FlattenedItem[]> = {
-        Tiers: items.filter((i) => i.sector === 'Tiers'),
-        Selectors: items.filter((i) => i.sector === 'Selectors'),
-        Objects: items.filter((i) => i.sector === 'Objects'),
+    const sectorMap: Record<Sector, keyof AssetGroupTagSearchResponse['data']> = {
+        [tagKind === 'label' ? 'Labels' : 'Tiers']: 'tags',
+        Selectors: 'selectors',
+        Members: 'members',
     };
 
     return (
         <div {...getComboboxProps()} className='relative w-4/6'>
-            <Popover open={isOpen && query.length >= 3}>
+            <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverTrigger asChild>
-                    <div className='flex items-center border-b-2 border-neutral-dark-1 dark:border-neutral-light-1'>
-                        <AppIcon.MagnifyingGlass />
-                        <Input
-                            placeholder='Search'
-                            className='border-none bg-transparent dark:bg-transparent placeholder-neutral-dark-1 dark:placeholder-neutral-light-1 focus-visible:ring-0 focus-visible:ring-offset-0 pl-3'
-                            {...getInputProps({ onFocus: openMenu })}
-                        />
+                    <div className='flex items-center'>
+                        <AppIcon.MagnifyingGlass className='-mr-4' />
+                        <Input variant={'underlined'} placeholder='Search' className='pl-8' {...getInputProps()} />
                     </div>
                 </PopoverTrigger>
                 <PopoverContent
                     className='w-[448px] max-h-[400px] overflow-y-auto'
                     onOpenAutoFocus={(e) => e.preventDefault()}>
-                    <ul {...getMenuProps()} className='space-y-4'>
+                    {/* supressing ref error as Popover isn't mounted on initial render */}
+                    {/* TODO: add comboBox component to Doodle UI and replace this usage */}
+                    <ul {...getMenuProps({}, { suppressRefError: true })} className='space-y-4'>
                         {isOpen &&
-                            (['Tiers', 'Selectors', 'Objects'] as Sector[]).map((sector) => (
+                            Object.entries(sectorMap).map(([sector, key]) => (
                                 <li key={sector}>
                                     <p className='font-bold mb-1'>{sector}</p>
-                                    {groupedSectors[sector].length > 0 ? (
+                                    {results[key].length > 0 ? (
                                         <ul>
-                                            {groupedSectors[sector].map((wrappedItem) => {
+                                            {results[key].map((item) => {
                                                 //global index for all items so we have unique indices with no overlap
-                                                const globalIndex = items.indexOf(wrappedItem);
+                                                const globalIndex = items.indexOf(item);
                                                 return (
                                                     <li
-                                                        key={wrappedItem.item.id}
+                                                        key={item.id}
                                                         {...getItemProps({
-                                                            item: wrappedItem,
+                                                            item,
                                                             index: globalIndex,
                                                         })}
-                                                        className='flex max-w-lg min-w-0'>
+                                                        className={cn('flex max-w-lg min-w-0', {
+                                                            'bg-secondary text-white dark:bg-secondary-variant-2 dark:text-black':
+                                                                highlightedIndex === globalIndex,
+                                                        })}>
                                                         <Button
-                                                            className='overflow-hidden justify-start w-full'
+                                                            className='overflow-hidden justify-start w-full no-underline'
                                                             variant='text'>
-                                                            <span className='truncate'>{wrappedItem.item.name}</span>
+                                                            <span
+                                                                className={cn('truncate', {
+                                                                    'text-white  dark:text-black':
+                                                                        highlightedIndex === globalIndex,
+                                                                })}>
+                                                                {item.name}
+                                                            </span>
                                                         </Button>
                                                     </li>
                                                 );
                                             })}
                                         </ul>
                                     ) : (
-                                        <p className='text-sm text-neutral-500'>No results</p>
+                                        <p className='pl-6 text-sm text-neutral-500'>No results</p>
                                     )}
                                 </li>
                             ))}
