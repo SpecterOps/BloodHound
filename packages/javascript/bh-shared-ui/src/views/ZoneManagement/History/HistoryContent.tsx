@@ -41,7 +41,7 @@ const BASE_COLUMNS = [
     },
     {
         header: () => <div className='pl-8 text-left'>Tier/Label</div>,
-        id: 'tier', //question here since I checked the API and I do not see in the response something like label/tier maybe target?
+        id: 'tier',
     },
     {
         header: () => <div className='pl-8 text-left'>Made by</div>,
