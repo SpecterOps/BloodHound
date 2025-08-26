@@ -984,11 +984,11 @@ func isValidCertType(certType model.AssetGroupCertification) bool {
 	}
 }
 
-func nodeShouldBeUpdated(node model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
-	if node.Certified != model.AssetGroupCertificationAuto {
-		if node.NodeId != lastProcessedNodeId {
+func recordShouldBeUpdated(record model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
+	if record.Certified != model.AssetGroupCertificationAuto {
+		if record.NodeId != lastProcessedNodeId {
 			return true
-		} else if node.Position == highestPriority {
+		} else if record.Position == highestPriority {
 			return true
 		}
 	}
@@ -999,8 +999,8 @@ type setSelectorNodeCertifier interface {
 	UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error
 }
 
-// certifyMembersBySelectorNodes - Note: nodes supplied must be in order of nodeId, followed by position
-func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, nodes []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) error {
+// certifyMembersBySelectorNodes - Note: selectorNodeRecords supplied must be in order of nodeId, followed by position
+func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) error {
 	var (
 		certificationStatus model.AssetGroupCertification
 		certifiedBy         null.String
@@ -1011,22 +1011,22 @@ func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier se
 		inputs = []database.UpdateCertificationBySelectorNodeInput{}
 	)
 
-	// Only update the nodes with the highest priority for a given nodeID
-	for _, node := range nodes {
+	// Only update the records with the highest priority for a given nodeID
+	for _, record := range selectorNodeRecords {
 		certificationStatus = model.AssetGroupCertificationPending
 		certifiedBy = null.String{}
-		if nodeShouldBeUpdated(node, lastProcessedNodeId, highestPriorityForGivenNode) {
+		if recordShouldBeUpdated(record, lastProcessedNodeId, highestPriorityForGivenNode) {
 			certificationStatus = requestAction
-			highestPriorityForGivenNode = node.Position
+			highestPriorityForGivenNode = record.Position
 			certifiedBy = userEmail
-			lastProcessedNodeId = node.NodeId
-			// don't actually update nodes that already match the request action
-			if node.Certified == requestAction {
+			lastProcessedNodeId = record.NodeId
+			// don't actually update records that already match the request action
+			if record.Certified == requestAction {
 				continue
 			}
 		}
-		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: node.AssetGroupTagId, SelectorId: node.SelectorId, CertifiedBy: certifiedBy, CertificationStatus: certificationStatus, NodeId: node.NodeId, NodeName: node.NodeName, Note: note})
-		lastProcessedNodeId = node.NodeId
+		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: record.AssetGroupTagId, SelectorId: record.SelectorId, CertifiedBy: certifiedBy, CertificationStatus: certificationStatus, NodeId: record.NodeId, NodeName: record.NodeName, Note: note})
+		lastProcessedNodeId = record.NodeId
 	}
 	if len(inputs) > 0 {
 		return selectorNodeCertifier.UpdateCertificationBySelectorNode(ctx, inputs)
