@@ -15,41 +15,66 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardHeader, CardTitle, DataTable, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagHistoryRecord } from 'js-client-library';
+import { AssetGroupTagsHistory } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { useState } from 'react';
-import { useInfiniteQuery } from 'react-query';
+import { useRef, useState } from 'react';
+import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
 import { apiClient } from '../../../utils';
-import { PageParam, createPaginatedFetcher } from '../../../utils/paginatedFetcher';
 import HistoryNotes from './HistoryNotes';
 import { useHistoryTableContext } from './HistoryTableContext';
 
+// const BASE_COLUMNS = [
+//     {
+//         header: () => <div className='font-semibold text-base'> Name </div>,
+//         id: 'name',
+//     },
+//     {
+//         header: () => <div className='font-semibold text-base'>Action</div>,
+//         id: 'action',
+//     },
+//     {
+//         header: () => <div className='font-semibold text-base'>Date</div>,
+//         id: 'date',
+//     },
+//     {
+//         header: () => <div className='font-semibold text-base'>Tier/Label</div>,
+//         id: 'tier', //question here since I checked the API and I do not see in the response something like label/tier maybe target?
+//     },
+//     {
+//         header: () => <div className='font-semibold text-base'>Made by</div>,
+//         id: 'author',
+//     },
+//     {
+//         header: () => <div className='font-semibold text-base'>Notes</div>,
+//         id: 'notes',
+//     },
+// ];
 const BASE_COLUMNS = [
     {
-        header: () => <div className='font-semibold text-base pl-4'> Name </div>,
+        header: () => <div className='pl-4 text-left'>Name</div>,
         id: 'name',
     },
     {
-        header: () => <div className='font-semibold text-base pl-4'>Action</div>,
+        header: () => <div className='pl-4 text-left'>Action</div>,
         id: 'action',
     },
     {
-        header: () => <div className='font-semibold text-base pl-4'>Date</div>,
+        header: () => <div className='pl-4 text-left'>Date</div>,
         id: 'date',
     },
     {
-        header: () => <div className='font-semibold text-base pl-4'>Tier/Label</div>,
+        header: () => <div className='pl-4 text-left'>Tier/Label</div>,
         id: 'tier', //question here since I checked the API and I do not see in the response something like label/tier maybe target?
     },
     {
-        header: () => <div className='font-semibold text-base pl-4'>Made by</div>,
+        header: () => <div className='pl-4 text-left'>Made by</div>,
         id: 'author',
     },
     {
-        header: () => <div className='font-semibold text-base pl-4'>Notes</div>,
+        header: () => <div className='pl-4 text-center'>Notes</div>,
         id: 'notes',
     },
 ];
@@ -77,7 +102,7 @@ const NoteComponent = ({ row }: any) => {
     };
 
     return (
-        <div>
+        <div className='text-center'>
             {author === 'System' ? (
                 <p className='pl-4 myH'>-</p>
             ) : (
@@ -85,23 +110,33 @@ const NoteComponent = ({ row }: any) => {
                     className='disabled:opacity-25 pl-4 myH'
                     onClick={() => handleOnClick()}
                     disabled={!row.original.note}>
-                    <AppIcon.LinedPaper size={18} />
+                    <AppIcon.LinedPaper size={17} />
                 </button>
             )}
         </div>
     );
 };
 
+// const formatActionCols = (row: any) => {
+//     return row.original.action.replace(/([A-Z])/g, ' $1').trim();
+// };
+
 const HISTORY_COLS = [
-    ({ row }: any) => <div className='pl-4 myH'>{row.original.target}</div>,
-    ({ row }: any) => <div className='pl-4 myH'>{row.original.action}</div>,
-    ({ row }: any) => <div className='pl-4 myH'>{row.original.date}</div>,
-    ({ row }: any) => <div className='pl-4 myH'>{row.original.tagName}</div>,
-    ({ row }: any) => <div className='pl-4 myH'>{row.original.email || row.original.actor}</div>,
+    ({ row }: any) => <div className='text-primary'>{row.original.target}</div>,
+    ({ row }: any) => <div>{row.original.action.replace(/([A-Z])/g, ' $1').trim()}</div>,
+    ({ row }: any) => <div>{row.original.date}</div>,
+    ({ row }: any) => <div>{row.original.tagName}</div>,
+    ({ row }: any) => <div>{row.original.email || row.original.actor}</div>,
     ({ row }: any) => <NoteComponent row={row} />,
 ];
 
-const PAGE_SIZE = 10;
+// The height of the tabs and page description; where history log table starts
+const TABLE_Y_OFFSET = '255px';
+
+const TABLE_HEIGHT_OFFSET = '326px';
+
+const QUERY_LIMIT = 1000;
+const QUERY_SKIP = 0;
 
 /** Generates an array of column data in the success or loading states */
 const getColumns = (isLoading: boolean) => {
@@ -111,53 +146,47 @@ const getColumns = (isLoading: boolean) => {
     }));
 };
 
-const useInfiniteQueriesPage = (query: string) => {
+const useAssetGroupTagHistoryQuery = (query: string) => {
     const doSearch = query.length >= 3;
-
-    const getPaginatedHistory = (skip: number = 0, limit: number = PAGE_SIZE) =>
-        createPaginatedFetcher(
-            () =>
-                doSearch
-                    ? apiClient.searchAssetGroupTagHistory(limit, skip, query)
-                    : apiClient.getAssetGroupTagHistory(limit, skip),
-            'records',
-            skip,
-            limit
-        );
-
     const queryKey = doSearch ? query : 'static';
 
-    return useInfiniteQuery<{
-        items: AssetGroupTagHistoryRecord[];
-        nextPageParam?: PageParam;
-    }>({
+    return useQuery<AssetGroupTagsHistory>({
         queryKey: ['asset-group-tag-history', queryKey],
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getPaginatedHistory(pageParam.skip, pageParam.limit),
-        getNextPageParam: (lastPage) => lastPage.nextPageParam,
+        queryFn: async () => {
+            const result = doSearch
+                ? await apiClient.searchAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP, query)
+                : await apiClient.getAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP);
+            return result.data;
+        },
     });
 };
 
 const HistoryContent = () => {
     const [search, setSearch] = useState('');
 
-    const { data, isLoading } = useInfiniteQueriesPage(search);
+    const {
+        data: history,
+        isLoading: isHistoryLoading,
+        isSuccess: isHistorySuccess,
+    } = useAssetGroupTagHistoryQuery(search);
+    const { data: tags, isLoading: isTagsLoading, isSuccess: isTagsSuccess } = useTagsQuery();
 
-    const tagsQuery = useTagsQuery();
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-    if (isLoading || tagsQuery.isLoading) return null;
+    const isLoading = isHistoryLoading || isTagsLoading;
+    const isSuccess = isHistorySuccess && isTagsSuccess;
 
-    const tableData = data?.pages[0].items || [];
+    const historyItems = isSuccess
+        ? history.data.records.map((item) => {
+              const tagName = tags?.find((tag) => tag.id === item.asset_group_tag_id)?.name;
 
-    tableData.forEach((record) => {
-        const name = tagsQuery.data?.find((tag) => tag.id === record.asset_group_tag_id)?.name;
-        const formattedDate = DateTime.fromISO(record.created_at).toFormat('MM-dd-yyyy');
-        record.date = formattedDate;
-
-        if (name !== undefined) {
-            record.tagName = name;
-        }
-    });
+              return {
+                  ...item,
+                  tagName,
+                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+              };
+          })
+        : [];
 
     type DataTableProps = React.ComponentProps<typeof DataTable>;
 
@@ -167,7 +196,7 @@ const HistoryContent = () => {
     };
 
     const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-        className: 'sticky top-0 z-10 shadow-sm',
+        className: 'sticky top-0 z-10 shadow-sm text-base',
     };
 
     const tableHeadProps: DataTableProps['TableHeadProps'] = {
@@ -175,30 +204,39 @@ const HistoryContent = () => {
     };
 
     const tableCellProps: DataTableProps['TableCellProps'] = {
-        className: 'truncate group relative',
+        className: 'truncate group relative pl-4',
     };
+
     return (
-        <div className='flex gap-8 mt-6 h-full'>
-            <Card className='h-full w-full grid grid-rows-[72px,1fr] overflow-hidden'>
+        <div id='history-wrapper' className={`flex gap-8 mt-6 h-[calc(100vh-${TABLE_Y_OFFSET})]`}>
+            <Card id='has-grid'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
                     <SearchInput value={search} onInputChange={setSearch} />
                 </CardHeader>
-                <DataTable
-                    className='w-auto h-auto overflow-auto'
-                    data={tableData ?? []}
-                    TableHeaderProps={tableHeaderProps}
-                    TableHeadProps={tableHeadProps}
-                    TableProps={tableProps}
-                    TableCellProps={tableCellProps}
-                    columns={getColumns(isLoading)}
-                    // virtualizationOptions={{
-                    //     rangeExtractor: (range) => {
-                    //         console.log('rangeExtractor', range);
-                    //         return new Array(range.count).fill(0).map((_, index) => range.startIndex + index);
-                    //     },
-                    // }}
-                />
+
+                <div ref={scrollRef} className={`overflow-y-auto h-[calc(100vh-${TABLE_HEIGHT_OFFSET})]`}>
+                    <DataTable
+                        data={historyItems ?? []}
+                        TableHeaderProps={tableHeaderProps}
+                        TableHeadProps={tableHeadProps}
+                        TableProps={tableProps}
+                        TableCellProps={tableCellProps}
+                        columns={getColumns(isLoading)}
+                        virtualizationOptions={{
+                            rangeExtractor: (range) => {
+                                console.log('rangeExtractor', range);
+                                return new Array(range.count).fill(0).map((_, index) => {
+                                    console.log('start index', range.startIndex);
+                                    console.log('index', index);
+
+                                    return range.startIndex + index;
+                                });
+                            },
+                            estimateSize: () => 17,
+                        }}
+                    />
+                </div>
             </Card>
             <HistoryNotes />
         </div>
