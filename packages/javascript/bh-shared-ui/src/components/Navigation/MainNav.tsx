@@ -208,16 +208,16 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             hoverActive={!isMouseDragging}
                             route={listDataItem.route as string}>
                             {listDataItem.onClick && !listDataItem.route ? (
-                                <div
-                                    className='cursor-pointer flex flex-row items-center justify-center relative'
+                                <MainNavItemAction
                                     onClick={listDataItem.onClick}
-                                    data-testid={listDataItem.testId}>
+                                    hoverActive={!isMouseDragging}
+                                    testId={listDataItem.testId}>
                                     <MainNavItemLabel
                                         icon={listDataItem.icon}
                                         label={listDataItem.label}
                                         hoverActive={!isMouseDragging}
                                     />
-                                </div>
+                                </MainNavItemAction>
                             ) : (
                                 <MainNavItemLink
                                     route={listDataItem.route as string}
