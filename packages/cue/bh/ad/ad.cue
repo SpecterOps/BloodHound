@@ -998,6 +998,13 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+ServicePrincipalNames: types.#StringEnum & {
+	symbol:         "ServicePrincipalNames"
+	schema:         "ad"
+	name:           "Service Principal Names"
+	representation: "serviceprincipalnames"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1134,6 +1141,7 @@ Properties: [
 	GroupScope,
 	NetBIOS,
 	AdminSDHolderProtected,
+	ServicePrincipalNames,
 ]
 
 // Kinds
