@@ -203,7 +203,8 @@ describe('UpdateUserDialog', () => {
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
-        await user.clear(screen.getByLabelText('Email Address'));
+        const emailAddressInput = screen.getByTestId('update-user-dialog_input-email-address');
+        await user.clear(emailAddressInput);
 
         await user.click(saveButton);
 
@@ -214,8 +215,6 @@ describe('UpdateUserDialog', () => {
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
         const { user, testUser, testOnSave } = setup();
-
-        //expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
         expect(await screen.findByTestId('update-user-dialog_label-email-address')).toBeInTheDocument();
 
@@ -235,19 +234,6 @@ describe('UpdateUserDialog', () => {
         await user.clear(lastNameInput);
         await user.type(lastNameInput, testUser.lastName);
 
-        /*
-
-        await user.clear(screen.getByLabelText('Principal Name'));
-        await user.type(screen.getByLabelText('Principal Name'), testUser.principalName);
-
-        await user.clear(screen.getByLabelText('First Name'));
-        await user.type(screen.getByLabelText('First Name'), testUser.firstName);
-
-        await user.clear(screen.getByLabelText('Last Name'));
-        await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
-
-        */
-
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
         await waitFor(() => expect(testOnSave).toHaveBeenCalled(), { timeout: 30000 });
@@ -256,7 +242,9 @@ describe('UpdateUserDialog', () => {
     it('should display all available roles', async () => {
         const { user } = setup();
 
-        await user.click(await screen.findByTestId('update-user-dialog_input-role'));
+        screen.debug(undefined, Infinity);
+
+        await user.click(await screen.findByTestId('update-user-dialog_select-role'));
 
         for (const role of testRoles) {
             expect(await screen.findByRole('option', { name: role.name })).toBeInTheDocument();
@@ -266,7 +254,7 @@ describe('UpdateUserDialog', () => {
     it('should display all available SSO providers', async () => {
         const { user } = setup();
 
-        await user.click(await screen.findByLabelText('Authentication Method'));
+        await user.click(await screen.findByTestId('update-user-dialog_select-authentication-method'));
 
         await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
 
@@ -302,20 +290,6 @@ describe('UpdateUserDialog', () => {
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
-        /*
-        await user.clear(screen.getByLabelText('Email Address'));
-        await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
-
-        await user.clear(screen.getByLabelText('Principal Name'));
-        await user.type(screen.getByLabelText('Principal Name'), testUser.principalName);
-
-        await user.clear(screen.getByLabelText('First Name'));
-        await user.type(screen.getByLabelText('First Name'), testUser.firstName);
-
-        await user.clear(screen.getByLabelText('Last Name'));
-        await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
-        */
-
         const emailAddressInput = screen.getByTestId('update-user-dialog_input-email-address');
         await user.clear(emailAddressInput);
         await user.type(emailAddressInput, testUser.emailAddress);
@@ -332,13 +306,16 @@ describe('UpdateUserDialog', () => {
         await user.clear(lastNameInput);
         await user.type(lastNameInput, testUser.lastName);
 
-        await user.click(await screen.findByLabelText('Authentication Method'));
-        await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
+        const authenticationMethodSelect = screen.getByTestId('update-user-dialog_select-authentication-method');
+        await user.click(authenticationMethodSelect);
+        //await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
+        const option = await screen.findByRole('option', { name: 'Single Sign-On (SSO)' });
+        expect(option).toBeInTheDocument();
 
-        await user.click(screen.getByLabelText('SSO Provider'));
+        await user.click(screen.getByTestId('update-user-dialog_sso-provider'));
         await user.click(await screen.findByRole('option', { name: testSSOProviders[0].name }));
 
-        await user.click(await screen.findByLabelText('Authentication Method'));
+        await user.click(await screen.getByTestId('update-user-dialog_select-authentication-method'));
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
 
         await user.click(saveButton);

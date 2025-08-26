@@ -16,16 +16,20 @@
 
 import {
     Button,
+    Card,
+    Checkbox,
     DialogActions,
     DialogClose,
     DialogDescription,
     DialogTitle,
     Form,
+    FormControl,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
     Input,
+    Label,
     Select,
     SelectContent,
     SelectItem,
@@ -34,9 +38,9 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Card, Checkbox, FormControl, FormControlLabel, Grid } from '@mui/material';
+import { Grid } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
@@ -53,30 +57,6 @@ const CreateUserForm: React.FC<{
     open?: boolean;
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
 }> = ({ error, isLoading, onSubmit, open, showEnvironmentAccessControls }) => {
-    /*
-    const {
-        control,
-        formState: { errors },
-        handleSubmit,
-        setError,
-        setValue,
-        register,
-        watch,
-    } = useForm<CreateUserRequestForm>({
-        defaultValues: {
-            emailAddress: '',
-            principal: '',
-            firstName: '',
-            lastName: '',
-            password: '',
-            needsPasswordReset: false,
-            roles: [3],
-            SSOProviderId: '',
-        },
-    });
-
-    */
-
     const defaultValues = {
         emailAddress: '',
         principal: '',
@@ -104,34 +84,32 @@ const CreateUserForm: React.FC<{
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
-    /*
     useEffect(() => {
         if (authenticationMethod === 'password') {
-            setValue('SSOProviderId', undefined);
+            form.setValue('SSOProviderId', undefined);
         }
 
         if (error) {
             if (error?.response?.status === 409) {
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
-                    setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
                 } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
-                    setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
+                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
                 } else {
-                    setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
             } else {
-                setError('root.oeneric', {
+                form.setError('root.oeneric', {
                     type: 'custom',
                     message: 'An unexpected error occurred. Please try again.',
                 });
             }
         }
-    }, [authenticationMethod, setValue, error, setError]);
+    }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
     if (error) {
         console.log(error);
     }
-    */
 
     return (
         <Form {...form}>
@@ -203,7 +181,9 @@ const CreateUserForm: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Principal Name</FormLabel>
+                                                    <FormLabel data-testid='create-user-dialog_label-principal-name'>
+                                                        Principal Name
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             {...field}
@@ -241,7 +221,9 @@ const CreateUserForm: React.FC<{
                                             render={({ field }) => (
                                                 <>
                                                     <FormItem>
-                                                        <FormLabel>First Name</FormLabel>
+                                                        <FormLabel data-testid='create-user-dialog_label-first-name'>
+                                                            First Name
+                                                        </FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 {...field}
@@ -280,7 +262,9 @@ const CreateUserForm: React.FC<{
                                             render={({ field }) => (
                                                 <>
                                                     <FormItem>
-                                                        <FormLabel>Last Name</FormLabel>
+                                                        <FormLabel data-testid='create-user-dialog_label-last-name'>
+                                                            Last Name
+                                                        </FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 {...field}
@@ -297,7 +281,9 @@ const CreateUserForm: React.FC<{
                                     <>
                                         <Grid item xs={12}>
                                             <FormItem>
-                                                <FormLabel>Authentication Method</FormLabel>
+                                                <FormLabel data-testid='create-user-dialog_label-authentication-method'>
+                                                    Authentication Method
+                                                </FormLabel>
                                                 <Select
                                                     data-testid='create-user-dialog_select-authentication-method'
                                                     onValueChange={(value) => setAuthenticationMethod(value as string)}
@@ -369,19 +355,19 @@ const CreateUserForm: React.FC<{
                                                         control={form.control}
                                                         defaultValue={false}
                                                         render={({ field }) => (
-                                                            <FormControlLabel
-                                                                control={
-                                                                    <Checkbox
-                                                                        {...field}
-                                                                        color='primary'
-                                                                        data-testid='create-user-dialog_checkbox-needs-password-reset'
-                                                                        onChange={(e, checked) =>
-                                                                            field.onChange(checked)
-                                                                        }
-                                                                    />
-                                                                }
-                                                                label='Force Password Reset?'
-                                                            />
+                                                            <div className='flex flex-row items-center'>
+                                                                <Checkbox
+                                                                    {...field}
+                                                                    data-testid='create-user-dialog_checkbox-needs-password-reset'
+                                                                    id='create-user-dialog_checkbox-needs-password-reset'
+                                                                    onChange={(e, checked) => field.onChange(checked)}
+                                                                />
+                                                                <Label
+                                                                    htmlFor='create-user-dialog_checkbox-needs-password-reset'
+                                                                    className='pl-2'>
+                                                                    Force Password Reset?
+                                                                </Label>
+                                                            </div>
                                                         )}
                                                     />
                                                 </Grid>
@@ -431,7 +417,11 @@ const CreateUserForm: React.FC<{
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <div className='flex row'>
-                                                        <FormLabel className='mr-2'>Role</FormLabel>
+                                                        <FormLabel
+                                                            className='mr-2'
+                                                            data-testid='create-user-dialog_label-role'>
+                                                            Role
+                                                        </FormLabel>
                                                         <Tooltip
                                                             tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
                                                             contentProps={{
