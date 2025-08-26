@@ -23,11 +23,15 @@ type MainNavLogoImage = {
     altText: string;
 };
 
+type MainNavLogoIcon = {
+    element: ReactNode;
+    dimensions: { height: string; width: string };
+};
+
 export type MainNavLogoDataObject = {
     project: {
         route: string;
-        icon: ReactNode;
-        image: MainNavLogoImage;
+        icon: MainNavLogoIcon;
     };
     specterOps: {
         image: MainNavLogoImage;

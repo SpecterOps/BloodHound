@@ -24,19 +24,14 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 export const useMainNavLogoData = (): MainNavData['logo'] => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
-    const bhceImageUrlDarkMode = '/img/banner-ce-dark-mode.png';
-    const bhceImageUrlLightMode = '/img/banner-ce-light-mode.png';
     const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
     const soImageUrlLightMode = '/img/banner-so-light-mode.png';
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogo size={24} className='scale-150 text-[#e61616]' />, // Note: size 24 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
-            image: {
-                imageUrl: `${import.meta.env.BASE_URL}${darkMode ? bhceImageUrlDarkMode : bhceImageUrlLightMode}`,
+            icon: {
+                element: <AppIcon.BHCELogoFull size={155} className='rounded h-full' />,
                 dimensions: { height: '40px', width: '165px' },
-                classes: 'ml-4 mt-2',
-                altText: 'BHCE Text Logo',
             },
         },
         specterOps: {

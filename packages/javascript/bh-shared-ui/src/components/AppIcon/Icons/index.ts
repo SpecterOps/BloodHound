@@ -16,6 +16,7 @@
 
 export * from './AttackPaths';
 export * from './BHCELogo';
+export * from './BHCELogoFull';
 export * from './BHELogo';
 export * from './BarChart';
 export * from './CalendarDay';

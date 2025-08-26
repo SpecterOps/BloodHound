@@ -25,12 +25,9 @@ import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types
 const MainNavLogoData: MainNavLogoDataObject = {
     project: {
         route: '/',
-        icon: <AppIcon.BHCELogo size={24} />,
-        image: {
-            imageUrl: `/test`,
+        icon: {
+            element: <AppIcon.BHCELogo size={24} />,
             dimensions: { height: '40px', width: '165px' },
-            classes: 'ml-4',
-            altText: 'BHE Text Logo',
         },
     },
     specterOps: {

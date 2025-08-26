@@ -25,7 +25,7 @@ import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
 const MainNavLogoTextImage: FC<{
-    mainNavLogoData: MainNavLogoDataObject['project'] | MainNavLogoDataObject['specterOps'];
+    mainNavLogoData: MainNavLogoDataObject['specterOps'];
 }> = ({ mainNavLogoData }) => {
     return (
         <img
@@ -35,6 +35,27 @@ const MainNavLogoTextImage: FC<{
             width={mainNavLogoData.image.dimensions.width}
             className={mainNavLogoData.image.classes}
         />
+    );
+};
+
+const NavItemViewPort: FC<{ children: ReactNode }> = (props) => {
+    return <div className='w-full min-h-10 overflow-hidden rounded relative'>{props.children}</div>;
+};
+
+export const AppIcon: FC<{ data: MainNavLogoDataObject; hoverActive: boolean }> = (props) => {
+    const { data, hoverActive } = props;
+    return (
+        <NavItemViewPort>
+            <AppLink
+                className={cn('absolute top-0 right-0 left-0 bottom-0 bg-cover', {
+                    'group-hover:w-full cursor-pointer': hoverActive,
+                })}
+                to={{ pathname: data.project.route }}
+                style={data.project.icon.dimensions}
+                data-testid='global_nav-home'>
+                {data.project.icon.element}
+            </AppLink>
+        </NavItemViewPort>
     );
 };
 
@@ -51,7 +72,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
         <li
             onClick={onClick}
             className={cn(
-                'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-1 dark:text-neutral-light-1',
+                'h-10 px-2 flex overflow-hidden items-center rounded text-neutral-dark-1 dark:text-neutral-light-1',
                 {
                     'text-primary dark:text-primary dark:hover:text-primary bg-neutral-light-4 cursor-default':
                         isActiveRoute,
@@ -77,7 +98,7 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
         <div
             role='button'
             onClick={onClick}
-            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
+            className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': hoverActive,
             })}
             data-testid={testId}>
@@ -96,8 +117,8 @@ const MainNavItemLink: FC<{
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <AppLink
             to={{ pathname: route }}
-            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
-                'group-hover:w-full cursor-pointer': hoverActive,
+            className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
+                // 'group-hover:w-full cursor-pointer': hoverActive,
             })}
             data-testid={testId}>
             {children}
@@ -105,11 +126,7 @@ const MainNavItemLink: FC<{
     );
 };
 
-const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; hoverActive: boolean }> = ({
-    icon,
-    label,
-    hoverActive,
-}) => {
+const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ icon, label }) => {
     return (
         // Note: The min-h here is to keep spacing between the logo and the list below.
         <>
@@ -120,10 +137,7 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; hoverAc
                 data-testid='global_nav-item-label-text'
                 className={cn(
                     'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in',
-                    {
-                        'group-hover:w-full group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-x-5':
-                            hoverActive,
-                    }
+                    'w-full opacity-100 flex items-center gap-x-5'
                 )}>
                 {label}
             </span>
@@ -188,23 +202,14 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     return (
         <nav
             className={cn(
-                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-2 print:hidden group',
+                'z-nav fixed top-0 px-2 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-2 print:hidden group',
                 {
                     'hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden': !isMouseDragging,
                 }
             )}>
-            <MainNavItemLink
-                route={mainNavData.logo.project.route}
-                testId='global_nav-home'
-                hoverActive={!isMouseDragging}>
-                <MainNavItemLabel
-                    icon={mainNavData.logo.project.icon}
-                    label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo.project} />}
-                    hoverActive={!isMouseDragging}
-                />
-            </MainNavItemLink>
+            <AppIcon data={mainNavData.logo} hoverActive={!isMouseDragging} />
             {/* Note: min height here is to keep the version number in bottom of nav */}
-            <div className='h-full min-h-[625px] w-full flex flex-col justify-between mt-6'>
+            <div className='h-full min-h-[625px] w-full flex flex-col justify-between'>
                 <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
                     <MainNavListItem key={0} hoverActive={!isMouseDragging}>
                         <div
@@ -213,7 +218,6 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             <MainNavItemLabel
                                 icon={<FontAwesomeIcon size='lg' icon={faUpload} className='pr-2.5 pb-1' />}
                                 label='Quick Ingest'
-                                hoverActive={!isMouseDragging}
                             />
                         </div>
                     </MainNavListItem>
@@ -227,11 +231,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                 route={listDataItem.route as string}
                                 hoverActive={!isMouseDragging}
                                 testId={listDataItem.testId}>
-                                <MainNavItemLabel
-                                    icon={listDataItem.icon}
-                                    label={listDataItem.label}
-                                    hoverActive={!isMouseDragging}
-                                />
+                                <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                             </MainNavItemLink>
                         </MainNavListItem>
                     ))}
@@ -247,11 +247,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                     route={listDataItem.route as string}
                                     hoverActive={!isMouseDragging}
                                     testId={listDataItem.testId}>
-                                    <MainNavItemLabel
-                                        icon={listDataItem.icon}
-                                        label={listDataItem.label}
-                                        hoverActive={!isMouseDragging}
-                                    />
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                                 </MainNavItemLink>
                             </MainNavListItem>
                         ) : (
@@ -260,11 +256,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                                     onClick={(() => listDataItem.functionHandler as () => void)()}
                                     hoverActive={!isMouseDragging}
                                     testId={listDataItem.testId}>
-                                    <MainNavItemLabel
-                                        icon={listDataItem.icon}
-                                        label={listDataItem.label}
-                                        hoverActive={!isMouseDragging}
-                                    />
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                                 </MainNavItemAction>
                             </MainNavListItem>
                         )
