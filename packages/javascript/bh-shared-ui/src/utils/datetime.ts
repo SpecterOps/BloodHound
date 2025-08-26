@@ -33,34 +33,28 @@ export enum LuxonFormat {
 
 export type ISO_DATE_STRING = string;
 
-export const calculateJobDuration = (start: ISO_DATE_STRING, end: ISO_DATE_STRING): string => {
-    const duration = DateTime.fromISO(end).diff(DateTime.fromISO(start), ['minutes', 'days']);
-
-    const minutes = Math.floor(duration.minutes);
-    const days = Math.floor(duration.days);
-
-    if (days === 1) {
-        return 'a day';
-    }
-    if (days >= 2) {
-        return `${days} days`;
-    }
-    if (minutes === 1) {
-        return `${minutes} minute`;
-    }
-    return `${minutes} minutes`;
-};
-
-/** Returns the given ISO datetime string formatted with the the timezone */
-export const toFormatted = (dateStr: string) => DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);
-
-/** Returns the duration, in mins, between 2 given ISO datetime strings */
-export const toMins = (start: string, end: string) => {
-    const interval = Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end));
+/** Returns the duration between 2 given ISO datetime strings in a simple format */
+export const getSimpleDuration = (start: ISO_DATE_STRING, end: ISO_DATE_STRING): string => {
+    const interval = Interval.fromISO(`${start}/${end}`);
 
     if (!interval.isValid) {
         return '';
     }
 
-    return Math.floor(interval.length('minutes')) + ' Min';
+    const minutes = Math.floor(interval.length('minutes'));
+    const days = Math.floor(interval.length('days'));
+
+    if (days === 1) {
+        return 'a day';
+    } else if (days >= 2) {
+        return `${days} days`;
+    } else if (minutes === 1) {
+        return `${minutes} min`;
+    } else {
+        return `${minutes} mins`;
+    }
 };
+
+/** Returns the given ISO datetime string formatted with the timezone */
+export const toFormatted = (dateStr: ISO_DATE_STRING): string =>
+    DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);

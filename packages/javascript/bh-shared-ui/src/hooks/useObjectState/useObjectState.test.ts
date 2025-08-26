@@ -49,4 +49,12 @@ describe('useObjectState', () => {
         act(() => result.current.deleteKeys('three' as any));
         expect(result.current.state).toEqual({ one: 1, two: 2 });
     });
+
+    it('keeps callbacks stable across renders', () => {
+        const { result, rerender } = renderHook(() => useObjectState({ a: 1 }));
+        const { applyState, deleteKeys } = result.current;
+        rerender();
+        expect(result.current.applyState).toBe(applyState);
+        expect(result.current.deleteKeys).toBe(deleteKeys);
+    });
 });

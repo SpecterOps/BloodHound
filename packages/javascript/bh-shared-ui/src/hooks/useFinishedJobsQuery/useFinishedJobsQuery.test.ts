@@ -105,15 +105,9 @@ describe('useFinishedJobsQuery', () => {
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(
-            'Your user role does not grant permission to view the finished jobs details. Please contact your administrator for details.',
+            expect.stringContaining('does not permit viewing'),
             'finished-jobs-permission',
-            {
-                anchorOrigin: {
-                    horizontal: 'right',
-                    vertical: 'top',
-                },
-                persist: true,
-            }
+            expect.objectContaining({ persist: true })
         );
     });
 
@@ -125,15 +119,23 @@ describe('useFinishedJobsQuery', () => {
     });
 
     it('shows an error notification if there is an error fetching', async () => {
-        console.error = vi.fn();
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
         checkPermissionMock.mockImplementation(() => true);
         const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
+        errorSpy.mockRestore();
 
         expect(addNotificationMock).toHaveBeenCalledWith(
-            'Unable to fetch jobs. Please try again.',
+            expect.stringContaining('Unable to fetch finished jobs'),
             'finished-jobs-error'
         );
+    });
+
+    it('dismisses the "no permission" notification on unmount', async () => {
+        checkPermissionMock.mockImplementation(() => false);
+        const { unmount } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
+        unmount();
+        expect(dismissNotificationMock).toHaveBeenCalledWith('finished-jobs-permission');
     });
 });

@@ -28,7 +28,7 @@ export const JOB_STATUS_MAP: Record<number, string> = {
     6: 'Ingesting',
     7: 'Analyzing',
     8: 'Partially Completed',
-} as const;
+} as const satisfies Record<number, string>;
 
 export const JOB_STATUS_INDICATORS: Record<number, { status: StatusType; pulse?: boolean }> = {
     [-1]: { status: 'bad' },
@@ -41,7 +41,7 @@ export const JOB_STATUS_INDICATORS: Record<number, { status: StatusType; pulse?:
     6: { status: 'pending', pulse: true },
     7: { status: 'pending' },
     8: { status: 'pending' },
-} as const;
+} as const satisfies Record<number, { status: StatusType; pulse?: boolean }>;
 
 export type JobCollectionType =
     | 'session_collection'
@@ -63,7 +63,7 @@ const COLLECTION_MAP = new Map(
 );
 
 /** Returns a string listing all the collections methods for the given job */
-export const toCollected = (job: ScheduledJobDisplay) =>
+export const toCollected = (job: Pick<ScheduledJobDisplay, JobCollectionType>) =>
     Object.entries(job)
         .filter(([key, value]) => COLLECTION_MAP.has(key) && value)
         .map(([key]) => COLLECTION_MAP.get(key))

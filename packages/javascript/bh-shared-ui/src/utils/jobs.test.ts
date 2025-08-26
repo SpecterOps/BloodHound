@@ -46,7 +46,7 @@ describe('toCollected', () => {
         );
     });
 
-    it('shows some collection methods for the given job', () => {
+    it('shows no collection methods', () => {
         const NO_COLLECTIONS_JOB = {
             ...MOCK_FINISHED_JOB,
             session_collection: false,
@@ -59,7 +59,7 @@ describe('toCollected', () => {
         expect(toCollected(NO_COLLECTIONS_JOB)).toBe('');
     });
 
-    it('shows no collection methods for the given job', () => {
+    it('shows some collection methods for the given job', () => {
         const SOME_COLLECTIONS_JOB = {
             ...MOCK_FINISHED_JOB,
             session_collection: false,

@@ -3,11 +3,11 @@ import { useCallback, useState } from 'react';
 export type ObjectState<T extends object> = {
     applyState: (updates: Partial<T>) => void;
     deleteKeys: (...keys: (keyof T)[]) => void;
-    setState: (newState: T) => void;
+    setState: React.Dispatch<React.SetStateAction<T>>;
     state: T;
 };
 
-/** Craetes an state object updatable  */
+/** Creates an updatable object state  */
 export const useObjectState = <T extends object>(initialState: T): ObjectState<T> => {
     const [state, setState] = useState<T>(initialState);
 
@@ -16,6 +16,10 @@ export const useObjectState = <T extends object>(initialState: T): ObjectState<T
     }, []);
 
     const deleteKeys = useCallback((...keys: (keyof T)[]) => {
+        if (keys.length === 0) {
+            return;
+        }
+
         setState((prev) => {
             const next = { ...prev };
             for (const key of keys) {

@@ -28,10 +28,10 @@ interface FinishedJobParams {
 }
 
 const NO_PERMISSION_MESSAGE =
-    'Your user role does not grant permission to view the finished jobs details. Please contact your administrator for details.';
+    'Your role does not permit viewing finished job details. Please contact your administrator for assistance.';
 const NO_PERMISSION_KEY = 'finished-jobs-permission';
 
-const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
+const FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
 const FETCH_ERROR_KEY = 'finished-jobs-error';
 
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */

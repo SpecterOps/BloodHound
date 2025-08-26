@@ -24,10 +24,10 @@ import {
     type NotificationAction,
 } from './actions';
 
-export const PERSIST_NOTIFICATION: OptionsObject = {
+export const PERSIST_NOTIFICATION = Object.freeze<OptionsObject>({
     persist: true,
     anchorOrigin: { vertical: 'top', horizontal: 'right' },
-};
+});
 
 /** Make method that wraps an action creator with dispatch */
 const curryWithDispatch = (dispatch: React.Dispatch<NotificationAction> | null) => {

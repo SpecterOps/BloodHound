@@ -11,7 +11,6 @@ import {
     DialogTrigger,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { noop } from 'lodash';
 import React, { useState } from 'react';
 import { useObjectState } from '../../hooks';
 import { AppIcon } from '../AppIcon';
@@ -20,7 +19,9 @@ type Props = {
     onConfirm: (filters: Record<string, unknown>) => void;
 };
 
+// TODO: BED-6407 - add onConfirm prop, executed when `Confirm` clicked
 export const FinishedJobsFilter: React.FC<Props> = () => {
+    // TODO: BED-6407 - Disable confirm when range has validation error
     const [isConfirmDisabled] = useState(true);
     const { setState: setFilters } = useObjectState<Record<string, unknown>>({});
 
@@ -39,7 +40,7 @@ export const FinishedJobsFilter: React.FC<Props> = () => {
             <DialogPortal>
                 <DialogOverlay blurBackground />
 
-                <DialogContent aria-describedby='Finished Jobs Log dialog'>
+                <DialogContent>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
                         <Button variant='text' className='font-normal p-0 h-fit' onClick={clearFilters}>
@@ -85,8 +86,8 @@ export const FinishedJobsFilter: React.FC<Props> = () => {
                                 className='text-primary'
                                 data-testid='finished_jobs_log-filter_dialog_confirm'
                                 disabled={isConfirmDisabled}
-                                // TODO: BED-6407
-                                onClick={() => noop}
+                                // TODO: BED-6407 - apply filters on click
+                                // onClick={() => null}
                                 type='submit'
                                 variant='text'>
                                 Confirm

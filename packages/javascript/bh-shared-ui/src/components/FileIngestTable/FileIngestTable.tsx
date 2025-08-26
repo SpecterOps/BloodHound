@@ -18,7 +18,7 @@ import { Card } from '@bloodhoundenterprise/doodleui';
 import { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
-import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, toFormatted, toMins } from '../../utils';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
 
@@ -28,16 +28,16 @@ const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verti
 
 const getRow = (job: FileIngestJob) => {
     const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
-    const statusProps = {
-        ...JOB_STATUS_INDICATORS[job.status],
-        label: JOB_STATUS_MAP[job.status],
-    };
+    const indicator = JOB_STATUS_INDICATORS[job.status];
+    const label = JOB_STATUS_MAP[job.status];
 
     return [
         <div className='min-w-32 space-y-2' key={`status-${job.id}`}>
             <div className='text-primary'>ID {job.id}</div>
             <div>{job.user_email_address}</div>
-            <div className='flex items-center'>{statusProps && <StatusIndicator {...statusProps} />}</div>
+            <div className='flex items-center'>
+                <StatusIndicator {...indicator} label={label} />
+            </div>
         </div>,
         <div className='max-w-40' key={`message-${job.id}`}>
             {job.status_message}
@@ -48,7 +48,7 @@ const getRow = (job: FileIngestJob) => {
                 {time} {tz}
             </div>
         </div>,
-        <div key={`duration-${job.id}`}>{toMins(job.start_time, job.end_time)}</div>,
+        <div key={`duration-${job.id}`}>{getSimpleDuration(job.start_time, job.end_time)}</div>,
         <div className='min-w-32 max-w-48' key={`collected-${job.id}`}>
             {job.total_files} Files
         </div>,
