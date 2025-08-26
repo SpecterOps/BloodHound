@@ -3161,7 +3161,7 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 func TestResources_CertifyMembers(t *testing.T) {
 	t.Parallel()
 	var (
-		endpoint                            = "/api/v2/asset-group-tags/certification"
+		endpoint                            = "/api/v2/asset-group-tags/certifications"
 		selectorId1                         = 1
 		nodeId1                             = graph.ID(1)
 		assetGroupTag1                      = 1
