@@ -354,3 +354,110 @@ func TestParseGroupMiscData(t *testing.T) {
 		})
 	}
 }
+
+func TestParseGroupGPOData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		gpo ein.GPO
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected ein.IngestibleNode
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGPOData without Properties",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Enabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{"gpostatus": "0"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{"gpostatusraw": "0", "gpostatus": ein.PrettyGPOStatusEnabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO UserConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{"gpostatus": "1"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{"gpostatusraw": "1", "gpostatus": ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO ComputerConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{"gpostatus": "2"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{"gpostatusraw": "2", "gpostatus": ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Disabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{"gpostatus": "3"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{"gpostatusraw": "3", "gpostatus": ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with Invalid GPO Status",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{"gpostatus": "4"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{"gpostatusraw": "4", "gpostatus": ein.PrettyGPOStatusNotExisting},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGPOData(testCase.args.gpo)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
+}
