@@ -46,11 +46,11 @@ export const createSavedQuery = (savedQuery: CreateUserQueryRequest, options?: R
     return apiClient.createUserQuery(savedQuery, options).then((response) => response.data.data);
 };
 
-export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest, options?: RequestOptions): Promise<SavedQuery> => {
+export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest): Promise<SavedQuery> => {
     return apiClient.updateUserQuery(savedQuery).then((response) => response.data.data);
 };
 
-export const importSavedQuery = (savedQuery: any, options?: RequestOptions): Promise<any> => {
+export const importSavedQuery = (savedQuery: any): Promise<any> => {
     return apiClient.importUserQuery(savedQuery).then((response) => response.data);
 };
 
