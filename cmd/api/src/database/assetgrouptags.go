@@ -740,8 +740,8 @@ func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, in
 				if err = transaction.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, input.CertifiedBy.String, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, input.Note); err != nil {
 					return err
 				}
+				historyRecordForNode[input.NodeId] = true
 			}
-			historyRecordForNode[input.NodeId] = true
 		}
 		return err
 	})
