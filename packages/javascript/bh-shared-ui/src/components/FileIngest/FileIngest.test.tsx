@@ -20,15 +20,14 @@ import { useState } from 'react';
 import { FileUploadDialogContext } from '../../hooks';
 import { createAuthStateWithPermissions } from '../../mocks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
-import { Permission } from '../../utils';
 import FileUploadDialog from '../FileUploadDialog';
-import FileIngest from './FileIngest';
+import FileIngest, { FILE_UPLOAD_PERMISSION } from './FileIngest';
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: createAuthStateWithPermissions([Permission.GRAPH_DB_INGEST]).user,
+                data: createAuthStateWithPermissions([FILE_UPLOAD_PERMISSION]).user,
             })
         );
     }),

@@ -28,11 +28,13 @@ import LegacyFileIngestTable from '../LegacyFileIngestTable/LegacyFileIngestTabl
 import LoadingOverlay from '../LoadingOverlay';
 import PageWithTitle from '../PageWithTitle';
 
+export const FILE_UPLOAD_PERMISSION = Permission.GRAPH_DB_INGEST;
+
 const FileIngest: FC = () => {
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
+    const hasPermission = checkPermission(FILE_UPLOAD_PERMISSION);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'file-upload-permission';

@@ -18,9 +18,10 @@ import type { ListFileIngestJobsResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { useNotifications } from '../../providers';
-import { apiClient, Permission, PERSIST_NOTIFICATION } from '../../utils';
+import { apiClient, PERSIST_NOTIFICATION } from '../../utils';
 import { usePermissions } from '../usePermissions';
 import { fileUploadKeys } from './useFileIngest';
+import { FILE_UPLOAD_PERMISSION } from '../../components/FileIngest/FileIngest';
 
 interface FileUploadParams {
     page: number;
@@ -37,7 +38,7 @@ const FETCH_ERROR_KEY = 'file-upload-error';
 /** Makes a paginated request for File Upload Jobs, returned as a TanStack Query */
 export const useGetFileUploadsQuery = ({ page, rowsPerPage }: FileUploadParams) => {
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+    const hasPermission = checkPermission(FILE_UPLOAD_PERMISSION);
 
     const { addNotification, dismissNotification } = useNotifications();
 
