@@ -13,51 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { createContext, Dispatch, SetStateAction, useContext, useState } from 'react';
+import { useState } from 'react';
 import { useCypherSearch, useGetSelectedQuery } from '../../../../hooks';
-import { QueryLineItem } from '../../../../types';
-type SelectedType = {
-    query: string;
-    id?: number;
-};
-type SaveAction = 'edit' | 'save-as' | undefined;
-
-interface SavedQueriesContextType {
-    selected: SelectedType;
-    selectedQuery: QueryLineItem | undefined;
-    showSaveQueryDialog: boolean;
-    saveAction: SaveAction;
-    setSelected: Dispatch<SetStateAction<SelectedType>>;
-    setShowSaveQueryDialog: Dispatch<SetStateAction<boolean>>;
-    setSaveAction: Dispatch<SetStateAction<SaveAction>>;
-    runQuery: any;
-    editQuery: any;
-}
-
-export const SavedQueriesContext = createContext<SavedQueriesContextType>({
-    selected: { query: '', id: undefined },
-    selectedQuery: undefined,
-    showSaveQueryDialog: false,
-    saveAction: undefined,
-    setSelected: () => {},
-    setShowSaveQueryDialog: () => {},
-    runQuery: () => {},
-    editQuery: () => {},
-    setSaveAction: () => {},
-});
-
-export const useSavedQueriesContext = () => {
-    const context = useContext(SavedQueriesContext);
-    if (!context) {
-        throw new Error('MyContext provider is missing!');
-    }
-    return context;
-};
+import { QueryLineItem, SaveQueryAction, SelectedQuery } from '../../../../types';
+import { SavedQueriesContext } from './SavedQueriesContext';
 
 export function SavedQueriesProvider({ children }: { children: any }) {
-    const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
+    const [selected, setSelected] = useState<SelectedQuery>({ query: '', id: undefined });
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
-    const [saveAction, setSaveAction] = useState<SaveAction>(undefined);
+    const [saveAction, setSaveAction] = useState<SaveQueryAction>(undefined);
 
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
 

@@ -91,6 +91,13 @@ export type QueryListSection = {
     queries: QueryLineItem[];
 };
 
+export type SelectedQuery = {
+    query: string;
+    id?: number;
+};
+
+export type SaveQueryAction = 'edit' | 'save-as' | undefined;
+
 export type SelectedNode = {
     id: string;
     type: EntityKinds;
