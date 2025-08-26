@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { render, screen } from '../../../../test-utils';
-import { SavedQueriesContext, useSavedQueriesContext } from './SavedQueriesProvider';
-
+import { SavedQueriesContext, useSavedQueriesContext } from './SavedQueriesContext';
 const testSelectedQuery = {
     name: '10 Admins',
     description: '10 Admins desc',
