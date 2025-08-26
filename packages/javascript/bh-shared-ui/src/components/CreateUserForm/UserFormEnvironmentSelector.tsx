@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogDescription, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import { Checkbox, DialogTitle } from '@bloodhoundenterprise/doodleui';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Card, TextField } from '@mui/material';
+import { Card, TextField } from '@mui/material';
 import { Environment } from 'js-client-library';
 import React, { useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
@@ -61,11 +61,9 @@ const UserFormEnvironmentSelector: React.FC<{
     return (
         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
             <DialogTitle>Environmental Access Control</DialogTitle>
-            <DialogDescription
-                className=''
-                data-testid=' flex flex-colcreate-user-dialog_environments-checkboxes-dialog'>
-                <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-16rem)] overflow-scroll h-full'>
-                    <Box className={'ml-4 mt-2 flex items-center'}>
+            <div className='flex flex-col' data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
+                    <div className={'ml-4 mt-2 flex items-center'}>
                         <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
                         <TextField
                             autoFocus
@@ -76,7 +74,7 @@ const UserFormEnvironmentSelector: React.FC<{
                             }}
                             variant='standard'
                         />
-                    </Box>
+                    </div>
                     <div
                         className='flex flex-row ml-4 mt-6 mb-2 items-center'
                         data-testid='create-user-dialog_environments-checkboxes-select-all'>
@@ -110,7 +108,7 @@ const UserFormEnvironmentSelector: React.FC<{
                             })}
                     </div>
                 </div>
-            </DialogDescription>
+            </div>
         </Card>
     );
 };
