@@ -26,55 +26,29 @@ import { apiClient } from '../../../utils';
 import HistoryNotes from './HistoryNotes';
 import { useHistoryTableContext } from './HistoryTableContext';
 
-// const BASE_COLUMNS = [
-//     {
-//         header: () => <div className='font-semibold text-base'> Name </div>,
-//         id: 'name',
-//     },
-//     {
-//         header: () => <div className='font-semibold text-base'>Action</div>,
-//         id: 'action',
-//     },
-//     {
-//         header: () => <div className='font-semibold text-base'>Date</div>,
-//         id: 'date',
-//     },
-//     {
-//         header: () => <div className='font-semibold text-base'>Tier/Label</div>,
-//         id: 'tier', //question here since I checked the API and I do not see in the response something like label/tier maybe target?
-//     },
-//     {
-//         header: () => <div className='font-semibold text-base'>Made by</div>,
-//         id: 'author',
-//     },
-//     {
-//         header: () => <div className='font-semibold text-base'>Notes</div>,
-//         id: 'notes',
-//     },
-// ];
 const BASE_COLUMNS = [
     {
-        header: () => <div className='pl-4 text-left'>Name</div>,
+        header: () => <div className='pl-8 text-left'>Name</div>,
         id: 'name',
     },
     {
-        header: () => <div className='pl-4 text-left'>Action</div>,
+        header: () => <div className='pl-8 text-left'>Action</div>,
         id: 'action',
     },
     {
-        header: () => <div className='pl-4 text-left'>Date</div>,
+        header: () => <div className='pl-8 text-left'>Date</div>,
         id: 'date',
     },
     {
-        header: () => <div className='pl-4 text-left'>Tier/Label</div>,
+        header: () => <div className='pl-8 text-left'>Tier/Label</div>,
         id: 'tier', //question here since I checked the API and I do not see in the response something like label/tier maybe target?
     },
     {
-        header: () => <div className='pl-4 text-left'>Made by</div>,
+        header: () => <div className='pl-8 text-left'>Made by</div>,
         id: 'author',
     },
     {
-        header: () => <div className='pl-4 text-center'>Notes</div>,
+        header: () => <div className='pl-8 text-center'>Notes</div>,
         id: 'notes',
     },
 ];
@@ -104,10 +78,10 @@ const NoteComponent = ({ row }: any) => {
     return (
         <div className='text-center'>
             {author === 'System' ? (
-                <p className='pl-4 myH'>-</p>
+                <p className='pl-4'>-</p>
             ) : (
                 <button
-                    className='disabled:opacity-25 pl-4 myH'
+                    className='disabled:opacity-25 pl-4'
                     onClick={() => handleOnClick()}
                     disabled={!row.original.note}>
                     <AppIcon.LinedPaper size={17} />
@@ -116,10 +90,6 @@ const NoteComponent = ({ row }: any) => {
         </div>
     );
 };
-
-// const formatActionCols = (row: any) => {
-//     return row.original.action.replace(/([A-Z])/g, ' $1').trim();
-// };
 
 const HISTORY_COLS = [
     ({ row }: any) => <div className='text-primary'>{row.original.target}</div>,
@@ -177,7 +147,7 @@ const HistoryContent = () => {
     const isSuccess = isHistorySuccess && isTagsSuccess;
 
     const historyItems = isSuccess
-        ? history.data.records.map((item) => {
+        ? history?.data.records.map((item) => {
               const tagName = tags?.find((tag) => tag.id === item.asset_group_tag_id)?.name;
 
               return {
@@ -204,18 +174,18 @@ const HistoryContent = () => {
     };
 
     const tableCellProps: DataTableProps['TableCellProps'] = {
-        className: 'truncate group relative pl-4',
+        className: 'truncate group relative pl-8',
     };
 
     return (
-        <div id='history-wrapper' className={`flex gap-8 mt-6 h-[calc(100vh-${TABLE_Y_OFFSET})]`}>
+        <div id='history-wrapper' className={`flex gap-8 mt-6 h-[calc(100vh_-_${TABLE_Y_OFFSET})]`}>
             <Card id='has-grid'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
                     <SearchInput value={search} onInputChange={setSearch} />
                 </CardHeader>
 
-                <div ref={scrollRef} className={`overflow-y-auto h-[calc(100vh-${TABLE_HEIGHT_OFFSET})]`}>
+                <div ref={scrollRef} className={`overflow-y-auto h-[calc(100vh_-_${TABLE_HEIGHT_OFFSET})]`}>
                     <DataTable
                         data={historyItems ?? []}
                         TableHeaderProps={tableHeaderProps}
@@ -225,11 +195,7 @@ const HistoryContent = () => {
                         columns={getColumns(isLoading)}
                         virtualizationOptions={{
                             rangeExtractor: (range) => {
-                                console.log('rangeExtractor', range);
                                 return new Array(range.count).fill(0).map((_, index) => {
-                                    console.log('start index', range.startIndex);
-                                    console.log('index', index);
-
                                     return range.startIndex + index;
                                 });
                             },
