@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, MainNavData, useFeatureFlags } from 'bh-shared-ui';
+import { AppIcon, MainNavData, useFeatureFlags, useFileUploadDialogContext } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -57,6 +57,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const tierFlag = featureFlags?.data?.find((flag) => {
         return flag.key === 'tier_management_engine';
     });
+        const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const primaryList = [
         {
@@ -70,6 +71,12 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             icon: <AppIcon.Diamond size={24} />,
             route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
+        },
+                {
+            label: 'Quick Ingest',
+            icon: <AppIcon.Upload size={24} className='mr-2' />,
+            onClick: () => setShowFileIngestDialog(true),
+            testId: 'quick-file-ingest',
         },
     ];
 
