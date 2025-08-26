@@ -24,6 +24,7 @@ export * from './CaretUp';
 export * from './Compass';
 export * from './DataAlert';
 export * from './Diamond';
+export * from './Disabled';
 export * from './Download';
 export * from './EclipseCircle';
 export * from './Equals';
