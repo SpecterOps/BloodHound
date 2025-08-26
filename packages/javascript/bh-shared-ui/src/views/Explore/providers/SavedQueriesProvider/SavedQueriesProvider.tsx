@@ -54,7 +54,7 @@ export const useSavedQueriesContext = () => {
     return context;
 };
 
-export const SavedQueriesProvider = ({ children }: { children: any }) => {
+export function SavedQueriesProvider({ children }: { children: any }) {
     const [selected, setSelected] = useState<SelectedType>({ query: '', id: undefined });
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
     const [saveAction, setSaveAction] = useState<SaveAction>(undefined);
@@ -88,4 +88,4 @@ export const SavedQueriesProvider = ({ children }: { children: any }) => {
     };
 
     return <SavedQueriesContext.Provider value={contextValue}>{children}</SavedQueriesContext.Provider>;
-};
+}
