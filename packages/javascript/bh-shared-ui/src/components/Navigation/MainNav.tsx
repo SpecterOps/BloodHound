@@ -203,7 +203,10 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <div className='h-full min-h-[625px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
-                        <MainNavListItem key={itemIndex} hoverActive={!isMouseDragging}>
+                        <MainNavListItem
+                            key={itemIndex}
+                            hoverActive={!isMouseDragging}
+                            route={listDataItem.route as string}>
                             {listDataItem.onClick && !listDataItem.route ? (
                                 <div
                                     className='cursor-pointer flex flex-row items-center justify-center relative'

@@ -48,7 +48,7 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
                 />
                 <span>{item.value}</span>
             </div>
-            {item.isPinned && <FontAwesomeIcon color='grey' className='' icon={faThumbTack} />}
+            {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
         </div>
     </li>
 );
