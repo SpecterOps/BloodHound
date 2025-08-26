@@ -1064,7 +1064,6 @@ export enum AzureKindProperties {
     UserType = 'usertype',
     TenantID = 'tenantid',
     ServicePrincipalID = 'service_principal_id',
-    ServicePrincipalNames = 'service_principal_names',
     OperatingSystemVersion = 'operatingsystemversion',
     TrustType = 'trustype',
     IsBuiltIn = 'isbuiltin',
@@ -1114,8 +1113,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Tenant ID';
         case AzureKindProperties.ServicePrincipalID:
             return 'Service Principal ID';
-        case AzureKindProperties.ServicePrincipalNames:
-            return 'Service Principal Names';
         case AzureKindProperties.OperatingSystemVersion:
             return 'Operating System Version';
         case AzureKindProperties.TrustType:
