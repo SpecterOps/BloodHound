@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DialogContent, DialogTitle, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
+import { DialogContent, DialogOverlay, DialogTitle, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import { CreateUserRequest } from 'js-client-library';
 import React from 'react';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
@@ -45,41 +45,22 @@ const CreateUserDialog: React.FC<{
     };
 
     return (
-        <DialogContent maxWidth='lg' className='!bg-transparent'>
-            <VisuallyHidden asChild>
-                <DialogTitle>Create User</DialogTitle>
-            </VisuallyHidden>
-            <CreateUserForm
-                error={error}
-                isLoading={isLoading}
-                onCancel={onClose}
-                onSubmit={handleOnSave}
-                open={open}
-                showEnvironmentAccessControls={showEnvironmentAccessControls}
-            />
-        </DialogContent>
+        <DialogOverlay>
+            <DialogContent maxWidth='lg' className='!bg-transparent'>
+                <VisuallyHidden asChild>
+                    <DialogTitle>Create User</DialogTitle>
+                </VisuallyHidden>
+                <CreateUserForm
+                    error={error}
+                    isLoading={isLoading}
+                    onCancel={onClose}
+                    onSubmit={handleOnSave}
+                    open={open}
+                    showEnvironmentAccessControls={showEnvironmentAccessControls}
+                />
+            </DialogContent>
+        </DialogOverlay>
     );
 };
 
 export default CreateUserDialog;
-
-{
-    /*
-        <Dialog
-            open={open}
-            fullWidth={true}
-            maxWidth={'sm'}
-            onClose={onClose}
-            disableEscapeKeyDown
-            PaperProps={{
-                //@ts-ignore
-                'data-testid': 'create-user-dialog',
-            }}
-            TransitionProps={{
-                onExited,
-            }}>
-            <DialogTitle>{'Create User'}</DialogTitle>
-            <CreateUserForm onCancel={onClose} onSubmit={handleOnSave} isLoading={isLoading} error={error} />
-        </Dialog>
-        */
-}
