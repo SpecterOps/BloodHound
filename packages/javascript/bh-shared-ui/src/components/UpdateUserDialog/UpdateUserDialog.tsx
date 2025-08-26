@@ -47,7 +47,7 @@ const UpdateUserDialog: React.FC<{
     };
 
     return (
-        <DialogContent maxWidth='lg' className='!bg-transparent'>
+        <DialogContent maxWidth='lg' className='!bg-transparent' pdate-user-dialog>
             <VisuallyHidden asChild>
                 <DialogTitle>Edit User</DialogTitle>
             </VisuallyHidden>
@@ -66,32 +66,3 @@ const UpdateUserDialog: React.FC<{
 };
 
 export default UpdateUserDialog;
-
-{
-    /*
-<Dialog
-        open={open}
-        fullWidth={true}
-        maxWidth={'sm'}
-        onClose={onClose}
-        disableEscapeKeyDown
-        keepMounted={false}
-        PaperProps={{
-            // @ts-ignore
-            'data-testid': 'update-user-dialog',
-        }}
-        TransitionProps={{
-            onExited,
-        }}>
-        <DialogTitle>{'Update User'}</DialogTitle>
-        <UpdateUserForm
-            onCancel={onClose}
-            onSubmit={handleOnSave}
-            userId={userId}
-            hasSelectedSelf={hasSelectedSelf}
-            isLoading={isLoading}
-            error={error}
-        />
-</Dialog>
-*/
-}
