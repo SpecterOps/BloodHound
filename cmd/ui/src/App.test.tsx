@@ -50,6 +50,13 @@ const server = setupServer(
                 data: createAuthStateWithPermissions(Object.values(Permissions)).user,
             })
         );
+    }),
+    rest.get('/api/v2/file-upload/accepted-types', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

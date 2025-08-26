@@ -31,7 +31,7 @@ import {
 import { useSelf } from '../../../hooks/useSelf';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
-import { useSavedQueriesContext } from '../providers';
+import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
 import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
@@ -39,7 +39,7 @@ import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
 import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
 import { CypherSearchState } from './types';
 
-const CypherSearch = ({
+const CypherSearchInner = ({
     cypherSearchState,
     autoRun,
     setAutoRun,
@@ -325,6 +325,25 @@ const CypherSearch = ({
                 setIsPublic={setIsPublic}
             />
         </>
+    );
+};
+
+const CypherSearch = ({
+    cypherSearchState,
+    autoRun,
+    setAutoRun,
+}: {
+    cypherSearchState: CypherSearchState;
+    autoRun: boolean;
+    setAutoRun: (autoRunQueries: boolean) => void;
+}) => {
+    return (
+        <SavedQueriesProvider>
+            <CypherSearchInner
+                cypherSearchState={cypherSearchState}
+                autoRun={autoRun}
+                setAutoRun={setAutoRun}></CypherSearchInner>
+        </SavedQueriesProvider>
     );
 };
 

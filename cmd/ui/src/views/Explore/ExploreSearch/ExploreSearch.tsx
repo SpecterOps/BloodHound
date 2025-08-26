@@ -26,7 +26,6 @@ import {
     MappedStringLiteral,
     NodeSearch,
     PathfindingSearch,
-    SavedQueriesProvider,
     cn,
     encodeCypherQuery,
     useCypherSearch,
@@ -204,13 +203,11 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <SavedQueriesProvider>
-                            <CypherSearch
-                                cypherSearchState={cypherSearchState}
-                                autoRun={autoRun}
-                                setAutoRun={handleAutoRunChange}
-                            />
-                        </SavedQueriesProvider>,
+                        <CypherSearch
+                            cypherSearchState={cypherSearchState}
+                            autoRun={autoRun}
+                            setAutoRun={handleAutoRunChange}
+                        />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
