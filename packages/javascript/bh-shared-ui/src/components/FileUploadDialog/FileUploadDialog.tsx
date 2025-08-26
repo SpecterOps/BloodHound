@@ -60,8 +60,8 @@ const FileUploadDialog: React.FC<{
                     setFilesForIngest([]);
                 },
             }}>
-            <div ref={dialogRef}>
-                <DialogContent>
+            <div className='grid overflow-hidden grid-rows-[1fr_72px]'>
+                <DialogContent ref={dialogRef}>
                     <div className='pb-2 font-bold'>{headerText}</div>
                     {description && <div>{description}</div>}
                     <>
