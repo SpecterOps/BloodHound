@@ -18,14 +18,15 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
 import { FC, useState } from 'react';
+import { cn } from '../../utils/theme';
+import { AppIcon } from '../AppIcon';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
     options: DropdownOption[];
     selectedText: string;
-    fullWidth?: boolean;
     onChange: (selection: DropdownOption) => void;
-}> = ({ options, selectedText, onChange, fullWidth }) => {
+}> = ({ options, selectedText, onChange }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
@@ -39,18 +40,13 @@ const DropdownSelector: FC<{
 
     return (
         <Box p={1}>
-            <Button
-                style={{
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'block',
-                    width: fullWidth ? '100%' : '',
-                    textTransform: 'uppercase',
-                }}
-                onClick={handleClick}
-                data-testid='dropdown_context-selector'>
-                {selectedText}
+            <Button className='w-full truncate uppercase' onClick={handleClick} data-testid='dropdown_context-selector'>
+                <span className='inline-flex justify-between gap-4 items-center w-full'>
+                    <span>{selectedText}</span>
+                    <span className={cn({ 'rotate-180 transition-transform': open })}>
+                        <AppIcon.CaretDown size={12} />
+                    </span>
+                </span>
             </Button>
             <Popover
                 open={open}

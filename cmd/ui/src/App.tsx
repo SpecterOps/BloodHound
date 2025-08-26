@@ -17,6 +17,7 @@ import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
     AppNotifications,
+    FileUploadDialogProvider,
     GenericErrorBoundaryFallback,
     MainNav,
     MainNavData,
@@ -126,9 +127,11 @@ const App: React.FC = () => {
             <CssBaseline />
             <BrowserRouter basename='/ui' history={createBrowserHistory()}>
                 <NotificationsProvider>
-                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                        <Inner />
-                    </ErrorBoundary>
+                    <FileUploadDialogProvider>
+                        <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                            <Inner />
+                        </ErrorBoundary>
+                    </FileUploadDialogProvider>
                 </NotificationsProvider>
             </BrowserRouter>
         </ThemeProvider>

@@ -111,7 +111,7 @@ describe('GroupManagement', () => {
     it('displays default text for domain selector when globalDomain is null', async () => {
         const { screen } = await setup();
 
-        expect(screen.getByTestId('data-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('data-quality_context-selector')).toBeInTheDocument();
     });
 
     it('renders an edit form for the selected asset group when a user has graph write permissions', async () => {

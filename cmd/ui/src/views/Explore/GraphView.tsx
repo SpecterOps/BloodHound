@@ -44,7 +44,7 @@ import { Attributes } from 'graphology-types';
 import { type GraphNodes } from 'js-client-library';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
+import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
@@ -245,7 +245,7 @@ const GraphView: FC = () => {
             />
 
             <GraphProgress loading={graphQuery.isLoading} />
-            <NoDataDialogWithLinks open={!graphHasData} />
+            <NoDataFileUploadDialogWithLinks open={!graphHasData} />
             {displayTable && (
                 <ExploreTable
                     selectedColumns={selectedColumns}

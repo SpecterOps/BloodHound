@@ -68,7 +68,8 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionToPublic(ctx context.Context, q
 	return permission, err
 }
 
-// CreateSavedQueryPermissionsToUsers - attempts to save the given saved query permissions in batches of 100 in a transaction
+// CreateSavedQueryPermissionsToUsers - attempts to save the given saved query permissions in batches of 100 in a transaction.
+// This will remove previously shared with users and replace it with the incoming user ids.
 func (s *BloodhoundDB) CreateSavedQueryPermissionsToUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) ([]model.SavedQueriesPermissions, error) {
 	var newPermissions []model.SavedQueriesPermissions
 	for _, sharedUserID := range userIDs {
@@ -79,11 +80,15 @@ func (s *BloodhoundDB) CreateSavedQueryPermissionsToUsers(ctx context.Context, q
 		})
 	}
 
-	result := s.db.WithContext(ctx).Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).CreateInBatches(&newPermissions, 100)
-
-	return newPermissions, CheckError(result)
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := CheckError(tx.Exec("DELETE FROM saved_queries_permissions WHERE query_id = ? AND public = FALSE", queryID)); err != nil {
+			return err
+		} else if err = CheckError(tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&newPermissions, 100)); err != nil {
+			return err
+		}
+		return nil
+	})
+	return newPermissions, err
 }
 
 // DeleteSavedQueryPermissionsForUsers batch deletes permissions associated with a query id and a list of users

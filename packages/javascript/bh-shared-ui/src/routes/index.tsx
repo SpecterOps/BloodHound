@@ -16,6 +16,8 @@
 
 export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'summary/tier/';
 
+export const ROUTE_ZONE_MANAGEMENT_ROOT = '/zone-management';
+
 export const ROUTE_ZONE_MANAGEMENT_DETAILS = '/details';
 export const ROUTE_ZONE_MANAGEMENT_TIER_DETAILS = '/details/tier/:tierId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS = '/details/label/:labelId';

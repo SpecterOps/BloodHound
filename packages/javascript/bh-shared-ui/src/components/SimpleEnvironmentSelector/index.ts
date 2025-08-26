@@ -14,9 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataSelectorValueTypes } from '../../views/DataQuality/DataSelector/types';
-
-export type SelectedEnvironment = {
-    id: string | null;
-    type: DataSelectorValueTypes | null;
-};
+export { default as SimpleEnvironmentSelector } from './SimpleEnvironmentSelector';
+export * from './types';

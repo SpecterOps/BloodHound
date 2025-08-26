@@ -16,17 +16,20 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
-import { FC, useState } from 'react';
-import { useMountEffect, usePermissions } from '../../hooks';
+import { FC } from 'react';
+import { useExecuteOnFileDrag, useMountEffect, usePermissions } from '../../hooks';
+import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
 import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
-import FileUploadDialog from '../FileUploadDialog';
-import FinishedIngestLog from '../FinishedIngestLog';
+import FeatureFlag from '../FeatureFlag';
+import { FileIngestTable } from '../FileIngestTable';
+import LegacyFileIngestTable from '../LegacyFileIngestTable/LegacyFileIngestTable';
+import LoadingOverlay from '../LoadingOverlay';
 import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
-    const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState<boolean>(false);
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const { checkPermission } = usePermissions();
     const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
@@ -51,7 +54,12 @@ const FileIngest: FC = () => {
 
     useMountEffect(effect);
 
-    const toggleFileUploadDialog = () => setFileUploadDialogOpen((prev) => !prev);
+    // Open the file upload dialog when a processable file is dragged into the browser client
+    useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
+        acceptedTypes: ['application/json', 'application/zip'],
+    });
+
+    const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
 
     return (
         <>
@@ -73,9 +81,12 @@ const FileIngest: FC = () => {
                     Upload File(s)
                 </Button>
             </Box>
-            <FinishedIngestLog />
-
-            <FileUploadDialog open={fileUploadDialogOpen} onClose={toggleFileUploadDialog} />
+            <FeatureFlag
+                flagKey='open_graph_phase_2'
+                loadingFallback={<LoadingOverlay loading />}
+                enabled={<FileIngestTable />}
+                disabled={<LegacyFileIngestTable />}
+            />
         </>
     );
 };

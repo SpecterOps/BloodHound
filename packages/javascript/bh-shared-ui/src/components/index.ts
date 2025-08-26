@@ -99,9 +99,6 @@ export { default as FileIngest } from './FileIngest';
 export * from './FileUploadDialog';
 export { default as FileUploadDialog } from './FileUploadDialog';
 
-export * from './FinishedIngestLog';
-export { default as FinishedIngestLog } from './FinishedIngestLog';
-
 export * from './FinishedJobsTable';
 
 export * from './GenericErrorBoundaryFallback';
@@ -181,6 +178,8 @@ export * from './SourceKindsCheckboxes';
 
 export * from './SetupKeyDialog';
 export { default as SetupKeyDialog } from './SetupKeyDialog';
+
+export * from './SimpleEnvironmentSelector';
 
 export * from './StatusIndicator';
 

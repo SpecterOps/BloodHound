@@ -39,9 +39,11 @@ export const useInitialEnvironment = (options: UseInitialEnvironmentParams) => {
         // set initial environment/tenant once user is authenticated
         select: (availableEnvironments) => {
             if (!availableEnvironments?.length) return;
+
             const collectedEnvironments = availableEnvironments?.filter(
                 (environment: Environment) => environment.collected
             );
+
             if (collectedEnvironments.length < 1) return; // We need to check after as well because OpenGraph allows us to create environments that are *not* collected
 
             const direction = (_orderBy ?? 'impactValue') === 'name' ? 'asc' : 'desc';

@@ -61,19 +61,24 @@ const FileDrop: React.FC<{
     return (
         <Box
             sx={{
-                cursor: 'pointer',
+                cursor: disabled ? 'default' : 'pointer',
                 height: 300,
                 borderRadius: 1,
                 border: 2,
                 px: 20,
+                paddingLeft: '130px',
+                paddingRight: '130px',
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 bgcolor:
-                    isHoverActive || isDragActive ? theme.palette.neutral.tertiary : theme.palette.neutral.secondary,
+                    isHoverActive || isDragActive || disabled
+                        ? theme.palette.neutral.tertiary
+                        : theme.palette.neutral.secondary,
                 color: theme.palette.color.primary,
+                opacity: disabled ? 0.5 : 1,
                 borderColor: theme.palette.color.primary,
                 fontWeight: 'bold',
                 textAlign: 'center',
@@ -89,8 +94,7 @@ const FileDrop: React.FC<{
                 accept={formatAcceptList()}
             />
             <FontAwesomeIcon icon={isDragActive ? faArrowDown : faInbox} size='3x' />
-            <p>Click here or drag and drop to upload files</p>
-
+            <p className='pt-2'>Click here or drag and drop to upload JSON or zip/compressed JSON files</p>
             <Box
                 position='absolute'
                 width='100%'

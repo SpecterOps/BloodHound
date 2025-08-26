@@ -18,8 +18,7 @@ import { Paper } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
-import { useListFileIngestJobs, usePermissions } from '../../hooks';
-import { Permission } from '../../utils';
+import { useGetFileUploadsQuery } from '../../hooks';
 import { LuxonFormat, calculateJobDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
@@ -33,15 +32,12 @@ const ingestTableHeaders = [
     { label: 'Status Message' },
 ];
 
-const FinishedIngestLog: React.FC = () => {
+const LegacyFileIngestTable: React.FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
 
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
-
-    const { data: listFileIngestJobsData } = useListFileIngestJobs(page, rowsPerPage, hasPermission);
+    const { data: listFileIngestJobsData } = useGetFileUploadsQuery({ page, rowsPerPage });
 
     useEffect(() => setTotalCount(listFileIngestJobsData?.count || 0), [listFileIngestJobsData]);
 
@@ -89,4 +85,4 @@ const FinishedIngestLog: React.FC = () => {
     );
 };
 
-export default FinishedIngestLog;
+export default LegacyFileIngestTable;

@@ -24,7 +24,7 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
-import { render, screen } from '../../../test-utils';
+import { act, render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
 describe('DynamicDetails', () => {
@@ -67,6 +67,13 @@ describe('DynamicDetails', () => {
                     ],
                 })
             );
+        }),
+        rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
         })
     );
 
@@ -74,7 +81,7 @@ describe('DynamicDetails', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders details for a selected tier', () => {
+    it('renders details for a selected tier', async () => {
         const testTag = {
             isLoading: false,
             isError: false,
@@ -96,7 +103,9 @@ describe('DynamicDetails', () => {
             },
         } as unknown as UseQueryResult<AssetGroupTag | undefined>;
 
-        render(<DynamicDetails queryResult={testTag} />);
+        await act(async () => {
+            render(<DynamicDetails queryResult={testTag} />);
+        });
 
         expect(screen.getByText('Tier-8')).toBeInTheDocument();
         expect(screen.getByText('pique International')).toBeInTheDocument();

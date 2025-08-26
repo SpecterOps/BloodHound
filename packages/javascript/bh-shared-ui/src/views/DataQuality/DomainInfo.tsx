@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ActiveDirectoryQualityStat } from 'js-client-library';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { useActiveDirectoryDataQualityStatsQuery, useActiveDirectoryPlatformsDataQualityStatsQuery } from '../../hooks';
@@ -69,23 +69,18 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
     headers = false,
     onDataError = () => {},
 }) => {
-    const { data, isLoading, isError } = useActiveDirectoryDataQualityStatsQuery(contextId);
-    const [domainData, setDomainData] = useState(data || null);
-
-    useEffect(() => {
-        if (data && data.data) setDomainData(data);
-    }, [data, contextId]);
+    const { data: domainData, isLoading, isError } = useActiveDirectoryDataQualityStatsQuery(contextId);
 
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
 
-    if (isLoading || !domainData) {
+    if (isLoading) {
         return <Layout stats={null} headers={headers} loading={true} />;
     }
 
-    if (isError) {
-        return <Layout stats={null} headers={headers} loading={false} />;
+    if (isError || !domainData || !domainData.data.length) {
+        return null;
     }
 
     const stats = domainData.data[0];
@@ -94,12 +89,7 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
 };
 
 export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
-    const { data, isLoading, isError } = useActiveDirectoryPlatformsDataQualityStatsQuery();
-    const [adPlatformData, setAdPlatformData] = useState(data || null);
-
-    useEffect(() => {
-        if (data && data.data) setAdPlatformData(data);
-    }, [data]);
+    const { data: adPlatformData, isLoading, isError } = useActiveDirectoryPlatformsDataQualityStatsQuery();
 
     useEffect(() => {
         if (isError) onDataError();
@@ -109,8 +99,8 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
         return <Layout stats={null} loading={true} />;
     }
 
-    if (isError || !adPlatformData) {
-        return <Layout stats={null} loading={false} />;
+    if (isError || !adPlatformData || !adPlatformData.data.length) {
+        return null;
     }
 
     const stats = adPlatformData.data[0];
