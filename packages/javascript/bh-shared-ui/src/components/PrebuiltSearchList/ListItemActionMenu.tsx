@@ -16,7 +16,7 @@
 import { FC, MouseEvent } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { useSavedQueriesContext } from '../../views';
+import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
     id?: number;

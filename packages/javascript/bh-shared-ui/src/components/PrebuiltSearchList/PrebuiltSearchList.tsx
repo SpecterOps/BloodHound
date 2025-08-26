@@ -19,7 +19,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
 import { FC, useEffect, useRef, useState } from 'react';
 import { QueryListSection } from '../../types';
-import { useSavedQueriesContext } from '../../views';
+import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
