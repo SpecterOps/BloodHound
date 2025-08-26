@@ -33,7 +33,7 @@ const FileUploadDialog: React.FC<{
 
     const {
         currentlyUploading,
-        listFileTypesForIngest,
+        getFileUploadAcceptedTypes,
         progressCache,
         currentIngestJobId,
         filesForIngest,
@@ -67,8 +67,8 @@ const FileUploadDialog: React.FC<{
                     <>
                         <FileDrop
                             onDrop={handleFileDrop}
-                            disabled={currentlyUploading || listFileTypesForIngest.isLoading}
-                            accept={listFileTypesForIngest.data?.data ?? []}
+                            disabled={currentlyUploading || getFileUploadAcceptedTypes.isLoading}
+                            accept={getFileUploadAcceptedTypes.data?.data ?? []}
                         />
                         {uploadMessage && <Box className='mt-2 mb-2'>{uploadMessage}</Box>}
                         <Link to='/administration/file-ingest' onClick={onClose}>
