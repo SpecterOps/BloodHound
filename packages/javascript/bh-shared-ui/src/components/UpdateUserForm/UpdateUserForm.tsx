@@ -16,10 +16,10 @@
 
 import {
     Button,
+    Card,
     DialogActions,
     DialogClose,
     DialogContent,
-    DialogDescription,
     DialogTitle,
     Form,
     FormControl,
@@ -34,9 +34,10 @@ import {
     SelectPortal,
     SelectTrigger,
     SelectValue,
+    Skeleton,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Card, DialogContentText, Grid, Skeleton } from '@mui/material';
+import { DialogContentText, Grid } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -216,15 +217,12 @@ const UpdateUserFormInner: React.FC<{
 
     return (
         <Form {...form}>
-            <form
-            //autoComplete='off'
-            //onSubmit={form.handleSubmit(onSubmit)}
-            >
+            <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
                 <div className='flex gap-x-4 justify-center'>
                     <Card className=' p-6 rounded shadow max-w-[600px]'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
-                        <DialogDescription className='flex flex-col' data-testid='update-user-dialog_dialog-content'>
+                        <div className='flex flex-col' data-testid='update-user-dialog_dialog-content'>
                             <Grid container spacing={2} className='min-h-[650px] mt-4'>
                                 <Grid item xs={12}>
                                     <FormField
@@ -288,7 +286,7 @@ const UpdateUserFormInner: React.FC<{
                                             <FormItem>
                                                 <FormLabel
                                                     aria-labelledby='principal'
-                                                    data-testid='update-user-dialog_label-email-address'>
+                                                    data-testid='update-user-dialog_label-principal-name'>
                                                     Principal Name
                                                 </FormLabel>
                                                 <FormControl>
@@ -402,7 +400,6 @@ const UpdateUserFormInner: React.FC<{
                                                     </FormLabel>
 
                                                     <Select
-                                                        data-testid='update-user-dialog_select-authentication-method'
                                                         //defaultValue={field.value}
                                                         onValueChange={(field: any) => {
                                                             form.setValue('authenticationMethod', field);
@@ -412,7 +409,9 @@ const UpdateUserFormInner: React.FC<{
                                                         //hidden={hasSelectedSelf}
                                                     >
                                                         <FormControl>
-                                                            <SelectTrigger className='mt-3'>
+                                                            <SelectTrigger
+                                                                className='mt-3'
+                                                                data-testid='update-user-dialog_select-authentication-method'>
                                                                 <SelectValue
                                                                     placeholder={
                                                                         authenticationMethod === 'password'
@@ -479,6 +478,7 @@ const UpdateUserFormInner: React.FC<{
                                                                 <SelectContent>
                                                                     {SSOProviders?.map((SSOProvider: SSOProvider) => (
                                                                         <SelectItem
+                                                                            role='option'
                                                                             value={SSOProvider.id.toString()}
                                                                             key={SSOProvider.id}>
                                                                             {SSOProvider.name}
@@ -520,14 +520,15 @@ const UpdateUserFormInner: React.FC<{
                                                     </div>
                                                     <FormControl>
                                                         <Select
-                                                            data-testid='update-user-dialog_input-role'
                                                             onValueChange={(field) => {
                                                                 form.setValue('roles', [Number(field)]);
                                                                 setSelectedRoleValue([Number(field)]);
                                                             }}
                                                             value={String(selectedRoleValue)}>
                                                             <FormControl>
-                                                                <SelectTrigger className='mt-3'>
+                                                                <SelectTrigger
+                                                                    className='mt-3'
+                                                                    data-testid='update-user-dialog_select-role'>
                                                                     <SelectValue placeholder={field.value} />
                                                                 </SelectTrigger>
                                                             </FormControl>
@@ -552,12 +553,12 @@ const UpdateUserFormInner: React.FC<{
                                     />
                                 </Grid>
                             </Grid>
-                        </DialogDescription>
+                        </div>
                         <DialogActions className='mt-8 flex justify-end gap-4'>
                             <DialogClose asChild>
                                 <Button
                                     data-testid='update-user-dialog_button-cancel'
-                                    //disabled={isLoading}
+                                    disabled={isLoading}
                                     role='button'
                                     type='button'
                                     variant='tertiary'>
@@ -566,8 +567,7 @@ const UpdateUserFormInner: React.FC<{
                             </DialogClose>
                             <Button
                                 data-testid='update-user-dialog_button-save'
-                                //disabled={isLoading}
-                                //onSubmit={form.handleSubmit(onSubmit)}
+                                disabled={isLoading}
                                 role='button'
                                 type='submit'>
                                 Save
