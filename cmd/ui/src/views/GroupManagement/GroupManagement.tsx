@@ -36,7 +36,7 @@ import {
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { dataCollectionMessage } from '../QA/utils';
+import { dataCollectionMessage } from '../DataQuality/utils';
 
 const GroupManagement = () => {
     const navigate = useAppNavigate();
