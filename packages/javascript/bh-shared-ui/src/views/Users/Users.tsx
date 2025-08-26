@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogPortal, DialogTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, Dialog, DialogOverlay, DialogPortal, DialogTrigger } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
@@ -206,15 +206,17 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                             </Button>
                         </DialogTrigger>
                         <DialogPortal>
-                            <CreateUserDialog
-                                error={createUserMutation.error}
-                                isLoading={createUserMutation.isLoading}
-                                onClose={toggleCreateUserDialog}
-                                onExited={createUserMutation.reset}
-                                onSave={createUserMutation.mutateAsync}
-                                open={createUserDialogOpen}
-                                showEnvironmentAccessControls={showEnvironmentAccessControls}
-                            />
+                            <DialogOverlay>
+                                <CreateUserDialog
+                                    error={createUserMutation.error}
+                                    isLoading={createUserMutation.isLoading}
+                                    onClose={toggleCreateUserDialog}
+                                    onExited={createUserMutation.reset}
+                                    onSave={createUserMutation.mutateAsync}
+                                    open={createUserDialogOpen}
+                                    showEnvironmentAccessControls={showEnvironmentAccessControls}
+                                />
+                            </DialogOverlay>
                         </DialogPortal>
                     </Dialog>
                 </Box>
@@ -236,6 +238,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
             <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
                 <DialogPortal>
                     <UpdateUserDialog
+                        data-testid='update-user-dialog'
                         error={updateUserMutation.error}
                         hasSelectedSelf={hasSelectedSelf}
                         isLoading={updateUserMutation.isLoading}
