@@ -1529,16 +1529,6 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	}
 }
 
-type GPOStatus int
-
-const (
-	GPOStatusNotExisting                             = -1
-	GPOStatusEnabled                       GPOStatus = 0
-	GPOStatusUserConfigurationDisabled     GPOStatus = 1
-	GPOStatusComputerConfigurationDisabled GPOStatus = 2
-	GPOStatusDisabled                      GPOStatus = 3
-)
-
 // Prettified definitions for GPOStatus
 const (
 	PrettyGPOStatusNotExisting                   = "GPO Status does not exist"
@@ -1556,17 +1546,17 @@ func ParseGPOData(gpo GPO) IngestibleNode {
 	if ok {
 		propMap[ad.GPOStatusRaw.String()] = status.(string)
 
-		switch propMap[ad.GPOStatusRaw.String()] {
-		case -1:
-			propMap[ad.GPOStatus.String()] = PrettyGPOStatusNotExisting
-		case 0:
+		switch status {
+		case "0":
 			propMap[ad.GPOStatus.String()] = PrettyGPOStatusEnabled
-		case 1:
+		case "1":
 			propMap[ad.GPOStatus.String()] = PrettyGPOStatusUserConfigurationDisabled
-		case 2:
+		case "2":
 			propMap[ad.GPOStatus.String()] = PrettyGPOStatusComputerConfigurationDisabled
-		case 3:
+		case "3":
 			propMap[ad.GPOStatus.String()] = PrettyGPOStatusDisabled
+		default:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusNotExisting
 		}
 	}
 
