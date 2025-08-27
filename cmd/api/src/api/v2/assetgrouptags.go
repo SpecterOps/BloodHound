@@ -1082,6 +1082,8 @@ type AssetGroupMemberWithCertification struct {
 func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
 		"node_environment_id": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"node_name":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"node_object_id":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"asset_group_tag_id":  {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"node_primary_kind":   {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"certified":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
@@ -1091,7 +1093,7 @@ func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.Filte
 }
 
 func (AssetGroupMemberWithCertification) IsStringColumn(filter string) bool {
-	return filter == "node_environment_id" || filter == "node_primary_kind" || filter == "certified_by"
+	return filter == "node_environment_id" || filter == "node_primary_kind" || filter == "certified_by" || filter == "node_name" || filter == "node_object_id"
 }
 
 type GetAssetGroupMembersWithCertificationResponse struct {
