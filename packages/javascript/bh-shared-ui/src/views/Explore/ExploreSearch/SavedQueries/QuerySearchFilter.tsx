@@ -62,19 +62,13 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
-        const {
-            target: { value },
-        } = event;
-
-        // clear filter
-        if (value.includes('')) {
+        const raw = event.target.value;
+        const newVal = typeof raw === 'string' ? raw.split(',') : raw;
+        if (newVal.includes('')) {
             queryFilterHandler(searchTerm, platform, [], source);
             setCategoriesOpen(false);
             return;
         }
-
-        // On autofill we get a stringified value.
-        const newVal = typeof value === 'string' ? value.split(',') : value;
         queryFilterHandler(searchTerm, platform, newVal, source);
     };
 

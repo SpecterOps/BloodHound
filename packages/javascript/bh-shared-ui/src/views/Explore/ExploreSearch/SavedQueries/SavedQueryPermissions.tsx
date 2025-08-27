@@ -63,30 +63,20 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             });
     }
 
-    const usersList = useMemo(() => idMap(), [listUsersQuery.data]);
-    const allUserIds = useMemo(() => usersList?.map((x) => x.id), [listUsersQuery.data]);
+    const usersList = useMemo(() => idMap(), [listUsersQuery.data, selfId]);
+    const allUserIds = useMemo(() => usersList?.map((x) => x.id) ?? [], [usersList]);
 
     useEffect(() => {
-        if (data?.shared_to_user_ids?.length) {
-            setSharedIds(data?.shared_to_user_ids);
-        } else {
-            setSharedIds([]);
-        }
-        if (data?.public) {
-            setIsPublic(true);
-            setSharedIds(allUserIds as string[]);
-        } else {
-            setIsPublic(false);
-        }
+        if (!data) return;
+        const initialShared = data.public ? allUserIds : data.shared_to_user_ids ?? [];
+        setSharedIds(initialShared);
+        setIsPublic(Boolean(data.public));
     }, [data, allUserIds]);
 
     const handleCheckAllChange = (checkedState: CheckedState) => {
-        setIsPublic(checkedState as boolean);
-        if (checkedState) {
-            setSharedIds(allUserIds as string[]);
-        } else {
-            setSharedIds([]);
-        }
+        const isTrue = checkedState === true;
+        setIsPublic(isTrue);
+        setSharedIds(isTrue ? allUserIds : []);
     };
 
     const handleCheckChange = (sharedUserId: string) => {
@@ -161,8 +151,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     return (
         <>
-            {isLoading && <div>Loading ...</div>}
-            {usersList?.length ? (
+            {isLoading || listUsersQuery.isLoading ? (
+                <div>Loading ...</div>
+            ) : usersList?.length ? (
                 <div>
                     <div className='flex-grow relative mb-2'>
                         <AppIcon.MagnifyingGlass size={16} className='absolute left-5 top-[50%] -mt-[8px]' />

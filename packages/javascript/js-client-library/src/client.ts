@@ -182,16 +182,16 @@ class BHEAPIClient {
             })
         );
 
-    importUserQuery = (payload: any) => {
-        const headers = {
-            'Content-Type': payload.type,
-        };
-
-        return this.baseClient.post<BasicResponse<any>>(
-            '/api/v2/saved-queries/import',
-            payload,
-            Object.assign({ headers })
-        );
+    importUserQuery = (payload: FormData | Blob | object, options?: RequestOptions) => {
+        const cfg: AxiosRequestConfig = { ...(options ?? {}) };
+        if (payload instanceof FormData) {
+            // Let the browser set multipart/form-data with boundary
+        } else if (payload instanceof Blob) {
+            cfg.headers = { ...(options?.headers ?? {}), 'Content-Type': payload.type || 'application/octet-stream' };
+        } else {
+            cfg.headers = { ...(options?.headers ?? {}), 'Content-Type': 'application/json' };
+        }
+        return this.baseClient.post<BasicResponse<any>>('/api/v2/saved-queries/import', payload as any, cfg);
     };
 
     getUserQueryPermissions = (queryId: number, options?: RequestOptions) =>

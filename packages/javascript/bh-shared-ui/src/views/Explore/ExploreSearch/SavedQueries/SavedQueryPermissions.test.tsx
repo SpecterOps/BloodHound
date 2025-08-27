@@ -71,8 +71,8 @@ afterAll(() => server.close());
 
 describe('SavedQueryPermissions', () => {
     it('should render an SavedQueryPermissions component', async () => {
-        const testSetIsPublic = vitest.fn();
-        const testSetSharedIds = vitest.fn();
+        const testSetIsPublic = vi.fn();
+        const testSetSharedIds = vi.fn();
         const testSharedIds: string[] = [];
         const testIsPublic = false;
 
@@ -86,7 +86,7 @@ describe('SavedQueryPermissions', () => {
         );
 
         // Empty State
-        expect(screen.getByText(/no users/i)).toBeInTheDocument();
+        expect(screen.getByText(/loading/i)).toBeInTheDocument();
 
         // Table Header Rendered
         const nestedElement = await waitFor(() => screen.getByText(/name/i));
@@ -96,8 +96,8 @@ describe('SavedQueryPermissions', () => {
     });
 
     it('should should reflect the checked state for public query', async () => {
-        const testSetIsPublic = vitest.fn();
-        const testSetSharedIds = vitest.fn();
+        const testSetIsPublic = vi.fn();
+        const testSetSharedIds = vi.fn();
         const testSharedIds: string[] = [];
         const testIsPublic = true;
         render(
@@ -116,8 +116,8 @@ describe('SavedQueryPermissions', () => {
     });
 
     it('should should reflect the NOT checked state for public query', async () => {
-        const testSetIsPublic = vitest.fn();
-        const testSetSharedIds = vitest.fn();
+        const testSetIsPublic = vi.fn();
+        const testSetSharedIds = vi.fn();
         const testSharedIds: string[] = [];
         const testIsPublic = false;
         render(

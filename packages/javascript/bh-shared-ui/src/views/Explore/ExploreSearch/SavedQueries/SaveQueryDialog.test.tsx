@@ -78,7 +78,6 @@ const handlers = [
             })
         );
     }),
-
     rest.get(`/api/v2/saved-queries/:queryId/permissions`, async (_req, res, ctx) => {
         return res(
             ctx.json({
@@ -447,17 +446,17 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('SaveQueryDialog', () => {
-    const testOnSave = vitest.fn();
-    const testOnClose = vitest.fn();
-    const testOnUpdate = vitest.fn();
-    const testSetSharedIds = vitest.fn();
-    const testSetIsPublic = vitest.fn();
+    const testOnSave = vi.fn();
+    const testOnClose = vi.fn();
+    const testOnUpdate = vi.fn();
+    const testSetSharedIds = vi.fn();
+    const testSetIsPublic = vi.fn();
 
     const testError = undefined;
     const testCypherSearchState = {
         cypherQuery: '',
-        performSearch: vitest.fn(),
-        setCypherQuery: vitest.fn(),
+        performSearch: vi.fn(),
+        setCypherQuery: vi.fn(),
     };
     const SaveQueryDialogWithProvider = () => (
         <SavedQueriesProvider>
