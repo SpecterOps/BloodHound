@@ -488,6 +488,8 @@ export enum ActiveDirectoryKindProperties {
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
+    GPOStatusRaw = 'gpostatusraw',
+    GPOStatus = 'gpostatus',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -761,6 +763,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'NetBIOS';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
+        case ActiveDirectoryKindProperties.GPOStatusRaw:
+            return 'GPO Status (Raw)';
+        case ActiveDirectoryKindProperties.GPOStatus:
+            return 'GPO Status';
         default:
             return undefined;
     }

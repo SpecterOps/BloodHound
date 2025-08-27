@@ -998,6 +998,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+GPOStatusRaw: types.#StringEnum & {
+	symbol:         "GPOStatusRaw"
+	schema:         "ad"
+	name:           "GPO Status (Raw)"
+	representation: "gpostatusraw"
+}
+
+GPOStatus: types.#StringEnum & {
+	symbol:         "GPOStatus"
+	schema:         "ad"
+	name:           "GPO Status"
+	representation: "gpostatus"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1134,6 +1148,8 @@ Properties: [
 	GroupScope,
 	NetBIOS,
 	AdminSDHolderProtected,
+	GPOStatusRaw,
+	GPOStatus,
 ]
 
 // Kinds
