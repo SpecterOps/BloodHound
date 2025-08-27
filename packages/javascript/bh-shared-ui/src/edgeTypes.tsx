@@ -41,6 +41,7 @@ export const AllEdgeTypes: Category[] = [
                 name: 'Active Directory Structure',
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.Contains,
+                    ActiveDirectoryRelationshipKind.DCFor,
                     ActiveDirectoryRelationshipKind.GPLink,
                     ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
@@ -103,6 +104,8 @@ export const AllEdgeTypes: Category[] = [
                 name: 'Active Directory Certificate Services',
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.GoldenCert,
+                    ActiveDirectoryRelationshipKind.ManageCA,
+                    ActiveDirectoryRelationshipKind.ManageCertificates,
                     ActiveDirectoryRelationshipKind.ADCSESC1,
                     ActiveDirectoryRelationshipKind.ADCSESC3,
                     ActiveDirectoryRelationshipKind.ADCSESC4,

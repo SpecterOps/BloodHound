@@ -17,7 +17,8 @@
 import { RequestOptions } from 'js-client-library';
 import { useCallback } from 'react';
 import { useQuery } from 'react-query';
-import { apiClient, Permission, PERMISSIONS } from '../../utils';
+import { apiClient } from '../../utils/api';
+import { Permission, PERMISSIONS } from '../../utils/permissions';
 
 export type PermissionsFns = {
     getUserPermissions: () => Permission[];

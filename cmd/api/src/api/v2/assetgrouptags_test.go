@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
@@ -42,6 +43,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -49,6 +51,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -1909,6 +1912,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 		}
 		assetGroupSelector = model.AssetGroupTagSelector{ID: 1, AssetGroupTagId: 1, Name: "Enterprise Domain Controllers"}
 		assetGroupTag      = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
+		defaultSort        = model.Sort{model.SortItem{Column: "node_id", Direction: model.AscendingSortDirection}}
 	)
 	defer mockCtrl.Finish()
 
@@ -2013,8 +2017,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, errors.New("some error")).Times(1)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, errors.New("db error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -2031,9 +2035,6 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					params := url.Values{}
 					params.Add("sort_by", "id")
 
-					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
-					require.Nil(t, err)
-
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
@@ -2041,14 +2042,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, nil)
-					mockGraphDb.EXPECT().
-						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]*graph.Node{}, nil)
-					mockGraphDb.EXPECT().
-						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(0), nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2065,9 +2060,6 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					params := url.Values{}
 					params.Add("sort_by", "objectid")
 
-					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
-					require.Nil(t, err)
-
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
@@ -2075,14 +2067,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, nil)
-					mockGraphDb.EXPECT().
-						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]*graph.Node{}, nil)
-					mockGraphDb.EXPECT().
-						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(0), nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "node_object_id", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2099,9 +2085,6 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					params := url.Values{}
 					params.Add("sort_by", "name")
 
-					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
-					require.Nil(t, err)
-
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
@@ -2109,14 +2092,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, nil)
-					mockGraphDb.EXPECT().
-						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]*graph.Node{}, nil)
-					mockGraphDb.EXPECT().
-						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(0), nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), model.Sort{model.SortItem{Column: "node_name", Direction: model.AscendingSortDirection}}, 0, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2137,14 +2114,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, nil)
-					mockGraphDb.EXPECT().
-						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(5)).
-						Return([]*graph.Node{}, nil)
-					mockGraphDb.EXPECT().
-						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(0), nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), defaultSort, 0, 5, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2165,14 +2136,30 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, nil)
-					mockGraphDb.EXPECT().
-						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Eq(100), gomock.Any()).
-						Return([]*graph.Node{}, nil)
-					mockGraphDb.EXPECT().
-						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(0), nil)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), defaultSort, 100, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success - environment filter",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+					apitest.AddQueryParam(input, "environments", "testenv")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
+						Return(assetGroupSelector, nil)
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{SQLString: "AND node_environment_id IN ?", Params: []any{[]string{"testenv"}}}, defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2192,45 +2179,38 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupSelectorNode{}, nil)
-					mockGraphDb.EXPECT().
-						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]*graph.Node{
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), defaultSort, 0, v2.AssetGroupTagDefaultLimit, 1).
+						Return([]model.AssetGroupSelectorNode{
 							{
-								ID:    1,
-								Kinds: []graph.Kind{ad.User},
-								Properties: graph.AsProperties(map[string]any{
-									"objectid": "OID-1",
-									"name":     "node1",
-								})},
+								NodeId:          1,
+								NodePrimaryKind: ad.User.String(),
+								NodeObjectId:    "OID-1",
+								NodeName:        "node1",
+							},
 							{
-								ID:    2,
-								Kinds: []graph.Kind{ad.Group},
-								Properties: graph.AsProperties(map[string]any{
-									"objectid": "OID-2",
-									"name":     "node2",
-								})},
-						}, nil)
-					mockGraphDb.EXPECT().
-						CountFilteredNodes(gomock.Any(), gomock.Any()).
-						Return(int64(2), nil)
+								NodeId:          2,
+								NodePrimaryKind: ad.Group.String(),
+								NodeObjectId:    "OID-2",
+								NodeName:        "node2",
+							}}, 2, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 					expected := v2.GetAssetGroupMembersResponse{
 						Members: []v2.AssetGroupMember{
 							{
-								NodeId:      1,
-								ObjectID:    "OID-1",
-								PrimaryKind: "User",
-								Name:        "node1",
+								NodeId:          1,
+								ObjectID:        "OID-1",
+								PrimaryKind:     "User",
+								Name:            "node1",
+								AssetGroupTagId: 1,
 							},
 							{
-								NodeId:      2,
-								ObjectID:    "OID-2",
-								PrimaryKind: "Group",
-								Name:        "node2",
+								NodeId:          2,
+								ObjectID:        "OID-2",
+								PrimaryKind:     "Group",
+								Name:            "node2",
+								AssetGroupTagId: 1,
 							},
 						},
 					}
@@ -2253,8 +2233,9 @@ func TestResources_PreviewSelectors(t *testing.T) {
 			Graph:      mockGraphDb,
 			GraphQuery: mockGraphQuery,
 		}
-		user    = setupUser()
-		userCtx = setupUserCtx(user)
+		user              = setupUser()
+		userCtx           = setupUserCtx(user)
+		badExpansionValue = model.AssetGroupExpansionMethod(5)
 	)
 
 	defer mockCtrl.Finish()
@@ -2276,6 +2257,24 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
 					apitest.BodyString(input, `{"seeds":["BadRequest"]}`)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Bad Request - Invalid Expansion Method",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.BodyStruct(input, v2.PreviewSelectorBody{
+						Seeds:     model.SelectorSeeds{{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"}},
+						Expansion: &badExpansionValue,
+					})
+				},
+				Setup: func() {
+					mockGraphQuery.EXPECT().
+						PrepareCypherQuery(gomock.Any(), gomock.Any()).
+						Return(queries.PreparedQuery{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -2703,7 +2702,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
-							100).
+							v2.AssetGroupTagDefaultLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2755,11 +2754,20 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							10,
-							100).
+							v2.AssetGroupTagDefaultLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Parse sort parameters error",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "sort_by", "invalid_column")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
 				},
 			},
 			{
@@ -2772,7 +2780,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
 							model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}},
 							0,
-							100).
+							v2.AssetGroupTagDefaultLimit).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -2804,7 +2812,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 
 					// verify skip, limit and count
 					require.Equal(t, 0, wrapper.Skip)
-					require.Equal(t, 100, wrapper.Limit)
+					require.Equal(t, 50, wrapper.Limit)
 					require.Equal(t, len(expectedHistoryRecs), wrapper.Count)
 
 					// verify the records are as expected
@@ -2812,4 +2820,340 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *mocks_db.MockDatabase
+	}
+
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func(testName string) *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "cannot decode request body error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`Not real json`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"error unmarshalling JSON payload"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "query less than 3 characters error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": ""}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"search query must be at least 3 characters long"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "get asset group history records db error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": "test"}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupHistory{}, 0, errors.New("entity not found"))
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],
+									"http_status":500,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success - query by action",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": "UpdateTag"}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+					if !strings.Contains(
+						sqlFilter.SQLString,
+						"actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?",
+					) {
+						return false
+					}
+
+					for _, v := range sqlFilter.Params {
+						switch p := v.(type) {
+						case string:
+							if p == "%UpdateTag%" {
+								return true
+							}
+						case []any:
+							for _, inner := range p {
+								if s, ok := inner.(string); ok && s == "%UpdateTag%" {
+									return true
+								}
+							}
+						}
+					}
+
+					return false
+				}), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					[]model.AssetGroupHistory{
+						{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag, AssetGroupTagId: 1},
+					},
+					1,
+					nil)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `
+					{
+							"count": 1,
+							"limit": 50,
+							"skip": 0,
+							"data": {
+								"records": [
+								{
+									"action": "UpdateTag",
+									"actor": "UUID2",
+									"asset_group_tag_id": 1,
+									"created_at": "2025-06-11T00:00:00Z",
+									"email": "user2@domain.com",
+									"environment_id": null,
+									"id": 2,
+									"note": null,
+									"target": ""
+								}
+							]
+						}
+					}
+				`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success - query by email sort by created_at",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags-history",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				request.Body = io.NopCloser(strings.NewReader(`{"query": "user1@domain.com"}`))
+
+				request.Header.Set("Content-Type", "application/json")
+
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+					if !strings.Contains(
+						sqlFilter.SQLString,
+						"actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?",
+					) {
+						return false
+					}
+
+					for _, v := range sqlFilter.Params {
+						switch p := v.(type) {
+						case string:
+							if p == "%user1@domain.com%" {
+								return true
+							}
+						case []any:
+							for _, inner := range p {
+								if s, ok := inner.(string); ok && s == "%user1@domain.com%" {
+									return true
+								}
+							}
+						}
+					}
+
+					return false
+				}), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, gomock.Any(), gomock.Any()).Return(
+					[]model.AssetGroupHistory{
+						{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},
+						{ID: 3, CreatedAt: time.Date(2025, 6, 12, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateSelector},
+						{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag},
+						{ID: 1, CreatedAt: time.Date(2025, 6, 10, 0, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionCreateTag},
+					},
+					4,
+					nil)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `
+					{
+							"count": 4,
+							"limit": 50,
+							"skip": 0,
+							"data": {
+								"records": [
+								{
+									"action": "DeleteSelector",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-12T02:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 4,
+									"note": null,
+									"target": ""
+								},
+								{
+									"action": "CreateSelector",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-12T00:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 3,
+									"note": null,
+									"target": ""
+								},
+								{
+									"action": "UpdateTag",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-11T00:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 2,
+									"note": null,
+									"target": ""
+								},
+								{
+									"action": "CreateTag",
+									"actor": "UUID1",
+									"asset_group_tag_id": 0,
+									"created_at": "2025-06-10T00:00:00Z",
+									"email": "user1@domain.com",
+									"environment_id": null,
+									"id": 1,
+									"note": null,
+									"target": ""
+								}
+							]
+						}
+					}
+				`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: mocks_db.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest(t.Name())
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				DB:         mocks.mockDatabase,
+				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/asset-group-tags-history", resources.SearchAssetGroupTagHistory).Methods("POST")
+
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
 }
