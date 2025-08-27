@@ -1539,14 +1539,12 @@ const (
 )
 
 func ParseGPOData(gpo GPO) IngestibleNode {
-	var ()
 	propMap := make(map[string]any)
 
-	status, ok := gpo.Properties[ad.GPOStatus.String()]
-	if ok {
-		propMap[ad.GPOStatusRaw.String()] = status.(string)
+	if status, ok := gpo.Properties[ad.GPOStatus.String()]; ok {
+		propMap[ad.GPOStatusRaw.String()] = strings.TrimSpace(fmt.Sprint(status))
 
-		switch status {
+		switch propMap[ad.GPOStatusRaw.String()] {
 		case "0":
 			propMap[ad.GPOStatus.String()] = PrettyGPOStatusEnabled
 		case "1":
