@@ -74,7 +74,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
         },
         {
             label: 'Quick Upload',
-            icon: <AppIcon.Upload size={24} className='mr-2' />,
+            icon: <AppIcon.Upload size={24} />,
             onClick: () => setShowFileIngestDialog(true),
             testId: 'quick-file-ingest',
         },
