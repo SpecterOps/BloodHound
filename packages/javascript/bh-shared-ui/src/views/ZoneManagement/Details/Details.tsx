@@ -104,7 +104,7 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
 
     return (
-        <div>
+        <div className='h-full'>
             <div className='flex mt-6'>
                 <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
                 <div className='w-1/3 flex justify-end'>
@@ -118,8 +118,8 @@ const Details: FC = () => {
                     )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+            <div className='flex gap-8 mt-4 h-full'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
                     {location.pathname.includes('label') ? (
                         <TagList
                             title={'Labels'}
@@ -171,7 +171,7 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='basis-1/3'>
+                <div className='basis-1/3 h-full'>
                     <SelectedDetails />
                 </div>
             </div>

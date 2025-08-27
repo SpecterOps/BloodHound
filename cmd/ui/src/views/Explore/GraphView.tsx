@@ -27,6 +27,7 @@ import {
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
+    glyphUtils,
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
@@ -35,7 +36,7 @@ import {
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useGraphHasData,
-    useTagGlyphMap,
+    useTagGlyphs,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -64,7 +65,7 @@ const GraphView: FC = () => {
     const graphQuery = useSigmaExploreGraph();
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
-    const tagGlyphMapQuery = useTagGlyphMap();
+    const tagGlyphMap = useTagGlyphs(glyphUtils);
 
     const { searchType } = useExploreParams();
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
@@ -95,11 +96,9 @@ const GraphView: FC = () => {
             darkMode,
             customIcons: customIconsQuery?.data ?? {},
             hideNodes: displayTable,
-            tagGlyphMap: tagGlyphMapQuery.data,
+            tagGlyphMap,
         };
-        // NOTE: Do not include `tagGlyphMap` ... or else !!
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [theme, darkMode, customIconsQuery.data, displayTable]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphMap]);
 
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {
@@ -133,10 +132,8 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    const isLoading =
-        graphHasDataQuery.isLoading || graphQuery.isLoading || customIconsQuery.isLoading || tagGlyphMapQuery.isLoading;
-    const isError =
-        graphHasDataQuery.isError || graphQuery.isError || customIconsQuery.isError || tagGlyphMapQuery.isError;
+    const isLoading = graphHasDataQuery.isLoading || graphQuery.isLoading || customIconsQuery.isLoading;
+    const isError = graphHasDataQuery.isError || graphQuery.isError || customIconsQuery.isError;
 
     if (isLoading) {
         return (

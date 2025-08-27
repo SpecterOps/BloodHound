@@ -29,7 +29,7 @@ import {
     UpdateAssetGroupTagRequest,
     UpdateSelectorRequest,
 } from 'js-client-library';
-import { useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { SortOrder } from '../../types';
 import {
@@ -96,48 +96,63 @@ const getAssetGroupTags = (options: RequestOptions) =>
         })
         .then((res) => res.data.data.tags);
 
-export const useTagGlyphMap = () => {
-    const tagsGlyphSelect = useCallback((tags: AssetGroupTag[]) => {
-        const glyphModifiedTags = tags?.map((tag) => {
-            const newTag = tag;
+const glyphQualifier = (glyph: string | null) => !glyph?.includes('http');
 
-            if (tag.glyph !== null && !tag.glyph.includes('http')) {
-                const glyphIconUrl = getModifiedSvgUrlFromIcon(
-                    findIconDefinition({ prefix: 'fas', iconName: tag.glyph as IconName }),
-                    {
-                        styles: {
-                            'transform-origin': 'center',
-                            scale: GLYPH_SCALE,
-                            color: DEFAULT_GLYPH_COLOR,
-                            'background-color': DEFAULT_GLYPH_BACKGROUND_COLOR,
-                        },
-                    }
-                );
+const glyphTransformer = (glyph: string): string => {
+    const glyphIconUrl = getModifiedSvgUrlFromIcon(findIconDefinition({ prefix: 'fas', iconName: glyph as IconName }), {
+        styles: {
+            'transform-origin': 'center',
+            scale: GLYPH_SCALE,
+            color: DEFAULT_GLYPH_COLOR,
+            'background-color': DEFAULT_GLYPH_BACKGROUND_COLOR,
+        },
+    });
 
-                newTag.glyph = glyphIconUrl;
-            }
+    return glyphIconUrl;
+};
 
-            return newTag;
-        });
+interface GlyphUtils {
+    qualifier?: (glyph: string | null) => boolean;
+    transformer: (glyph: string) => string;
+}
 
-        return glyphModifiedTags;
-    }, []);
+export const glyphUtils: GlyphUtils = {
+    qualifier: glyphQualifier,
+    transformer: glyphTransformer,
+};
 
-    const {
-        isLoading,
-        isError,
-        data: tags,
-    } = useTagsQuery({ queryKey: [...zoneManagementKeys.tags(), 'glyphs'], select: tagsGlyphSelect });
-
+export const createGlyphMapFromTags = (
+    tags: AssetGroupTag[] | undefined,
+    utils: GlyphUtils
+): Record<string, string> => {
     const glyphMap: Record<string, string> = {};
+    const { qualifier = () => true, transformer } = utils;
 
     tags?.forEach((tag) => {
-        if (tag.glyph !== null) {
-            glyphMap[`Tag_${tag.name}`] = tag.glyph;
+        const underscoredTagName = tag.name.split(' ').join('_');
+
+        if (tag.glyph !== null && qualifier(tag.glyph)) {
+            const glyphValue = transformer(tag.glyph);
+            glyphMap[`Tag_${underscoredTagName}`] = glyphValue;
         }
     });
 
-    return { isLoading, isError, data: glyphMap };
+    return glyphMap;
+};
+
+export const useTagGlyphs = (glyphUtils: GlyphUtils) => {
+    const [glyphMap, setGlyphMap] = useState<Record<string, string>>({});
+
+    const tagsQuery = useAssetGroupTags();
+
+    useEffect(() => {
+        if (!tagsQuery.data) return;
+
+        const newMap = createGlyphMapFromTags(tagsQuery.data, glyphUtils);
+        setGlyphMap(newMap);
+    }, [tagsQuery.data, glyphUtils]);
+
+    return glyphMap;
 };
 
 export const useTagsQuery = (queryOptions?: GenericQueryOptions<AssetGroupTag[]>) =>
