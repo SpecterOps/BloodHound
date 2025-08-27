@@ -17,14 +17,9 @@
 import type { ScheduledJobDisplay } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { PERSIST_NOTIFICATION } from '../../providers';
 import { renderHook, waitFor } from '../../test-utils';
-import {
-    FETCH_ERROR_KEY,
-    FETCH_ERROR_MESSAGE,
-    NO_PERMISSION_KEY,
-    NO_PERMISSION_MESSAGE,
-    PERSIST_NOTIFICATION,
-} from '../../utils/finishedJobs';
+import { FETCH_ERROR_KEY, FETCH_ERROR_MESSAGE, NO_PERMISSION_KEY, NO_PERMISSION_MESSAGE } from '../../utils';
 import { useFinishedJobs } from './useFinishedJobs';
 
 const addNotificationMock = vi.fn();
@@ -133,5 +128,12 @@ describe('useFinishedJobs', () => {
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY);
+    });
+
+    it('dismisses the "no permission" notification on unmount', async () => {
+        checkPermissionMock.mockImplementation(() => false);
+        const { unmount } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
+        unmount();
+        expect(dismissNotificationMock).toHaveBeenCalledWith(NO_PERMISSION_KEY);
     });
 });

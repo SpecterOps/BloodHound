@@ -16,16 +16,31 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import FileIngest from '.';
+import { useState } from 'react';
+import { FileUploadDialogContext } from '../../hooks';
 import { createAuthStateWithPermissions } from '../../mocks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { Permission } from '../../utils';
+import FileUploadDialog from '../FileUploadDialog';
+import FileIngest from './FileIngest';
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+            })
+        );
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'open_graph_phase_2',
+                        enabled: true,
+                    },
+                ],
             })
         );
     }),
@@ -84,16 +99,61 @@ const server = setupServer(
     })
 );
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+const OriginalXMLHttpRequest = XMLHttpRequest;
 
+beforeAll(() => {
+    server.listen();
+    class MockXMLHttpRequest extends OriginalXMLHttpRequest {
+        private __upload = {
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            onabort: vi.fn(),
+            onerror: vi.fn(),
+            onload: vi.fn(),
+            onloadend: vi.fn(),
+            onloadstart: vi.fn(),
+            onprogress: vi.fn(),
+            ontimeout: vi.fn(),
+            dispatchEvent: vi.fn(),
+        };
+        get upload() {
+            return this.__upload as any;
+        }
+    }
+    vi.stubGlobal('XMLHttpRequest', MockXMLHttpRequest);
+});
+
+afterEach(() => server.resetHandlers());
+afterAll(() => {
+    server.close();
+    vi.stubGlobal('XMLHttpRequest', OriginalXMLHttpRequest);
+    vi.clearAllMocks();
+    server.resetHandlers();
+});
+
+const Wrapper = () => {
+    const [showFileIngestDialog, setShowFileIngestDialog] = useState(false);
+
+    const value = {
+        showFileIngestDialog,
+        setShowFileIngestDialog,
+    };
+
+    return (
+        <>
+            <FileUploadDialogContext.Provider value={value}>
+                <FileIngest />
+            </FileUploadDialogContext.Provider>
+            <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+        </>
+    );
+};
 describe('FileIngest', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
     it('accepts a valid file and allows the user to continue through the upload process', async () => {
-        render(<FileIngest />);
+        render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
         await waitFor(() => expect(openButton).toBeEnabled());
@@ -114,7 +174,7 @@ describe('FileIngest', () => {
     });
 
     it('prevents a user from proceeding if the file is not valid', async () => {
-        render(<FileIngest />);
+        render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
         await waitFor(() => expect(openButton).toBeEnabled());
@@ -131,18 +191,27 @@ describe('FileIngest', () => {
     });
 
     it('displays a table of completed ingest logs', async () => {
-        render(<FileIngest />);
+        render(<Wrapper />);
         await waitFor(() => screen.getByText('test_email@specterops.io'));
 
         expect(screen.getByText('test_email@specterops.io')).toBeInTheDocument();
-        expect(screen.getByText('1 minute')).toBeInTheDocument();
+        expect(screen.getByText('1 min')).toBeInTheDocument();
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
-        render(<FileIngest />);
+        server.use(
+            rest.get('/api/v2/self', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: createAuthStateWithPermissions([]).user,
+                    })
+                );
+            })
+        );
+        render(<Wrapper />);
 
         expect(screen.queryByText('test_email@specterops.io')).toBeNull();
-        expect(screen.queryByText('1 minute')).toBeNull();
+        expect(screen.queryByText('1 min')).toBeNull();
 
         expect(screen.getByTestId('file-ingest_button-upload-files')).toBeDisabled();
     });

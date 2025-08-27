@@ -292,6 +292,13 @@ AdminCount: types.#StringEnum & {
 	representation: "admincount"
 }
 
+AdminSDHolderProtected: types.#StringEnum & {
+	symbol:         "AdminSDHolderProtected"
+	schema:         "ad"
+	name:           "AdminSDHolder Protected"
+	representation: "adminsdholderprotected"
+}
+
 DontRequirePreAuth: types.#StringEnum & {
 	symbol:         "DontRequirePreAuth"
 	schema:         "ad"
@@ -991,6 +998,13 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+ServicePrincipalNames: types.#StringEnum & {
+	symbol:         "ServicePrincipalNames"
+	schema:         "ad"
+	name:           "Service Principal Names"
+	representation: "serviceprincipalnames"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1126,6 +1140,8 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	AdminSDHolderProtected,
+	ServicePrincipalNames,
 ]
 
 // Kinds
@@ -1841,6 +1857,8 @@ SharedRelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	ManageCA,
+	ManageCertificates,
 ]
 
 // Edges that are used during inbound traversal

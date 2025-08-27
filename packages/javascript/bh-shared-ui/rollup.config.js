@@ -59,6 +59,7 @@ export default {
         'json-2-csv',
         'js-client-library',
         'js-file-download',
+        'json-2-csv',
         'lodash/capitalize',
         'lodash/cloneDeep',
         'lodash/find',
