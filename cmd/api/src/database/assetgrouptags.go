@@ -593,15 +593,19 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx 
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
-	baseSqlStr := fmt.Sprintf(`
-		WITH selectors AS (
-			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
-		), seeds AS (
-			SELECT selector_id, type, value FROM %s %s
-		)`,
-		model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
+	var (
+		baseSqlStr = fmt.Sprintf(`
+			WITH selectors AS (
+				SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
+			), seeds AS (
+				SELECT selector_id, type, value FROM %s %s
+			)`,
+			model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
 
-	sqlStr := fmt.Sprintf("%s SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id %s %s", baseSqlStr, orderSQL, skipLimitString)
+		filteredSqlStr = fmt.Sprintf(`, filtered AS ( SELECT DISTINCT s.id distinct_id, s.* FROM selectors s JOIN seeds sd ON sd.selector_id = s.id %s %s)`, orderSQL, skipLimitString)
+
+		sqlStr = fmt.Sprintf("%s %s SELECT * FROM seeds JOIN filtered f ON seeds.selector_id = f.distinct_id %s", baseSqlStr, filteredSqlStr, orderSQL)
+	)
 
 	if rows, err := s.db.WithContext(ctx).Raw(sqlStr, append(append([]any{assetGroupTagId}, selectorSqlFilter.Params...), selectorSeedSqlFilter.Params...)...).Rows(); err != nil {
 		return model.AssetGroupTagSelectors{}, 0, err
