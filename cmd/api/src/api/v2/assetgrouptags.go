@@ -997,7 +997,10 @@ type setSelectorNodeCertifier interface {
 	UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error
 }
 
-// certifyMembersBySelectorNodes - Note: selectorNodeRecords supplied must be in order of nodeId, followed by position
+// certifyMembersBySelectorNodes updates the certification status for a given slice of selectorNodeRecords.
+// selectorNodeRecords supplied must be in order of nodeId, followed by position.
+// If there are duplicate nodeIds in selectorNodeRecords, only the lowest position (highest priority) selectorNodeRecords is updated,
+// and all lower-priority selectorNodeRecords are set to Pending Certification.
 func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, userId string, note null.String) error {
 	var (
 		certificationStatus model.AssetGroupCertification
