@@ -27,7 +27,7 @@ export function SavedQueriesProvider({ children }: { children: any }) {
 
     const { setCypherQuery, performSearch } = useCypherSearch();
 
-    const runQuery = (query: string, id: number) => {
+    const runQuery = (query: string, id?: number) => {
         setSelected({ query, id });
         setCypherQuery(query);
         performSearch(query);
