@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 type MainNavLogoImage = {
     imageUrl: string;

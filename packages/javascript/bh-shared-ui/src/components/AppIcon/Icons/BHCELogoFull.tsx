@@ -14,10 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useId } from 'react';
 import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 
 export const BHCELogoFull: React.FC<BaseSVGProps> = (props) => {
+    const clipId = useId();
+
     return (
         <BaseSVG
             name='bhce-logo-full'
@@ -26,7 +28,7 @@ export const BHCELogoFull: React.FC<BaseSVGProps> = (props) => {
             color='#E02F35'
             xmlns='http://www.w3.org/2000/svg'
             {...props}>
-            <g clipPath='url(#clip0_3737_6095)'>
+            <g clipPath={`url(#${clipId})`}>
                 <BasePath d='M463.009 0H3.99145C1.78703 0 0 1.79086 0 4V116C0 118.209 1.78703 120 3.99145 120H463.009C465.213 120 467 118.209 467 116V4C467 1.79086 465.213 0 463.009 0Z' />
                 {/* We are not using BasePath for the below path elements because each letter of the logo needs to be filled with white. The background color is still controllable via color prop to this component. Eventually we may need to change the letter fill colors, but we should account for that in BaseSVG and BasePath first */}
                 <path
@@ -192,7 +194,7 @@ export const BHCELogoFull: React.FC<BaseSVGProps> = (props) => {
                 />
             </g>
             <defs>
-                <clipPath id='clip0_3737_6095'>
+                <clipPath id={clipId}>
                     <rect width='467' height='120' fill='white' />
                 </clipPath>
             </defs>
