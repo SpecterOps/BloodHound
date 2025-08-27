@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useRef } from 'react';
+import { CSSProperties, useEffect, useRef } from 'react';
 import { Transition } from 'react-transition-group';
 import { SNACKBAR_DURATION } from '../../../../constants';
 type CypherSearchMessageProps = {
@@ -40,22 +40,33 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
         transform: 'scale(1)',
     };
 
-    const transitionStyles: { [key: string]: React.CSSProperties } = {
+    const transitionStyles: Record<string, CSSProperties> = {
         entering: { opacity: 1, transform: 'translateX(0) scale(0.96)' },
         entered: { opacity: 1 },
         exiting: { opacity: 0, transform: 'scale(0.9)' },
         exited: { opacity: 0 },
     };
 
+    const timeoutRef = useRef<number | undefined>(undefined);
     const handleEntered = () => {
-        setTimeout(() => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = window.setTimeout(() => {
             clearMessage();
         }, SNACKBAR_DURATION);
     };
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <div className='w-full'>
-            <Transition nodeRef={nodeRef} in={showMessage} timeout={duration} onEntered={handleEntered}>
+            <Transition nodeRef={nodeRef} in={showMessage} timeout={duration} onEntered={handleEntered} unmountOnExit>
                 {(state) => (
                     <div
                         ref={nodeRef}
@@ -63,7 +74,9 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
                             ...defaultStyle,
                             ...transitionStyles[state],
                         }}
-                        className='leading-none'>
+                        className='leading-none'
+                        role='status'
+                        aria-live='polite'>
                         {message}
                     </div>
                 )}

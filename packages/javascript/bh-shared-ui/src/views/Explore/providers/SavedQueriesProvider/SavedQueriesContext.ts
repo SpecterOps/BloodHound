@@ -23,7 +23,7 @@ interface SavedQueriesContextType {
     saveAction: SaveQueryAction | undefined;
     setSelected: Dispatch<SetStateAction<SelectedQuery>>;
     setShowSaveQueryDialog: Dispatch<SetStateAction<boolean>>;
-    setSaveAction: Dispatch<SetStateAction<SaveQueryAction>>;
+    setSaveAction: Dispatch<SetStateAction<SaveQueryAction | undefined>>;
     runQuery: (query: string, id?: number) => void;
     editQuery: (id: number) => void;
 }
