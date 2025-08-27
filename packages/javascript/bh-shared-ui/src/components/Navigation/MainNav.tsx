@@ -249,7 +249,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         ) : (
                             <MainNavListItem key={itemIndex} allowHover={allowHover}>
                                 <MainNavItemAction
-                                    onClick={(() => listDataItem.functionHandler as () => void)()}
+                                    onClick={listDataItem.functionHandler ?? (() => {})}
                                     allowHover={allowHover}
                                     testId={listDataItem.testId}>
                                     <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
