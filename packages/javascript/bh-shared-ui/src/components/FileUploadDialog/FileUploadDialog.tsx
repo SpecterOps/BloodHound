@@ -16,7 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { ReactNode, useRef } from 'react';
+import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
@@ -29,8 +29,6 @@ const FileUploadDialog: React.FC<{
     headerText?: ReactNode;
     description?: ReactNode;
 }> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
-    const dialogRef = useRef<HTMLDivElement>(null);
-
     const {
         currentlyUploading,
         getFileUploadAcceptedTypes,
@@ -47,7 +45,7 @@ const FileUploadDialog: React.FC<{
         handleSubmit,
         handleRemoveFile,
         onClose,
-    } = useFileUploadDialogHandlers({ onCloseProp, dialogRef });
+    } = useFileUploadDialogHandlers({ onCloseProp });
 
     return (
         <Dialog

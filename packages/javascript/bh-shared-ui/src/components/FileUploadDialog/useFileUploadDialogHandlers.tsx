@@ -18,7 +18,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     useEndFileIngestJob,
     useGetFileUploadAcceptedTypesQuery,
-    useOnClickOutside,
     useStartFileIngestJob,
     useUploadFileToIngestJob,
 } from '../../hooks';
@@ -29,7 +28,6 @@ export const makeProgressCacheKey = (jobId: string, fileName: string) => `job-${
 
 export const useFileUploadDialogHandlers = ({
     onCloseProp,
-    dialogRef,
 }: {
     onCloseProp: () => void;
     dialogRef: React.RefObject<HTMLDivElement>;
@@ -60,8 +58,6 @@ export const useFileUploadDialogHandlers = ({
 
         onCloseProp();
     }, [onCloseProp]);
-
-    useOnClickOutside(dialogRef, onClose);
 
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
