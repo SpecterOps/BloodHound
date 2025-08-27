@@ -19,6 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
 import { render, screen, within } from '../../../test-utils';
+import { useParams } from 'react-router-dom';
 import { TagList } from './TagList';
 
 const testQuery = {
@@ -90,13 +91,23 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useParams: vi.fn(),
+    };
+});
+
 describe('List', async () => {
+    vi.mocked(useParams).mockReturnValue({ tierId: '3', labelId: undefined });
+
     it('shows a loading view when data is fetching', async () => {
         const testQuery = { isLoading: true, isError: false, data: undefined } as unknown as UseQueryResult<
             AssetGroupTag[]
         >;
 
-        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(screen.getAllByTestId('zone-management_labels-list_loading-skeleton')).toHaveLength(3);
     });
@@ -104,20 +115,20 @@ describe('List', async () => {
     it('handles data fetching errors', async () => {
         const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
 
     it('renders a sortable list for Labels', async () => {
-        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByText('app-icon-sort-asc')).toBeInTheDocument();
         expect(screen.queryByTestId('zone-management_details_labels-list_static-order')).not.toBeInTheDocument();
     });
 
     it('renders a non sortable list for Tiers', async () => {
-        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByTestId('zone-management_details_tiers-list_static-order')).toBeInTheDocument();
         expect(screen.queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
@@ -139,7 +150,7 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         const listItem = await screen.findByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem).toBeInTheDocument();
@@ -155,7 +166,7 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         const listItem = screen.getByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem).toBeInTheDocument();
@@ -171,7 +182,7 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         const listItem1 = screen.getByTestId('zone-management_details_tiers-list_item-1');
         expect(listItem1).toBeInTheDocument();
@@ -179,11 +190,12 @@ describe('List', async () => {
 
         const listItem2 = screen.getByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem2).toBeInTheDocument();
+
         expect(await within(listItem2).findByTestId('analysis_disabled_icon')).toBeInTheDocument();
     });
 
     it('handles rendering a selected item', async () => {
-        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<TagList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
     });
