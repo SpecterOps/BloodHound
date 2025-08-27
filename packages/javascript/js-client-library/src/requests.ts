@@ -250,6 +250,10 @@ export interface UpdateUserRequest {
     roles: number[];
     SSOProviderId?: number;
     is_disabled?: boolean;
+    environment_control_list?: {
+        environments?: string[];
+        all_environments?: boolean;
+    };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
 }

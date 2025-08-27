@@ -1094,10 +1094,12 @@ class BHEAPIClient {
                 sso_provider_id: user.SSOProviderId,
                 secret: user.password,
                 needs_password_reset: user.needsPasswordReset,
+                /*
                 environment_control_list: {
-                    environments: ['12345', '123'],
-                    all_environments: true,
+                    environments: user.environment_control_list.environments,
+                    all_environments: user.environment_control_list.all_environments,
                 },
+                */
             },
             options
         );
@@ -1113,10 +1115,12 @@ class BHEAPIClient {
                 roles: user.roles,
                 sso_provider_id: user.SSOProviderId,
                 is_disabled: user.is_disabled,
+                /*
                 environment_control_list: {
-                    environments: ['12345', '123'],
-                    all_environments: true,
+                    environments: user.environment_control_list.environments,
+                    all_environments: user.environment_control_list.all_environments,
                 },
+                */
             },
             options
         );
