@@ -57,7 +57,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const tierFlag = featureFlags?.data?.find((flag) => {
         return flag.key === 'tier_management_engine';
     });
-        const { setShowFileIngestDialog } = useFileUploadDialogContext();
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const primaryList = [
         {
@@ -72,8 +72,8 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
         },
-                {
-            label: 'Quick Ingest',
+        {
+            label: 'Quick Upload',
             icon: <AppIcon.Upload size={24} className='mr-2' />,
             onClick: () => setShowFileIngestDialog(true),
             testId: 'quick-file-ingest',
