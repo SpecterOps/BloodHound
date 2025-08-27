@@ -3171,6 +3171,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 		selectorId3                         = 3
 		nodeId3                             = graph.ID(3)
 		assetGroupTag3                      = 3
+		selectorId4                         = 4
 		highestPosition                     = 1
 		mediumPosition                      = 2
 		lowestPosition                      = 3
@@ -3189,7 +3190,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 			Position:        highestPosition,
 		}
 		assetGroupSelectorNode1MedPriority = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
-			SelectorId: selectorId1,
+			SelectorId: selectorId2,
 			NodeId:     nodeId1,
 			Certified:  model.AssetGroupCertificationPending,
 			Source:     model.AssetGroupSelectorNodeSourceSeed,
@@ -3200,7 +3201,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 			Position:        mediumPosition,
 		}
 		assetGroupSelectorNode1LowPriority = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
-			SelectorId: selectorId1,
+			SelectorId: selectorId3,
 			NodeId:     nodeId1,
 			Certified:  model.AssetGroupCertificationPending,
 			Source:     model.AssetGroupSelectorNodeSourceSeed,
@@ -3211,9 +3212,20 @@ func TestResources_CertifyMembers(t *testing.T) {
 			Position:        lowestPosition,
 		}
 		assetGroupSelectorNode1AlreadyCertified = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
-			SelectorId: selectorId1,
+			SelectorId: selectorId4,
 			NodeId:     nodeId1,
 			Certified:  model.AssetGroupCertificationManual,
+			Source:     model.AssetGroupSelectorNodeSourceSeed,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		},
+			AssetGroupTagId: assetGroupTag1,
+			Position:        highestPosition,
+		}
+		assetGroupSelectorNode1AutoCertified = model.AssetGroupSelectorNodeExpanded{AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+			SelectorId: selectorId4,
+			NodeId:     nodeId1,
+			Certified:  model.AssetGroupCertificationAuto,
 			Source:     model.AssetGroupSelectorNodeSourceSeed,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
@@ -3428,14 +3440,14 @@ func TestResources_CertifyMembers(t *testing.T) {
 					Note:                note,
 				}, {
 					AssetGroupTagId:     assetGroupTag1,
-					SelectorId:          selectorId1,
+					SelectorId:          selectorId2,
 					CertificationStatus: model.AssetGroupCertificationPending,
 					NodeId:              nodeId1,
 					UserId:              userId.String(),
 					Note:                note,
 				}, {
 					AssetGroupTagId:     assetGroupTag1,
-					SelectorId:          selectorId1,
+					SelectorId:          selectorId3,
 					CertificationStatus: model.AssetGroupCertificationPending,
 					NodeId:              nodeId1,
 					UserId:              userId.String(),
@@ -3466,14 +3478,14 @@ func TestResources_CertifyMembers(t *testing.T) {
 					Note:                note,
 				}, {
 					AssetGroupTagId:     assetGroupTag1,
-					SelectorId:          selectorId1,
+					SelectorId:          selectorId2,
 					CertificationStatus: model.AssetGroupCertificationPending,
 					UserId:              userId.String(),
 					NodeId:              nodeId1,
 					Note:                note,
 				}, {
 					AssetGroupTagId:     assetGroupTag1,
-					SelectorId:          selectorId1,
+					SelectorId:          selectorId3,
 					CertificationStatus: model.AssetGroupCertificationPending,
 					UserId:              userId.String(),
 					NodeId:              nodeId1,
@@ -3496,14 +3508,14 @@ func TestResources_CertifyMembers(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(gomock.Any(), gomock.Any()).Return(nodes, nil)
 				expectedDbInput := []database.UpdateCertificationBySelectorNodeInput{{
 					AssetGroupTagId:     assetGroupTag1,
-					SelectorId:          selectorId1,
+					SelectorId:          selectorId2,
 					CertificationStatus: model.AssetGroupCertificationPending,
 					UserId:              userId.String(),
 					NodeId:              nodeId1,
 					Note:                note,
 				}, {
 					AssetGroupTagId:     assetGroupTag1,
-					SelectorId:          selectorId1,
+					SelectorId:          selectorId3,
 					CertificationStatus: model.AssetGroupCertificationPending,
 					UserId:              userId.String(),
 					NodeId:              nodeId1,
@@ -3589,6 +3601,20 @@ func TestResources_CertifyMembers(t *testing.T) {
 				}
 				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(gomock.Any(), gomock.Any()).Return(nodes, nil)
 				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), expectedDbInput)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: "",
+			}},
+		{
+			name:    "success - ignore auto certified node",
+			request: httptest.NewRequestWithContext(createContextWithOwnerEmail(userEmailAddress, userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d, "note": "%s"}`, model.AssetGroupCertificationManual, stringNote))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				nodes := []model.AssetGroupSelectorNodeExpanded{
+					assetGroupSelectorNode1AutoCertified}
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(gomock.Any(), gomock.Any()).Return(nodes, nil)
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,

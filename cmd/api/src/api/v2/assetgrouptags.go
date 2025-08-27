@@ -985,12 +985,10 @@ func isValidCertType(certType model.AssetGroupCertification) bool {
 }
 
 func recordShouldBeUpdated(record model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
-	if record.Certified != model.AssetGroupCertificationAuto {
-		if record.NodeId != lastProcessedNodeId {
-			return true
-		} else if record.Position == highestPriority {
-			return true
-		}
+	if record.NodeId != lastProcessedNodeId {
+		return true
+	} else if record.Position == highestPriority {
+		return true
 	}
 	return false
 }
@@ -1020,8 +1018,8 @@ func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier se
 			highestPriorityForGivenNode = record.Position
 			certifiedBy = userEmail
 			lastProcessedNodeId = record.NodeId
-			// don't actually update records that already match the request action
-			if record.Certified == requestAction {
+			// don't actually update records that already match the request action or are auto-certified
+			if record.Certified == requestAction || record.Certified == model.AssetGroupCertificationAuto {
 				continue
 			}
 		}
