@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dialog, DialogOverlay, DialogPortal } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
@@ -123,14 +124,20 @@ describe('CreateUserDialog', () => {
         };
 
         render(
-            <CreateUserDialog
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={options?.renderLoading || false}
-                error={options?.renderErrors}
-                showEnvironmentAccessControls={false}
-            />
+            <Dialog open={true}>
+                <DialogPortal>
+                    <DialogOverlay>
+                        <CreateUserDialog
+                            open={true}
+                            onClose={testOnClose}
+                            onSave={testOnSave}
+                            isLoading={options?.renderLoading || false}
+                            error={options?.renderErrors}
+                            showEnvironmentAccessControls={false}
+                        />
+                    </DialogOverlay>
+                </DialogPortal>
+            </Dialog>
         );
 
         return {
@@ -145,26 +152,26 @@ describe('CreateUserDialog', () => {
         setup();
 
         expect(screen.getByText('Create User')).toBeInTheDocument();
-        /*
 
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
-        expect(await screen.findByTestId('create-user-dialog_label-email-address')).toBeInTheDocument();
+        expect(screen.getByLabelText('Principal Name')).toBeInTheDocument();
 
-        expect(await screen.findByTestId('create-user-dialog_label-principal-name')).toBeInTheDocument();
+        expect(screen.getByLabelText('First Name')).toBeInTheDocument();
 
-        expect(await screen.findByTestId('create-user-dialog_label-first-name')).toBeInTheDocument();
+        expect(screen.getByLabelText('Last Name')).toBeInTheDocument();
 
-        expect(await screen.findByTestId('create-user-dialog_label-last-name')).toBeInTheDocument();
+        expect(screen.getByLabelText('Authentication Method')).toBeInTheDocument();
 
-        expect(await screen.findByTestId('create-user-dialog_label-authentication-method')).toBeInTheDocument();
+        expect(screen.getByLabelText('Initial Password')).toBeInTheDocument();
 
-        expect(await screen.findByTestId('create-user-dialog_label-role')).toBeInTheDocument();
+        expect(screen.getByLabelText('Force Password Reset?')).toBeInTheDocument();
+
+        expect(screen.getByLabelText('Role')).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-        */
     });
 
     it('should call onClose when Close button is clicked', async () => {
