@@ -69,7 +69,7 @@ const server = setupServer(
             })
         );
     }),
-    rest.get(`/api/v2/saved-queries/${undefined}/permissions`, async (req, res, ctx) => {
+    rest.get(`/api/v2/saved-queries/:id/permissions`, async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
