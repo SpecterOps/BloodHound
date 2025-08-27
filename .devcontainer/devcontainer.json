@@ -22,7 +22,7 @@
 			"installTools": true,
 			"version": "latest"
 		},
-		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
 			"plugins": "ssh-agent npm",
 			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
 			"username": "vscode"

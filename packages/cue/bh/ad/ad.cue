@@ -998,6 +998,13 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+ServicePrincipalNames: types.#StringEnum & {
+	symbol:         "ServicePrincipalNames"
+	schema:         "ad"
+	name:           "Service Principal Names"
+	representation: "serviceprincipalnames"
+}
+
 GPOStatusRaw: types.#StringEnum & {
 	symbol:         "GPOStatusRaw"
 	schema:         "ad"
@@ -1148,6 +1155,7 @@ Properties: [
 	GroupScope,
 	NetBIOS,
 	AdminSDHolderProtected,
+	ServicePrincipalNames,
 	GPOStatusRaw,
 	GPOStatus,
 ]

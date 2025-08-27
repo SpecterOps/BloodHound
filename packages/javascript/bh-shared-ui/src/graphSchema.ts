@@ -488,6 +488,7 @@ export enum ActiveDirectoryKindProperties {
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
+    ServicePrincipalNames = 'serviceprincipalnames',
     GPOStatusRaw = 'gpostatusraw',
     GPOStatus = 'gpostatus',
 }
@@ -763,6 +764,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'NetBIOS';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
+        case ActiveDirectoryKindProperties.ServicePrincipalNames:
+            return 'Service Principal Names';
         case ActiveDirectoryKindProperties.GPOStatusRaw:
             return 'GPO Status (Raw)';
         case ActiveDirectoryKindProperties.GPOStatus:
@@ -1067,7 +1070,6 @@ export enum AzureKindProperties {
     UserType = 'usertype',
     TenantID = 'tenantid',
     ServicePrincipalID = 'service_principal_id',
-    ServicePrincipalNames = 'service_principal_names',
     OperatingSystemVersion = 'operatingsystemversion',
     TrustType = 'trustype',
     IsBuiltIn = 'isbuiltin',
@@ -1117,8 +1119,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Tenant ID';
         case AzureKindProperties.ServicePrincipalID:
             return 'Service Principal ID';
-        case AzureKindProperties.ServicePrincipalNames:
-            return 'Service Principal Names';
         case AzureKindProperties.OperatingSystemVersion:
             return 'Operating System Version';
         case AzureKindProperties.TrustType:
