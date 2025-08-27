@@ -134,6 +134,15 @@ const ImportQueryDialog: React.FC<{
         }
     };
 
+    const handleRetry = async (file: FileForIngest) => {
+        try {
+            await uploadFile(file);
+            setNewFileStatus(file.file.name, FileStatus.DONE);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     const handleUploadAll = async () => {
         updateStatusOfReadyFiles(FileStatus.UPLOADING);
         // const fileToUpload = filesForIngest[0];
@@ -196,7 +205,7 @@ const ImportQueryDialog: React.FC<{
                                         file={file}
                                         key={index}
                                         onRemove={() => handleRemoveFile(index)}
-                                        onRefresh={() => {}}
+                                        onRefresh={() => handleRetry(file)}
                                         percentCompleted={0}
                                     />
                                 );
