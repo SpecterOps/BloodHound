@@ -201,14 +201,14 @@ export enum QueryScope {
 
 export interface CreateUserQueryRequest {
     name: string;
-    description: string;
+    description?: string;
     query: string;
 }
 
 export interface UpdateUserQueryRequest {
     id: number;
     name: string;
-    description: string;
+    description?: string;
     query: string;
 }
 export interface UpdateUserQueryPermissionsRequest {
