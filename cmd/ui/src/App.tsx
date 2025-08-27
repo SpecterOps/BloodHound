@@ -100,6 +100,8 @@ export const Inner: React.FC = () => {
             <Helmet>
                 {
                     // dynamically set themed favicon by os/browser theme
+                    // Why is this needed and the favicon definition in index.html?
+                    // The helmet supports firefox, and index.html ensures a favicon is initially loaded when the tab first renders with the title.
                     isOSDarkTheme ? (
                         <link rel='shortcut icon' href='/ui/favicon-dark.ico' />
                     ) : (
