@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { ReactNode, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import FileDrop from '../FileDrop';
@@ -54,70 +54,67 @@ const FileUploadDialog: React.FC<{
             open={open}
             fullWidth={true}
             maxWidth={'sm'}
+            scroll='paper'
+            onClose={onClose}
             TransitionProps={{
                 onExited: () => {
                     setFileUploadStep(FileUploadStep.ADD_FILES);
                     setFilesForIngest([]);
                 },
             }}>
-            <div className='grid overflow-hidden grid-rows-[1fr_72px]' ref={dialogRef}>
-                <DialogContent>
-                    <div className='pb-2 font-bold'>{headerText}</div>
-                    {description && <div>{description}</div>}
-                    <>
-                        <FileDrop
-                            onDrop={handleFileDrop}
-                            disabled={currentlyUploading || getFileUploadAcceptedTypes.isLoading}
-                            accept={getFileUploadAcceptedTypes.data?.data ?? []}
-                        />
-                        {uploadMessage && <Box className='mt-2 mb-2'>{uploadMessage}</Box>}
-                        <Link to='/administration/file-ingest' onClick={onClose}>
-                            <div className='text-center m-2 p-2 hover:bg-slate-200 rounded-md'>
-                                View File Ingest History
-                            </div>
-                        </Link>
+            <DialogTitle>
+                <div className='pb-2 font-bold'>{headerText}</div>
+                {description && <div>{description}</div>}
 
-                        {filesForIngest.length > 0 && (
-                            <Box sx={{ my: '8px' }}>
-                                {filesForIngest.map((file, index) => {
-                                    return (
-                                        <FileStatusListItem
-                                            file={file}
-                                            percentCompleted={
-                                                progressCache[
-                                                    makeProgressCacheKey(currentIngestJobId, file?.file?.name)
-                                                ] || 0
-                                            }
-                                            key={index}
-                                            onRemove={() => handleRemoveFile(index)}
-                                            onRefresh={retryUploadSingleFile}
-                                        />
-                                    );
-                                })}
-                            </Box>
-                        )}
-                    </>
-                    {currentlyUploading && (
-                        <div>
-                            <p>Upload in progress.</p>
-                            <p>
-                                You can continue using the platform&mdash;we will alert you once the upload is complete.
-                            </p>
-                        </div>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
-                        {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
-                    </Button>
-                    <Button
-                        disabled={submitDialogDisabled}
-                        onClick={handleSubmit}
-                        data-testid='confirmation-dialog_button-yes'>
-                        Upload
-                    </Button>
-                </DialogActions>
-            </div>
+                <FileDrop
+                    onDrop={handleFileDrop}
+                    disabled={currentlyUploading || getFileUploadAcceptedTypes.isLoading}
+                    accept={getFileUploadAcceptedTypes.data?.data ?? []}
+                />
+                {uploadMessage && <div className='mt-2 mb-2 font-normal'>{uploadMessage}</div>}
+                <Link to='/administration/file-ingest' onClick={onClose}>
+                    <div className='text-center font-normal m-2 p-2 hover:bg-slate-200 rounded-md'>
+                        View File Ingest History
+                    </div>
+                </Link>
+            </DialogTitle>
+            <DialogContent>
+                {filesForIngest.length > 0 && (
+                    <Box sx={{ my: '8px' }}>
+                        {filesForIngest.map((file, index) => {
+                            return (
+                                <FileStatusListItem
+                                    file={file}
+                                    percentCompleted={
+                                        progressCache[makeProgressCacheKey(currentIngestJobId, file?.file?.name)] || 0
+                                    }
+                                    key={index}
+                                    onRemove={() => handleRemoveFile(index)}
+                                    onRefresh={retryUploadSingleFile}
+                                />
+                            );
+                        })}
+                    </Box>
+                )}
+
+                {currentlyUploading && (
+                    <div>
+                        <p>Upload in progress.</p>
+                        <p>You can continue using the platform&mdash;we will alert you once the upload is complete.</p>
+                    </div>
+                )}
+            </DialogContent>
+            <DialogActions>
+                <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
+                    {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
+                </Button>
+                <Button
+                    disabled={submitDialogDisabled}
+                    onClick={handleSubmit}
+                    data-testid='confirmation-dialog_button-yes'>
+                    Upload
+                </Button>
+            </DialogActions>
         </Dialog>
     );
 };
