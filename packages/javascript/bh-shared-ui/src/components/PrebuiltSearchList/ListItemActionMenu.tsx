@@ -29,20 +29,21 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
 
     const handleRun = (event: MouseEvent) => {
         event.stopPropagation();
-        runQuery(query as string, id as number);
+        if (typeof query !== 'string') return;
+        runQuery(query, id);
     };
 
     const handleEdit = (event: MouseEvent) => {
         event.stopPropagation();
-        editQuery(id as number);
+        if (id == null) return;
+        editQuery(id);
     };
 
     const handleDelete = (event: MouseEvent) => {
         event.stopPropagation();
-        deleteQuery(id as number);
+        if (id == null) return;
+        deleteQuery(id);
     };
-
-    //on click run - event bubbles up the line item click event which fires Run
 
     const listItemStyles = 'w-full px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
 
