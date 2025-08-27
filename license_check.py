@@ -273,6 +273,7 @@ IGNORED_PATH_ELEMENTS = [
     # This is generated code that we don't really care about
     "packages/go/cypher/parser",
     # These are vendored packages
+    "packages/go/bhlog/multihandler.go",
     "packages/python/beagle/beagle/semver",
     "cmd/api/src/cmd/testidp/samlidp",
     # Ignore checksums
