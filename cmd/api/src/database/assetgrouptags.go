@@ -726,6 +726,7 @@ type UpdateCertificationBySelectorNodeInput struct {
 	NodeId              graph.ID
 	NodeName            string
 	Note                null.String
+	UserId              string
 }
 
 func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, inputs []UpdateCertificationBySelectorNodeInput) error {
@@ -737,7 +738,7 @@ func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, in
 			if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), input.CertificationStatus, input.CertifiedBy, input.SelectorId, input.NodeId); result.Error != nil {
 				return CheckError(result)
 			} else if !historyRecordForNode[input.NodeId] && input.CertificationStatus != model.AssetGroupCertificationPending {
-				if err = transaction.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorSystem, input.CertifiedBy.String, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, input.Note); err != nil {
+				if err = transaction.CreateAssetGroupHistoryRecord(ctx, input.UserId, input.CertifiedBy.String, input.NodeName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(input.CertificationStatus), input.AssetGroupTagId, null.String{}, input.Note); err != nil {
 					return err
 				}
 				historyRecordForNode[input.NodeId] = true

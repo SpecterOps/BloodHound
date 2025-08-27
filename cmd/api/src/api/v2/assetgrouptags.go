@@ -1000,7 +1000,7 @@ type setSelectorNodeCertifier interface {
 }
 
 // certifyMembersBySelectorNodes - Note: selectorNodeRecords supplied must be in order of nodeId, followed by position
-func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, note null.String) error {
+func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, userId string, note null.String) error {
 	var (
 		certificationStatus model.AssetGroupCertification
 		certifiedBy         null.String
@@ -1025,7 +1025,7 @@ func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier se
 				continue
 			}
 		}
-		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: record.AssetGroupTagId, SelectorId: record.SelectorId, CertifiedBy: certifiedBy, CertificationStatus: certificationStatus, NodeId: record.NodeId, NodeName: record.NodeName, Note: note})
+		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: record.AssetGroupTagId, SelectorId: record.SelectorId, CertifiedBy: certifiedBy, UserId: userId, CertificationStatus: certificationStatus, NodeId: record.NodeId, NodeName: record.NodeName, Note: note})
 		lastProcessedNodeId = record.NodeId
 	}
 	if len(inputs) > 0 {
@@ -1051,7 +1051,7 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupMemberIDsRequired, request), response)
 	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(requestCtx, reqBody.MemberIDs...); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, null.StringFrom(reqBody.Note)); err != nil {
+	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, user.ID.String(), null.StringFrom(reqBody.Note)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
