@@ -21,7 +21,7 @@ import { useFinishedJobs } from '../../hooks';
 import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toCollected, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
-import { FinishedJobsFilter } from './FinishedJobsFilter';
+import { FinishedJobsFilterDialog } from './FinishedJobsFilterDialog';
 
 const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'Data Collected'];
 
@@ -71,7 +71,7 @@ export const FinishedJobsTable: FC = () => {
 
     return (
         <>
-            <FinishedJobsFilter onConfirm={setFilters} />
+            <FinishedJobsFilterDialog onConfirm={setFilters} />
             <Card>
                 <DataTable
                     data={finishedJobs.map(getRow)}

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import {
     Button,
     Dialog,
@@ -28,25 +29,47 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import React, { useState } from 'react';
 import { useObjectState } from '../../hooks';
+import { getCollectionState, isCollectionKey, type FinishedJobsFilter } from '../../utils';
 import { AppIcon } from '../AppIcon';
+import { DataCollectedSelect } from './DataCollectedSelect';
+import { SELECT_NONE, StatusSelect } from './StatusSelect';
 
 type Props = {
-    onConfirm: (filters: Record<string, unknown>) => void;
+    onConfirm: (filters: FinishedJobsFilter) => void;
 };
 
 // TODO: BED-6407 - add onConfirm prop, executed when `Confirm` clicked
-export const FinishedJobsFilter: React.FC<Props> = () => {
+export const FinishedJobsFilterDialog: React.FC<Props> = () => {
     // TODO: BED-6407 - Disable confirm when range has validation error
     const [isConfirmDisabled] = useState(true);
-    const { setState: setFilters } = useObjectState<Record<string, unknown>>({});
+    const filters = useObjectState<FinishedJobsFilter>({});
 
-    const clearFilters = () => setFilters({});
+    const clearFilters = () => filters.setState({});
+
+    const selectStatus = (status: string) => {
+        if (status === SELECT_NONE) {
+            filters.deleteKeys('status');
+        } else {
+            filters.applyState({ status: status });
+        }
+    };
+
+    const toggleDataCollections = (key: string) => {
+        if (key in filters.state && isCollectionKey(key)) {
+            filters.deleteKeys(key);
+        } else {
+            filters.applyState({ [key]: true });
+        }
+    };
 
     return (
         <Dialog>
             <div className='mb-4 text-right'>
                 <DialogTrigger asChild>
-                    <Button variant='icon' data-testid='finished_jobs_log-open_filter_dialog'>
+                    <Button
+                        data-testid='finished_jobs_log-open_filter_dialog'
+                        name='filter-finished-jobs'
+                        variant='icon'>
                         <AppIcon.FilterOutline size={22} />
                     </Button>
                 </DialogTrigger>
@@ -70,9 +93,12 @@ export const FinishedJobsFilter: React.FC<Props> = () => {
                     {/* Multiple Descriptions ensures that Dialog gaps still apply */}
                     <DialogDescription asChild>
                         <div className='flex gap-10'>
-                            {/* TODO: BED-6404 */}
-                            <span>Status Select</span>
-                            <span>Collection Select</span>
+                            <StatusSelect status={filters.state.status} onSelect={selectStatus} />
+
+                            <DataCollectedSelect
+                                enabledCollections={getCollectionState(filters.state)}
+                                onSelect={toggleDataCollections}
+                            />
                         </div>
                     </DialogDescription>
 
