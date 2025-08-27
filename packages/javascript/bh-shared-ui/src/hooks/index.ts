@@ -44,9 +44,13 @@ export * from './useFileIngest';
 
 export * from './useFileUploadDialogContext';
 
+export * from './useFinishedJobsQuery';
+
 export * from './useGraphItem';
 
 export * from './useMountEffect';
+
+export * from './useObjectState';
 
 export * from './usePermissions';
 

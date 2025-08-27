@@ -18,25 +18,15 @@ import { type ScheduledJobDisplay } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 
-import { renderHook, waitFor } from '../test-utils';
-import {
-    FETCH_ERROR_KEY,
-    FETCH_ERROR_MESSAGE,
-    NO_PERMISSION_KEY,
-    NO_PERMISSION_MESSAGE,
-    PERSIST_NOTIFICATION,
-    toCollected,
-    toFormatted,
-    toMins,
-    useFinishedJobsQuery,
-} from './finishedJobs';
+import { renderHook, waitFor } from '../../test-utils';
+import { useFinishedJobsQuery } from './useFinishedJobsQuery';
 
 const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
 const checkPermissionMock = vi.fn();
 
-vi.mock('../providers', async () => {
-    const actual = await vi.importActual('../providers');
+vi.mock('../../providers', async () => {
+    const actual = await vi.importActual('../../providers');
     return {
         ...actual,
         useNotifications: () => ({
@@ -46,8 +36,8 @@ vi.mock('../providers', async () => {
     };
 });
 
-vi.mock('../hooks/usePermissions', async () => {
-    const actual = await vi.importActual('../hooks');
+vi.mock('../../hooks/usePermissions', async () => {
+    const actual = await vi.importActual('../../hooks');
     return {
         ...actual,
         usePermissions: () => ({
@@ -100,53 +90,6 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('toCollected', () => {
-    it('shows the collection methods for the given job', () => {
-        expect(toCollected(MOCK_FINISHED_JOB)).toBe(
-            'Sessions, Local Groups, AD Structure, Certificate Services, CA Registry, DC Registry'
-        );
-    });
-
-    it('shows some collection methods for the given job', () => {
-        const NO_COLLECTIONS_JOB = {
-            ...MOCK_FINISHED_JOB,
-            session_collection: false,
-            local_group_collection: false,
-            ad_structure_collection: false,
-            cert_services_collection: false,
-            ca_registry_collection: false,
-            dc_registry_collection: false,
-        };
-        expect(toCollected(NO_COLLECTIONS_JOB)).toBe('');
-    });
-
-    it('shows no collection methods for the given job', () => {
-        const SOME_COLLECTIONS_JOB = {
-            ...MOCK_FINISHED_JOB,
-            session_collection: false,
-            local_group_collection: false,
-            ad_structure_collection: false,
-            cert_services_collection: false,
-        };
-        expect(toCollected(SOME_COLLECTIONS_JOB)).toBe('CA Registry, DC Registry');
-    });
-});
-
-describe('toFormatted', () => {
-    it('formats the date string', () => {
-        const result = toFormatted('2024-01-01T15:30:00.500Z');
-        // Server TZ might not match local dev TZ
-        // Match format like '2024-01-01 09:30 CST'
-        expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{3,4}$/);
-    });
-});
-
-describe('toMins', () => {
-    it('shows an interval in mins', () => {
-        expect(toMins('2024-01-01T15:30:00.500Z', '2024-01-02T03:00:00.000Z')).toBe('689 Min');
-    });
-});
-
 describe('useFinishedJobsQuery', () => {
     it('requests finished jobs', async () => {
         checkPermissionMock.mockImplementation(() => true);
@@ -162,9 +105,9 @@ describe('useFinishedJobsQuery', () => {
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(
-            NO_PERMISSION_MESSAGE,
-            NO_PERMISSION_KEY,
-            PERSIST_NOTIFICATION
+            expect.stringContaining('does not permit viewing'),
+            'finished-jobs-permission',
+            expect.objectContaining({ persist: true })
         );
     });
 
@@ -176,12 +119,23 @@ describe('useFinishedJobsQuery', () => {
     });
 
     it('shows an error notification if there is an error fetching', async () => {
-        console.error = vi.fn();
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
         checkPermissionMock.mockImplementation(() => true);
         const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
+        errorSpy.mockRestore();
 
-        expect(addNotificationMock).toHaveBeenCalledWith(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY);
+        expect(addNotificationMock).toHaveBeenCalledWith(
+            expect.stringContaining('Unable to fetch finished jobs'),
+            'finished-jobs-error'
+        );
+    });
+
+    it('dismisses the "no permission" notification on unmount', async () => {
+        checkPermissionMock.mockImplementation(() => false);
+        const { unmount } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
+        unmount();
+        expect(dismissNotificationMock).toHaveBeenCalledWith('finished-jobs-permission');
     });
 });

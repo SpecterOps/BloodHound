@@ -15,28 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card } from '@bloodhoundenterprise/doodleui';
-import type { ScheduledJobDisplay } from 'js-client-library';
+import { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useFinishedJobsQuery } from '../../hooks';
-import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toCollected, toFormatted } from '../../utils';
+import { useGetFileUploadsQuery } from '../../hooks';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
-import { FinishedJobsFilter } from './FinishedJobsFilter';
 
-const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'Data Collected'];
+const HEADERS = ['ID / User / Status', 'Status Message', 'Start Time', 'Duration', 'File Information'];
 
 const getHeaders = (headers: string[]) => headers.map((label) => ({ label, verticalAlign: 'baseline' }));
 
-const getRow = (job: ScheduledJobDisplay) => {
-    const formatted = toFormatted(job.start_time);
-    const [date, time, tz] = formatted.split(/\s+/, 3);
+const getRow = (job: FileIngestJob) => {
+    const [date, time, tz] = toFormatted(job.start_time).split(' ', 3);
     const indicator = JOB_STATUS_INDICATORS[job.status];
     const label = JOB_STATUS_MAP[job.status];
 
     return [
         <div className='min-w-32 space-y-2' key={`status-${job.id}`}>
             <div className='text-primary'>ID {job.id}</div>
-            <div>{job.client_name}</div>
+            <div>{job.user_email_address}</div>
             <div className='flex items-center'>
                 <StatusIndicator {...indicator} label={label} />
             </div>
@@ -52,41 +50,35 @@ const getRow = (job: ScheduledJobDisplay) => {
         </div>,
         <div key={`duration-${job.id}`}>{getSimpleDuration(job.start_time, job.end_time)}</div>,
         <div className='min-w-32 max-w-48' key={`collected-${job.id}`}>
-            {toCollected(job)}
+            {job.total_files} Files
         </div>,
     ];
 };
 
-export const FinishedJobsTable: FC = () => {
+export const FileIngestTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    // TODO: BED-6407
-    const [, /* filters */ setFilters] = useState({});
+    const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage });
 
-    const { data, isLoading } = useFinishedJobsQuery({ page, rowsPerPage });
-
-    const finishedJobs = data?.data ?? [];
+    const fileUploadJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
     return (
-        <>
-            <FinishedJobsFilter onConfirm={setFilters} />
-            <Card>
-                <DataTable
-                    data={finishedJobs.map(getRow)}
-                    headers={getHeaders(HEADERS)}
-                    isLoading={isLoading}
-                    paginationProps={{
-                        page,
-                        rowsPerPage,
-                        count,
-                        onPageChange: (_event, page) => setPage(page),
-                        onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value, 10)),
-                    }}
-                    showPaginationControls
-                />
-            </Card>
-        </>
+        <Card>
+            <DataTable
+                data={fileUploadJobs.map(getRow)}
+                headers={getHeaders(HEADERS)}
+                isLoading={isLoading}
+                paginationProps={{
+                    page,
+                    rowsPerPage,
+                    count,
+                    onPageChange: (_event, page) => setPage(page),
+                    onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                }}
+                showPaginationControls
+            />
+        </Card>
     );
 };

@@ -118,6 +118,16 @@ func ParseLatestVersionFromTags(cwd string, env environment.Environment) (semver
 	}
 }
 
+// ParseTimestampFromSHA gets the timestamp for a given commit SHA
+func ParseTimestampFromSHA(env environment.Environment, cwd, sha string) (string, error) {
+	result, err := cmdrunner.Run("git", []string{"--no-pager", "log", "-n", "1", "--format=%cI", sha}, cwd, env)
+	if err != nil {
+		return "", fmt.Errorf("getting timestamp via git log: %w", err)
+	}
+
+	return strings.TrimSuffix(result.StandardOutput.String(), "\n"), nil
+}
+
 // parseLatestVersion parses a list of found versions and returns the latest from among them
 func parseLatestVersion(versions []string) (semver.Version, error) {
 	if len(versions) == 0 {
