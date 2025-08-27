@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ScheduledJobDisplay } from 'js-client-library';
-import { toCollected, toFormatted, toMins } from './jobs';
+import { toCollected } from './jobs';
 
 const MOCK_FINISHED_JOB: ScheduledJobDisplay = {
     id: 22,
@@ -46,7 +46,7 @@ describe('toCollected', () => {
         );
     });
 
-    it('shows some collection methods for the given job', () => {
+    it('shows no collection methods', () => {
         const NO_COLLECTIONS_JOB = {
             ...MOCK_FINISHED_JOB,
             session_collection: false,
@@ -59,7 +59,7 @@ describe('toCollected', () => {
         expect(toCollected(NO_COLLECTIONS_JOB)).toBe('');
     });
 
-    it('shows no collection methods for the given job', () => {
+    it('shows some collection methods for the given job', () => {
         const SOME_COLLECTIONS_JOB = {
             ...MOCK_FINISHED_JOB,
             session_collection: false,
@@ -68,20 +68,5 @@ describe('toCollected', () => {
             cert_services_collection: false,
         };
         expect(toCollected(SOME_COLLECTIONS_JOB)).toBe('CA Registry, DC Registry');
-    });
-});
-
-describe('toFormatted', () => {
-    it('formats the date string', () => {
-        const result = toFormatted('2024-01-01T15:30:00.500Z');
-        // Server TZ might not match local dev TZ
-        // Match format like '2024-01-01 09:30 CST'
-        expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{3,4}$/);
-    });
-});
-
-describe('toMins', () => {
-    it('shows an interval in mins', () => {
-        expect(toMins('2024-01-01T15:30:00.500Z', '2024-01-02T03:00:00.000Z')).toBe('689 Min');
     });
 });

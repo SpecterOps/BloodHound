@@ -13,25 +13,32 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-name: Static Code Analysis
-
+name: Audit Release
 on:
-  pull_request:
-    branches:
-      - main
-      - "stage/**"
-    types:
-      - opened
-      - synchronize
+  workflow_dispatch:
+    inputs:
+      start:
+        description: Begin with commit SHA/tag/branch name
+        required: true
+        type: string
+      end:
+        description: End with commit SHA/tag/branch name
+        required: true
+        type: string
+      base:
+        description: Base branch
+        default: main
+        type: string
 
 jobs:
-  run-analysis:
+  audit:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source code for this repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -40,19 +47,7 @@ jobs:
           cache: true
           check-latest: true
 
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Yarn
-        run: |
-          npm install --global yarn
-
-      - name: Install Deps
-        run: |
-          go tool stbernard deps
-
-      - name: Run Analysis
-        run: |
-          go tool stbernard analysis
+      - name: Audit Release Tags with Base
+        run: go tool stbernard audit -start ${{ inputs.start }} -end ${{ inputs.end }} -base ${{ inputs.base }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

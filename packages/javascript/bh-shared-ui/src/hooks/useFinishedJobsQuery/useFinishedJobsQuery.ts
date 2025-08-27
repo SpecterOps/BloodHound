@@ -17,8 +17,7 @@
 import type { GetScheduledJobDisplayResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { useNotifications } from '../../providers';
-import { PERSIST_NOTIFICATION } from '../../utils';
+import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
 import { apiClient } from '../../utils/api';
 import { Permission } from '../../utils/permissions';
 import { usePermissions } from '../usePermissions';
@@ -28,12 +27,12 @@ interface FinishedJobParams {
     rowsPerPage: number;
 }
 
-export const NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the finished jobs details. Please
-    contact your administrator for details.`;
-export const NO_PERMISSION_KEY = 'finished-jobs-permission';
+const NO_PERMISSION_MESSAGE =
+    'Your role does not permit viewing finished job details. Please contact your administrator for assistance.';
+const NO_PERMISSION_KEY = 'finished-jobs-permission';
 
-export const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
-export const FETCH_ERROR_KEY = 'finished-jobs-error';
+const FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
+const FETCH_ERROR_KEY = 'finished-jobs-error';
 
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
 export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) => {
