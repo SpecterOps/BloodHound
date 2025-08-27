@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import { render, screen } from '../../test-utils';
 import { SavedQueriesContext } from '../../views';
 import ListItemActionMenu from './ListItemActionMenu';
@@ -27,7 +28,7 @@ const testSelectedQuery = {
 };
 
 const TestSavedQueriesContext = {
-    selected: { query: '', id: 1 },
+    selected: { query: 'abcde', id: 1 },
     selectedQuery: testSelectedQuery,
     showSaveQueryDialog: false,
     saveAction: undefined,
@@ -39,11 +40,11 @@ const TestSavedQueriesContext = {
 };
 
 describe('ListItemActionMenu', () => {
-    const testDeleteHandler = vitest.fn();
+    const testDeleteHandler = vi.fn();
     const user = userEvent.setup();
     const ListItemActionMenuWithProvider = () => (
         <SavedQueriesContext.Provider value={TestSavedQueriesContext}>
-            <ListItemActionMenu id={1} deleteQuery={testDeleteHandler} />
+            <ListItemActionMenu id={1} deleteQuery={testDeleteHandler} query='abc' />
         </SavedQueriesContext.Provider>
     );
 

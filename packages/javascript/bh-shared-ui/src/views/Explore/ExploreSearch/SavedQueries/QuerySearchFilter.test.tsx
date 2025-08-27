@@ -17,14 +17,21 @@ import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../../../test-utils';
 import QuerySearchFilter from './QuerySearchFilter';
 
-const mockProvider = vi.fn();
-const mockContext = vi.fn();
+// const mockProvider = vi.fn();
+const mockContext = vi.fn().mockReturnValue({
+    // Provide only what the component reads; adjust as needed
+    selected: undefined,
+    selectedQuery: undefined,
+    setSelected: vi.fn(),
+    runQuery: vi.fn(),
+    editQuery: vi.fn(),
+} as any);
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');
     return {
         ...actual,
-        SavedQueriesProvider: () => mockProvider,
-        useSavedQueriesContext: () => mockContext,
+        SavedQueriesProvider: actual.SavedQueriesProvider,
+        useSavedQueriesContext: () => mockContext(),
     };
 });
 
@@ -81,7 +88,7 @@ describe('QuerySearchFilter', () => {
 
         const testPlatforms = screen.getByLabelText('Platforms');
 
-        expect(testPlatforms).toBeInTheDocument;
+        expect(testPlatforms).toBeInTheDocument();
 
         expect(screen.queryByText('All')).not.toBeInTheDocument();
 

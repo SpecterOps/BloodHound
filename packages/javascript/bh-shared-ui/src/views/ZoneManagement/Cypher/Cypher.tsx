@@ -37,11 +37,13 @@ export const Cypher: FC<{
 
     const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
     const location = useLocation();
-    const receivedQuery = location.state?.query;
+    const receivedQuery = location.state?.query as unknown;
 
     useEffect(() => {
-        setCypherQuery(receivedQuery);
-    }, []);
+        if (!preview && typeof receivedQuery === 'string' && receivedQuery.length) {
+            setCypherQuery(receivedQuery);
+        }
+    }, [preview, receivedQuery]);
 
     const kindsQuery = useQuery({
         queryKey: ['graph-kinds'],
