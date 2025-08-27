@@ -542,7 +542,7 @@ describe('SaveQueryDialog', () => {
         );
 
         expect(
-            screen.getByText(/an error ocurred while attempting to save this query. please try again./i)
+            screen.getByText(/an error occurred while attempting to save this query. please try again./i)
         ).toBeInTheDocument();
     });
 

@@ -204,7 +204,7 @@ const SaveQueryDialog: React.FC<{
                                 <CardFooter className='flex justify-end gap-4'>
                                     {error ? (
                                         <div>
-                                            An error ocurred while attempting to save this query. Please try again.
+                                            An error occurred while attempting to save this query. Please try again.
                                         </div>
                                     ) : null}
 
