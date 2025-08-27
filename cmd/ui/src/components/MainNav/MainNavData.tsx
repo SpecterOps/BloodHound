@@ -29,15 +29,12 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: {
-                element: <AppIcon.BHCELogoFull size={155} className='rounded h-full' />,
-                dimensions: { height: '40px', width: '165px' },
-            },
+            icon: <AppIcon.BHCELogoFull size={155} className='rounded h-full' />,
         },
         specterOps: {
             image: {
                 imageUrl: `${import.meta.env.BASE_URL}${darkMode ? soImageUrlDarkMode : soImageUrlLightMode}`,
-                dimensions: { height: '25px', width: '110px' },
+                dimensions: { height: 25, width: 110 },
                 altText: 'SpecterOps Text Logo',
             },
         },

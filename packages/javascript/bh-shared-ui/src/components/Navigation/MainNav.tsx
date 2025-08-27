@@ -38,24 +38,20 @@ const MainNavLogoTextImage: FC<{
     );
 };
 
-const NavItemViewPort: FC<{ children: ReactNode }> = (props) => {
-    return <div className='w-full min-h-10 overflow-hidden rounded relative'>{props.children}</div>;
-};
+const baseLinkContainerStyles = 'w-full min-h-10 overflow-hidden rounded';
 
 export const MainNavLogo: FC<{ data: MainNavLogoDataObject; allowHover: boolean }> = (props) => {
     const { data, allowHover } = props;
     return (
-        <NavItemViewPort>
+        <div className={baseLinkContainerStyles} data-testid='global_nav-home'>
             <AppLink
-                className={cn('absolute top-0 right-0 left-0 bottom-0 bg-cover', {
-                    'group-hover:w-full cursor-pointer': allowHover,
+                className={cn({
+                    'cursor-pointer': allowHover,
                 })}
-                to={{ pathname: data.project.route }}
-                style={data.project.icon.dimensions}
-                data-testid='global_nav-home'>
-                {data.project.icon.element}
+                to={{ pathname: data.project.route }}>
+                {data.project.icon}
             </AppLink>
-        </NavItemViewPort>
+        </div>
     );
 };
 
@@ -72,7 +68,8 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; allowHover: boo
         <li
             onClick={onClick}
             className={cn(
-                'h-10 px-2 flex overflow-hidden items-center rounded text-neutral-dark-1 dark:text-neutral-light-1',
+                baseLinkContainerStyles,
+                'px-2 flex items-center text-neutral-dark-1 dark:text-neutral-light-1',
                 {
                     'text-primary dark:text-primary dark:hover:text-primary bg-neutral-light-4 cursor-default':
                         isActiveRoute,

@@ -18,20 +18,15 @@ import type { ReactNode } from 'react';
 
 type MainNavLogoImage = {
     imageUrl: string;
-    dimensions: { height: string; width: string };
+    dimensions: { height: number; width: number };
     classes?: string;
     altText: string;
-};
-
-type MainNavLogoIcon = {
-    element: ReactNode;
-    dimensions: { height: string; width: string };
 };
 
 export type MainNavLogoDataObject = {
     project: {
         route: string;
-        icon: MainNavLogoIcon;
+        icon: ReactNode;
     };
     specterOps: {
         image: MainNavLogoImage;
