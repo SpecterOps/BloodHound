@@ -13,24 +13,43 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import type { ScheduledJobDisplay } from 'js-client-library';
-import { DateTime, Interval } from 'luxon';
-import { OptionsObject } from 'notistack';
-import { StatusType } from '../components';
-import { LuxonFormat } from './datetime';
 
-export const JOB_STATUS_MAP: Record<number, { label: string; status: StatusType; pulse?: boolean }> = {
-    [-1]: { label: 'Invalid', status: 'bad' },
-    0: { label: 'Ready', status: 'good' },
-    1: { label: 'Running', status: 'pending', pulse: true },
-    2: { label: 'Complete', status: 'good' },
-    3: { label: 'Canceled', status: 'bad' },
-    4: { label: 'Timed Out', status: 'bad' },
-    5: { label: 'Failed', status: 'bad' },
-    6: { label: 'Ingesting', status: 'pending', pulse: true },
-    7: { label: 'Analyzing', status: 'pending' },
-    8: { label: 'Partially Completed', status: 'pending' },
-};
+import type { ScheduledJobDisplay } from 'js-client-library';
+import { StatusType } from '../components';
+
+export const JOB_STATUS_MAP: Record<number, string> = {
+    [-1]: 'Invalid',
+    0: 'Ready',
+    1: 'Running',
+    2: 'Complete',
+    3: 'Canceled',
+    4: 'Timed Out',
+    5: 'Failed',
+    6: 'Ingesting',
+    7: 'Analyzing',
+    8: 'Partially Completed',
+} as const satisfies Record<number, string>;
+
+export const JOB_STATUS_INDICATORS: Record<number, { status: StatusType; pulse?: boolean }> = {
+    [-1]: { status: 'bad' },
+    0: { status: 'good' },
+    1: { status: 'pending', pulse: true },
+    2: { status: 'good' },
+    3: { status: 'bad' },
+    4: { status: 'bad' },
+    5: { status: 'bad' },
+    6: { status: 'pending', pulse: true },
+    7: { status: 'pending' },
+    8: { status: 'pending' },
+} as const satisfies Record<number, { status: StatusType; pulse?: boolean }>;
+
+export type JobCollectionType =
+    | 'session_collection'
+    | 'local_group_collection'
+    | 'ad_structure_collection'
+    | 'cert_services_collection'
+    | 'ca_registry_collection'
+    | 'dc_registry_collection';
 
 const COLLECTION_MAP = new Map(
     Object.entries({
@@ -43,28 +62,9 @@ const COLLECTION_MAP = new Map(
     })
 );
 
-export const PERSIST_NOTIFICATION: OptionsObject = {
-    persist: true,
-    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-};
-
-/** Returns the duration, in mins, between 2 given ISO datetime strings */
-export const toMins = (start: string, end: string) => {
-    const interval = Interval.fromDateTimes(DateTime.fromISO(start), DateTime.fromISO(end));
-
-    if (!interval.isValid) {
-        return '';
-    }
-
-    return Math.floor(interval.length('minutes')) + ' Min';
-};
-
 /** Returns a string listing all the collections methods for the given job */
-export const toCollected = (job: ScheduledJobDisplay) =>
+export const toCollected = (job: Pick<ScheduledJobDisplay, JobCollectionType>) =>
     Object.entries(job)
         .filter(([key, value]) => COLLECTION_MAP.has(key) && value)
         .map(([key]) => COLLECTION_MAP.get(key))
         .join(', ');
-
-/** Returns the given ISO datetime string formatted with the the timezone */
-export const toFormatted = (dateStr: string) => DateTime.fromISO(dateStr).toFormat(LuxonFormat.DATE_WITHOUT_GMT);
