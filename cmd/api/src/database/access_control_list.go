@@ -87,8 +87,9 @@ func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user mo
 
 		// If a user has a TAC List, then they no longer have access to all environments
 		user.AllEnvironments = false
+		userUpdateResult := s.db.Raw("UPDATE users SET all_environments = false WHERE id = ?", user.ID.String())
 
-		return s.UpdateUser(ctx, user)
+		return CheckError(userUpdateResult)
 	})
 
 	return availableEnvironments, err

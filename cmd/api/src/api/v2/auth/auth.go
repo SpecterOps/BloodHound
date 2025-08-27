@@ -370,12 +370,12 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		if etacFeatureFlag.Enabled {
-			if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
-				return
-			}
-
 			if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
+				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
+					return
+				}
+
 				if len(createUserRequest.UpdateUserRequest.EnvironmentControlList.Environments) != 0 && createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
 					return
@@ -532,11 +532,12 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if etacFeatureFlag.Enabled {
-			if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
-				return
-			}
 			if updateUserRequest.EnvironmentControlList != nil {
+				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
+					return
+				}
+
 				if len(updateUserRequest.EnvironmentControlList.Environments) != 0 && updateUserRequest.EnvironmentControlList.AllEnvironments {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
 					return
