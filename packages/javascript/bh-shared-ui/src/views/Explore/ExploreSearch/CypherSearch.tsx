@@ -211,7 +211,7 @@ const CypherSearchInner = ({
     };
 
     const handleSaveAs = () => {
-        setSelected({ query: '' });
+        setSelected({ query: '', id: undefined });
         setSaveAction('save-as');
         setShowSaveQueryDialog(true);
     };

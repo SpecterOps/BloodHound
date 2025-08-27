@@ -21,7 +21,7 @@ import { SavedQueriesContext } from './SavedQueriesContext';
 export function SavedQueriesProvider({ children }: { children: any }) {
     const [selected, setSelected] = useState<SelectedQuery>({ query: '', id: undefined });
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
-    const [saveAction, setSaveAction] = useState<SaveQueryAction>(undefined);
+    const [saveAction, setSaveAction] = useState<SaveQueryAction | undefined>(undefined);
 
     const selectedQuery: QueryLineItem | undefined = useGetSelectedQuery(selected.query, selected.id);
 

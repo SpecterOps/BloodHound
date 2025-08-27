@@ -73,7 +73,6 @@ export const getQueryPermissions = async (id: number, options?: RequestOptions):
 export const useQueryPermissions = (id?: number) =>
     useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id as number, { signal }), {
         retry: false,
-        enabled: typeof id === 'number',
     });
 
 export const updateQueryPermissions = (
