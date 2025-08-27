@@ -75,7 +75,7 @@ const CypherSearchInner = ({
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
-    const { data: permissions } = useQueryPermissions(selectedQuery?.id as number);
+    const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
     useEffect(() => {
         //Setting the selected query once on load

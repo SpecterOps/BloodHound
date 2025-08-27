@@ -24,7 +24,7 @@ const handlers = [
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: {},
+                data: [],
             })
         );
     }),

@@ -85,7 +85,7 @@ describe('CommonSearches', () => {
 
         //wait for loading to complete
         await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-        await waitForElementToBeRemoved(() => screen.getByTestId('common-searches-skeleton'));
+        await waitForElementToBeRemoved(() => screen.queryByTestId('common-searches-skeleton'));
 
         const header = screen.getByText(/Pre-built Queries/i);
         expect(header).toBeInTheDocument();

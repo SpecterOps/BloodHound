@@ -20,12 +20,12 @@ interface SavedQueriesContextType {
     selected: SelectedQuery;
     selectedQuery: QueryLineItem | undefined;
     showSaveQueryDialog: boolean;
-    saveAction: SaveQueryAction;
+    saveAction: SaveQueryAction | undefined;
     setSelected: Dispatch<SetStateAction<SelectedQuery>>;
     setShowSaveQueryDialog: Dispatch<SetStateAction<boolean>>;
     setSaveAction: Dispatch<SetStateAction<SaveQueryAction>>;
-    runQuery: any;
-    editQuery: any;
+    runQuery: (query: string, id?: number) => void;
+    editQuery: (id: number) => void;
 }
 
 export const SavedQueriesContext = createContext<SavedQueriesContextType>({
