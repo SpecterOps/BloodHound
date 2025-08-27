@@ -121,6 +121,12 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
+                /*
+                environment_control_list: {
+                    environments: user.environment_control_list.environments || [],
+                    all_environments: user.environment_control_list.all_environments,
+                },
+                */
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);
@@ -237,7 +243,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
             <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
                 <DialogPortal>
                     <UpdateUserDialog
-                        data-testid='update-user-dialog'
                         error={updateUserMutation.error}
                         hasSelectedSelf={hasSelectedSelf}
                         isLoading={updateUserMutation.isLoading}
@@ -248,6 +253,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                         showEnvironmentAccessControls={showEnvironmentAccessControls}
                         userId={selectedUserId!}
                     />
+                    \{' '}
                 </DialogPortal>
             </Dialog>
             <ConfirmationDialog
