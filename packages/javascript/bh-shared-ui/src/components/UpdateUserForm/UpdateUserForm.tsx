@@ -127,6 +127,12 @@ const UpdateUserForm: React.FC<{
                 lastName: getUserQuery.data.last_name || '',
                 SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
                 roles: getUserQuery.data.roles?.map((role: any) => role.id) || [],
+                /*
+                environment_control_list: {
+                    environments: getUserQuery.data.environment_control_list.environments || [],
+                    all_environments: getUserQuery.data.environment_control_list.all_environments,
+                },
+                */
             }}
             error={error}
             hasSelectedSelf={hasSelectedSelf}
@@ -241,18 +247,11 @@ const UpdateUserFormInner: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel
-                                                    aria-labelledby='emailAddress'
-                                                    data-testid='update-user-dialog_label-email-address'>
+                                                <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
                                                     Email Address
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        data-testid='update-user-dialog_input-email-address'
-                                                        id='emailAddress'
-                                                        type='email'
-                                                    />
+                                                    <Input {...field} id='emailAddress' type='email' />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -284,17 +283,11 @@ const UpdateUserFormInner: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel
-                                                    aria-labelledby='principal'
-                                                    data-testid='update-user-dialog_label-principal-name'>
+                                                <FormLabel aria-labelledby='principal' htmlFor='principal'>
                                                     Principal Name
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        data-testid='update-user-dialog_input-principal-name'
-                                                        id='principal'
-                                                    />
+                                                    <Input {...field} id='principal' />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -326,15 +319,9 @@ const UpdateUserFormInner: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel data-testid='update-user-dialog_label-first-name'>
-                                                    First Name
-                                                </FormLabel>
+                                                <FormLabel htmlFor='firstName'>First Name</FormLabel>
                                                 <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        id='firstName'
-                                                        data-testid='update-user-dialog_input-first-name'
-                                                    />
+                                                    <Input {...field} id='firstName' />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -366,15 +353,9 @@ const UpdateUserFormInner: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel data-testid='update-user-dialog_label-last-name'>
-                                                    Last Name
-                                                </FormLabel>
+                                                <FormLabel htmlFor='lastName'>Last Name</FormLabel>
                                                 <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        data-testid='update-user-dialog_input-last-name'
-                                                        id='lastName'
-                                                    />
+                                                    <Input {...field} id='lastName' />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -391,27 +372,25 @@ const UpdateUserFormInner: React.FC<{
                                                 required: 'Authentication Method is required',
                                             }}
                                             render={({ field }) => (
-                                                <>
+                                                <FormItem>
                                                     <FormLabel
-                                                        data-testid='update-user-dialog_label-authentication-method'
-                                                        //hidden={hasSelectedSelf}
+                                                        //hidden={hasSelectedSelf} // TODO: KEEP
+                                                        htmlFor='authenticationMethod'
                                                         className='mb-4'>
                                                         Authentication Method
                                                     </FormLabel>
 
                                                     <Select
-                                                        //defaultValue={field.value}
+                                                        defaultValue={field.value}
                                                         onValueChange={(field: any) => {
                                                             form.setValue('authenticationMethod', field);
                                                             //setAuthenticationMethod(field);
                                                         }}
                                                         value={field.value}
-                                                        //hidden={hasSelectedSelf}
+                                                        //hidden={hasSelectedSelf} //todo: keep'
                                                     >
-                                                        <FormControl>
-                                                            <SelectTrigger
-                                                                className='mt-3'
-                                                                data-testid='update-user-dialog_select-authentication-method'>
+                                                        <FormControl className='pointer-events-auto'>
+                                                            <SelectTrigger className='mt-3' id='authenticationMethod'>
                                                                 <SelectValue
                                                                     placeholder={
                                                                         authenticationMethod === 'password'
@@ -437,7 +416,7 @@ const UpdateUserFormInner: React.FC<{
                                                             </SelectContent>
                                                         </SelectPortal>
                                                     </Select>
-                                                </>
+                                                </FormItem>
                                             )}
                                         />
                                     </Grid>
@@ -453,7 +432,7 @@ const UpdateUserFormInner: React.FC<{
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel
-                                                            data-testid='update-user-dialog_label-sso-provider'
+                                                            htmlFor='sso'
                                                             id='SSOProviderId-label'
                                                             //hidden={hasSelectedSelf}
                                                         >
@@ -461,7 +440,6 @@ const UpdateUserFormInner: React.FC<{
                                                         </FormLabel>
 
                                                         <Select
-                                                            data-testid='update-user-dialog_sso-provider'
                                                             onValueChange={(field: any) => {
                                                                 form.setValue('authenticationMethod', field.value);
                                                                 //setAuthenticationMethod(field.value);
@@ -470,7 +448,7 @@ const UpdateUserFormInner: React.FC<{
                                                             //hidden={hasSelectedSelf}
                                                         >
                                                             <FormControl>
-                                                                <SelectTrigger className='mt-3'>
+                                                                <SelectTrigger className='mt-3' id='sso'>
                                                                     <SelectValue placeholder='SSO Provider' />
                                                                 </SelectTrigger>
                                                             </FormControl>
@@ -506,9 +484,7 @@ const UpdateUserFormInner: React.FC<{
                                             <>
                                                 <FormItem>
                                                     <div className='flex row'>
-                                                        <FormLabel
-                                                            data-testid='update-user-dialog_label-role'
-                                                            className='mr-2'>
+                                                        <FormLabel className='mr-2' htmlFor='role'>
                                                             Role
                                                         </FormLabel>
                                                         <Tooltip
@@ -524,11 +500,10 @@ const UpdateUserFormInner: React.FC<{
                                                                 form.setValue('roles', [Number(field)]);
                                                                 setSelectedRoleValue([Number(field)]);
                                                             }}
+                                                            //open
                                                             value={String(selectedRoleValue)}>
-                                                            <FormControl>
-                                                                <SelectTrigger
-                                                                    className='mt-3'
-                                                                    data-testid='update-user-dialog_select-role'>
+                                                            <FormControl className='pointer-events-auto'>
+                                                                <SelectTrigger className='mt-3' id='role'>
                                                                     <SelectValue placeholder={field.value} />
                                                                 </SelectTrigger>
                                                             </FormControl>

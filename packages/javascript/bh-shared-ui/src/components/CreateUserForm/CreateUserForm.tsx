@@ -20,7 +20,6 @@ import {
     Checkbox,
     DialogActions,
     DialogClose,
-    DialogDescription,
     DialogTitle,
     Form,
     FormControl,
@@ -38,14 +37,16 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Grid } from '@mui/material';
-import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Grid, TextField } from '@mui/material';
+import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
 import { apiClient } from '../../utils';
-import UserFormEnvironmentSelector from './UserFormEnvironmentSelector';
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
@@ -66,6 +67,12 @@ const CreateUserForm: React.FC<{
         needsPasswordReset: false,
         roles: [3],
         SSOProviderId: '',
+        /*
+        environment_control_list: {
+            environments: [],
+            all_environments: false,
+        },
+        */
     };
 
     const form = useForm<CreateUserRequestForm>({ defaultValues });
@@ -111,6 +118,39 @@ const CreateUserForm: React.FC<{
         console.log(error);
     }
 
+    const {
+        data: availableEnvironments,
+        //isLoading,
+        //isError
+    } = useAvailableEnvironments();
+
+    const [searchInput, setSearchInput] = useState<string>('');
+    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
+
+    const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
+        environment.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+
+    const handleSelectAllChange = (checked: any) => {
+        if (checked) {
+            const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map((item) => item.id);
+            setSelectedEnvironments(returnMappedEnvironments || []);
+        } else {
+            setSelectedEnvironments([]);
+        }
+    };
+
+    const handleItemChange = (itemId: any, checked: any) => {
+        if (checked) {
+            setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
+        } else {
+            setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
+        }
+    };
+
+    const isAllSelected =
+        selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
+
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
@@ -119,7 +159,7 @@ const CreateUserForm: React.FC<{
                         <Card className=' p-6 rounded shadow max-w-[600px]'>
                             <DialogTitle>{'Create User'}</DialogTitle>
 
-                            <DialogDescription className='flex flex-col' data-testid='create-user-dialog_content'>
+                            <div className='flex flex-col' data-testid='create-user-dialog_content'>
                                 <Grid container spacing={2} className='min-h-[650px] mt-4'>
                                     <Grid item xs={12}>
                                         <FormField
@@ -138,9 +178,7 @@ const CreateUserForm: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel
-                                                        aria-labelledby='emailAddress'
-                                                        data-testid='create-user-dialog_label-email-address'>
+                                                    <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
                                                         Email Address
                                                     </FormLabel>
                                                     <FormControl>
@@ -181,15 +219,9 @@ const CreateUserForm: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel data-testid='create-user-dialog_label-principal-name'>
-                                                        Principal Name
-                                                    </FormLabel>
+                                                    <FormLabel htmlFor='principal'>Principal Name</FormLabel>
                                                     <FormControl>
-                                                        <Input
-                                                            {...field}
-                                                            data-testid='create-user-dialog_input-principal-name'
-                                                            id='principal'
-                                                        />
+                                                        <Input {...field} id='principal' />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -221,15 +253,9 @@ const CreateUserForm: React.FC<{
                                             render={({ field }) => (
                                                 <>
                                                     <FormItem>
-                                                        <FormLabel data-testid='create-user-dialog_label-first-name'>
-                                                            First Name
-                                                        </FormLabel>
+                                                        <FormLabel htmlFor='firstName'>First Name</FormLabel>
                                                         <FormControl>
-                                                            <Input
-                                                                {...field}
-                                                                data-testid='create-user-dialog_input-first-name'
-                                                                id='firstName'
-                                                            />
+                                                            <Input {...field} id='firstName' />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -262,16 +288,11 @@ const CreateUserForm: React.FC<{
                                             render={({ field }) => (
                                                 <>
                                                     <FormItem>
-                                                        <FormLabel data-testid='create-user-dialog_label-last-name'>
-                                                            Last Name
-                                                        </FormLabel>
+                                                        <FormLabel htmlFor='lastName'>Last Name</FormLabel>
                                                         <FormControl>
-                                                            <Input
-                                                                {...field}
-                                                                data-testid='create-user-dialog_input-last-name'
-                                                                id='lastName'
-                                                            />
+                                                            <Input {...field} id='lastName' />
                                                         </FormControl>
+                                                        <FormMessage />
                                                     </FormItem>
                                                 </>
                                             )}
@@ -281,7 +302,7 @@ const CreateUserForm: React.FC<{
                                     <>
                                         <Grid item xs={12}>
                                             <FormItem>
-                                                <FormLabel data-testid='create-user-dialog_label-authentication-method'>
+                                                <FormLabel htmlFor='authenticationMethod'>
                                                     Authentication Method
                                                 </FormLabel>
                                                 <Select
@@ -289,7 +310,7 @@ const CreateUserForm: React.FC<{
                                                     onValueChange={(value) => setAuthenticationMethod(value as string)}
                                                     value={authenticationMethod}>
                                                     <FormControl>
-                                                        <SelectTrigger>
+                                                        <SelectTrigger id='authenticationMethod'>
                                                             <SelectValue placeholder={authenticationMethod} />
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -336,15 +357,13 @@ const CreateUserForm: React.FC<{
                                                         }}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>Password</FormLabel>
+                                                                <FormLabel htmlFor='password'>
+                                                                    Initial Password
+                                                                </FormLabel>
                                                                 <FormControl>
-                                                                    <Input
-                                                                        {...field}
-                                                                        data-testid='create-user-dialog_input-password'
-                                                                        id='password'
-                                                                        type='password'
-                                                                    />
+                                                                    <Input {...field} id='password' type='password' />
                                                                 </FormControl>
+                                                                <FormMessage />
                                                             </FormItem>
                                                         )}
                                                     />
@@ -356,17 +375,24 @@ const CreateUserForm: React.FC<{
                                                         defaultValue={false}
                                                         render={({ field }) => (
                                                             <div className='flex flex-row items-center'>
-                                                                <Checkbox
-                                                                    {...field}
-                                                                    data-testid='create-user-dialog_checkbox-needs-password-reset'
-                                                                    id='create-user-dialog_checkbox-needs-password-reset'
-                                                                    onChange={(e, checked) => field.onChange(checked)}
-                                                                />
-                                                                <Label
-                                                                    htmlFor='create-user-dialog_checkbox-needs-password-reset'
-                                                                    className='pl-2'>
-                                                                    Force Password Reset?
-                                                                </Label>
+                                                                <FormItem>
+                                                                    <FormControl>
+                                                                        <Checkbox
+                                                                            {...field}
+                                                                            id='needsPasswordReset'
+                                                                            onClick={(checked: any) =>
+                                                                                field.onChange(checked)
+                                                                            }
+                                                                            checked={field.value}
+                                                                            //value={form.watch('needsPasswordReset').valueOf()}
+                                                                        />
+                                                                    </FormControl>
+                                                                    <Label
+                                                                        htmlFor='needsPasswordReset'
+                                                                        className='pl-2'>
+                                                                        Force Password Reset?
+                                                                    </Label>
+                                                                </FormItem>
                                                             </div>
                                                         )}
                                                     />
@@ -375,15 +401,14 @@ const CreateUserForm: React.FC<{
                                         ) : (
                                             <Grid item xs={12}>
                                                 <FormItem>
-                                                    <FormLabel>SSO Provider</FormLabel>
+                                                    <FormLabel htmlFor='sso'>SSO Provider</FormLabel>
                                                     <Select
-                                                        data-testid='create-user-dialog_sso-provider'
                                                         onValueChange={(value) =>
                                                             setAuthenticationMethod(value as string)
                                                         }
                                                         value={authenticationMethod}>
                                                         <FormControl>
-                                                            <SelectTrigger>
+                                                            <SelectTrigger id='sso'>
                                                                 <SelectValue placeholder='SSO Provider' />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -417,9 +442,7 @@ const CreateUserForm: React.FC<{
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <div className='flex row'>
-                                                        <FormLabel
-                                                            className='mr-2'
-                                                            data-testid='create-user-dialog_label-role'>
+                                                        <FormLabel className='mr-2' htmlFor='role'>
                                                             Role
                                                         </FormLabel>
                                                         <Tooltip
@@ -438,7 +461,7 @@ const CreateUserForm: React.FC<{
                                                         }}
                                                         value={String(selectedRoleValue)}>
                                                         <FormControl>
-                                                            <SelectTrigger>
+                                                            <SelectTrigger id='role'>
                                                                 <SelectValue placeholder={field.value} />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -471,7 +494,7 @@ const CreateUserForm: React.FC<{
                                     )}
                                     */}
                                 </Grid>
-                            </DialogDescription>
+                            </div>
                             <DialogActions className='mt-8 flex justify-end gap-4'>
                                 <DialogClose asChild>
                                     <Button
@@ -487,7 +510,94 @@ const CreateUserForm: React.FC<{
                                 </Button>
                             </DialogActions>
                         </Card>
-                        {showEnvironmentAccessControls && selectedRole && <UserFormEnvironmentSelector />}
+                        {showEnvironmentAccessControls && selectedRole && (
+                            <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
+                                <DialogTitle>Environmental Access Control</DialogTitle>
+                                <div
+                                    className='flex flex-col'
+                                    data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                                    <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
+                                        <div className={'ml-4 mt-2 flex items-center'}>
+                                            <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
+                                            <TextField
+                                                autoFocus
+                                                className={'w-full ml-3'}
+                                                label='Search'
+                                                onChange={(e) => {
+                                                    setSearchInput(e.target.value);
+                                                }}
+                                                variant='standard'
+                                            />
+                                        </div>
+                                        <div
+                                            className='flex flex-row ml-4 mt-6 mb-2 items-center'
+                                            data-testid='create-user-dialog_environments-checkboxes-select-all'>
+                                            <FormField
+                                                name='allEnvironments'
+                                                control={form.control}
+                                                defaultValue={false}
+                                                render={({ field }) => (
+                                                    <FormItem className='flex flex-row items-center'>
+                                                        <Checkbox
+                                                            {...field}
+                                                            checked={isAllSelected}
+                                                            id='allEnvironments'
+                                                            onCheckedChange={handleSelectAllChange}
+                                                            value={true}
+                                                            //value={form.watch({ ''}).valueOf()} // environment_control_list.all_environments
+                                                        />
+                                                        <Label
+                                                            htmlFor='allEnvironments'
+                                                            className='ml-3 w-full cursor-pointer'>
+                                                            Select All Environments
+                                                        </Label>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <div
+                                            className='flex flex-col'
+                                            data-testid='create-user-dialog_environments-checkboxes'>
+                                            {filteredEnvironments &&
+                                                filteredEnvironments?.map((item) => {
+                                                    return (
+                                                        <div
+                                                            className='flex justify-start items-center ml-5'
+                                                            data-testid='create-user-dialog_environments-checkbox'>
+                                                            <FormField
+                                                                name='environments'
+                                                                control={form.control}
+                                                                defaultValue={false}
+                                                                render={({ field }) => (
+                                                                    <FormItem className='flex flex-row items-center'>
+                                                                        <Checkbox
+                                                                            {...field}
+                                                                            checked={selectedEnvironments.includes(
+                                                                                item.id
+                                                                            )}
+                                                                            className='m-3'
+                                                                            id='environments'
+                                                                            onCheckedChange={(checked) =>
+                                                                                handleItemChange(item.id, checked)
+                                                                            }
+                                                                            value={item.name} // environment_control_list.environments
+                                                                        />
+                                                                        <Label
+                                                                            htmlFor='environments'
+                                                                            className='mr-3 w-full cursor-pointer'>
+                                                                            {item.name}
+                                                                        </Label>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
                     </div>
                 )}
             </form>

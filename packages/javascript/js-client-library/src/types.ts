@@ -212,6 +212,10 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
+    environment_control_list?: {
+        environments?: string[];
+        all_environments?: boolean;
+    };
 }
 
 interface Permission {
