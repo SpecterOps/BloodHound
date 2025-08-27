@@ -1,0 +1,15 @@
+{
+    "graph": {
+        "edges": [
+            {
+                "start": {
+                    "value": "node_1"
+                },
+                "end": {
+                    "value": "node_2"
+                },
+                "kind": "EdgeKindA"
+            }
+        ]
+    }
+}

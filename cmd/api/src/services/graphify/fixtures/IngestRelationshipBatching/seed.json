@@ -1,0 +1,20 @@
+{
+    "graph": {
+        "nodes": [
+            {
+                "id": "node_1",
+                "kinds": ["KindA"],
+                "properties": {
+                    "hello": "world"
+                }
+            },
+            {
+                "id": "node_2",
+                "kinds": ["KindB"],
+                "properties": {
+                    "hello": "world"
+                }
+            }
+        ]
+    }
+}

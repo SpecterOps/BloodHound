@@ -21,7 +21,9 @@ package graphify_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"path"
 	"testing"
 	"time"
 
@@ -32,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
@@ -424,4 +427,59 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 		})
 	})
+}
+
+func TestRelationshipBatching(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx                       = context.Background()
+		fixturesPath              = path.Join("fixtures", "IngestRelationshipBatching")
+		testSuite                 = setupIntegrationTestSuite(t, fixturesPath)
+		seedFile                  = path.Join(testSuite.WorkDir, "seed.json")
+		edgeWithoutSourceKindFile = path.Join(testSuite.WorkDir, "edge_without_source_kind.json")
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	total, failed, err := testSuite.GraphifyService.ProcessIngestFile(
+		ctx,
+		model.IngestTask{FileName: seedFile, FileType: model.FileTypeJson},
+		time.Now(),
+	)
+
+	require.NoError(t, err)
+	require.Zero(t, failed)
+	require.Equal(t, 1, total)
+
+	// assert that seed is there
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &generic.Graph{
+		Nodes: []generic.Node{
+			{ID: "NODE_1", Kinds: []string{"KindA"}, Properties: map[string]any{"hello": "world"}},
+			{ID: "NODE_2", Kinds: []string{"KindB"}, Properties: map[string]any{"hello": "world"}},
+		},
+	})
+
+	// ingest an edge with no source kind
+	// do we add an empty kind to the existing nodes?
+	total, failed, err = testSuite.GraphifyService.ProcessIngestFile(
+		ctx,
+		model.IngestTask{FileName: edgeWithoutSourceKindFile, FileType: model.FileTypeJson},
+		time.Now(),
+	)
+
+	require.NoError(t, err)
+	require.Zero(t, failed)
+	require.Equal(t, 1, total)
+
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &generic.Graph{
+		Nodes: []generic.Node{
+			{ID: "NODE_1", Kinds: []string{"KindA"}, Properties: map[string]any{"hello": "world"}},
+			{ID: "NODE_2", Kinds: []string{"KindB"}, Properties: map[string]any{"hello": "world"}},
+		},
+	})
+
+	// ingest an edge with source kind
+	// do we add the source kind to the existing nodes?
+
 }
