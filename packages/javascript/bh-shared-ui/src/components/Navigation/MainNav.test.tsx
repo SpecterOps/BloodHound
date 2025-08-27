@@ -27,13 +27,13 @@ const MainNavLogoData: MainNavLogoDataObject = {
         route: '/',
         icon: {
             element: <AppIcon.BHCELogo size={24} />,
-            dimensions: { height: '40px', width: '165px' },
+            dimensions: { height: 40, width: 165 },
         },
     },
     specterOps: {
         image: {
             imageUrl: `/test`,
-            dimensions: { height: '40px', width: '165px' },
+            dimensions: { height: 40, width: 165 },
             classes: 'ml-4',
             altText: 'BHE Text Logo',
         },

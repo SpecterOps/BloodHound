@@ -135,10 +135,7 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ 
             </span>
             <span
                 data-testid='global_nav-item-label-text'
-                className={cn(
-                    'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in',
-                    'w-full opacity-100 flex items-center gap-x-5'
-                )}>
+                className='whitespace-nowrap min-h-10 font-medium text-xl transition-opacity duration-200 ease-in w-full opacity-100 flex items-center gap-x-5'>
                 {label}
             </span>
         </>
