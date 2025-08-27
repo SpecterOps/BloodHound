@@ -26,12 +26,7 @@ import { FileForIngest, FileStatus, FileUploadStep } from './types';
 
 export const makeProgressCacheKey = (jobId: string, fileName: string) => `job-${jobId}-file-${fileName}`;
 
-export const useFileUploadDialogHandlers = ({
-    onCloseProp,
-}: {
-    onCloseProp: () => void;
-    dialogRef: React.RefObject<HTMLDivElement>;
-}) => {
+export const useFileUploadDialogHandlers = ({ onCloseProp }: { onCloseProp: () => void }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
