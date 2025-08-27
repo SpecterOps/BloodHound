@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
+import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -92,18 +92,6 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
     return graph;
 };
 
-const getGlyphImage = (kinds: string[], tagGlyphMap: Record<string, string>): string | null => {
-    for (let index = kinds.length - 1; index > -1; index--) {
-        const kind = kinds[index];
-        if (!kind.includes('Tag_')) continue;
-
-        if (tagGlyphMap[kind] !== null) {
-            return tagGlyphMap[kind];
-        }
-    }
-    return null;
-};
-
 const initGraphNodes = (
     graph: MultiDirectedGraph,
     nodes: GraphNodes,
@@ -127,7 +115,7 @@ const initGraphNodes = (
         nodeParams.image = iconInfo.url || '';
         nodeParams.glyphs = [];
 
-        const glyphImage = getGlyphImage(node.kinds, tagGlyphMap);
+        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphMap);
         if (glyphImage) {
             nodeParams.type = 'glyphs';
             nodeParams.glyphs.push({

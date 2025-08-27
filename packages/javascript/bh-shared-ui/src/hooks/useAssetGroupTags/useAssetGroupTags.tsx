@@ -140,6 +140,16 @@ export const createGlyphMapFromTags = (
     return glyphMap;
 };
 
+export const getGlyphFromKinds = (kinds: string[] = [], tagGlyphMap: Record<string, string> = {}): string | null => {
+    for (let index = kinds.length - 1; index > -1; index--) {
+        const kind = kinds[index];
+        if (!kind.includes('Tag_')) continue;
+
+        if (tagGlyphMap[kind]) return tagGlyphMap[kind];
+    }
+    return null;
+};
+
 export const useTagGlyphs = (glyphUtils: GlyphUtils) => {
     const [glyphMap, setGlyphMap] = useState<Record<string, string>>({});
 
