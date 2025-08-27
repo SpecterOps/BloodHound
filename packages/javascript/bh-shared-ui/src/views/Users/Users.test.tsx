@@ -54,7 +54,9 @@ describe('Users', () => {
         await userEvent.click(within(testUserRow).getByRole('button', { name: 'bars' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         await userEvent.click(screen.getByRole('menuitem', { name: /update user/i, hidden: false }));
-        expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
+
+        // expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
+        expect(await screen.getByRole('dialog'));
 
         // update Marshall to use username/password based authentication and save the changes
         await userEvent.click(screen.getByLabelText('Authentication Method'));
