@@ -73,6 +73,7 @@ const (
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 	ErrorResponseAssetGroupTagExceededNameLimit     = "asset group tag name is limited to 250 characters"
+	ErrorResponseAssetGroupTagInvalidTagName        = "asset group tag name must contain only alphanumeric characters and underscores"
 	ErrorResponseAssetGroupTagDuplicateKindName     = "asset group tag name must be unique"
 	ErrorResponseAssetGroupTagInvalid               = "valid tag_type is required"
 	ErrorResponseAssetGroupTagExceededTagLimit      = "tag limit has been exceeded"

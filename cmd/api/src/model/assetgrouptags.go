@@ -80,6 +80,8 @@ const (
 const (
 	TierZeroGlyph = "gem"
 	OwnedGlyph    = "skull"
+
+	ValidAssetGroupTagNameRegex = "^[a-zA-Z0-9_]+$"
 )
 
 type AssetGroupTag struct {
