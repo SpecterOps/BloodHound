@@ -115,21 +115,23 @@ const ImportQueryDialog: React.FC<{
             })
         );
     };
-    const uploadFile = async (ingestFile: FileForIngest) => {
-        await importSavedQueryMutation.mutateAsync(ingestFile.file, {
-            onError: (error: any) => {
-                const apiError = error?.response?.data as ErrorResponse;
-
-                if (apiError?.errors?.length && apiError.errors[0].message?.length) {
-                    const { message } = apiError.errors[0];
-                    addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
-                    setUploadFailureError(ingestFile.file.name, message);
-                } else {
-                    addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
-                    setUploadFailureError(ingestFile.file.name, 'Upload Failed');
-                }
-            },
-        });
+    const uploadFile = async (ingestFile: FileForIngest): Promise<boolean> => {
+        try {
+            await importSavedQueryMutation.mutateAsync(ingestFile.file);
+            setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
+            return true;
+        } catch (error: any) {
+            const apiError = error?.response?.data as ErrorResponse;
+            if (apiError?.errors?.length && apiError.errors[0].message?.length) {
+                const { message } = apiError.errors[0];
+                addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
+                setUploadFailureError(ingestFile.file.name, message);
+            } else {
+                addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
+                setUploadFailureError(ingestFile.file.name, 'Upload Failed');
+            }
+            return false;
+        }
     };
 
     const handleUploadAll = async () => {
@@ -139,15 +141,13 @@ const ImportQueryDialog: React.FC<{
         let errorCount = 0;
 
         for (const ingestFile of filesForIngest) {
-            // Separate error handling so we can continue on when a file fails
-
-            try {
-                await uploadFile(ingestFile);
-            } catch (error) {
+            // Skip files that already have parse/validation errors
+            if (ingestFile.errors?.length) {
                 errorCount += 1;
+                continue;
             }
-
-            setNewFileStatus(ingestFile.file.name, FileStatus.DONE);
+            const ok = await uploadFile(ingestFile);
+            if (!ok) errorCount += 1;
         }
 
         if (errorCount === filesForIngest.length) {
