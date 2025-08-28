@@ -64,7 +64,7 @@ post:
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
-      $ref: './../responses/internal-server-error.yaml'# Copyright 2024 Specter Ops, Inc.
+      $ref: './../responses/internal-server-error.yaml'
 
 get:
   operationId: GetAssetGroupTagsCertifications
@@ -77,31 +77,11 @@ get:
   parameters:
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
-    - name: node_environment_id
-      in: query
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: node_name
-      in: query
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: node_object_id
-      in: query
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: asset_group_tag_id
       in: query
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.integer.yaml'
-    - name: node_primary_kind
-      in: query
-      required: false
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: certified
       in: query
       required: false
@@ -119,6 +99,27 @@ get:
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: node_environment_id
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: node_name
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: node_object_id
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: node_primary_kind
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+
   responses:
     200:
       description: OK

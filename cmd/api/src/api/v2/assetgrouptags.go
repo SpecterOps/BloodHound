@@ -1081,19 +1081,28 @@ type AssetGroupMemberWithCertification struct {
 
 func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
-		"node_environment_id": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"node_name":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"node_object_id":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"asset_group_tag_id":  {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"node_primary_kind":   {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"certified":           {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
 		"certified_by":        {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"created_at":          {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"node_environment_id": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"node_name":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"node_object_id":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"node_primary_kind":   {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 	}
 }
 
 func (AssetGroupMemberWithCertification) IsStringColumn(filter string) bool {
-	return filter == "node_environment_id" || filter == "node_primary_kind" || filter == "certified_by" || filter == "node_name" || filter == "node_object_id"
+	switch filter {
+	case "node_environment_id",
+		"node_primary_kind",
+		"certified_by",
+		"node_name",
+		"node_object_id":
+		return true
+	default:
+		return false
+	}
 }
 
 type GetAssetGroupMembersWithCertificationResponse struct {
@@ -1104,7 +1113,7 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 	var (
 		requestContext                    = request.Context()
 		defaultSkip                       = 0
-		defaultLimit                      = 100
+		defaultLimit                      = AssetGroupTagDefaultLimit
 		assetGroupMemberWithCertification = AssetGroupMemberWithCertification{}
 		queryParams                       = request.URL.Query()
 	)
@@ -1115,7 +1124,6 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(assetGroupMemberWithCertification, name); err != nil {
@@ -1135,7 +1143,6 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
 		} else if selectorNodes, count, err := s.DB.GetSelectorNodes(requestContext, sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
