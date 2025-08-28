@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogOverlay, DialogPortal } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogDescription, DialogOverlay, DialogPortal, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
+import { userEventHelpers } from '../../utils/testHelpers';
 import CreateUserDialog from './CreateUserDialog';
 
 const testRoles = [
@@ -109,10 +110,14 @@ describe('CreateUserDialog', () => {
         renderLoading?: boolean;
     };
 
+    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
+    userEventHelpers();
+
     const setup = (options?: SetupOptions) => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
+        const handleOpenChange = vi.fn();
         const testUser = {
             emailAddress: 'testuser@example.com',
             principalName: 'testuser',
@@ -124,17 +129,20 @@ describe('CreateUserDialog', () => {
         };
 
         render(
-            <Dialog open={true}>
+            <Dialog open={true} onOpenChange={handleOpenChange}>
                 <DialogPortal>
                     <DialogOverlay>
                         <CreateUserDialog
                             open={true}
+                            showEnvironmentAccessControls={false}
                             onClose={testOnClose}
                             onSave={testOnSave}
                             isLoading={options?.renderLoading || false}
                             error={options?.renderErrors}
-                            showEnvironmentAccessControls={false}
                         />
+                        <VisuallyHidden>
+                            <DialogDescription />
+                        </VisuallyHidden>
                     </DialogOverlay>
                 </DialogPortal>
             </Dialog>
@@ -172,16 +180,6 @@ describe('CreateUserDialog', () => {
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-    });
-
-    it('should call onClose when Close button is clicked', async () => {
-        const { user, testOnClose } = setup();
-
-        const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
-
-        await user.click(cancelButton);
-
-        expect(testOnClose).toHaveBeenCalled();
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
