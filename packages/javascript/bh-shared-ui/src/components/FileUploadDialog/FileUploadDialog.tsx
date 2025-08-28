@@ -17,9 +17,9 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
+import { AppLink } from '../Navigation';
 import { FileUploadStep } from './types';
 import { makeProgressCacheKey, useFileUploadDialogHandlers } from './useFileUploadDialogHandlers';
 
@@ -70,11 +70,11 @@ const FileUploadDialog: React.FC<{
                     accept={getFileUploadAcceptedTypes.data?.data ?? []}
                 />
                 {uploadMessage && <div className='mt-2 mb-2 font-normal'>{uploadMessage}</div>}
-                <Link to='/administration/file-ingest' onClick={onClose}>
+                <AppLink to='/administration/file-ingest' onClick={onClose}>
                     <div className='text-center font-normal m-2 p-2 hover:bg-slate-200 rounded-md'>
                         View File Ingest History
                     </div>
-                </Link>
+                </AppLink>
             </DialogTitle>
             <DialogContent>
                 {filesForIngest.length > 0 && (
