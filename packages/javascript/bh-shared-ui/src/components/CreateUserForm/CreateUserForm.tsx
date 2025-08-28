@@ -105,7 +105,7 @@ const CreateUserForm: React.FC<{
                     form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
             } else {
-                form.setError('root.oeneric', {
+                form.setError('root.generic', {
                     type: 'custom',
                     message: 'An unexpected error occurred. Please try again.',
                 });
@@ -142,7 +142,6 @@ const CreateUserForm: React.FC<{
     const isAllSelected =
         selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
-    console.log(isLoading);
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
@@ -366,7 +365,7 @@ const CreateUserForm: React.FC<{
                                                         defaultValue={false}
                                                         render={({ field }) => (
                                                             <div className='flex flex-row items-center'>
-                                                                <FormItem>
+                                                                <FormItem className='flex flex-row my-3'>
                                                                     <FormControl>
                                                                         <Checkbox
                                                                             {...field}

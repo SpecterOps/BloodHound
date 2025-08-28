@@ -13,18 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogOverlay,
-    DialogPortal,
-    DialogTitle,
-    VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { act, render, screen, waitFor } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
 import CreateUserForm from './CreateUserForm';
 const DEFAULT_PROPS = {
@@ -113,23 +105,12 @@ describe('CreateUserForm', () => {
 
         //render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
-        await act(async () => {
-            render(
-                <Dialog open={true}>
-                    <DialogPortal>
-                        <DialogOverlay>
-                            <DialogContent>
-                                <VisuallyHidden>
-                                    <DialogTitle>Create User Form Test</DialogTitle>
-                                    <DialogDescription />
-                                </VisuallyHidden>
-                                <CreateUserForm {...DEFAULT_PROPS}>{queryClient}</CreateUserForm>
-                            </DialogContent>
-                        </DialogOverlay>
-                    </DialogPortal>
-                </Dialog>
-            );
-        });
+        render(
+            <Dialog open={true}>
+                <CreateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
 
@@ -162,23 +143,12 @@ describe('CreateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        await act(async () => {
-            render(
-                <Dialog open={true}>
-                    <DialogPortal>
-                        <DialogOverlay>
-                            <DialogContent>
-                                <VisuallyHidden>
-                                    <DialogTitle>Create User Form Test</DialogTitle>
-                                    <DialogDescription />
-                                </VisuallyHidden>
-                                <CreateUserForm {...DEFAULT_PROPS}>{queryClient}</CreateUserForm>
-                            </DialogContent>
-                        </DialogOverlay>
-                    </DialogPortal>
-                </Dialog>
-            );
-        });
+        render(
+            <Dialog open={true}>
+                <CreateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
 
@@ -228,25 +198,12 @@ describe('CreateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        //render(<CreateUserForm open {...DEFAULT_PROPS} />, { queryClient });
-
-        await act(async () => {
-            render(
-                <Dialog open={true}>
-                    <DialogPortal>
-                        <DialogOverlay>
-                            <DialogContent>
-                                <VisuallyHidden>
-                                    <DialogTitle />
-                                    <DialogDescription />
-                                </VisuallyHidden>
-                                <CreateUserForm {...DEFAULT_PROPS}>{queryClient}</CreateUserForm>
-                            </DialogContent>
-                        </DialogOverlay>
-                    </DialogPortal>
-                </Dialog>
-            );
-        });
+        render(
+            <Dialog open={true}>
+                <CreateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
         const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
