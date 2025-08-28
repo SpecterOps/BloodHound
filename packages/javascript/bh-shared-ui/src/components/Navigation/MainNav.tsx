@@ -200,7 +200,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 />
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
-            <div className='h-full min-h-[625px] w-full flex flex-col justify-between mt-6'>
+            <div className='h-full min-h-[665px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem
