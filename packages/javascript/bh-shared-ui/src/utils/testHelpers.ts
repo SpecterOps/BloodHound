@@ -62,6 +62,8 @@ export const setUpQueryClient = (stateMaps: { key: QueryKey; data: any }[]) => {
                 refetchOnMount: false,
                 refetchOnWindowFocus: false,
                 staleTime: Infinity,
+                cacheTime: Infinity,
+                enabled: false, // Prevents automatic fetching
             },
         },
     });
@@ -71,4 +73,11 @@ export const setUpQueryClient = (stateMaps: { key: QueryKey; data: any }[]) => {
     });
 
     return queryClient;
+};
+
+export const userEventHelpers = () => {
+    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+    window.HTMLElement.prototype.releasePointerCapture = vi.fn();
 };
