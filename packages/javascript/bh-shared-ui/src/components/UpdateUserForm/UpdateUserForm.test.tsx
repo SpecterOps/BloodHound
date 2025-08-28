@@ -13,18 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogOverlay,
-    DialogPortal,
-    DialogTitle,
-    VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { act, render, screen } from '../../test-utils';
+import { render, screen } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
 import UpdateUserForm from './UpdateUserForm';
 
@@ -375,60 +367,24 @@ describe('UpdateUserForm', () => {
         const mockState = [
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
-                data: {
-                    MOCK_USER,
-                },
+                data: MOCK_USER,
             },
             {
                 key: ['getRoles'],
-                data: {
-                    MOCK_ROLES,
-                },
+                data: MOCK_ROLES,
             },
-            {
-                key: ['listSSOProviders'],
-                data: null,
-            },
+            { key: ['listSSOProviders'], data: null },
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        console.log(queryClient);
-
-        /*
-        vi.mock('react-query', () => ({
-            ...vi.importActual('react-query'),
-            useQueryClient: () => ({
-                setQueryData: vi.fn(),
-                getQueryData: vi.fn().mockReturnValueOnce(queryClient),
-            }),
-        }));
-        */
-
-        //render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
-
         render(
             <Dialog open={true}>
-                <DialogPortal>
-                    <DialogOverlay>
-                        <DialogContent>
-                            <VisuallyHidden>
-                                <DialogTitle />
-                                <DialogDescription />
-                            </VisuallyHidden>
-                            <UpdateUserForm {...DEFAULT_PROPS}> {queryClient}</UpdateUserForm>
-                        </DialogContent>
-                    </DialogOverlay>
-                </DialogPortal>
-            </Dialog>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
         );
 
         const user = userEvent.setup();
-
-        screen.debug(undefined, Infinity);
-
-        queryClient.clear();
-
-        await screen.getByRole('button', { name: 'Cancel' });
 
         const button = screen.getByRole('button', { name: 'Save' });
 
@@ -460,7 +416,7 @@ describe('UpdateUserForm', () => {
         ).toBeInTheDocument();
     });
 
-    it.skip('should not have less characters than the minimum requirement', async () => {
+    it('should not have less characters than the minimum requirement', async () => {
         const mockState = [
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
@@ -476,24 +432,12 @@ describe('UpdateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        //render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });Upd
-        await act(async () => {
-            render(
-                <Dialog open={true}>
-                    <DialogPortal>
-                        <DialogOverlay>
-                            <DialogContent>
-                                <VisuallyHidden>
-                                    <DialogTitle />
-                                    <DialogDescription />
-                                </VisuallyHidden>
-                                <UpdateUserForm {...DEFAULT_PROPS}>{queryClient}</UpdateUserForm>
-                            </DialogContent>
-                        </DialogOverlay>
-                    </DialogPortal>
-                </Dialog>
-            );
-        });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -510,7 +454,7 @@ describe('UpdateUserForm', () => {
         expect(await screen.findByText(`Last Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument();
     });
 
-    it.skip('should not allow leading or trailing empty spaces', async () => {
+    it('should not allow leading or trailing empty spaces', async () => {
         const mockState = [
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
@@ -524,25 +468,12 @@ describe('UpdateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        //render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
-
-        await act(async () => {
-            render(
-                <Dialog open={true}>
-                    <DialogPortal>
-                        <DialogOverlay>
-                            <DialogContent>
-                                <VisuallyHidden>
-                                    <DialogTitle />
-                                    <DialogDescription />
-                                </VisuallyHidden>
-                                <UpdateUserForm {...DEFAULT_PROPS}>{queryClient}</UpdateUserForm>
-                            </DialogContent>
-                        </DialogOverlay>
-                    </DialogPortal>
-                </Dialog>
-            );
-        });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
