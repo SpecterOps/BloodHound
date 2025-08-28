@@ -18759,7 +18759,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Only alphanumeric characters, underscores, and spaces are allowed."
           },
           "type": {
             "type": "integer"
@@ -18782,7 +18783,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Only alphanumeric characters, underscores, and spaces are allowed."
           },
           "description": {
             "type": "string"
