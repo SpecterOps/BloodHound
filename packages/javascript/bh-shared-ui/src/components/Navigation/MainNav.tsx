@@ -206,7 +206,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <MainNavLogo data={mainNavData.logo} allowHover={allowHover} />
             {/* Note: min height here is to keep the version number in bottom of nav */}
             <div className='h-full min-h-[625px] w-full flex flex-col justify-between'>
-                <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
+                <ul className='flex flex-col gap-4 mt-4' data-testid='global_nav-primary-list'>
                     <MainNavListItem key={0} allowHover={allowHover}>
                         <div
                             className='cursor-pointer flex flex-row items-center relative top-1 left-[2px]'
