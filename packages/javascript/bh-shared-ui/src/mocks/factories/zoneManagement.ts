@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker/locale/en';
 import {
     AssetGroupTag,
     AssetGroupTagMemberInfo,

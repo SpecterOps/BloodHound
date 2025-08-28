@@ -1,4 +1,4 @@
-# Copyright 2024 Specter Ops, Inc.
+# Copyright 2025 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
@@ -19,26 +19,11 @@ allOf:
   - $ref: './model.components.timestamps.yaml'
   - type: object
     properties:
-      user_id:
+      file_name:
         type: string
-        format: uuid
-      user_email_address:
+      parent_file_name:
         type: string
-        format: email
-      status:
-        $ref: './enum.job-status.yaml'
-      status_message:
-        type: string
-      start_time:
-        type: string
-        format: date-time
-      end_time:
-        type: string
-        format: date-time
-      last_ingest:
-        type: string
-        format: date-time
-      total_files:
-        type: integer
-      failed_files:
-        type: integer
+      errors:
+        type: array
+        items:
+          type: string
