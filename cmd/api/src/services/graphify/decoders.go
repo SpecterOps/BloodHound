@@ -37,7 +37,7 @@ type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ing
 // T represents a specific ingest type (e.g., User, Computer, Group, etc.).
 type ConversionFunc[T any] func(decoded T, converted *ConvertedData) error
 
-func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFuncWithTime[T]) error {
+func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, conversionFunc ConversionFuncWithTime[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
@@ -77,7 +77,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 	return errs.Combined()
 }
 
-func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
+func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
@@ -119,7 +119,7 @@ func DecodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, so
 	return errs.Combined()
 }
 
-func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
+func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 
 	var (
 		convertedData = ConvertedGroupData{}
@@ -158,7 +158,7 @@ func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	return errs.Combined()
 }
 
-func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
+func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
@@ -195,7 +195,7 @@ func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	return errs.Combined()
 }
 
-func decodeAzureData(batch *TimestampedBatch, decoder *json.Decoder) error {
+func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0

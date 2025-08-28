@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/drivers/pg/changelog"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -107,7 +108,10 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		startDelay := 0 * time.Second
 
 		var (
-			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema)
+			// todo: this pgxpool wire up needs thinkin
+			// if you go rawSQL route, then inject some neo flag into the graphifyService to prevent ingest from submitting.
+			cl             = changelog.NewChangelog(connections.Graph, changelog.DefaultOptions())
+			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer     = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
@@ -133,6 +137,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			bhapi.NewDaemon(cfg, routerInst.Handler()),
 			gc.NewDataPruningDaemon(connections.RDMS),
 			datapipeDaemon,
+			cl,
 		}, nil
 	}
 }

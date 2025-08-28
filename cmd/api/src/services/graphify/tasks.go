@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/dawgs/graph"
@@ -132,13 +133,15 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
 	if paths, failedExtracting, err := s.extractIngestFiles(task.FileName, task.FileType); err != nil {
 		return 0, failedExtracting, err
+	} else if changelogFF, err := s.db.GetFlagByKey(ctx, appcfg.FeatureChangelog); err != nil {
+		return 0, 0, fmt.Errorf("get feature flag: %w", err)
 	} else {
 
 		failedIngestion := 0
 
 		errs := util.NewErrorCollector()
 		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
+			ingestContext := NewIngestContext(ctx, batch, ingestTime, s.changeManager, changelogFF.Enabled)
 
 			for _, filePath := range paths {
 				readOpts := ReadOptions{
@@ -146,19 +149,23 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 					FileType:           task.FileType,
 					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx)}
 
-				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
+				if err := processSingleFile(ctx, filePath, ingestContext, readOpts); err != nil {
 					failedIngestion++
 					errs.Add(err) // util.NewErrorCollector at fn scope
 					continue      // keep ingesting the rest
 				}
 			}
 
+			if changelogFF.Enabled {
+				// this logs basic metrics for the changelog, how many hits/misses per file
+				s.changeManager.FlushStats()
+			}
 			return errs.Combined()
 		})
 	}
 }
 
-func processSingleFile(ctx context.Context, filePath string, batch *TimestampedBatch, readOpts ReadOptions) error {
+func processSingleFile(ctx context.Context, filePath string, batch *IngestContext, readOpts ReadOptions) error {
 	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", filePath))()
 
 	file, err := os.Open(filePath)

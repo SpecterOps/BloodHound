@@ -55,7 +55,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
@@ -100,7 +100,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
@@ -155,7 +155,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
@@ -200,7 +200,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
@@ -255,7 +255,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
@@ -319,7 +319,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					return nil
@@ -366,7 +366,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 	t.Run("happy path. a file uploaded as a zip passes validation and is written to the graph", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
-			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+			timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 			err := graphify.ReadFileForIngest(timestampedBatch, validReader, readOptions)
 			require.Nil(t, err)
 
@@ -403,7 +403,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+				timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 				err := graphify.ReadFileForIngest(timestampedBatch, invalidReader, readOptions)
 				require.NotNil(t, err)
 				var report upload.ValidationReport

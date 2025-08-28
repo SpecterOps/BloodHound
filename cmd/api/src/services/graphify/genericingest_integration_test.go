@@ -54,7 +54,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
@@ -92,7 +92,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -120,7 +120,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -148,7 +148,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -176,7 +176,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -204,7 +204,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -232,7 +232,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
@@ -270,7 +270,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
@@ -307,7 +307,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
@@ -343,7 +343,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
@@ -379,7 +379,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -407,7 +407,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
@@ -435,7 +435,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
@@ -500,7 +500,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
+					timestampedBatch := NewIngestContext(batch, time.Now().UTC())
 					updates, err := resolveRelationships(timestampedBatch, rels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 2)

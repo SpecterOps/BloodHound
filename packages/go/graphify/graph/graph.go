@@ -124,7 +124,7 @@ func (s *Command) Parse() error {
 type GraphService interface {
 	TeardownService(context.Context)
 	InitializeService(context.Context, string, graph.Database) error
-	Ingest(context.Context, *graphify.TimestampedBatch, io.ReadSeeker) error
+	Ingest(context.Context, *graphify.IngestContext, io.ReadSeeker) error
 	RunAnalysis(context.Context, graph.Database) error
 }
 
@@ -183,7 +183,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 	return nil
 }
 
-func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.TimestampedBatch, reader io.ReadSeeker) error {
+func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.IngestContext, reader io.ReadSeeker) error {
 	return graphify.ReadFileForIngest(batch, reader, s.readOpts)
 }
 
@@ -420,7 +420,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 
 	for _, filepath := range filepaths {
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+			timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
 
 			file, err := os.Open(filepath)
 			if err != nil {

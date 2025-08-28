@@ -17,6 +17,8 @@ module github.com/specterops/bloodhound
 
 go 1.24.4
 
+replace github.com/specterops/dawgs v0.2.0 => ../../dawgs
+
 require (
 	cuelang.org/go v0.13.2
 	github.com/Masterminds/semver/v3 v3.3.1
