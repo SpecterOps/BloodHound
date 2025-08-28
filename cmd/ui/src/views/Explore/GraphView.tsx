@@ -64,9 +64,6 @@ const GraphView: FC = () => {
     const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
 
-    const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
-    const tagGlyphMap = useTagGlyphs(glyphUtils);
-
     const { searchType } = useExploreParams();
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
 
@@ -79,6 +76,9 @@ const GraphView: FC = () => {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+
+    const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
+    const tagGlyphMap = useTagGlyphs(glyphUtils, darkMode);
 
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);

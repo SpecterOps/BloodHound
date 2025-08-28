@@ -299,9 +299,11 @@ export const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, iconPa
         styles: { 'transform-origin': 'center', ...params.styles },
     });
 
-    const svgString = modifiedIcon.html[0].replace(/<svg/, '<svg width="200" height="200"');
+    const svg = modifiedIcon.html[0];
 
-    const svg = new Blob([svgString], { type: 'image/svg+xml' });
+    const amendedSvg = svg.replace(/<svg/, '<svg width="200" height="200"');
 
-    return URL.createObjectURL(svg);
+    const blob = new Blob([amendedSvg], { type: 'image/svg+xml' });
+
+    return URL.createObjectURL(blob);
 };

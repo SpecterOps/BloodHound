@@ -62,6 +62,6 @@ function transformIconDictionary(icons: IconDictionary): IconDictionary {
 // Append URLs for nodes, glyphs, and any additional utility icons
 appendIconSvgUrls(NODE_ICONS);
 appendGlyphSvgUrls(GLYPHS);
-UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon);
+UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, { styles: { scale: NODE_SCALE } });
 
 export { GLYPHS, GetIconInfo, NODE_ICONS, UNKNOWN_ICON, transformIconDictionary };

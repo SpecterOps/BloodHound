@@ -98,13 +98,17 @@ const getAssetGroupTags = (options: RequestOptions) =>
 
 const glyphQualifier = (glyph: string | null) => !glyph?.includes('http');
 
-const glyphTransformer = (glyph: string): string => {
-    const glyphIconUrl = getModifiedSvgUrlFromIcon(findIconDefinition({ prefix: 'fas', iconName: glyph as IconName }), {
+const glyphTransformer = (glyph: string, darkMode?: boolean): string => {
+    const iconDefiniton = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
+
+    if (!iconDefiniton) return '';
+
+    const glyphIconUrl = getModifiedSvgUrlFromIcon(iconDefiniton, {
         styles: {
             'transform-origin': 'center',
             scale: GLYPH_SCALE,
-            color: DEFAULT_GLYPH_COLOR,
-            'background-color': DEFAULT_GLYPH_BACKGROUND_COLOR,
+            background: darkMode ? DEFAULT_GLYPH_COLOR : DEFAULT_GLYPH_BACKGROUND_COLOR,
+            color: darkMode ? DEFAULT_GLYPH_BACKGROUND_COLOR : DEFAULT_GLYPH_COLOR,
         },
     });
 
@@ -113,7 +117,7 @@ const glyphTransformer = (glyph: string): string => {
 
 interface GlyphUtils {
     qualifier?: (glyph: string | null) => boolean;
-    transformer: (glyph: string) => string;
+    transformer: (glyph: string, darkMode?: boolean) => string;
 }
 
 export const glyphUtils: GlyphUtils = {
@@ -123,7 +127,8 @@ export const glyphUtils: GlyphUtils = {
 
 export const createGlyphMapFromTags = (
     tags: AssetGroupTag[] | undefined,
-    utils: GlyphUtils
+    utils: GlyphUtils,
+    darkMode?: boolean
 ): Record<string, string> => {
     const glyphMap: Record<string, string> = {};
     const { qualifier = () => true, transformer } = utils;
@@ -132,8 +137,9 @@ export const createGlyphMapFromTags = (
         const underscoredTagName = tag.name.split(' ').join('_');
 
         if (tag.glyph !== null && qualifier(tag.glyph)) {
-            const glyphValue = transformer(tag.glyph);
-            glyphMap[`Tag_${underscoredTagName}`] = glyphValue;
+            const glyphValue = transformer(tag.glyph, darkMode);
+
+            if (glyphValue !== '') glyphMap[`Tag_${underscoredTagName}`] = glyphValue;
         }
     });
 
@@ -150,17 +156,16 @@ export const getGlyphFromKinds = (kinds: string[] = [], tagGlyphMap: Record<stri
     return null;
 };
 
-export const useTagGlyphs = (glyphUtils: GlyphUtils) => {
+export const useTagGlyphs = (glyphUtils: GlyphUtils, darkMode?: boolean) => {
     const [glyphMap, setGlyphMap] = useState<Record<string, string>>({});
-
     const tagsQuery = useAssetGroupTags();
 
     useEffect(() => {
         if (!tagsQuery.data) return;
 
-        const newMap = createGlyphMapFromTags(tagsQuery.data, glyphUtils);
+        const newMap = createGlyphMapFromTags(tagsQuery.data, glyphUtils, darkMode);
         setGlyphMap(newMap);
-    }, [tagsQuery.data, glyphUtils]);
+    }, [tagsQuery.data, glyphUtils, darkMode]);
 
     return glyphMap;
 };
