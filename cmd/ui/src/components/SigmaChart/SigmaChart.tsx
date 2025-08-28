@@ -19,7 +19,7 @@ import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { forwardRef } from 'react';
+import { forwardRef, RefAttributes } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
@@ -44,7 +44,7 @@ interface SigmaChartProps {
     showEdgeLabels?: boolean;
 }
 
-const SigmaChart = forwardRef(function SigmaChart(
+const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(function SigmaChart(
     {
         graph,
         highlightedItem,
