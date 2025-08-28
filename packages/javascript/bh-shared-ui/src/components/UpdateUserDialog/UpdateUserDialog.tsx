@@ -54,7 +54,6 @@ const UpdateUserDialog: React.FC<{
             <UpdateUserForm
                 error={error}
                 isLoading={isLoading}
-                onCancel={onClose}
                 onSubmit={handleOnSave}
                 hasSelectedSelf={hasSelectedSelf}
                 open={open}

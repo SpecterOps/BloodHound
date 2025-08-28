@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogOverlay, DialogPortal } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogDescription, DialogOverlay, DialogPortal, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { fireEvent, render, screen, waitFor } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
+import { userEventHelpers } from '../../utils/testHelpers';
 import UpdateUserDialog from './UpdateUserDialog';
 
 const testRoles = [
@@ -129,10 +130,15 @@ describe('UpdateUserDialog', () => {
         renderLoading?: boolean;
     };
 
+    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
+    userEventHelpers();
+
     const setup = (options?: SetupOptions) => {
         const user = userEvent.setup();
+        const testOnOpen = vi.fn();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
+        const handleOpenChange = vi.fn();
         const testUser = {
             emailAddress: 'testuser@example.com',
             principalName: 'testuser',
@@ -144,18 +150,20 @@ describe('UpdateUserDialog', () => {
         };
 
         render(
-            <Dialog open={true}>
+            <Dialog open={testOnOpen} onOpenChange={handleOpenChange}>
                 <DialogPortal>
                     <DialogOverlay>
                         <UpdateUserDialog
                             userId={'1'}
-                            open={true}
                             onClose={testOnClose}
                             onSave={testOnSave}
                             isLoading={options?.renderLoading || false}
                             error={options?.renderErrors}
                             hasSelectedSelf={false}
                         />
+                        <VisuallyHidden>
+                            <DialogDescription />
+                        </VisuallyHidden>
                     </DialogOverlay>
                 </DialogPortal>
             </Dialog>
@@ -189,18 +197,6 @@ describe('UpdateUserDialog', () => {
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-    });
-
-    it('should call onClose when Close button is clicked', async () => {
-        const { user, testOnClose } = setup();
-
-        //screen.debug(undefined, Infinity);
-
-        const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
-
-        await user.click(cancelButton);
-
-        expect(testOnClose).toHaveBeenCalled();
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
@@ -242,10 +238,7 @@ describe('UpdateUserDialog', () => {
     it('should display all available roles', async () => {
         const { user } = setup();
 
-        //await user.click(await screen.findByLabelText('Role'));
-
-        const selectTrigger = await screen.findByLabelText('Role'); // Or by text, etc.
-        fireEvent.pointerDown(selectTrigger);
+        await user.click(await screen.findByLabelText('Role'));
 
         for (const role of testRoles) {
             expect(await screen.findByRole('option', { name: role.name })).toBeInTheDocument();
@@ -257,7 +250,7 @@ describe('UpdateUserDialog', () => {
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
-        await user.click(await screen.findByRole('option', { name: /Single Sign-On (SSO)/i }));
+        await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
 
         expect(screen.queryByLabelText('Initial Password')).not.toBeInTheDocument();
 

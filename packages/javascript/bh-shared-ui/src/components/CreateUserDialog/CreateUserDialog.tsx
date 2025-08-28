@@ -53,7 +53,6 @@ const CreateUserDialog: React.FC<{
                 <CreateUserForm
                     error={error}
                     isLoading={isLoading}
-                    onCancel={onClose}
                     onSubmit={handleOnSave}
                     open={open}
                     showEnvironmentAccessControls={showEnvironmentAccessControls}
