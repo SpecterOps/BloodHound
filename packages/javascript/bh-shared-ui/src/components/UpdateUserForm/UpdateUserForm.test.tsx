@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen } from '../../test-utils';
@@ -20,12 +21,13 @@ import { setUpQueryClient } from '../../utils';
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
-    onCancel: () => null,
     onSubmit: () => vi.fn,
     userId: '2d92f310-68fc-402a-915a-438a57f81342',
     hasSelectedSelf: false,
     isLoading: false,
     error: false,
+    showEnvironmentAccessControls: false,
+    open: true,
 };
 
 const MOCK_ROLES = [
@@ -375,10 +377,16 @@ describe('UpdateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
-        const button = await screen.findByRole('button', { name: 'Save' });
+
+        const button = screen.getByRole('button', { name: 'Save' });
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');
@@ -413,16 +421,23 @@ describe('UpdateUserForm', () => {
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
                 data: MOCK_USER,
+                isLoading: false,
             },
             {
                 key: ['getRoles'],
                 data: MOCK_ROLES,
+                isLoading: false,
             },
-            { key: ['listSSOProviders'], data: null },
+            { key: ['listSSOProviders'], data: null, isLoading: false },
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -453,7 +468,12 @@ describe('UpdateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
