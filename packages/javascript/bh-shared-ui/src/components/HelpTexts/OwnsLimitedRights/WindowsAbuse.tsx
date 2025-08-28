@@ -25,8 +25,13 @@ const WindowsAbuse: FC = () => {
                 abuse the specific privileges granted to the OWNER RIGHTS SID.
                 <br />
                 <br />
-                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at
-                https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
+                Please refer to the abuse info for the specific privileges granted to OWNER RIGHTS at{' '}
+                <a
+                    target='_blank'
+                    rel='noopener'
+                    href='https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges'>
+                    https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
+                </a>
             </Typography>
         </>
     );

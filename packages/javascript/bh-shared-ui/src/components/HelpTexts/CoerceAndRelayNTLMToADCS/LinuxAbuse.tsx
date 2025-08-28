@@ -23,20 +23,35 @@ const LinuxAbuse: FC = () => {
         <>
             <Typography variant={'body2'}>
                 1. Start the Relay Server The NTLM relay can be executed with{' '}
-                <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>. To
-                relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and use
-                the arguments
+                <a
+                    target='_blank'
+                    rel='noopener'
+                    href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>
+                    ntlmrelayx.py
+                </a>
+                . To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and
+                use the arguments
                 <CodeController>{'--adcs --template <TEMPLATE_NAME>.'}</CodeController>
             </Typography>
 
             <Typography variant={'body2'}>
                 2. Coerce the Target Computer Several coercion methods are documented here:{' '}
-                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                <a
+                    target='_blank'
+                    rel='noopener'
+                    href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
                     Windows Coerced Authentication Methods
                 </a>
                 . Examples of tools include:
-                <a href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>printerbug.py</a>
-                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
+                <a
+                    target='_blank'
+                    rel='noopener'
+                    href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>
+                    printerbug.py
+                </a>
+                <a target='_blank' rel='noopener' href={'https://github.com/topotam/PetitPotam'}>
+                    PetitPotam
+                </a>
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
                 Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE.
             </Typography>

@@ -31,7 +31,8 @@ const Abuse: FC = () => {
                     <li>
                         Use the{' '}
                         <a
-                            className='text-secondary dark:text-secondary-variant-2'
+                            target='_blank'
+                            rel='noopener'
                             href={
                                 'https://learn.microsoft.com/en-us/graph/api/serviceprincipal-addpassword?view=graph-rest-1.0&tabs=http'
                             }>
@@ -41,9 +42,7 @@ const Abuse: FC = () => {
                     </li>
                     <li>
                         Use the{' '}
-                        <a
-                            className='text-secondary dark:text-secondary-variant-2'
-                            href={'https://learn.microsoft.com/en-us/cli/azure/'}>
+                        <a target='_blank' rel='noopener' href={'https://learn.microsoft.com/en-us/cli/azure/'}>
                             Azure CLI
                         </a>{' '}
                         to authenticate as the Service Principal.
