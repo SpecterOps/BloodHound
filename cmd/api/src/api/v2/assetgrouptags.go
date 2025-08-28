@@ -984,7 +984,7 @@ func isValidCertType(certType model.AssetGroupCertification) bool {
 	}
 }
 
-func recordShouldBeUpdated(record model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
+func recordEligibleForUpdate(record model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
 	if record.NodeId != lastProcessedNodeId {
 		return true
 	} else if record.Position == highestPriority {
@@ -1016,7 +1016,7 @@ func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier se
 	for _, record := range selectorNodeRecords {
 		certificationStatus = model.AssetGroupCertificationPending
 		certifiedBy = null.String{}
-		if recordShouldBeUpdated(record, lastProcessedNodeId, highestPriorityForGivenNode) {
+		if recordEligibleForUpdate(record, lastProcessedNodeId, highestPriorityForGivenNode) {
 			certificationStatus = requestAction
 			highestPriorityForGivenNode = record.Position
 			certifiedBy = userEmail
