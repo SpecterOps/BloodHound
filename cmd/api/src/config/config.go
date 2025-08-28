@@ -125,13 +125,12 @@ type SAMLConfiguration struct {
 }
 
 type DefaultAdminConfiguration struct {
-	PrincipalName   string `json:"principal_name"`
-	Password        string `json:"password"`
-	EmailAddress    string `json:"email_address"`
-	FirstName       string `json:"first_name"`
-	LastName        string `json:"last_name"`
-	ExpireNow       bool   `json:"expire_now"`
-	AllEnvironments bool   `json:"all_environments"`
+	PrincipalName string `json:"principal_name"`
+	Password      string `json:"password"`
+	EmailAddress  string `json:"email_address"`
+	FirstName     string `json:"first_name"`
+	LastName      string `json:"last_name"`
+	ExpireNow     bool   `json:"expire_now"`
 }
 
 type Configuration struct {

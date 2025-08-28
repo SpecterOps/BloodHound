@@ -75,13 +75,12 @@ func NewDefaultConfiguration() (Configuration, error) {
 				},
 			},
 			DefaultAdmin: DefaultAdminConfiguration{
-				PrincipalName:   "admin",
-				Password:        generatedPassword,
-				EmailAddress:    "spam@example.com",
-				FirstName:       "Admin",
-				LastName:        "User",
-				ExpireNow:       true,
-				AllEnvironments: true,
+				PrincipalName: "admin",
+				Password:      generatedPassword,
+				EmailAddress:  "spam@example.com",
+				FirstName:     "Admin",
+				LastName:      "User",
+				ExpireNow:     true,
 			},
 		}, nil
 	}
