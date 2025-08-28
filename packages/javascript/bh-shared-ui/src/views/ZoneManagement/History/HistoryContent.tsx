@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardHeader, CardTitle, DataTable, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagsHistory } from 'js-client-library';
+import { AssetGroupTagHistoryRecord } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { useRef, useState } from 'react';
-import { useQuery } from 'react-query';
+import React, { useRef, useState } from 'react';
+import { useInfiniteQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
@@ -105,8 +105,9 @@ const TABLE_Y_OFFSET = '255px';
 
 const TABLE_HEIGHT_OFFSET = '326px';
 
-const QUERY_LIMIT = 1000;
-const QUERY_SKIP = 0;
+// const QUERY_LIMIT = 1000;
+// const QUERY_SKIP = 0;
+const PAGE_SIZE = 5;
 
 /** Generates an array of column data in the success or loading states */
 const getColumns = (isLoading: boolean) => {
@@ -116,38 +117,119 @@ const getColumns = (isLoading: boolean) => {
     }));
 };
 
-const useAssetGroupTagHistoryQuery = (query: string) => {
-    const doSearch = query.length >= 3;
+// useInfiniteQuery(queryKey, ({ pageParam = 1 }) => fetchPage(pageParam), {
+//     ...options,
+//     getNextPageParam: (lastPage, allPages) => lastPage.nextCursor,
+//     getPreviousPageParam: (firstPage, allPages) => firstPage.prevCursor,
+// });
+
+const useAssetGroupTagHistoryQuery = (query?: string) => {
+    const doSearch = query && query.length >= 3;
     const queryKey = doSearch ? query : 'static';
 
-    return useQuery<AssetGroupTagsHistory>({
+    return useInfiniteQuery<{
+        count: number;
+        data: { records: AssetGroupTagHistoryRecord[] };
+        limit: number;
+        skip: number;
+    }>({
         queryKey: ['asset-group-tag-history', queryKey],
-        queryFn: async () => {
+        queryFn: async ({ pageParam = 1 }) => {
+            // console.log({ pageParam });
+
+            const skip = (pageParam - 1) * PAGE_SIZE;
+
             const result = doSearch
-                ? await apiClient.searchAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP, query)
-                : await apiClient.getAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP);
+                ? await apiClient.searchAssetGroupTagHistory(PAGE_SIZE, skip, query)
+                : await apiClient.getAssetGroupTagHistory(PAGE_SIZE, skip);
             return result.data;
         },
+        getNextPageParam: (lastPage) => {
+            const nextPage = lastPage.skip / PAGE_SIZE + 2;
+
+            if ((nextPage - 1) * PAGE_SIZE >= lastPage.count) {
+                return undefined;
+            }
+
+            return nextPage;
+        },
+        getPreviousPageParam: (firstPage) => {
+            if (firstPage.skip === 0) {
+                return undefined;
+            }
+
+            return firstPage.skip / PAGE_SIZE - 1;
+        },
     });
+
+    // ** THIS IS THE ORIGINAL QUERY FOR REGULAR QUERY AND THE SEARCH BAR
+    //     return useQuery<AssetGroupTagsHistory>({
+    //         queryKey: ['asset-group-tag-history', queryKey],
+    //         queryFn: async () => {
+    //             const result = doSearch
+    //                 ? await apiClient.searchAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP, query)
+    //                 : await apiClient.getAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP);
+
+    //             return result.data;
+    //         },
+    //     });
 };
 
 const HistoryContent = () => {
     const [search, setSearch] = useState('');
 
     const {
-        data: history,
+        data: logHistory,
         isLoading: isHistoryLoading,
+        isFetching: isHistoryFetching,
         isSuccess: isHistorySuccess,
+        fetchNextPage,
     } = useAssetGroupTagHistoryQuery(search);
     const { data: tags, isLoading: isTagsLoading, isSuccess: isTagsSuccess } = useTagsQuery();
 
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    const historyData = logHistory ?? { pages: [{ count: 0, data: { records: [] } }] };
+    const totalDBRowCount = historyData.pages[0].count;
+    const historyItemsRaw = historyData.pages.flatMap((item) => item.data.records);
+    const totalFetched = historyItemsRaw.length;
+
+    const fetchMoreOnBottomReached = React.useCallback(
+        (containerRefElement?: HTMLDivElement | null) => {
+            if (containerRefElement) {
+                const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+                //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+                if (
+                    scrollHeight - scrollTop - clientHeight < 500 &&
+                    !isHistoryFetching &&
+                    totalFetched < totalDBRowCount
+                ) {
+                    fetchNextPage();
+                }
+            }
+        },
+        [fetchNextPage, isHistoryFetching, totalFetched, totalDBRowCount]
+    );
+
+    React.useEffect(() => {
+        fetchMoreOnBottomReached(scrollRef.current);
+    }, [fetchMoreOnBottomReached]);
+
+    const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
+        getScrollElement: () => scrollRef.current,
+        estimateSize: () => 55,
+        measureElement:
+            typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
+                ? (element) => element?.getBoundingClientRect().height
+                : undefined,
+        overscan: 5,
+    };
+
     const isLoading = isHistoryLoading || isTagsLoading;
     const isSuccess = isHistorySuccess && isTagsSuccess;
 
     const historyItems = isSuccess
-        ? history?.data.records.map((item) => {
+        ? historyItemsRaw.map((item) => {
               const tagName = tags?.find((tag) => tag.id === item.asset_group_tag_id)?.name;
 
               return {
@@ -178,14 +260,16 @@ const HistoryContent = () => {
     };
 
     return (
-        <div id='history-wrapper' className={`flex gap-8 mt-6 h-[calc(100vh_-_${TABLE_Y_OFFSET})]`}>
+        // <div id='history-wrapper' className={`flex gap-8 mt-6 h-[calc(100vh_-_${TABLE_Y_OFFSET})]`}>
+        <div id='history-wrapper' className={`flex gap-8 mt-6`}>
             <Card id='has-grid'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
                     <SearchInput value={search} onInputChange={setSearch} />
                 </CardHeader>
 
-                <div ref={scrollRef} className={`overflow-y-auto h-[calc(100vh_-_${TABLE_HEIGHT_OFFSET})]`}>
+                {/* <div ref={scrollRef} className={`overflow-y-auto h-[calc(100vh_-_${TABLE_HEIGHT_OFFSET})]`}> */}
+                <div ref={scrollRef} className={`overflow-y-auto`}>
                     <DataTable
                         data={historyItems ?? []}
                         TableHeaderProps={tableHeaderProps}
@@ -193,14 +277,14 @@ const HistoryContent = () => {
                         TableProps={tableProps}
                         TableCellProps={tableCellProps}
                         columns={getColumns(isLoading)}
-                        virtualizationOptions={{
-                            rangeExtractor: (range) => {
-                                return new Array(range.count).fill(0).map((_, index) => {
-                                    return range.startIndex + index;
-                                });
-                            },
-                            estimateSize: () => 17,
-                        }}
+                        virtualizationOptions={virtualizationOptions}
+
+                        // rangeExtractor: (range) => {
+                        //     return new Array(range.count).fill(0).map((_, index) => {
+                        //         return range.startIndex + index;
+                        //     });
+                        // },
+                        // estimateSize: () => 17,
                     />
                 </div>
             </Card>
