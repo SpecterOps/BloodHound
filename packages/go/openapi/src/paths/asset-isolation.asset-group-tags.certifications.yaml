@@ -52,7 +52,6 @@ post:
   responses:
     200:
       description: OK
-
     400:
       $ref: './../responses/bad-request.yaml'
     401:
