@@ -37,6 +37,7 @@ export type CreateAssetGroupTagRequest = {
     name: string;
     description: string;
     type: AssetGroupTagTypes;
+    glyph?: string;
     position?: number | null;
     requireCertify?: boolean | null;
 };
