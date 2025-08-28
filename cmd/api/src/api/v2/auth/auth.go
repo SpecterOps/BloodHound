@@ -362,6 +362,28 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
+		// eTAC
+		etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag)
+		if err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+
+		if etacFeatureFlag.Enabled {
+			if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
+				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
+					return
+				}
+
+				if len(createUserRequest.UpdateUserRequest.EnvironmentControlList.Environments) != 0 && createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
+					return
+				}
+				userTemplate.AllEnvironments = createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments
+			}
+		}
+
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
 			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
@@ -371,6 +393,28 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
+			// eTAC
+			if etacFeatureFlag.Enabled {
+				// In order to properly create the environment access rows for the new user, we need to wait for the user to be created
+				// to obtain the user's id to link the user to the new etac list
+				if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
+					// If the user isn't granting access to all environments, give them access to each environment requested
+					if createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
+						if err := s.db.DeleteEnvironmentListForUser(request.Context(), newUser); err != nil {
+							api.HandleDatabaseError(request, response, err)
+							return
+						}
+					} else {
+						if environments, err := s.db.UpdateEnvironmentListForUser(request.Context(), newUser, createUserRequest.EnvironmentControlList.Environments); err != nil {
+							api.HandleDatabaseError(request, response, err)
+							return
+						} else {
+							newUser.EnvironmentAccessControl = environments
+						}
+					}
+				}
+			}
+
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
 
@@ -482,6 +526,51 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			return
 		} else if updateUserRequest.Roles != nil {
 			user.Roles = roles
+		}
+
+		// eTAC
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if etacFeatureFlag.Enabled {
+			if updateUserRequest.EnvironmentControlList != nil {
+				// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
+				effectiveRoles := roles
+				if updateUserRequest.Roles != nil {
+					effectiveRoles = user.Roles
+				}
+
+				if effectiveRoles.Has(model.Role{Name: auth.RoleAdministrator}) || effectiveRoles.Has(model.Role{Name: auth.RolePowerUser}) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
+					return
+				}
+
+				if len(updateUserRequest.EnvironmentControlList.Environments) != 0 && updateUserRequest.EnvironmentControlList.AllEnvironments {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
+					return
+				}
+
+				// Delete the user's environment entries before setting them to the new request
+				if err := s.db.DeleteEnvironmentListForUser(request.Context(), user); err != nil {
+					api.HandleDatabaseError(request, response, err)
+				}
+
+				user.AllEnvironments = updateUserRequest.EnvironmentControlList.AllEnvironments
+
+				// If the user isn't granting access to all environments, give them access to each environment requested
+				if updateUserRequest.EnvironmentControlList.AllEnvironments {
+					user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
+				} else {
+					environments := make([]model.EnvironmentAccess, 0)
+					for _, environment := range updateUserRequest.EnvironmentControlList.Environments {
+						newEnvironment := model.EnvironmentAccess{
+							UserID:      user.ID.String(),
+							Environment: environment,
+						}
+						environments = append(environments, newEnvironment)
+					}
+					user.EnvironmentAccessControl = environments
+				}
+			}
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
