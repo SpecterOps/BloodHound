@@ -1084,9 +1084,9 @@ func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.Filte
 		"node_environment_id": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"node_name":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"node_object_id":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"asset_group_tag_id":  {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"asset_group_tag_id":  {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
 		"node_primary_kind":   {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"certified":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"certified":           {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
 		"certified_by":        {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"created_at":          {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
 	}
