@@ -65,3 +65,8 @@ allOf:
       all_environments:
         type: boolean
         readOnly: true
+      environment_access_control:
+        description: A collection of environments that a user has been granted access to as part of ETAC
+        type: array
+        items:
+          $ref: './model.environment-access-control.yaml'

@@ -17223,6 +17223,21 @@
           }
         }
       },
+      "model.environment-access-control": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The user UUID that associates the access control to a specific user",
+            "readOnly": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "The environment id which a user has been granted access to"
+          }
+        }
+      },
       "model.user": {
         "allOf": [
           {
@@ -17307,6 +17322,13 @@
               "all_environments": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "environment_access_control": {
+                "description": "A collection of environments that a user has been granted access to as part of ETAC",
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.environment-access-control"
+                }
               }
             }
           }
@@ -17982,6 +18004,29 @@
           },
           "is_disabled": {
             "type": "boolean"
+          },
+          "environment_control_list": {
+            "type": "object",
+            "description": "Sets an environment access control list to the user. When all_environments is set to true, a user's existing environment list is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "properties": {
+              "all_environments": {
+                "type": "boolean"
+              },
+              "environments": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "required": "all_environments"
+              },
+              {
+                "required": "environments"
+              }
+            ]
           }
         }
       },
