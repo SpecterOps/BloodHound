@@ -1116,6 +1116,26 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(ctx, id any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelector), ctx, id)
 }
 
+// GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition mocks base method.
+func (m *MockDatabase) GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range nodeIds {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition", varargs...)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNodeExpanded)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition indicates an expected call of GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx any, nodeIds ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, nodeIds...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition), varargs...)
+}
+
 // GetAssetGroupTag mocks base method.
 func (m *MockDatabase) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()
@@ -2279,6 +2299,20 @@ func (m *MockDatabase) UpdateAuthToken(ctx context.Context, authToken model.Auth
 func (mr *MockDatabaseMockRecorder) UpdateAuthToken(ctx, authToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), ctx, authToken)
+}
+
+// UpdateCertificationBySelectorNode mocks base method.
+func (m *MockDatabase) UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCertificationBySelectorNode", ctx, input)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateCertificationBySelectorNode indicates an expected call of UpdateCertificationBySelectorNode.
+func (mr *MockDatabaseMockRecorder) UpdateCertificationBySelectorNode(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCertificationBySelectorNode", reflect.TypeOf((*MockDatabase)(nil).UpdateCertificationBySelectorNode), ctx, input)
 }
 
 // UpdateCustomNodeKind mocks base method.

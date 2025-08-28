@@ -21,6 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
@@ -37,13 +38,16 @@ type SummaryCardProps = {
 
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
 
     return (
         <Card
             className='w-full flex px-6 py-4 rounded-xl'
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, '_')}-list_item-${id}`}>
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {!analysisEnabled && <ZoneAnalysisIcon size={24} tooltip />}
+                {type === AssetGroupTagTypeTier && id !== topTagId && (
+                    <ZoneAnalysisIcon size={24} tooltip analysisEnabled={analysisEnabled} />
+                )}
                 <span className='text-2xl font-bold truncate min-w-0'>{title}</span>
             </div>
             <LargeRightArrow className='w-8 h-16' />

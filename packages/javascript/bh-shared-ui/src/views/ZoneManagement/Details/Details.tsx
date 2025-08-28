@@ -34,6 +34,7 @@ import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
 import { MembersList } from './MembersList';
+import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
@@ -103,9 +104,12 @@ const Details: FC = () => {
 
     return (
         <div>
-            <div className='flex mt-6 gap-8'>
-                {InfoHeader && <InfoHeader />}
-                <div className='basis-1/3'>
+            <div className='flex mt-6'>
+                <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
+                <div className='w-1/3 flex justify-end'>
+                    <SearchBar />
+                </div>
+                <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
                             <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>

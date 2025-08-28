@@ -6500,6 +6500,74 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/certifications": {
+      "post": {
+        "operationId": "CertifyOrRevokeObjects",
+        "summary": "Certify or Revoke Certification of Objects",
+        "description": "Manually certify/revoke certification of objects as belonging to the Zone they're selected by",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for certifying or revoking certification of objects.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "member_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "action": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "member_ids",
+                  "action"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
