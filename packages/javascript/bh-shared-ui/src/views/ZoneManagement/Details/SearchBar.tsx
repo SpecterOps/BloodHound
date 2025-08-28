@@ -18,7 +18,6 @@ import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,
     AssetGroupTagMember,
-    AssetGroupTagSearchResponse,
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
@@ -30,7 +29,9 @@ import { useDebouncedValue, useZonePathParams } from '../../../hooks';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
 
-type Sector = 'Tiers' | 'Selectors' | 'Members';
+type SectorMap =
+    | { Tiers: 'tags'; Selectors: 'selectors'; Members: 'members' }
+    | { Labels: 'tags'; Selectors: 'selectors'; Members: 'members' };
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
 
@@ -88,11 +89,10 @@ const SearchBar: React.FC = () => {
         },
     });
 
-    const sectorMap: Record<Sector, keyof AssetGroupTagSearchResponse['data']> = {
-        [tagKind === 'label' ? 'Labels' : 'Tiers']: 'tags',
-        Selectors: 'selectors',
-        Members: 'members',
-    };
+    const sectorMap: SectorMap =
+        tagKind === 'label'
+            ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
+            : { Tiers: 'tags', Selectors: 'selectors', Members: 'members' };
 
     return (
         <div {...getComboboxProps()} className='relative w-4/6'>
