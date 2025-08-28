@@ -27,7 +27,7 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     open: boolean;
     showEnvironmentAccessControls: boolean;
-}> = ({ error, isLoading, onClose, onExited, onSave, open, showEnvironmentAccessControls }) => {
+}> = ({ error, isLoading, onClose, onSave, open, showEnvironmentAccessControls }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.SSOProviderId) {
