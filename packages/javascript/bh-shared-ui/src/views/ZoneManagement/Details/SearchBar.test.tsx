@@ -42,12 +42,12 @@ afterAll(() => server.close());
 
 describe('SearchBar', () => {
     it('renders an input box', () => {
-        render(<SearchBar selected='1' />);
+        render(<SearchBar />);
         expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
 
     it('does not trigger search for fewer than 3 characters', async () => {
-        render(<SearchBar selected='1' />);
+        render(<SearchBar />);
 
         const input = screen.getByPlaceholderText(/search/i);
         const user = userEvent.setup();
