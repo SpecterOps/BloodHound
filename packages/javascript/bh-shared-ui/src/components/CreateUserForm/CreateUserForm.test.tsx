@@ -13,10 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { act, render, screen } from '../../test-utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
 import CreateUserForm from './CreateUserForm';
 const DEFAULT_PROPS = {
@@ -24,6 +32,8 @@ const DEFAULT_PROPS = {
     onSubmit: () => vi.fn,
     isLoading: false,
     error: false,
+    open: true,
+    showEnvironmentAccessControls: false,
 };
 
 const MOCK_ROLES = [
@@ -109,7 +119,10 @@ describe('CreateUserForm', () => {
                     <DialogPortal>
                         <DialogOverlay>
                             <DialogContent>
-                                <DialogTitle>Creater User Form Test</DialogTitle>
+                                <VisuallyHidden>
+                                    <DialogTitle>Create User Form Test</DialogTitle>
+                                    <DialogDescription />
+                                </VisuallyHidden>
                                 <CreateUserForm {...DEFAULT_PROPS}>{queryClient}</CreateUserForm>
                             </DialogContent>
                         </DialogOverlay>
@@ -119,7 +132,12 @@ describe('CreateUserForm', () => {
         });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
+
+        //const button = await screen.getByRole('button', { name: 'Save' });
         await user.type(screen.getByLabelText(/principal/i), ' ');
         await user.type(screen.getByLabelText(/first/i), ' ');
         await user.type(screen.getByLabelText(/last/i), ' ');
@@ -134,7 +152,7 @@ describe('CreateUserForm', () => {
         expect(await screen.findByText('Password must be at least 12 characters long')).toBeInTheDocument();
     });
 
-    it.skip('should not allow the input to exceed the allowed length', async () => {
+    it('should not allow the input to exceed the allowed length', async () => {
         const mockState = [
             {
                 key: ['getRoles'],
@@ -144,10 +162,29 @@ describe('CreateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        await act(async () => {
+            render(
+                <Dialog open={true}>
+                    <DialogPortal>
+                        <DialogOverlay>
+                            <DialogContent>
+                                <VisuallyHidden>
+                                    <DialogTitle>Create User Form Test</DialogTitle>
+                                    <DialogDescription />
+                                </VisuallyHidden>
+                                <CreateUserForm {...DEFAULT_PROPS}>{queryClient}</CreateUserForm>
+                            </DialogContent>
+                        </DialogOverlay>
+                    </DialogPortal>
+                </Dialog>
+            );
+        });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');
@@ -181,7 +218,7 @@ describe('CreateUserForm', () => {
         expect(await screen.findByText('Password must be less than 1000 characters')).toBeInTheDocument();
     });
 
-    it.skip('should not allow leading or trailing empty spaces', async () => {
+    it('should not allow leading or trailing empty spaces', async () => {
         const mockState = [
             {
                 key: ['getRoles'],
@@ -191,10 +228,30 @@ describe('CreateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<CreateUserForm open {...DEFAULT_PROPS} />, { queryClient });
+        //render(<CreateUserForm open {...DEFAULT_PROPS} />, { queryClient });
+
+        await act(async () => {
+            render(
+                <Dialog open={true}>
+                    <DialogPortal>
+                        <DialogOverlay>
+                            <DialogContent>
+                                <VisuallyHidden>
+                                    <DialogTitle />
+                                    <DialogDescription />
+                                </VisuallyHidden>
+                                <CreateUserForm {...DEFAULT_PROPS}>{queryClient}</CreateUserForm>
+                            </DialogContent>
+                        </DialogOverlay>
+                    </DialogPortal>
+                </Dialog>
+            );
+        });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
         await user.type(screen.getByLabelText(/principal/i), ' dd');
         await user.type(screen.getByLabelText(/first/i), ' bsg!');
         await user.type(screen.getByLabelText(/last/i), 'asdfw ');

@@ -13,19 +13,29 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { render, screen } from '../../test-utils';
+import { act, render, screen } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
-    onCancel: () => null,
     onSubmit: () => vi.fn,
     userId: '2d92f310-68fc-402a-915a-438a57f81342',
     hasSelectedSelf: false,
     isLoading: false,
     error: false,
+    showEnvironmentAccessControls: false,
+    open: true,
 };
 
 const MOCK_ROLES = [
@@ -365,19 +375,53 @@ describe('UpdateUserForm', () => {
         const mockState = [
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
+                data: {
+                    MOCK_USER,
+                },
             },
             {
                 key: ['getRoles'],
-                data: MOCK_ROLES,
+                data: {
+                    MOCK_ROLES,
+                },
             },
-            { key: ['listSSOProviders'], data: null },
+            {
+                key: ['listSSOProviders'],
+                data: null,
+            },
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        console.log(queryClient);
+
+        //render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+
+        render(
+            <Dialog open={true}>
+                <DialogPortal>
+                    <DialogOverlay>
+                        <DialogContent>
+                            <VisuallyHidden>
+                                <DialogTitle />
+                                <DialogDescription />
+                            </VisuallyHidden>
+                            <UpdateUserForm {...DEFAULT_PROPS} />
+                        </DialogContent>
+                    </DialogOverlay>
+                </DialogPortal>
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
+
+        screen.debug(undefined, Infinity);
+
+        /*
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
+        */
         const button = screen.getByRole('button', { name: 'Save' });
 
         await user.click(screen.getByLabelText(/email/i));
@@ -413,16 +457,35 @@ describe('UpdateUserForm', () => {
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
                 data: MOCK_USER,
+                isLoading: false,
             },
             {
                 key: ['getRoles'],
                 data: MOCK_ROLES,
+                isLoading: false,
             },
-            { key: ['listSSOProviders'], data: null },
+            { key: ['listSSOProviders'], data: null, isLoading: false },
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        //render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });Upd
+        await act(async () => {
+            render(
+                <Dialog open={true}>
+                    <DialogPortal>
+                        <DialogOverlay>
+                            <DialogContent>
+                                <VisuallyHidden>
+                                    <DialogTitle />
+                                    <DialogDescription />
+                                </VisuallyHidden>
+                                <UpdateUserForm {...DEFAULT_PROPS}>{queryClient}</UpdateUserForm>
+                            </DialogContent>
+                        </DialogOverlay>
+                    </DialogPortal>
+                </Dialog>
+            );
+        });
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -453,7 +516,25 @@ describe('UpdateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        //render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
+
+        await act(async () => {
+            render(
+                <Dialog open={true}>
+                    <DialogPortal>
+                        <DialogOverlay>
+                            <DialogContent>
+                                <VisuallyHidden>
+                                    <DialogTitle />
+                                    <DialogDescription />
+                                </VisuallyHidden>
+                                <UpdateUserForm {...DEFAULT_PROPS}>{queryClient}</UpdateUserForm>
+                            </DialogContent>
+                        </DialogOverlay>
+                    </DialogPortal>
+                </Dialog>
+            );
+        });
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
