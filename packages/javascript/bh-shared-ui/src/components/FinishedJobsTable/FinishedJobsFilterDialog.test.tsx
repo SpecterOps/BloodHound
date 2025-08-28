@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '../../test-utils';
+import { render, screen, within } from '../../test-utils';
 import { FinishedJobsFilterDialog } from './FinishedJobsFilterDialog';
 
 const renderFilterDialog = async (open = true) => {
@@ -31,14 +31,24 @@ const renderFilterDialog = async (open = true) => {
     return { filterButton, user };
 };
 
+// Radix Select relies on pointer events + scroll positioning under the hood
+// (Popper + focus management). In JSDOM, those methods (scrollIntoView,
+// hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
+// crashes silently when trying to open the select dropdown.
+beforeAll(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+    window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+});
+
 describe('FinishedJobsFilterDialog', () => {
     it('renders a filter button', async () => {
         const { filterButton } = await renderFilterDialog(false);
         expect(filterButton).toBeInTheDocument();
     });
 
-    it('displays the filter', async () => {
-        await renderFilterDialog();
+    it('opens and closes the filter', async () => {
+        const { user } = await renderFilterDialog();
 
         const dialogTitle = screen.getByText('Filter');
         const status = screen.getByText('Status');
@@ -47,10 +57,6 @@ describe('FinishedJobsFilterDialog', () => {
         expect(dialogTitle).toBeInTheDocument();
         expect(status).toBeInTheDocument();
         expect(dataCollected).toBeInTheDocument();
-    });
-
-    it('closes the filter', async () => {
-        const { user } = await renderFilterDialog();
 
         const cancelButton = screen.getByRole('button', { name: 'Cancel' });
         expect(cancelButton).toBeInTheDocument();
@@ -60,20 +66,43 @@ describe('FinishedJobsFilterDialog', () => {
     });
 });
 
-// describe('FinishedJobsFilterDialog - Status Select', () => {
-//     it('filters by status', async () => {
-//         await renderFilterDialog();
+describe('FinishedJobsFilterDialog - Status Select', () => {
+    it('has status filters', async () => {
+        const { user } = await renderFilterDialog();
 
-//         const statusSelect = screen.getByRole('combobox', { name: 'Status Select' });
-//         expect(statusSelect).toBeInTheDocument();
-//     });
-// });
+        // Grab the select trigger
+        const statusSelect = screen.getByRole('combobox', { name: 'Status Select' });
+        await user.click(statusSelect);
 
-// describe('FinishedJobsFilterDialog - Status Select', () => {
-//     it('has select by data collected', async () => {
-//         const { user } = await renderFilterDialog();
+        // Grab the listbox that just opened (menu items)
+        const listbox = await screen.findByRole('listbox');
 
-//         const dataCollectedSelect = screen.getByRole('combobox', { name: 'Data Collected Select' });
-//         await expect(dataCollectedSelect).toBeInTheDocument();
-//     });
-// });
+        // Get all the menu items
+        const options = within(listbox).getAllByRole('option');
+        expect(options.map((o) => o.textContent)).toEqual(['None', 'Complete', 'Failed']);
+    });
+});
+
+describe('FinishedJobsFilterDialog - Data Collected Select', () => {
+    it('has data collected filters', async () => {
+        const { user } = await renderFilterDialog();
+
+        // Grab the select trigger
+        const dataCollectedSelect = screen.getByRole('combobox', { name: 'Data Collected Select' });
+        await user.click(dataCollectedSelect);
+
+        // Grab the listbox that just opened (menu items)
+        const listbox = await screen.findByRole('listbox');
+
+        // Get all the menu items
+        const options = within(listbox).getAllByRole('option');
+        expect(options.map((o) => o.textContent)).toEqual([
+            'Sessions',
+            'Local Groups',
+            'AD Structure',
+            'Certificate Services',
+            'CA Registry',
+            'DC Registry',
+        ]);
+    });
+});
