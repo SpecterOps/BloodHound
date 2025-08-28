@@ -84,9 +84,6 @@ const InfoHeader: FC = () => {
                     </AppLink>
                 </Button>
             </div>
-            <div className='flex justify-start basis-1/3'>
-                <input type='text' placeholder='search' className='hidden' />
-            </div>
         </div>
     );
 };

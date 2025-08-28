@@ -140,7 +140,8 @@ export const NodeSourceChild = 2 as const;
 export const NodeSourceParent = 3 as const;
 
 export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
-export interface AssetGroupTagNode {
+export interface AssetGroupTagMember {
+    asset_group_tag_id: number;
     id: number; // uint64 graphID
     primary_kind: string;
     object_id: string;
