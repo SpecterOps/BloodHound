@@ -6500,7 +6500,7 @@
         }
       }
     },
-    "/api/v2/asset-group-tags/members/certification": {
+    "/api/v2/asset-group-tags/certifications": {
       "post": {
         "operationId": "CertifyOrRevokeObjects",
         "summary": "Certify or Revoke Certification of Objects",
