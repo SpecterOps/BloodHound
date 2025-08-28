@@ -533,7 +533,13 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			api.HandleDatabaseError(request, response, err)
 		} else if etacFeatureFlag.Enabled {
 			if updateUserRequest.EnvironmentControlList != nil {
-				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+				// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
+				effectiveRoles := roles
+				if updateUserRequest.Roles != nil {
+					effectiveRoles = user.Roles
+				}
+
+				if effectiveRoles.Has(model.Role{Name: auth.RoleAdministrator}) || effectiveRoles.Has(model.Role{Name: auth.RolePowerUser}) {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
 					return
 				}

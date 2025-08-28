@@ -81,8 +81,8 @@ const (
 	ErrorResponseDetailsQueryTooShort               = "search query must be at least 3 characters long"
 	ErrorResponseInvalidTagGlyph                    = "the glyph specified is invalid"
 	ErrorResponseAssetGroupTagDuplicateGlyph        = "asset group tag glyph must be unique"
-	ErrorResponseETACBadRequest                     = "when all_environments is set to true, we cannot process an environment list, please check the request"
-	ErrorResponseETACInvalidRoles                   = "Administrators and Power Users may not have a ETAC permissions applied to them"
+	ErrorResponseETACBadRequest                     = "cannot specify environments when all_environments is true"
+	ErrorResponseETACInvalidRoles                   = "Administrators and Power Users may not have an ETAC list applied to them"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

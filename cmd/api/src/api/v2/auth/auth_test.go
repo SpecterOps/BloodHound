@@ -2914,8 +2914,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
 				EnvironmentControlList: &v2.UpdateUserETACListRequest{
-					Environments:    []string{"12345"},
-					AllEnvironments: false,
+					Environments: []string{"12345"},
 				},
 			},
 			returnedRoles: model.Roles{
