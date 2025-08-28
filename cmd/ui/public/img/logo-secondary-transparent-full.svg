@@ -1,3 +1,20 @@
+<!--
+    Copyright 2025 Specter Ops, Inc.
+    
+    Licensed under the Apache License, Version 2.0
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+    
+    SPDX-License-Identifier: Apache-2.0
+-->
 <svg width="500" height="528" viewBox="0 0 500 528" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="500" height="404" rx="6" fill="#E02F35"/>
 <path d="M0.0351562 480.397V438.439H17.5333C21.8905 438.439 25.2756 439.412 27.6885 441.321C30.0841 443.248 31.2819 445.939 31.2819 449.393C31.2819 451.65 30.6917 453.594 29.4939 455.226C28.2961 456.858 26.6817 458.038 24.6159 458.802C27.0289 459.444 28.921 460.607 30.2751 462.308C31.6291 464.01 32.3061 466.18 32.3061 468.801C32.3061 472.533 31.0736 475.397 28.5912 477.394C26.1088 479.407 22.6717 480.397 18.2624 480.397H0.0525193H0.0351562ZM5.9894 456.754H16.5786C22.3766 456.754 25.2756 454.497 25.2756 449.966C25.2756 445.435 22.3766 443.179 16.5786 443.179H5.9894V456.754ZM5.9894 475.623H17.5333C23.3661 475.623 26.2824 473.262 26.2824 468.54C26.2824 463.819 23.3661 461.51 17.5333 461.51H5.9894V475.623Z" fill="white"/>
