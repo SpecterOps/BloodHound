@@ -135,10 +135,10 @@ describe('UpdateUserDialog', () => {
 
     const setup = (options?: SetupOptions) => {
         const user = userEvent.setup();
-        const testOnOpen = vi.fn();
+        //const testOnOpen = vi.fn();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-        const handleOpenChange = vi.fn();
+        //const handleOpenChange = vi.fn();
         const testUser = {
             emailAddress: 'testuser@example.com',
             principalName: 'testuser',
@@ -150,7 +150,7 @@ describe('UpdateUserDialog', () => {
         };
 
         render(
-            <Dialog open={testOnOpen} onOpenChange={handleOpenChange}>
+            <Dialog open={open}>
                 <DialogPortal>
                     <DialogOverlay>
                         <UpdateUserDialog
@@ -306,6 +306,8 @@ describe('UpdateUserDialog', () => {
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
 
         await user.click(saveButton);
+
+        screen.debug(undefined, Infinity);
 
         await waitFor(
             () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),

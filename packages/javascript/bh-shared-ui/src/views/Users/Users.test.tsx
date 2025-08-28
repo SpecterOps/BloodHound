@@ -44,6 +44,7 @@ describe('Users', () => {
         expect(
             within(testUserRow).getByText(`${testBloodHoundUsers[1].first_name} ${testBloodHoundUsers[1].last_name}`)
         ).toBeInTheDocument();
+        console.log(testUserRow);
         expect(within(testUserRow).getByText('2024-01-01 04:00 PST (GMT-0800)')).toBeInTheDocument();
         expect(within(testUserRow).getByText('User')).toBeInTheDocument();
         expect(within(testUserRow).getByText('Active')).toBeInTheDocument();
