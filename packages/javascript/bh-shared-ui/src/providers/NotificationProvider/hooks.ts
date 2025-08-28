@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { OptionsObject } from 'notistack';
 import { useContext, useMemo } from 'react';
 import { NotificationsContext, NotificationsDispatchContext } from './NotificationsProvider';
 import {
@@ -22,6 +23,11 @@ import {
     removeNotification as removeNotificationAction,
     type NotificationAction,
 } from './actions';
+
+export const PERSIST_NOTIFICATION = Object.freeze<OptionsObject>({
+    persist: true,
+    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+});
 
 /** Make method that wraps an action creator with dispatch */
 const curryWithDispatch = (dispatch: React.Dispatch<NotificationAction> | null) => {
