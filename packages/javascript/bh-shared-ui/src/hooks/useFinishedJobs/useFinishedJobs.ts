@@ -17,14 +17,13 @@
 import type { GetScheduledJobDisplayResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { useNotifications } from '../../providers';
+import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
 import {
     FETCH_ERROR_KEY,
     FETCH_ERROR_MESSAGE,
     FinishedJobParams,
     NO_PERMISSION_KEY,
     NO_PERMISSION_MESSAGE,
-    PERSIST_NOTIFICATION,
     Permission,
     apiClient,
 } from '../../utils';
