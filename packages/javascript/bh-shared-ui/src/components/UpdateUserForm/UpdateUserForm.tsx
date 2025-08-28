@@ -19,7 +19,7 @@ import {
     Card,
     DialogActions,
     DialogClose,
-    DialogContent,
+    DialogDescription,
     DialogTitle,
     Form,
     FormControl,
@@ -37,7 +37,7 @@ import {
     Skeleton,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { DialogContentText, Grid } from '@mui/material';
+import { Alert, Grid } from '@mui/material';
 import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -49,7 +49,6 @@ import UserFormEnvironmentSelector from '../CreateUserForm/UserFormEnvironmentSe
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
 const UpdateUserForm: React.FC<{
-    onCancel: () => void;
     onSubmit: (user: UpdateUserRequestForm) => void;
     userId: string;
     hasSelectedSelf: boolean;
@@ -57,7 +56,7 @@ const UpdateUserForm: React.FC<{
     error: any;
     open?: boolean;
     showEnvironmentAccessControls?: boolean;
-}> = ({ onCancel, onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
+}> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
     const getUserQuery = useQuery(
         ['getUser', userId],
         ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
@@ -77,21 +76,18 @@ const UpdateUserForm: React.FC<{
     if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
             <>
-                <DialogContent>
-                    <DialogContentText>
-                        <Skeleton />
-                    </DialogContentText>
-                </DialogContent>
+                <Skeleton />
                 <DialogActions>
-                    <DialogActions>
+                    <DialogClose asChild>
                         <Button
+                            data-testid='update-user-dialog_button-cancel'
+                            disabled={isLoading}
+                            role='button'
                             type='button'
-                            variant='tertiary'
-                            onClick={onCancel}
-                            data-testid='update-user-dialog_button-close'>
-                            Close
+                            variant='tertiary'>
+                            Cancel
                         </Button>
-                    </DialogActions>
+                    </DialogClose>
                 </DialogActions>
             </>
         );
@@ -100,19 +96,20 @@ const UpdateUserForm: React.FC<{
     if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
         return (
             <>
-                <DialogContent>
-                    <DialogContentText>User not found.</DialogContentText>
-                </DialogContent>
+                <DialogDescription>
+                    <div>User not found.</div>
+                </DialogDescription>
                 <DialogActions>
-                    <DialogActions>
+                    <DialogClose asChild>
                         <Button
+                            data-testid='update-user-dialog_button-cancel'
+                            disabled={isLoading}
+                            role='button'
                             type='button'
-                            variant='tertiary'
-                            onClick={onCancel}
-                            data-testid='update-user-dialog_button-close'>
+                            variant='tertiary'>
                             Close
                         </Button>
-                    </DialogActions>
+                    </DialogClose>
                 </DialogActions>
             </>
         );
@@ -126,7 +123,7 @@ const UpdateUserForm: React.FC<{
                 firstName: getUserQuery.data.first_name || '',
                 lastName: getUserQuery.data.last_name || '',
                 SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
-                roles: getUserQuery.data.roles?.map((role: any) => role.id) || [],
+                roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
                 /*
                 environment_control_list: {
                     environments: getUserQuery.data.environment_control_list.environments || [],
@@ -137,7 +134,6 @@ const UpdateUserForm: React.FC<{
             error={error}
             hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}
-            onCancel={onCancel}
             onSubmit={onSubmit}
             roles={getRolesQuery.data}
             SSOProviders={listSSOProvidersQuery.data}
@@ -151,7 +147,6 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf: boolean;
     initialData: UpdateUserRequestForm;
     isLoading: boolean;
-    onCancel: () => void;
     open?: boolean;
     onSubmit: (user: UpdateUserRequestForm) => void;
     roles?: Role[];
@@ -162,7 +157,6 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf,
     initialData,
     isLoading,
-    //onCancel,
     onSubmit,
     //open,
     roles,
@@ -405,9 +399,6 @@ const UpdateUserFormInner: React.FC<{
                                                                 <SelectItem value='password'>
                                                                     Username / Password
                                                                 </SelectItem>
-                                                                <SelectItem value='sso'>
-                                                                    Single Sign-On (SSO)
-                                                                </SelectItem>
                                                                 {SSOProviders && SSOProviders.length > 0 && (
                                                                     <SelectItem value='sso'>
                                                                         Single Sign-On (SSO)
@@ -527,6 +518,11 @@ const UpdateUserFormInner: React.FC<{
                                         )}
                                     />
                                 </Grid>
+                                {!!form.formState.errors.root?.generic && (
+                                    <Grid item xs={12}>
+                                        <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                    </Grid>
+                                )}
                             </Grid>
                         </div>
                         <DialogActions className='mt-8 flex justify-end gap-4'>

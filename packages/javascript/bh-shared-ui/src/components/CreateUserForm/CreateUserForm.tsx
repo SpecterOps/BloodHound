@@ -39,7 +39,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, TextField } from '@mui/material';
+import { Alert, Grid, TextField } from '@mui/material';
 import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -53,7 +53,6 @@ export type CreateUserRequestForm = Omit<CreateUserRequest, 'SSOProviderId'> & {
 const CreateUserForm: React.FC<{
     error: any;
     isLoading: boolean;
-    onCancel: () => void;
     onSubmit: (user: CreateUserRequestForm) => void;
     open?: boolean;
     showEnvironmentAccessControls?: boolean; //TODO: required or not?
@@ -114,15 +113,7 @@ const CreateUserForm: React.FC<{
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
-    if (error) {
-        console.log(error);
-    }
-
-    const {
-        data: availableEnvironments,
-        //isLoading,
-        //isError
-    } = useAvailableEnvironments();
+    const { data: availableEnvironments } = useAvailableEnvironments();
 
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
@@ -151,6 +142,7 @@ const CreateUserForm: React.FC<{
     const isAllSelected =
         selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
+    console.log(isLoading);
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
@@ -319,7 +311,6 @@ const CreateUserForm: React.FC<{
                                                             <SelectItem value='password'>
                                                                 Username / Password
                                                             </SelectItem>
-                                                            <SelectItem value='sso'>Single Sign-On (SSO)</SelectItem>
                                                             {listSSOProvidersQuery.data &&
                                                                 listSSOProvidersQuery.data?.length > 0 && (
                                                                     <SelectItem value='sso'>
@@ -468,7 +459,9 @@ const CreateUserForm: React.FC<{
                                                         <SelectPortal>
                                                             <SelectContent>
                                                                 {getRolesQuery.isLoading ? (
-                                                                    <SelectItem value={''}>Loading...</SelectItem>
+                                                                    <SelectItem value={'loading'}>
+                                                                        Loading...
+                                                                    </SelectItem>
                                                                 ) : (
                                                                     getRolesQuery.data?.map((role: Role) => (
                                                                         <SelectItem
@@ -486,13 +479,11 @@ const CreateUserForm: React.FC<{
                                             )}
                                         />
                                     </Grid>
-                                    {/*
-                                    {!!errors.root?.generic && (
+                                    {!!form.formState.errors.root?.generic && (
                                         <Grid item xs={12}>
-                                            <Alert severity='error'>{errors.root.generic.message}</Alert>
+                                            <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
                                         </Grid>
                                     )}
-                                    */}
                                 </Grid>
                             </div>
                             <DialogActions className='mt-8 flex justify-end gap-4'>
