@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ScheduledJobDisplay } from 'js-client-library';
-import { StatusType } from '../components';
+import { IndicatorType } from '../components';
 import { typedEntries } from './object';
 
 const jobCollectionKeys = [
@@ -57,7 +57,7 @@ export const JOB_STATUS_MAP: Record<number, string> = {
     8: 'Partially Completed',
 } as const satisfies Record<number, string>;
 
-export const JOB_STATUS_INDICATORS: Record<number, { status: StatusType; pulse?: boolean }> = {
+export const JOB_STATUS_INDICATORS: Record<number, { status: IndicatorType; pulse?: boolean }> = {
     [-1]: { status: 'bad' },
     0: { status: 'good' },
     1: { status: 'pending', pulse: true },
@@ -68,7 +68,7 @@ export const JOB_STATUS_INDICATORS: Record<number, { status: StatusType; pulse?:
     6: { status: 'pending', pulse: true },
     7: { status: 'pending' },
     8: { status: 'pending' },
-} as const satisfies Record<number, { status: StatusType; pulse?: boolean }>;
+} as const satisfies Record<number, { status: IndicatorType; pulse?: boolean }>;
 
 export const COLLECTION_MAP: Record<JobCollectionKey, string> = {
     session_collection: 'Sessions',
@@ -85,7 +85,7 @@ export const getCollectionState = (state: FinishedJobsFilter): EnabledCollection
     return Object.fromEntries(entries) as EnabledCollections;
 };
 
-/** Given a string, return true if that key */
+/** Given a string, return true if it is a valid job collection key */
 export const isCollectionKey = (key: string): key is JobCollectionKey =>
     (jobCollectionKeys as readonly string[]).includes(key);
 

@@ -19,14 +19,11 @@ import * as hooks from '../../hooks';
 import { render, screen, within } from '../../test-utils';
 import { FinishedJobsFilterDialog } from './FinishedJobsFilterDialog';
 
-const useObjectStateMock = vi.spyOn(hooks, 'useObjectState');
-
 const mockObjectHook = (initialState = {}) => {
     const applyState = vi.fn();
     const deleteKeys = vi.fn();
     const state = initialState;
-
-    useObjectStateMock.mockReturnValue({ applyState, deleteKeys, state } as any);
+    vi.spyOn(hooks, 'useObjectState').mockReturnValue({ applyState, deleteKeys, state } as any);
 
     return { applyState, deleteKeys };
 };
@@ -54,6 +51,10 @@ beforeAll(() => {
     window.HTMLElement.prototype.releasePointerCapture = vi.fn();
 });
 
+afterEach(() => {
+    vi.restoreAllMocks();
+});
+
 describe('FinishedJobsFilterDialog', () => {
     it('renders a filter button', async () => {
         const { filterButton } = await renderFilterDialog(false);
@@ -63,25 +64,17 @@ describe('FinishedJobsFilterDialog', () => {
     it('opens and closes the filter', async () => {
         const { user } = await renderFilterDialog();
 
-        const dialogTitle = screen.getByText('Filter');
-        const status = screen.getByText('Status');
-        const dataCollected = screen.getByText('Data Collected');
+        // No assertions needed as getBy* throws if elements are not found
+        ['Filter', 'Status', 'Data Collected'].forEach((text) => screen.getByText(text));
 
-        expect(dialogTitle).toBeInTheDocument();
-        expect(status).toBeInTheDocument();
-        expect(dataCollected).toBeInTheDocument();
-
-        const cancelButton = screen.getByRole('button', { name: 'Cancel' });
-        expect(cancelButton).toBeInTheDocument();
-
-        await user.click(cancelButton);
-        expect(cancelButton).not.toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
     });
 });
 
 describe('FinishedJobsFilterDialog - Status Select', () => {
+    // Grab the select trigger and click it
     const openSelect = async (user: ReturnType<typeof userEvent.setup>) => {
-        // Grab the select trigger and click it
         const statusSelect = screen.getByRole('combobox', { name: 'Status Select' });
         await user.click(statusSelect);
     };
@@ -132,7 +125,7 @@ describe('FinishedJobsFilterDialog - Data Collected Select', () => {
 
     it('has data collected filters', async () => {
         const { user } = await renderFilterDialog();
-        openSelect(user);
+        await openSelect(user);
 
         // Grab the listbox that just opened (menu items)
         const listbox = await screen.findByRole('listbox');
@@ -154,7 +147,7 @@ describe('FinishedJobsFilterDialog - Data Collected Select', () => {
         const { user } = await renderFilterDialog(true);
         await openSelect(user);
 
-        // Select a couple data collecters from the listbox
+        // Select a couple data collectors from the listbox
         const adCollect = await screen.findByRole('option', { name: 'AD Structure' });
         const dcCollect = await screen.findByRole('option', { name: 'DC Registry' });
         await user.click(adCollect);
@@ -169,7 +162,7 @@ describe('FinishedJobsFilterDialog - Data Collected Select', () => {
         const { user } = await renderFilterDialog(true);
         await openSelect(user);
 
-        // Unselect the selected data collecters
+        // Unselect the selected data collectors
         const adCollect = await screen.findByRole('option', { name: 'AD Structure' });
         const dcCollect = await screen.findByRole('option', { name: 'DC Registry' });
         await user.click(adCollect);

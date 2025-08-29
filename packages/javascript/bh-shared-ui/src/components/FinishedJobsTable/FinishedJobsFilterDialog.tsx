@@ -55,7 +55,9 @@ export const FinishedJobsFilterDialog: React.FC<Props> = () => {
     };
 
     const toggleDataCollections = (key: string) => {
-        if (key in filters.state && isCollectionKey(key)) {
+        if (!isCollectionKey(key)) return;
+
+        if (key in filters.state) {
             filters.deleteKeys(key);
         } else {
             filters.applyState({ [key]: true });
