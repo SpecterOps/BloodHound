@@ -15,8 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import * as hooks from '../../hooks';
 import { render, screen, within } from '../../test-utils';
 import { FinishedJobsFilterDialog } from './FinishedJobsFilterDialog';
+
+const useObjectStateMock = vi.spyOn(hooks, 'useObjectState');
+
+const mockObjectHook = (initialState = {}) => {
+    const applyState = vi.fn();
+    const deleteKeys = vi.fn();
+    const state = initialState;
+
+    useObjectStateMock.mockReturnValue({ applyState, deleteKeys, state } as any);
+
+    return { applyState, deleteKeys };
+};
 
 const renderFilterDialog = async (open = true) => {
     render(<FinishedJobsFilterDialog onConfirm={() => {}} />);
@@ -67,12 +80,15 @@ describe('FinishedJobsFilterDialog', () => {
 });
 
 describe('FinishedJobsFilterDialog - Status Select', () => {
-    it('has status filters', async () => {
-        const { user } = await renderFilterDialog();
-
-        // Grab the select trigger
+    const openSelect = async (user: ReturnType<typeof userEvent.setup>) => {
+        // Grab the select trigger and click it
         const statusSelect = screen.getByRole('combobox', { name: 'Status Select' });
         await user.click(statusSelect);
+    };
+
+    it('has status filters', async () => {
+        const { user } = await renderFilterDialog();
+        await openSelect(user);
 
         // Grab the listbox that just opened (menu items)
         const listbox = await screen.findByRole('listbox');
@@ -81,15 +97,42 @@ describe('FinishedJobsFilterDialog - Status Select', () => {
         const options = within(listbox).getAllByRole('option');
         expect(options.map((o) => o.textContent)).toEqual(['None', 'Complete', 'Failed']);
     });
+
+    it('filters by the selected status', async () => {
+        const { applyState } = mockObjectHook({ status: '' });
+        const { user } = await renderFilterDialog(true);
+        await openSelect(user);
+
+        // Select a status from the listbox
+        const completeStatus = await screen.findByRole('option', { name: 'Complete' });
+        await user.click(completeStatus);
+
+        expect(applyState).toBeCalledWith({ status: '2' });
+    });
+
+    it('clears the applied filter', async () => {
+        const { deleteKeys } = mockObjectHook({ status: '2' });
+        const { user } = await renderFilterDialog(true);
+        await openSelect(user);
+
+        // Select a status from the listbox
+        const completeStatus = await screen.findByRole('option', { name: 'None' });
+        await user.click(completeStatus);
+
+        expect(deleteKeys).toBeCalledWith('status');
+    });
 });
 
 describe('FinishedJobsFilterDialog - Data Collected Select', () => {
-    it('has data collected filters', async () => {
-        const { user } = await renderFilterDialog();
-
-        // Grab the select trigger
+    const openSelect = async (user: ReturnType<typeof userEvent.setup>) => {
+        // Grab the select trigger and click it
         const dataCollectedSelect = screen.getByRole('combobox', { name: 'Data Collected Select' });
         await user.click(dataCollectedSelect);
+    };
+
+    it('has data collected filters', async () => {
+        const { user } = await renderFilterDialog();
+        openSelect(user);
 
         // Grab the listbox that just opened (menu items)
         const listbox = await screen.findByRole('listbox');
@@ -104,5 +147,35 @@ describe('FinishedJobsFilterDialog - Data Collected Select', () => {
             'CA Registry',
             'DC Registry',
         ]);
+    });
+
+    it('filters by selected data collected', async () => {
+        const { applyState } = mockObjectHook({});
+        const { user } = await renderFilterDialog(true);
+        await openSelect(user);
+
+        // Select a couple data collecters from the listbox
+        const adCollect = await screen.findByRole('option', { name: 'AD Structure' });
+        const dcCollect = await screen.findByRole('option', { name: 'DC Registry' });
+        await user.click(adCollect);
+        await user.click(dcCollect);
+
+        expect(applyState).toHaveBeenNthCalledWith(1, { ad_structure_collection: true });
+        expect(applyState).toHaveBeenNthCalledWith(2, { dc_registry_collection: true });
+    });
+
+    it('clears the applied filter', async () => {
+        const { deleteKeys } = mockObjectHook({ ad_structure_collection: true, dc_registry_collection: true });
+        const { user } = await renderFilterDialog(true);
+        await openSelect(user);
+
+        // Unselect the selected data collecters
+        const adCollect = await screen.findByRole('option', { name: 'AD Structure' });
+        const dcCollect = await screen.findByRole('option', { name: 'DC Registry' });
+        await user.click(adCollect);
+        await user.click(dcCollect);
+
+        expect(deleteKeys).toHaveBeenNthCalledWith(1, 'ad_structure_collection');
+        expect(deleteKeys).toHaveBeenNthCalledWith(2, 'dc_registry_collection');
     });
 });

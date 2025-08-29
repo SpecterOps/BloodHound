@@ -66,10 +66,7 @@ export const FinishedJobsFilterDialog: React.FC<Props> = () => {
         <Dialog>
             <div className='mb-4 text-right'>
                 <DialogTrigger asChild>
-                    <Button
-                        data-testid='finished_jobs_log-open_filter_dialog'
-                        name='filter-finished-jobs'
-                        variant='icon'>
+                    <Button data-testid='finished_jobs_log-open_filter_dialog' variant='icon'>
                         <AppIcon.FilterOutline size={22} />
                     </Button>
                 </DialogTrigger>
