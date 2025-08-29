@@ -17,7 +17,6 @@
 import type { ScheduledJobDisplay } from 'js-client-library';
 
 import { IndicatorType } from '../types';
-import { typedEntries } from './object';
 
 const jobCollectionKeys = [
     'session_collection',
@@ -82,8 +81,11 @@ export const COLLECTION_MAP: Record<JobCollectionKey, string> = {
 
 /** Given a FinishedJobsFilters state, return an object containing just the enabled collections */
 export const getCollectionState = (state: FinishedJobsFilter): EnabledCollections => {
-    const entries = typedEntries(state).filter(([key, value]) => isCollectionKey(key) && value === true);
-    return Object.fromEntries(entries) as EnabledCollections;
+    const result: EnabledCollections = {};
+    for (const key of jobCollectionKeys) {
+        if (state[key] === true) result[key] = true;
+    }
+    return result;
 };
 
 /** Given a string, return true if it is a valid job collection key */
@@ -99,7 +101,7 @@ export const FETCH_ERROR_KEY = 'finished-jobs-error';
 
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: Pick<ScheduledJobDisplay, JobCollectionKey>) =>
-    typedEntries(job)
-        .filter(([key, value]) => isCollectionKey(key) && value)
-        .map(([key]) => COLLECTION_MAP[key])
+    jobCollectionKeys
+        .filter((key) => job[key])
+        .map((key) => COLLECTION_MAP[key])
         .join(', ');
