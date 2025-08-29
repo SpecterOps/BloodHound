@@ -23,6 +23,7 @@ import {
     useZonePathParams,
 } from '../../../../hooks';
 import { useAppNavigate } from '../../../../utils';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 
 export const useTagFormUtils = () => {
     const navigate = useAppNavigate();
@@ -35,8 +36,8 @@ export const useTagFormUtils = () => {
 
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
-    const isLabelLocation = location.pathname.includes('zone-management/save/label');
-    const isTierLocation = location.pathname.includes('zone-management/save/tier');
+    const isLabelLocation = location.pathname.includes(`${ROUTE_ZONE_MANAGEMENT_ROOT}/save/label`);
+    const isTierLocation = location.pathname.includes(`${ROUTE_ZONE_MANAGEMENT_ROOT}/save/tier`);
 
     const tagKind: 'label' | 'tier' = isLabelLocation ? 'label' : 'tier';
     const tagKindDisplay: 'Label' | 'Tier' = capitalize(tagKind) as 'Label' | 'Tier';
@@ -49,10 +50,10 @@ export const useTagFormUtils = () => {
         navigate(`${location.pathname}/${tagId}/selector`);
     };
 
-    const handleUpdateNavigate = () => navigate(`/zone-management/details/${tagKind}/${tagId}`);
+    const handleUpdateNavigate = () => navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${tagId}`);
 
     const handleDeleteNavigate = () =>
-        navigate(`/zone-management/details/${tagKind}/${tagKind === 'tier' ? topTagId : ownedId}`);
+        navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${tagKind === 'tier' ? topTagId : ownedId}`);
 
     const showAnalysisToggle = privilegeZoneAnalysisEnabled && isUpdateTierLocation && tierId !== topTagId?.toString();
 

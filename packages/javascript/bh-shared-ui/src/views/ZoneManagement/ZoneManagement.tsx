@@ -24,6 +24,7 @@ import {
     ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS,
+    ROUTE_ZONE_MANAGEMENT_ROOT,
     ROUTE_ZONE_MANAGEMENT_SUMMARY,
     ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS,
@@ -99,7 +100,7 @@ const ZoneManagement: FC = () => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
                             const id = value === 'tier' ? tagId : ownedId;
-                            navigate(`/zone-management/${path}/${value}/${id}`);
+                            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
                             <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>

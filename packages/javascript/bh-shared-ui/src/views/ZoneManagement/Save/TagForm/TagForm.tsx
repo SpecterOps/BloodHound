@@ -133,7 +133,7 @@ export const TagForm: FC = () => {
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
                 if (!isDirty) {
-                    addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                    addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     });
                     return;
@@ -150,7 +150,7 @@ export const TagForm: FC = () => {
 
                 addNotification(
                     `${tagKindDisplay} was updated successfully!`,
-                    `zone-management_update-${tagKind}_success_${tagId}`,
+                    `privilege-zones_update-${tagKind}_success_${tagId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -179,7 +179,7 @@ export const TagForm: FC = () => {
 
             addNotification(
                 `${tagKindDisplay} was deleted successfully!`,
-                `zone-management_delete-${tagKind}_success_${tagId}`,
+                `privilege-zones_delete-${tagKind}_success_${tagId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }

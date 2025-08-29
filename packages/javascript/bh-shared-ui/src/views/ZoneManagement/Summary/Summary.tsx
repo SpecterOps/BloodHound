@@ -19,7 +19,7 @@ import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useTagsQuery } from '../../../hooks';
-import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
+import { ROUTE_ZONE_MANAGEMENT_ROOT, ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
 import { SelectedDetails } from '../Details/SelectedDetails';
@@ -55,7 +55,7 @@ const Summary: FC = () => {
                 <InfoHeader />
                 <div className='basis-1/3'>
                     <Button asChild variant={'secondary'}>
-                        <Link data-testid='zone-management_edit-button' to={getSavePath(tierId, labelId, selectorId)}>
+                        <Link data-testid='privilege-zones_edit-button' to={getSavePath(tierId, labelId, selectorId)}>
                             Edit
                         </Link>
                     </Button>
@@ -69,7 +69,7 @@ const Summary: FC = () => {
                         selected={tagId as string}
                         onSelect={(id) =>
                             navigate(
-                                `/zone-management/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
+                                `${ROUTE_ZONE_MANAGEMENT_ROOT}/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
                             )
                         }
                     />

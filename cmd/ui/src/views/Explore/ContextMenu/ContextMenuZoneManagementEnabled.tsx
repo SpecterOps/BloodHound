@@ -32,11 +32,12 @@ import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'src/routes/constants';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => {} }) => {
+}> = ({ contextMenu, onClose = () => { } }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();
@@ -158,7 +159,7 @@ const ContextMenu: FC<{
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
+                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/tier/${tierZeroAssetGroup!.id}`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
@@ -174,7 +175,7 @@ const ContextMenu: FC<{
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
+                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/label/${ownedAssetGroup!.id}`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                     />,
                 ]}

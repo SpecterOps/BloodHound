@@ -61,7 +61,7 @@ const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorForm
     const expansion = getSelectorExpansionMethod(tagId, tagKind, ownedId?.toString());
 
     const previewQuery = useQuery({
-        queryKey: ['zone-management', 'preview-selectors', selectorType, seeds, expansion],
+        queryKey: ['privilege-zones', 'preview-selectors', selectorType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
                 .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })

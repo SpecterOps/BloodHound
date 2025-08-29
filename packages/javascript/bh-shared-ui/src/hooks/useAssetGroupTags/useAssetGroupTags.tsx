@@ -68,7 +68,7 @@ export interface PatchSelectorParams extends DeleteSelectorParams {
 const PAGE_SIZE = 25;
 
 export const zoneManagementKeys = {
-    all: ['zone-management'] as const,
+    all: ['privilege-zones'] as const,
     tags: () => [...zoneManagementKeys.all, 'tags'] as const,
     tagDetail: (tagId: string | number) => [...zoneManagementKeys.tags(), 'tagId', tagId] as const,
     selectors: () => [...zoneManagementKeys.all, 'selectors'] as const,

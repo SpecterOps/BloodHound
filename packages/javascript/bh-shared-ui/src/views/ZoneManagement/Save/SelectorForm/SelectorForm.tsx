@@ -32,6 +32,7 @@ import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 
 const diffValues = (
     data: AssetGroupTagSelector | undefined,
@@ -145,7 +146,7 @@ const SelectorForm: FC = () => {
             if (isEmpty(diffedValues)) {
                 addNotification(
                     'No changes to selector detected',
-                    `zone-management_update-selector_no-changes-warn_${selectorId}`,
+                    `privilege-zones_update-selector_no-changes-warn_${selectorId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -161,7 +162,7 @@ const SelectorForm: FC = () => {
 
             addNotification(
                 'Selector was updated successfully!',
-                `zone-management_update-selector_success_${selectorId}`,
+                `privilege-zones_update-selector_success_${selectorId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -183,7 +184,7 @@ const SelectorForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            navigate(`/zone-management/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`);
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
         }

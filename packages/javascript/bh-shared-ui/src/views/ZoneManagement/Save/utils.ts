@@ -25,7 +25,7 @@ export const handleError = (
 ) => {
     console.error(error);
 
-    const key = `zone-management_${action}-${entity}`;
+    const key = `privilege-zones_${action}-${entity}`;
 
     const options: OptionsObject = { anchorOrigin: { vertical: 'top', horizontal: 'right' } };
 

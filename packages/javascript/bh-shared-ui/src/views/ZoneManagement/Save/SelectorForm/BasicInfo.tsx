@@ -51,6 +51,7 @@ import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 
 const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const location = useLocation();
@@ -62,7 +63,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
 
     const tagQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId],
+        queryKey: ['privilege-zones', 'tags', tagId],
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTag(tagId);
             return response.data.data['tag'];
@@ -91,7 +92,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             setDeleteDialogOpen(false);
 
-            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}`);
         } catch (error) {
             handleError(error, 'deleting', 'selector', addNotification);
         }

@@ -29,6 +29,7 @@ import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 
 const Save: FC = () => {
     const location = useLocation();
@@ -48,7 +49,7 @@ const Save: FC = () => {
                         <BreadcrumbLink asChild>
                             <AppLink
                                 data-testid='zone-management_save_details-breadcrumb'
-                                to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`}>
+                                to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`}>
                                 {captitalizedPluralTagValue}
                             </AppLink>
                         </BreadcrumbLink>
@@ -60,7 +61,7 @@ const Save: FC = () => {
                                 <BreadcrumbLink asChild>
                                     <AppLink
                                         data-testid='zone-management_save_tag-breadcrumb'
-                                        to={`/zone-management/save/${tagValue}/${tagId}`}>
+                                        to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/save/${tagValue}/${tagId}`}>
                                         {`${capitalizedTagValue} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>

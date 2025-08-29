@@ -44,13 +44,13 @@ export const getSavePath = (
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
-    const savePath = '/zone-management/save';
+    const savePath = `${ROUTE_ZONE_MANAGEMENT_ROOT}/save`;
 
-    if (selectorId && labelId) return `/zone-management/save/label/${labelId}/selector/${selectorId}`;
-    if (selectorId && tierId) return `/zone-management/save/tier/${tierId}/selector/${selectorId}`;
+    if (selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/label/${labelId}/selector/${selectorId}`;
+    if (selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/tier/${tierId}/selector/${selectorId}`;
 
-    if (!selectorId && labelId) return `/zone-management/save/label/${labelId}`;
-    if (!selectorId && tierId) return `/zone-management/save/tier/${tierId}`;
+    if (!selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/label/${labelId}`;
+    if (!selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/tier/${tierId}`;
 
     return savePath;
 };
@@ -126,7 +126,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${id}`);
                             }}
                         />
                     ) : (
@@ -135,7 +135,7 @@ const Details: FC = () => {
                             listQuery={tiersQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${id}`);
                             }}
                         />
                     )}
@@ -144,7 +144,7 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
-                            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+                            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
                         }}
                     />
                     {selectorId !== undefined ? (
@@ -153,7 +153,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                                    `${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -164,7 +164,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
+                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}

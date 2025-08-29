@@ -28,6 +28,7 @@ import { AppIcon } from '../../../components';
 import { useDebouncedValue, useZonePathParams } from '../../../hooks';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 
 type SectorMap =
     | { Tiers: 'tags'; Selectors: 'selectors'; Members: 'members' }
@@ -43,7 +44,7 @@ const SearchBar: React.FC = () => {
     const { tagId, tagKind } = useZonePathParams();
 
     const searchQuery = useQuery({
-        queryKey: ['zone-management', 'search', debouncedInputValue, tagId, tagKind],
+        queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, tagKind],
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
@@ -62,11 +63,11 @@ const SearchBar: React.FC = () => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`/zone-management/details/${tagKind}/${item.id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${item.id}`);
         } else if (isSelector(item)) {
-            navigate(`/zone-management/details/${tagKind}/${item.asset_group_tag_id}/selector/${item.id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${item.asset_group_tag_id}/selector/${item.id}`);
         } else {
-            navigate(`/zone-management/details/${tagKind}/${item.asset_group_tag_id}/member/${item.id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${item.asset_group_tag_id}/member/${item.id}`);
         }
     };
 
