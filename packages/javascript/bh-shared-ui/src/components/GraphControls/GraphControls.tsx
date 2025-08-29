@@ -155,9 +155,9 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphButton
-                    aria-label='Search current results for a node'
+                    aria-label='Search node in results'
                     onClick={() => setIsCurrentSearchOpen(true)}
-                    displayText={'Search current results for a node'}
+                    displayText={'Search'}
                     disabled={isCurrentSearchOpen}
                     data-testid='explore_graph-controls_search-current-results'
                 />
