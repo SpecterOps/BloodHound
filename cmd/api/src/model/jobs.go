@@ -36,6 +36,7 @@ type IngestJob struct {
 	LastIngest       time.Time   `json:"last_ingest"`
 	TotalFiles       int         `json:"total_files"`
 	FailedFiles      int         `json:"failed_files"`
+
 	BigSerial
 }
 

@@ -81,12 +81,23 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     position: number | null;
     requireCertify: boolean | null;
     description: string;
-    counts?: AssetGroupTagCounts;
     analysis_enabled: boolean | null;
+    glyph: string | null;
+    counts?: AssetGroupTagCounts;
 }
 
 export const SeedTypeObjectId = 1 as const;
 export const SeedTypeCypher = 2 as const;
+
+export const SeedExpansionMethodNone = 0 as const;
+export const SeedExpansionMethodAll = 1 as const;
+export const SeedExpansionMethodChild = 2 as const;
+export const SeedExpansionMethodParent = 3 as const;
+export type SeedExpansionMethod =
+    | typeof SeedExpansionMethodNone
+    | typeof SeedExpansionMethodAll
+    | typeof SeedExpansionMethodChild
+    | typeof SeedExpansionMethodParent;
 
 export type SeedTypes = typeof SeedTypeObjectId | typeof SeedTypeCypher;
 
@@ -130,7 +141,8 @@ export const NodeSourceChild = 2 as const;
 export const NodeSourceParent = 3 as const;
 
 export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
-export interface AssetGroupTagNode {
+export interface AssetGroupTagMember {
+    asset_group_tag_id: number;
     id: number; // uint64 graphID
     primary_kind: string;
     object_id: string;
@@ -276,6 +288,7 @@ export interface GraphNodeProperties {
 export type GraphNode = {
     label: string;
     kind: string;
+    kinds: string[];
     objectId: string;
     lastSeen: string;
     isTierZero: boolean;

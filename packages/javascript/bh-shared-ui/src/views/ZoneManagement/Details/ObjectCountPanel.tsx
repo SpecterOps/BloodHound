@@ -17,18 +17,21 @@
 import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
+import { useEnvironmentIdList } from '../../../hooks';
 import { apiClient } from '../../../utils';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
+    const environments = useEnvironmentIdList(['zone-management']);
     const objectsCountQuery = useQuery({
-        queryKey: ['asset-group-tags-count', tagId],
-        queryFn: ({ signal }) => apiClient.getAssetGroupTagMembersCount(tagId, { signal }).then((res) => res.data.data),
+        queryKey: ['asset-group-tags-count', tagId, ...environments],
+        queryFn: ({ signal }) =>
+            apiClient.getAssetGroupTagMembersCount(tagId, environments, { signal }).then((res) => res.data.data),
     });
 
     if (objectsCountQuery.isLoading) {
         return (
             <Card
-                className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
+                className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
                 data-testid='zone-management_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
@@ -45,7 +48,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isError) {
         return (
             <Card
-                className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
+                className='flex flex-col px-6 py-6 select-none max-w-[32rem]'
                 data-testid='zone-management_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
@@ -60,7 +63,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     } else if (objectsCountQuery.isSuccess && objectsCountQuery.data) {
         return (
             <Card
-                className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
+                className='flex flex-col px-6 py-6 select-none overflow-y-auto max-w-[32rem]'
                 data-testid='zone-management_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>

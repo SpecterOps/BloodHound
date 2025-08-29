@@ -40,7 +40,7 @@ import {
 } from 'src/routes/constants';
 
 const DatabaseManagement = React.lazy(() => import('src/views/DatabaseManagement'));
-const QA = React.lazy(() => import('src/views/QA'));
+const DataQuality = React.lazy(() => import('src/views/DataQuality'));
 const Users = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.Users })));
 const EarlyAccessFeatures = React.lazy(() => import('src/views/EarlyAccessFeatures'));
 const FileIngest = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.FileIngest })));
@@ -62,7 +62,7 @@ const sections: AdministrationSection[] = [
             {
                 label: 'Data Quality',
                 path: ROUTE_ADMINISTRATION_DATA_QUALITY,
-                component: QA,
+                component: DataQuality,
                 adminOnly: false,
             },
             {

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagNode, GraphNode } from 'js-client-library';
+import { AssetGroupTagMember, GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { cn } from '../utils';
 import NodeIcon from './NodeIcon';
@@ -33,8 +33,8 @@ const isGraphNode = (node: unknown): node is GraphNode => {
     return 'label' in (node as GraphNode);
 };
 
-const isAssetGroupTagNode = (node: unknown): node is AssetGroupTagNode => {
-    return 'object_id' in (node as AssetGroupTagNode);
+const isAssetGroupTagNode = (node: unknown): node is AssetGroupTagMember => {
+    return 'object_id' in (node as AssetGroupTagMember);
 };
 
 const isNormalizedNodeItem = (node: unknown): node is NormalizedNodeItem => {

@@ -784,7 +784,6 @@ const (
 	UserType                                          Property = "usertype"
 	TenantID                                          Property = "tenantid"
 	ServicePrincipalID                                Property = "service_principal_id"
-	ServicePrincipalNames                             Property = "service_principal_names"
 	OperatingSystemVersion                            Property = "operatingsystemversion"
 	TrustType                                         Property = "trustype"
 	IsBuiltIn                                         Property = "isbuiltin"
@@ -820,7 +819,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -838,8 +837,6 @@ func ParseProperty(source string) (Property, error) {
 		return TenantID, nil
 	case "service_principal_id":
 		return ServicePrincipalID, nil
-	case "service_principal_names":
-		return ServicePrincipalNames, nil
 	case "operatingsystemversion":
 		return OperatingSystemVersion, nil
 	case "trustype":
@@ -924,8 +921,6 @@ func (s Property) String() string {
 		return string(TenantID)
 	case ServicePrincipalID:
 		return string(ServicePrincipalID)
-	case ServicePrincipalNames:
-		return string(ServicePrincipalNames)
 	case OperatingSystemVersion:
 		return string(OperatingSystemVersion)
 	case TrustType:
@@ -1010,8 +1005,6 @@ func (s Property) Name() string {
 		return "Tenant ID"
 	case ServicePrincipalID:
 		return "Service Principal ID"
-	case ServicePrincipalNames:
-		return "Service Principal Names"
 	case OperatingSystemVersion:
 		return "Operating System Version"
 	case TrustType:

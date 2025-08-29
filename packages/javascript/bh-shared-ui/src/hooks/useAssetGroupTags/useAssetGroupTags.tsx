@@ -13,24 +13,34 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { findIconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { IconName } from '@fortawesome/free-solid-svg-icons';
 import {
     AssetGroupTag,
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypes,
     AssetGroupTagTypeTier,
+    AssetGroupTagTypes,
     CreateAssetGroupTagRequest,
     CreateSelectorRequest,
     RequestOptions,
     UpdateAssetGroupTagRequest,
     UpdateSelectorRequest,
 } from 'js-client-library';
+import { useEffect, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { SortOrder } from '../../types';
-import { apiClient } from '../../utils';
-import { createPaginatedFetcher, PageParam } from '../../utils/paginatedFetcher';
+import {
+    DEFAULT_GLYPH_BACKGROUND_COLOR,
+    DEFAULT_GLYPH_COLOR,
+    GLYPH_SCALE,
+    GenericQueryOptions,
+    apiClient,
+    getModifiedSvgUrlFromIcon,
+} from '../../utils';
+import { PageParam, createPaginatedFetcher } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
 
 interface CreateAssetGroupTagParams {
@@ -66,27 +76,105 @@ export const zoneManagementKeys = {
     selectorDetail: (tagId: string | number, selectorId: string | number) =>
         [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
     members: () => [...zoneManagementKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number) => [...zoneManagementKeys.members(), 'tag', tagId] as const,
-    membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined) =>
-        [...zoneManagementKeys.membersByTag(tagId), 'selector', selectorId] as const,
+    membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
+        [...zoneManagementKeys.members(), 'tag', tagId, sortOrder, ...environments] as const,
+    membersByTagAndSelector: (
+        tagId: string | number,
+        selectorId: string | number | undefined,
+        sortOrder: SortOrder,
+        environments: string[] = []
+    ) => ['tag', tagId, 'selector', selectorId, sortOrder, ...environments] as const,
 };
 
-export const getAssetGroupTags = () =>
+const getAssetGroupTags = (options: RequestOptions) =>
     apiClient
         .getAssetGroupTags({
+            ...options,
             params: {
                 counts: true,
             },
         })
-        .then((res) => {
-            return res.data.data['tags'];
-        });
+        .then((res) => res.data.data.tags);
 
-export const useTagsQuery = (filter?: (value: AssetGroupTag, index: number, array: AssetGroupTag[]) => boolean) =>
+const glyphQualifier = (glyph: string | null) => !glyph?.includes('http');
+
+const glyphTransformer = (glyph: string, darkMode?: boolean): string => {
+    const iconDefiniton = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
+
+    if (!iconDefiniton) return '';
+
+    const glyphIconUrl = getModifiedSvgUrlFromIcon(iconDefiniton, {
+        styles: {
+            'transform-origin': 'center',
+            scale: GLYPH_SCALE,
+            background: darkMode ? DEFAULT_GLYPH_COLOR : DEFAULT_GLYPH_BACKGROUND_COLOR,
+            color: darkMode ? DEFAULT_GLYPH_BACKGROUND_COLOR : DEFAULT_GLYPH_COLOR,
+        },
+    });
+
+    return glyphIconUrl;
+};
+
+interface GlyphUtils {
+    qualifier?: (glyph: string | null) => boolean;
+    transformer: (glyph: string, darkMode?: boolean) => string;
+}
+
+export const glyphUtils: GlyphUtils = {
+    qualifier: glyphQualifier,
+    transformer: glyphTransformer,
+};
+
+export const createGlyphMapFromTags = (
+    tags: AssetGroupTag[] | undefined,
+    utils: GlyphUtils,
+    darkMode?: boolean
+): Record<string, string> => {
+    const glyphMap: Record<string, string> = {};
+    const { qualifier = () => true, transformer } = utils;
+
+    tags?.forEach((tag) => {
+        const underscoredTagName = tag.name.split(' ').join('_');
+
+        if (tag.glyph !== null && qualifier(tag.glyph)) {
+            const glyphValue = transformer(tag.glyph, darkMode);
+
+            if (glyphValue !== '') glyphMap[`Tag_${underscoredTagName}`] = glyphValue;
+        }
+    });
+
+    return glyphMap;
+};
+
+export const getGlyphFromKinds = (kinds: string[] = [], tagGlyphMap: Record<string, string> = {}): string | null => {
+    for (let index = kinds.length - 1; index > -1; index--) {
+        const kind = kinds[index];
+        if (!kind.includes('Tag_')) continue;
+
+        if (tagGlyphMap[kind]) return tagGlyphMap[kind];
+    }
+    return null;
+};
+
+export const useTagGlyphs = (glyphUtils: GlyphUtils, darkMode?: boolean) => {
+    const [glyphMap, setGlyphMap] = useState<Record<string, string>>({});
+    const tagsQuery = useAssetGroupTags();
+
+    useEffect(() => {
+        if (!tagsQuery.data) return;
+
+        const newMap = createGlyphMapFromTags(tagsQuery.data, glyphUtils, darkMode);
+        setGlyphMap(newMap);
+    }, [tagsQuery.data, glyphUtils, darkMode]);
+
+    return glyphMap;
+};
+
+export const useTagsQuery = (queryOptions?: GenericQueryOptions<AssetGroupTag[]>) =>
     useQuery({
-        queryKey: zoneManagementKeys.tags(),
-        queryFn: () => getAssetGroupTags(),
-        select: (data) => (filter ? data.filter(filter) : data),
+        queryKey: zoneManagementKeys.tags() as unknown as string[],
+        queryFn: ({ signal }) => getAssetGroupTags({ signal }),
+        ...queryOptions,
     });
 
 export const getAssetGroupTagSelectors = (tagId: string | number, skip: number = 0, limit: number = PAGE_SIZE) =>
@@ -110,8 +198,10 @@ export const useSelectorsInfiniteQuery = (tagId: string | number | undefined) =>
         nextPageParam?: PageParam;
     }>({
         queryKey: zoneManagementKeys.selectorsByTag(tagId!),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupTagSelectors(tagId!, pageParam.skip, pageParam.limit),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID provided for selectors request');
+            return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
     });
@@ -120,42 +210,52 @@ export const getAssetGroupTagMembers = (
     tagId: number | string,
     skip = 0,
     limit = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = 'asc',
+    environments?: string[]
 ) =>
     createPaginatedFetcher<AssetGroupTagMemberListItem>(
-        () => apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name'),
+        () =>
+            apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name', environments),
         'members',
         skip,
         limit
     );
 
-export const useTagMembersInfiniteQuery = (tagId: number | string | undefined, sortOrder: SortOrder) =>
+export const useTagMembersInfiniteQuery = (
+    tagId: number | string | undefined,
+    sortOrder: SortOrder,
+    environments?: string[]
+) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTag(tagId!),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupTagMembers(tagId!, pageParam.skip, pageParam.limit, sortOrder),
+        queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder, environments),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID provided for tag members request');
+            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder, environments);
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined,
     });
 
-export const getAssetGroupSelectorMembers = (
+export const getAssetGroupTagSelectorMembers = (
     tagId: number | string,
-    selectorId: number | string | undefined = undefined,
+    selectorId: number | string,
     skip: number = 0,
     limit: number = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = 'asc',
+    environments?: string[]
 ) =>
     createPaginatedFetcher(
         () =>
             apiClient.getAssetGroupTagSelectorMembers(
                 tagId,
-                selectorId!,
+                selectorId,
                 skip,
                 limit,
-                sortOrder === 'asc' ? 'name' : '-name'
+                sortOrder === 'asc' ? 'name' : '-name',
+                environments
             ),
         'members',
         skip,
@@ -165,15 +265,26 @@ export const getAssetGroupSelectorMembers = (
 export const useSelectorMembersInfiniteQuery = (
     tagId: number | string | undefined,
     selectorId: number | string | undefined,
-    sortOrder: SortOrder
+    sortOrder: SortOrder,
+    environments?: string[]
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId),
-        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) =>
-            getAssetGroupSelectorMembers(tagId!, selectorId, pageParam.skip, pageParam.limit, sortOrder),
+        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder, environments),
+        queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
+            if (!tagId) return Promise.reject('No tag ID available to get selector members');
+            if (!selectorId) return Promise.reject('No selector ID available to get selector members');
+            return getAssetGroupTagSelectorMembers(
+                tagId,
+                selectorId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments
+            );
+        },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
         enabled: tagId !== undefined && selectorId !== undefined,
     });

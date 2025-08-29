@@ -54,10 +54,10 @@ const (
 type AssetGroupCertification int
 
 const (
-	AssetGroupCertificationRevoked AssetGroupCertification = -1
-	AssetGroupCertificationNone    AssetGroupCertification = 0
-	AssetGroupCertificationManual  AssetGroupCertification = 1
-	AssetGroupCertificationAuto    AssetGroupCertification = 2
+	AssetGroupCertificationPending AssetGroupCertification = 0
+	AssetGroupCertificationRevoked AssetGroupCertification = 1
+	AssetGroupCertificationManual  AssetGroupCertification = 2
+	AssetGroupCertificationAuto    AssetGroupCertification = 3
 )
 
 type AssetGroupSelectorNodeSource int
@@ -77,6 +77,11 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
+const (
+	TierZeroGlyph = "gem"
+	OwnedGlyph    = "skull"
+)
+
 type AssetGroupTag struct {
 	ID              int               `json:"id"`
 	Type            AssetGroupTagType `json:"type" validate:"required"`
@@ -92,6 +97,7 @@ type AssetGroupTag struct {
 	Position        null.Int32        `json:"position"`
 	RequireCertify  null.Bool         `json:"require_certify"`
 	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
+	Glyph           null.String       `json:"glyph"`
 }
 
 type AssetGroupTags []AssetGroupTag
@@ -110,6 +116,7 @@ func (s AssetGroupTag) AuditData() AuditData {
 		"position":         s.Position,
 		"require_certify":  s.RequireCertify,
 		"analysis_enabled": s.AnalysisEnabled,
+		"glyph":            s.Glyph,
 	}
 }
 
@@ -122,7 +129,7 @@ func (s AssetGroupTag) KindName() string {
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
-	return filter == "name" || filter == "description"
+	return filter == "name" || filter == "description" || filter == "glyph"
 }
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
@@ -138,6 +145,7 @@ func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 		"deleted_by":       {Equals, NotEquals},
 		"require_certify":  {Equals, NotEquals},
 		"analysis_enabled": {Equals, NotEquals},
+		"glyph":            {Equals, NotEquals, ApproximatelyEquals},
 	}
 }
 
@@ -274,4 +282,10 @@ func GetAssetGroupMemberProperties(node *graph.Node) (primaryKind, displayName, 
 	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
 
 	return primaryKind, displayName, objectId, envId
+}
+
+type AssetGroupSelectorNodeExpanded struct {
+	AssetGroupSelectorNode
+	AssetGroupTagId int `json:"asset_group_tag_id"`
+	Position        int `json:"position"`
 }

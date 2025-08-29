@@ -523,8 +523,6 @@ func GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx context.Context, db graph.Dat
 					return false
 				} else if nodeDomainSid != domainsid {
 					return false
-				} else if smbSigning, err := node.Properties.Get(ad.SMBSigning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) || smbSigning {
-					return false
 				} else if restrictNtlm, err := node.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil || restrictNtlm {
 					return false
 				} else {
@@ -724,8 +722,6 @@ func GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(ctx context.Context, db graph.
 				} else if nodeDomainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 					return false
 				} else if nodeDomainSid != domainsid {
-					return false
-				} else if smbSigning, err := node.Properties.Get(ad.SMBSigning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) || smbSigning {
 					return false
 				} else if restrictNtlm, err := node.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil || restrictNtlm {
 					return false

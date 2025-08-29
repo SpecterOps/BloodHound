@@ -22,6 +22,7 @@ import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { DataTable, Header } from '../../components';
 import { usePermissions } from '../../hooks';
+import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { LuxonFormat, Permission, apiClient } from '../../utils';
 import UserActionsMenu from './UserActionsMenu';
 
@@ -71,18 +72,11 @@ const UsersTable: FC<UsersTableProps> = ({
 }) => {
     const theme = useTheme();
 
-    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
-        apiClient.getSelf({ signal }).then((res) => res.data?.data)
-    );
+    const getSelfQuery = useSelf();
+    const listUsersQuery = useBloodHoundUsers();
 
     const { checkPermission } = usePermissions();
     const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
-
-    const listUsersQuery = useQuery(
-        ['listUsers'],
-        ({ signal }) => apiClient.listUsers({ signal }).then((res) => res.data?.data?.users),
-        { enabled: hasPermission }
-    );
 
     const listSSOProvidersQuery = useQuery(
         ['listSSOProviders'],

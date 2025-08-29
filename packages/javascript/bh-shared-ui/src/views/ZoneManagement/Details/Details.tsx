@@ -27,14 +27,17 @@ import {
     useTagMembersInfiniteQuery,
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
+import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
+import { ROUTE_ZONE_MANAGEMENT_DETAILS, ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
-import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
+import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
+import { TagList } from './TagList';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -73,6 +76,9 @@ const Details: FC = () => {
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const environments = useEnvironmentIdList([
+        { path: ROUTE_ZONE_MANAGEMENT_ROOT + ROUTE_ZONE_MANAGEMENT_DETAILS, caseSensitive: false, end: false },
+    ]);
 
     const tagId = labelId === undefined ? tierId : labelId;
 
@@ -82,25 +88,29 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
+    const tiersQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
 
-    const labelsQuery = useTagsQuery(
-        (tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned
-    );
+    const labelsQuery = useTagsQuery({
+        select: (tags) =>
+            tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
+    });
 
     const selectorsQuery = useSelectorsInfiniteQuery(tagId);
 
-    const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder);
+    const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
 
-    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder);
+    const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
 
     return (
-        <div>
-            <div className='flex mt-6 gap-8'>
-                {InfoHeader && <InfoHeader />}
-                <div className='basis-1/3'>
+        <div className='h-full'>
+            <div className='flex mt-6'>
+                <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
+                <div className='w-1/3 flex justify-end'>
+                    <SearchBar />
+                </div>
+                <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
                             <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
@@ -108,10 +118,10 @@ const Details: FC = () => {
                     )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+            <div className='flex gap-8 mt-4 h-full'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
                     {location.pathname.includes('label') ? (
-                        <DetailsList
+                        <TagList
                             title={'Labels'}
                             listQuery={labelsQuery}
                             selected={tagId}
@@ -120,7 +130,7 @@ const Details: FC = () => {
                             }}
                         />
                     ) : (
-                        <DetailsList
+                        <TagList
                             title={'Tiers'}
                             listQuery={tiersQuery}
                             selected={tagId}
@@ -161,7 +171,7 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='basis-1/3'>
+                <div className='basis-1/3 h-full'>
                     <SelectedDetails />
                 </div>
             </div>

@@ -38,11 +38,13 @@ export const useExploreSelectedItem = () => {
     );
 
     const clearSelectedItem = useCallback(() => {
-        setExploreParams({
-            expandedPanelSections: null,
-            selectedItem: null,
-        });
-    }, [setExploreParams]);
+        if (selectedItem) {
+            setExploreParams({
+                expandedPanelSections: null,
+                selectedItem: null,
+            });
+        }
+    }, [setExploreParams, selectedItem]);
 
     const selectedItemType = useMemo(
         () => (selectedItem ? parseItemId(selectedItem).itemType : undefined),
