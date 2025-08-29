@@ -210,7 +210,7 @@ describe('GraphControls', () => {
         it('disables GraphButton when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search node in results');
+            const searchResultsMenu = screen.getByText('Search');
             await user.click(searchResultsMenu);
 
             expect(searchResultsMenu).toBeDisabled();
@@ -221,7 +221,7 @@ describe('GraphControls', () => {
 
             expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
 
-            const searchResultsMenu = screen.getByText('Search node in results');
+            const searchResultsMenu = screen.getByText('Search');
             await user.click(searchResultsMenu);
 
             expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
@@ -230,7 +230,7 @@ describe('GraphControls', () => {
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search node in results');
+            const searchResultsMenu = screen.getByText('Search');
 
             await user.click(searchResultsMenu);
 
