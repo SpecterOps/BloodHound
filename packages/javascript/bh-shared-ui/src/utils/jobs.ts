@@ -16,7 +16,7 @@
 
 import type { ScheduledJobDisplay } from 'js-client-library';
 
-import { IndicatorType } from '../types';
+import type { IndicatorType } from '../types';
 
 const jobCollectionKeys = [
     'session_collection',
@@ -31,9 +31,7 @@ type JobCollectionKey = (typeof jobCollectionKeys)[number];
 
 export type EnabledCollections = Partial<Record<JobCollectionKey, boolean>>;
 
-const jobParamsKeys = ['client_name', 'end_time', 'start_time', 'status'] as const;
-
-type JobsParamsKey = (typeof jobParamsKeys)[number];
+type JobsParamsKey = 'client_name' | 'end_time' | 'start_time' | 'status';
 
 type JobsFilterParams = Partial<Record<JobsParamsKey, string>>;
 
@@ -57,7 +55,9 @@ export const JOB_STATUS_MAP: Record<number, string> = {
     8: 'Partially Completed',
 } as const satisfies Record<number, string>;
 
-export const JOB_STATUS_INDICATORS: Record<number, { status: IndicatorType; pulse?: boolean }> = {
+type JobStatusCode = keyof typeof JOB_STATUS_MAP;
+
+export const JOB_STATUS_INDICATORS: Record<JobStatusCode, { status: IndicatorType; pulse?: boolean }> = {
     [-1]: { status: 'bad' },
     0: { status: 'good' },
     1: { status: 'pending', pulse: true },
@@ -68,7 +68,7 @@ export const JOB_STATUS_INDICATORS: Record<number, { status: IndicatorType; puls
     6: { status: 'pending', pulse: true },
     7: { status: 'pending' },
     8: { status: 'pending' },
-} as const satisfies Record<number, { status: IndicatorType; pulse?: boolean }>;
+} as const satisfies Record<JobStatusCode, { status: IndicatorType; pulse?: boolean }>;
 
 export const COLLECTION_MAP: Record<JobCollectionKey, string> = {
     session_collection: 'Sessions',
@@ -79,14 +79,12 @@ export const COLLECTION_MAP: Record<JobCollectionKey, string> = {
     dc_registry_collection: 'DC Registry',
 } as const satisfies Record<JobCollectionKey, string>;
 
-/** Given a FinishedJobsFilters state, return an object containing just the enabled collections */
-export const getCollectionState = (state: FinishedJobsFilter): EnabledCollections => {
-    const result: EnabledCollections = {};
-    for (const key of jobCollectionKeys) {
-        if (state[key] === true) result[key] = true;
-    }
-    return result;
-};
+/** Given a FinishedJobsFilter state, return an object containing just the enabled collections */
+export const getCollectionState = (state: FinishedJobsFilter): EnabledCollections =>
+    jobCollectionKeys.reduce<EnabledCollections>((acc, key) => {
+        if (state[key] === true) acc[key] = true;
+        return acc;
+    }, {});
 
 /** Given a string, return true if it is a valid job collection key */
 export const isCollectionKey = (key: string): key is JobCollectionKey =>
@@ -102,6 +100,6 @@ export const FETCH_ERROR_KEY = 'finished-jobs-error';
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: Pick<ScheduledJobDisplay, JobCollectionKey>) =>
     jobCollectionKeys
-        .filter((key) => job[key])
+        .filter((key) => job[key] === true)
         .map((key) => COLLECTION_MAP[key])
         .join(', ');

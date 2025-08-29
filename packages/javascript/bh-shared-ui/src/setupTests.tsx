@@ -34,9 +34,10 @@ beforeAll(() => {
     // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
     // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
     // crashes silently when trying to open the select dropdown.
-    window.HTMLElement.prototype.scrollIntoView = vi.fn();
-    window.HTMLElement.prototype.hasPointerCapture = vi.fn();
-    window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+    const proto = Element.prototype as any;
+    if (!proto.scrollIntoView) proto.scrollIntoView = vi.fn();
+    if (!proto.hasPointerCapture) proto.hasPointerCapture = vi.fn();
+    if (!proto.releasePointerCapture) proto.releasePointerCapture = vi.fn();
 });
 
 beforeEach(() => {
