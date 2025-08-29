@@ -14,32 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'summary/tier/';
-
+export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'zone/';
 export const ROUTE_ZONE_MANAGEMENT_ROOT = '/privilege-zones';
 
-export const ROUTE_ZONE_MANAGEMENT_DETAILS = '/details';
-export const ROUTE_ZONE_MANAGEMENT_TIER_DETAILS = '/details/tier/:tierId';
-export const ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS = '/details/label/:labelId';
 export const ROUTE_ZONE_MANAGEMENT_SUMMARY = '/summary';
-export const ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS = '/summary/tier/:tierId';
-export const ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS = '/summary/label/:labelId';
-export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS = '/details/tier/:tierId/selector/:selectorId';
-export const ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/member/:memberId';
+export const ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS = `/zone/:tierId/summary`;
+export const ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS = `label/:labelId/summary`;
+
+export const ROUTE_ZONE_MANAGEMENT_DETAILS = '/details';
+export const ROUTE_ZONE_MANAGEMENT_TIER_DETAILS = `/zone/:tierId/details`;
+export const ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS = `/label/:labelId/details`;
+export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS = `/zone/:tierId/details/selector/:selectorId`;
+export const ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS = `/zone/:tierId/details/member/:memberId`;
 export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS =
-    '/details/tier/:tierId/selector/:selectorId/member/:memberId';
-export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS = '/details/label/:labelId/selector/:selectorId';
+    `/zone/:tierId/details/selector/:selectorId/member/:memberId`;
+export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS = `/label/:labelId/details/selector/:selectorId`;
 export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS = '/details/label/:labelId/member/:memberId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS =
     '/details/label/:labelId/selector/:selectorId/member/:memberId';
-
 export const ROUTE_ZONE_MANAGEMENT_SAVE = '/save';
-export const ROUTE_ZONE_MANAGEMENT_UPDATE_TIER = '/save/tier/:tierId';
-export const ROUTE_ZONE_MANAGEMENT_UPDATE_LABEL = '/save/label/:labelId';
-export const ROUTE_ZONE_MANAGEMENT_TIER_UPDATE_SELECTOR = '/save/tier/:tierId/selector/:selectorId';
-export const ROUTE_ZONE_MANAGEMENT_TIER_CREATE_SELECTOR = '/save/tier/:tierId/selector';
-export const ROUTE_ZONE_MANAGEMENT_LABEL_UPDATE_SELECTOR = '/save/label/:labelId/selector/:selectorId';
-export const ROUTE_ZONE_MANAGEMENT_LABEL_CREATE_SELECTOR = '/save/label/:labelId/selector';
+export const ROUTE_ZONE_MANAGEMENT_UPDATE_TIER = '/zone/:tierId/save';
+export const ROUTE_ZONE_MANAGEMENT_UPDATE_LABEL = '/label/:labelId/save';
+export const ROUTE_ZONE_MANAGEMENT_TIER_UPDATE_SELECTOR = '/tier/:tierId/save/selector/:selectorId';
+export const ROUTE_ZONE_MANAGEMENT_TIER_CREATE_SELECTOR = '/tier/:tierId/save/selector';
+export const ROUTE_ZONE_MANAGEMENT_LABEL_UPDATE_SELECTOR = '/label/:labelId/save/selector/:selectorId';
+export const ROUTE_ZONE_MANAGEMENT_LABEL_CREATE_SELECTOR = '/label/:labelId/save/selector';
 
 export type Routable = {
     path: string;
