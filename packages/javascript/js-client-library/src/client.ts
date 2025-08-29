@@ -204,8 +204,25 @@ class BHEAPIClient {
             options
         );
 
-    getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, options);
+    getAssetGroupTagSelectors = (
+        tagId: number | string,
+        skip: number | string,
+        limit: number,
+        sort_by: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                environments,
+                sort_by,
+            },
+            paramsSerializer: { indexes: null },
+        });
 
     getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(

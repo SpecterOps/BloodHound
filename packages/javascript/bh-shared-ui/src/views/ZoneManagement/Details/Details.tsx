@@ -73,6 +73,7 @@ const Details: FC = () => {
     const location = useLocation();
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
+    const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
@@ -95,7 +96,7 @@ const Details: FC = () => {
             tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
     });
 
-    const selectorsQuery = useSelectorsInfiniteQuery(tagId);
+    const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
 
     const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
 
@@ -142,10 +143,12 @@ const Details: FC = () => {
 
                     <SelectorsList
                         listQuery={selectorsQuery}
-                        selected={selectorId}
+                        onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
                         }}
+                        selected={selectorId}
+                        sortOrder={selectorsListSortOrder}
                     />
                     {selectorId !== undefined ? (
                         <MembersList
