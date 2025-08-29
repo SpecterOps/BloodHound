@@ -15,14 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
-import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphSchema';
 import { CommonSearchType } from './types';
 
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
-
-const azureTransitEdgeTypes = AzurePathfindingEdges().join('|');
-const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 
 const highPrivilegedRoleDisplayNameRegex =
     '^(Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator).*$';
@@ -76,7 +72,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Paths from Domain Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Group)-[:AD_ATTACK_PATHS*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Workstations where Domain Users can RDP',
@@ -88,7 +84,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Dangerous privileges for Domain Users groups',
-                cypher: `MATCH p=(s:Group)-[:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=(s:Group)-[:AD_ATTACK_PATHS]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Domain Admins logons to non-Domain Controllers',
@@ -124,31 +120,31 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'Shortest paths to systems trusted for unconstrained delegation',
-                cypher: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t:Computer))\nWHERE t.unconstraineddelegation = true AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s)-[:AD_ATTACK_PATHS*1..]->(t:Computer))\nWHERE t.unconstraineddelegation = true AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Domain Admins from Kerberoastable users',
-                cypher: `MATCH p=shortestPath((s:User)-[:${adTransitEdgeTypes}*1..]->(t:Group))\nWHERE s.hasspn=true\nAND s.enabled = true\nAND NOT s.objectid ENDS WITH '-502'\nAND NOT COALESCE(s.gmsa, false) = true\nAND NOT COALESCE(s.msa, false) = true\nAND t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:User)-[:AD_ATTACK_PATHS*1..]->(t:Group))\nWHERE s.hasspn=true\nAND s.enabled = true\nAND NOT s.objectid ENDS WITH '-502'\nAND NOT COALESCE(s.gmsa, false) = true\nAND NOT COALESCE(s.msa, false) = true\nAND t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s)-[:AD_ATTACK_PATHS*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Domain Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((s:Group)-[:${adTransitEdgeTypes}*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Group)-[:AD_ATTACK_PATHS*1..]->(t))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s.objectid ENDS WITH '-513' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Domain Admins',
-                cypher: `MATCH p=shortestPath((t:Group)<-[:${adTransitEdgeTypes}*1..]-(s:Base))\nWHERE t.objectid ENDS WITH '-512' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((t:Group)<-[:AD_ATTACK_PATHS*1..]-(s:Base))\nWHERE t.objectid ENDS WITH '-512' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Owned objects to Tier Zero',
-                cypher: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((s)-[:${adTransitEdgeTypes}*1..]->(t))\n// WHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\n// AND COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}'\n// RETURN p\n// LIMIT 1000`,
+                cypher: `// MANY TO MANY SHORTEST PATH QUERIES USE EXCESSIVE SYSTEM RESOURCES AND TYPICALLY WILL NOT COMPLETE\n// UNCOMMENT THE FOLLOWING LINES BY REMOVING THE DOUBLE FORWARD SLASHES AT YOUR OWN RISK\n// MATCH p=shortestPath((s)-[:AD_ATTACK_PATHS*1..]->(t))\n// WHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\n// AND COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}'\n// RETURN p\n// LIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Owned objects',
-                cypher: `MATCH p=shortestPath((s:Base)-[:${adTransitEdgeTypes}*1..]->(t:Base))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:Base)-[:AD_ATTACK_PATHS*1..]->(t:Base))\nWHERE COALESCE(s.system_tags, '') CONTAINS '${OWNED_OBJECT_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
@@ -327,19 +323,19 @@ RETURN p\nLIMIT 1000`,
         queries: [
             {
                 description: 'Shortest paths from Entra Users to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((s:AZUser)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZUser)-[:AZ_ATTACK_PATHS*1..]->(t:AZBase))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to privileged roles',
-                cypher: `MATCH p=shortestPath((s:AZBase)-[:${azureTransitEdgeTypes}*1..]->(t:AZRole))\nWHERE t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZBase)-[:AZ_ATTACK_PATHS*1..]->(t:AZRole))\nWHERE t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths from Azure Applications to Tier Zero / High Value targets',
-                cypher: `MATCH p=shortestPath((s:AZApp)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZApp)-[:AZ_ATTACK_PATHS*1..]->(t:AZBase))\nWHERE COALESCE(t.system_tags, '') CONTAINS '${TIER_ZERO_TAG}' AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Shortest paths to Azure Subscriptions',
-                cypher: `MATCH p=shortestPath((s:AZBase)-[:${azureTransitEdgeTypes}*1..]->(t:AZSubscription))\nWHERE s<>t\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p=shortestPath((s:AZBase)-[:AZ_ATTACK_PATHS*1..]->(t:AZSubscription))\nWHERE s<>t\nRETURN p\nLIMIT 1000`,
             },
         ],
     },

@@ -16,6 +16,7 @@
 
 import { Theme } from '@mui/material';
 import { DefaultTheme, makeStyles } from '@mui/styles';
+import { ATTACK_PATH_RELATIONSHIP_SHORTCUTS } from './attackPathShortcuts';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
@@ -448,9 +449,12 @@ export const graphSchema = (extraKinds?: string[]) => {
     const azureNodeKinds = Object.values(AzureNodeKind).map((l) => `:${l}`);
     const adEdges = Object.values(ActiveDirectoryRelationshipKind).map((r) => `:${r}`);
     const azureEdges = Object.values(AzureRelationshipKind).map((r) => `:${r}`);
+    // Cypher relationship shortcut aliases understood by the API rewriter (not real stored relationship kinds).
+    // Including here enables editor autocomplete for these macros.
+    const relationshipShortcuts = [...ATTACK_PATH_RELATIONSHIP_SHORTCUTS];
 
     const knownNodeKinds = new Set([...adNodeKinds, ...azureNodeKinds]);
-    const knownEdgeKinds = new Set([...adEdges, ...azureEdges]);
+    const knownEdgeKinds = new Set([...adEdges, ...azureEdges, ...relationshipShortcuts]);
 
     // Best effort attempt to remove known nodes from the edges list and vice versa.
     const dynamicNodeKinds = (extraKinds ?? []).map((l) => `:${l}`).filter((label) => !knownEdgeKinds.has(label));
