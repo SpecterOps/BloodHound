@@ -56,19 +56,19 @@ func main() {
 		printVersion()
 	}
 
+	// start with a JSON logger
+	bhlog.ConfigureDefaultJSON(os.Stdout)
+
 	// Jump the bootstrap initializer so all logs are configured properly
 	if enabled, err := config.GetTextLoggerEnabled(); err != nil {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
-		slog.Error(fmt.Sprintf("Failed to check text logger enabled: %v", err))
+		slog.Error("Failed to check text logger enabled", "err", err)
 		os.Exit(1)
 	} else if enabled {
 		bhlog.ConfigureDefaultText(os.Stdout)
-	} else {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
 	}
 
 	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
-		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
+		slog.Error("Unable to read configuration", "path", configFilePath, "err", err)
 		os.Exit(1)
 	} else {
 		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{

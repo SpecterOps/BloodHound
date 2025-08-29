@@ -18,7 +18,10 @@ package bhlog
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -75,4 +78,24 @@ func jsonReplaceAttr(_ []string, attr slog.Attr) slog.Attr {
 	}
 
 	return attr
+}
+
+type slogDebugHandler struct {
+	slog.Handler
+}
+
+func (dh slogDebugHandler) Handle(ctx context.Context, r slog.Record) error {
+	err := dh.Handler.Handle(ctx, r)
+	if err != nil {
+		var loc = "UNKOWN"
+
+		if r.PC != 0 {
+			fs := runtime.CallersFrames([]uintptr{r.PC})
+			f, _ := fs.Next()
+			loc = fmt.Sprintf("%s:%d", f.File, f.Line)
+		}
+
+		fmt.Fprintf(os.Stderr, "logger error: %s: %v\n", loc, err)
+	}
+	return err
 }

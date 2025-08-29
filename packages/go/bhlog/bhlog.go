@@ -30,43 +30,38 @@ const (
 	bhlogMessageKey = "message"
 )
 
-func JsonHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
-	return slog.NewJSONHandler(pipe, options)
+func NewWrappedTextHandler(pipe io.Writer) slog.Handler {
+	return slog.NewTextHandler(pipe, &slog.HandlerOptions{
+		Level:       level.GetLevelVar(),
+		ReplaceAttr: textReplaceAttr,
+	})
 }
 
-func TextHandler(pipe io.Writer, options *slog.HandlerOptions) slog.Handler {
-	return slog.NewTextHandler(pipe, options)
+func NewWrappedJSONHandler(pipe io.Writer) slog.Handler {
+	return slog.NewJSONHandler(pipe, &slog.HandlerOptions{
+		Level:       level.GetLevelVar(),
+		ReplaceAttr: jsonReplaceAttr,
+	})
 }
 
+func NewWrappedLogger(handler slog.Handler) *slog.Logger {
+	return slog.New(&contextHandler{
+		IDResolver: auth.NewIdentityResolver(),
+		Handler:    handler,
+	})
+}
+
+// Deprecated: use slog.SetDefault with NewWrappedTextHandler and NewWrappedLogger instead
 func ConfigureDefaultText(pipe io.Writer) {
-	var (
-		handler = TextHandler(pipe, &slog.HandlerOptions{
-			Level:       level.GetLevelVar(),
-			ReplaceAttr: textReplaceAttr,
-		})
-
-		logger = slog.New(&contextHandler{
-			IDResolver: auth.NewIdentityResolver(),
-			Handler:    handler,
-		})
-	)
-
+	handler := NewWrappedTextHandler(pipe)
+	logger := NewWrappedLogger(handler)
 	slog.SetDefault(logger)
 }
 
+// Deprecated: use slog.SetDefault with NewWrappedJSONHandler and NewWrappedLogger instead
 func ConfigureDefaultJSON(pipe io.Writer) {
-	var (
-		handler = JsonHandler(pipe, &slog.HandlerOptions{
-			Level:       level.GetLevelVar(),
-			ReplaceAttr: jsonReplaceAttr,
-		})
-
-		logger = slog.New(&contextHandler{
-			IDResolver: auth.NewIdentityResolver(),
-			Handler:    handler,
-		})
-	)
-
+	handler := NewWrappedJSONHandler(pipe)
+	logger := NewWrappedLogger(handler)
 	slog.SetDefault(logger)
 }
 

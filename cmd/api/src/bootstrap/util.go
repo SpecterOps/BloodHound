@@ -120,7 +120,41 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 
 // InitializeLogging sets up output file logging, and returns errors if any
 func InitializeLogging(cfg config.Configuration) error {
-	var logLevel = slog.LevelInfo
+	var (
+		logLevel      = slog.LevelInfo
+		fileHandler   slog.Handler
+		stdoutHandler slog.Handler
+	)
+
+	if cfg.EnableTextLogger {
+		stdoutHandler = bhlog.NewWrappedTextHandler(os.Stdout)
+	} else {
+		stdoutHandler = bhlog.NewWrappedJSONHandler(os.Stdout)
+	}
+
+	if cfg.LogPath != "" {
+		logFile, err := os.OpenFile(cfg.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			slog.Error("failed to configure logging to file", "path", cfg.LogPath, "err", err)
+		}
+		// TODO: is there a good way to handle this?
+		// do not run `defer logFile.Close()` because it closes the
+		// file immediately after this function instead of at application exit
+
+		if cfg.EnableTextLogger {
+			fileHandler = bhlog.NewWrappedTextHandler(logFile)
+		} else {
+			fileHandler = bhlog.NewWrappedJSONHandler(logFile)
+		}
+	}
+
+	if fileHandler != nil {
+		slog.SetDefault(bhlog.NewWrappedLogger(
+			bhlog.NewMultiHandler(stdoutHandler, fileHandler),
+		))
+	} else {
+		slog.SetDefault(bhlog.NewWrappedLogger(stdoutHandler))
+	}
 
 	if cfg.LogLevel != "" {
 		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
@@ -130,13 +164,12 @@ func InitializeLogging(cfg config.Configuration) error {
 		}
 	}
 
-	if cfg.EnableTextLogger {
-		bhlog.ConfigureDefaultText(os.Stdout)
-	} else {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
-	}
 	level.SetGlobalLevel(logLevel)
 
+	if fileHandler != nil {
+		slog.Info("configured logging to file", "path", cfg.LogPath)
+	}
 	slog.Info("Logging configured")
+
 	return nil
 }
