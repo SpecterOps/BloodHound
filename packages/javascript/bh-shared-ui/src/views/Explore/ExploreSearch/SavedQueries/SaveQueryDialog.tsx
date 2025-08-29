@@ -54,6 +54,7 @@ const SaveQueryDialog: React.FC<{
     sharedIds: string[];
     isPublic: boolean;
     saveAction: string | undefined;
+    saveUpdatePending: boolean;
     onClose: () => void;
     onSave: (data: { name: string; description: string; localCypherQuery: string }) => Promise<void>;
     onUpdate: (data: UpdateUserQueryRequest) => Promise<void>;
@@ -66,6 +67,7 @@ const SaveQueryDialog: React.FC<{
     sharedIds,
     isPublic,
     saveAction,
+    saveUpdatePending,
     onClose,
     onSave,
     onUpdate,
@@ -108,7 +110,7 @@ const SaveQueryDialog: React.FC<{
         setLocalCypherQuery(cypherQuery);
     }, [cypherQuery]);
 
-    const saveDisabled = name?.trim() === '';
+    const saveDisabled = name?.trim() === '' || saveUpdatePending;
 
     const handleSave = () => {
         if (isNew) {

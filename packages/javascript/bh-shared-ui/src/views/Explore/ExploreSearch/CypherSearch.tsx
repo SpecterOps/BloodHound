@@ -60,6 +60,7 @@ const CypherSearchInner = ({
     });
     const [sharedIds, setSharedIds] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(false);
+    const [saveUpdatePending, setSaveUpdatePending] = useState(false);
 
     // Still using the MUI theme here to check for dark mode -- we need a better solution for this
     const theme = useTheme();
@@ -137,6 +138,7 @@ const CypherSearchInner = ({
     };
 
     const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
+        setSaveUpdatePending(true);
         return createSavedQueryMutation.mutate(
             { name: data.name, description: data.description, query: data.localCypherQuery },
             {
@@ -147,11 +149,15 @@ const CypherSearchInner = ({
                     setSelected({ query: data.localCypherQuery, id: res.id });
                     updateQueryPermissions(res.id);
                 },
+                onSettled: () => {
+                    setSaveUpdatePending(false);
+                },
             }
         );
     };
 
     const handleUpdateQuery = async (data: UpdateUserQueryRequest) => {
+        setSaveUpdatePending(true);
         return updateSavedQueryMutation.mutate(
             { name: data.name, description: data.description, id: data.id, query: data.query },
             {
@@ -161,6 +167,9 @@ const CypherSearchInner = ({
                     addNotification(`${data.name} updated!`, 'userSavedQuery');
                     performSearch(data.query);
                     updateQueryPermissions(res.id);
+                },
+                onSettled: () => {
+                    setSaveUpdatePending(false);
                 },
             }
         );
@@ -318,6 +327,7 @@ const CypherSearchInner = ({
                 sharedIds={sharedIds}
                 isPublic={isPublic}
                 saveAction={saveAction}
+                saveUpdatePending={saveUpdatePending}
                 onClose={handleCloseSaveQueryDialog}
                 onSave={handleSaveQuery}
                 onUpdate={handleUpdateQuery}
