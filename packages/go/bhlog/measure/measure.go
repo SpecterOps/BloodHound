@@ -62,12 +62,12 @@ func ContextLogAndMeasure(ctx context.Context, level slog.Level, msg string, arg
 	)
 
 	args = append(args, FieldMeasurementID, pairID)
-	slog.Log(ctx, level, msg, args...)
+	slog.Log(ctx, level, "Starting "+msg, args...)
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			args = append(args, FieldElapsed, elapsed)
-			slog.Log(ctx, level, msg, args...)
+			slog.Log(ctx, level, "Finished "+msg, args...)
 		}
 	}
 }
@@ -79,12 +79,12 @@ func LogAndMeasure(level slog.Level, msg string, args ...any) func() {
 	)
 
 	args = append(args, FieldMeasurementID, pairID)
-	slog.Log(context.TODO(), level, msg, args...)
+	slog.Log(context.TODO(), level, "Starting "+msg, args...)
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			args = append(args, FieldElapsed, elapsed)
-			slog.Log(context.TODO(), level, msg, args...)
+			slog.Log(context.TODO(), level, "Finished "+msg, args...)
 		}
 	}
 }
