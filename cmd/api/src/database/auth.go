@@ -520,7 +520,7 @@ func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.
 // EndUserSession terminates the provided session
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
 func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
-	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
+	s.db.WithContext(ctx).Exec(`UPDATE user_sessions SET expires_at = NOW() WHERE user_id = ?`, userSession.UserID)
 }
 
 // corresponding retrival function is model.UserSession.GetFlag()
