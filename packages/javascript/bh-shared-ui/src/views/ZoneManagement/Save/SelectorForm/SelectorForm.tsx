@@ -46,6 +46,7 @@ const diffValues = (
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+    if (data.auto_certify != workingCopy.auto_certify) diffed.auto_certify = workingCopy.auto_certify;
     if (workingCopy.disabled !== disabled) diffed.disabled = workingCopy.disabled;
     if (!isEqual(workingCopy.seeds, data.seeds)) diffed.seeds = workingCopy.seeds;
 
@@ -201,8 +202,8 @@ const SelectorForm: FC = () => {
         const abortController = new AbortController();
 
         if (selectorQuery.data) {
-            const { name, description, seeds } = selectorQuery.data;
-            form.reset({ name, description, seeds, disabled: !selectorStatus(selectorId, selectorQuery.data) });
+            const { name, description, auto_certify, seeds } = selectorQuery.data;
+            form.reset({ name, description, auto_certify, seeds, disabled: !selectorStatus(selectorId, selectorQuery.data) });
 
             const seedsToSelectedObjects = async () => {
                 const nodesByObjectId = new Map<string, GraphNode>();

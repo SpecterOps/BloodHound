@@ -20,5 +20,6 @@ export interface SelectorFormInputs {
     name: string;
     description: string;
     seeds: SelectorSeedRequest[];
+    auto_certify?: boolean;
     disabled?: boolean;
 }

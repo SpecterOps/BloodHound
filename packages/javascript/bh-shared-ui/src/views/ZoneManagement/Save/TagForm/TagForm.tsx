@@ -92,6 +92,7 @@ export const TagForm: FC = () => {
         defaultValues: {
             name: '',
             description: '',
+            require_certify: false,
             analysis_enabled: false,
             position: -1,
         },
@@ -109,6 +110,7 @@ export const TagForm: FC = () => {
                 const requestValues = {
                     name: formData.name,
                     description: formData.description,
+                    require_certify: formData.require_certify,
                     position: null,
                     type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
                 };
@@ -211,6 +213,7 @@ export const TagForm: FC = () => {
                 name: tagQuery.data.name,
                 description: tagQuery.data.description,
                 position: tagQuery.data.position,
+                require_certify: tagQuery.data.require_certify || false,
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
             });
         }
@@ -334,6 +337,25 @@ export const TagForm: FC = () => {
                                                     data-testid='zone-management_save_tag-form_description-input'
                                                     placeholder='Description Input'
                                                     rows={3}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name='require_certify'
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Required Certification</FormLabel>
+                                            <FormControl>
+                                                <Switch
+                                                    {...field}
+                                                    data-testid='zone-management_save_tag-form_require_certify-toggle'
+                                                    checked={field.value || false}
+                                                    onCheckedChange={field.onChange}
+                                                    label = 'Enable this to mandate certification for all members within this zone'                                                 
                                                 />
                                             </FormControl>
                                             <FormMessage />

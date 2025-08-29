@@ -42,7 +42,7 @@ import { FC, useCallback, useContext, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
-import { DeleteConfirmationDialog } from '../../../../components';
+import {DeleteConfirmationDialog } from '../../../../components';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
@@ -178,6 +178,24 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                                 data-testid='zone-management_save_selector-form_description-input'
                                                 placeholder='Description Input'
                                                 rows={3}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={control}
+                                name='auto_certify'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Automatic Certification</FormLabel>
+                                        <FormControl>
+                                            <Switch
+                                                data-testid='zone-management_save_selector-form_auto_certify-input'
+                                                checked = {field.value}
+                                                onCheckedChange={field.onChange}
+                                                label='Selector automatically applies certification for members tagged'
                                             />
                                         </FormControl>
                                         <FormMessage />
