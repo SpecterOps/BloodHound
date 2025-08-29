@@ -39,6 +39,7 @@ import {
     AssetGroupTagTypeTier,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
+    AssetGroupTag,
 } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -56,6 +57,7 @@ import { useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { handleError } from '../utils';
 import { useTagFormUtils } from './utils';
+import isEmpty from 'lodash/isEmpty';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -88,6 +90,24 @@ export const TagForm: FC = () => {
     const showSalesMessage = isUpdateTierLocation && SalesMessage;
     const showTierList = isUpdateTierLocation && TierList;
 
+    const diffValues = (
+        data: AssetGroupTag | undefined,
+        formValues: UpdateAssetGroupTagRequest
+    ): Partial<UpdateAssetGroupTagRequest> => {
+        if (data === undefined) return formValues;
+        const workingCopy = { ...formValues };
+        const diffed: Partial<UpdateAssetGroupTagRequest> = {};
+    
+        if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
+        if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+        if (data.type !== workingCopy.type) diffed.type = workingCopy.type;
+        if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+        if (data.require_certify != workingCopy.require_certify) diffed.require_certify = workingCopy.require_certify;
+        if (data.analysis_enabled !== workingCopy.analysis_enabled) diffed.analysis_enabled = workingCopy.analysis_enabled;
+    
+        return diffed;
+    };
+
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
             name: '',
@@ -97,8 +117,6 @@ export const TagForm: FC = () => {
             position: -1,
         },
     });
-
-    const { isDirty } = form.formState;
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -132,16 +150,17 @@ export const TagForm: FC = () => {
     );
 
     const handleUpdateTag = useCallback(
-        async (formData: UpdateAssetGroupTagRequest) => {
+        async () => {
             try {
-                if (!isDirty) {
+                const diffedValues = diffValues(tagQuery.data, {...form.getValues()})
+                if (isEmpty(diffedValues)) {
                     addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     });
                     return;
                 }
 
-                const updatedValues = { ...formData };
+                const updatedValues = { ...diffedValues };
 
                 if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
 
@@ -170,7 +189,6 @@ export const TagForm: FC = () => {
             updateTagMutation,
             tagKind,
             tagKindDisplay,
-            isDirty,
             privilegeZoneAnalysisEnabled,
         ]
     );
@@ -199,7 +217,7 @@ export const TagForm: FC = () => {
             if (tagId === '') {
                 handleCreateTag(formData as CreateAssetGroupTagRequest);
             } else {
-                handleUpdateTag(formData);
+                handleUpdateTag();
             }
         },
         [tagId, handleCreateTag, handleUpdateTag]
