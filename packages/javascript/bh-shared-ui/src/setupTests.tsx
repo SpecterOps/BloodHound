@@ -28,6 +28,17 @@ import 'whatwg-fetch';
 expect.extend(matchers);
 
 // mocks
+
+beforeAll(() => {
+    // Radix Select relies on pointer events + scroll positioning under the hood
+    // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
+    // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix
+    // crashes silently when trying to open the select dropdown.
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+    window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+});
+
 beforeEach(() => {
     vi.clearAllMocks();
 });
