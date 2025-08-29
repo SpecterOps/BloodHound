@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { CommonSearches as prebuiltSearchListAGI } from '../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../commonSearchesAGT';
@@ -48,44 +49,25 @@ export const usePrebuiltQueries = () => {
 };
 
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
-    const queryList = usePrebuiltQueries();
-    const matchedResults: any[] = [];
-    //first we check for a matched id
-    for (const item of queryList) {
-        let result = null;
-        result = item.queries.find((query) => {
-            if (id && query.id === id) {
-                return query;
-            }
-        });
-        if (result) {
-            return result;
-        }
-    }
+    const groups = usePrebuiltQueries(); // [{ queries: Query[] }, ...]
 
-    //next we check for matched query string
-    //setting an array in case of duplicated queries via save as
-    for (const item of queryList) {
-        item.queries.find((query) => {
-            if (query.query === cypherQuery) {
-                matchedResults.push(query);
-            }
-        });
-    }
+    const selected = useMemo<QueryLineItem | null>(() => {
+        const queryList: QueryLineItem[] = groups.flatMap((g) => g.queries ?? []);
 
-    //prefer user saved version over hardcoded version
-    //this is useful on initial load or refresh where we dont have the specific query id to compare against
-    if (!matchedResults) return null;
-    if (matchedResults.length === 1) {
-        return matchedResults[0];
-    } else if (matchedResults.length > 1) {
-        const resultWithId = matchedResults.find((query) => {
-            if (query.id !== undefined) {
-                return query;
-            }
-        });
-        if (resultWithId) {
-            return resultWithId;
+        // Prefer direct id match if provided
+        if (id != null) {
+            const byId = queryList.find((q) => q.id === id);
+            if (byId) return byId;
         }
-    }
+
+        // Fallback: match by cypher string (could be multiple “Save As” copies)
+        const matches = queryList.filter((q) => q.query === cypherQuery);
+        if (matches.length === 0) return null;
+        if (matches.length === 1) return matches[0];
+
+        // If multiples, prefer the user-saved (has an id) over hardcoded
+        return matches.find((q) => q.id != null) ?? matches[0];
+    }, [groups, id, cypherQuery]);
+
+    return selected;
 };
