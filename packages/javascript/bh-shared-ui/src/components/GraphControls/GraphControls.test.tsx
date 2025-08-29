@@ -202,7 +202,7 @@ describe('GraphControls', () => {
     describe('Searching current results', () => {
         it('renders GraphButton with correct text', async () => {
             setup();
-            const searchResultsMenu = await screen.findByText('Search node in results');
+            const searchResultsMenu = await screen.findByText('Search');
 
             expect(searchResultsMenu).toBeInTheDocument();
         });
