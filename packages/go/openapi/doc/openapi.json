@@ -2725,6 +2725,15 @@
           }
         },
         {
+          "name": "X-File-Upload-Name",
+          "description": "File upload name header, used to specify the name of the file being uploaded to improve error reporting.",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
           "name": "file_upload_job_id",
           "description": "The ID for the file upload job.",
           "in": "path",
@@ -2757,6 +2766,65 @@
         "responses": {
           "202": {
             "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/file-upload/{file_upload_job_id}/completed-tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "file_upload_job_id",
+          "description": "The ID for the file upload job.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCompletedTasks",
+        "summary": "Get Completed Tasks",
+        "description": "Get information about the individual completed file upload tasks associated with a job",
+        "tags": [
+          "Collection Uploads",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.file-upload-job.completed-tasks"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -18255,6 +18323,39 @@
               "last_ingest": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "total_files": {
+                "type": "integer"
+              },
+              "failed_files": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "model.file-upload-job.completed-tasks": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "parent_file_name": {
+                "type": "string"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -18827,7 +18928,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Only alphanumeric characters, underscores, and spaces are allowed."
           },
           "type": {
             "type": "integer"
@@ -18850,7 +18952,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Only alphanumeric characters, underscores, and spaces are allowed."
           },
           "description": {
             "type": "string"
@@ -19974,7 +20077,8 @@
               "environment_id",
               "impact_percentage",
               "impact_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -20009,6 +20113,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           },
@@ -20028,7 +20135,8 @@
               "impact_count",
               "exposure_percentage",
               "exposure_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -20087,6 +20195,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           }

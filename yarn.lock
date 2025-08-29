@@ -5190,7 +5190,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     react-error-boundary: ^3.1.4
-    react-hook-form: ^7.0.0
+    react-hook-form: ^7.61.1
     react-query: ^3.39.3
     react-redux: ^8.1.1
     react-router-dom: 6.4.1
@@ -10698,15 +10698,6 @@ __metadata:
   peerDependencies:
     react: ">=16.13.1"
   checksum: f36270a5d775a25c8920f854c0d91649ceea417b15b5bc51e270a959b0476647bb79abb4da3be7dd9a4597b029214e8fe43ea914a7f16fa7543c91f784977f1b
-  languageName: node
-  linkType: hard
-
-"react-hook-form@npm:^7.0.0":
-  version: 7.45.2
-  resolution: "react-hook-form@npm:7.45.2"
-  peerDependencies:
-    react: ^16.8.0 || ^17 || ^18
-  checksum: 023ca091f2bb1f3117d8a694871874c4a344f02c795c6a08b8f78b09b78444451375fbe921d7db4ba7cd78909b1fa5e92d19efd2bfedc43124fdc44540ac036c
   languageName: node
   linkType: hard
 

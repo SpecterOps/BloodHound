@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,27 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package model
-
-import (
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-)
-
-type IngestTask struct {
-	StoredFileName   string     `json:"file_name"`
-	OriginalFileName string     `json:"original_file_name"`
-	RequestGUID      string     `json:"request_guid"`
-	JobId            null.Int64 `json:"task_id" gorm:"column:task_id"`
-	FileType         FileType   `json:"file_type"`
-
-	BigSerial
-}
-
-type IngestTasks []IngestTask
-
-type FileType int
-
-const (
-	FileTypeJson FileType = iota
-	FileTypeZip
-)
+export * from './useFinishedJobs';
