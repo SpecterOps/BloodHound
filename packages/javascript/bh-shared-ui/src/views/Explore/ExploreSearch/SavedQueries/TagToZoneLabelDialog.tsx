@@ -55,8 +55,9 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const tierLabelType = isLabel ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier;
 
-    const tiersQuery = useTagsQuery((tag: any) => tag.type === tierLabelType);
-    zoneLabelList = tiersQuery.data;
+    const tiersQuery = useTagsQuery();
+
+    zoneLabelList = tiersQuery.data?.filter((tag) => tag.type === tierLabelType);
 
     const [zone, setZone] = useState('');
     const [label, setLabel] = useState('');
