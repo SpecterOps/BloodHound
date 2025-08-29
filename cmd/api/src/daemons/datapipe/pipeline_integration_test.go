@@ -50,10 +50,18 @@ func TestDeleteData_Sourceless(t *testing.T) {
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	// simulate requesting deletion
@@ -91,10 +99,18 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	// simulate requesting deletion
@@ -132,10 +148,18 @@ func TestDeleteData_All(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	// simulate requesting deletion

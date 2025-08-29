@@ -14,18 +14,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: object
-properties:
-  name:
-    type: string
-    description: "Only alphanumeric characters, underscores, and spaces are allowed."
-  type: 
-    type: integer
-  description:
-    type: string
-  require_certify:
-    type: boolean
-  position:
-    type: integer
-  glyph:
-    $ref: './null.string.yaml'
+allOf:
+  - $ref: './model.components.int64.id.yaml'
+  - $ref: './model.components.timestamps.yaml'
+  - type: object
+    properties:
+      file_name:
+        type: string
+      parent_file_name:
+        type: string
+      errors:
+        type: array
+        items:
+          type: string

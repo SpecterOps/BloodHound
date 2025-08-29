@@ -50,7 +50,7 @@ const Summary: FC = () => {
     const tagsQuery = useTagsQuery();
 
     return (
-        <div>
+        <div className='h-full'>
             <div className='flex mt-6 gap-8'>
                 <InfoHeader />
                 <div className='basis-1/3'>
@@ -61,7 +61,7 @@ const Summary: FC = () => {
                     </Button>
                 </div>
             </div>
-            <div className='flex gap-8 mt-4 w-full'>
+            <div className='flex gap-8 mt-4 w-full h-full'>
                 <div className='basis-2/3'>
                     <SummaryList
                         title={labelId ? 'Labels' : 'Tiers'}

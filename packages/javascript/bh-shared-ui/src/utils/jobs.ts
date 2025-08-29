@@ -17,6 +17,11 @@
 import type { ScheduledJobDisplay } from 'js-client-library';
 import { StatusType } from '../components';
 
+export interface FinishedJobParams {
+    page: number;
+    rowsPerPage: number;
+}
+
 export const JOB_STATUS_MAP: Record<number, string> = {
     [-1]: 'Invalid',
     0: 'Ready',
@@ -61,6 +66,13 @@ const COLLECTION_MAP = new Map(
         dc_registry_collection: 'DC Registry',
     })
 );
+
+export const NO_PERMISSION_MESSAGE =
+    'Your role does not permit viewing finished job details. Please contact your administrator for assistance.';
+export const NO_PERMISSION_KEY = 'finished-jobs-permission';
+
+export const FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
+export const FETCH_ERROR_KEY = 'finished-jobs-error';
 
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: Pick<ScheduledJobDisplay, JobCollectionType>) =>
