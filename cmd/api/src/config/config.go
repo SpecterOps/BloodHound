@@ -169,6 +169,7 @@ type Configuration struct {
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
 	UI                           UIConfiguration           `json:"ui"`
+	EnableEmbeddedCollectorsDownload bool                      `json:"enable_embedded_collectors_download"`
 }
 
 func (s Configuration) TempDirectory() string {
