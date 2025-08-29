@@ -51,22 +51,22 @@ export const usePrebuiltQueries = () => {
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
     const groups = usePrebuiltQueries(); // [{ queries: Query[] }, ...]
 
-    const selected = useMemo<QueryLineItem | null>(() => {
+    const selected = useMemo<QueryLineItem | undefined>(() => {
         const queryList: QueryLineItem[] = groups.flatMap((g) => g.queries ?? []);
 
         // Prefer direct id match if provided
-        if (id != null) {
+        if (id != undefined) {
             const byId = queryList.find((q) => q.id === id);
             if (byId) return byId;
         }
 
         // Fallback: match by cypher string (could be multiple “Save As” copies)
         const matches = queryList.filter((q) => q.query === cypherQuery);
-        if (matches.length === 0) return null;
+        if (matches.length === 0) return undefined;
         if (matches.length === 1) return matches[0];
 
         // If multiples, prefer the user-saved (has an id) over hardcoded
-        return matches.find((q) => q.id != null) ?? matches[0];
+        return matches.find((q) => q.id != undefined) ?? matches[0];
     }, [groups, id, cypherQuery]);
 
     return selected;
