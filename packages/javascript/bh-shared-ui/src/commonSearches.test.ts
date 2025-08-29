@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ATTACK_PATH_RELATIONSHIP_SHORTCUTS } from './attackPathShortcuts';
 import { CommonSearches } from './commonSearchesAGI';
 import {
     ActiveDirectoryNodeKind,
@@ -26,7 +27,10 @@ import { CommonSearchType } from './types';
 describe('common search list', () => {
     const kindPattern = /:([^ )\]*]+)/gm;
 
-    test('the queries in the list only include nodes and edges that are defined in our schema', () => {
+    // Relationship shortcut aliases that are expanded server-side and not part of the static schema enums
+    const relationshipShortcutAliases = ATTACK_PATH_RELATIONSHIP_SHORTCUTS.map((s) => s.slice(1));
+
+    test('the queries in the list only include nodes and edges that are defined in our schema or are valid shortcut aliases', () => {
         CommonSearches.forEach((commonSearchType: CommonSearchType) => {
             commonSearchType.queries.forEach((query) => {
                 const kinds = query.cypher.match(kindPattern);
@@ -47,7 +51,8 @@ describe('common search list', () => {
                                 const isAZEdge = Object.values(AzureRelationshipKind).includes(
                                     kind as AzureRelationshipKind
                                 );
-                                const inSchema = isADNode || isADEdge || isAZNode || isAZEdge;
+                                const isShortcut = relationshipShortcutAliases.includes(kind);
+                                const inSchema = isADNode || isADEdge || isAZNode || isAZEdge || isShortcut;
 
                                 expect(inSchema).toBeTruthy();
                             });
