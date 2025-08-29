@@ -858,7 +858,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 		)
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			roleAssignments.UsersWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
+			roleAssignments.PrincipalsWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
 				nextJob := analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(nextID),
 					ToID:   innerGroupID,
@@ -881,7 +881,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					return err
 				}
 			} else if !isRoleAssignable {
-				roleAssignments.UsersWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
+				roleAssignments.PrincipalsWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: graph.ID(nextID),
 						ToID:   innerGroupID,
