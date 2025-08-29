@@ -49,17 +49,43 @@ export const usePrebuiltQueries = () => {
 
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
     const queryList = usePrebuiltQueries();
+    const matchedResults: any[] = [];
+    //first we check for a matched id
     for (const item of queryList) {
         let result = null;
         result = item.queries.find((query) => {
             if (id && query.id === id) {
                 return query;
-            } else if (query.query === cypherQuery) {
-                return query;
             }
         });
         if (result) {
             return result;
+        }
+    }
+
+    //next we check for matched query string
+    //setting an array in case of duplicated queries via save as
+    for (const item of queryList) {
+        item.queries.find((query) => {
+            if (query.query === cypherQuery) {
+                matchedResults.push(query);
+            }
+        });
+    }
+
+    //prefer user saved version over hardcoded version
+    //this is useful on initial load or refresh where we dont have the specific query id to compare against
+    if (!matchedResults) return null;
+    if (matchedResults.length === 1) {
+        return matchedResults[0];
+    } else if (matchedResults.length > 1) {
+        const resultWithId = matchedResults.find((query) => {
+            if (query.id !== undefined) {
+                return query;
+            }
+        });
+        if (resultWithId) {
+            return resultWithId;
         }
     }
 };
