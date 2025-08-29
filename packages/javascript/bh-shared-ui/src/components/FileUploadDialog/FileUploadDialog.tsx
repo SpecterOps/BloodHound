@@ -80,13 +80,12 @@ const FileUploadDialog: React.FC<{
                 {filesForIngest.length > 0 && (
                     <Box sx={{ my: '8px' }}>
                         {filesForIngest.map((file, index) => {
+                            const key = makeProgressCacheKey(currentIngestJobId, file?.file?.name);
                             return (
                                 <FileStatusListItem
                                     file={file}
-                                    percentCompleted={
-                                        progressCache[makeProgressCacheKey(currentIngestJobId, file?.file?.name)] || 0
-                                    }
-                                    key={index}
+                                    percentCompleted={progressCache[key] || 0}
+                                    key={key}
                                     onRemove={() => handleRemoveFile(index)}
                                     onRefresh={retryUploadSingleFile}
                                 />
