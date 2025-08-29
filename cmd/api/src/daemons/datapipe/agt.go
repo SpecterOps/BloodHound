@@ -414,7 +414,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	var (
 		countInserted int
 
-		certified   = model.AssetGroupCertificationNone
+		certified   = model.AssetGroupCertificationPending
 		certifiedBy null.String
 
 		nodesToUpdate []model.AssetGroupSelectorNode
@@ -441,7 +441,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationNone) ||
+			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationPending) ||
 				oldNode.NodeName != displayName ||
 				oldNode.NodePrimaryKind != primaryKind ||
 				oldNode.NodeEnvironmentId != envId ||
@@ -457,7 +457,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		if len(nodesToUpdate) > 0 {
 			for _, oldSelectorNode := range nodesToUpdate {
 				// Protect property updates from overwriting existing certification
-				if oldSelectorNode.Certified != model.AssetGroupCertificationNone {
+				if oldSelectorNode.Certified != model.AssetGroupCertificationPending {
 					certified = oldSelectorNode.Certified
 					certifiedBy = oldSelectorNode.CertifiedBy
 				}
