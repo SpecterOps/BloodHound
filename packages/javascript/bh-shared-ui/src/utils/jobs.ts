@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ScheduledJobDisplay } from 'js-client-library';
-import { IndicatorType } from '../components';
+
+import { IndicatorType } from '../types';
 import { typedEntries } from './object';
 
 const jobCollectionKeys = [
