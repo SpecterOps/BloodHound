@@ -85,7 +85,7 @@ const FileUploadDialog: React.FC<{
                                 <FileStatusListItem
                                     file={file}
                                     percentCompleted={progressCache[key] || 0}
-                                    key={key + index}
+                                    key={`${key}${index}`}
                                     onRemove={() => handleRemoveFile(index)}
                                     onRefresh={retryUploadSingleFile}
                                 />
