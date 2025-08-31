@@ -14,12 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faUpload } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
-import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -183,7 +180,6 @@ const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ c
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-    const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     return (
         <nav
@@ -204,35 +200,36 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 />
             </MainNavItemLink>
             {/* Note: min height here is to keep the version number in bottom of nav */}
-            <div className='h-full min-h-[625px] w-full flex flex-col justify-between mt-6'>
+            <div className='h-full min-h-[665px] w-full flex flex-col justify-between mt-6'>
                 <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
-                    <MainNavListItem key={0} hoverActive={!isMouseDragging}>
-                        <div
-                            className='cursor-pointer flex flex-row items-center relative top-1 left-[2px]'
-                            onClick={() => setShowFileIngestDialog(true)}>
-                            <MainNavItemLabel
-                                icon={<FontAwesomeIcon size='lg' icon={faUpload} className='pr-2.5 pb-1' />}
-                                label='Quick Ingest'
-                                hoverActive={!isMouseDragging}
-                            />
-                        </div>
-                    </MainNavListItem>
-
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem
-                            key={itemIndex + 1}
-                            route={listDataItem.route as string}
-                            hoverActive={!isMouseDragging}>
-                            <MainNavItemLink
-                                route={listDataItem.route as string}
-                                hoverActive={!isMouseDragging}
-                                testId={listDataItem.testId}>
-                                <MainNavItemLabel
-                                    icon={listDataItem.icon}
-                                    label={listDataItem.label}
+                            key={itemIndex}
+                            hoverActive={!isMouseDragging}
+                            route={listDataItem.route as string}>
+                            {listDataItem.onClick && !listDataItem.route ? (
+                                <MainNavItemAction
+                                    onClick={listDataItem.onClick}
                                     hoverActive={!isMouseDragging}
-                                />
-                            </MainNavItemLink>
+                                    testId={listDataItem.testId}>
+                                    <MainNavItemLabel
+                                        icon={listDataItem.icon}
+                                        label={listDataItem.label}
+                                        hoverActive={!isMouseDragging}
+                                    />
+                                </MainNavItemAction>
+                            ) : (
+                                <MainNavItemLink
+                                    route={listDataItem.route as string}
+                                    hoverActive={!isMouseDragging}
+                                    testId={listDataItem.testId}>
+                                    <MainNavItemLabel
+                                        icon={listDataItem.icon}
+                                        label={listDataItem.label}
+                                        hoverActive={!isMouseDragging}
+                                    />
+                                </MainNavItemLink>
+                            )}
                         </MainNavListItem>
                     ))}
                 </ul>
