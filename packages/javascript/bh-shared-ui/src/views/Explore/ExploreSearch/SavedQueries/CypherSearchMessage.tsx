@@ -17,8 +17,6 @@ import { CSSProperties, useEffect, useRef } from 'react';
 import { Transition } from 'react-transition-group';
 import { SNACKBAR_DURATION } from '../../../../constants';
 type CypherSearchMessageProps = {
-    // message?: string;
-    // showMessage: boolean;
     messageState: {
         showMessage: boolean;
         message?: string;
