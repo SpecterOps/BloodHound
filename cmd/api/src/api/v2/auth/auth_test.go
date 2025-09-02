@@ -2952,6 +2952,28 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 		},
 		{
+			name: "Error when current role is Administrator and roles omitted",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+					Roles:         model.Roles{{Name: authz.RoleAdministrator}},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled: &isDisabled,
+				EnvironmentControlList: &v2.UpdateUserETACListRequest{
+					Environments: []string{"12345"},
+				},
+			},
+			returnedRoles:  nil,
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACInvalidRoles)
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {},
+		},
+		{
 			name: "Error attempting to set both all_environments true and set access to specific environments",
 			setupUser: func(id uuid.UUID) model.User {
 				return model.User{
