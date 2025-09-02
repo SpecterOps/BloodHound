@@ -349,10 +349,7 @@ const CypherSearch = ({
 }) => {
     return (
         <SavedQueriesProvider>
-            <CypherSearchInner
-                cypherSearchState={cypherSearchState}
-                autoRun={autoRun}
-                setAutoRun={setAutoRun}></CypherSearchInner>
+            <CypherSearchInner cypherSearchState={cypherSearchState} autoRun={autoRun} setAutoRun={setAutoRun} />
         </SavedQueriesProvider>
     );
 };
