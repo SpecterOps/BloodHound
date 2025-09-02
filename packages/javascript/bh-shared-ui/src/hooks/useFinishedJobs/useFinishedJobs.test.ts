@@ -14,19 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { type ScheduledJobDisplay } from 'js-client-library';
+import type { ScheduledJobDisplay } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-
+import { PERSIST_NOTIFICATION } from '../../providers';
 import { renderHook, waitFor } from '../../test-utils';
-import { PERSIST_NOTIFICATION } from '../../utils';
-import {
-    FETCH_ERROR_KEY,
-    FETCH_ERROR_MESSAGE,
-    NO_PERMISSION_KEY,
-    NO_PERMISSION_MESSAGE,
-    useFinishedJobsQuery,
-} from './finishedJobs';
+import { FETCH_ERROR_KEY, FETCH_ERROR_MESSAGE, NO_PERMISSION_KEY, NO_PERMISSION_MESSAGE } from '../../utils';
+import { useFinishedJobs } from './useFinishedJobs';
 
 const addNotificationMock = vi.fn();
 const dismissNotificationMock = vi.fn();
@@ -43,12 +37,14 @@ vi.mock('../../providers', async () => {
     };
 });
 
-vi.mock('../../hooks/usePermissions', async () => {
-    const actual = await vi.importActual('../../hooks');
+vi.mock('../usePermissions', async () => {
+    const actual = await vi.importActual('../usePermissions');
     return {
         ...actual,
         usePermissions: () => ({
             checkPermission: checkPermissionMock,
+            // Treat permissions as loaded in tests unless explicitly overridden
+            isSuccess: true,
         }),
     };
 });
@@ -97,10 +93,10 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('useFinishedJobsQuery', () => {
+describe('useFinishedJobs', () => {
     it('requests finished jobs', async () => {
         checkPermissionMock.mockImplementation(() => true);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(result.current.data.data.length).toBe(10);
@@ -108,7 +104,7 @@ describe('useFinishedJobsQuery', () => {
 
     it('shows "no permission" notification if lacking permission', async () => {
         checkPermissionMock.mockImplementation(() => false);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(
@@ -120,18 +116,24 @@ describe('useFinishedJobsQuery', () => {
 
     it('does not request finished jobs if lacking permission', async () => {
         checkPermissionMock.mockImplementation(() => false);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.data).toBeUndefined();
     });
 
     it('shows an error notification if there is an error fetching', async () => {
-        console.error = vi.fn();
         server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
         checkPermissionMock.mockImplementation(() => true);
-        const { result } = renderHook(() => useFinishedJobsQuery({ page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY);
+    });
+
+    it('dismisses the "no permission" notification on unmount', async () => {
+        checkPermissionMock.mockImplementation(() => false);
+        const { unmount } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
+        unmount();
+        expect(dismissNotificationMock).toHaveBeenCalledWith(NO_PERMISSION_KEY);
     });
 });
