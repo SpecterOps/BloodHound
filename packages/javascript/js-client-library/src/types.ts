@@ -105,9 +105,9 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
-export const AssetGroupTagSelectorAutoCertifyDisabled = 0;
-export const AssetGroupTagSelectorAutoCertifySeedsOnly = 1;
-export const AssetGroupTagSelectorAutoCertifyAllMembers = 2;
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 1 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 2 as const;
 
 export type AssetGroupTagSelectorAutoCertifyType =
     | typeof AssetGroupTagSelectorAutoCertifyDisabled
@@ -118,7 +118,7 @@ export const AssetGroupTagSelectorAutoCertifyMap = {
     [AssetGroupTagSelectorAutoCertifyDisabled]: 'Disabled',
     [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Seeds Only',
     [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Members',
-};
+} as const;
 
 export interface AssetGroupTagSelectorCounts {
     members: number;

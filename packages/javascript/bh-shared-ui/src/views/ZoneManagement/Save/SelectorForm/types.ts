@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagSelectorAutoCertifyValues, SelectorSeedRequest } from 'js-client-library';
+import { AssetGroupTagSelectorAutoCertifyType, SelectorSeedRequest } from 'js-client-library';
 
 export interface SelectorFormInputs {
     name: string;
     description: string;
     seeds: SelectorSeedRequest[];
-    auto_certify?: AssetGroupTagSelectorAutoCertifyValues;
+    auto_certify?: AssetGroupTagSelectorAutoCertifyType;
     disabled?: boolean;
 }

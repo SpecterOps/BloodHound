@@ -20,6 +20,7 @@ import {
     AssetGroupTagMemberInfo,
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
     AssetGroupTagTypeTier,
     NodeSourceChild,
@@ -40,7 +41,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         updated_by: faker.internet.email(),
         deleted_at: faker.date.past().toISOString(),
         deleted_by: faker.internet.email(),
-        requireCertify: faker.datatype.boolean(),
+        require_certify: faker.datatype.boolean(),
         analysis_enabled: faker.datatype.boolean(),
     };
 };
@@ -74,7 +75,7 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
         allow_disable: faker.datatype.boolean(),
         description: faker.random.words(),
         is_default: faker.datatype.boolean(),
-        auto_certify: faker.datatype.boolean(),
+        auto_certify: faker.datatype.number({ min: 0, max: 2 }) as AssetGroupTagSelectorAutoCertifyType,
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
