@@ -20,21 +20,16 @@ import { setupServer } from 'msw/node';
 import Users from '.';
 import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
 import { render, screen, within } from '../../test-utils';
-import { userEventHelpers } from '../../utils';
 
 const server = setupServer(...bloodHoundUsersHandlers);
 
 beforeAll(() => server.listen());
-afterEach(() => {
-    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
-    userEventHelpers();
-    server.resetHandlers();
-});
+afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Users', () => {
     test('The password reset dialog is opened when switching a user from SAML based authentication to username/password based authentication', async () => {
-        render(<Users showEnvironmentAccessControls={false} />);
+        render(<Users />);
 
         expect(screen.getByText('Manage Users')).toBeInTheDocument();
 
@@ -43,10 +38,6 @@ describe('Users', () => {
 
         // this table row contains the data for "Marshall Law" aka testBloodHoundUsers[1]
         const testUserRow = screen.getAllByRole('row')[2];
-
-        userEventHelpers();
-
-        console.log(testUserRow);
 
         expect(within(testUserRow).getByText(testBloodHoundUsers[1].principal_name)).toBeInTheDocument();
         expect(within(testUserRow).getByText(testBloodHoundUsers[1].email_address)).toBeInTheDocument();
@@ -63,9 +54,7 @@ describe('Users', () => {
         await userEvent.click(within(testUserRow).getByRole('button', { name: 'bars' }));
         await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         await userEvent.click(screen.getByRole('menuitem', { name: /update user/i, hidden: false }));
-
-        // expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
-        expect(await screen.getByRole('dialog'));
+        expect(await screen.findByTestId('update-user-dialog')).toBeVisible();
 
         // update Marshall to use username/password based authentication and save the changes
         await userEvent.click(screen.getByLabelText('Authentication Method'));
@@ -73,7 +62,7 @@ describe('Users', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         // the update user dialog should close and the password reset dialog should open
-        expect(await screen.findByTestId('update-user-dialog')).not.toBeVisible();
+        expect(screen.queryByTestId('update-user-dialog')).toBeNull();
         expect(await screen.findByTestId('password-dialog')).toBeVisible();
 
         // the force password reset option should be checked
@@ -81,7 +70,7 @@ describe('Users', () => {
     });
 
     it('disables the create user button and does not populate a table if the user lacks the permission', async () => {
-        render(<Users showEnvironmentAccessControls={false} />);
+        render(<Users />);
 
         expect(screen.getByTestId('manage-users_button-create-user')).toBeDisabled();
 

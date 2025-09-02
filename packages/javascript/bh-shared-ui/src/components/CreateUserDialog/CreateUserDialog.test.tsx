@@ -263,6 +263,8 @@ describe('CreateUserDialog', () => {
     it('should display error message when error prop is provided', async () => {
         setup({ renderErrors: true });
 
+        screen.debug(undefined, Infinity);
+
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
