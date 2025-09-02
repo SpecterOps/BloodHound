@@ -47,7 +47,7 @@ const UpdateUserDialog: React.FC<{
     };
 
     return (
-        <DialogContent maxWidth='lg' className='!bg-transparent !pointer-events-auto'>
+        <DialogContent maxWidth='lg' className='!bg-transparent !pointer-events-auto' data-testid='update-user-dialog'>
             <VisuallyHidden asChild>
                 <DialogTitle>Edit User</DialogTitle>
             </VisuallyHidden>
