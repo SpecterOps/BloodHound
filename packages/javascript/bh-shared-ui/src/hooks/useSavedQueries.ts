@@ -27,7 +27,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { GenericQueryOptions, getQueryKey } from '../utils';
 import { apiClient } from '../utils/api';
 export const savedQueryKeys = {
-    all: () => ['savedQueries'],
+    all: ['savedQueries'] as const,
     permissions: () => ['permissions'],
 };
 
@@ -75,17 +75,17 @@ export const getQueryPermissions = async (id: number, options?: RequestOptions):
     }
 };
 
-// export const useQueryPermissions = (id?: number) =>
-//     useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id as number, { signal }), {
-//         retry: false,
-//     });
-
 export const useQueryPermissions = (id?: number) =>
-    useQuery({
-        queryKey: getQueryKey(savedQueryKeys.permissions(), [`query-id-${id}`]),
-        queryFn: ({ signal }) => getQueryPermissions(id as number, { signal }),
+    useQuery(savedQueryKeys.permissions(), ({ signal }) => getQueryPermissions(id as number, { signal }), {
         retry: false,
     });
+
+// export const useQueryPermissions = (id?: number) =>
+//     useQuery({
+//         queryKey: getQueryKey(savedQueryKeys.permissions(), [`query-id-${id}`]),
+//         queryFn: ({ signal }) => getQueryPermissions(id as number, { signal }),
+//         retry: false,
+//     });
 
 export const updateQueryPermissions = (
     { id, payload }: { id: number; payload: UpdateUserQueryPermissionsRequest },
@@ -120,7 +120,7 @@ export const useSavedQueries = (
     queryOptions?: GenericQueryOptions<SavedQuery[]>
 ) => {
     return useQuery({
-        queryKey: savedQueryKeys.all(),
+        queryKey: ['savedQueries'],
         queryFn: ({ signal }) => getSavedQueries(scope, { signal }),
         ...queryOptions,
     });
@@ -129,7 +129,7 @@ export const useCreateSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(createSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all());
+            queryClient.invalidateQueries(savedQueryKeys.all);
         },
     });
 };
@@ -138,7 +138,7 @@ export const useUpdateSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(updateSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all());
+            queryClient.invalidateQueries(savedQueryKeys.all);
         },
     });
 };
@@ -147,7 +147,7 @@ export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all());
+            queryClient.invalidateQueries(savedQueryKeys.all);
         },
     });
 };
@@ -156,7 +156,7 @@ export const useImportSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(importSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all());
+            queryClient.invalidateQueries(savedQueryKeys.all);
         },
     });
 };
