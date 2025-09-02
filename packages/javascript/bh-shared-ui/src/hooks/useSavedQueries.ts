@@ -24,11 +24,11 @@ import {
     UpdateUserQueryRequest,
 } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { GenericQueryOptions } from '../utils';
+import { GenericQueryOptions, getQueryKey } from '../utils';
 import { apiClient } from '../utils/api';
 export const savedQueryKeys = {
     all: () => ['savedQueries'],
-    permissions: ['permissions'] as const,
+    permissions: () => ['permissions'],
 };
 
 export const getSavedQueries = (scope: QueryScope, options?: RequestOptions): Promise<SavedQuery[]> => {
@@ -75,8 +75,15 @@ export const getQueryPermissions = async (id: number, options?: RequestOptions):
     }
 };
 
+// export const useQueryPermissions = (id?: number) =>
+//     useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id as number, { signal }), {
+//         retry: false,
+//     });
+
 export const useQueryPermissions = (id?: number) =>
-    useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id as number, { signal }), {
+    useQuery({
+        queryKey: getQueryKey(savedQueryKeys.permissions(), [`query-id-${id}`]),
+        queryFn: ({ signal }) => getQueryPermissions(id as number, { signal }),
         retry: false,
     });
 
@@ -88,8 +95,8 @@ export const updateQueryPermissions = (
 export const useUpdateQueryPermissions = () => {
     const queryClient = useQueryClient();
     return useMutation(updateQueryPermissions, {
-        onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.permissions);
+        onSuccess: (data) => {
+            queryClient.invalidateQueries(getQueryKey(savedQueryKeys.permissions(), [`query-id-${data.query_id}`]));
         },
     });
 };
@@ -102,8 +109,8 @@ export const deleteQueryPermissions = (
 export const useDeleteQueryPermissions = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteQueryPermissions, {
-        onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.permissions);
+        onSuccess: (data) => {
+            queryClient.invalidateQueries(getQueryKey(savedQueryKeys.permissions(), [`query-id-${data.query_id}`]));
         },
     });
 };
