@@ -20,11 +20,16 @@ import { setupServer } from 'msw/node';
 import Users from '.';
 import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
 import { render, screen, within } from '../../test-utils';
+import { userEventHelpers } from '../../utils';
 
 const server = setupServer(...bloodHoundUsersHandlers);
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
+    userEventHelpers();
+    server.resetHandlers();
+});
 afterAll(() => server.close());
 
 describe('Users', () => {
@@ -39,12 +44,15 @@ describe('Users', () => {
         // this table row contains the data for "Marshall Law" aka testBloodHoundUsers[1]
         const testUserRow = screen.getAllByRole('row')[2];
 
+        userEventHelpers();
+
+        console.log(testUserRow);
+
         expect(within(testUserRow).getByText(testBloodHoundUsers[1].principal_name)).toBeInTheDocument();
         expect(within(testUserRow).getByText(testBloodHoundUsers[1].email_address)).toBeInTheDocument();
         expect(
             within(testUserRow).getByText(`${testBloodHoundUsers[1].first_name} ${testBloodHoundUsers[1].last_name}`)
         ).toBeInTheDocument();
-        console.log(testUserRow);
         expect(within(testUserRow).getByText('2024-01-01 04:00 PST (GMT-0800)')).toBeInTheDocument();
         expect(within(testUserRow).getByText('User')).toBeInTheDocument();
         expect(within(testUserRow).getByText('Active')).toBeInTheDocument();
