@@ -62,6 +62,7 @@ type CustomNodeIcon struct {
 func (s *CustomNodeKindConfig) Scan(value interface{}) error {
 	if value == nil {
 		*s = CustomNodeKindConfig{}
+		return nil
 	}
 
 	if bytes, ok := value.([]byte); !ok {

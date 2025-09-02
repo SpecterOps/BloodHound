@@ -38,3 +38,7 @@ allOf:
       last_ingest:
         type: string
         format: date-time
+      total_files:
+        type: integer
+      failed_files:
+        type: integer

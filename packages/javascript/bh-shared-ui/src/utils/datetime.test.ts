@@ -14,21 +14,30 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { calculateJobDuration } from './datetime';
+import { getSimpleDuration, toFormatted } from './datetime';
 
-describe('calculateJobDuration', () => {
+describe('getSimpleDuration', () => {
     it('calculates the running time of a job and converts to a human readable format', () => {
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-01T00:01:00Z')).toBe('1 minute');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-01T00:05:00Z')).toBe('5 minutes');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-01T00:30:00Z')).toBe('30 minutes');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-02T00:00:00Z')).toBe('a day');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-03T00:00:00Z')).toBe('2 days');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-01T00:01:00Z')).toBe('1 min');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-01T00:05:00Z')).toBe('5 mins');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-01T00:30:00Z')).toBe('30 mins');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-02T00:00:00Z')).toBe('a day');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-03T00:00:00Z')).toBe('2 days');
     });
 
     it('rounds down fractional minutes/days', () => {
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-01T00:01:30Z')).toBe('1 minute');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-01T00:05:55Z')).toBe('5 minutes');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-02T01:20:40Z')).toBe('a day');
-        expect(calculateJobDuration('2023-01-01T00:00:00Z', '2023-01-03T12:30:10Z')).toBe('2 days');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-01T00:01:30Z')).toBe('1 min');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-01T00:05:55Z')).toBe('5 mins');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-02T01:20:40Z')).toBe('a day');
+        expect(getSimpleDuration('2023-01-01T00:00:00Z', '2023-01-03T12:30:10Z')).toBe('2 days');
+    });
+});
+
+describe('toFormatted', () => {
+    it('formats the date string', () => {
+        const result = toFormatted('2024-01-01T15:30:00.500Z');
+        // Server TZ might not match local dev TZ
+        // Allow 'CST'/'UTC' or 'GMT-06:00' style outputs depending on environment
+        expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} (?:[A-Z]{3,4}|GMT[+-]\d{1,2}:\d{2})$/);
     });
 });

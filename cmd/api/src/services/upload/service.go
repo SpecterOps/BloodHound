@@ -38,4 +38,8 @@ type UploadData interface {
 	GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
 	DeleteAllIngestJobs(ctx context.Context) error
 	CancelAllIngestJobs(ctx context.Context) error
+
+	// Completed task handlers - distinctly different from task handlers
+	CreateCompletedTask(ctx context.Context, task model.CompletedTask) (model.CompletedTask, error)
+	GetCompletedTasks(ctx context.Context, ingestJobId int64) ([]model.CompletedTask, error)
 }

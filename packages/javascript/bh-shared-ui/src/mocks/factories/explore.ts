@@ -56,6 +56,7 @@ export const cypherTestResponse = {
             '108': {
                 label: 'T1_TONYMONTANA@PHANTOM.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2110',
                 isTierZero: false,
                 isOwnedObject: false,
@@ -92,6 +93,7 @@ export const cypherTestResponse = {
             '489': {
                 label: 'ZZZIGNE@PHANTOM.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2216',
                 isTierZero: false,
                 isOwnedObject: false,
@@ -128,6 +130,7 @@ export const cypherTestResponse = {
             '490': {
                 label: 'SVC_SHS@PHANTOM.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2165',
                 isTierZero: false,
                 isOwnedObject: false,
@@ -164,6 +167,7 @@ export const cypherTestResponse = {
             '491': {
                 label: 'NETWORK SERVICE@PHANTOM.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'PHANTOM.CORP-S-1-5-20',
                 isTierZero: false,
                 isOwnedObject: false,
@@ -180,6 +184,7 @@ export const cypherTestResponse = {
             '569': {
                 label: 'TOM@GHOST.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-1105',
                 isTierZero: true,
                 isOwnedObject: false,
@@ -217,6 +222,7 @@ export const cypherTestResponse = {
             '570': {
                 label: 'WALTER@GHOST.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-1106',
                 isTierZero: true,
                 isOwnedObject: false,
@@ -254,6 +260,7 @@ export const cypherTestResponse = {
             '571': {
                 label: 'ADMINISTRATOR@GHOST.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-500',
                 isTierZero: true,
                 isOwnedObject: false,
@@ -291,6 +298,7 @@ export const cypherTestResponse = {
             '572': {
                 label: 'GUEST@GHOST.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2845847946-3451170323-4261139666-501',
                 isTierZero: false,
                 isOwnedObject: false,
@@ -327,6 +335,7 @@ export const cypherTestResponse = {
             '82': {
                 label: 'ALICE@PHANTOM.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2173',
                 isTierZero: true,
                 isOwnedObject: false,
@@ -364,6 +373,7 @@ export const cypherTestResponse = {
             '9': {
                 label: 'CERTMAN@PHANTOM.CORP',
                 kind: 'User',
+                kinds: ['User'],
                 objectId: 'S-1-5-21-2697957641-2271029196-387917394-2201',
                 isTierZero: true,
                 isOwnedObject: false,

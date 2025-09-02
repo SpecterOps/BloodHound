@@ -40,8 +40,9 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: "~1.24.4"
+          go-version-file: go.mod
           cache: true
+          check-latest: true
 
       - name: Run Tests
         run: |

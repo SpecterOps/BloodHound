@@ -488,6 +488,7 @@ export enum ActiveDirectoryKindProperties {
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
+    ServicePrincipalNames = 'serviceprincipalnames',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -761,6 +762,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'NetBIOS';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
+        case ActiveDirectoryKindProperties.ServicePrincipalNames:
+            return 'Service Principal Names';
         default:
             return undefined;
     }
@@ -777,6 +780,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
+        ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
         ActiveDirectoryRelationshipKind.AllowedToAct,
@@ -823,6 +827,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
@@ -1061,7 +1066,6 @@ export enum AzureKindProperties {
     UserType = 'usertype',
     TenantID = 'tenantid',
     ServicePrincipalID = 'service_principal_id',
-    ServicePrincipalNames = 'service_principal_names',
     OperatingSystemVersion = 'operatingsystemversion',
     TrustType = 'trustype',
     IsBuiltIn = 'isbuiltin',
@@ -1111,8 +1115,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Tenant ID';
         case AzureKindProperties.ServicePrincipalID:
             return 'Service Principal ID';
-        case AzureKindProperties.ServicePrincipalNames:
-            return 'Service Principal Names';
         case AzureKindProperties.OperatingSystemVersion:
             return 'Operating System Version';
         case AzureKindProperties.TrustType:

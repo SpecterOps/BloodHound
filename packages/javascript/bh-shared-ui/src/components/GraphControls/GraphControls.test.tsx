@@ -47,6 +47,7 @@ describe('GraphControls', () => {
         '1': {
             label: 'computer_node',
             kind: 'Computer',
+            kinds: [],
             objectId: '001',
             isTierZero: false,
             isOwnedObject: false,

@@ -50,7 +50,7 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate group relative',
+    className: 'truncate group relative p-0',
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
@@ -58,7 +58,7 @@ const tableOptions: DataTableProps['tableOptions'] = {
 };
 
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
-    estimateSize: () => 79,
+    estimateSize: () => 40,
 };
 
 const ExploreTable = ({
@@ -146,11 +146,14 @@ const ExploreTable = ({
     return (
         <div
             data-testid='explore-table-container-wrapper'
-            className={cn('dark:bg-neutral-dark-5 border-2 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2', {
-                'h-1/2': !isExpanded,
-                'h-[calc(100%-72px)]': isExpanded,
-                'w-[calc(100%-450px)]': selectedItem,
-            })}>
+            className={cn(
+                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg',
+                {
+                    'h-1/2': !isExpanded,
+                    'h-[calc(100%-72px)]': isExpanded,
+                    'w-[calc(100%-450px)]': selectedItem,
+                }
+            )}>
             <div className='explore-table-container w-full h-full overflow-hidden grid grid-rows-[72px,1fr]'>
                 <TableControls
                     columns={columnOptionsForDropdown}

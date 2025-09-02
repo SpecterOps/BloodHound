@@ -23,46 +23,79 @@ import {
 import clsx from 'clsx';
 import { FC } from 'react';
 import { AppIcon } from '../../components';
-import { usePrivilegeZoneAnalysis } from '../../hooks';
+import { usePrivilegeZoneAnalysis, useZonePathParams } from '../../hooks';
 
 type ZoneAnalysisIconProps = {
     iconClasses?: string | null;
     size?: number;
     tooltip?: boolean;
     wrapperClasses?: string;
+    analysisEnabled?: boolean | null;
 };
 
-export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({ iconClasses, size = 24, tooltip, wrapperClasses }) => {
+export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
+    iconClasses,
+    size = 24,
+    tooltip,
+    wrapperClasses,
+    analysisEnabled,
+}) => {
+    const { isLabelLocation } = useZonePathParams();
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
-
+    const ariaLabel = privilegeZoneAnalysisEnabled === false ? 'Upgrade available' : 'Analysis disabled';
     const iconProps = {
         size,
-        'data-testid': 'analysis_disabled_icon',
-        'aria-label': 'Analysis disabled for this tier',
+        'aria-label': ariaLabel,
         role: 'img',
-        className: clsx(iconClasses, 'mb-0.5 mr-2 text-[#ED8537]'),
+        className: clsx(
+            iconClasses,
+            !privilegeZoneAnalysisEnabled && 'mb-0.5 text-[#ED8537]',
+            privilegeZoneAnalysisEnabled && 'text-[#8E8C95]',
+            'mr-2'
+        ),
     };
 
-    if (!privilegeZoneAnalysisEnabled) {
-        return null;
+    if (isLabelLocation) return null;
+
+    if (privilegeZoneAnalysisEnabled === false) {
+        return tooltip ? (
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <div className={wrapperClasses}>
+                            <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                            Upgrade Available
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
+        ) : (
+            <AppIcon.DataAlert {...iconProps} data-testid='analysis_upgrade_icon' />
+        );
     }
 
-    return tooltip ? (
-        <TooltipProvider>
-            <TooltipRoot>
-                <TooltipTrigger>
-                    <div className={clsx(wrapperClasses)}>
-                        <AppIcon.DataAlert {...iconProps} />
-                    </div>
-                </TooltipTrigger>
-                <TooltipPortal>
-                    <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                        Analysis disabled
-                    </TooltipContent>
-                </TooltipPortal>
-            </TooltipRoot>
-        </TooltipProvider>
-    ) : (
-        <AppIcon.DataAlert {...iconProps} />
-    );
+    if (privilegeZoneAnalysisEnabled && !analysisEnabled) {
+        return tooltip ? (
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <div className={wrapperClasses}>
+                            <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                            Analysis disabled
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
+        ) : (
+            <AppIcon.Disabled {...iconProps} data-testid='analysis_disabled_icon' />
+        );
+    }
 };

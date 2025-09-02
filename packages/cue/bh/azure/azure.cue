@@ -240,13 +240,6 @@ ServicePrincipalID: types.#StringEnum & {
 	representation: "service_principal_id"
 }
 
-ServicePrincipalNames: types.#StringEnum & {
-	symbol:         "ServicePrincipalNames"
-	schema:         "azure"
-	name:           "Service Principal Names"
-	representation: "service_principal_names"
-}
-
 TenantID: types.#StringEnum & {
 	symbol:         "TenantID"
 	schema:         "azure"
@@ -319,7 +312,6 @@ Properties: [
 	UserType,
 	TenantID,
 	ServicePrincipalID,
-	ServicePrincipalNames,
 	OperatingSystemVersion,
 	TrustType,
 	IsBuiltIn,

@@ -39,7 +39,7 @@ export const isTag = (data: any): data is AssetGroupTag => {
 };
 
 export const isSelector = (data: any): data is AssetGroupTagSelector => {
-    return 'seeds' in data;
+    return 'is_default' in data;
 };
 
 export const getSelectorSeedType = (selector: AssetGroupTagSelector): SeedTypes => {

@@ -120,6 +120,7 @@ export const KnownNodePropertiesToDisplay = {
      */
     nodeType: 'Node Type',
     kind: 'Node Type',
+    kinds: 'Node Kinds',
     isTierZero: 'Tier Zero',
     isOwnedObject: 'Is Owned',
     label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,

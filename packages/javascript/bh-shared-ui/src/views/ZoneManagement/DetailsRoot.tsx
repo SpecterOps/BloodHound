@@ -18,6 +18,7 @@ import { FC } from 'react';
 import { AppNavigate } from '../../components';
 import { useHighestPrivilegeTagId } from '../../hooks';
 import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
+
 const DetailsRoot: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     if (tagId) {

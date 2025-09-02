@@ -39,16 +39,16 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
         }}>
         <div className="w-full text-left flex justify-between items-center'">
             <div>
-                <Checkbox className={cn('mr-2', { '*:bg-blue-800': isSelected })} checked={isSelected} />
+                <Checkbox
+                    className={cn('mr-2 *:text-white', {
+                        '*:bg-primary dark:border-none': isSelected,
+                        'dark:border-white': !isSelected,
+                    })}
+                    checked={isSelected}
+                />
                 <span>{item.value}</span>
             </div>
-            {item.isPinned && (
-                <FontAwesomeIcon
-                    stroke=''
-                    className='justify-self-end stroke-cyan-300 dark:fill-white'
-                    icon={faThumbTack}
-                />
-            )}
+            {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
         </div>
     </li>
 );

@@ -79,8 +79,11 @@ const (
 	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
 	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided tier position is out of range"
 	ErrorResponseDetailsQueryTooShort               = "search query must be at least 3 characters long"
+	ErrorResponseAssetGroupCertTypeInvalid          = "valid certification action is required"
 	ErrorResponseInvalidTagGlyph                    = "the glyph specified is invalid"
 	ErrorResponseAssetGroupTagDuplicateGlyph        = "asset group tag glyph must be unique"
+	ErrorResponseAssetGroupMemberIDsRequired        = "asset group member IDs are required"
+	ErrorResponseUnknownUser                        = "unknown user"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

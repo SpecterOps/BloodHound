@@ -17,7 +17,6 @@
 import {
     AssetGroupTag,
     AssetGroupTagHistoryRecord,
-    AssetGroupTagNode,
     AssetGroupTagSelector,
     CollectorManifest,
     CommunityCollectorType,
@@ -175,16 +174,22 @@ export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
 export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
 
-export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
 
-export interface AssetGroupTagMemberListItem extends AssetGroupTagNode {
+export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
     source: NodeSourceTypes;
 }
 
-export interface AssetGroupTagMemberInfo extends AssetGroupTagNode {
+export interface AssetGroupTagMemberInfo extends AssetGroupTagMember {
     properties: Record<string, any>;
     selectors: AssetGroupTagSelector[];
 }
+
+export type AssetGroupTagSearchResponse = BasicResponse<{
+    tags: AssetGroupTag[];
+    selectors: AssetGroupTagSelector[];
+    members: AssetGroupTagMember[];
+}>;
 
 export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
 export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTag[] }>;

@@ -282,6 +282,8 @@ paths:
     $ref: './paths/collection-uploads.file-upload.start.yaml'
   /api/v2/file-upload/{file_upload_job_id}:
     $ref: './paths/collection-uploads.file-upload.id.yaml'
+  /api/v2/file-upload/{file_upload_job_id}/completed-tasks:
+    $ref: './paths/collection-uploads.file-upload.id.completed-tasks.yaml'
   /api/v2/file-upload/{file_upload_job_id}/end:
     $ref: './paths/collection-uploads.file-upload.id.end.yaml'
   /api/v2/file-upload/accepted-types:
@@ -356,6 +358,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.search.yaml'
   /api/v2/asset-group-tags-history:
     $ref: './paths/asset-isolation.asset-group-tags-history.yaml'
+  /api/v2/asset-group-tags/certifications:
+    $ref: './paths/asset-isolation.asset-group-tags.certifications.yaml'
 
   # graph
   /api/v2/graphs/kinds:

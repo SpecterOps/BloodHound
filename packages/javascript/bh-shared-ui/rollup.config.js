@@ -38,6 +38,7 @@ export default {
         '@emotion/react',
         '@emotion/styled',
         '@faker-js/faker',
+        '@faker-js/faker/locale/en',
         '@fortawesome/fontawesome-svg-core',
         '@fortawesome/free-regular-svg-icons',
         '@fortawesome/free-solid-svg-icons',

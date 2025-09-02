@@ -40,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
@@ -1308,6 +1309,22 @@ func createContextWithAdminOwnerId(id uuid2.UUID) context.Context {
 					Description: "Can manage users, clients, and application configuration",
 					Permissions: auth.Permissions().All(),
 				}},
+			},
+		},
+		Host: nil,
+	}
+	return bhCtx.ConstructGoContext()
+}
+
+func createContextWithOwnerEmail(emailAddress null.String, id uuid2.UUID) context.Context {
+	bhCtx := ctx.Context{
+		RequestID: "",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique: model.Unique{
+					ID: id,
+				},
+				EmailAddress: emailAddress,
 			},
 		},
 		Host: nil,

@@ -82,6 +82,9 @@ func NewDefaultConfiguration() (Configuration, error) {
 				LastName:      "User",
 				ExpireNow:     true,
 			},
+			UI: UIConfiguration{
+				EnableUserAnalytics: false,
+			},
 		}, nil
 	}
 }

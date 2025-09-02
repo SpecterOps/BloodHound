@@ -18,6 +18,7 @@ import { AssetGroupTag, AssetGroupTagTypeTier, ConfigurationKey } from 'js-clien
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
+import { useParams } from 'react-router-dom';
 import { render, screen, within } from '../../../test-utils';
 import { TagList } from './TagList';
 
@@ -90,7 +91,17 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useParams: vi.fn(),
+    };
+});
+
 describe('List', async () => {
+    vi.mocked(useParams).mockReturnValue({ tierId: '3', labelId: undefined });
+
     it('shows a loading view when data is fetching', async () => {
         const testQuery = { isLoading: true, isError: false, data: undefined } as unknown as UseQueryResult<
             AssetGroupTag[]
@@ -179,6 +190,7 @@ describe('List', async () => {
 
         const listItem2 = screen.getByTestId('zone-management_details_tiers-list_item-2');
         expect(listItem2).toBeInTheDocument();
+
         expect(await within(listItem2).findByTestId('analysis_disabled_icon')).toBeInTheDocument();
     });
 

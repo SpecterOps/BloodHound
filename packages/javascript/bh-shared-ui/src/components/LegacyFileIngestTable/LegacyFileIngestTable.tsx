@@ -19,7 +19,7 @@ import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
 import { useGetFileUploadsQuery } from '../../hooks';
-import { LuxonFormat, calculateJobDuration } from '../../utils/datetime';
+import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
 
@@ -62,7 +62,7 @@ const LegacyFileIngestTable: React.FC = () => {
                 job.end_time === ZERO_VALUE_API_DATE
                     ? ''
                     : DateTime.fromISO(job.end_time).toFormat(LuxonFormat.DATETIME_WITH_LINEBREAKS),
-                job.end_time === ZERO_VALUE_API_DATE ? '' : calculateJobDuration(job.start_time, job.end_time),
+                job.end_time === ZERO_VALUE_API_DATE ? '' : getSimpleDuration(job.start_time, job.end_time),
                 FileUploadJobStatusToString[job.status],
                 job.status_message,
             ]) || [];

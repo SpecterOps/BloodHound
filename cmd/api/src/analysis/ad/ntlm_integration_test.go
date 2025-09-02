@@ -192,8 +192,25 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 						switch start.ID {
 						case harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
+							coercionTargets, err := ad2.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, result)
+							assert.NoError(t, err)
+							assert.Contains(t, coercionTargets.IDs(), harness.NTLMCoerceAndRelayNTLMToSMB.Computer8.ID)
+							composition, err := ad2.GetEdgeCompositionPath(context.Background(), db, result)
+							assert.NoError(t, err)
+							nodes := composition.AllNodes().IDs()
+							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Group8.ID)
+							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Group7.ID)
+							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Computer8.ID)
 						case harness.NTLMCoerceAndRelayNTLMToSMB.Group1.ID:
 							assert.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
+							coercionTargets, err := ad2.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, result)
+							assert.NoError(t, err)
+							assert.Contains(t, coercionTargets.IDs(), harness.NTLMCoerceAndRelayNTLMToSMB.Computer1.ID)
+							composition, err := ad2.GetEdgeCompositionPath(context.Background(), db, result)
+							assert.NoError(t, err)
+							nodes := composition.AllNodes().IDs()
+							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Computer1.ID)
+							assert.Contains(t, nodes, harness.NTLMCoerceAndRelayNTLMToSMB.Computer2.ID)
 						default:
 							require.FailNow(t, "unrecognized start node id")
 						}

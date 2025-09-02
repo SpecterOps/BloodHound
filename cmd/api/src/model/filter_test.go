@@ -20,15 +20,44 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/cypher/models"
 )
 
 func TestBuildSQLFilter(t *testing.T) {
 	testCases := []struct {
 		name    string
 		input   model.Filters
+		alias   models.Optional[string]
 		output  model.SQLFilter
 		wantErr bool
 	}{
+		{
+			name: "greater than",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "gt",
+					Value:    "12",
+				}},
+			},
+			alias: models.OptionalValue("f"),
+			output: model.SQLFilter{
+				SQLString: "f.foo > 12",
+			},
+			wantErr: false,
+		},
+		{
+			name: "greater than or equals",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "gte",
+					Value:    "12",
+				}},
+			},
+			alias: models.OptionalValue("f"),
+			output: model.SQLFilter{
+				SQLString: "f.foo >= 12",
+			},
+		},
 		{
 			name: "greater than",
 			input: model.Filters{
@@ -188,7 +217,7 @@ func TestBuildSQLFilter(t *testing.T) {
 	// Run each test case and compare the output with the expected result
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actualOutput, err := model.BuildSQLFilter(tc.input)
+			actualOutput, err := model.BuildSQLFilter(tc.input, tc.alias)
 
 			if tc.wantErr {
 				if err == nil {

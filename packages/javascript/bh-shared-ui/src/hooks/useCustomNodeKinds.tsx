@@ -17,7 +17,7 @@
 import { findIconDefinition, IconName } from '@fortawesome/fontawesome-svg-core';
 import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
-import { apiClient, DEFAULT_ICON_BACKGROUND, GenericQueryOptions, IconDictionary } from '../utils';
+import { apiClient, DEFAULT_ICON_BACKGROUND_COLOR, GenericQueryOptions, IconDictionary } from '../utils';
 
 export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconDictionary> =>
     apiClient.getCustomNodeKinds(options).then((res) => {
@@ -34,7 +34,7 @@ export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconD
 
                 customIcons[node.kindName] = {
                     icon: iconDefinition,
-                    color: node.config.icon.color ? node.config.icon.color : DEFAULT_ICON_BACKGROUND,
+                    color: node.config.icon.color ? node.config.icon.color : DEFAULT_ICON_BACKGROUND_COLOR,
                 };
             });
         }

@@ -34,6 +34,7 @@ import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
 import { MembersList } from './MembersList';
+import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
@@ -87,11 +88,12 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
+    const tiersQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
 
-    const labelsQuery = useTagsQuery(
-        (tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned
-    );
+    const labelsQuery = useTagsQuery({
+        select: (tags) =>
+            tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
+    });
 
     const selectorsQuery = useSelectorsInfiniteQuery(tagId);
 
@@ -102,10 +104,13 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
 
     return (
-        <div>
-            <div className='flex mt-6 gap-8'>
-                {InfoHeader && <InfoHeader />}
-                <div className='basis-1/3'>
+        <div className='h-full'>
+            <div className='flex mt-6'>
+                <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
+                <div className='w-1/3 flex justify-end'>
+                    <SearchBar />
+                </div>
+                <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
                             <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
@@ -113,8 +118,8 @@ const Details: FC = () => {
                     )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+            <div className='flex gap-8 mt-4 h-full'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
                     {location.pathname.includes('label') ? (
                         <TagList
                             title={'Labels'}
@@ -166,7 +171,7 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='basis-1/3'>
+                <div className='basis-1/3 h-full'>
                     <SelectedDetails />
                 </div>
             </div>

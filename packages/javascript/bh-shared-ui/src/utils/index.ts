@@ -28,6 +28,7 @@ export * from './exportGraphData';
 export * from './icons';
 export * from './jobs';
 export * from './luxon';
+export * from './object';
 export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';

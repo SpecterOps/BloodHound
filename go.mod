@@ -46,7 +46,7 @@ require (
 	github.com/russellhaering/goxmldsig v1.5.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.2.0
+	github.com/specterops/dawgs v0.2.1
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
