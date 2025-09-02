@@ -55,11 +55,13 @@ import { useNotifications } from '../../../../providers';
 import { useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { handleError } from '../utils';
+import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
 
 const MAX_NAME_LENGTH = 250;
 
 export const TagForm: FC = () => {
+    const [glyphDialogOpen, setGlyphDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const navigate = useAppNavigate();
@@ -94,6 +96,7 @@ export const TagForm: FC = () => {
             description: '',
             analysis_enabled: false,
             position: -1,
+            glyph: '',
         },
     });
 
@@ -106,12 +109,13 @@ export const TagForm: FC = () => {
     const handleCreateTag = useCallback(
         async (formData: CreateAssetGroupTagRequest) => {
             try {
-                const requestValues = {
+                const requestValues: CreateAssetGroupTagRequest = {
                     name: formData.name,
                     description: formData.description,
                     position: null,
                     type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
                 };
+                if (formData.glyph !== '') requestValues.glyph = formData.glyph;
 
                 const response = await createTagMutation.mutateAsync({
                     values: requestValues,
@@ -142,6 +146,7 @@ export const TagForm: FC = () => {
                 const updatedValues = { ...formData };
 
                 if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+                if (formData.glyph === '') delete updatedValues.glyph;
 
                 await updateTagMutation.mutateAsync({
                     updatedValues,
@@ -203,7 +208,8 @@ export const TagForm: FC = () => {
         [tagId, handleCreateTag, handleUpdateTag]
     );
 
-    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
+    const handleDeleteCancel = useCallback(() => setDeleteDialogOpen(false), []);
+    const handleGlyphCancel = useCallback(() => setGlyphDialogOpen(false), []);
 
     useEffect(() => {
         if (tagQuery.data) {
@@ -361,6 +367,14 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 )}
+                                <Button
+                                    onClick={() => {
+                                        setGlyphDialogOpen(true);
+                                    }}
+                                    className='w-48'
+                                    variant={'secondary'}>
+                                    <span>Select Glyph</span>
+                                </Button>
                                 <div className='hidden'>
                                     <FormField
                                         control={form.control}
@@ -426,11 +440,14 @@ export const TagForm: FC = () => {
                     />
                 )}
             </form>
+
+            <GlyphSelectDialog open={glyphDialogOpen} handleCancel={handleGlyphCancel} handleSelect={() => {}} />
+
             <DeleteConfirmationDialog
                 isLoading={tagQuery.isLoading}
                 itemName={tagQuery.data?.name || tagKind}
                 itemType={tagKind}
-                onCancel={handleCancel}
+                onCancel={handleDeleteCancel}
                 onConfirm={handleDeleteTag}
                 open={deleteDialogOpen}
             />
