@@ -24,7 +24,7 @@ const Opsec: FC = () => {
                 Please refer to the OPSEC info for the specific granted permissions at{' '}
                 <a
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html'>
                     https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html
                 </a>

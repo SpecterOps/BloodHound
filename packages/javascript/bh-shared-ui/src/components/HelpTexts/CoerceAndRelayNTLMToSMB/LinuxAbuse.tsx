@@ -24,7 +24,7 @@ const LinuxAbuse: FC = () => {
                 1. Start the Relay Server The NTLM relay can be executed with{' '}
                 <a
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>
                     ntlmrelayx.py
                 </a>
@@ -35,18 +35,18 @@ const LinuxAbuse: FC = () => {
                 2. Coerce the Target Computer Several coercion methods are documented here:{' '}
                 <a
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
                     Windows Coerced Authentication Methods
                 </a>
                 . Examples of tools include:
                 <a
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>
                     printerbug.py
                 </a>
-                <a target='_blank' rel='noopener' href={'https://github.com/topotam/PetitPotam'}>
+                <a target='_blank' rel='noopener noreferrer' href={'https://github.com/topotam/PetitPotam'}>
                     PetitPotam
                 </a>
             </Typography>

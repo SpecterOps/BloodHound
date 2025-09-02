@@ -29,7 +29,7 @@ const LinuxAbuse: FC = () => {
                 Please refer to the abuse info for the specific granted permissions at{' '}
                 <a
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges'>
                     https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
                 </a>

@@ -41,7 +41,10 @@ const WindowsAbuse: FC = () => {
                 <ListItem>
                     <ListItemText>
                         Build GMSAPasswordReader.exe from its source:{' '}
-                        <a target='_blank' rel='noopener' href='https://github.com/rvazarkar/GMSAPasswordReader'>
+                        <a
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/rvazarkar/GMSAPasswordReader'>
                             https://github.com/rvazarkar/GMSAPasswordReader
                         </a>
                     </ListItemText>
