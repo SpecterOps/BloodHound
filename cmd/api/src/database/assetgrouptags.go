@@ -847,7 +847,8 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
-	// Fetch a paginated list of nodes matching the filter and unique per node - selectorID combo. Any potential dupes are eliminated by preferring highest value of certified, lowest position zone, and earliest created_at date
+	// Fetch a paginated list of nodes matching the filter and unique per node - selectorID combo. Any potential dupes are eliminated by first selecting the rows
+	// with the lowest position zone, then finding the row with highest value of certified and grabbing the earliest created_at date seen across rows.
 	query := fmt.Sprintf(`
 		WITH nodes_associated_with_min_pos AS (
 			SELECT 
@@ -902,14 +903,45 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 	if result := s.db.WithContext(ctx).Raw(query).Find(&nodes); result.Error != nil {
 		return nil, 0, result.Error
 	} else {
-		// TODO: update this to match the above
-		query = fmt.Sprintf(`SELECT COUNT(DISTINCT n.node_id) FROM %s n 
-			JOIN %s s ON n.selector_id = s.id
-			JOIN %s t ON s.asset_group_tag_id = t.id
-			WHERE t.type = %d %s `,
-			model.AssetGroupSelectorNode{}.TableName(), model.AssetGroupTagSelector{}.TableName(), model.AssetGroupTag{}.TableName(), model.AssetGroupTagTypeTier, sqlFilter.SQLString)
+		// get a total count on the above query without pagination
+		countQuery := fmt.Sprintf(`
+			WITH nodes_associated_with_min_pos AS (
+				SELECT 
+					n.*, 
+					t.position,
+					MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
+				FROM %s n
+				JOIN %s s ON n.selector_id = s.id
+				JOIN %s t ON s.asset_group_tag_id = t.id
+				WHERE t.type = %d %s
+			),
+			sort_on_created_at AS (
+				SELECT DISTINCT ON (sort.node_id)
+					sort.node_id,
+					sort.selector_id,
+					sort.certified,
+					sort.certified_by,
+					sort.source,
+					sort.node_primary_kind,
+					sort.node_environment_id,
+					sort.node_object_id,
+					sort.node_name,
+					sort.position,
+					sort.updated_at,
+					MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS min_created_at
+				FROM nodes_associated_with_min_pos sort
+				WHERE sort.position = sort.min_position_for_node
+				ORDER BY sort.node_id, sort.certified DESC, sort.created_at ASC
+			)
+			SELECT COUNT(*) 
+			FROM sort_on_created_at;`,
+			model.AssetGroupSelectorNode{}.TableName(),
+			model.AssetGroupTagSelector{}.TableName(),
+			model.AssetGroupTag{}.TableName(),
+			model.AssetGroupTagTypeTier,
+			sqlFilter.SQLString)
 
-		if result := s.db.WithContext(ctx).Raw(query).Scan(&count); result.Error != nil {
+		if result := s.db.WithContext(ctx).Raw(countQuery).Scan(&count); result.Error != nil {
 			return nil, 0, result.Error
 		} else {
 			return nodes, count, nil
