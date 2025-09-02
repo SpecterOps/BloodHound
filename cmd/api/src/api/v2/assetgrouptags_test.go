@@ -3824,7 +3824,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, 100).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 2, nil)
+				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 2, nil)
 			},
 
 			expected: expected{
@@ -3832,7 +3832,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 				responseBody: `
 					{
 							"count": 2,
-							"limit": 100,
+							"limit": 50,
 							"skip": 0,
 							"data": {
 								"members": [
@@ -3867,7 +3867,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), model.SQLFilter{}, 0, 100).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 1, nil)
+				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 1, nil)
 			},
 
 			expected: expected{
@@ -3875,7 +3875,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 				responseBody: `
 					{
 							"count": 1,
-							"limit": 100,
+							"limit": 50,
 							"skip": 0,
 							"data": {
 								"members": [
