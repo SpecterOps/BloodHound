@@ -26,8 +26,7 @@ export const ROUTE_ZONE_MANAGEMENT_TIER_DETAILS = `/zone/:tierId/details`;
 export const ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS = `/label/:labelId/details`;
 export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS = `/zone/:tierId/details/selector/:selectorId`;
 export const ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS = `/zone/:tierId/details/member/:memberId`;
-export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS =
-    `/zone/:tierId/details/selector/:selectorId/member/:memberId`;
+export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS = `/zone/:tierId/details/selector/:selectorId/member/:memberId`;
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS = `/label/:labelId/details/selector/:selectorId`;
 export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS = '/details/label/:labelId/member/:memberId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS =

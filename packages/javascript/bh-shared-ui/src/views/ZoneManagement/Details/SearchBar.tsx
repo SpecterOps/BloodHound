@@ -26,9 +26,9 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, useZonePathParams } from '../../../hooks';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 
 type SectorMap =
     | { Tiers: 'tags'; Selectors: 'selectors'; Members: 'members' }

@@ -144,7 +144,9 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
-                            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`);
+                            navigate(
+                                `${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
+                            );
                         }}
                     />
                     {selectorId !== undefined ? (
@@ -164,7 +166,9 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`);
+                                navigate(
+                                    `${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
+                                );
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}

@@ -27,9 +27,9 @@ import { FC } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
 
 const Save: FC = () => {
     const location = useLocation();

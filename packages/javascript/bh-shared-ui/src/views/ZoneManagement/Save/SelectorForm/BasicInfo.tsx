@@ -45,13 +45,13 @@ import { useLocation, useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 
 const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const location = useLocation();

@@ -30,14 +30,14 @@ import {
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'src/routes/constants';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'src/routes/constants';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => { } }) => {
+}> = ({ contextMenu, onClose = () => {} }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();

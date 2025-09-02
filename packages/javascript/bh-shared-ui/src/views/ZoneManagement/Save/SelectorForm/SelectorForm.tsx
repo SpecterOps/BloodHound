@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { useZonePathParams } from '../../../../hooks';
 import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { handleError } from '../utils';
@@ -32,7 +33,6 @@ import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
 
 const diffValues = (
     data: AssetGroupTagSelector | undefined,
@@ -184,7 +184,9 @@ const SelectorForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`);
+            navigate(
+                `${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`
+            );
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
         }

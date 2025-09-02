@@ -22,8 +22,8 @@ import {
     usePrivilegeZoneAnalysis,
     useZonePathParams,
 } from '../../../../hooks';
-import { useAppNavigate } from '../../../../utils';
 import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
+import { useAppNavigate } from '../../../../utils';
 
 export const useTagFormUtils = () => {
     const navigate = useAppNavigate();
