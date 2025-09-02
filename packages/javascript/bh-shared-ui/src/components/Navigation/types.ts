@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 type MainNavLogoImage = {
     imageUrl: string;
-    dimensions: { height: string; width: string };
+    dimensions: { height: number; width: number };
     classes?: string;
     altText: string;
 };
@@ -27,7 +27,6 @@ export type MainNavLogoDataObject = {
     project: {
         route: string;
         icon: ReactNode;
-        image: MainNavLogoImage;
     };
     specterOps: {
         image: MainNavLogoImage;
