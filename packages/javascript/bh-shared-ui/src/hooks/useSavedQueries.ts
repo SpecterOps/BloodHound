@@ -24,11 +24,11 @@ import {
     UpdateUserQueryRequest,
 } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { GenericQueryOptions, getQueryKey } from '../utils';
+import { GenericQueryOptions } from '../utils';
 import { apiClient } from '../utils/api';
 export const savedQueryKeys = {
     all: ['savedQueries'] as const,
-    permissions: () => ['permissions'],
+    permissions: ['permissions'] as const,
 };
 
 export const getSavedQueries = (scope: QueryScope, options?: RequestOptions): Promise<SavedQuery[]> => {
@@ -61,13 +61,17 @@ export const deleteSavedQuery = (id: number): Promise<void> => {
 
 export const getQueryPermissions = async (id: number, options?: RequestOptions): Promise<any> => {
     const emptyPermissions = { query_id: undefined, public: false, shared_to_user_ids: [] };
+    console.log('getQueryPermissions');
+    console.log(id);
     if (!id) {
         return emptyPermissions;
     }
     try {
         return await apiClient.getUserQueryPermissions(id, options).then((response) => response.data.data);
     } catch (error: any) {
+        console.log(error);
         const status = error?.response?.status ?? error?.status;
+        console.log(status);
         if (status === 404 || status === 400) {
             return emptyPermissions;
         }
@@ -76,13 +80,13 @@ export const getQueryPermissions = async (id: number, options?: RequestOptions):
 };
 
 export const useQueryPermissions = (id?: number) =>
-    useQuery(savedQueryKeys.permissions(), ({ signal }) => getQueryPermissions(id as number, { signal }), {
+    useQuery(savedQueryKeys.permissions, ({ signal }) => getQueryPermissions(id as number, { signal }), {
         retry: false,
     });
 
 // export const useQueryPermissions = (id?: number) =>
 //     useQuery({
-//         queryKey: getQueryKey(savedQueryKeys.permissions(), [`query-id-${id}`]),
+//         queryKey: getQueryKey(savedQueryKeys.permissions, [`query-id-${id}`]),
 //         queryFn: ({ signal }) => getQueryPermissions(id as number, { signal }),
 //         retry: false,
 //     });
@@ -96,7 +100,7 @@ export const useUpdateQueryPermissions = () => {
     const queryClient = useQueryClient();
     return useMutation(updateQueryPermissions, {
         onSuccess: (data) => {
-            queryClient.invalidateQueries(getQueryKey(savedQueryKeys.permissions(), [`query-id-${data.query_id}`]));
+            queryClient.invalidateQueries(savedQueryKeys.permissions);
         },
     });
 };
@@ -110,7 +114,7 @@ export const useDeleteQueryPermissions = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteQueryPermissions, {
         onSuccess: (data) => {
-            queryClient.invalidateQueries(getQueryKey(savedQueryKeys.permissions(), [`query-id-${data.query_id}`]));
+            queryClient.invalidateQueries(savedQueryKeys.permissions);
         },
     });
 };

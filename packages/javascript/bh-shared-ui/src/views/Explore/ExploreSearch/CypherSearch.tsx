@@ -104,20 +104,26 @@ const CypherSearchInner = ({
     const updateQueryPermissions = (id: number) => {
         if (permissions.public && !isPublic && sharedIds.length) {
             const localSharedIds = [...sharedIds];
-            updateQueryPermissionsMutation.mutate({
-                id: id,
-                payload: {
-                    user_ids: [],
-                    public: isPublic,
+            updateQueryPermissionsMutation.mutate(
+                {
+                    id: id,
+                    payload: {
+                        user_ids: [],
+                        public: isPublic,
+                    },
                 },
-            });
-            updateQueryPermissionsMutation.mutate({
-                id: id,
-                payload: {
-                    user_ids: localSharedIds,
-                    public: false,
-                },
-            });
+                {
+                    onSettled: () => {
+                        updateQueryPermissionsMutation.mutate({
+                            id: id,
+                            payload: {
+                                user_ids: localSharedIds,
+                                public: false,
+                            },
+                        });
+                    },
+                }
+            );
         } else {
             updateQueryPermissionsMutation.mutate(
                 {
