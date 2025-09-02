@@ -1398,6 +1398,39 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.Equal(t, "NodeSelectedByT0", nodeCertifications[0].NodeName)
 	})
 
+	t.Run("Multiple nodes - verify correct hybrid output", func(t *testing.T) {
+		testNodeId := uint64(30)
+
+		// a selector for T0 selects this node
+		err = dbInst.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, null.StringFrom("Sel0_1_NoCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
+		require.NoError(t, err)
+
+		timeBeforeSel0_1_NodeInserted := time.Now().UTC()
+
+		// another selector for T0 selects this node
+		err = dbInst.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, null.StringFrom("Sel0_1_ManualCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
+		require.NoError(t, err)
+
+		// a selector for T1 also selects this node
+		err = dbInst.InsertSelectorNode(testCtx, 2, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
+		require.NoError(t, err)
+
+		// a selector for T2 also selects this node
+		err = dbInst.InsertSelectorNode(testCtx, 3, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
+		require.NoError(t, err)
+
+		// filtering on the nodes from this test only
+		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
+		require.NoError(t, err)
+
+		// there should only be a single node returned
+		require.Equal(t, 1, count)
+		// it should have the highest certification value associated with T0
+		require.Equal(t, model.AssetGroupCertificationManual, nodeCertifications[0].Certified)
+		// it should have a timestamp of the first node inserted for this tier
+		require.True(t, nodeCertifications[0].CreatedAt.Before(timeBeforeSel0_1_NodeInserted))
+	})
+
 	t.Run("Multiple nodes - verify highest certify wins", func(t *testing.T) {
 		testNodeId := uint64(2)
 		// this one has certification revoked
@@ -1405,7 +1438,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// no certification
-		err = dbInst.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationNone, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertNone")
+		err = dbInst.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertNone")
 		require.NoError(t, err)
 
 		// manual certification

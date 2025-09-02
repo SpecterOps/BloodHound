@@ -848,22 +848,61 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 	}
 
 	// Fetch a paginated list of nodes matching the filter and unique per node - selectorID combo. Any potential dupes are eliminated by preferring highest value of certified, lowest position zone, and earliest created_at date
-	query := fmt.Sprintf(`SELECT DISTINCT ON (n.node_id) n.*, t.position FROM %s n 
-		JOIN %s s ON n.selector_id = s.id
-		JOIN %s t ON s.asset_group_tag_id = t.id
-		WHERE t.type = %d %s 
-		ORDER BY 
-			  n.node_id ASC,
-			  n.certified DESC,
-			  t.position ASC,
-			  n.created_at ASC
+	query := fmt.Sprintf(`
+		WITH nodes_associated_with_min_pos AS (
+			SELECT 
+				n.*, 
+				t.position,
+				MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
+			FROM %s n
+			JOIN %s s ON n.selector_id = s.id
+			JOIN %s t ON s.asset_group_tag_id = t.id
+			WHERE t.type = %d %s
+		),
+		sort_on_created_at AS (
+			SELECT DISTINCT ON (sort.node_id)
+				sort.node_id,
+				sort.selector_id,
+				sort.certified,
+				sort.certified_by,
+				sort.source,
+				sort.node_primary_kind,
+				sort.node_environment_id,
+				sort.node_object_id,
+				sort.node_name,
+				sort.position,
+				sort.updated_at,
+				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS min_created_at    -- add a column that tracks the earliest created_at for a given node_id
+			FROM nodes_associated_with_min_pos sort
+			WHERE sort.position = sort.min_position_for_node
+			ORDER BY sort.node_id, sort.certified DESC, sort.created_at ASC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
+		)
+		SELECT
+			hybrid.node_id,
+			hybrid.selector_id,
+			hybrid.certified,
+			hybrid.certified_by,  
+			hybrid.source,
+			hybrid.node_primary_kind,
+			hybrid.node_environment_id,
+			hybrid.node_object_id,
+			hybrid.node_name,
+			hybrid.position,
+			hybrid.updated_at,
+			hybrid.min_created_at AS created_at
+		FROM sort_on_created_at hybrid
 		%s;`,
-		model.AssetGroupSelectorNode{}.TableName(), model.AssetGroupTagSelector{}.TableName(), model.AssetGroupTag{}.TableName(), model.AssetGroupTagTypeTier, sqlFilter.SQLString, skipLimitString)
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+		model.AssetGroupTag{}.TableName(),
+		model.AssetGroupTagTypeTier,
+		sqlFilter.SQLString,
+		skipLimitString)
 
 	if result := s.db.WithContext(ctx).Raw(query).Find(&nodes); result.Error != nil {
 		return nil, 0, result.Error
 	} else {
-		// run the previous query without pagination or sorting to get an overall count
+		// TODO: update this to match the above
 		query = fmt.Sprintf(`SELECT COUNT(DISTINCT n.node_id) FROM %s n 
 			JOIN %s s ON n.selector_id = s.id
 			JOIN %s t ON s.asset_group_tag_id = t.id
