@@ -199,7 +199,10 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                         }
                     />
                     */}
-                    <Dialog open={createUserDialogOpen} onOpenChange={toggleCreateUserDialog}>
+                    <Dialog
+                        open={createUserDialogOpen}
+                        onOpenChange={toggleCreateUserDialog}
+                        data-testid='create-user-dialog'>
                         <DialogTrigger asChild>
                             <Button
                                 disabled={!hasPermission}
@@ -241,7 +244,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 </Paper>
             </PageWithTitle>
 
-            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
+            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog} data-testid='update-user-dialog'>
                 <DialogPortal>
                     <UpdateUserDialog
                         error={updateUserMutation.error}
