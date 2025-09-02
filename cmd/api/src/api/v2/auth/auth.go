@@ -370,17 +370,17 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		if etacFeatureFlag.Enabled {
-			if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
+			if createUserRequest.EnvironmentControlList != nil {
 				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
 					return
 				}
 
-				if len(createUserRequest.UpdateUserRequest.EnvironmentControlList.Environments) != 0 && createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
+				if len(createUserRequest.EnvironmentControlList.Environments) != 0 && createUserRequest.EnvironmentControlList.AllEnvironments {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
 					return
 				}
-				userTemplate.AllEnvironments = createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments
+				userTemplate.AllEnvironments = createUserRequest.EnvironmentControlList.AllEnvironments
 			}
 		}
 
@@ -534,9 +534,9 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		} else if etacFeatureFlag.Enabled {
 			if updateUserRequest.EnvironmentControlList != nil {
 				// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
-				effectiveRoles := roles
+				effectiveRoles := user.Roles
 				if updateUserRequest.Roles != nil {
-					effectiveRoles = user.Roles
+					effectiveRoles = roles
 				}
 
 				if effectiveRoles.Has(model.Role{Name: auth.RoleAdministrator}) || effectiveRoles.Has(model.Role{Name: auth.RolePowerUser}) {
@@ -552,6 +552,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 				// Delete the user's environment entries before setting them to the new request
 				if err := s.db.DeleteEnvironmentListForUser(request.Context(), user); err != nil {
 					api.HandleDatabaseError(request, response, err)
+					return
 				}
 
 				user.AllEnvironments = updateUserRequest.EnvironmentControlList.AllEnvironments

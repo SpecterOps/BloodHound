@@ -44,6 +44,7 @@ func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, user
 }
 
 // UpdateEnvironmentListForUser will remove all entries in the access control list for a user and add a new entry for each environment provided
+// This method will also set all_environments to false for the provided user
 func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments []string) ([]model.EnvironmentAccess, error) {
 	var (
 		auditData = model.AuditData{
@@ -87,8 +88,9 @@ func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user mo
 
 		// If a user has a TAC List, then they no longer have access to all environments
 		user.AllEnvironments = false
+		saveUserResult := tx.WithContext(ctx).Save(user)
 
-		return s.UpdateUser(ctx, user)
+		return CheckError(saveUserResult)
 	})
 
 	return availableEnvironments, err

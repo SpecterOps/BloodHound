@@ -1531,7 +1531,6 @@ func TestCreateUser_Success_ETAC(t *testing.T) {
 					Principal: "good user",
 					EnvironmentControlList: &v2.UpdateUserETACListRequest{
 						AllEnvironments: true,
-						Environments:    nil,
 					},
 				},
 				SetUserSecretRequest: v2.SetUserSecretRequest{
@@ -1586,7 +1585,30 @@ func TestCreateUser_Success_ETAC(t *testing.T) {
 			},
 		},
 		{
-			name: "error setting etac for ineligible role",
+			name: "Success when ETAC enabled and list omitted defaults to all environments",
+			goodUser: model.User{
+				PrincipalName:   "good user",
+				AllEnvironments: true,
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			},
+			expectedStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, `"all_environments":true`)
+			},
+		},
+		{
+			name: "Error setting etac for ineligible role",
 			goodUser: model.User{
 				PrincipalName: "good user",
 			},
