@@ -203,7 +203,13 @@ const SelectorForm: FC = () => {
 
         if (selectorQuery.data) {
             const { name, description, auto_certify, seeds } = selectorQuery.data;
-            form.reset({ name, description, auto_certify, seeds, disabled: !selectorStatus(selectorId, selectorQuery.data) });
+            form.reset({
+                name,
+                description,
+                auto_certify,
+                seeds,
+                disabled: !selectorStatus(selectorId, selectorQuery.data),
+            });
 
             const seedsToSelectedObjects = async () => {
                 const nodesByObjectId = new Map<string, GraphNode>();

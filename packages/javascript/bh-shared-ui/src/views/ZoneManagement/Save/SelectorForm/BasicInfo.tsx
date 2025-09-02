@@ -36,13 +36,16 @@ import {
     Skeleton,
     Switch,
     Textarea,
+    Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
-import {DeleteConfirmationDialog } from '../../../../components';
+import { DeleteConfirmationDialog } from '../../../../components';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
@@ -184,24 +187,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </FormItem>
                                 )}
                             />
-                             <FormField
-                                control={control}
-                                name='auto_certify'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Automatic Certification</FormLabel>
-                                        <FormControl>
-                                            <Switch
-                                                data-testid='zone-management_save_selector-form_auto_certify-input'
-                                                checked = {field.value}
-                                                onCheckedChange={field.onChange}
-                                                label='Selector automatically applies certification for members tagged'
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+
                             <div>
                                 <Label className='text-base font-bold'>Selector Type</Label>
                                 <Select
@@ -228,6 +214,54 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
+                            <FormField
+                                control={control}
+                                name='auto_certify'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Tooltip
+                                            tooltip={'TODO tooltip text coming'}
+                                            contentProps={{ side: 'right', sideOffset: -140 }}>
+                                            <span className='flex'>
+                                                <FormLabel aria-labelledby='auto_certify'>
+                                                    Automatic Certification
+                                                </FormLabel>
+                                                <span className='flex justify-center items-center'>
+                                                    <FontAwesomeIcon
+                                                        className={'ml-[3px]'}
+                                                        size={'2xs'}
+                                                        icon={faInfoCircle}
+                                                    />
+                                                </span>
+                                            </span>
+                                        </Tooltip>
+                                        <Select
+                                            data-testid='zone-management_save_selector-form_auto_certify-input'
+                                            value={field.value?.toString()}
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value?.toString()}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder='Disabled' {...field} />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectPortal>
+                                                <SelectContent>
+                                                    {Object.entries(AssetGroupTagSelectorAutoCertifyMap).map(
+                                                        ([autoCertifyOption, displayValue]) => (
+                                                            <SelectItem
+                                                                key={autoCertifyOption}
+                                                                value={autoCertifyOption}>
+                                                                {displayValue}
+                                                            </SelectItem>
+                                                        )
+                                                    )}
+                                                </SelectContent>
+                                            </SelectPortal>
+                                        </Select>
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                     </div>
                 </CardContent>

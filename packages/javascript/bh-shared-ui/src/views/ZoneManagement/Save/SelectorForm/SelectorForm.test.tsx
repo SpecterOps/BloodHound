@@ -31,7 +31,7 @@ const testSelector = {
     allow_disable: true,
     description: 'bar',
     is_default: false,
-    auto_certify: true,
+    auto_certify: 2,
     created_at: '2024-10-05T17:54:32.245Z',
     created_by: 'Stephen64@gmail.com',
     updated_at: '2024-07-20T11:22:18.219Z',
@@ -106,10 +106,10 @@ describe('Selector Form', () => {
         expect(descriptionInput).toHaveValue('');
 
         longWait(async () => {
-            const autoCertifySwitch = await screen.findByLabelText('Automatic Certification')
-            expect(autoCertifySwitch).toBeInTheDocument();
-            expect(autoCertifySwitch).toHaveValue('off');
-        })
+            const autoCertifyDropdown = await screen.findByLabelText('Automatic Certification');
+            expect(autoCertifyDropdown).toBeInTheDocument();
+            expect(autoCertifyDropdown).toHaveValue('Disabled');
+        });
 
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
@@ -154,10 +154,10 @@ describe('Selector Form', () => {
         });
 
         longWait(async () => {
-            const autoCertifySwitch = await screen.findByLabelText('Automatic Certification')
-            expect(autoCertifySwitch).toBeInTheDocument();
-            expect(autoCertifySwitch).toHaveValue('on');
-        })
+            const autoCertifyDropdown = await screen.findByLabelText('Automatic Certification');
+            expect(autoCertifyDropdown).toBeInTheDocument();
+            expect(autoCertifyDropdown).toHaveValue('All Members');
+        });
 
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 

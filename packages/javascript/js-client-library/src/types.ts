@@ -79,7 +79,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     kind_id: number;
     type: AssetGroupTagTypes;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
     counts?: AssetGroupTagCounts;
     analysis_enabled: boolean | null;
@@ -105,6 +105,21 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 1;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 2;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Disabled',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Seeds Only',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Members',
+};
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
@@ -115,7 +130,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
