@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { CSSProperties, useEffect, useRef } from 'react';
-import { Transition } from 'react-transition-group';
+import { useCallback, useEffect, useRef } from 'react';
 import { SNACKBAR_DURATION } from '../../../../constants';
+import { cn } from '../../../../utils';
 type CypherSearchMessageProps = {
     messageState: {
         showMessage: boolean;
@@ -27,58 +27,38 @@ type CypherSearchMessageProps = {
 const CypherSearchMessage = (props: CypherSearchMessageProps) => {
     const { clearMessage, messageState } = props;
     const { showMessage, message } = messageState;
-
-    const nodeRef = useRef(null);
-
-    const duration = 300;
-
-    const defaultStyle = {
-        transition: `opacity ${duration}ms ease-in-out, transform ${duration}ms`,
-        opacity: 0,
-        transform: 'scale(1)',
-    };
-
-    const transitionStyles: Record<string, CSSProperties> = {
-        entering: { opacity: 1, transform: 'translateX(0) scale(0.96)' },
-        entered: { opacity: 1 },
-        exiting: { opacity: 0, transform: 'scale(0.9)' },
-        exited: { opacity: 0 },
-    };
-
     const timeoutRef = useRef<number | undefined>(undefined);
-    const handleEntered = () => {
+
+    const startTimer = useCallback(() => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
         timeoutRef.current = window.setTimeout(() => {
             clearMessage();
         }, SNACKBAR_DURATION);
-    };
+    }, [clearMessage]);
+
     useEffect(() => {
+        if (showMessage) {
+            startTimer();
+        }
         return () => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, []);
+    }, [clearMessage, showMessage, startTimer]);
 
     return (
         <div className='w-full'>
-            <Transition nodeRef={nodeRef} in={showMessage} timeout={duration} onEntered={handleEntered} unmountOnExit>
-                {(state) => (
-                    <div
-                        ref={nodeRef}
-                        style={{
-                            ...defaultStyle,
-                            ...transitionStyles[state],
-                        }}
-                        className='leading-none'
-                        role='status'
-                        aria-live='polite'>
-                        {message}
-                    </div>
-                )}
-            </Transition>
+            <div
+                role='status'
+                aria-live='polite'
+                className={cn('leading-none opacity-0 scale-90 transition-all duration-300 ease-in-out', {
+                    'opacity-100 scale-100 transition-all duration-300 ease-in-out': showMessage,
+                })}>
+                {message}
+            </div>
         </div>
     );
 };
