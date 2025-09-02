@@ -44,13 +44,14 @@ export const getSavePath = (
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
+    // TODO - what should this route be to account for zone/label?
     const savePath = `${ROUTE_ZONE_MANAGEMENT_ROOT}/save`;
 
-    if (selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/label/${labelId}/selector/${selectorId}`;
-    if (selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/tier/${tierId}/selector/${selectorId}`;
+    if (selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/label/${labelId}/save/selector/${selectorId}`;
+    if (selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/tier/${tierId}/save/selector/${selectorId}`;
 
-    if (!selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/label/${labelId}`;
-    if (!selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/save/tier/${tierId}`;
+    if (!selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/label/${labelId}/save`;
+    if (!selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/tier/${tierId}/save`;
 
     return savePath;
 };

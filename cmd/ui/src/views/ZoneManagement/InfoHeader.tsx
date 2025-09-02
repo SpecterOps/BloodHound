@@ -80,7 +80,7 @@ const InfoHeader: FC = () => {
                 <Button variant='primary' disabled={!tagId} asChild>
                     <AppLink
                         data-testid='zone-management_create-selector-link'
-                        to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                        to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector`}>
                         Create Selector
                     </AppLink>
                 </Button>

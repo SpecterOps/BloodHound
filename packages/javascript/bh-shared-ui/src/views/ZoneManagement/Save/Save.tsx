@@ -61,7 +61,7 @@ const Save: FC = () => {
                                 <BreadcrumbLink asChild>
                                     <AppLink
                                         data-testid='zone-management_save_tag-breadcrumb'
-                                        to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/save/${tagValue}/${tagId}`}>
+                                        to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/${tagValue}/${tagId}/save`}>
                                         {`${capitalizedTagValue} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>
