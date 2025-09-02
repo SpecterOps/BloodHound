@@ -28,7 +28,6 @@ import {
     FormLabel,
     FormMessage,
     Input,
-    Label,
     Select,
     SelectContent,
     SelectItem,
@@ -39,7 +38,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Alert, Grid, TextField } from '@mui/material';
+import { Alert } from '@mui/material';
 import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -55,7 +54,7 @@ const CreateUserForm: React.FC<{
     isLoading: boolean;
     onSubmit: (user: CreateUserRequestForm) => void;
     open?: boolean;
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
+    showEnvironmentAccessControls?: boolean;
 }> = ({ error, isLoading, onSubmit, open, showEnvironmentAccessControls }) => {
     const defaultValues = {
         emailAddress: '',
@@ -76,7 +75,7 @@ const CreateUserForm: React.FC<{
 
     const form = useForm<CreateUserRequestForm>({ defaultValues });
 
-    const [authenticationMethod, setAuthenticationMethod] = useState<string>('password');
+    const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
     const [selectedRoleValue, setSelectedRoleValue] = useState([3]);
 
     const roleInputValue = form.watch('roles');
@@ -89,29 +88,6 @@ const CreateUserForm: React.FC<{
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
-
-    useEffect(() => {
-        if (authenticationMethod === 'password') {
-            form.setValue('SSOProviderId', undefined);
-        }
-
-        if (error) {
-            if (error?.response?.status === 409) {
-                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
-                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
-                } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
-                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
-                } else {
-                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
-                }
-            } else {
-                form.setError('root.generic', {
-                    type: 'custom',
-                    message: 'An unexpected error occurred. Please try again.',
-                });
-            }
-        }
-    }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
     const { data: availableEnvironments } = useAvailableEnvironments();
 
@@ -142,348 +118,355 @@ const CreateUserForm: React.FC<{
     const isAllSelected =
         selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
+    useEffect(() => {
+        if (authenticationMethod === 'password') {
+            form.setValue('SSOProviderId', undefined);
+        }
+
+        if (error) {
+            if (error?.response?.status === 409) {
+                if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
+                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
+                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
+                } else {
+                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                }
+            } else {
+                form.setError('root.generic', {
+                    type: 'custom',
+                    message: 'An unexpected error occurred. Please try again.',
+                });
+            }
+        }
+    }, [authenticationMethod, form, form.setValue, error, form.setError]);
+
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
                 {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                     <div className='flex gap-x-4 justify-center'>
-                        <Card className=' p-6 rounded shadow max-w-[600px]'>
+                        <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                             <DialogTitle>{'Create User'}</DialogTitle>
 
-                            <div className='flex flex-col' data-testid='create-user-dialog_content'>
-                                <Grid container spacing={2} className='min-h-[650px] mt-4'>
-                                    <Grid item xs={12}>
-                                        <FormField
-                                            name='emailAddress'
-                                            control={form.control}
-                                            rules={{
-                                                required: 'Email Address is required',
-                                                maxLength: {
-                                                    value: MAX_EMAIL_LENGTH,
-                                                    message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
-                                                },
-                                                pattern: {
-                                                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                                    message: 'Please follow the example@domain.com format',
-                                                },
-                                            }}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
-                                                        Email Address
-                                                    </FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            {...field}
-                                                            type='email'
-                                                            id='emailAddress'
-                                                            data-testid='create-user-dialog_input-email-address'
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </Grid>
-
-                                    <Grid item xs={12}>
-                                        <FormField
-                                            name='principal'
-                                            control={form.control}
-                                            rules={{
-                                                required: 'Principal Name is required',
-                                                maxLength: {
-                                                    value: MAX_NAME_LENGTH,
-                                                    message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                                },
-                                                minLength: {
-                                                    value: MIN_NAME_LENGTH,
-                                                    message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                                },
-                                                validate: (value) => {
-                                                    const trimmed = value.trim();
-                                                    if (value !== trimmed) {
-                                                        return 'Principal Name does not allow leading or trailing spaces';
-                                                    }
-                                                    return true;
-                                                },
-                                            }}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel htmlFor='principal'>Principal Name</FormLabel>
-                                                    <FormControl>
-                                                        <Input {...field} id='principal' />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <FormField
-                                            name='firstName'
-                                            control={form.control}
-                                            rules={{
-                                                required: 'First Name is required',
-                                                maxLength: {
-                                                    value: MAX_NAME_LENGTH,
-                                                    message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                                },
-                                                minLength: {
-                                                    value: MIN_NAME_LENGTH,
-                                                    message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                                },
-                                                validate: (value) => {
-                                                    const trimmed = value.trim();
-                                                    if (value !== trimmed) {
-                                                        return 'First Name does not allow leading or trailing spaces';
-                                                    }
-                                                    return true;
-                                                },
-                                            }}
-                                            render={({ field }) => (
-                                                <>
-                                                    <FormItem>
-                                                        <FormLabel htmlFor='firstName'>First Name</FormLabel>
-                                                        <FormControl>
-                                                            <Input {...field} id='firstName' />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                </>
-                                            )}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <FormField
-                                            name='lastName'
-                                            control={form.control}
-                                            rules={{
-                                                required: 'Last Name is required',
-                                                maxLength: {
-                                                    value: MAX_NAME_LENGTH,
-                                                    message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                                },
-                                                minLength: {
-                                                    value: MIN_NAME_LENGTH,
-                                                    message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                                },
-                                                validate: (value) => {
-                                                    const trimmed = value.trim();
-                                                    if (value !== trimmed) {
-                                                        return 'Last Name does not allow leading or trailing spaces';
-                                                    }
-                                                    return true;
-                                                },
-                                            }}
-                                            render={({ field }) => (
-                                                <>
-                                                    <FormItem>
-                                                        <FormLabel htmlFor='lastName'>Last Name</FormLabel>
-                                                        <FormControl>
-                                                            <Input {...field} id='lastName' />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                </>
-                                            )}
-                                        />
-                                    </Grid>
-
-                                    <>
-                                        <Grid item xs={12}>
+                            <div
+                                className='flex flex-col min-h-[650px] mt-4 w-full'
+                                data-testid='create-user-dialog_content'>
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='emailAddress'
+                                        control={form.control}
+                                        rules={{
+                                            required: 'Email Address is required',
+                                            maxLength: {
+                                                value: MAX_EMAIL_LENGTH,
+                                                message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
+                                            },
+                                            pattern: {
+                                                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                                message: 'Please follow the example@domain.com format',
+                                            },
+                                        }}
+                                        render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel htmlFor='authenticationMethod'>
-                                                    Authentication Method
+                                                <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
+                                                    Email Address
                                                 </FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} type='email' id='emailAddress' />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='principal'
+                                        control={form.control}
+                                        rules={{
+                                            required: 'Principal Name is required',
+                                            maxLength: {
+                                                value: MAX_NAME_LENGTH,
+                                                message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                            },
+                                            minLength: {
+                                                value: MIN_NAME_LENGTH,
+                                                message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                            },
+                                            validate: (value) => {
+                                                const trimmed = value.trim();
+                                                if (value !== trimmed) {
+                                                    return 'Principal Name does not allow leading or trailing spaces';
+                                                }
+                                                return true;
+                                            },
+                                        }}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel htmlFor='principal'>Principal Name</FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} id='principal' />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='firstName'
+                                        control={form.control}
+                                        rules={{
+                                            required: 'First Name is required',
+                                            maxLength: {
+                                                value: MAX_NAME_LENGTH,
+                                                message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                            },
+                                            minLength: {
+                                                value: MIN_NAME_LENGTH,
+                                                message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                            },
+                                            validate: (value) => {
+                                                const trimmed = value.trim();
+                                                if (value !== trimmed) {
+                                                    return 'First Name does not allow leading or trailing spaces';
+                                                }
+                                                return true;
+                                            },
+                                        }}
+                                        render={({ field }) => (
+                                            <>
+                                                <FormItem>
+                                                    <FormLabel htmlFor='firstName'>First Name</FormLabel>
+                                                    <FormControl>
+                                                        <Input {...field} id='firstName' />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            </>
+                                        )}
+                                    />
+                                </div>
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='lastName'
+                                        control={form.control}
+                                        rules={{
+                                            required: 'Last Name is required',
+                                            maxLength: {
+                                                value: MAX_NAME_LENGTH,
+                                                message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                            },
+                                            minLength: {
+                                                value: MIN_NAME_LENGTH,
+                                                message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                            },
+                                            validate: (value) => {
+                                                const trimmed = value.trim();
+                                                if (value !== trimmed) {
+                                                    return 'Last Name does not allow leading or trailing spaces';
+                                                }
+                                                return true;
+                                            },
+                                        }}
+                                        render={({ field }) => (
+                                            <>
+                                                <FormItem>
+                                                    <FormLabel htmlFor='lastName'>Last Name</FormLabel>
+                                                    <FormControl>
+                                                        <Input {...field} id='lastName' />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            </>
+                                        )}
+                                    />
+                                </div>
+
+                                <>
+                                    <div className='mb-4'>
+                                        <FormItem>
+                                            <FormLabel htmlFor='authenticationMethod'>Authentication Method</FormLabel>
+                                            <Select
+                                                onValueChange={(value) => setAuthenticationMethod(value as string)}
+                                                value={authenticationMethod}>
+                                                <FormControl className='mt-2'>
+                                                    <SelectTrigger id='authenticationMethod'>
+                                                        <SelectValue placeholder={authenticationMethod} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectPortal>
+                                                    <SelectContent>
+                                                        <SelectItem value='password'>Username / Password</SelectItem>
+                                                        {listSSOProvidersQuery.data &&
+                                                            listSSOProvidersQuery.data?.length > 0 && (
+                                                                <SelectItem value='sso'>
+                                                                    Single Sign-On (SSO)
+                                                                </SelectItem>
+                                                            )}
+                                                    </SelectContent>
+                                                </SelectPortal>
+                                            </Select>
+                                        </FormItem>
+                                    </div>
+
+                                    {authenticationMethod === 'password' ? (
+                                        <>
+                                            <div className='mb-4'>
+                                                <FormField
+                                                    name='password'
+                                                    control={form.control}
+                                                    defaultValue=''
+                                                    rules={{
+                                                        required: 'Password is required',
+                                                        minLength: {
+                                                            value: 12,
+                                                            message: 'Password must be at least 12 characters long',
+                                                        },
+                                                        pattern: {
+                                                            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+                                                            message:
+                                                                'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (!@#$%^&*)',
+                                                        },
+                                                        maxLength: {
+                                                            value: 1000,
+                                                            message: 'Password must be less than 1000 characters',
+                                                        },
+                                                    }}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel htmlFor='password'>Initial Password</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} id='password' type='password' />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className='mb-4'>
+                                                <FormField
+                                                    name='needsPasswordReset'
+                                                    control={form.control}
+                                                    defaultValue={false}
+                                                    render={({ field }) => (
+                                                        <div className='flex flex-row items-center'>
+                                                            <FormItem className='flex flex-row my-3'>
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                        {...field}
+                                                                        id='needsPasswordReset'
+                                                                        onClick={(checked: any) =>
+                                                                            field.onChange(checked)
+                                                                        }
+                                                                        checked={field.value}
+                                                                        //value={form.watch('needsPasswordReset').valueOf()}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormLabel
+                                                                    htmlFor='needsPasswordReset'
+                                                                    className='pl-2'>
+                                                                    Force Password Reset?
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        </div>
+                                                    )}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className='mb-4'>
+                                            <FormItem>
+                                                <FormLabel htmlFor='sso'>SSO Provider</FormLabel>
                                                 <Select
-                                                    data-testid='create-user-dialog_select-authentication-method'
                                                     onValueChange={(value) => setAuthenticationMethod(value as string)}
                                                     value={authenticationMethod}>
                                                     <FormControl>
-                                                        <SelectTrigger id='authenticationMethod'>
-                                                            <SelectValue placeholder={authenticationMethod} />
+                                                        <SelectTrigger id='sso'>
+                                                            <SelectValue placeholder='SSO Provider' />
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectPortal>
                                                         <SelectContent>
-                                                            <SelectItem value='password'>
-                                                                Username / Password
-                                                            </SelectItem>
-                                                            {listSSOProvidersQuery.data &&
-                                                                listSSOProvidersQuery.data?.length > 0 && (
-                                                                    <SelectItem value='sso'>
-                                                                        Single Sign-On (SSO)
+                                                            {listSSOProvidersQuery.data?.map(
+                                                                (SSOProvider: SSOProvider) => (
+                                                                    <SelectItem
+                                                                        value={SSOProvider.id.toString()}
+                                                                        key={SSOProvider.id}>
+                                                                        {SSOProvider.name}
                                                                     </SelectItem>
-                                                                )}
+                                                                )
+                                                            )}
                                                         </SelectContent>
                                                     </SelectPortal>
                                                 </Select>
                                             </FormItem>
-                                        </Grid>
-
-                                        {authenticationMethod === 'password' ? (
-                                            <>
-                                                <Grid item xs={12}>
-                                                    <FormField
-                                                        name='password'
-                                                        control={form.control}
-                                                        defaultValue=''
-                                                        rules={{
-                                                            required: 'Password is required',
-                                                            minLength: {
-                                                                value: 12,
-                                                                message: 'Password must be at least 12 characters long',
-                                                            },
-                                                            pattern: {
-                                                                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
-                                                                message:
-                                                                    'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (!@#$%^&*)',
-                                                            },
-                                                            maxLength: {
-                                                                value: 1000,
-                                                                message: 'Password must be less than 1000 characters',
-                                                            },
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel htmlFor='password'>
-                                                                    Initial Password
-                                                                </FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} id='password' type='password' />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs={12}>
-                                                    <FormField
-                                                        name='needsPasswordReset'
-                                                        control={form.control}
-                                                        defaultValue={false}
-                                                        render={({ field }) => (
-                                                            <div className='flex flex-row items-center'>
-                                                                <FormItem className='flex flex-row my-3'>
-                                                                    <FormControl>
-                                                                        <Checkbox
-                                                                            {...field}
-                                                                            id='needsPasswordReset'
-                                                                            onClick={(checked: any) =>
-                                                                                field.onChange(checked)
-                                                                            }
-                                                                            checked={field.value}
-                                                                            //value={form.watch('needsPasswordReset').valueOf()}
-                                                                        />
-                                                                    </FormControl>
-                                                                    <Label
-                                                                        htmlFor='needsPasswordReset'
-                                                                        className='pl-2'>
-                                                                        Force Password Reset?
-                                                                    </Label>
-                                                                </FormItem>
-                                                            </div>
-                                                        )}
-                                                    />
-                                                </Grid>
-                                            </>
-                                        ) : (
-                                            <Grid item xs={12}>
-                                                <FormItem>
-                                                    <FormLabel htmlFor='sso'>SSO Provider</FormLabel>
-                                                    <Select
-                                                        onValueChange={(value) =>
-                                                            setAuthenticationMethod(value as string)
-                                                        }
-                                                        value={authenticationMethod}>
-                                                        <FormControl>
-                                                            <SelectTrigger id='sso'>
-                                                                <SelectValue placeholder='SSO Provider' />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectPortal>
-                                                            <SelectContent>
-                                                                {listSSOProvidersQuery.data?.map(
-                                                                    (SSOProvider: SSOProvider) => (
-                                                                        <SelectItem
-                                                                            value={SSOProvider.id.toString()}
-                                                                            key={SSOProvider.id}>
-                                                                            {SSOProvider.name}
-                                                                        </SelectItem>
-                                                                    )
-                                                                )}
-                                                            </SelectContent>
-                                                        </SelectPortal>
-                                                    </Select>
-                                                </FormItem>
-                                            </Grid>
-                                        )}
-                                    </>
-
-                                    <Grid item xs={12}>
-                                        <FormField
-                                            name='roles.0'
-                                            control={form.control}
-                                            defaultValue={1}
-                                            rules={{
-                                                required: 'Role is required',
-                                            }}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <div className='flex row'>
-                                                        <FormLabel className='mr-2' htmlFor='role'>
-                                                            Role
-                                                        </FormLabel>
-                                                        <Tooltip
-                                                            tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
-                                                            contentProps={{
-                                                                className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <Select
-                                                        {...form.register('roles')}
-                                                        data-testid='create-user-dialog_role'
-                                                        onValueChange={(field) => {
-                                                            form.setValue('roles', [Number(field)]);
-                                                            setSelectedRoleValue([Number([field])]);
-                                                        }}
-                                                        value={String(selectedRoleValue)}>
-                                                        <FormControl>
-                                                            <SelectTrigger id='role'>
-                                                                <SelectValue placeholder={field.value} />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectPortal>
-                                                            <SelectContent>
-                                                                {getRolesQuery.isLoading ? (
-                                                                    <SelectItem value={'loading'}>
-                                                                        Loading...
-                                                                    </SelectItem>
-                                                                ) : (
-                                                                    getRolesQuery.data?.map((role: Role) => (
-                                                                        <SelectItem
-                                                                            className='hover:cursor-pointer'
-                                                                            key={role.id}
-                                                                            value={role.id.toString()}>
-                                                                            {role.name}
-                                                                        </SelectItem>
-                                                                    ))
-                                                                )}
-                                                            </SelectContent>
-                                                        </SelectPortal>
-                                                    </Select>
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </Grid>
-                                    {!!form.formState.errors.root?.generic && (
-                                        <Grid item xs={12}>
-                                            <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
-                                        </Grid>
+                                        </div>
                                     )}
-                                </Grid>
+                                </>
+
+                                <div className=''>
+                                    <FormField
+                                        name='roles.0'
+                                        control={form.control}
+                                        defaultValue={1}
+                                        rules={{
+                                            required: 'Role is required',
+                                        }}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className='flex row'>
+                                                    <FormLabel className='mr-2' htmlFor='role'>
+                                                        Role
+                                                    </FormLabel>
+                                                    <Tooltip
+                                                        tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                        contentProps={{
+                                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                        }}
+                                                    />
+                                                </div>
+                                                <Select
+                                                    {...form.register('roles')}
+                                                    data-testid='create-user-dialog_role'
+                                                    onValueChange={(field) => {
+                                                        form.setValue('roles', [Number(field)]);
+                                                        setSelectedRoleValue([Number([field])]);
+                                                    }}
+                                                    value={String(selectedRoleValue)}>
+                                                    <FormControl>
+                                                        <SelectTrigger id='role'>
+                                                            <SelectValue placeholder={field.value} />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectPortal>
+                                                        <SelectContent>
+                                                            {getRolesQuery.isLoading ? (
+                                                                <SelectItem value={'loading'}>Loading...</SelectItem>
+                                                            ) : (
+                                                                getRolesQuery.data?.map((role: Role) => (
+                                                                    <SelectItem
+                                                                        className='hover:cursor-pointer'
+                                                                        key={role.id}
+                                                                        value={role.id.toString()}>
+                                                                        {role.name}
+                                                                    </SelectItem>
+                                                                ))
+                                                            )}
+                                                        </SelectContent>
+                                                    </SelectPortal>
+                                                </Select>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                {!!form.formState.errors.root?.generic && (
+                                    <div className='mb-4'>
+                                        <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                    </div>
+                                )}
                             </div>
                             <DialogActions className='mt-8 flex justify-end gap-4'>
                                 <DialogClose asChild>
@@ -507,16 +490,19 @@ const CreateUserForm: React.FC<{
                                     className='flex flex-col'
                                     data-testid='create-user-dialog_environments-checkboxes-dialog'>
                                     <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
-                                        <div className={'ml-4 mt-2 flex items-center'}>
-                                            <FontAwesomeIcon icon={faSearch} size='lg' color='inherit' />
-                                            <TextField
-                                                autoFocus
+                                        <div
+                                            className={
+                                                'ml-4 mt-2 flex items-center flex justify-center items-center relative'
+                                            }>
+                                            <FontAwesomeIcon className={''} icon={faSearch} />
+                                            <Input
                                                 className={'w-full ml-3'}
-                                                label='Search'
+                                                id='search'
+                                                type='text'
+                                                placeholder='Search'
                                                 onChange={(e) => {
                                                     setSearchInput(e.target.value);
                                                 }}
-                                                variant='standard'
                                             />
                                         </div>
                                         <div
@@ -536,11 +522,11 @@ const CreateUserForm: React.FC<{
                                                             value={true}
                                                             //value={form.watch({ ''}).valueOf()} // environment_control_list.all_environments
                                                         />
-                                                        <Label
+                                                        <FormLabel
                                                             htmlFor='allEnvironments'
                                                             className='ml-3 w-full cursor-pointer'>
                                                             Select All Environments
-                                                        </Label>
+                                                        </FormLabel>
                                                     </FormItem>
                                                 )}
                                             />
@@ -572,11 +558,11 @@ const CreateUserForm: React.FC<{
                                                                             }
                                                                             value={item.name} // environment_control_list.environments
                                                                         />
-                                                                        <Label
+                                                                        <FormLabel
                                                                             htmlFor='environments'
                                                                             className='mr-3 w-full cursor-pointer'>
                                                                             {item.name}
-                                                                        </Label>
+                                                                        </FormLabel>
                                                                     </FormItem>
                                                                 )}
                                                             />

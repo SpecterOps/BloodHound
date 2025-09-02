@@ -17,6 +17,7 @@
 import {
     Button,
     Card,
+    Checkbox,
     DialogActions,
     DialogClose,
     DialogDescription,
@@ -37,14 +38,16 @@ import {
     Skeleton,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { Alert, Grid } from '@mui/material';
-import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert } from '@mui/material';
+import { Environment, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
 import { apiClient } from '../../utils';
-import UserFormEnvironmentSelector from '../CreateUserForm/UserFormEnvironmentSelector';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
@@ -150,7 +153,7 @@ const UpdateUserFormInner: React.FC<{
     open?: boolean;
     onSubmit: (user: UpdateUserRequestForm) => void;
     roles?: Role[];
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
+    showEnvironmentAccessControls?: boolean;
     SSOProviders?: SSOProvider[];
 }> = ({
     error,
@@ -170,19 +173,43 @@ const UpdateUserFormInner: React.FC<{
         },
     });
 
-    //const [authenticationMethod, setAuthenticationMethod] = useState(initialData.SSOProviderId ? 'sso' : 'password');
     const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
-
-    const rolesWithEnvironmentPermissions =
-        selectedRoleValue.toString() === '2' || selectedRoleValue.toString() === '3';
-
+    const roleInputValue = form.watch('roles');
+    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
     const authenticationMethod = form.watch('authenticationMethod');
 
-    /*
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('SSOProviderId'))
     )?.config?.auto_provision?.role_provision;
-    */
+
+    const { data: availableEnvironments } = useAvailableEnvironments();
+
+    const [searchInput, setSearchInput] = useState<string>('');
+    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
+
+    const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
+        environment.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+
+    const handleSelectAllChange = (checked: any) => {
+        if (checked) {
+            const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map((item) => item.id);
+            setSelectedEnvironments(returnMappedEnvironments || []);
+        } else {
+            setSelectedEnvironments([]);
+        }
+    };
+
+    const handleItemChange = (itemId: any, checked: any) => {
+        if (checked) {
+            setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
+        } else {
+            setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
+        }
+    };
+
+    const isAllSelected =
+        selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
@@ -215,150 +242,153 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
+    console.log(hasSelectedSelf);
+
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
-                <div className='flex gap-x-4 justify-center'>
-                    <Card className=' p-6 rounded shadow max-w-[600px]'>
+                <div className='flex gap-x-4 justify-center h-fit'>
+                    <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
-                        <div className='flex flex-col' data-testid='update-user-dialog_dialog-content'>
-                            <Grid container spacing={2} className='min-h-[650px] mt-4'>
-                                <Grid item xs={12}>
-                                    <FormField
-                                        control={form.control}
-                                        name='emailAddress'
-                                        rules={{
-                                            required: 'Email Address is required',
-                                            maxLength: {
-                                                value: MAX_EMAIL_LENGTH,
-                                                message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
-                                            },
-                                            pattern: {
-                                                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                                message: 'Please follow the example@domain.com format',
-                                            },
-                                        }}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
-                                                    Email Address
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} id='emailAddress' type='email' />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </Grid>
+                        <div className='flex flex-col  mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+                            <div className='mb-4'>
+                                <FormField
+                                    control={form.control}
+                                    name='emailAddress'
+                                    rules={{
+                                        required: 'Email Address is required',
+                                        maxLength: {
+                                            value: MAX_EMAIL_LENGTH,
+                                            message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
+                                        },
+                                        pattern: {
+                                            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                            message: 'Please follow the example@domain.com format',
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
+                                                Email Address
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='emailAddress' type='email' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-                                <Grid item xs={12}>
-                                    <FormField
-                                        name='principal'
-                                        control={form.control}
-                                        rules={{
-                                            required: 'Principal Name is required',
-                                            maxLength: {
-                                                value: MAX_NAME_LENGTH,
-                                                message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                            },
-                                            minLength: {
-                                                value: MIN_NAME_LENGTH,
-                                                message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                            },
-                                            validate: (value) => {
-                                                const trimmed = value.trim();
-                                                if (value !== trimmed) {
-                                                    return 'Principal Name does not allow leading or trailing spaces';
-                                                }
-                                                return true;
-                                            },
-                                        }}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel aria-labelledby='principal' htmlFor='principal'>
-                                                    Principal Name
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} id='principal' />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </Grid>
+                            <div className='mb-4'>
+                                <FormField
+                                    name='principal'
+                                    control={form.control}
+                                    rules={{
+                                        required: 'Principal Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Principal Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel aria-labelledby='principal' htmlFor='principal'>
+                                                Principal Name
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='principal' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-                                <Grid item xs={12}>
-                                    <FormField
-                                        name='firstName'
-                                        control={form.control}
-                                        rules={{
-                                            required: 'First Name is required',
-                                            maxLength: {
-                                                value: MAX_NAME_LENGTH,
-                                                message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                            },
-                                            minLength: {
-                                                value: MIN_NAME_LENGTH,
-                                                message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                            },
-                                            validate: (value) => {
-                                                const trimmed = value.trim();
-                                                if (value !== trimmed) {
-                                                    return 'First Name does not allow leading or trailing spaces';
-                                                }
-                                                return true;
-                                            },
-                                        }}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel htmlFor='firstName'>First Name</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} id='firstName' />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </Grid>
+                            <div className='mb-4'>
+                                <FormField
+                                    name='firstName'
+                                    control={form.control}
+                                    rules={{
+                                        required: 'First Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'First Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel htmlFor='firstName'>First Name</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='firstName' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-                                <Grid item xs={12}>
-                                    <FormField
-                                        name='lastName'
-                                        control={form.control}
-                                        rules={{
-                                            required: 'Last Name is required',
-                                            maxLength: {
-                                                value: MAX_NAME_LENGTH,
-                                                message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
-                                            },
-                                            minLength: {
-                                                value: MIN_NAME_LENGTH,
-                                                message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
-                                            },
-                                            validate: (value) => {
-                                                const trimmed = value.trim();
-                                                if (value !== trimmed) {
-                                                    return 'Last Name does not allow leading or trailing spaces';
-                                                }
-                                                return true;
-                                            },
-                                        }}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel htmlFor='lastName'>Last Name</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} id='lastName' />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </Grid>
+                            <div className='mb-4'>
+                                <FormField
+                                    name='lastName'
+                                    control={form.control}
+                                    rules={{
+                                        required: 'Last Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Last Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel htmlFor='lastName'>Last Name</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='lastName' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-                                <>
-                                    <Grid item xs={12}>
+                            <>
+                                {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for authentication method if use selected self */}
+                                {!hasSelectedSelf && (
+                                    <div className='mb-4'>
                                         <FormField
                                             name='authenticationMethod'
                                             control={form.control}
@@ -367,10 +397,7 @@ const UpdateUserFormInner: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel
-                                                        //hidden={hasSelectedSelf} // TODO: KEEP
-                                                        htmlFor='authenticationMethod'
-                                                        className='mb-4'>
+                                                    <FormLabel htmlFor='authenticationMethod' className=''>
                                                         Authentication Method
                                                     </FormLabel>
 
@@ -380,9 +407,7 @@ const UpdateUserFormInner: React.FC<{
                                                             form.setValue('authenticationMethod', field);
                                                             //setAuthenticationMethod(field);
                                                         }}
-                                                        value={field.value}
-                                                        //hidden={hasSelectedSelf} //todo: keep'
-                                                    >
+                                                        value={field.value}>
                                                         <FormControl className='pointer-events-auto'>
                                                             <SelectTrigger className='mt-3' id='authenticationMethod'>
                                                                 <SelectValue
@@ -410,60 +435,58 @@ const UpdateUserFormInner: React.FC<{
                                                 </FormItem>
                                             )}
                                         />
-                                    </Grid>
+                                    </div>
+                                )}
 
-                                    {authenticationMethod === 'sso' && (
-                                        <Grid item xs={12}>
-                                            <FormField
-                                                name='SSOProviderId'
-                                                control={form.control}
-                                                rules={{
-                                                    required: 'SSO Provider is required',
-                                                }}
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel
-                                                            htmlFor='sso'
-                                                            id='SSOProviderId-label'
-                                                            //hidden={hasSelectedSelf}
-                                                        >
-                                                            SSO Provider
-                                                        </FormLabel>
+                                {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for sso select if use selected self */}
+                                {authenticationMethod === 'sso' && !hasSelectedSelf && (
+                                    <div className='mb-4'>
+                                        <FormField
+                                            name='SSOProviderId'
+                                            control={form.control}
+                                            rules={{
+                                                required: 'SSO Provider is required',
+                                            }}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel htmlFor='sso' id='SSOProviderId-label'>
+                                                        SSO Provider
+                                                    </FormLabel>
 
-                                                        <Select
-                                                            onValueChange={(field: any) => {
-                                                                form.setValue('authenticationMethod', field.value);
-                                                                //setAuthenticationMethod(field.value);
-                                                            }}
-                                                            value={field.value}
-                                                            //hidden={hasSelectedSelf}
-                                                        >
-                                                            <FormControl>
-                                                                <SelectTrigger className='mt-3' id='sso'>
-                                                                    <SelectValue placeholder='SSO Provider' />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectPortal>
-                                                                <SelectContent>
-                                                                    {SSOProviders?.map((SSOProvider: SSOProvider) => (
-                                                                        <SelectItem
-                                                                            role='option'
-                                                                            value={SSOProvider.id.toString()}
-                                                                            key={SSOProvider.id}>
-                                                                            {SSOProvider.name}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </SelectPortal>
-                                                        </Select>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </Grid>
-                                    )}
-                                </>
+                                                    <Select
+                                                        onValueChange={(field: any) => {
+                                                            form.setValue('authenticationMethod', field.value);
+                                                            //setAuthenticationMethod(field.value);
+                                                        }}
+                                                        value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger className='mt-3' id='sso'>
+                                                                <SelectValue placeholder='SSO Provider' />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectPortal>
+                                                            <SelectContent>
+                                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
+                                                                    <SelectItem
+                                                                        role='option'
+                                                                        value={SSOProvider.id.toString()}
+                                                                        key={SSOProvider.id}>
+                                                                        {SSOProvider.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </SelectPortal>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </>
 
-                                <Grid item xs={12}>
+                            {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for role select if use selected self */}
+                            {!hasSelectedSelf && (
+                                <div className='mb-4'>
                                     <FormField
                                         name='roles.0'
                                         control={form.control}
@@ -494,7 +517,12 @@ const UpdateUserFormInner: React.FC<{
                                                             //open
                                                             value={String(selectedRoleValue)}>
                                                             <FormControl className='pointer-events-auto'>
-                                                                <SelectTrigger className='mt-3' id='role'>
+                                                                <SelectTrigger
+                                                                    className='mt-3'
+                                                                    id='role'
+                                                                    disabled={
+                                                                        selectedSSOProviderHasRoleProvisionEnabled
+                                                                    }>
                                                                     <SelectValue placeholder={field.value} />
                                                                 </SelectTrigger>
                                                             </FormControl>
@@ -513,17 +541,22 @@ const UpdateUserFormInner: React.FC<{
                                                             </SelectPortal>
                                                         </Select>
                                                     </FormControl>
+                                                    {selectedSSOProviderHasRoleProvisionEnabled && (
+                                                        <FormMessage id='role-helper-text'>
+                                                            SSO Provider has enabled role provision.
+                                                        </FormMessage>
+                                                    )}
                                                 </FormItem>
                                             </>
                                         )}
                                     />
-                                </Grid>
-                                {!!form.formState.errors.root?.generic && (
-                                    <Grid item xs={12}>
-                                        <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
-                                    </Grid>
-                                )}
-                            </Grid>
+                                </div>
+                            )}
+                            {!!form.formState.errors.root?.generic && (
+                                <div>
+                                    <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                </div>
+                            )}
                         </div>
                         <DialogActions className='mt-8 flex justify-end gap-4'>
                             <DialogClose asChild>
@@ -545,8 +578,94 @@ const UpdateUserFormInner: React.FC<{
                             </Button>
                         </DialogActions>
                     </Card>
-                    {showEnvironmentAccessControls && rolesWithEnvironmentPermissions && (
-                        <UserFormEnvironmentSelector />
+                    {showEnvironmentAccessControls && selectedRole && (
+                        <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
+                            <DialogTitle>Environmental Access Control</DialogTitle>
+                            <div
+                                className='flex flex-col'
+                                data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                                <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
+                                    <div
+                                        className={
+                                            'ml-4 mt-2 flex items-center flex justify-center items-center relative'
+                                        }>
+                                        <FontAwesomeIcon className={''} icon={faSearch} />
+                                        <Input
+                                            className={'w-full ml-3'}
+                                            id='search'
+                                            type='text'
+                                            placeholder='Search'
+                                            onChange={(e) => {
+                                                setSearchInput(e.target.value);
+                                            }}
+                                        />
+                                    </div>
+                                    <div
+                                        className='flex flex-row ml-4 mt-6 mb-2 items-center'
+                                        data-testid='create-user-dialog_environments-checkboxes-select-all'>
+                                        <FormField
+                                            name='allEnvironments'
+                                            control={form.control}
+                                            defaultValue={false}
+                                            render={({ field }) => (
+                                                <FormItem className='flex flex-row items-center'>
+                                                    <Checkbox
+                                                        {...field}
+                                                        checked={isAllSelected}
+                                                        id='allEnvironments'
+                                                        onCheckedChange={handleSelectAllChange}
+                                                        value={true}
+                                                        //value={form.watch({ ''}).valueOf()} // environment_control_list.all_environments
+                                                    />
+                                                    <FormLabel
+                                                        htmlFor='allEnvironments'
+                                                        className='ml-3 w-full cursor-pointer'>
+                                                        Select All Environments
+                                                    </FormLabel>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <div
+                                        className='flex flex-col'
+                                        data-testid='update-user-dialog_environments-checkboxes'>
+                                        {filteredEnvironments &&
+                                            filteredEnvironments?.map((item) => {
+                                                return (
+                                                    <div
+                                                        className='flex justify-start items-center ml-5'
+                                                        data-testid='create-user-dialog_environments-checkbox'>
+                                                        <FormField
+                                                            name='environments'
+                                                            control={form.control}
+                                                            defaultValue={false}
+                                                            render={({ field }) => (
+                                                                <FormItem className='flex flex-row items-center'>
+                                                                    <Checkbox
+                                                                        {...field}
+                                                                        checked={selectedEnvironments.includes(item.id)}
+                                                                        className='m-3'
+                                                                        id='environments'
+                                                                        onCheckedChange={(checked) =>
+                                                                            handleItemChange(item.id, checked)
+                                                                        }
+                                                                        value={item.name} // environment_control_list.environments
+                                                                    />
+                                                                    <FormLabel
+                                                                        htmlFor='environments'
+                                                                        className='mr-3 w-full cursor-pointer'>
+                                                                        {item.name}
+                                                                    </FormLabel>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
                     )}
                 </div>
             </form>
