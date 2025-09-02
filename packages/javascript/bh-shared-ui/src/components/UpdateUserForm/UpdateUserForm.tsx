@@ -242,8 +242,6 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
-    console.log(showEnvironmentAccessControls + ' IS SHOWENVACCESSCONTROLS');
-
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>

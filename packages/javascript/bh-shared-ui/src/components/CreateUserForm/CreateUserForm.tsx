@@ -362,7 +362,7 @@ const CreateUserForm: React.FC<{
                                                                             field.onChange(checked)
                                                                         }
                                                                         checked={field.value}
-                                                                        //value={form.watch('needsPasswordReset').valueOf()}
+                                                                        value={form.watch('needsPasswordReset')}
                                                                     />
                                                                 </FormControl>
                                                                 <FormLabel
@@ -462,8 +462,8 @@ const CreateUserForm: React.FC<{
                                         )}
                                     />
                                 </div>
-                                {!!form.formState.errors.root?.generic && (
-                                    <div className='mb-4'>
+                                {form.formState.errors.root?.generic && (
+                                    <div>
                                         <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
                                     </div>
                                 )}
@@ -519,8 +519,7 @@ const CreateUserForm: React.FC<{
                                                             checked={isAllSelected}
                                                             id='allEnvironments'
                                                             onCheckedChange={handleSelectAllChange}
-                                                            value={true}
-                                                            //value={form.watch({ ''}).valueOf()} // environment_control_list.all_environments
+                                                            value={form.watch('emailAddress')} // TODO: environment_control_list.all_environments
                                                         />
                                                         <FormLabel
                                                             htmlFor='allEnvironments'
