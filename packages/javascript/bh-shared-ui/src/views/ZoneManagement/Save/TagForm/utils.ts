@@ -50,10 +50,10 @@ export const useTagFormUtils = () => {
         navigate(`${location.pathname}/${tagId}/selector`);
     };
 
-    const handleUpdateNavigate = () => navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${tagId}`);
+    const handleUpdateNavigate = () => navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${tagKind}/${tagId}/details`);
 
     const handleDeleteNavigate = () =>
-        navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${tagKind === 'tier' ? topTagId : ownedId}`);
+        navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${tagKind}/${tagKind === 'tier' ? topTagId : ownedId}/details`);
 
     const showAnalysisToggle = privilegeZoneAnalysisEnabled && isUpdateTierLocation && tierId !== topTagId?.toString();
 

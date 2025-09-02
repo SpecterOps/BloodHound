@@ -37,7 +37,7 @@ import CopyMenuItem from './CopyMenuItem';
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => {} }) => {
+}> = ({ contextMenu, onClose = () => { } }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();
@@ -159,7 +159,7 @@ const ContextMenu: FC<{
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/tier/${tierZeroAssetGroup!.id}`}
+                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/tier/${tierZeroAssetGroup!.id}/details`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
@@ -175,7 +175,7 @@ const ContextMenu: FC<{
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/label/${ownedAssetGroup!.id}`}
+                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/label/${ownedAssetGroup!.id}/details`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                     />,
                 ]}

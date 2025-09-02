@@ -63,11 +63,11 @@ const SearchBar: React.FC = () => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${item.id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${tagKind}/${item.id}/details`);
         } else if (isSelector(item)) {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${item.asset_group_tag_id}/selector/${item.id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${tagKind}/${item.asset_group_tag_id}/details/selector/${item.id}`);
         } else {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${tagKind}/${item.asset_group_tag_id}/member/${item.id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${tagKind}/${item.asset_group_tag_id}/details/member/${item.id}`);
         }
     };
 

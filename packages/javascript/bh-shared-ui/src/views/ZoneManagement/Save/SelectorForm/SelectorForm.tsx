@@ -185,7 +185,7 @@ const SelectorForm: FC = () => {
             });
 
             navigate(
-                `${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`
+                `${ROUTE_ZONE_MANAGEMENT_ROOT}/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}/details`
             );
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);

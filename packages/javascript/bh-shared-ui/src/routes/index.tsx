@@ -31,6 +31,7 @@ export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS = `/label/:labelId/det
 export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS = '/details/label/:labelId/member/:memberId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS =
     '/details/label/:labelId/selector/:selectorId/member/:memberId';
+
 export const ROUTE_ZONE_MANAGEMENT_SAVE = '/save';
 export const ROUTE_ZONE_MANAGEMENT_UPDATE_TIER = '/zone/:tierId/save';
 export const ROUTE_ZONE_MANAGEMENT_UPDATE_LABEL = '/label/:labelId/save';

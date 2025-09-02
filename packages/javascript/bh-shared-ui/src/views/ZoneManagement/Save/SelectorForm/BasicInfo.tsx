@@ -92,7 +92,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             setDeleteDialogOpen(false);
 
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details`);
         } catch (error) {
             handleError(error, 'deleting', 'selector', addNotification);
         }

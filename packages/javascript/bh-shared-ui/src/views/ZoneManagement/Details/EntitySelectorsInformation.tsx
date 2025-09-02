@@ -63,14 +63,14 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`);
         },
         [tagId, navigate, labelId]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/save/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector/${id}`);
         },
         [tagId, navigate, labelId]
     );
