@@ -65,6 +65,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         setQueryId(undefined);
     };
 
+    console.log('listSections');
+
+    console.log(listSections);
+
     const groupedQueries = groupBy(listSections, 'category');
     const handleDelete = (id: number) => {
         setQueryId(id);

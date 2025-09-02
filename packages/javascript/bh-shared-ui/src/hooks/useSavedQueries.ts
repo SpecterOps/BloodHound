@@ -24,9 +24,10 @@ import {
     UpdateUserQueryRequest,
 } from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { GenericQueryOptions } from '../utils';
 import { apiClient } from '../utils/api';
 export const savedQueryKeys = {
-    all: ['savedQueries'] as const,
+    all: () => ['savedQueries'],
     permissions: ['permissions'] as const,
 };
 
@@ -107,15 +108,21 @@ export const useDeleteQueryPermissions = () => {
     });
 };
 
-export const useSavedQueries = (scope: QueryScope = QueryScope.ALL) => {
-    return useQuery(savedQueryKeys.all, ({ signal }) => getSavedQueries(scope, { signal }));
+export const useSavedQueries = (
+    scope: QueryScope = QueryScope.ALL,
+    queryOptions?: GenericQueryOptions<SavedQuery[]>
+) => {
+    return useQuery({
+        queryKey: savedQueryKeys.all(),
+        queryFn: ({ signal }) => getSavedQueries(scope, { signal }),
+        ...queryOptions,
+    });
 };
-
 export const useCreateSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(createSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+            queryClient.invalidateQueries(savedQueryKeys.all());
         },
     });
 };
@@ -124,7 +131,7 @@ export const useUpdateSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(updateSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+            queryClient.invalidateQueries(savedQueryKeys.all());
         },
     });
 };
@@ -133,7 +140,7 @@ export const useDeleteSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(deleteSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+            queryClient.invalidateQueries(savedQueryKeys.all());
         },
     });
 };
@@ -142,7 +149,7 @@ export const useImportSavedQuery = () => {
     const queryClient = useQueryClient();
     return useMutation(importSavedQuery, {
         onSuccess: () => {
-            queryClient.invalidateQueries(savedQueryKeys.all);
+            queryClient.invalidateQueries(savedQueryKeys.all());
         },
     });
 };

@@ -13,34 +13,40 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { QueryScope, SavedQuery } from 'js-client-library';
 import { useMemo } from 'react';
-import { useQuery } from 'react-query';
 import { CommonSearches as prebuiltSearchListAGI } from '../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../commonSearchesAGT';
 import { useFeatureFlag, useSavedQueries } from '../../hooks';
 import { QueryLineItem } from '../../types';
-import { apiClient } from '../../utils';
+import { useSelf } from '../useSelf';
 
 export const usePrebuiltQueries = () => {
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
-    const userQueries = useSavedQueries();
-    const getSelf = useQuery(['getSelf'], ({ signal }) => apiClient.getSelf({ signal }).then((res) => res.data.data));
 
-    //Get master list of queries to validate against
-    const savedLineItems: QueryLineItem[] =
-        userQueries.data?.map((query) => ({
-            name: query.name,
-            description: query.description,
-            query: query.query,
-            canEdit: query.user_id === getSelf.data?.id,
-            id: query.id,
-            user_id: query.user_id,
-        })) || [];
+    const { getSelfId } = useSelf();
+    const { data: selfId } = getSelfId;
 
+    const queryDataMapper = (data: SavedQuery[]) => {
+        return (
+            data?.map((query: SavedQuery) => ({
+                name: query.name,
+                description: query.description,
+                query: query.query,
+                canEdit: query.user_id === selfId,
+                id: query.id,
+                user_id: query.user_id,
+            })) || []
+        );
+    };
+
+    const userQueries = useSavedQueries(QueryScope.ALL, {
+        select: queryDataMapper,
+    });
     const savedQueries = {
         category: 'Saved Queries',
         subheader: '',
-        queries: savedLineItems,
+        queries: userQueries.data || [],
     };
     const queryList = tierFlag?.enabled
         ? [...prebuiltSearchListAGT, savedQueries]
