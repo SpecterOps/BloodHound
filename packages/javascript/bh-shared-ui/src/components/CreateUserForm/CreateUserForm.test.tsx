@@ -103,8 +103,6 @@ describe('CreateUserForm', () => {
 
         const queryClient = setUpQueryClient(mockState);
 
-        //render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
-
         render(
             <Dialog open={true}>
                 <CreateUserForm {...DEFAULT_PROPS} />
@@ -118,7 +116,6 @@ describe('CreateUserForm', () => {
             timeout: 30000,
         });
 
-        //const button = await screen.getByRole('button', { name: 'Save' });
         await user.type(screen.getByLabelText(/principal/i), ' ');
         await user.type(screen.getByLabelText(/first/i), ' ');
         await user.type(screen.getByLabelText(/last/i), ' ');

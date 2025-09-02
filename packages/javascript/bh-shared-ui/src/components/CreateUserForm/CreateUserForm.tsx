@@ -93,6 +93,16 @@ const CreateUserForm: React.FC<{
 
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
+    const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
+
+    const handleCheckedChange = (checked: boolean | 'indeterminate') => {
+        setNeedsPasswordReset(checked === true);
+        if (checked === true) {
+            form.setValue('needsPasswordReset', true);
+        } else {
+            form.setValue('needsPasswordReset', false);
+        }
+    };
 
     const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
@@ -351,18 +361,14 @@ const CreateUserForm: React.FC<{
                                                     name='needsPasswordReset'
                                                     control={form.control}
                                                     defaultValue={false}
-                                                    render={({ field }) => (
+                                                    render={() => (
                                                         <div className='flex flex-row items-center'>
                                                             <FormItem className='flex flex-row my-3'>
                                                                 <FormControl>
                                                                     <Checkbox
-                                                                        {...field}
                                                                         id='needsPasswordReset'
-                                                                        onClick={(checked: any) =>
-                                                                            field.onChange(checked)
-                                                                        }
-                                                                        checked={field.value}
-                                                                        value={form.watch('needsPasswordReset')}
+                                                                        onCheckedChange={handleCheckedChange}
+                                                                        checked={needsPasswordReset}
                                                                     />
                                                                 </FormControl>
                                                                 <FormLabel
@@ -510,16 +516,14 @@ const CreateUserForm: React.FC<{
                                             data-testid='create-user-dialog_environments-checkboxes-select-all'>
                                             <FormField
                                                 name='allEnvironments'
-                                                control={form.control}
+                                                //control={form.control}
                                                 defaultValue={false}
-                                                render={({ field }) => (
+                                                render={() => (
                                                     <FormItem className='flex flex-row items-center'>
                                                         <Checkbox
-                                                            {...field}
                                                             checked={isAllSelected}
                                                             id='allEnvironments'
                                                             onCheckedChange={handleSelectAllChange}
-                                                            value={form.watch('emailAddress')} // TODO: environment_control_list.all_environments
                                                         />
                                                         <FormLabel
                                                             htmlFor='allEnvironments'
