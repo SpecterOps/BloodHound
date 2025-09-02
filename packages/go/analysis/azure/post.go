@@ -858,7 +858,23 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 		)
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			roleAssignments.PrincipalsWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
+			roleAssignments.UsersWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
+				nextJob := analysis.CreatePostRelationshipJob{
+					FromID: graph.ID(nextID),
+					ToID:   innerGroupID,
+					Kind:   azure.AddMembers,
+				}
+
+				return channels.Submit(ctx, outC, nextJob)
+			})
+
+			return nil
+		}); err != nil {
+			slog.Error(fmt.Sprintf("Failed to submit azure add members AddMemberAllGroupsTargetRoles post processing job: %v", err))
+		}
+
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			roleAssignments.ServicePrincipalsWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
 				nextJob := analysis.CreatePostRelationshipJob{
 					FromID: graph.ID(nextID),
 					ToID:   innerGroupID,
@@ -881,7 +897,31 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 					return err
 				}
 			} else if !isRoleAssignable {
-				roleAssignments.PrincipalsWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
+				roleAssignments.UsersWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
+					nextJob := analysis.CreatePostRelationshipJob{
+						FromID: graph.ID(nextID),
+						ToID:   innerGroupID,
+						Kind:   azure.AddMembers,
+					}
+
+					return channels.Submit(ctx, outC, nextJob)
+				})
+			}
+
+			return nil
+		}); err != nil {
+			slog.Error(fmt.Sprintf("Failed to submit azure add members AddMemberGroupNotRoleAssignableTargetRoles post processing job: %v", err))
+		}
+
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
+				if graph.IsErrPropertyNotFound(err) {
+					slog.WarnContext(ctx, fmt.Sprintf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole))
+				} else {
+					return err
+				}
+			} else if !isRoleAssignable {
+				roleAssignments.ServicePrincipalsWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: graph.ID(nextID),
 						ToID:   innerGroupID,
