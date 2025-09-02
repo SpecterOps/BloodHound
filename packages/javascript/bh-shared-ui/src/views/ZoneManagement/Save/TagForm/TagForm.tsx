@@ -74,6 +74,7 @@ export const TagForm: FC = () => {
         isLabelLocation,
         isUpdateTierLocation,
         showAnalysisToggle,
+        isTierLocation,
         showDeleteButton,
         formTitle,
         tagKind,
@@ -361,7 +362,8 @@ export const TagForm: FC = () => {
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
+                                {isTierLocation && (
+                                    <FormField
                                     control={form.control}
                                     name='require_certify'
                                     render={({ field }) => (
@@ -380,6 +382,8 @@ export const TagForm: FC = () => {
                                         </FormItem>
                                     )}
                                 />
+                                )}
+                                
                                 {showAnalysisToggle && (
                                     <FormField
                                         control={form.control}
