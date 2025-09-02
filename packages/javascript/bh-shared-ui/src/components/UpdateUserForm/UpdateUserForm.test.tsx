@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,478 +13,671 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Dialog } from '@bloodhoundenterprise/doodleui';
-import userEvent from '@testing-library/user-event';
-import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { render, screen } from '../../test-utils';
-import { setUpQueryClient } from '../../utils';
-import UpdateUserForm from './UpdateUserForm';
 
-const DEFAULT_PROPS = {
-    onSubmit: () => vi.fn,
-    userId: '2d92f310-68fc-402a-915a-438a57f81342',
-    hasSelectedSelf: false,
-    isLoading: false,
-    error: false,
-    showEnvironmentAccessControls: false,
-    open: true,
+import {
+    Button,
+    Card,
+    Checkbox,
+    DialogActions,
+    DialogClose,
+    DialogDescription,
+    DialogTitle,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+    Input,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectPortal,
+    SelectTrigger,
+    SelectValue,
+    Skeleton,
+    Tooltip,
+} from '@bloodhoundenterprise/doodleui';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Alert } from '@mui/material';
+import { Environment, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useQuery } from 'react-query';
+import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
+import { apiClient } from '../../utils';
+
+export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
+
+const UpdateUserForm: React.FC<{
+    onSubmit: (user: UpdateUserRequestForm) => void;
+    userId: string;
+    hasSelectedSelf: boolean;
+    isLoading: boolean;
+    error: any;
+    open?: boolean;
+    showEnvironmentAccessControls?: boolean;
+}> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
+    const getUserQuery = useQuery(
+        ['getUser', userId],
+        ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
+        {
+            cacheTime: 0,
+        }
+    );
+
+    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
+        apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
+    );
+
+    const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
+        apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
+    );
+
+    if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
+        return (
+            <>
+                <Skeleton />
+                <DialogActions>
+                    <DialogClose asChild>
+                        <Button
+                            data-testid='update-user-dialog_button-cancel'
+                            disabled={isLoading}
+                            role='button'
+                            type='button'
+                            variant='tertiary'>
+                            Cancel
+                        </Button>
+                    </DialogClose>
+                </DialogActions>
+            </>
+        );
+    }
+
+    if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
+        return (
+            <>
+                <DialogDescription>
+                    <div>User not found.</div>
+                </DialogDescription>
+                <DialogActions>
+                    <DialogClose asChild>
+                        <Button
+                            data-testid='update-user-dialog_button-cancel'
+                            disabled={isLoading}
+                            role='button'
+                            type='button'
+                            variant='tertiary'>
+                            Close
+                        </Button>
+                    </DialogClose>
+                </DialogActions>
+            </>
+        );
+    }
+
+    return (
+        <UpdateUserFormInner
+            initialData={{
+                emailAddress: getUserQuery.data.email_address || '',
+                principal: getUserQuery.data.principal_name || '',
+                firstName: getUserQuery.data.first_name || '',
+                lastName: getUserQuery.data.last_name || '',
+                SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
+                roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
+                /*
+                environment_control_list: {
+                    environments: getUserQuery.data.environment_control_list.environments || [],
+                    all_environments: getUserQuery.data.environment_control_list.all_environments,
+                },
+                */
+            }}
+            error={error}
+            hasSelectedSelf={hasSelectedSelf}
+            isLoading={isLoading}
+            onSubmit={onSubmit}
+            roles={getRolesQuery.data}
+            SSOProviders={listSSOProvidersQuery.data}
+            showEnvironmentAccessControls={showEnvironmentAccessControls}
+        />
+    );
 };
 
-const MOCK_ROLES = [
-    {
-        name: 'Administrator',
-        description: 'Can manage users, clients, and application configuration',
-        permissions: [],
-        id: 1,
-        created_at: '2025-04-24T20:28:45.676055Z',
-        updated_at: '2025-04-24T20:28:45.676055Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
+const UpdateUserFormInner: React.FC<{
+    error: any;
+    hasSelectedSelf: boolean;
+    initialData: UpdateUserRequestForm;
+    isLoading: boolean;
+    open?: boolean;
+    onSubmit: (user: UpdateUserRequestForm) => void;
+    roles?: Role[];
+    showEnvironmentAccessControls?: boolean;
+    SSOProviders?: SSOProvider[];
+}> = ({
+    error,
+    hasSelectedSelf,
+    initialData,
+    isLoading,
+    onSubmit,
+    //open,
+    roles,
+    showEnvironmentAccessControls,
+    SSOProviders,
+}) => {
+    const form = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
+        defaultValues: {
+            ...initialData,
+            authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',
         },
-    },
-    {
-        name: 'User',
-        description: 'Can read data, modify asset group memberships',
-        permissions: [],
-        id: 2,
-        created_at: '2025-04-24T20:28:45.676055Z',
-        updated_at: '2025-04-24T20:28:45.676055Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
-        },
-    },
-    {
-        name: 'Read-Only',
-        description: 'Used for integrations',
-        permissions: [],
-        id: 3,
-        created_at: '2025-04-24T20:28:45.676055Z',
-        updated_at: '2025-04-24T20:28:45.676055Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
-        },
-    },
-    {
-        name: 'Upload-Only',
-        description: 'Used for data collection clients, can post data but cannot read data',
-        permissions: [],
-        id: 4,
-        created_at: '2025-04-24T20:28:45.676055Z',
-        updated_at: '2025-04-24T20:28:45.676055Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
-        },
-    },
-    {
-        name: 'Power User',
-        description: 'Can upload data, manage clients, and perform any action a User can',
-        permissions: [],
-        id: 5,
-        created_at: '2025-04-24T20:28:45.676055Z',
-        updated_at: '2025-04-24T20:28:45.676055Z',
-        deleted_at: {
-            Time: '0001-01-01T00:00:00Z',
-            Valid: false,
-        },
-    },
-];
-
-const MOCK_USER = [
-    {
-        data: {
-            sso_provider_id: null,
-            AuthSecret: {
-                digest_method: 'argon2',
-                expires_at: '2025-08-17T22:14:58.489177Z',
-                totp_activated: false,
-                id: 1,
-                created_at: '2025-05-19T22:14:58.490455Z',
-                updated_at: '2025-05-19T22:14:58.490455Z',
-                deleted_at: {
-                    Time: '0001-01-01T00:00:00Z',
-                    Valid: false,
-                },
-            },
-            roles: [
-                {
-                    name: 'Administrator',
-                    description: 'Can manage users, clients, and application configuration',
-                    permissions: [
-                        {
-                            authority: 'app',
-                            name: 'ReadAppConfig',
-                            id: 1,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'app',
-                            name: 'WriteAppConfig',
-                            id: 2,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'risks',
-                            name: 'GenerateReport',
-                            id: 3,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'risks',
-                            name: 'ManageRisks',
-                            id: 4,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
-                            name: 'CreateToken',
-                            id: 5,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
-                            name: 'ManageAppConfig',
-                            id: 6,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
-                            name: 'ManageProviders',
-                            id: 7,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
-                            name: 'ManageSelf',
-                            id: 8,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'auth',
-                            name: 'ManageUsers',
-                            id: 9,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'clients',
-                            name: 'Manage',
-                            id: 10,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'clients',
-                            name: 'Tasking',
-                            id: 11,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'collection',
-                            name: 'ManageJobs',
-                            id: 12,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'graphdb',
-                            name: 'Read',
-                            id: 13,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'graphdb',
-                            name: 'Write',
-                            id: 14,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'saved_queries',
-                            name: 'Read',
-                            id: 15,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'saved_queries',
-                            name: 'Write',
-                            id: 16,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'clients',
-                            name: 'Read',
-                            id: 17,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'db',
-                            name: 'Wipe',
-                            id: 18,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'graphdb',
-                            name: 'Mutate',
-                            id: 19,
-                            created_at: '2025-05-19T22:14:58.188368Z',
-                            updated_at: '2025-05-19T22:14:58.188368Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                        {
-                            authority: 'graphdb',
-                            name: 'Ingest',
-                            id: 20,
-                            created_at: '2025-05-19T22:14:58.311151Z',
-                            updated_at: '2025-05-19T22:14:58.311151Z',
-                            deleted_at: {
-                                Time: '0001-01-01T00:00:00Z',
-                                Valid: false,
-                            },
-                        },
-                    ],
-                    id: 1,
-                    created_at: '2025-05-19T22:14:58.188368Z',
-                    updated_at: '2025-05-19T22:14:58.188368Z',
-                    deleted_at: {
-                        Time: '0001-01-01T00:00:00Z',
-                        Valid: false,
-                    },
-                },
-            ],
-            first_name: 'BloodHound',
-            last_name: 'Dev',
-            email_address: 'spam@example.com',
-            principal_name: 'admin',
-            last_login: '2025-05-30T15:00:41.511369Z',
-            is_disabled: false,
-            eula_accepted: true,
-            id: '2d92f310-68fc-402a-915a-438a57f81342',
-            created_at: '2025-05-19T22:14:58.489615Z',
-            updated_at: '2025-05-19T22:16:51.805983Z',
-            deleted_at: {
-                Time: '0001-01-01T00:00:00Z',
-                Valid: false,
-            },
-        },
-    },
-];
-
-describe('UpdateUserForm', () => {
-    it('should not allow the input to exceed the allowed length', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
-
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} />
-            </Dialog>,
-            { queryClient }
-        );
-
-        const user = userEvent.setup();
-
-        const button = screen.getByRole('button', { name: 'Save' });
-
-        await user.click(screen.getByLabelText(/email/i));
-        await user.paste('a'.repeat(309) + '@domain.com');
-
-        await user.click(screen.getByLabelText(/principal/i));
-        await user.paste('a'.repeat(1001));
-
-        await user.click(screen.getByLabelText(/first/i));
-        await user.paste('a'.repeat(1001));
-
-        await user.click(screen.getByLabelText(/last/i));
-        await user.paste('a'.repeat(1001));
-
-        await user.click(button);
-
-        expect(
-            await screen.findByText(`Email address must be less than ${MAX_EMAIL_LENGTH} characters`)
-        ).toBeInTheDocument();
-        expect(
-            await screen.findByText(`Principal Name must be less than ${MAX_NAME_LENGTH} characters`)
-        ).toBeInTheDocument();
-        expect(
-            await screen.findByText(`First Name must be less than ${MAX_NAME_LENGTH} characters`)
-        ).toBeInTheDocument();
-        expect(
-            await screen.findByText(`Last Name must be less than ${MAX_NAME_LENGTH} characters`)
-        ).toBeInTheDocument();
     });
 
-    it('should not have less characters than the minimum requirement', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-                isLoading: false,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-                isLoading: false,
-            },
-            { key: ['listSSOProviders'], data: null, isLoading: false },
-        ];
-        const queryClient = setUpQueryClient(mockState);
+    const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
+    const roleInputValue = form.watch('roles');
+    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
+    const authenticationMethod = form.watch('authenticationMethod');
 
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} />
-            </Dialog>,
-            { queryClient }
-        );
+    const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
+        ({ id }) => id === Number(form.watch('SSOProviderId'))
+    )?.config?.auto_provision?.role_provision;
 
-        const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+    const { data: availableEnvironments } = useAvailableEnvironments();
 
-        await user.type(screen.getByLabelText(/principal/i), 'a');
-        await user.type(screen.getByLabelText(/first/i), 'a');
-        await user.type(screen.getByLabelText(/last/i), 'a');
-        await user.click(button);
+    const [searchInput, setSearchInput] = useState<string>('');
+    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
 
-        expect(
-            await screen.findByText(`Principal Name must be ${MIN_NAME_LENGTH} characters or more`)
-        ).toBeInTheDocument();
-        expect(await screen.findByText(`First Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument();
-        expect(await screen.findByText(`Last Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument();
-    });
+    const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
+        environment.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
 
-    it('should not allow leading or trailing empty spaces', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
+    const handleSelectAllChange = (checked: any) => {
+        if (checked) {
+            const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map((item) => item.id);
+            setSelectedEnvironments(returnMappedEnvironments || []);
+        } else {
+            setSelectedEnvironments([]);
+        }
+    };
 
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} />
-            </Dialog>,
-            { queryClient }
-        );
+    const handleItemChange = (itemId: any, checked: any) => {
+        if (checked) {
+            setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
+        } else {
+            setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
+        }
+    };
 
-        const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+    const isAllSelected =
+        selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
-        await user.type(screen.getByLabelText(/principal/i), ' dd');
-        await user.type(screen.getByLabelText(/first/i), ' bsg!');
-        await user.type(screen.getByLabelText(/last/i), 'asdfw ');
-        await user.click(button);
+    useEffect(() => {
+        if (authenticationMethod === 'password') {
+            form.setValue('SSOProviderId', undefined);
+        }
 
-        expect(await screen.findByText('Principal Name does not allow leading or trailing spaces')).toBeInTheDocument();
-        expect(await screen.findByText('First Name does not allow leading or trailing spaces')).toBeInTheDocument();
-        expect(await screen.findByText('Last Name does not allow leading or trailing spaces')).toBeInTheDocument();
-    });
-});
+        if (error) {
+            const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
+            if (error.response?.status === 400) {
+                if (errMsg.includes('role provision enabled')) {
+                    form.setError('root.generic', {
+                        type: 'custom',
+                        message: 'Cannot modify user roles for role provision enabled SSO providers.',
+                    });
+                }
+            } else if (error.response?.status === 409) {
+                if (errMsg.includes('principal name')) {
+                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else if (errMsg.includes('email')) {
+                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
+                } else {
+                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                }
+            } else {
+                form.setError('root.generic', {
+                    type: 'custom',
+                    message: 'An unexpected error occurred. Please try again.',
+                });
+            }
+        }
+    }, [authenticationMethod, form, form.setValue, error, form.setError]);
+
+    return (
+        <Form {...form}>
+            <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
+                <div className='flex gap-x-4 justify-center max-h-[800px]'>
+                    <Card className='p-6 rounded shadow max-w-[600px] w-full'>
+                        <DialogTitle>{'Edit User'}</DialogTitle>
+
+                        <div className='flex flex-col mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+                            <div className='mb-4'>
+                                <FormField
+                                    control={form.control}
+                                    name='emailAddress'
+                                    rules={{
+                                        required: 'Email Address is required',
+                                        maxLength: {
+                                            value: MAX_EMAIL_LENGTH,
+                                            message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
+                                        },
+                                        pattern: {
+                                            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                            message: 'Please follow the example@domain.com format',
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='emailAddress'>
+                                                Email Address
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='emailAddress' type='email' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className='mb-4'>
+                                <FormField
+                                    name='principal'
+                                    control={form.control}
+                                    rules={{
+                                        required: 'Principal Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Principal Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='principal'>
+                                                Principal Name
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='principal' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className='mb-4'>
+                                <FormField
+                                    name='firstName'
+                                    control={form.control}
+                                    rules={{
+                                        required: 'First Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'First Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='firstName'>
+                                                First Name
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='firstName' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className='mb-4'>
+                                <FormField
+                                    name='lastName'
+                                    control={form.control}
+                                    rules={{
+                                        required: 'Last Name is required',
+                                        maxLength: {
+                                            value: MAX_NAME_LENGTH,
+                                            message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                        },
+                                        minLength: {
+                                            value: MIN_NAME_LENGTH,
+                                            message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Last Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='lastName'>
+                                                Last Name
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} id='lastName' />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <>
+                                {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for authentication method if use selected self */}
+                                {!hasSelectedSelf && (
+                                    <div className='mb-4'>
+                                        <FormField
+                                            name='authenticationMethod'
+                                            control={form.control}
+                                            rules={{
+                                                required: 'Authentication Method is required',
+                                            }}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel
+                                                        className='font-medium !text-sm'
+                                                        htmlFor='authenticationMethod'>
+                                                        Authentication Method
+                                                    </FormLabel>
+
+                                                    <Select
+                                                        defaultValue={field.value}
+                                                        onValueChange={(field: any) => {
+                                                            form.setValue('authenticationMethod', field);
+                                                            //setAuthenticationMethod(field);
+                                                        }}
+                                                        value={field.value}>
+                                                        <FormControl className='pointer-events-auto'>
+                                                            <SelectTrigger
+                                                                variant='underlined'
+                                                                className='bg-transparent'
+                                                                id='authenticationMethod'>
+                                                                <SelectValue
+                                                                    placeholder={
+                                                                        authenticationMethod === 'password'
+                                                                            ? 'Username / Password'
+                                                                            : 'Single Sign-On (SSO)'
+                                                                    }
+                                                                />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectPortal>
+                                                            <SelectContent>
+                                                                <SelectItem value='password'>
+                                                                    Username / Password
+                                                                </SelectItem>
+                                                                {SSOProviders && SSOProviders.length > 0 && (
+                                                                    <SelectItem value='sso'>
+                                                                        Single Sign-On (SSO)
+                                                                    </SelectItem>
+                                                                )}
+                                                            </SelectContent>
+                                                        </SelectPortal>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for sso select if use selected self */}
+                                {authenticationMethod === 'sso' && !hasSelectedSelf && (
+                                    <div className='mb-4'>
+                                        <FormField
+                                            name='SSOProviderId'
+                                            control={form.control}
+                                            rules={{
+                                                required: 'SSO Provider is required',
+                                            }}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel
+                                                        className='font-medium !text-sm'
+                                                        htmlFor='sso'
+                                                        id='SSOProviderId-label'>
+                                                        SSO Provider
+                                                    </FormLabel>
+
+                                                    <Select
+                                                        onValueChange={(field: any) => {
+                                                            form.setValue('authenticationMethod', field.value);
+                                                        }}
+                                                        value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger
+                                                                variant='underlined'
+                                                                className='bg-transparent'
+                                                                id='sso'>
+                                                                <SelectValue placeholder='SSO Provider' />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectPortal>
+                                                            <SelectContent>
+                                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
+                                                                    <SelectItem
+                                                                        role='option'
+                                                                        value={SSOProvider.id.toString()}
+                                                                        key={SSOProvider.id}>
+                                                                        {SSOProvider.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </SelectPortal>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </>
+
+                            {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for role select if use selected self */}
+                            {!hasSelectedSelf && (
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='roles.0'
+                                        control={form.control}
+                                        defaultValue={1}
+                                        rules={{
+                                            required: 'Role is required',
+                                        }}
+                                        render={({ field }) => (
+                                            <>
+                                                <FormItem>
+                                                    <div className='flex row'>
+                                                        <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
+                                                            Role
+                                                        </FormLabel>
+                                                        <Tooltip
+                                                            tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                            contentProps={{
+                                                                className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <FormControl>
+                                                        <Select
+                                                            onValueChange={(field) => {
+                                                                form.setValue('roles', [Number(field)]);
+                                                                setSelectedRoleValue([Number(field)]);
+                                                            }}
+                                                            value={String(selectedRoleValue)}>
+                                                            <FormControl className='pointer-events-auto'>
+                                                                <SelectTrigger
+                                                                    variant='underlined'
+                                                                    className='bg-transparent'
+                                                                    id='role'
+                                                                    disabled={
+                                                                        selectedSSOProviderHasRoleProvisionEnabled
+                                                                    }>
+                                                                    <SelectValue placeholder={field.value} />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectPortal>
+                                                                <SelectContent>
+                                                                    {roles?.map((role: Role) => (
+                                                                        <SelectItem
+                                                                            className='hover:cursor-pointer'
+                                                                            key={role.id}
+                                                                            role='option'
+                                                                            value={role.id.toString()}>
+                                                                            {role.name}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </SelectPortal>
+                                                        </Select>
+                                                    </FormControl>
+                                                    {selectedSSOProviderHasRoleProvisionEnabled && (
+                                                        <FormMessage id='role-helper-text'>
+                                                            SSO Provider has enabled role provision.
+                                                        </FormMessage>
+                                                    )}
+                                                </FormItem>
+                                            </>
+                                        )}
+                                    />
+                                </div>
+                            )}
+                            {!!form.formState.errors.root?.generic && (
+                                <div>
+                                    <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                </div>
+                            )}
+                        </div>
+                        <DialogActions className='mt-8 flex justify-end gap-4'>
+                            <DialogClose asChild>
+                                <Button
+                                    data-testid='update-user-dialog_button-cancel'
+                                    disabled={isLoading}
+                                    role='button'
+                                    type='button'
+                                    variant='tertiary'>
+                                    Cancel
+                                </Button>
+                            </DialogClose>
+                            <Button
+                                data-testid='update-user-dialog_button-save'
+                                disabled={isLoading}
+                                role='button'
+                                type='submit'>
+                                Save
+                            </Button>
+                        </DialogActions>
+                    </Card>
+                    {showEnvironmentAccessControls && selectedRole && (
+                        <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
+                            <DialogTitle>Environmental Access Control</DialogTitle>
+                            <div
+                                className='flex flex-col h-full pb-6'
+                                data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                                <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
+                                    <div className='border border-solid border-color-[#CACFD3] flex'>
+                                        <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
+                                        <Input
+                                            variant='underlined'
+                                            className='w-full ml-3'
+                                            id='search'
+                                            type='text'
+                                            placeholder='Search'
+                                            onChange={(e) => {
+                                                setSearchInput(e.target.value);
+                                            }}
+                                        />
+                                    </div>
+                                    <div
+                                        className='flex flex-row ml-4 mt-6 mb-2 items-center'
+                                        data-testid='create-user-dialog_all-environments-checkbox'>
+                                        <FormField
+                                            name='allEnvironments'
+                                            control={form.control}
+                                            defaultValue={false}
+                                            render={() => (
+                                                <FormItem className='flex flex-row items-center'>
+                                                    <Checkbox
+                                                        checked={isAllSelected}
+                                                        id='allEnvironments'
+                                                        onCheckedChange={handleSelectAllChange} // environment_control_list.all_environments
+                                                    />
+                                                    <FormLabel
+                                                        className='ml-3 w-full cursor-pointer font-medium !text-sm'
+                                                        htmlFor='allEnvironments'>
+                                                        Select All Environments
+                                                    </FormLabel>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <div
+                                        className='flex flex-col'
+                                        data-testid='update-user-dialog_environments-checkboxes'>
+                                        {filteredEnvironments &&
+                                            filteredEnvironments?.map((item) => {
+                                                return (
+                                                    <div
+                                                        className='flex justify-start items-center ml-5'
+                                                        data-testid='create-user-dialog_environments-checkbox'>
+                                                        <FormField
+                                                            name='environments'
+                                                            control={form.control}
+                                                            defaultValue={false}
+                                                            render={() => (
+                                                                <FormItem className='flex flex-row items-center'>
+                                                                    <Checkbox
+                                                                        checked={selectedEnvironments.includes(item.id)}
+                                                                        className='m-2'
+                                                                        id='environments'
+                                                                        onCheckedChange={
+                                                                            (checked) =>
+                                                                                handleItemChange(item.id, checked)
+                                                                            // environment_control_list.environments
+                                                                        }
+                                                                    />
+                                                                    <FormLabel
+                                                                        className=' w-full cursor-pointer ml-3 w-full cursor-pointer font-medium !text-sm'
+                                                                        htmlFor='environments'>
+                                                                        {item.name}
+                                                                    </FormLabel>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
+                </div>
+            </form>
+        </Form>
+    );
+};
+
+export default UpdateUserForm;

@@ -242,14 +242,24 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
+    console.log(hasSelectedSelf);
+
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
+<<<<<<< HEAD
                 <div className='flex gap-x-4 justify-center max-h-[800px]'>
                     <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
                         <div className='flex flex-col mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+=======
+                <div className='flex gap-x-4 justify-center h-fit'>
+                    <Card className='p-6 rounded shadow max-w-[600px] w-full'>
+                        <DialogTitle>{'Edit User'}</DialogTitle>
+
+                        <div className='flex flex-col  mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                             <div className='mb-4'>
                                 <FormField
                                     control={form.control}
@@ -267,7 +277,11 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
+<<<<<<< HEAD
                                             <FormLabel className='font-medium !text-sm' htmlFor='emailAddress'>
+=======
+                                            <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                 Email Address
                                             </FormLabel>
                                             <FormControl>
@@ -303,7 +317,11 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
+<<<<<<< HEAD
                                             <FormLabel className='font-medium !text-sm' htmlFor='principal'>
+=======
+                                            <FormLabel aria-labelledby='principal' htmlFor='principal'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                 Principal Name
                                             </FormLabel>
                                             <FormControl>
@@ -339,9 +357,13 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
+<<<<<<< HEAD
                                             <FormLabel className='font-medium !text-sm' htmlFor='firstName'>
                                                 First Name
                                             </FormLabel>
+=======
+                                            <FormLabel htmlFor='firstName'>First Name</FormLabel>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                             <FormControl>
                                                 <Input {...field} id='firstName' />
                                             </FormControl>
@@ -375,9 +397,13 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
+<<<<<<< HEAD
                                             <FormLabel className='font-medium !text-sm' htmlFor='lastName'>
                                                 Last Name
                                             </FormLabel>
+=======
+                                            <FormLabel htmlFor='lastName'>Last Name</FormLabel>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                             <FormControl>
                                                 <Input {...field} id='lastName' />
                                             </FormControl>
@@ -399,9 +425,13 @@ const UpdateUserFormInner: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
+<<<<<<< HEAD
                                                     <FormLabel
                                                         className='font-medium !text-sm'
                                                         htmlFor='authenticationMethod'>
+=======
+                                                    <FormLabel htmlFor='authenticationMethod' className=''>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                         Authentication Method
                                                     </FormLabel>
 
@@ -456,16 +486,21 @@ const UpdateUserFormInner: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
+<<<<<<< HEAD
                                                     <FormLabel
                                                         className='font-medium !text-sm'
                                                         htmlFor='sso'
                                                         id='SSOProviderId-label'>
+=======
+                                                    <FormLabel htmlFor='sso' id='SSOProviderId-label'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                         SSO Provider
                                                     </FormLabel>
 
                                                     <Select
                                                         onValueChange={(field: any) => {
                                                             form.setValue('authenticationMethod', field.value);
+<<<<<<< HEAD
                                                         }}
                                                         value={field.value}>
                                                         <FormControl>
@@ -473,6 +508,13 @@ const UpdateUserFormInner: React.FC<{
                                                                 variant='underlined'
                                                                 className='bg-transparent'
                                                                 id='sso'>
+=======
+                                                            //setAuthenticationMethod(field.value);
+                                                        }}
+                                                        value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger className='mt-3' id='sso'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                                 <SelectValue placeholder='SSO Provider' />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -529,8 +571,12 @@ const UpdateUserFormInner: React.FC<{
                                                             value={String(selectedRoleValue)}>
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
+<<<<<<< HEAD
                                                                     variant='underlined'
                                                                     className='bg-transparent'
+=======
+                                                                    className='mt-3'
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                                     id='role'
                                                                     disabled={
                                                                         selectedSSOProviderHasRoleProvisionEnabled
@@ -594,6 +640,7 @@ const UpdateUserFormInner: React.FC<{
                         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
                             <DialogTitle>Environmental Access Control</DialogTitle>
                             <div
+<<<<<<< HEAD
                                 className='flex flex-col h-full pb-6'
                                 data-testid='create-user-dialog_environments-checkboxes-dialog'>
                                 <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
@@ -602,6 +649,18 @@ const UpdateUserFormInner: React.FC<{
                                         <Input
                                             variant='underlined'
                                             className='w-full ml-3'
+=======
+                                className='flex flex-col'
+                                data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                                <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
+                                    <div
+                                        className={
+                                            'ml-4 mt-2 flex items-center flex justify-center items-center relative'
+                                        }>
+                                        <FontAwesomeIcon className={''} icon={faSearch} />
+                                        <Input
+                                            className={'w-full ml-3'}
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                             id='search'
                                             type='text'
                                             placeholder='Search'
@@ -612,11 +671,16 @@ const UpdateUserFormInner: React.FC<{
                                     </div>
                                     <div
                                         className='flex flex-row ml-4 mt-6 mb-2 items-center'
+<<<<<<< HEAD
                                         data-testid='create-user-dialog_all-environments-checkbox'>
+=======
+                                        data-testid='create-user-dialog_environments-checkboxes-select-all'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                         <FormField
                                             name='allEnvironments'
                                             control={form.control}
                                             defaultValue={false}
+<<<<<<< HEAD
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
@@ -627,6 +691,21 @@ const UpdateUserFormInner: React.FC<{
                                                     <FormLabel
                                                         className='ml-3 w-full cursor-pointer font-medium !text-sm'
                                                         htmlFor='allEnvironments'>
+=======
+                                            render={({ field }) => (
+                                                <FormItem className='flex flex-row items-center'>
+                                                    <Checkbox
+                                                        {...field}
+                                                        checked={isAllSelected}
+                                                        id='allEnvironments'
+                                                        onCheckedChange={handleSelectAllChange}
+                                                        value={true}
+                                                        //value={form.watch({ ''}).valueOf()} // environment_control_list.all_environments
+                                                    />
+                                                    <FormLabel
+                                                        htmlFor='allEnvironments'
+                                                        className='ml-3 w-full cursor-pointer'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                         Select All Environments
                                                     </FormLabel>
                                                 </FormItem>
@@ -646,6 +725,7 @@ const UpdateUserFormInner: React.FC<{
                                                             name='environments'
                                                             control={form.control}
                                                             defaultValue={false}
+<<<<<<< HEAD
                                                             render={() => (
                                                                 <FormItem className='flex flex-row items-center'>
                                                                     <Checkbox
@@ -661,6 +741,23 @@ const UpdateUserFormInner: React.FC<{
                                                                     <FormLabel
                                                                         className=' w-full cursor-pointer ml-3 w-full cursor-pointer font-medium !text-sm'
                                                                         htmlFor='environments'>
+=======
+                                                            render={({ field }) => (
+                                                                <FormItem className='flex flex-row items-center'>
+                                                                    <Checkbox
+                                                                        {...field}
+                                                                        checked={selectedEnvironments.includes(item.id)}
+                                                                        className='m-3'
+                                                                        id='environments'
+                                                                        onCheckedChange={(checked) =>
+                                                                            handleItemChange(item.id, checked)
+                                                                        }
+                                                                        value={item.name} // environment_control_list.environments
+                                                                    />
+                                                                    <FormLabel
+                                                                        htmlFor='environments'
+                                                                        className='mr-3 w-full cursor-pointer'>
+>>>>>>> f566203b8 (chore: forms update for create and update user)
                                                                         {item.name}
                                                                     </FormLabel>
                                                                 </FormItem>

@@ -27,7 +27,7 @@ const UpdateUserDialog: React.FC<{
     onExited?: () => void;
     onSave: (user: UpdateUserRequest) => Promise<any>;
     open?: boolean;
-    showEnvironmentAccessControls?: boolean; //TODO: required or not?
+    showEnvironmentAccessControls?: boolean;
     userId: string;
 }> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
     const handleOnSave = (user: UpdateUserRequestForm) => {
