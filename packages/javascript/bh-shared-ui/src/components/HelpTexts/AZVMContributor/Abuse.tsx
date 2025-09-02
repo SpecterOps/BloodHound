@@ -25,17 +25,17 @@ const Abuse: FC = () => {
             </Typography>
 
             <Typography variant='body2'>Via PowerZure:</Typography>
-            <Link target='_blank' rel='noopener' href='http://Invoke-AzureRunCommand'>
+            <Link target='_blank' rel='noopener noreferrer' href='http://Invoke-AzureRunCommand'>
                 Invoke-AzureRunCommand
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='http://Invoke-AzureRunMSBuild'>
+            <Link target='_blank' rel='noopener noreferrer' href='http://Invoke-AzureRunMSBuild'>
                 Invoke-AzureRunMSBuild
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#invoke-azurerunprogram'>
                 Invoke-AzureRunProgram
             </Link>

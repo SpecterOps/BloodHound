@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.netspi.com/attacking-azure-with-custom-script-extensions/'>
                 https://blog.netspi.com/attacking-azure-with-custom-script-extensions/
             </Link>

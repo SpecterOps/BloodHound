@@ -22,29 +22,29 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
                 https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
                 https://www.youtube.com/watch?v=z8thoG7gPd0
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.sixdub.net/?p=579'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://www.sixdub.net/?p=579'>
                 https://www.sixdub.net/?p=579
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4724'>
                 https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4724
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.thehacker.recipes/ad/movement/dacl/forcechangepassword'>
                 https://www.thehacker.recipes/ad/movement/dacl/forcechangepassword
             </Link>

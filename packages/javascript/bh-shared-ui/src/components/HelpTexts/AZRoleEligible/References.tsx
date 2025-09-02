@@ -22,37 +22,37 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/rest/api/authorization/role-eligibility-schedule-instances/get?view=rest-authorization-2020-10-01&tabs=HTTP'>
                 Role Eligibility Schedule Instances - Get - REST API (Azure Authorization)
             </Link>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roleeligibilityscheduleinstances?view=graph-rest-1.0&tabs=http'>
                 List roleEligibilityScheduleInstances - Microsoft Graph v1.0
             </Link>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/graph/api/policyroot-list-rolemanagementpolicies?view=graph-rest-1.0&tabs=http'>
                 List roleManagementPolicies - Microsoft Graph v1.0
             </Link>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/graph/api/policyroot-list-rolemanagementpolicyassignments?view=graph-rest-1.0&tabs=http'>
                 List roleManagementPolicyAssignments - Microsoft Graph v1.0
             </Link>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/graph/api/unifiedrolemanagementpolicyassignment-get?view=graph-rest-1.0&tabs=http'>
                 Get unifiedRoleManagementPolicyAssignment - Microsoft Graph v1.0
             </Link>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-apis'>
                 API concepts in Privileged Identity management - Microsoft Entra ID Governance
             </Link>
