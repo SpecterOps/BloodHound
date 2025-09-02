@@ -121,7 +121,7 @@ describe('DynamicDetails', () => {
             data: {
                 asset_group_tag_id: 9,
                 allow_disable: false,
-                auto_certify: true,
+                auto_certify: 1,
                 created_at: '2025-02-12T16:24:18.633Z',
                 created_by: 'Emery_Swift86@gmail.com',
                 description: 'North',
@@ -134,7 +134,7 @@ describe('DynamicDetails', () => {
                 updated_at: '2024-11-25T11:34:45.894Z',
                 updated_by: 'Demario_Corwin88@yahoo.com',
             },
-        } as unknown as UseQueryResult<AssetGroupTag | undefined>;
+        } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
         render(<DynamicDetails queryResult={testSelector} />);
 
@@ -155,7 +155,7 @@ describe('DynamicDetails', () => {
                 asset_group_tag_id: 9,
                 allow_disable: false,
                 id: 1,
-                auto_certify: false,
+                auto_certify: 2,
                 seeds: [{ type: SeedTypeObjectId, value: '1', selector_id: 1 }],
                 created_at: '2025-02-12T16:24:18.633Z',
                 created_by: 'Emery_Swift86@gmail.com',
