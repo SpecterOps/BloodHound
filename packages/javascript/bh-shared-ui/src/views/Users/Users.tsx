@@ -243,7 +243,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 </Paper>
             </PageWithTitle>
 
-            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog} data-testid='update-user-dialog'>
+            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
                 <DialogPortal>
                     <UpdateUserDialog
                         error={updateUserMutation.error}
