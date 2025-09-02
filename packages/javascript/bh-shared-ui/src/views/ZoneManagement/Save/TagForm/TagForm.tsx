@@ -35,12 +35,13 @@ import {
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+    AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
-    AssetGroupTag,
 } from 'js-client-library';
+import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
@@ -57,7 +58,6 @@ import { useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { handleError } from '../utils';
 import { useTagFormUtils } from './utils';
-import isEmpty from 'lodash/isEmpty';
 
 const MAX_NAME_LENGTH = 250;
 
@@ -98,14 +98,15 @@ export const TagForm: FC = () => {
         if (data === undefined) return formValues;
         const workingCopy = { ...formValues };
         const diffed: Partial<UpdateAssetGroupTagRequest> = {};
-    
+
         if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
         if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
         if (data.type !== workingCopy.type) diffed.type = workingCopy.type;
         if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
         if (data.require_certify != workingCopy.require_certify) diffed.require_certify = workingCopy.require_certify;
-        if (data.analysis_enabled !== workingCopy.analysis_enabled) diffed.analysis_enabled = workingCopy.analysis_enabled;
-    
+        if (data.analysis_enabled !== workingCopy.analysis_enabled)
+            diffed.analysis_enabled = workingCopy.analysis_enabled;
+
         return diffed;
     };
 
@@ -150,49 +151,46 @@ export const TagForm: FC = () => {
         [createTagMutation, addNotification, handleCreateNavigate, tagKind, tagKindDisplay, isLabelLocation]
     );
 
-    const handleUpdateTag = useCallback(
-        async () => {
-            try {
-                const diffedValues = diffValues(tagQuery.data, {...form.getValues()})
-                if (isEmpty(diffedValues)) {
-                    addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    });
-                    return;
-                }
-
-                const updatedValues = { ...diffedValues };
-
-                if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
-
-                await updateTagMutation.mutateAsync({
-                    updatedValues,
-                    tagId,
+    const handleUpdateTag = useCallback(async () => {
+        try {
+            const diffedValues = diffValues(tagQuery.data, { ...form.getValues() });
+            if (isEmpty(diffedValues)) {
+                addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
-
-                addNotification(
-                    `${tagKindDisplay} was updated successfully!`,
-                    `zone-management_update-${tagKind}_success_${tagId}`,
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
-
-                handleUpdateNavigate();
-            } catch (error) {
-                handleError(error, 'updating', tagKind, addNotification);
+                return;
             }
-        },
-        [
-            tagId,
-            handleUpdateNavigate,
-            addNotification,
-            updateTagMutation,
-            tagKind,
-            tagKindDisplay,
-            privilegeZoneAnalysisEnabled,
-        ]
-    );
+
+            const updatedValues = { ...diffedValues };
+
+            if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+
+            await updateTagMutation.mutateAsync({
+                updatedValues,
+                tagId,
+            });
+
+            addNotification(
+                `${tagKindDisplay} was updated successfully!`,
+                `zone-management_update-${tagKind}_success_${tagId}`,
+                {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+
+            handleUpdateNavigate();
+        } catch (error) {
+            handleError(error, 'updating', tagKind, addNotification);
+        }
+    }, [
+        tagId,
+        handleUpdateNavigate,
+        addNotification,
+        updateTagMutation,
+        tagKind,
+        tagKindDisplay,
+        privilegeZoneAnalysisEnabled,
+    ]);
 
     const handleDeleteTag = useCallback(async () => {
         try {
@@ -364,26 +362,27 @@ export const TagForm: FC = () => {
                                 />
                                 {isTierLocation && (
                                     <FormField
-                                    control={form.control}
-                                    name='require_certify'
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Required Certification</FormLabel>
-                                            <FormControl>
-                                                <Switch
-                                                    {...field}
-                                                    data-testid='zone-management_save_tag-form_require_certify-toggle'
-                                                    checked={field.value || false}
-                                                    onCheckedChange={field.onChange}
-                                                    label = 'Enable this to mandate certification for all members within this zone'                                                 
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        control={form.control}
+                                        name='require_certify'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Required Certification</FormLabel>
+                                                <FormControl>
+                                                    <Switch
+                                                        {...field}
+                                                        value={field.value?.toString()}
+                                                        data-testid='zone-management_save_tag-form_require_certify-toggle'
+                                                        checked={field.value || false}
+                                                        onCheckedChange={field.onChange}
+                                                        label='Enable this to mandate certification for all members within this zone'
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                 )}
-                                
+
                                 {showAnalysisToggle && (
                                     <FormField
                                         control={form.control}

@@ -186,10 +186,10 @@ describe('Tag Form', () => {
         expect(descriptionInput).toHaveValue('');
 
         longWait(async () => {
-            const requireCertifySwitch = await screen.findByLabelText('Required Certification')
+            const requireCertifySwitch = await screen.findByLabelText('Required Certification');
             expect(requireCertifySwitch).toBeInTheDocument();
             expect(requireCertifySwitch).toHaveValue('off');
-        })
+        });
 
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
@@ -302,10 +302,10 @@ describe('Tag Form', () => {
         });
 
         longWait(async () => {
-            const requireCertifySwitch = await screen.findByLabelText('Required Certification')
+            const requireCertifySwitch = await screen.findByLabelText('Required Certification');
             expect(requireCertifySwitch).toBeInTheDocument();
             expect(requireCertifySwitch).toHaveValue('on');
-        })
+        });
 
         // The delete button should not render when editing T0
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
