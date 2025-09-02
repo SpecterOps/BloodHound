@@ -20,15 +20,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
-import { useQuery } from 'react-query';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../../commonSearchesAGT';
 import FeatureFlag from '../../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
 import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
+import { useSelf } from '../../../../hooks/useSelf';
 import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../../types';
-import { apiClient, cn } from '../../../../utils';
+import { cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
 import QuerySearchFilter from './QuerySearchFilter';
 
@@ -64,9 +64,8 @@ const InnerCommonSearches = ({
 
     const [filteredList, setFilteredList] = useState<QueryListSection[]>([]);
 
-    const getSelfQuery = useQuery(['getSelf'], ({ signal }) =>
-        apiClient.getSelf({ signal }).then((res) => res.data.data)
-    );
+    const { getSelfId } = useSelf();
+    const { data: selfId } = getSelfId;
 
     useEffect(() => {
         setFilteredList(queryList);
@@ -139,16 +138,14 @@ const InnerCommonSearches = ({
             filteredData = filteredData
                 .map((obj) => ({
                     ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) => item.user_id === getSelfQuery.data?.id),
+                    queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
                 }))
                 .filter((x) => x.queries.length);
         } else if (source && source === 'shared') {
             filteredData = filteredData
                 .map((obj) => ({
                     ...obj,
-                    queries: obj.queries.filter(
-                        (item: QueryLineItem) => item.id && item.user_id !== getSelfQuery.data?.id
-                    ),
+                    queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
                 }))
                 .filter((x) => x.queries.length);
         }
