@@ -92,7 +92,7 @@ const NoteComponent = ({ row }: any) => {
 };
 
 const HISTORY_COLS = [
-    ({ row }: any) => <div className='text-primary'>{row.original.target}</div>,
+    ({ row }: any) => <div>{row.original.target}</div>,
     ({ row }: any) => <div>{row.original.action.replace(/([A-Z])/g, ' $1').trim()}</div>,
     ({ row }: any) => <div>{row.original.date}</div>,
     ({ row }: any) => <div>{row.original.tagName}</div>,
@@ -100,14 +100,7 @@ const HISTORY_COLS = [
     ({ row }: any) => <NoteComponent row={row} />,
 ];
 
-// The height of the tabs and page description; where history log table starts
-const TABLE_Y_OFFSET = '255px';
-
-const TABLE_HEIGHT_OFFSET = '326px';
-
-// const QUERY_LIMIT = 1000;
-// const QUERY_SKIP = 0;
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 15;
 
 /** Generates an array of column data in the success or loading states */
 const getColumns = (isLoading: boolean) => {
@@ -116,12 +109,6 @@ const getColumns = (isLoading: boolean) => {
         cell: isLoading ? LOADING_COLS[index] : HISTORY_COLS[index],
     }));
 };
-
-// useInfiniteQuery(queryKey, ({ pageParam = 1 }) => fetchPage(pageParam), {
-//     ...options,
-//     getNextPageParam: (lastPage, allPages) => lastPage.nextCursor,
-//     getPreviousPageParam: (firstPage, allPages) => firstPage.prevCursor,
-// });
 
 const useAssetGroupTagHistoryQuery = (query?: string) => {
     const doSearch = query && query.length >= 3;
@@ -135,13 +122,12 @@ const useAssetGroupTagHistoryQuery = (query?: string) => {
     }>({
         queryKey: ['asset-group-tag-history', queryKey],
         queryFn: async ({ pageParam = 1 }) => {
-            // console.log({ pageParam });
-
             const skip = (pageParam - 1) * PAGE_SIZE;
 
             const result = doSearch
                 ? await apiClient.searchAssetGroupTagHistory(PAGE_SIZE, skip, query)
                 : await apiClient.getAssetGroupTagHistory(PAGE_SIZE, skip);
+
             return result.data;
         },
         getNextPageParam: (lastPage) => {
@@ -161,18 +147,6 @@ const useAssetGroupTagHistoryQuery = (query?: string) => {
             return firstPage.skip / PAGE_SIZE - 1;
         },
     });
-
-    // ** THIS IS THE ORIGINAL QUERY FOR REGULAR QUERY AND THE SEARCH BAR
-    //     return useQuery<AssetGroupTagsHistory>({
-    //         queryKey: ['asset-group-tag-history', queryKey],
-    //         queryFn: async () => {
-    //             const result = doSearch
-    //                 ? await apiClient.searchAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP, query)
-    //                 : await apiClient.getAssetGroupTagHistory(QUERY_LIMIT, QUERY_SKIP);
-
-    //             return result.data;
-    //         },
-    //     });
 };
 
 const HistoryContent = () => {
@@ -216,6 +190,7 @@ const HistoryContent = () => {
     }, [fetchMoreOnBottomReached]);
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
+        count: totalFetched,
         getScrollElement: () => scrollRef.current,
         estimateSize: () => 55,
         measureElement:
@@ -260,16 +235,14 @@ const HistoryContent = () => {
     };
 
     return (
-        // <div id='history-wrapper' className={`flex gap-8 mt-6 h-[calc(100vh_-_${TABLE_Y_OFFSET})]`}>
-        <div id='history-wrapper' className={`flex gap-8 mt-6`}>
-            <Card id='has-grid'>
+        <div id='history-wrapper' className={`flex gap-8 mt-6 grow`}>
+            <Card className='grow' id='has-grid'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
                     <SearchInput value={search} onInputChange={setSearch} />
                 </CardHeader>
 
-                {/* <div ref={scrollRef} className={`overflow-y-auto h-[calc(100vh_-_${TABLE_HEIGHT_OFFSET})]`}> */}
-                <div ref={scrollRef} className={`overflow-y-auto`}>
+                <div ref={scrollRef} className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
                     <DataTable
                         data={historyItems ?? []}
                         TableHeaderProps={tableHeaderProps}
@@ -278,13 +251,6 @@ const HistoryContent = () => {
                         TableCellProps={tableCellProps}
                         columns={getColumns(isLoading)}
                         virtualizationOptions={virtualizationOptions}
-
-                        // rangeExtractor: (range) => {
-                        //     return new Array(range.count).fill(0).map((_, index) => {
-                        //         return range.startIndex + index;
-                        //     });
-                        // },
-                        // estimateSize: () => 17,
                     />
                 </div>
             </Card>
