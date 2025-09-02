@@ -256,7 +256,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                         showEnvironmentAccessControls={showEnvironmentAccessControls}
                         userId={selectedUserId!}
                     />
-                    \{' '}
                 </DialogPortal>
             </Dialog>
             <ConfirmationDialog

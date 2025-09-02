@@ -242,7 +242,7 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError]);
 
-    console.log(hasSelectedSelf);
+    console.log(showEnvironmentAccessControls + ' IS SHOWENVACCESSCONTROLS');
 
     return (
         <Form {...form}>
