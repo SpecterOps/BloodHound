@@ -17,12 +17,12 @@ import { Skeleton } from '@mui/material';
 import { FC } from 'react';
 import { AppNavigate } from '../../components';
 import { useHighestPrivilegeTagId } from '../../hooks';
-import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
+import { DEFAULT_ZONE_MANAGEMENT_ROUTE, ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../routes';
 
 const DetailsRoot: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
     if (tagId) {
-        return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + tagId} replace />;
+        return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + tagId + ROUTE_ZONE_MANAGEMENT_SUMMARY} replace />;
     } else {
         return <Skeleton className='h-24' />;
     }

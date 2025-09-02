@@ -135,7 +135,7 @@ const Details: FC = () => {
                             listQuery={tiersQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${id}/details`);
                             }}
                         />
                     )}
@@ -144,7 +144,7 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
-                            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+                            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`);
                         }}
                     />
                     {selectorId !== undefined ? (
@@ -153,7 +153,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                                    `${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -164,7 +164,7 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
+                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`);
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}
