@@ -105,6 +105,12 @@ describe('Selector Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
+        longWait(async () => {
+            const autoCertifySwitch = await screen.findByLabelText('Automatic Certification')
+            expect(autoCertifySwitch).toBeInTheDocument();
+            expect(autoCertifySwitch).toHaveValue('off');
+        })
+
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Object Selector component renders by default
@@ -146,6 +152,12 @@ describe('Selector Form', () => {
         longWait(() => {
             expect(descriptionInput).toHaveValue('bar');
         });
+
+        longWait(async () => {
+            const autoCertifySwitch = await screen.findByLabelText('Automatic Certification')
+            expect(autoCertifySwitch).toBeInTheDocument();
+            expect(autoCertifySwitch).toHaveValue('on');
+        })
 
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 

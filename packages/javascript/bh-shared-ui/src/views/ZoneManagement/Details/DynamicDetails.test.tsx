@@ -143,6 +143,7 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
         expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Cypher')).toBeInTheDocument();
+        expect(screen.getByText('Automatic Certification:')).toBeInTheDocument();
     });
 
     it('renders details for a selected selector and is of type "Object"', () => {
@@ -154,7 +155,7 @@ describe('DynamicDetails', () => {
                 asset_group_tag_id: 9,
                 allow_disable: false,
                 id: 1,
-                auto_certify: true,
+                auto_certify: false,
                 seeds: [{ type: SeedTypeObjectId, value: '1', selector_id: 1 }],
                 created_at: '2025-02-12T16:24:18.633Z',
                 created_by: 'Emery_Swift86@gmail.com',
@@ -175,5 +176,6 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
         expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Object ID')).toBeInTheDocument();
+        expect(screen.getByText('Automatic Certification:')).toBeInTheDocument();
     });
 });

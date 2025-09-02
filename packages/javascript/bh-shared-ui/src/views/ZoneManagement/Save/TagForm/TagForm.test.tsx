@@ -35,7 +35,7 @@ const testTierZero = {
     deleted_at: null,
     deleted_by: null,
     position: 1,
-    require_certify: false,
+    require_certify: true,
     analysis_enabled: true,
 };
 
@@ -185,6 +185,12 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
+        longWait(async () => {
+            const requireCertifySwitch = await screen.findByLabelText('Required Certification')
+            expect(requireCertifySwitch).toBeInTheDocument();
+            expect(requireCertifySwitch).toHaveValue('off');
+        })
+
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
@@ -214,6 +220,9 @@ describe('Tag Form', () => {
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
+
+        // The Require Certification switch should not render when creating a label
+        expect(screen.queryByText(/Required Certification/i)).not.toBeInTheDocument();
 
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
@@ -292,6 +301,12 @@ describe('Tag Form', () => {
             expect(descriptionInput).toHaveValue('Tier Zero Description');
         });
 
+        longWait(async () => {
+            const requireCertifySwitch = await screen.findByLabelText('Required Certification')
+            expect(requireCertifySwitch).toBeInTheDocument();
+            expect(requireCertifySwitch).toHaveValue('on');
+        })
+
         // The delete button should not render when editing T0
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
@@ -326,6 +341,9 @@ describe('Tag Form', () => {
         longWait(() => {
             expect(descriptionInput).toHaveValue('Owned Description');
         });
+
+        // The Require Certification switch should not render when editing a label
+        expect(screen.queryByText(/Required Certification/i)).not.toBeInTheDocument();
 
         // The delete button should not render when editing Owned
         longWait(() => {
