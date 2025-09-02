@@ -114,7 +114,6 @@ describe('CypherSearch', () => {
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
-        // expect(screen.getByRole('button', { name: /run/ })).toBeInTheDocument();
     });
 
     // Disabling this test for now, tailwind does not output any css in shared-ui tests so we can't check for visibility
