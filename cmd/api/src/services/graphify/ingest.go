@@ -405,9 +405,14 @@ func maybeSubmitNodeUpdate(ic *IngestContext, update graph.NodeUpdate) error {
 		return ic.Batch.UpdateNodeBy(update)
 	}
 
+	objectid, err := update.Node.Properties.Get("objectid").String()
+	if err != nil {
+		return fmt.Errorf("reading objectid failed: %w", err)
+	}
+
 	// Build change event for changelog
 	change := changelog.NewNodeChange(
-		update.Node.ID.String(),
+		objectid,
 		update.Node.Kinds,
 		update.Node.Properties,
 	)
@@ -422,7 +427,9 @@ func maybeSubmitNodeUpdate(ic *IngestContext, update graph.NodeUpdate) error {
 		return ic.Batch.UpdateNodeBy(update)
 	}
 
-	// Unchanged: enqueue change-- this is needed to maintain reconciliation semantics
+	// Unchanged: enqueue change-- this is needed to maintain reconciliation
+	// this is really just a batch operation under the hood. every node ingested will get batched either here of in the branch above...
+	// will there be savings?
 	ic.changeManager.Submit(ic.Ctx, change)
 
 	return nil

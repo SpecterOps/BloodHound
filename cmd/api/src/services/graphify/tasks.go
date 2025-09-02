@@ -202,6 +202,11 @@ func (s *GraphifyService) getAllTasks() model.IngestTasks {
 func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 
 	for _, task := range s.getAllTasks() {
+		start := time.Now()
+		slog.Info(fmt.Sprintf("ingest starting"), "timestamp", start)
+		defer func() {
+			slog.Info(fmt.Sprintf("ingest finished"), "timestamp", time.Now(), "duration", time.Since(start))
+		}()
 		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
 		// handling assumes that all failures should be logged and not returned.
 		if s.ctx.Err() != nil {
