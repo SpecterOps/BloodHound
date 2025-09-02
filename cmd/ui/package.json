@@ -16,7 +16,7 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.27",
+        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.28",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
@@ -53,7 +53,7 @@
         "react-dom": "^18.2.0",
         "react-error-boundary": "^3.1.4",
         "react-helmet": "^6.1.0",
-        "react-hook-form": "^7.0.0",
+        "react-hook-form": "^7.61.1",
         "react-query": "^3.39.3",
         "react-redux": "^8.1.1",
         "react-router-dom": "6.4.1",

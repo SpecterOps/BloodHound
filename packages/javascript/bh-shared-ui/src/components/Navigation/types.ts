@@ -39,6 +39,7 @@ export type MainNavDataListItem = {
     route?: string;
     functionHandler?: () => void;
     testId: string;
+    onClick?: () => void;
 };
 
 export type MainNavData = {

@@ -17,11 +17,11 @@
 import { Card } from '@bloodhoundenterprise/doodleui';
 import type { ScheduledJobDisplay } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useFinishedJobsQuery } from '../../hooks';
+import { useFinishedJobs } from '../../hooks';
 import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toCollected, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
-import { FinishedJobsFilter } from './FinishedJobsFilter';
+import { FinishedJobsFilterDialog } from './FinishedJobsFilterDialog';
 
 const HEADERS = ['ID / Client / Status', 'Message', 'Start Time', 'Duration', 'Data Collected'];
 
@@ -64,14 +64,14 @@ export const FinishedJobsTable: FC = () => {
     // TODO: BED-6407
     const [, /* filters */ setFilters] = useState({});
 
-    const { data, isLoading } = useFinishedJobsQuery({ page, rowsPerPage });
+    const { data, isLoading } = useFinishedJobs({ page, rowsPerPage });
 
     const finishedJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
     return (
         <>
-            <FinishedJobsFilter onConfirm={setFilters} />
+            <FinishedJobsFilterDialog onConfirm={setFilters} />
             <Card>
                 <DataTable
                     data={finishedJobs.map(getRow)}
