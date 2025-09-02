@@ -305,8 +305,6 @@ describe('UpdateUserDialog', () => {
 
         await user.click(saveButton);
 
-        screen.debug(undefined, Infinity);
-
         await waitFor(
             () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
             {
