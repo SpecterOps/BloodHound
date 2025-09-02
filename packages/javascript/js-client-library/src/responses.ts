@@ -17,6 +17,7 @@
 import {
     AssetGroupTag,
     AssetGroupTagHistoryRecord,
+    AssetGroupTagMember,
     AssetGroupTagSelector,
     CollectorManifest,
     CommunityCollectorType,
