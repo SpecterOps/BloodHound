@@ -836,7 +836,7 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 	)
 
 	if sqlFilter.SQLString != "" {
-		sqlFilter.SQLString = "AND " + sqlFilter.SQLString
+		sqlFilter.SQLString = "WHERE " + sqlFilter.SQLString
 	}
 
 	if limit > 0 {
@@ -854,11 +854,12 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 			SELECT 
 				n.*, 
 				t.position,
+				s.asset_group_tag_id,
 				MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
 			FROM %s n
 			JOIN %s s ON n.selector_id = s.id
 			JOIN %s t ON s.asset_group_tag_id = t.id
-			WHERE t.type = %d %s
+			WHERE t.type = %d
 		),
 		sort_on_created_at AS (
 			SELECT DISTINCT ON (sort.node_id)
@@ -873,7 +874,8 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 				sort.node_name,
 				sort.position,
 				sort.updated_at,
-				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS min_created_at    -- add a column that tracks the earliest created_at for a given node_id
+				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,    -- make a column that tracks the earliest created_at for a given node_id
+				sort.asset_group_tag_id
 			FROM nodes_associated_with_min_pos sort
 			WHERE sort.position = sort.min_position_for_node
 			ORDER BY sort.node_id, sort.certified DESC, sort.created_at ASC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
@@ -890,9 +892,10 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 			hybrid.node_name,
 			hybrid.position,
 			hybrid.updated_at,
-			hybrid.min_created_at AS created_at
+			hybrid.created_at,
+			hybrid.asset_group_tag_id
 		FROM sort_on_created_at hybrid
-		%s;`,
+		%s %s;`,
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 		model.AssetGroupTag{}.TableName(),
@@ -909,11 +912,12 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 				SELECT 
 					n.*, 
 					t.position,
+					s.asset_group_tag_id,
 					MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
 				FROM %s n
 				JOIN %s s ON n.selector_id = s.id
 				JOIN %s t ON s.asset_group_tag_id = t.id
-				WHERE t.type = %d %s
+				WHERE t.type = %d
 			),
 			sort_on_created_at AS (
 				SELECT DISTINCT ON (sort.node_id)
@@ -928,13 +932,14 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 					sort.node_name,
 					sort.position,
 					sort.updated_at,
-					MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS min_created_at
+					MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,
+					sort.asset_group_tag_id
 				FROM nodes_associated_with_min_pos sort
 				WHERE sort.position = sort.min_position_for_node
 				ORDER BY sort.node_id, sort.certified DESC, sort.created_at ASC
 			)
 			SELECT COUNT(*) 
-			FROM sort_on_created_at;`,
+			FROM sort_on_created_at %s;`,
 			model.AssetGroupSelectorNode{}.TableName(),
 			model.AssetGroupTagSelector{}.TableName(),
 			model.AssetGroupTag{}.TableName(),
