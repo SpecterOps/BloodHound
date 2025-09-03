@@ -46,7 +46,7 @@ const CreateUserDialog: React.FC<{
 
     return (
         <DialogOverlay>
-            <DialogContent maxWidth='lg' className='!bg-transparent'>
+            <DialogContent maxWidth='lg' className='!bg-transparent overflow-y-auto max-h-screen'>
                 <VisuallyHidden asChild>
                     <DialogTitle>Create User</DialogTitle>
                 </VisuallyHidden>
