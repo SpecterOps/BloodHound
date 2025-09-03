@@ -29,6 +29,7 @@ import (
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
@@ -101,9 +102,11 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		WorkDir: workDir,
 	}
 
+	cl := changelog.NewChangelog(graphDB, changelog.DefaultOptions())
+
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,

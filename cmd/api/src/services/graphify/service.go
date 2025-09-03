@@ -36,25 +36,6 @@ type GraphifyData interface {
 	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
 }
 
-// ChangeManager represents the ingestion-facing API for the changelog daemon.
-//
-// It provides three responsibilities:
-//   - Deduplication: ResolveChange determines whether a proposed change is new or modified
-//     and therefore requires persistence, or whether it has already been seen.
-//   - Submission: Submit enqueues a change for asynchronous processing by the changelog loop.
-//   - Metrics: FlushStats logs and resets internal cache hit/miss statistics,
-//     allowing callers to observe deduplication efficiency over time.
-//
-// Typical usage in ingestion pipelines is:
-//  1. Call ResolveChange to decide if the update should be applied.
-//  2. If ResolveChange returns true, apply the update to the batch/DB.
-//  3. If ResolveChange returns false, Submit the change to the changelog. (this updates an entities lastseen prop for reconciliation)
-type ChangeManager interface {
-	ResolveChange(change changelog.Change) (bool, error)
-	Submit(ctx context.Context, change changelog.Change) bool
-	FlushStats()
-}
-
 type GraphifyService struct {
 	ctx     context.Context
 	db      GraphifyData
@@ -62,10 +43,10 @@ type GraphifyService struct {
 	cfg     config.Configuration
 	schema  upload.IngestSchema
 
-	changeManager ChangeManager
+	changeManager changelog.ChangeManager
 }
 
-func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager ChangeManager) GraphifyService {
+func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager changelog.ChangeManager) GraphifyService {
 	return GraphifyService{
 		ctx:           ctx,
 		db:            db,

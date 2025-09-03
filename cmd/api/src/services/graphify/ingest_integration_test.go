@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
@@ -55,8 +56,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
+					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -100,8 +103,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
+					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -155,8 +160,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
+					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -200,8 +207,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
+					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -255,8 +264,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
+					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -319,8 +330,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
+					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					return nil
 				})
@@ -366,8 +379,11 @@ func Test_ReadFileForIngest(t *testing.T) {
 	t.Run("happy path. a file uploaded as a zip passes validation and is written to the graph", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
-			timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-			err := graphify.ReadFileForIngest(timestampedBatch, validReader, readOptions)
+
+			cl := changelog.NewChangelog(testContext.Graph.Database, changelog.DefaultOptions())
+			ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+			err := graphify.ReadFileForIngest(ingestContext, validReader, readOptions)
 			require.Nil(t, err)
 
 		}, func(details integration.HarnessDetails, tx graph.Transaction) {
@@ -403,8 +419,10 @@ func Test_ReadFileForIngest(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
-				err := graphify.ReadFileForIngest(timestampedBatch, invalidReader, readOptions)
+				cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+				ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+
+				err := graphify.ReadFileForIngest(ingestContext, invalidReader, readOptions)
 				require.NotNil(t, err)
 				var report upload.ValidationReport
 				if errors.As(err, &report) {

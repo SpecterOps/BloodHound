@@ -56,20 +56,22 @@ type ReadOptions struct {
 
 // IngestContext is a container for dependencies needed by ingest
 type IngestContext struct {
-	Ctx        context.Context
-	Batch      graph.Batch
+	Ctx context.Context
+	// Batch is the buffering/flushing mechanism that writes entities to the graph database
+	Batch graph.Batch
+	// IngestTime is a single timestamp assigned to the lastseen property of every entity ignested per ingest run
 	IngestTime time.Time
-
-	changeManager    ChangeManager
+	// changeManager is the caching layer that deduplicates ingest payloads across ingest runs
+	changeManager    changelog.ChangeManager
 	changelogEnabled bool
 }
 
-func NewIngestContext(ctx context.Context, batch graph.Batch, ingestTime time.Time, writer ChangeManager, changelogEnabled bool) *IngestContext {
+func NewIngestContext(ctx context.Context, batch graph.Batch, ingestTime time.Time, changeManager changelog.ChangeManager, changelogEnabled bool) *IngestContext {
 	return &IngestContext{
 		Ctx:              ctx,
 		Batch:            batch,
 		IngestTime:       ingestTime,
-		changeManager:    writer,
+		changeManager:    changeManager,
 		changelogEnabled: changelogEnabled,
 	}
 }
