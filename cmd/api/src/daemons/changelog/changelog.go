@@ -82,41 +82,49 @@ func (s *Changelog) Start(ctx context.Context) {
 
 	go func() {
 		defer close(s.done)
-		if err := s.loop.start(cctx); err != nil {
-			slog.ErrorContext(cctx, "changelog loop exited with error", "err", err)
-		}
+		s.runLoop(cctx)
 	}()
 
 	// Poll feature flag in a separate goroutine
-	go func() {
-		ticker := time.NewTicker(s.options.PollInterval)
-		defer ticker.Stop()
+	go s.runPoller(cctx)
+}
 
-		var isEnabled bool // track last seen state
+// runLoop owns the changelog’s inner ingestion loop.
+func (s *Changelog) runLoop(ctx context.Context) {
+	if err := s.loop.start(ctx); err != nil {
+		slog.ErrorContext(ctx, "changelog loop exited with error", "err", err)
+	}
+}
 
-		for {
-			select {
-			case <-cctx.Done():
-				return
+// runPoller periodically checks the feature flag and sizes the cache accordingly.
+func (s *Changelog) runPoller(ctx context.Context) {
+	ticker := time.NewTicker(s.options.PollInterval)
+	defer ticker.Stop()
 
-			case <-ticker.C:
-				flagEnabled, size, err := s.flagGetter(cctx)
-				if err != nil {
-					slog.WarnContext(cctx, "feature flag check failed", "err", err)
-					continue
-				}
+	var isEnabled bool // track last seen state
 
-				switch {
-				case flagEnabled && !isEnabled:
-					s.Enable(cctx, size)
-					isEnabled = true
-				case !flagEnabled && isEnabled:
-					s.Disable(cctx)
-					isEnabled = false
-				}
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-ticker.C:
+			flagEnabled, size, err := s.flagGetter(ctx)
+			if err != nil {
+				slog.WarnContext(ctx, "feature flag check failed", "err", err)
+				continue
+			}
+
+			switch {
+			case flagEnabled && !isEnabled:
+				s.Enable(ctx, size)
+				isEnabled = true
+			case !flagEnabled && isEnabled:
+				s.Disable(ctx)
+				isEnabled = false
 			}
 		}
-	}()
+	}
 }
 
 func (s *Changelog) Stop(ctx context.Context) error {
