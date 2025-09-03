@@ -81,7 +81,7 @@ export const useQueryPermissions = (id?: number) =>
         queryKey: getQueryKey([...savedQueryKeys.permissions], savedQueryKeys.queryId(id)),
         queryFn: ({ signal }) => getQueryPermissions(id as number, { signal }),
         retry: false,
-        enabled: typeof id !== undefined,
+        enabled: typeof id !== 'undefined',
     });
 
 export const updateQueryPermissions = (
