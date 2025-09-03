@@ -37,8 +37,8 @@ type ChangeManager interface {
 }
 
 type Changelog struct {
-	cache   *cache // pointer so we can replace it atmoically
-	conn    graph.Database
+	cache   *cache // pointer so we can replace it atomically
+	db      graph.Database
 	loop    loop
 	options Options
 
@@ -52,7 +52,7 @@ type Changelog struct {
 
 type Options struct {
 	BatchSize     int
-	FlushInterval time.Duration // interval for force flush when ingest is quiet (to clear out leftovers in buffer)
+	FlushInterval time.Duration // interval for force flush when ingest is quiet (clears out leftovers in buffer)
 	PollInterval  time.Duration // interval for FF check
 }
 
@@ -68,7 +68,7 @@ func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, op
 	return &Changelog{
 		flagGetter: dbFlagGetter(dawgsDB, flagProvider),
 		options:    opts,
-		conn:       dawgsDB,
+		db:         dawgsDB,
 	}
 }
 
@@ -78,7 +78,7 @@ func (s *Changelog) Start(ctx context.Context) {
 	cctx, s.cancel = context.WithCancel(ctx)
 	s.done = make(chan struct{})
 
-	s.loop = newLoop(cctx, newDBFlusher(s.conn), s.options.BatchSize, s.options.FlushInterval)
+	s.loop = newLoop(cctx, newDBFlusher(s.db), s.options.BatchSize, s.options.FlushInterval)
 
 	go func() {
 		defer close(s.done)
@@ -117,10 +117,10 @@ func (s *Changelog) runPoller(ctx context.Context) {
 
 			switch {
 			case flagEnabled && !isEnabled:
-				s.Enable(ctx, size)
+				s.enable(ctx, size)
 				isEnabled = true
 			case !flagEnabled && isEnabled:
-				s.Disable(ctx)
+				s.disable(ctx)
 				isEnabled = false
 			}
 		}
@@ -178,8 +178,8 @@ func dbFlagGetter(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer) fu
 	}
 }
 
-// Enable sets up the cache with the calculated size.
-func (s *Changelog) Enable(ctx context.Context, size int) {
+// enable sets up the cache with the calculated size.
+func (s *Changelog) enable(ctx context.Context, size int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -188,8 +188,8 @@ func (s *Changelog) Enable(ctx context.Context, size int) {
 	s.cache = &cache
 }
 
-// Disable resets the cache to free memory.
-func (s *Changelog) Disable(ctx context.Context) {
+// disable resets the cache to free memory.
+func (s *Changelog) disable(ctx context.Context) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

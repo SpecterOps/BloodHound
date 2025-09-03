@@ -42,6 +42,8 @@ import (
 func Test_IngestRelationships(t *testing.T) {
 	t.Run("Create rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -56,7 +58,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
@@ -89,6 +91,8 @@ func Test_IngestRelationships(t *testing.T) {
 
 	t.Run("Update rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -103,7 +107,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
@@ -146,6 +150,8 @@ func Test_IngestRelationships(t *testing.T) {
 
 	t.Run("Create rel using source/target nodes that specify objectid.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -160,7 +166,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
@@ -193,6 +199,8 @@ func Test_IngestRelationships(t *testing.T) {
 
 	t.Run("Update rel using source/target nodes that specify objectid.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -207,7 +215,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
@@ -250,6 +258,8 @@ func Test_IngestRelationships(t *testing.T) {
 
 	t.Run("Create rel. Source/target nodes' objectid's dont exist. Both nodes get created and rel gets created.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -264,7 +274,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
@@ -316,6 +326,8 @@ func Test_IngestRelationships(t *testing.T) {
 
 	t.Run("Dont create rel. Source/target nodes' have names that don't resolve to objectids. Neither node gets created and rel creation is skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.IngestRelationships.Setup(testContext)
@@ -330,7 +342,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 					ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
@@ -378,9 +390,11 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 	t.Run("happy path. a file uploaded as a zip passes validation and is written to the graph", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
 
-			cl := changelog.NewChangelog(testContext.Graph.Database, changelog.DefaultOptions())
+			cl := changelog.NewChangelog(testContext.Graph.Database, bloodhoundDB, changelog.DefaultOptions())
 			ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 			err := graphify.ReadFileForIngest(ingestContext, validReader, readOptions)
@@ -417,9 +431,11 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 	t.Run("failure path. a file uploaded as a zip fails validation and nothing is written to the graph", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		bloodhoundDB := integration.OpenDatabase(t)
+
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				cl := changelog.NewChangelog(db, changelog.DefaultOptions())
+				cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
 				ingestContext := graphify.NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
 
 				err := graphify.ReadFileForIngest(ingestContext, invalidReader, readOptions)

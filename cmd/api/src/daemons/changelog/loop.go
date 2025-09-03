@@ -87,12 +87,12 @@ type flusher interface {
 }
 
 type dbFlusher struct {
-	conn graph.Database
+	db graph.Database
 }
 
 // newDBFlusher wraps a graph.Database into a Flusher.
-func newDBFlusher(conn graph.Database) flusher {
-	return &dbFlusher{conn: conn}
+func newDBFlusher(db graph.Database) flusher {
+	return &dbFlusher{db: db}
 }
 
 // flush implements Flusher by using BatchOperation.
@@ -101,7 +101,7 @@ func (s *dbFlusher) flush(ctx context.Context, changes []Change) error {
 		return nil
 	}
 
-	return s.conn.BatchOperation(ctx, func(batch graph.Batch) error {
+	return s.db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, ch := range changes {
 			if err := ch.Apply(batch); err != nil {
 				return err

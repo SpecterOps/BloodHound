@@ -11,7 +11,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -69,6 +71,10 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
+	gormDB, err := database.OpenDatabase(connStr)
+
+	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
+
 	// Attempt to truncate but don't care about the error
 	dawgsDB.Run(
 		ctx,
@@ -87,7 +93,7 @@ func newHarness() *Harness {
 		os.Exit(1)
 	}
 
-	log := changelog.NewChangelog(dawgsDB, changelog.DefaultOptions())
+	log := changelog.NewChangelog(dawgsDB, db, changelog.DefaultOptions())
 
 	return &Harness{DB: dawgsDB, Log: log, Ctx: ctx, Cancel: cancel, WaitGroup: &sync.WaitGroup{}}
 }

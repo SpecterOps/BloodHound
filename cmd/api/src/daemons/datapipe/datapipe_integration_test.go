@@ -108,7 +108,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		WorkDir: workDir,
 	}
 
-	cl := changelog.NewChangelog(graphDB, changelog.DefaultOptions())
+	cl := changelog.NewChangelog(graphDB, db, changelog.DefaultOptions())
 
 	return IntegrationTestSuite{
 		Context:         ctx,
