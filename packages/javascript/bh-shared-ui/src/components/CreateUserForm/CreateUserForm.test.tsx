@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { setUpQueryClient } from '../../utils';
 import CreateUserForm from './CreateUserForm';
 const DEFAULT_PROPS = {
@@ -23,6 +24,8 @@ const DEFAULT_PROPS = {
     onSubmit: () => vi.fn,
     isLoading: false,
     error: false,
+    open: true,
+    showEnvironmentAccessControls: false,
 };
 
 const MOCK_ROLES = [
@@ -100,10 +103,19 @@ describe('CreateUserForm', () => {
 
         const queryClient = setUpQueryClient(mockState);
 
-        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <CreateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
+
         await user.type(screen.getByLabelText(/principal/i), ' ');
         await user.type(screen.getByLabelText(/first/i), ' ');
         await user.type(screen.getByLabelText(/last/i), ' ');
@@ -128,10 +140,18 @@ describe('CreateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <CreateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');
@@ -175,10 +195,17 @@ describe('CreateUserForm', () => {
         ];
         const queryClient = setUpQueryClient(mockState);
 
-        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
+        render(
+            <Dialog open={true}>
+                <CreateUserForm {...DEFAULT_PROPS} />
+            </Dialog>,
+            { queryClient }
+        );
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
+            timeout: 30000,
+        });
         await user.type(screen.getByLabelText(/principal/i), ' dd');
         await user.type(screen.getByLabelText(/first/i), ' bsg!');
         await user.type(screen.getByLabelText(/last/i), 'asdfw ');

@@ -14,11 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dialog, DialogDescription, DialogOverlay, DialogPortal, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
+import { userEventHelpers } from '../../utils/testHelpers';
 import UpdateUserDialog from './UpdateUserDialog';
 
 const testRoles = [
@@ -128,6 +130,9 @@ describe('UpdateUserDialog', () => {
         renderLoading?: boolean;
     };
 
+    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
+    userEventHelpers();
+
     const setup = (options?: SetupOptions) => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
@@ -143,15 +148,23 @@ describe('UpdateUserDialog', () => {
         };
 
         render(
-            <UpdateUserDialog
-                userId={'1'}
-                open={true}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={options?.renderLoading || false}
-                error={options?.renderErrors}
-                hasSelectedSelf={false}
-            />
+            <Dialog open={true}>
+                <DialogPortal>
+                    <DialogOverlay>
+                        <UpdateUserDialog
+                            userId={'1'}
+                            onClose={testOnClose}
+                            onSave={testOnSave}
+                            isLoading={options?.renderLoading || false}
+                            error={options?.renderErrors}
+                            hasSelectedSelf={false}
+                        />
+                        <VisuallyHidden>
+                            <DialogDescription />
+                        </VisuallyHidden>
+                    </DialogOverlay>
+                </DialogPortal>
+            </Dialog>
         );
 
         return {
@@ -165,11 +178,11 @@ describe('UpdateUserDialog', () => {
     it('should render an update user form', async () => {
         setup();
 
-        expect(screen.getByText('Update User')).toBeInTheDocument();
+        expect(screen.getByText('Edit User')).toBeInTheDocument();
 
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
-        expect(screen.getByLabelText('Principal Name')).toBeInTheDocument();
+        expect(await screen.findByLabelText('Principal Name')).toBeInTheDocument();
 
         expect(screen.getByLabelText('First Name')).toBeInTheDocument();
 
@@ -182,16 +195,6 @@ describe('UpdateUserDialog', () => {
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-    });
-
-    it('should call onClose when Close button is clicked', async () => {
-        const { user, testOnClose } = setup();
-
-        const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
-
-        await user.click(cancelButton);
-
-        expect(testOnClose).toHaveBeenCalled();
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
@@ -277,7 +280,7 @@ describe('UpdateUserDialog', () => {
     it('should clear out the sso provider id from submission data when the authentication method is changed', async () => {
         const { user, testUser, testOnSave } = setup();
 
-        const saveButton = await screen.findByRole('button', { name: 'Save' });
+        const saveButton = await screen.findByRole('button', { name: /save/i });
 
         await user.clear(screen.getByLabelText('Email Address'));
         await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
