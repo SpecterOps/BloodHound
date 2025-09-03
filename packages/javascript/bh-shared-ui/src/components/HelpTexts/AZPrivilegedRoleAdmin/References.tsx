@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#add-azureadrole'>
                 https://powerzure.readthedocs.io/en/latest/Functions/operational.html#add-azureadrole
             </Link>

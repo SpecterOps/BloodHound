@@ -26,17 +26,11 @@ const MainNavLogoData: MainNavLogoDataObject = {
     project: {
         route: '/',
         icon: <AppIcon.BHCELogo size={24} />,
-        image: {
-            imageUrl: `/test`,
-            dimensions: { height: '40px', width: '165px' },
-            classes: 'ml-4',
-            altText: 'BHE Text Logo',
-        },
     },
     specterOps: {
         image: {
             imageUrl: `/test`,
-            dimensions: { height: '40px', width: '165px' },
+            dimensions: { height: 40, width: 165 },
             classes: 'ml-4',
             altText: 'BHE Text Logo',
         },
@@ -157,27 +151,21 @@ describe('MainNav', () => {
         expect(versionNumberLabel).toHaveClass('group-hover:block');
         // ---- classes displayed on hover ----
     });
-    it('should only render an icon in list item when collapsed and the label should be styled to be hidden but appear on group-hover of the nav', async () => {
-        const testLinkItem = MainNavPrimaryListData[0];
-
+    it('has styles that hide icon labels when the nav is collapsed and show labels when its expanded', async () => {
+        // This test is a quite naive but its purpose is to essentially create a contract between the TSX and styles.
+        // Ideally we could check for these styles and then check for labels outside the bounding rect and icons within it.
+        // ... but jsdom would rather we not do that
         const MainNavBar = screen.getByRole('navigation');
-        expect(MainNavBar).toHaveClass('group');
 
-        const primaryList = await within(MainNavBar).findByTestId('global_nav-primary-list');
-        const linkItemIcon = await within(primaryList).getAllByTestId('global_nav-item-label-icon')[0];
-        const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
+        expect(MainNavBar).toHaveClass('w-nav-width hover:w-nav-width-expanded hover:overflow-x-hidden');
 
-        expect(linkItemIcon).toBeInTheDocument();
+        // MainNavLogo
+        const navLogo = within(MainNavBar).getByTestId('global_nav-home');
+        expect(navLogo).toHaveClass('overflow-hidden');
 
-        // ---- collapsed classes ----
-        expect(linkItemText).toHaveClass('hidden');
-        expect(linkItemText).toHaveClass('opacity-0');
-        // ---- collapsed classes ----
-
-        // ---- classes displayed on hover ----
-        expect(linkItemText).toHaveClass('group-hover:opacity-100');
-        expect(linkItemText).toHaveClass('group-hover:flex');
-        // ---- classes displayed on hover ----
+        // MainNavListItem
+        const navItems = within(MainNavBar).getAllByRole('listitem');
+        navItems.every((item) => expect(item).toHaveClass('overflow-hidden'));
     });
     it('should style the powered-by to display when nav is expanded', async () => {
         const MainNavBar = screen.getByRole('navigation');

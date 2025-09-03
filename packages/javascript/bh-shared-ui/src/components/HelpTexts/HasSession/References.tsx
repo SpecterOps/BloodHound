@@ -21,38 +21,38 @@ const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
             <Typography variant='body1'>Gathering Credentials</Typography>
-            <Link target='_blank' rel='noopener' href='http://blog.gentilkiwi.com/mimikatz'>
+            <Link target='_blank' rel='noopener noreferrer' href='http://blog.gentilkiwi.com/mimikatz'>
                 http://blog.gentilkiwi.com/mimikatz
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/gentilkiwi/mimikatz'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/gentilkiwi/mimikatz'>
                 https://github.com/gentilkiwi/mimikatz
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?page_id=1821'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?page_id=1821'>
                 https://adsecurity.org/?page_id=1821
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/wiki/Credential_Access'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/wiki/Credential_Access'>
                 https://attack.mitre.org/wiki/Credential_Access
             </Link>
 
             <Typography variant='body1'>Token Impersonation</Typography>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.exploit-db.com/docs/english/13054-security-implications-of-windows-access-tokens.pdf'>
                 https://www.exploit-db.com/docs/english/13054-security-implications-of-windows-access-tokens.pdf
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/PowerShellMafia/PowerSploit/blob/master/Exfiltration/Invoke-TokenManipulation.ps1'>
                 https://github.com/PowerShellMafia/PowerSploit/blob/master/Exfiltration/Invoke-TokenManipulation.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/wiki/Technique/T1134'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/wiki/Technique/T1134'>
                 https://attack.mitre.org/wiki/Technique/T1134
             </Link>
         </Box>

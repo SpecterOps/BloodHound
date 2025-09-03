@@ -22,35 +22,44 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.dsinternals.com/en/retrieving-cleartext-gmsa-passwords-from-active-directory/'>
                 https://www.dsinternals.com/en/retrieving-cleartext-gmsa-passwords-from-active-directory/
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.powershellgallery.com/packages/DSInternals/'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.powershellgallery.com/packages/DSInternals/'>
                 https://www.powershellgallery.com/packages/DSInternals/
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/markgamache/gMSA/tree/master/PSgMSAPwd'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://github.com/markgamache/gMSA/tree/master/PSgMSAPwd'>
                 https://github.com/markgamache/gMSA/tree/master/PSgMSAPwd
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=36'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?p=36'>
                 https://adsecurity.org/?p=36
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=2535'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?p=2535'>
                 https://adsecurity.org/?p=2535
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4662'>
                 https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4662
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.thehacker.recipes/ad/movement/dacl/readgmsapassword'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.thehacker.recipes/ad/movement/dacl/readgmsapassword'>
                 https://www.thehacker.recipes/ad/movement/dacl/readgmsapassword
             </Link>
         </Box>

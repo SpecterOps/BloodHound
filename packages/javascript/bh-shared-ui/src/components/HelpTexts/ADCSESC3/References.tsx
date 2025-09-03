@@ -20,28 +20,28 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/techniques/T1649/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1649/'>
                 https://attack.mitre.org/techniques/T1649/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Certify'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Certify'>
                 https://github.com/GhostPack/Certify
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/ly4k/Certipy'>
                 https://github.com/ly4k/Certipy
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cersod/97f47d4c-2901-41fa-9616-96b94e1b5435'>
                 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cersod/97f47d4c-2901-41fa-9616-96b94e1b5435
             </Link>

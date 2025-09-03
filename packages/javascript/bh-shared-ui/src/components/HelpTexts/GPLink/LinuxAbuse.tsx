@@ -30,7 +30,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
             </Typography>
 
             <Typography variant='body2'>
-                <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Hackndo/pyGPOAbuse'>
                     pyGPOAbuse.py
                 </Link>{' '}
                 can be used for that purpose.

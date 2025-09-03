@@ -20,34 +20,34 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://github.com/NetSPI/PowerUpSQL/wiki'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/NetSPI/PowerUpSQL/wiki'>
                 https://github.com/NetSPI/PowerUpSQL/wiki
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.slideshare.net/nullbind/powerupsql-2018-blackhat-usa-arsenal-presentation'>
                 https://www.slideshare.net/nullbind/powerupsql-2018-blackhat-usa-arsenal-presentation
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://sqlwiki.netspi.com/attackQueries/executingOSCommands/#sqlserver'>
                 https://sqlwiki.netspi.com/attackQueries/executingOSCommands/#sqlserver
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-windows-service-accounts-and-permissions?view=sql-server-2017'>
                 https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-windows-service-accounts-and-permissions?view=sql-server-2017
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.netspi.com/finding-sensitive-data-domain-sql-servers-using-powerupsql/'>
                 https://blog.netspi.com/finding-sensitive-data-domain-sql-servers-using-powerupsql/
             </Link>

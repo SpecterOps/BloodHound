@@ -21,8 +21,13 @@ const Opsec: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                Please refer to the OPSEC info for the specific granted permissions at
-                https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html
+                Please refer to the OPSEC info for the specific granted permissions at{' '}
+                <a
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html'>
+                    https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html
+                </a>
             </Typography>
         </>
     );

@@ -20,20 +20,20 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=1729'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?p=1729'>
                 https://adsecurity.org/?p=1729
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.harmj0y.net/redteaming/mimikatz-and-dcsync-and-extrasids-oh-my/'>
                 https://blog.harmj0y.net/redteaming/mimikatz-and-dcsync-and-extrasids-oh-my/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync'>
                 https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync
             </Link>

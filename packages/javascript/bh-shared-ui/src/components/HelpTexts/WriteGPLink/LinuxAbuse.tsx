@@ -22,13 +22,13 @@ const LinuxAbuse: FC = () => {
         <>
             <Typography variant='body2'>
                 From a Linux machine, the WriteGPLink permission may be abused using the{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
                     OUned.py
                 </Link>{' '}
                 exploitation tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                     the article associated to the OUned.py tool
                 </Link>

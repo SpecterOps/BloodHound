@@ -20,15 +20,15 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/tactics/TA0008/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/tactics/TA0008/'>
                 ATT&amp;CK T0008: Lateral Movement
             </Link>
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/techniques/T1021/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1021/'>
                 ATT&amp;CK T1021: Remote Services
             </Link>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/azure/active-directory/devices/howto-vm-sign-in-azure-ad-windows'>
                 Login to Windows virtual machine in Azure using Azure Active Directory authentication
             </Link>

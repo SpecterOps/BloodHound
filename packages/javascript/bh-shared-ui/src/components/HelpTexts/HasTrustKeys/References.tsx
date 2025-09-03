@@ -22,33 +22,33 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.improsec.com/tech-blog/sid-filter-as-security-boundary-between-domains-part-7-trust-account-attack-from-trusting-to-trusted'>
                 SID filter as security boundary between domains? (Part 7) - Trust account attack
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/gentilkiwi/mimikatz'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/gentilkiwi/mimikatz'>
                 Mimikatz GitHub
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/dirkjanm/krbrelayx'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/dirkjanm/krbrelayx'>
                 krbrelayx GitHub
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://snovvcrash.rocks/2021/05/21/calculating-kerberos-keys.html'>
                 A Note on Calculating Kerberos Keys for AD Accounts
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus'>
                 Rubeus GitHub
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/fortra/impacket/blob/master/examples/getTGT.py'>
                 Impacket getTGT.py
             </Link>

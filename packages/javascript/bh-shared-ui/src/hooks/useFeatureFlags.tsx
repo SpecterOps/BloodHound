@@ -14,9 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AxiosError } from 'axios';
 import { RequestOptions } from 'js-client-library';
 import { UseQueryOptions, useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
+
+export const FORBIDDEN = 403;
 
 export type Flag = {
     id: number;
@@ -41,12 +44,27 @@ export const toggleFeatureFlag = (flagId: string | number, options?: RequestOpti
     return apiClient.toggleFeatureFlag(flagId, options).then((response) => response.data);
 };
 
-type QueryOptions<T> = Omit<UseQueryOptions<Flag[], unknown, T | undefined, string[]>, 'queryFn'>;
+type QueryOptions<T> = Omit<UseQueryOptions<Flag[], AxiosError, T | undefined, string[]>, 'queryFn'>;
 
 export function useFeatureFlags<T = Flag[]>(options?: QueryOptions<T>) {
     const { queryKey, ...rest } = options ?? {};
 
-    return useQuery(featureFlagKeys.getKey(options?.queryKey), ({ signal }) => getFeatureFlags({ signal }), rest);
+    return useQuery({
+        ...rest,
+        queryKey: featureFlagKeys.getKey(options?.queryKey),
+        queryFn: async ({ signal }) => {
+            try {
+                return await getFeatureFlags({ signal });
+            } catch (error) {
+                const status = (error as AxiosError).response?.status;
+                // Ignore 403s as any retries will still be 403
+                if (status === FORBIDDEN) {
+                    return [] as Flag[];
+                }
+                throw error;
+            }
+        },
+    });
 }
 
 export function useFeatureFlag(flagKey: string, options?: Omit<QueryOptions<Flag | undefined>, 'select'>) {

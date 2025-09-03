@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.netspi.com/maintaining-azure-persistence-via-automation-accounts/'>
                 https://blog.netspi.com/maintaining-azure-persistence-via-automation-accounts/
             </Link>

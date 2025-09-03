@@ -24,7 +24,7 @@ const Abuse: FC = () => {
             <Typography variant='body2'>Via PowerZure</Typography>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#get-azurekeyvaultcontent'>
                 Get-AzureKeyVaultContent
             </Link>

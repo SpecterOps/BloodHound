@@ -23,7 +23,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
         <>
             <Typography variant='body2'>
                 A targeted kerberoast attack can be performed using{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/targetedKerberoast'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/ShutdownRepo/targetedKerberoast'>
                     targetedKerberoast.py
                 </Link>
                 .

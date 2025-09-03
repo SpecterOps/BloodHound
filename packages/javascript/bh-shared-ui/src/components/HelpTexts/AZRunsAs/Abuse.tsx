@@ -31,7 +31,8 @@ const Abuse: FC = () => {
                     <li>
                         Use the{' '}
                         <a
-                            className='text-secondary dark:text-secondary-variant-2'
+                            target='_blank'
+                            rel='noopener noreferrer'
                             href={
                                 'https://learn.microsoft.com/en-us/graph/api/serviceprincipal-addpassword?view=graph-rest-1.0&tabs=http'
                             }>
@@ -42,7 +43,8 @@ const Abuse: FC = () => {
                     <li>
                         Use the{' '}
                         <a
-                            className='text-secondary dark:text-secondary-variant-2'
+                            target='_blank'
+                            rel='noopener noreferrer'
                             href={'https://learn.microsoft.com/en-us/cli/azure/'}>
                             Azure CLI
                         </a>{' '}

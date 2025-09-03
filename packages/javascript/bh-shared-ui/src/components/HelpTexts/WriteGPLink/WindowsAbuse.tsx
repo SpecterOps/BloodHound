@@ -24,7 +24,10 @@ const WindowsAbuse: FC = () => {
                 From a domain-joined compromised Windows machine, the WriteGPLink permission may be abused through
                 Powermad, PowerView and native Windows functionalities. For a detailed outline of exploit requirements
                 and implementation, you can refer to{' '}
-                <Link target='_blank' rel='noopener' href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
                     this article
                 </Link>
                 .

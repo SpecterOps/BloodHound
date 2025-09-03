@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/'>
                 https://dirkjanm.io/azure-ad-privilege-escalation-application-admin/
             </Link>

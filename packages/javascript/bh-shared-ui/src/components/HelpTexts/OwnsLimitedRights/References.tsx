@@ -22,12 +22,12 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.hub.trimarcsecurity.com/post/trimarc-whitepaper-owner-or-pwnd'>
                 https://www.hub.trimarcsecurity.com/post/trimarc-whitepaper-owner-or-pwnd
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/JimSycurity/OwnerOrPwned'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/JimSycurity/OwnerOrPwned'>
                 https://github.com/JimSycurity/OwnerOrPwned
             </Link>
         </Box>

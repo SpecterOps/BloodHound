@@ -20,11 +20,11 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <>
-            <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://wald0.com/?p=179'>
                 https://wald0.com/?p=179
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://blog.cptjesus.com/posts/bloodhound15'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://blog.cptjesus.com/posts/bloodhound15'>
                 https://blog.cptjesus.com/posts/bloodhound15
             </Link>
         </>

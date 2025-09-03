@@ -22,21 +22,21 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 Certified Pre-Owned ADCS Whitepaper
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.pkisolutions.com/understanding-active-directory-certificate-services-containers-in-active-directory/'>
                 Understanding Active Directory Certificate Services Containers in Active Directory
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.ravenswoodtechnology.com/components-of-a-pki-part-2/'>
                 Components of a PKI, Part 2: Certificate Authorities and CA Hierarchies
             </Link>

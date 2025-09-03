@@ -42,7 +42,7 @@ const Abuse: FC = () => {
                 key and tools like krbrelayx.py. (See reference:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://snovvcrash.rocks/2021/05/21/calculating-kerberos-keys.html'>
                     A Note on Calculating Kerberos Keys for AD Accounts
                 </Link>{' '}

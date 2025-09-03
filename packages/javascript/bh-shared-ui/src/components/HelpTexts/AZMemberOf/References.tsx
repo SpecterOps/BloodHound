@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/azure/active-directory/roles/groups-create-eligible'>
                 Create a role-assignable group in Azure Active Directory
             </Link>

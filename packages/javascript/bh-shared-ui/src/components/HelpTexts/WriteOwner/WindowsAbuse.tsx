@@ -415,7 +415,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             The encrypted attributes can also be retrieved and decrypted using{' '}
                             <Link
                                 target='_blank'
-                                rel='noopener'
+                                rel='noopener noreferrer'
                                 href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
                                 lapsv2decrypt
                             </Link>{' '}
@@ -823,7 +823,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
                             this article
                         </Link>
@@ -1046,7 +1046,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
                             this article
                         </Link>
