@@ -454,7 +454,6 @@ const UpdateUserFormInner: React.FC<{
                                                     <Select
                                                         onValueChange={(field: any) => {
                                                             form.setValue('authenticationMethod', field.value);
-                                                            //setAuthenticationMethod(field.value);
                                                         }}
                                                         value={field.value}>
                                                         <FormControl>
@@ -512,7 +511,6 @@ const UpdateUserFormInner: React.FC<{
                                                                 form.setValue('roles', [Number(field)]);
                                                                 setSelectedRoleValue([Number(field)]);
                                                             }}
-                                                            //open
                                                             value={String(selectedRoleValue)}>
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
@@ -580,14 +578,11 @@ const UpdateUserFormInner: React.FC<{
                         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
                             <DialogTitle>Environmental Access Control</DialogTitle>
                             <div
-                                className='flex flex-col'
+                                className='flex flex-col h-full pb-6'
                                 data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                                <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
-                                    <div
-                                        className={
-                                            'ml-4 mt-2 flex items-center flex justify-center items-center relative'
-                                        }>
-                                        <FontAwesomeIcon className={''} icon={faSearch} />
+                                <div className='border border-color-[#CACFD3] mt-3 h-box-border h-full overflow-y-auto'>
+                                    <div className='ml-4 mt-2 flex items-center flex justify-center items-center relative'>
+                                        <FontAwesomeIcon className='' icon={faSearch} />
                                         <Input
                                             className={'w-full ml-3'}
                                             id='search'
@@ -600,20 +595,17 @@ const UpdateUserFormInner: React.FC<{
                                     </div>
                                     <div
                                         className='flex flex-row ml-4 mt-6 mb-2 items-center'
-                                        data-testid='create-user-dialog_environments-checkboxes-select-all'>
+                                        data-testid='create-user-dialog_all-environments-checkbox'>
                                         <FormField
                                             name='allEnvironments'
                                             control={form.control}
                                             defaultValue={false}
-                                            render={({ field }) => (
+                                            render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
-                                                        {...field}
                                                         checked={isAllSelected}
                                                         id='allEnvironments'
-                                                        onCheckedChange={handleSelectAllChange}
-                                                        value={true}
-                                                        //value={form.watch({ ''}).valueOf()} // environment_control_list.all_environments
+                                                        onCheckedChange={handleSelectAllChange} // environment_control_list.all_environments
                                                     />
                                                     <FormLabel
                                                         htmlFor='allEnvironments'
@@ -637,21 +629,21 @@ const UpdateUserFormInner: React.FC<{
                                                             name='environments'
                                                             control={form.control}
                                                             defaultValue={false}
-                                                            render={({ field }) => (
+                                                            render={() => (
                                                                 <FormItem className='flex flex-row items-center'>
                                                                     <Checkbox
-                                                                        {...field}
                                                                         checked={selectedEnvironments.includes(item.id)}
-                                                                        className='m-3'
+                                                                        className='m-2'
                                                                         id='environments'
-                                                                        onCheckedChange={(checked) =>
-                                                                            handleItemChange(item.id, checked)
+                                                                        onCheckedChange={
+                                                                            (checked) =>
+                                                                                handleItemChange(item.id, checked)
+                                                                            // environment_control_list.environments
                                                                         }
-                                                                        value={item.name} // environment_control_list.environments
                                                                     />
                                                                     <FormLabel
                                                                         htmlFor='environments'
-                                                                        className='mr-3 w-full cursor-pointer'>
+                                                                        className=' w-full cursor-pointer'>
                                                                         {item.name}
                                                                     </FormLabel>
                                                                 </FormItem>

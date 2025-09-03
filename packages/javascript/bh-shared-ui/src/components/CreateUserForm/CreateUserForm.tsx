@@ -155,13 +155,11 @@ const CreateUserForm: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
                 {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
-                    <div className='flex gap-x-4 justify-center'>
+                    <div className='flex gap-x-4 justify-center  max-h-[800px]'>
                         <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                             <DialogTitle>{'Create User'}</DialogTitle>
 
-                            <div
-                                className='flex flex-col min-h-[650px] mt-4 w-full'
-                                data-testid='create-user-dialog_content'>
+                            <div className='flex flex-col  mt-4 w-full' data-testid='create-user-dialog_content'>
                                 <div className='mb-4'>
                                     <FormField
                                         name='emailAddress'
@@ -179,11 +177,19 @@ const CreateUserForm: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
+                                                <FormLabel
+                                                    aria-labelledby='emailAddress'
+                                                    htmlFor='emailAddress'
+                                                    className='font-medium !text-sm'>
                                                     Email Address
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} type='email' id='emailAddress' />
+                                                    <Input
+                                                        {...field}
+                                                        type='email'
+                                                        id='emailAddress'
+                                                        placeholder='email@example.com'
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -215,7 +221,9 @@ const CreateUserForm: React.FC<{
                                         }}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel htmlFor='principal'>Principal Name</FormLabel>
+                                                <FormLabel htmlFor='principal' className='font-medium !text-sm'>
+                                                    Principal Name{' '}
+                                                </FormLabel>
                                                 <FormControl>
                                                     <Input {...field} id='principal' />
                                                 </FormControl>
@@ -249,7 +257,9 @@ const CreateUserForm: React.FC<{
                                         render={({ field }) => (
                                             <>
                                                 <FormItem>
-                                                    <FormLabel htmlFor='firstName'>First Name</FormLabel>
+                                                    <FormLabel className='font-medium !text-sm' htmlFor='firstName'>
+                                                        First Name
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input {...field} id='firstName' />
                                                     </FormControl>
@@ -284,7 +294,9 @@ const CreateUserForm: React.FC<{
                                         render={({ field }) => (
                                             <>
                                                 <FormItem>
-                                                    <FormLabel htmlFor='lastName'>Last Name</FormLabel>
+                                                    <FormLabel className='font-medium !text-sm' htmlFor='lastName'>
+                                                        Last Name
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input {...field} id='lastName' />
                                                     </FormControl>
@@ -298,12 +310,17 @@ const CreateUserForm: React.FC<{
                                 <>
                                     <div className='mb-4'>
                                         <FormItem>
-                                            <FormLabel htmlFor='authenticationMethod'>Authentication Method</FormLabel>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='authenticationMethod'>
+                                                Authentication Method
+                                            </FormLabel>
                                             <Select
                                                 onValueChange={(value) => setAuthenticationMethod(value as string)}
                                                 value={authenticationMethod}>
                                                 <FormControl className='mt-2'>
-                                                    <SelectTrigger id='authenticationMethod'>
+                                                    <SelectTrigger
+                                                        variant='underlined'
+                                                        className='bg-transparent'
+                                                        id='authenticationMethod'>
                                                         <SelectValue placeholder={authenticationMethod} />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -347,7 +364,11 @@ const CreateUserForm: React.FC<{
                                                     }}
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel htmlFor='password'>Initial Password</FormLabel>
+                                                            <FormLabel
+                                                                className='font-medium !text-sm'
+                                                                htmlFor='password'>
+                                                                Initial Password
+                                                            </FormLabel>
                                                             <FormControl>
                                                                 <Input {...field} id='password' type='password' />
                                                             </FormControl>
@@ -373,7 +394,7 @@ const CreateUserForm: React.FC<{
                                                                 </FormControl>
                                                                 <FormLabel
                                                                     htmlFor='needsPasswordReset'
-                                                                    className='pl-2'>
+                                                                    className='pl-2 font-medium !text-sm'>
                                                                     Force Password Reset?
                                                                 </FormLabel>
                                                             </FormItem>
@@ -390,7 +411,10 @@ const CreateUserForm: React.FC<{
                                                     onValueChange={(value) => setAuthenticationMethod(value as string)}
                                                     value={authenticationMethod}>
                                                     <FormControl>
-                                                        <SelectTrigger id='sso'>
+                                                        <SelectTrigger
+                                                            variant='underlined'
+                                                            className='bg-transparent'
+                                                            id='sso'>
                                                             <SelectValue placeholder='SSO Provider' />
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -424,13 +448,13 @@ const CreateUserForm: React.FC<{
                                         render={({ field }) => (
                                             <FormItem>
                                                 <div className='flex row'>
-                                                    <FormLabel className='mr-2' htmlFor='role'>
+                                                    <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
                                                         Role
                                                     </FormLabel>
                                                     <Tooltip
                                                         tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
                                                         contentProps={{
-                                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                            className: 'dark:bg-neutral-dark-5 border-0',
                                                         }}
                                                     />
                                                 </div>
@@ -443,7 +467,10 @@ const CreateUserForm: React.FC<{
                                                     }}
                                                     value={String(selectedRoleValue)}>
                                                     <FormControl>
-                                                        <SelectTrigger id='role'>
+                                                        <SelectTrigger
+                                                            variant='underlined'
+                                                            className='bg-transparent'
+                                                            id='role'>
                                                             <SelectValue placeholder={field.value} />
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -493,9 +520,9 @@ const CreateUserForm: React.FC<{
                             <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
                                 <DialogTitle>Environmental Access Control</DialogTitle>
                                 <div
-                                    className='flex flex-col'
+                                    className='flex flex-col box-border h-full'
                                     data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                                    <div className='border border-color-[#CACFD3] mt-3 h-[calc(100vh-8rem)] overflow-y-auto'>
+                                    <div className='border border-color-[#CACFD3] mt-3 overflow-y-auto flex-1 mb-8'>
                                         <div
                                             className={
                                                 'ml-4 mt-2 flex items-center flex justify-center items-center relative'
@@ -527,7 +554,7 @@ const CreateUserForm: React.FC<{
                                                         />
                                                         <FormLabel
                                                             htmlFor='allEnvironments'
-                                                            className='ml-3 w-full cursor-pointer'>
+                                                            className='ml-3 w-full cursor-pointer font-normal'>
                                                             Select All Environments
                                                         </FormLabel>
                                                     </FormItem>
@@ -563,7 +590,7 @@ const CreateUserForm: React.FC<{
                                                                         />
                                                                         <FormLabel
                                                                             htmlFor='environments'
-                                                                            className='mr-3 w-full cursor-pointer'>
+                                                                            className='mr-3 w-full cursor-pointer font-normal'>
                                                                             {item.name}
                                                                         </FormLabel>
                                                                     </FormItem>
