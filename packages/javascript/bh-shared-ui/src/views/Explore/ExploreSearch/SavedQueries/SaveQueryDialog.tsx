@@ -100,7 +100,7 @@ const SaveQueryDialog: React.FC<{
 
     useEffect(() => {
         setName(selectedQuery && selectedQuery.name ? selectedQuery.name : '');
-    }, [selectedQuery?.name]);
+    }, [selectedQuery, selectedQuery?.name]);
 
     useEffect(() => {
         setDescription(selectedQuery && selectedQuery.description ? selectedQuery.description : '');
