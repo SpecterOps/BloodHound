@@ -20,9 +20,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
-import { CommonSearches as prebuiltSearchListAGI } from '../../../../commonSearchesAGI';
-import { CommonSearches as prebuiltSearchListAGT } from '../../../../commonSearchesAGT';
-import FeatureFlag from '../../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
 import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
@@ -39,7 +36,7 @@ type CommonSearchesProps = {
     showCommonQueries: boolean;
 };
 
-const InnerCommonSearches = ({
+const CommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
     onToggleCommonQueries,
@@ -196,13 +193,5 @@ const InnerCommonSearches = ({
         </div>
     );
 };
-
-const CommonSearches = (props: CommonSearchesProps) => (
-    <FeatureFlag
-        flagKey='tier_management_engine'
-        enabled={<InnerCommonSearches {...props} prebuiltSearchList={prebuiltSearchListAGT} />}
-        disabled={<InnerCommonSearches {...props} prebuiltSearchList={prebuiltSearchListAGI} />}
-    />
-);
 
 export default CommonSearches;
