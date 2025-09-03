@@ -110,22 +110,9 @@ describe('CypherSearch', () => {
 
     it('should render', async () => {
         const { screen } = await setup();
-        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
+        await waitForElementToBeRemoved(() => screen.getByTestId('common-searches-skeleton'));
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
-
         expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
-    });
-
-    // Disabling this test for now, tailwind does not output any css in shared-ui tests so we can't check for visibility
-    it.skip('should show common cypher searches when user clicks on folder button', async () => {
-        const { screen, user } = await setup();
-        const prebuiltSearches = screen.getByText(/pre-built searches/i);
-        expect(prebuiltSearches).not.toBeVisible();
-
-        const menu = screen.getByRole('button', { name: /show\/hide saved queries/i });
-
-        await user.click(menu);
-        expect(prebuiltSearches).toBeVisible();
     });
 
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {

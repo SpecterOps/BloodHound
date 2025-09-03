@@ -158,7 +158,6 @@ class BHEAPIClient {
             'Content-Type': 'application/json',
         };
         return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
-            // ...options,
             headers,
         });
     };
