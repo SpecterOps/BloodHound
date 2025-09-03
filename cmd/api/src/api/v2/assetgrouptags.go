@@ -1079,26 +1079,27 @@ type AssetGroupMemberWithCertification struct {
 	Certification model.AssetGroupCertification `json:"certified"`
 }
 
+// note some of these filters do not match the db column names and require translation to work
 func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
-		"asset_group_tag_id":  {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"certified":           {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"certified_by":        {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"created_at":          {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"node_environment_id": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"node_name":           {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"node_object_id":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"node_primary_kind":   {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"asset_group_tag_id": {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"certified":          {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"certified_by":       {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"created_at":         {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"environments":       {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"name":               {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"object_id":          {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"primary_kind":       {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 	}
 }
 
 func (AssetGroupMemberWithCertification) IsStringColumn(filter string) bool {
 	switch filter {
-	case "node_environment_id",
-		"node_primary_kind",
+	case "environments",
+		"primary_kind",
 		"certified_by",
-		"node_name",
-		"node_object_id":
+		"name",
+		"object_id":
 		return true
 	default:
 		return false
@@ -1116,6 +1117,7 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 		defaultLimit                      = AssetGroupTagDefaultLimit
 		assetGroupMemberWithCertification = AssetGroupMemberWithCertification{}
 		queryParams                       = request.URL.Query()
+		translatedQueryFilter             = make(model.QueryParameterFilterMap)
 	)
 	// Parse Query Parameters
 	if skip, err := ParseSkipQueryParameter(queryParams, defaultSkip); err != nil {
@@ -1130,18 +1132,30 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 				api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			} else {
+
 				for i, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-					queryFilters[name][i].IsStringData = assetGroupMemberWithCertification.IsStringColumn(filter.Name)
+
+					switch filter.Name {
+					case "environments":
+						filter.Name = "node_environment_id"
+					case "name":
+						filter.Name = "node_name"
+					case "object_id":
+						filter.Name = "node_object_id"
+					case "primary_kind":
+						filter.Name = "node_primary_kind"
+					}
+					translatedQueryFilter.AddFilter(filter)
+					translatedQueryFilter[filter.Name][i].IsStringData = assetGroupMemberWithCertification.IsStringColumn(filter.Name)
 				}
 			}
-
 		}
 
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+		if sqlFilter, err := translatedQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if selectorNodes, count, err := s.DB.GetSelectorNodes(requestContext, sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)

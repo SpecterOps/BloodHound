@@ -99,22 +99,22 @@ get:
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.time.yaml'
-    - name: node_environment_id
+    - name: environments
       in: query
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: node_name
+    - name: name
       in: query
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: node_object_id
+    - name: object_id
       in: query
       required: false
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: node_primary_kind
+    - name: primary_kind
       in: query
       required: false
       schema:

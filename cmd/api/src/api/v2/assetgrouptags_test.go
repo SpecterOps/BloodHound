@@ -3815,7 +3815,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 				request := &http.Request{
 					URL: &url.URL{
 						Path:     "/api/v2/asset-group-tags/certifications",
-						RawQuery: "node_name=eq:test",
+						RawQuery: "name=eq:test",
 					},
 					Method: http.MethodGet,
 				}
@@ -3844,7 +3844,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 									"name": "TestNode",
 									"created_at": "0001-01-01T00:00:00Z",
 									"certified_by": "",
-									"certification": 0
+									"certified": 0
 								}
 							]
 						}
@@ -3887,7 +3887,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 									"name": "TestNode",
 									"created_at": "0001-01-01T00:00:00Z",
 									"certified_by": "",
-									"certification": 0
+									"certified": 0
 								}
 							]
 						}

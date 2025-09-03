@@ -6677,7 +6677,7 @@
             }
           },
           {
-            "name": "node_environment_id",
+            "name": "environments",
             "in": "query",
             "required": false,
             "schema": {
@@ -6685,7 +6685,7 @@
             }
           },
           {
-            "name": "node_name",
+            "name": "name",
             "in": "query",
             "required": false,
             "schema": {
@@ -6693,7 +6693,7 @@
             }
           },
           {
-            "name": "node_object_id",
+            "name": "object_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -6701,7 +6701,7 @@
             }
           },
           {
-            "name": "node_primary_kind",
+            "name": "primary_kind",
             "in": "query",
             "required": false,
             "schema": {
@@ -19206,7 +19206,7 @@
                       "certified_by": {
                         "type": "string"
                       },
-                      "certification": {
+                      "certified": {
                         "type": "integer",
                         "description": "0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert"
                       }
