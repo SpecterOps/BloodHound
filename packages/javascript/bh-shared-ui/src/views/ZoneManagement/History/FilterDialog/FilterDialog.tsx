@@ -18,10 +18,12 @@ import {
     DatePicker,
     Dialog,
     DialogActions,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    DialogTrigger,
     Form,
     FormControl,
     FormField,
@@ -40,7 +42,7 @@ import {
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect } from 'react';
 import { ErrorOption, useForm } from 'react-hook-form';
-import { MaskedInput } from '../../../../components';
+import { AppIcon, MaskedInput } from '../../../../components';
 import { useTagsQuery } from '../../../../hooks';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
 import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
@@ -55,7 +57,7 @@ const actionOptions = [
     'Deleted',
 ] as const;
 
-interface AssetGroupTagHistoryFilters {
+export interface AssetGroupTagHistoryFilters {
     action: (typeof actionOptions)[number];
     tag: string;
     madeBy: string;
@@ -63,21 +65,19 @@ interface AssetGroupTagHistoryFilters {
     ['end-date']: string;
 }
 
-const defaultValues = { action: actionOptions[0], tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
+export const DEFAULT_FILTER_VALUE = { action: actionOptions[0], tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 const FilterDialog: FC<{
-    open: boolean;
-    handleClose: () => void;
     setFilters: (filters: AssetGroupTagHistoryFilters) => void;
-    filters?: AssetGroupTagHistoryFilters;
-}> = ({ open, filters = defaultValues, handleClose, setFilters }) => {
+    filters: AssetGroupTagHistoryFilters;
+}> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
 
-    const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues });
+    const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
 
     const validateDateFields = useCallback(
         (startDate: DateTime, endDate: DateTime) => {
@@ -130,7 +130,13 @@ const FilterDialog: FC<{
     }, [form, filters]);
 
     return (
-        <Dialog open={open}>
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button data-testid='History_log_filter_dialog' variant='text'>
+                    <AppIcon.FilterOutline size={22} />
+                </Button>
+            </DialogTrigger>
+
             <DialogPortal>
                 <DialogContent>
                     <Form {...form}>
@@ -139,7 +145,7 @@ const FilterDialog: FC<{
                                 <span className='text-xl'>Filter</span>
                                 <Button
                                     variant={'text'}
-                                    onClick={() => form.reset(defaultValues)}
+                                    onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
                                     className='font-normal p-2'>
                                     Clear All
                                 </Button>
@@ -359,15 +365,19 @@ const FilterDialog: FC<{
                             </div>
 
                             <DialogActions>
-                                <Button variant={'text'} onClick={handleClose} className='p-2'>
-                                    Cancel
-                                </Button>
-                                <Button
-                                    variant={'text'}
-                                    className='text-primary dark:text-secondary-variant-2 p-2'
-                                    onClick={handleConfirm}>
-                                    Confirm
-                                </Button>
+                                <DialogClose asChild>
+                                    <Button variant={'text'} className='p-2'>
+                                        Cancel
+                                    </Button>
+                                </DialogClose>
+                                <DialogClose>
+                                    <Button
+                                        variant={'text'}
+                                        className='text-primary dark:text-secondary-variant-2 p-2'
+                                        onClick={handleConfirm}>
+                                        Confirm
+                                    </Button>
+                                </DialogClose>
                             </DialogActions>
                         </form>
                     </Form>
