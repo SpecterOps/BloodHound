@@ -79,7 +79,6 @@ describe('CommonSearches', () => {
                     onPerformCypherSearch={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
                     showCommonQueries={true}
-                    prebuiltSearchList={[]}
                 />
             </QueryClientProvider>
         );
@@ -99,7 +98,6 @@ describe('CommonSearches', () => {
                     onPerformCypherSearch={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
                     showCommonQueries={true}
-                    prebuiltSearchList={[]}
                 />
             </QueryClientProvider>
         );
@@ -122,7 +120,6 @@ describe('CommonSearches', () => {
                     onPerformCypherSearch={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
                     showCommonQueries={false}
-                    prebuiltSearchList={[]}
                 />
             </QueryClientProvider>
         );
@@ -155,7 +152,6 @@ describe('CommonSearches', () => {
                     onPerformCypherSearch={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
                     showCommonQueries={false}
-                    prebuiltSearchList={[]}
                 />
             </QueryClientProvider>
         );
@@ -191,7 +187,6 @@ describe('CommonSearches', () => {
                     onPerformCypherSearch={vi.fn()}
                     onToggleCommonQueries={vi.fn()}
                     showCommonQueries={false}
-                    prebuiltSearchList={[]}
                 />
             </QueryClientProvider>
         );
@@ -225,7 +220,6 @@ describe('CommonSearches', () => {
                     onPerformCypherSearch={vi.fn()}
                     onToggleCommonQueries={handleToggle}
                     showCommonQueries={true}
-                    prebuiltSearchList={[]}
                 />
             </QueryClientProvider>
         );

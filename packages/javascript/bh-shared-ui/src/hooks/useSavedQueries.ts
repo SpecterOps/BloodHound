@@ -15,11 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    BasicResponse,
     CreateUserQueryRequest,
     DeleteUserQueryPermissionsRequest,
     QueryScope,
     RequestOptions,
     SavedQuery,
+    SavedQueryPermissionsResponse,
     UpdateUserQueryPermissionsRequest,
     UpdateUserQueryRequest,
 } from 'js-client-library';
@@ -36,12 +38,8 @@ export const getSavedQueries = (scope: QueryScope, options?: RequestOptions): Pr
     return apiClient.getUserSavedQueries(scope, options).then((response) => response.data.data);
 };
 
-export const getExportQueries = (): Promise<any> => {
-    return apiClient.getExportCypherQueries().then((response: any) => response);
-};
-
-export const getExportQuery = (id: number) => {
-    return apiClient.getExportCypherQuery(id).then((response) => response);
+export const getExportQuery = (id: number, options?: RequestOptions) => {
+    return apiClient.getExportCypherQuery(id, options).then((response) => response);
 };
 
 export const createSavedQuery = (savedQuery: CreateUserQueryRequest, options?: RequestOptions): Promise<SavedQuery> => {
@@ -52,15 +50,20 @@ export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest): Promise<Sa
     return apiClient.updateUserQuery(savedQuery).then((response) => response.data.data);
 };
 
-export const importSavedQuery = (savedQuery: any): Promise<any> => {
-    return apiClient.importUserQuery(savedQuery).then((response) => response.data);
+export const importSavedQuery = (savedQuery: FormData | Blob | object): Promise<Blob | BasicResponse<any>> => {
+    return apiClient.importUserQuery(savedQuery).then((response) => {
+        return response.data;
+    });
 };
 
 export const deleteSavedQuery = (id: number): Promise<void> => {
     return apiClient.deleteUserQuery(id).then((response) => response.data);
 };
 
-export const getQueryPermissions = async (id: number, options?: RequestOptions): Promise<any> => {
+export const getQueryPermissions = async (
+    id: number,
+    options?: RequestOptions
+): Promise<SavedQueryPermissionsResponse> => {
     const emptyPermissions = { query_id: undefined, public: false, shared_to_user_ids: [] };
     if (!id) {
         return emptyPermissions;

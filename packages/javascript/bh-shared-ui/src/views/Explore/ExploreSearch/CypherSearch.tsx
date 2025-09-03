@@ -102,7 +102,7 @@ const CypherSearchInner = ({
         setShowCommonQueries((v) => !v);
     };
     const updateQueryPermissions = (id: number) => {
-        if (permissions.public && !isPublic && sharedIds.length) {
+        if (permissions?.public && !isPublic && sharedIds.length) {
             const localSharedIds = [...sharedIds];
             updateQueryPermissionsMutation.mutate(
                 {

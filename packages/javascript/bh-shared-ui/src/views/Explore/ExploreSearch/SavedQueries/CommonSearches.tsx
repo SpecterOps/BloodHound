@@ -41,7 +41,7 @@ const CommonSearches = ({
     onPerformCypherSearch,
     onToggleCommonQueries,
     showCommonQueries,
-}: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
+}: CommonSearchesProps) => {
     const { selected, selectedQuery, setSelected } = useSavedQueriesContext();
 
     const userQueries = useSavedQueries();
@@ -155,6 +155,8 @@ const CommonSearches = ({
     const handleExport = () => {
         if (!(selectedQuery && selectedQuery?.id)) return;
         getExportQuery(selectedQuery.id).then((res) => {
+            console.log('export');
+            console.log(res);
             const filename =
                 res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] || `exported_queries.zip`;
             fileDownload(res.data, filename);
