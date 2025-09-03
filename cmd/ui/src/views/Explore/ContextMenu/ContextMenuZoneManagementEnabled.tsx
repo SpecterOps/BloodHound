@@ -30,7 +30,7 @@ import {
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'src/routes/constants';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'bh-shared-ui';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
 

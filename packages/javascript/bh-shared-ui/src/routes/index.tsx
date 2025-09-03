@@ -28,9 +28,9 @@ export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS = `/zone/:tierId/detail
 export const ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS = `/zone/:tierId/details/member/:memberId`;
 export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS = `/zone/:tierId/details/selector/:selectorId/member/:memberId`;
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS = `/label/:labelId/details/selector/:selectorId`;
-export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS = '/details/label/:labelId/member/:memberId';
+export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS = '/label/:labelId/details/member/:memberId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS =
-    '/details/label/:labelId/selector/:selectorId/member/:memberId';
+    '/label/:labelId/details/selector/:selectorId/member/:memberId';
 
 export const ROUTE_ZONE_MANAGEMENT_SAVE = '/save';
 export const ROUTE_ZONE_MANAGEMENT_UPDATE_TIER = '/zone/:tierId/save';

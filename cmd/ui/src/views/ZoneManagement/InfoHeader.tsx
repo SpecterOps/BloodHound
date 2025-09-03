@@ -29,7 +29,7 @@ import {
 } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'src/routes/constants';
+import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'bh-shared-ui';
 
 const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {
     switch (type) {
