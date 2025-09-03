@@ -28,7 +28,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { ROUTE_ZONE_MANAGEMENT_DETAILS, ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
+import { ROUTE_PRIVILEGE_ZONES_DETAILS, ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -45,13 +45,13 @@ export const getSavePath = (
     selectorId: string | undefined
 ) => {
     // TODO - what should this route be to account for zone/label?
-    const savePath = `${ROUTE_ZONE_MANAGEMENT_ROOT}/save`;
+    const savePath = `${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierId}/save`;
 
-    if (selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/label/${labelId}/save/selector/${selectorId}`;
-    if (selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/tier/${tierId}/save/selector/${selectorId}`;
+    if (selectorId && labelId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${labelId}/save/selector/${selectorId}`;
+    if (selectorId && tierId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierId}/save/selector/${selectorId}`;
 
-    if (!selectorId && labelId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/label/${labelId}/save`;
-    if (!selectorId && tierId) return `${ROUTE_ZONE_MANAGEMENT_ROOT}/tier/${tierId}/save`;
+    if (!selectorId && labelId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${labelId}/save`;
+    if (!selectorId && tierId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierId}/save`;
 
     return savePath;
 };
@@ -78,7 +78,7 @@ const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
     const environments = useEnvironmentIdList([
-        { path: ROUTE_ZONE_MANAGEMENT_ROOT + ROUTE_ZONE_MANAGEMENT_DETAILS, caseSensitive: false, end: false },
+        { path: ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_DETAILS, caseSensitive: false, end: false },
     ]);
 
     const tagId = labelId === undefined ? tierId : labelId;
@@ -127,7 +127,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/details/${getTagUrlValue(labelId)}/${id}`);
                             }}
                         />
                     ) : (
@@ -136,7 +136,7 @@ const Details: FC = () => {
                             listQuery={tiersQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${id}/details`);
+                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${id}/details`);
                             }}
                         />
                     )}
@@ -146,7 +146,7 @@ const Details: FC = () => {
                         selected={selectorId}
                         onSelect={(id) => {
                             navigate(
-                                `${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
+                                `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
                             );
                         }}
                     />
@@ -156,7 +156,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
+                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -168,7 +168,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_ZONE_MANAGEMENT_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
+                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}

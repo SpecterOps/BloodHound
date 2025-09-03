@@ -19,7 +19,7 @@ import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useTagsQuery } from '../../../hooks';
-import { ROUTE_ZONE_MANAGEMENT_ROOT, ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
+import { ROUTE_PRIVILEGE_ZONES_ROOT, ROUTE_PRIVILEGE_ZONES_SUMMARY } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
 import { SelectedDetails } from '../Details/SelectedDetails';
@@ -69,7 +69,7 @@ const Summary: FC = () => {
                         selected={tagId as string}
                         onSelect={(id) =>
                             navigate(
-                                `${ROUTE_ZONE_MANAGEMENT_ROOT}/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
+                                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${ROUTE_PRIVILEGE_ZONES_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
                             )
                         }
                     />

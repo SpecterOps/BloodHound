@@ -24,7 +24,7 @@ import { getTagUrlValue, itemSkeletons } from '../../../views';
 
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams } from '../../../hooks';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
@@ -63,14 +63,14 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`);
         },
         [tagId, navigate, labelId]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector/${id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector/${id}`);
         },
         [tagId, navigate, labelId]
     );

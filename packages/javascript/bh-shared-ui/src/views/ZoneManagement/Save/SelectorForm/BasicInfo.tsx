@@ -45,7 +45,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
@@ -92,7 +92,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             setDeleteDialogOpen(false);
 
-            navigate(`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details`);
         } catch (error) {
             handleError(error, 'deleting', 'selector', addNotification);
         }

@@ -25,7 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { useZonePathParams } from '../../../../hooks';
 import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../../routes';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../../routes';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { handleError } from '../utils';
@@ -185,7 +185,7 @@ const SelectorForm: FC = () => {
             });
 
             navigate(
-                `${ROUTE_ZONE_MANAGEMENT_ROOT}/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}/details`
+                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}/details`
             );
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
