@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardHeader, CardTitle, DataTable, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagHistoryRecord } from 'js-client-library';
+import { type AssetGroupTagHistoryRecord } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useRef, useState } from 'react';
 import { useInfiniteQuery } from 'react-query';
@@ -23,6 +23,7 @@ import { AppIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
 import { apiClient } from '../../../utils';
+import { DEFAULT_FILTER_VALUE, FilterDialog, type AssetGroupTagHistoryFilters } from './FilterDialog';
 import HistoryNotes from './HistoryNotes';
 import { useHistoryTableContext } from './HistoryTableContext';
 
@@ -92,7 +93,7 @@ const NoteComponent = ({ row }: any) => {
 };
 
 const HISTORY_COLS = [
-    ({ row }: any) => <div>{row.original.target}</div>,
+    ({ row }: any) => <div className='text-primary dark:text-secondary-variant-2'>{row.original.target}</div>,
     ({ row }: any) => <div>{row.original.action.replace(/([A-Z])/g, ' $1').trim()}</div>,
     ({ row }: any) => <div>{row.original.date}</div>,
     ({ row }: any) => <div>{row.original.tagName}</div>,
@@ -110,7 +111,7 @@ const getColumns = (isLoading: boolean) => {
     }));
 };
 
-const useAssetGroupTagHistoryQuery = (query?: string) => {
+const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilters, query?: string) => {
     const doSearch = query && query.length >= 3;
     const queryKey = doSearch ? query : 'static';
 
@@ -151,6 +152,7 @@ const useAssetGroupTagHistoryQuery = (query?: string) => {
 
 const HistoryContent = () => {
     const [search, setSearch] = useState('');
+    const [filters, setFilters] = useState<AssetGroupTagHistoryFilters>(DEFAULT_FILTER_VALUE);
 
     const {
         data: logHistory,
@@ -158,7 +160,7 @@ const HistoryContent = () => {
         isFetching: isHistoryFetching,
         isSuccess: isHistorySuccess,
         fetchNextPage,
-    } = useAssetGroupTagHistoryQuery(search);
+    } = useAssetGroupTagHistoryQuery(filters, search);
     const { data: tags, isLoading: isTagsLoading, isSuccess: isTagsSuccess } = useTagsQuery();
 
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -239,7 +241,11 @@ const HistoryContent = () => {
             <Card className='grow' id='has-grid'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
-                    <SearchInput value={search} onInputChange={setSearch} />
+                    <div className='flex items-center '>
+                        <SearchInput value={search} onInputChange={setSearch} />
+
+                        <FilterDialog setFilters={setFilters} filters={filters} />
+                    </div>
                 </CardHeader>
 
                 <div ref={scrollRef} className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
