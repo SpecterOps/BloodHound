@@ -20,7 +20,7 @@ import { OptionsObject } from 'notistack';
 export const handleError = (
     error: unknown,
     action: 'creating' | 'updating' | 'deleting',
-    entity: 'selector' | 'tier' | 'label',
+    entity: 'selector' | 'zone' | 'label',
     addNotification: (notification: string, key?: string, options?: OptionsObject) => void
 ) => {
     console.error(error);

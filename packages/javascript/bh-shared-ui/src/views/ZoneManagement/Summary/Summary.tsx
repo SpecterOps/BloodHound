@@ -38,8 +38,8 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 const Summary: FC = () => {
     const navigate = useAppNavigate();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tierId = topTagId?.toString(), labelId, selectorId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = topTagId?.toString(), labelId, selectorId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -55,7 +55,7 @@ const Summary: FC = () => {
                 <InfoHeader />
                 <div className='basis-1/3'>
                     <Button asChild variant={'secondary'}>
-                        <Link data-testid='privilege-zones_edit-button' to={getSavePath(tierId, labelId, selectorId)}>
+                        <Link data-testid='privilege-zones_edit-button' to={getSavePath(zoneId, labelId, selectorId)}>
                             Edit
                         </Link>
                     </Button>
@@ -64,7 +64,7 @@ const Summary: FC = () => {
             <div className='flex gap-8 mt-4 w-full h-full'>
                 <div className='basis-2/3'>
                     <SummaryList
-                        title={labelId ? 'Labels' : 'Tiers'}
+                        title={labelId ? 'Labels' : 'Zones'}
                         listQuery={tagsQuery}
                         selected={tagId as string}
                         onSelect={(id) =>

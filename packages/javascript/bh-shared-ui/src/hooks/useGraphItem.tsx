@@ -27,7 +27,7 @@ export interface BaseItemResponse {
 
 export interface NodeResponse extends BaseItemResponse {
     objectId: string;
-    isTierZero: boolean;
+    isZoneZero: boolean;
     isOwnedObject: boolean;
 }
 

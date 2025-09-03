@@ -32,12 +32,12 @@ type SummaryListProps = {
     onSelect: (id: number) => void;
     listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string;
-    title: 'Tiers' | 'Labels';
+    title: 'Zones' | 'Labels';
 };
 
 const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, title }) => {
     const targetTypes: AssetGroupTagTypes[] =
-        title === 'Tiers' ? [AssetGroupTagTypeTier] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+        title === 'Zones' ? [AssetGroupTagTypeTier] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
     return (
         <div className='flex flex-col w-full h-full space-y-4'>

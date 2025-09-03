@@ -27,7 +27,7 @@ import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
 
 type TagListProps = {
-    title: 'Tiers' | 'Labels';
+    title: 'Zones' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string | undefined;
     onSelect: (id: number) => void;
@@ -44,11 +44,11 @@ type TagListProps = {
 export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { isTierLocation } = useZonePathParams();
+    const { isZoneLocation } = useZonePathParams();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
-            {title !== 'Tiers' ? (
+            {title !== 'Zones' ? (
                 <SortableHeader
                     title={title}
                     onSort={() => {
@@ -87,7 +87,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                     ) : listQuery.isSuccess ? (
                         listQuery.data
                             ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && title === 'Tiers') {
+                                if (isTag(a) && isTag(b) && title === 'Zones') {
                                     // A tag can be a tier and also have position null it seems
                                     return (a.position || 0) - (b.position || 0);
                                 } else {
@@ -121,7 +121,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                {isTag(listItem) && isTierLocation && listItem.id !== topTagId && (
+                                                {isTag(listItem) && isZoneLocation && listItem.id !== topTagId && (
                                                     <ZoneAnalysisIcon
                                                         size={18}
                                                         tooltip

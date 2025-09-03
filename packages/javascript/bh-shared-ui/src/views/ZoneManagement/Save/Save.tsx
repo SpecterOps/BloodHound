@@ -33,10 +33,10 @@ import TagForm from './TagForm';
 
 const Save: FC = () => {
     const location = useLocation();
-    const { tierId, labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId, labelId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
     const showSelectorForm = location.pathname.includes('selector');
-    const tagValue = location.pathname.includes('label') ? 'label' : 'tier';
+    const tagValue = location.pathname.includes('label') ? 'label' : 'zone';
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -49,7 +49,7 @@ const Save: FC = () => {
                         <BreadcrumbLink asChild>
                             <AppLink
                                 data-testid='zone-management_save_details-breadcrumb'
-                                to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}/details`}>
+                                to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagValue}/${tagValue === 'zone' ? topTagId : ownedId}/details`}>
                                 {captitalizedPluralTagValue}
                             </AppLink>
                         </BreadcrumbLink>

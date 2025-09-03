@@ -27,11 +27,11 @@ import {
     ROUTE_PRIVILEGE_ZONES_ROOT,
     ROUTE_PRIVILEGE_ZONES_SUMMARY,
     ROUTE_PRIVILEGE_ZONES_SUMMARY_LABEL_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_SUMMARY_TIER_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_SELECTOR_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_SUMMARY_ZONE_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
@@ -42,19 +42,19 @@ const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
 
 const detailsPaths = [
-    ROUTE_PRIVILEGE_ZONES_TIER_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
     ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_SELECTOR_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS,
     ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_TIER_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
     ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS,
     ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS,
 ];
 
 const summaryPaths = [
     ROUTE_PRIVILEGE_ZONES_SUMMARY,
-    ROUTE_PRIVILEGE_ZONES_SUMMARY_TIER_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_SUMMARY_ZONE_DETAILS,
     ROUTE_PRIVILEGE_ZONES_SUMMARY_LABEL_DETAILS,
 ];
 
@@ -93,18 +93,18 @@ const ZoneManagement: FC = () => {
                 </p>
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
-                        defaultValue='tier'
+                        defaultValue='zones'
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
-                        value={location.pathname.includes('label') ? 'label' : 'tier'}
+                        value={location.pathname.includes('label') ? 'label' : 'zone'}
                         onValueChange={(value) => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? tagId : ownedId;
+                            const id = value === 'zone' ? tagId : ownedId;
                             navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${value}/${id}/${path}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>
-                                Tiers
+                            <TabsTrigger value='zone' data-testid='zone-management_tab-list_tiers-tab'>
+                                Zones
                             </TabsTrigger>
                             <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
                                 Labels

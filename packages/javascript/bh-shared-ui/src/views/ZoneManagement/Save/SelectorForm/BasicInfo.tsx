@@ -57,8 +57,8 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const location = useLocation();
     const navigate = useAppNavigate();
 
-    const { tierId = '', labelId, selectorId = '' } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
 
@@ -140,7 +140,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                         </div>
                     )}
                     <p className='font-bold'>
-                        {location.pathname.includes('label') ? 'Label' : 'Tier'}:{' '}
+                        {location.pathname.includes('label') ? 'Label' : 'Zone'}:{' '}
                         <span className='font-normal'>{tagQuery.data?.name}</span>
                     </p>
                     <div className='flex flex-col gap-6 mt-6'>

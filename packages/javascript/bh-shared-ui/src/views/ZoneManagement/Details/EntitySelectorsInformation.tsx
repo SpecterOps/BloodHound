@@ -28,8 +28,8 @@ import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
-    const { tierId, labelId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId, labelId, memberId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 

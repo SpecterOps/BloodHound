@@ -40,18 +40,18 @@ import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
 
 export const getSavePath = (
-    tierId: string | undefined,
+    zoneId: string | undefined,
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
     // TODO - what should this route be to account for zone/label?
-    const savePath = `${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierId}/save`;
+    const savePath = `${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneId}/save`;
 
     if (selectorId && labelId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${labelId}/save/selector/${selectorId}`;
-    if (selectorId && tierId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierId}/save/selector/${selectorId}`;
+    if (selectorId && zoneId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneId}/save/selector/${selectorId}`;
 
     if (!selectorId && labelId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${labelId}/save`;
-    if (!selectorId && tierId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierId}/save`;
+    if (!selectorId && zoneId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneId}/save`;
 
     return savePath;
 };
@@ -59,13 +59,13 @@ export const getSavePath = (
 export const getEditButtonState = (
     memberId?: string,
     selectorsQuery?: UseQueryResult,
-    tiersQuery?: UseQueryResult,
+    zonesQuery?: UseQueryResult,
     labelsQuery?: UseQueryResult
 ) => {
     return (
         !!memberId ||
-        (selectorsQuery?.isLoading && tiersQuery?.isLoading && labelsQuery?.isLoading) ||
-        (selectorsQuery?.isError && tiersQuery?.isError && labelsQuery?.isError)
+        (selectorsQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
+        (selectorsQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
     );
 };
 
@@ -76,12 +76,12 @@ const Details: FC = () => {
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
     const environments = useEnvironmentIdList([
         { path: ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_DETAILS, caseSensitive: false, end: false },
     ]);
 
-    const tagId = labelId === undefined ? tierId : labelId;
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -89,7 +89,7 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tiersQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
+    const zonesQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
 
     const labelsQuery = useTagsQuery({
         select: (tags) =>
@@ -102,7 +102,7 @@ const Details: FC = () => {
 
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
-    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
 
     return (
         <div className='h-full'>
@@ -114,7 +114,7 @@ const Details: FC = () => {
                 <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
+                            <AppLink to={getSavePath(zoneId, labelId, selectorId)}>Edit</AppLink>
                         </Button>
                     )}
                 </div>
@@ -132,8 +132,8 @@ const Details: FC = () => {
                         />
                     ) : (
                         <TagList
-                            title={'Tiers'}
-                            listQuery={tiersQuery}
+                            title={'Zones'}
+                            listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
                                 navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${id}/details`);

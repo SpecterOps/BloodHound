@@ -52,8 +52,8 @@ const DescriptionField: FC<{ description: string }> = ({ description }) => {
 const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
     const { SalesMessage } = useContext(ZoneManagementContext);
-    const { tierId = '', labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = '', labelId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
 

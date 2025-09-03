@@ -44,8 +44,8 @@ const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggreg
 
 const InfoHeader: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tierId = topTagId?.toString(), labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = topTagId?.toString(), labelId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
 

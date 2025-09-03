@@ -25,7 +25,7 @@ import {
     HIGH_VALUE_LABEL,
     Permission,
     SelectedNode,
-    TIER_ZERO_TAG,
+    ZONE_ZERO_TAG,
     createTypedSearchParams,
     useAppNavigate,
     useExploreParams,
@@ -74,14 +74,14 @@ const GroupManagement = () => {
         }
     };
 
-    // Handle tier zero case
+    // Handle zone zero case
     const mapAssetGroups = (assetGroups: AssetGroup[]): DropdownOption[] => {
         return assetGroups.map((assetGroup) => {
-            const isTierZero = assetGroup.tag === TIER_ZERO_TAG;
+            const isZoneZero = assetGroup.tag === ZONE_ZERO_TAG;
             return {
                 key: assetGroup.id,
-                value: isTierZero ? HIGH_VALUE_LABEL : assetGroup.name,
-                icon: isTierZero ? faGem : undefined,
+                value: isZoneZero ? HIGH_VALUE_LABEL : assetGroup.name,
+                icon: isZoneZero ? faGem : undefined,
             };
         });
     };
@@ -90,8 +90,8 @@ const GroupManagement = () => {
         <GroupManagementContent
             globalEnvironment={environment ?? null}
             showExplorePageLink={!!openNode}
-            tierZeroLabel={HIGH_VALUE_LABEL}
-            tierZeroTag={TIER_ZERO_TAG}
+            zoneZeroLabel={HIGH_VALUE_LABEL}
+            zoneZeroTag={ZONE_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
             entityPanelComponent={<EntityInfoPanel selectedNode={openNode} DataTable={EntityInfoDataTable} />}
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, MainNavData, useFeatureFlags } from 'bh-shared-ui';
+import { AppIcon, MainNavData, useFeatureFlags, ROUTE_PRIVILEGE_ZONES_ROOT } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -54,7 +54,8 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
-    const tierFlag = featureFlags?.data?.find((flag) => {
+    const zoneFlag = featureFlags?.data?.find((flag) => {
+        // TODO - is this changed in the DB?
         return flag.key === 'tier_management_engine';
     });
 
@@ -66,10 +67,10 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: 'global_nav-explore',
         },
         {
-            label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
+            label: zoneFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
-            testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
+            route: zoneFlag?.enabled ? ROUTE_PRIVILEGE_ZONES_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
+            testId: zoneFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
         },
     ];
 

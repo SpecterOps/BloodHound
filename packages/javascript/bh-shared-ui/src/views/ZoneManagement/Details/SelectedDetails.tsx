@@ -23,8 +23,8 @@ import DynamicDetails from './DynamicDetails';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
-    const { tierId, labelId, selectorId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId, labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const tagQuery = useQuery({
         queryKey: ['privilege-zones', 'tag', tagId],

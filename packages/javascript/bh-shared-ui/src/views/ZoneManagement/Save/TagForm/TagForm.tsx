@@ -70,7 +70,7 @@ export const TagForm: FC = () => {
         privilegeZoneAnalysisEnabled,
         disableNameInput,
         isLabelLocation,
-        isUpdateTierLocation,
+        isUpdateZoneLocation,
         showAnalysisToggle,
         showDeleteButton,
         formTitle,
@@ -84,9 +84,9 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
-    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
-    const showSalesMessage = isUpdateTierLocation && SalesMessage;
-    const showTierList = isUpdateTierLocation && TierList;
+    const { ZoneList, SalesMessage } = useContext(ZoneManagementContext);
+    const showSalesMessage = isUpdateZoneLocation && SalesMessage;
+    const showZoneList = isUpdateZoneLocation && ZoneList;
 
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
@@ -416,13 +416,13 @@ export const TagForm: FC = () => {
                     </div>
                 </div>
 
-                {showTierList && (
-                    <TierList
-                        tiers={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
+                {showZoneList && (
+                    <ZoneList
+                        zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
                         setPosition={(position: number | undefined) => {
                             form.setValue('position', position, { shouldDirty: true });
                         }}
-                        name={tagQuery.data?.name || 'New Tier'}
+                        name={tagQuery.data?.name || 'New Zone'}
                     />
                 )}
             </form>

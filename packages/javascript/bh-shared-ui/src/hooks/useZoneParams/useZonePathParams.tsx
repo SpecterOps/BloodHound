@@ -17,23 +17,23 @@
 import { useParams } from 'react-router-dom';
 
 export const useZonePathParams = () => {
-    const { tierId = '', labelId, selectorId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = '', labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const isLabelLocation = labelId !== undefined;
-    const isTierLocation = tierId !== '';
+    const isZoneLocation = zoneId !== '';
 
-    const tagKind: 'label' | 'tier' = isLabelLocation ? 'label' : 'tier';
-    const tagKindDisplay: 'Label' | 'Tier' = isLabelLocation ? 'Label' : 'Tier';
+    const tagKind: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
+    const tagKindDisplay: 'Label' | 'Zone' = isLabelLocation ? 'Label' : 'Zone';
 
     return {
         tagId,
-        tierId,
+        zoneId,
         labelId,
         selectorId,
         memberId,
         isLabelLocation,
-        isTierLocation,
+        isZoneLocation,
         tagKind,
         tagKindDisplay,
     };
