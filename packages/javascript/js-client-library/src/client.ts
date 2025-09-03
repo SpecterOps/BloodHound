@@ -72,6 +72,7 @@ import {
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
     GetEnterpriseCollectorsResponse,
+    GetExportQueryResponse,
     GetScheduledJobDisplayResponse,
     GraphResponse,
     ListAuthTokensResponse,
@@ -174,12 +175,15 @@ class BHEAPIClient {
             })
         );
 
-    getExportCypherQuery = (id: number): Promise<any> =>
+    getExportCypherQuery = (id: number, options?: RequestOptions): Promise<GetExportQueryResponse> =>
         this.baseClient.get(
             `/api/v2/saved-queries/${id}/export`,
-            Object.assign({
-                responseType: 'blob',
-            })
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
         );
 
     importUserQuery = (payload: FormData | Blob | object, options?: RequestOptions) => {

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
     AssetGroupTagMember,
@@ -365,3 +366,5 @@ export type ScheduledJobDisplay = {
 };
 
 export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
+
+export type GetExportQueryResponse = AxiosResponse<Blob>;

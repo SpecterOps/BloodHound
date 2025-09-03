@@ -18,6 +18,7 @@ import {
     BasicResponse,
     CreateUserQueryRequest,
     DeleteUserQueryPermissionsRequest,
+    GetExportQueryResponse,
     QueryScope,
     RequestOptions,
     SavedQuery,
@@ -38,7 +39,7 @@ export const getSavedQueries = (scope: QueryScope, options?: RequestOptions): Pr
     return apiClient.getUserSavedQueries(scope, options).then((response) => response.data.data);
 };
 
-export const getExportQuery = (id: number, options?: RequestOptions) => {
+export const getExportQuery = (id: number, options?: RequestOptions): Promise<GetExportQueryResponse> => {
     return apiClient.getExportCypherQuery(id, options).then((response) => response);
 };
 
