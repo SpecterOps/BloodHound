@@ -18,9 +18,13 @@ type cache struct {
 	stats cacheStats
 }
 
-func newCache() cache {
+func newCache(size int) cache {
+	if size == 0 {
+		size = 1_000_000
+	}
+
 	return cache{
-		data:  make(map[uint64]uint64),
+		data:  make(map[uint64]uint64, size),
 		mutex: &sync.Mutex{},
 		stats: cacheStats{},
 	}
