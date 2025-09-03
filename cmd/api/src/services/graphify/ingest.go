@@ -397,12 +397,12 @@ func validateNodeKinds(objectID string, kinds graph.Kinds) error {
 	}
 }
 
-// maybeSubmitNodeUpdate decides whether to update a node directly, or route it
+// maybeSubmitNodeUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
-func maybeSubmitNodeUpdate(ic *IngestContext, update graph.NodeUpdate) error {
-	if !ic.changelogEnabled {
-		// No changelog: always update
-		return ic.Batch.UpdateNodeBy(update)
+func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) error {
+	if !ingestCtx.changelogEnabled {
+		// No changelog: always update via dawgs batch
+		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
 
 	objectid, err := update.Node.Properties.Get("objectid").String()
@@ -417,31 +417,29 @@ func maybeSubmitNodeUpdate(ic *IngestContext, update graph.NodeUpdate) error {
 		update.Node.Properties,
 	)
 
-	shouldSubmit, err := ic.changeManager.ResolveChange(change)
+	shouldSubmit, err := ingestCtx.changeManager.ResolveChange(change)
 	if err != nil {
-		return fmt.Errorf("resolve change: %w", err)
+		return fmt.Errorf("resolve node change: %w", err)
 	}
 
 	if shouldSubmit {
-		// New/modified: update DB
-		return ic.Batch.UpdateNodeBy(update)
+		// New/modified: update via dawgs batch
+		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	// this is really just a batch operation under the hood. every node ingested will get batched either here of in the branch above...
-	// will there be savings?
-	ic.changeManager.Submit(ic.Ctx, change)
+	ingestCtx.changeManager.Submit(ingestCtx.Ctx, change)
 
 	return nil
 }
 
-func IngestNodes(batch *IngestContext, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
+func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range nodes {
-		if err := IngestNode(batch, baseKind, next); err != nil {
+		if err := IngestNode(ingestCtx, baseKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
 			errs.Add(err)
 		}
@@ -455,23 +453,63 @@ func IngestNodes(batch *IngestContext, baseKind graph.Kind, nodes []ein.Ingestib
 //
 // Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
 // Errors encountered during resolution or update are collected and returned as a single combined error.
-func IngestRelationships(batch *IngestContext, baseKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
-	updates, err := resolveRelationships(batch, relationships, baseKind)
+	updates, err := resolveRelationships(ingestCtx, relationships, sourceKind)
 	if err != nil {
 		errs.Add(err)
 	}
 
 	for _, update := range updates {
-		if err := batch.Batch.UpdateRelationshipBy(update); err != nil {
+		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
 			errs.Add(err)
 		}
 	}
 
 	return errs.Combined()
+}
+
+// maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
+// through the changelog for deduplication and caching.
+func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.RelationshipUpdate) error {
+	if !ingestCtx.changelogEnabled {
+		// No changelog: always update via dawgs batch
+		return ingestCtx.Batch.UpdateRelationshipBy(update)
+	}
+
+	sourceObjectID, err := update.Start.Properties.Get(common.ObjectID.String()).String()
+	if err != nil {
+		return fmt.Errorf("get source objectid: %w", err)
+	}
+	targetObjectID, err := update.End.Properties.Get(common.ObjectID.String()).String()
+	if err != nil {
+		return fmt.Errorf("get target objectid: %w", err)
+	}
+
+	change := changelog.NewEdgeChange(
+		sourceObjectID,
+		targetObjectID,
+		update.Relationship.Kind,
+		update.Relationship.Properties,
+	)
+
+	shouldSubmit, err := ingestCtx.changeManager.ResolveChange(change)
+	if err != nil {
+		return fmt.Errorf("resolve edge change: %w", err)
+	}
+
+	if shouldSubmit {
+		// New/modified: update via dawgs batch
+		return ingestCtx.Batch.UpdateRelationshipBy(update)
+	}
+
+	// Unchanged: enqueue change-- this is needed to maintain reconciliation
+	ingestCtx.changeManager.Submit(ingestCtx.Ctx, change)
+
+	return nil
 }
 
 func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationship) error {
