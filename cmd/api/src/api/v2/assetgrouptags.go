@@ -1076,7 +1076,7 @@ type AssetGroupMemberWithCertification struct {
 	AssetGroupMember
 	CreatedAt     time.Time                     `json:"created_at"`
 	CertifiedBy   string                        `json:"certified_by"`
-	Certification model.AssetGroupCertification `json:"certification"`
+	Certification model.AssetGroupCertification `json:"certified"`
 }
 
 func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.FilterOperator {
@@ -1147,7 +1147,7 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			// return paginated AssetGroupMemberWithCertification of matches and also a count
-			var members []AssetGroupMemberWithCertification
+			members := make([]AssetGroupMemberWithCertification, 0)
 			for _, selNode := range selectorNodes {
 				member := AssetGroupMemberWithCertification{
 					AssetGroupMember: AssetGroupMember{

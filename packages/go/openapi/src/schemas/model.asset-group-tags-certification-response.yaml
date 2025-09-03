@@ -49,6 +49,6 @@ properties:
                 format: date-time
               certified_by:
                 type: string
-              certification:
+              certified:
                 type: integer
                 description: 0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert
