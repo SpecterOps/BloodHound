@@ -18,7 +18,9 @@ import { Button, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';
+import { SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
+import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, getListHeight } from './utils';
 
@@ -38,19 +40,32 @@ type SelectorsListProps = {
     }>;
     selected: string | undefined;
     onSelect: (id: number) => void;
+    sortOrder: SortOrder;
+    onChangeSortOrder: (sort: SortOrder) => void;
 };
 
-const SelectorsListWrapper = ({ children }: { children: React.ReactNode }) => {
+const SelectorsListWrapper = ({
+    children,
+    onChangeSortOrder,
+    sortOrder,
+}: {
+    children: React.ReactNode;
+    onChangeSortOrder: (sort: SortOrder) => void;
+    sortOrder: SortOrder;
+}) => {
     return (
         <div data-testid={`zone-management_details_selectors-list`}>
-            <div
-                data-testid={`zone-management_details_selectors-list_static-order`}
-                className='p-0 relative w-full border-b-2 border-neutral-light-5 dark:border-neutral-dark-5'>
-                <div className='inline-flex items-center justify-center h-10 transition-colors text-neutral-dark-5 dark:text-neutral-light-5 pl-6 font-bold text-xl'>
-                    Selectors
-                </div>
-            </div>
-
+            <SortableHeader
+                title={'Selectors'}
+                onSort={() => {
+                    onChangeSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                }}
+                sortOrder={sortOrder}
+                classes={{
+                    container: 'border-b-2 border-neutral-light-5 dark:border-neutral-dark-5',
+                    button: 'pl-6 font-bold text-xl',
+                }}
+            />
             <div
                 className={cn(`overflow-y-auto border-x-2 border-neutral-light-5 dark:border-neutral-dark-5`, {
                     'h-[762px]': getListHeight(window.innerHeight) === 762,
@@ -71,10 +86,16 @@ const SelectorsListWrapper = ({ children }: { children: React.ReactNode }) => {
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
  * @returns The component that displays a list of selectors for the zone management page
  */
-export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onSelect }) => {
+export const SelectorsList: FC<SelectorsListProps> = ({
+    listQuery,
+    onChangeSortOrder,
+    onSelect,
+    selected,
+    sortOrder,
+}) => {
     if (listQuery.isError) {
         return (
-            <SelectorsListWrapper>
+            <SelectorsListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
                 <ul>
                     <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                         <span className='text-base'>There was an error fetching this data</span>
@@ -121,7 +142,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({ listQuery, selected, onS
     };
 
     return (
-        <SelectorsListWrapper>
+        <SelectorsListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
             <InfiniteQueryFixedList<AssetGroupTagSelector>
                 itemSize={40}
                 queryResult={listQuery}
