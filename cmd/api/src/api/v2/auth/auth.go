@@ -363,7 +363,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		// eTAC
-		etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag)
+		etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl)
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
@@ -533,7 +533,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		}
 
 		// eTAC
-		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), database.EnvironmentAccessControlFeatureFlag); err != nil {
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if etacFeatureFlag.Enabled {
 			if updateUserRequest.EnvironmentControlList != nil {
