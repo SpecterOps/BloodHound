@@ -404,6 +404,8 @@ export enum ActiveDirectoryKindProperties {
     CertificateMappingMethods = 'certificatemappingmethods',
     StrongCertificateBindingEnforcementRaw = 'strongcertificatebindingenforcementraw',
     StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
+    VulnerableNetlogonSecurityDescriptor = 'vulnerablenetlogonsecuritydescriptor',
+    VulnerableNetlogonSecurityDescriptorCollected = 'vulnerablenetlogonsecuritydescriptorcollected',
     EKUs = 'ekus',
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     SubjectAltRequireDNS = 'subjectaltrequiredns',
@@ -594,6 +596,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Strong Certificate Binding Enforcement (Raw)';
         case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement:
             return 'Strong Certificate Binding Enforcement';
+        case ActiveDirectoryKindProperties.VulnerableNetlogonSecurityDescriptor:
+            return 'Vulnerable Netlogon Security Descriptor';
+        case ActiveDirectoryKindProperties.VulnerableNetlogonSecurityDescriptorCollected:
+            return 'Vulnerable Netlogon Security Descriptor Collected';
         case ActiveDirectoryKindProperties.EKUs:
             return 'Enhanced Key Usage';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
