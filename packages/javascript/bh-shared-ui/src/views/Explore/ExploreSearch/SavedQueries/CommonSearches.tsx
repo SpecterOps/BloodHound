@@ -100,7 +100,6 @@ const InnerCommonSearches = ({
         );
     }
 
-    //SHOULD THIS BE ABSTRACTED INTO A HOOK
     const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
         setSearchTerm(searchTerm);
         setPlatform(platform);
