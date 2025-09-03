@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/graph/api/serviceprincipal-addpassword?view=graph-rest-1.0&tabs=http'>
                 Microsoft Docs: servicePrincipal: addPassword
             </Link>

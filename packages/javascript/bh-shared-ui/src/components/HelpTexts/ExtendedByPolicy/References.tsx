@@ -22,21 +22,21 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53'>
                 ADCS ESC13 Abuse Technique
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd378897(v=ws.10)?redirectedfrom=MSDN'>
                 Authentication Mechanism Assurance for AD DS in Windows Server 2008 R2 Step-by-Step Guide
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.gradenegger.eu/en/using-authentication-mechanism-assurance-ama-to-secure-the-login-of-administrative-accounts/'>
                 Use Authentication Mechanism Assurance (AMA) to secure administrative account logins
             </Link>
