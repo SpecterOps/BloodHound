@@ -245,11 +245,11 @@ const UpdateUserFormInner: React.FC<{
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
-                <div className='flex gap-x-4 justify-center h-fit'>
+                <div className='flex gap-x-4 justify-center max-h-[800px]'>
                     <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
-                        <div className='flex flex-col  mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+                        <div className='flex flex-col mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
                             <div className='mb-4'>
                                 <FormField
                                     control={form.control}
@@ -267,7 +267,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel aria-labelledby='emailAddress' htmlFor='emailAddress'>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='emailAddress'>
                                                 Email Address
                                             </FormLabel>
                                             <FormControl>
@@ -303,7 +303,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel aria-labelledby='principal' htmlFor='principal'>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='principal'>
                                                 Principal Name
                                             </FormLabel>
                                             <FormControl>
@@ -339,7 +339,9 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel htmlFor='firstName'>First Name</FormLabel>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='firstName'>
+                                                First Name
+                                            </FormLabel>
                                             <FormControl>
                                                 <Input {...field} id='firstName' />
                                             </FormControl>
@@ -373,7 +375,9 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel htmlFor='lastName'>Last Name</FormLabel>
+                                            <FormLabel className='font-medium !text-sm' htmlFor='lastName'>
+                                                Last Name
+                                            </FormLabel>
                                             <FormControl>
                                                 <Input {...field} id='lastName' />
                                             </FormControl>
@@ -395,7 +399,9 @@ const UpdateUserFormInner: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel htmlFor='authenticationMethod' className=''>
+                                                    <FormLabel
+                                                        className='font-medium !text-sm'
+                                                        htmlFor='authenticationMethod'>
                                                         Authentication Method
                                                     </FormLabel>
 
@@ -407,7 +413,10 @@ const UpdateUserFormInner: React.FC<{
                                                         }}
                                                         value={field.value}>
                                                         <FormControl className='pointer-events-auto'>
-                                                            <SelectTrigger className='mt-3' id='authenticationMethod'>
+                                                            <SelectTrigger
+                                                                variant='underlined'
+                                                                className='bg-transparent'
+                                                                id='authenticationMethod'>
                                                                 <SelectValue
                                                                     placeholder={
                                                                         authenticationMethod === 'password'
@@ -447,7 +456,10 @@ const UpdateUserFormInner: React.FC<{
                                             }}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel htmlFor='sso' id='SSOProviderId-label'>
+                                                    <FormLabel
+                                                        className='font-medium !text-sm'
+                                                        htmlFor='sso'
+                                                        id='SSOProviderId-label'>
                                                         SSO Provider
                                                     </FormLabel>
 
@@ -457,7 +469,10 @@ const UpdateUserFormInner: React.FC<{
                                                         }}
                                                         value={field.value}>
                                                         <FormControl>
-                                                            <SelectTrigger className='mt-3' id='sso'>
+                                                            <SelectTrigger
+                                                                variant='underlined'
+                                                                className='bg-transparent'
+                                                                id='sso'>
                                                                 <SelectValue placeholder='SSO Provider' />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -495,7 +510,7 @@ const UpdateUserFormInner: React.FC<{
                                             <>
                                                 <FormItem>
                                                     <div className='flex row'>
-                                                        <FormLabel className='mr-2' htmlFor='role'>
+                                                        <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
                                                             Role
                                                         </FormLabel>
                                                         <Tooltip
@@ -514,7 +529,8 @@ const UpdateUserFormInner: React.FC<{
                                                             value={String(selectedRoleValue)}>
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
-                                                                    className='mt-3'
+                                                                    variant='underlined'
+                                                                    className='bg-transparent'
                                                                     id='role'
                                                                     disabled={
                                                                         selectedSSOProviderHasRoleProvisionEnabled
@@ -580,11 +596,12 @@ const UpdateUserFormInner: React.FC<{
                             <div
                                 className='flex flex-col h-full pb-6'
                                 data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                                <div className='border border-color-[#CACFD3] mt-3 h-box-border h-full overflow-y-auto'>
-                                    <div className='ml-4 mt-2 flex items-center flex justify-center items-center relative'>
-                                        <FontAwesomeIcon className='' icon={faSearch} />
+                                <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
+                                    <div className='border border-solid border-color-[#CACFD3] flex'>
+                                        <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
                                         <Input
-                                            className={'w-full ml-3'}
+                                            variant='underlined'
+                                            className='w-full ml-3'
                                             id='search'
                                             type='text'
                                             placeholder='Search'
@@ -608,8 +625,8 @@ const UpdateUserFormInner: React.FC<{
                                                         onCheckedChange={handleSelectAllChange} // environment_control_list.all_environments
                                                     />
                                                     <FormLabel
-                                                        htmlFor='allEnvironments'
-                                                        className='ml-3 w-full cursor-pointer'>
+                                                        className='ml-3 w-full cursor-pointer font-medium !text-sm'
+                                                        htmlFor='allEnvironments'>
                                                         Select All Environments
                                                     </FormLabel>
                                                 </FormItem>
@@ -642,8 +659,8 @@ const UpdateUserFormInner: React.FC<{
                                                                         }
                                                                     />
                                                                     <FormLabel
-                                                                        htmlFor='environments'
-                                                                        className=' w-full cursor-pointer'>
+                                                                        className=' w-full cursor-pointer ml-3 w-full cursor-pointer font-medium !text-sm'
+                                                                        htmlFor='environments'>
                                                                         {item.name}
                                                                     </FormLabel>
                                                                 </FormItem>
