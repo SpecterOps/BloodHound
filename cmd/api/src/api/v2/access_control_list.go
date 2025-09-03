@@ -58,3 +58,19 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 
 	return true, nil
 }
+
+func GetUserAccessList(ctx context.Context, db database.EnvironmentAccessControlData, user model.User) ([]string, error) {
+	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]string, 0, len(allowedList))
+
+	for _, envAccess := range allowedList {
+		list = append(list, envAccess.Environment)
+	}
+
+	return list, nil
+}
