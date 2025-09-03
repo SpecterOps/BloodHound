@@ -7,7 +7,7 @@ export const SearchInput: React.FC<{ value: string; onInputChange: (search: stri
     onInputChange,
 }) => {
     return (
-        <div className='px-2 flex items-center w-1/6 border-b-2 border-neutral-dark-1 dark:border-neutral-light-1'>
+        <div className='px-2 flex items-center w-1/7 border-b-2 border-neutral-dark-1 dark:border-neutral-light-1'>
             <AppIcon.MagnifyingGlass />
             <Input
                 placeholder='Search'
