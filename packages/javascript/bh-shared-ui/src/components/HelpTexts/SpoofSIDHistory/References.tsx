@@ -22,60 +22,63 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10)'>
                 Microsoft AD Trust Technical Documentation
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10)#how-sid-history-can-be-used-to-elevate-privileges'>
                 How SID History can be used to elevate privileges
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/'>
                 Active Directory forest trusts part 1 - How does SID filtering work?
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/techniques/T1134/005/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1134/005/'>
                 T1134.005: Access Token Manipulation: SID-History Injection
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/techniques/T1558/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1558/'>
                 T1558: Steal or Forge Kerberos Tickets
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/techniques/T1550/003/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1550/003/'>
                 T1550.003: Use Alternate Authentication Material: Pass the Ticket
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=1772'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?p=1772'>
                 Sneaky Active Directory Persistence #14: SID History
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/MichaelGrafnetter/DSInternals/blob/master/Documentation/PowerShell/Add-ADDBSidHistory.md'>
                 Add-ADDBSidHistory
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus'>
                 Rubeus
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/fortra/impacket/blob/master/examples/ticketer.py'>
                 ticketer.py
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.thehacker.recipes/ad/persistence/sid-history'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.thehacker.recipes/ad/persistence/sid-history'>
                 The Hacker Recipes: SID History
             </Link>
             <br />

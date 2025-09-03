@@ -57,6 +57,7 @@ import {
     AssetGroupTagMemberInfoResponse,
     AssetGroupTagMembersResponse,
     AssetGroupTagResponse,
+    AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
     AssetGroupTagsResponse,
@@ -245,6 +246,9 @@ class BHEAPIClient {
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
+    searchAssetGroupTags = (body: { query: string; tag_type: number }, options?: RequestOptions) =>
+        this.baseClient.post<AssetGroupTagSearchResponse>(`/api/v2/asset-group-tags/search`, body, options);
+
     getAssetGroupTag = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
 
@@ -271,8 +275,25 @@ class BHEAPIClient {
             options
         );
 
-    getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, options);
+    getAssetGroupTagSelectors = (
+        tagId: number | string,
+        skip: number | string,
+        limit: number,
+        sort_by: string,
+        environments?: string[],
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                environments,
+                sort_by,
+            },
+            paramsSerializer: { indexes: null },
+        });
 
     getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(

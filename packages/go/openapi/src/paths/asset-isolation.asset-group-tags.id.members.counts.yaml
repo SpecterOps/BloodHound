@@ -34,13 +34,7 @@ get:
     - Enterprise
 
   parameters:
-    - name: environments
-      description: Environment IDs
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
+    - $ref: './../parameters/query.environments.yaml'
 
   responses:
     200:

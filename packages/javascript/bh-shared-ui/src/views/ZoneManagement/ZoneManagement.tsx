@@ -90,7 +90,7 @@ const ZoneManagement: FC = () => {
                     <br />
                     {SupportLink && <SupportLink />}
                 </p>
-                <div className='flex flex-col'>
+                <div className='flex flex-col h-[75vh]'>
                     <Tabs
                         defaultValue='tier'
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
