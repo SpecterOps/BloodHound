@@ -370,6 +370,10 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		if etacFeatureFlag.Enabled {
+			// Access to all environments will be denied by default
+			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
+			userTemplate.AllEnvironments = false
+
 			if createUserRequest.EnvironmentControlList != nil {
 				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
