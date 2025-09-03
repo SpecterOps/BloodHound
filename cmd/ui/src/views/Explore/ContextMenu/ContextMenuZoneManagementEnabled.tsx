@@ -30,7 +30,7 @@ import {
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'bh-shared-ui';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from 'bh-shared-ui';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -159,7 +159,7 @@ const ContextMenu: FC<{
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/tier/${tierZeroAssetGroup!.id}/details`}
+                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/tier/${tierZeroAssetGroup!.id}/details`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
@@ -175,7 +175,7 @@ const ContextMenu: FC<{
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_ZONE_MANAGEMENT_ROOT}/label/${ownedAssetGroup!.id}/details`}
+                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${ownedAssetGroup!.id}/details`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                     />,
                 ]}

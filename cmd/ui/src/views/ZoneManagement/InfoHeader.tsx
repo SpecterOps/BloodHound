@@ -29,7 +29,7 @@ import {
 } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ROUTE_ZONE_MANAGEMENT_ROOT } from 'bh-shared-ui';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from 'bh-shared-ui';
 
 const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {
     switch (type) {
@@ -80,7 +80,7 @@ const InfoHeader: FC = () => {
                 <Button variant='primary' disabled={!tagId} asChild>
                     <AppLink
                         data-testid='zone-management_create-selector-link'
-                        to={`${ROUTE_ZONE_MANAGEMENT_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector`}>
+                        to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector`}>
                         Create Selector
                     </AppLink>
                 </Button>
