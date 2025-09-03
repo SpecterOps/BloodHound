@@ -69,7 +69,7 @@ const Summary: FC = () => {
                         selected={tagId as string}
                         onSelect={(id) =>
                             navigate(
-                                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${ROUTE_PRIVILEGE_ZONES_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
+                                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${id}/${ROUTE_PRIVILEGE_ZONES_SUMMARY}`
                             )
                         }
                     />

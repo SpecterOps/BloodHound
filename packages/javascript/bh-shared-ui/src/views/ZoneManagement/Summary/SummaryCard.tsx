@@ -68,7 +68,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                         // Prevent event bubbling for the view details action
                         e.stopPropagation();
                         navigate(
-                            `${ROUTE_PRIVILEGE_ZONES_ROOT}/${ROUTE_PRIVILEGE_ZONES_DETAILS}/${type === AssetGroupTagTypeTier ? 'tier' : 'label'}/${id}`
+                            `${ROUTE_PRIVILEGE_ZONES_ROOT}/${type === AssetGroupTagTypeTier ? 'tier' : 'label'}/${id}/${ROUTE_PRIVILEGE_ZONES_DETAILS}`
                         );
                     }}
                     className='flex items-center space-x-2 hover:underline'>

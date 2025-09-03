@@ -127,7 +127,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${id}/details`);
                             }}
                         />
                     ) : (

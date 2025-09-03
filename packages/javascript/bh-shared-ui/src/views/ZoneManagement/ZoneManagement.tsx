@@ -100,7 +100,7 @@ const ZoneManagement: FC = () => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
                             const id = value === 'tier' ? tagId : ownedId;
-                            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${path}/${value}/${id}`);
+                            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${value}/${id}/${path}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
                             <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>
