@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
+import { Button, Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { User } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
@@ -41,7 +41,6 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const queryId = selectedQuery?.id;
 
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [filteredUsers, setFilteredUsers] = useState<ListUser[]>([]);
 
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
@@ -140,14 +139,15 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         setSearchTerm(searchTerm);
     };
 
-    useEffect(() => {
-        if (searchTerm.length) {
-            const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
-            setFilteredUsers(filtered as ListUser[]);
-        } else {
-            setFilteredUsers([]);
-        }
-    }, [searchTerm]);
+    const filteredUsers = useMemo(() => {
+        if (!searchTerm) return usersList;
+        const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        return filtered;
+    }, [searchTerm, usersList]);
+
+    const resetSearch = () => {
+        setSearchTerm('');
+    };
 
     return (
         <>
@@ -167,21 +167,40 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         />
                     </div>
                     <div className='h-[335px] overflow-auto'>
-                        <DataTable
-                            TableHeadProps={{
-                                className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
-                            }}
-                            TableBodyProps={{ className: 'text-s font-roboto underline' }}
-                            TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
-                            columns={getColumns()}
-                            data={filteredUsers.length ? filteredUsers : usersList}
-                        />
+                        {filteredUsers?.length ? (
+                            <DataTable
+                                TableHeadProps={{
+                                    className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
+                                }}
+                                TableBodyProps={{ className: 'text-s font-roboto underline' }}
+                                TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
+                                columns={getColumns()}
+                                data={filteredUsers}
+                            />
+                        ) : (
+                            <QueryPermissionsEmpty resetSearch={resetSearch} />
+                        )}
                     </div>
                 </div>
             ) : (
-                <div className='flex flex-col  py-8'>There are currently no users on this account.</div>
+                <div className='flex flex-col py-8 px-2'>There are currently no users on this account.</div>
             )}
         </>
+    );
+};
+
+type QueryPermissionsEmptyProps = {
+    resetSearch: () => void;
+};
+const QueryPermissionsEmpty = (props: QueryPermissionsEmptyProps) => {
+    const { resetSearch } = props;
+    return (
+        <div className='flex flex-col py-8 px-2 items-center'>
+            <p className='mb-6'>No users match this search term.</p>
+            <Button variant='primary' size='small' onClick={resetSearch}>
+                Reset Search
+            </Button>
+        </div>
     );
 };
 
