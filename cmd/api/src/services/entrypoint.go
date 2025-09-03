@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/api/bhapi"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/api/toolapi"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/gc"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -39,7 +40,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
-	"github.com/specterops/dawgs/drivers/pg/changelog"
 	"github.com/specterops/dawgs/graph"
 )
 

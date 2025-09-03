@@ -19,10 +19,10 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"github.com/specterops/dawgs/drivers/pg/changelog"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -63,7 +63,6 @@ type GraphifyService struct {
 	schema  upload.IngestSchema
 
 	changeManager ChangeManager
-	// todo: flag here for neo driver if batchOp doesn't work.
 }
 
 func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager ChangeManager) GraphifyService {
