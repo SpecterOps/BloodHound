@@ -19,6 +19,7 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     NodeResponse,
     Permission,
+    ROUTE_PRIVILEGE_ZONES_ROOT,
     apiClient,
     isNode,
     useExploreParams,
@@ -30,14 +31,13 @@ import {
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
-import { ROUTE_PRIVILEGE_ZONES_ROOT } from 'bh-shared-ui';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => { } }) => {
+}> = ({ contextMenu, onClose = () => {} }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();

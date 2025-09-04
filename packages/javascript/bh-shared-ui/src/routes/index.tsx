@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Most of these routes are not being used, why do we have them?
 export const DEFAULT_PRIVILEGE_ZONES_ROUTE = 'zone/';
 export const ROUTE_PRIVILEGE_ZONES_ROOT = '/privilege-zones';

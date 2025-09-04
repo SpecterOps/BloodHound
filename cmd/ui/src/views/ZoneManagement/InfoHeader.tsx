@@ -19,6 +19,7 @@ import {
     AZ_PLATFORM,
     AppLink,
     EnvironmentAggregation,
+    ROUTE_PRIVILEGE_ZONES_ROOT,
     SelectedEnvironment,
     SelectorValueTypes,
     SimpleEnvironmentSelector,
@@ -29,7 +30,6 @@ import {
 } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ROUTE_PRIVILEGE_ZONES_ROOT } from 'bh-shared-ui';
 
 const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {
     switch (type) {
