@@ -103,11 +103,9 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		WorkDir: workDir,
 	}
 
-	cl := changelog.NewChangelog(graphDB, db, changelog.DefaultOptions())
-
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, nil),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
