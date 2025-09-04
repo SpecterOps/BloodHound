@@ -35,8 +35,5 @@ export const useSelf = () => {
         },
     });
 
-    const isAdminOrPowerUser =
-        getSelfRoles?.data?.includes('Administrator') || getSelfRoles?.data?.includes('Power User');
-
-    return { getSelfId, getSelfRoles, isAdminOrPowerUser };
+    return { getSelfId, getSelfRoles };
 };

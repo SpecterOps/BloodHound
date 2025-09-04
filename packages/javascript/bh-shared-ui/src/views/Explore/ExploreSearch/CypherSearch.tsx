@@ -24,13 +24,13 @@ import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
+    usePermissions,
     useQueryPermissions,
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
-import { useSelf } from '../../../hooks/useSelf';
 import { useNotifications } from '../../../providers';
-import { apiClient, cn } from '../../../utils';
+import { Permission, apiClient, cn } from '../../../utils';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
@@ -72,7 +72,7 @@ const CypherSearchInner = ({
         queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
     });
     const { addNotification } = useNotifications();
-    const { isAdminOrPowerUser } = useSelf();
+    const { checkPermission } = usePermissions();
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
@@ -289,7 +289,7 @@ const CypherSearchInner = ({
                         </div>
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        {isAdminOrPowerUser && (
+                        {checkPermission(Permission.GRAPH_DB_WRITE) && (
                             <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                         )}
                         <Button
