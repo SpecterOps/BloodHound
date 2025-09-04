@@ -441,6 +441,7 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error filtering asset group members: %v", err), request), response)
 			return agMembers, err
 		} else {
+
 			return agMembers, err
 		}
 	}

@@ -704,9 +704,6 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 		mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{
 			EmailAddress: null.StringFrom("spam@exaple.com"),
 		}, nil).Times(2)
-		mockDB.EXPECT().
-			GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-			Return(appcfg.FeatureFlag{Enabled: false}, nil)
 
 		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
 		require.Nil(t, err)
@@ -781,92 +778,6 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 
 		require.Equal(t, http.StatusNotFound, response.Code)
 		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
-	})
-	t.Run("db error - unable to get feature flag", func(t *testing.T) {
-		mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: false}, errors.New("db error"))
-
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
-		require.Nil(t, err)
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
-
-		response := httptest.NewRecorder()
-
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), "db error")
-	})
-	t.Run("unable to get user from context", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{}, nil)
-		mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-
-		req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
-		require.Nil(t, err)
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-		query := req.URL.Query()
-		query.Add("environments", "test")
-		req.URL.RawQuery = query.Encode()
-
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
-
-		response := httptest.NewRecorder()
-
-		handler := http.HandlerFunc(resources.GetAssetGroupTag)
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), "unknown user")
-	})
-	t.Run("user does not have access to environment - forbidden error", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{}, nil)
-		mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-		mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.AssignableToTypeOf(model.User{})).Return([]database.EnvironmentAccess{{Environment: "not test"}}, nil)
-
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
-		require.Nil(t, err)
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-		query := req.URL.Query()
-		query.Add("environments", "test")
-		req.URL.RawQuery = query.Encode()
-
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
-
-		response := httptest.NewRecorder()
-
-		handler := http.HandlerFunc(resources.GetAssetGroupTag)
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusForbidden, response.Code)
-		require.Contains(t, response.Body.String(), "user does not have access to this environment")
-	})
-
-	t.Run("error getting users environments", func(t *testing.T) {
-		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{}, nil)
-		mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-		mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.AssignableToTypeOf(model.User{})).Return([]database.EnvironmentAccess{{Environment: "test"}}, errors.New("error"))
-
-		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
-		require.Nil(t, err)
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-		query := req.URL.Query()
-		query.Add("environments", "test")
-		req.URL.RawQuery = query.Encode()
-
-		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId})
-
-		response := httptest.NewRecorder()
-
-		handler := http.HandlerFunc(resources.GetAssetGroupTag)
-		handler.ServeHTTP(response, req)
-
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), "error getting users environments")
 	})
 }
 
@@ -1578,8 +1489,22 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 	apitest.NewHarness(t, resources.GetAssetGroupTagMemberCountsByKind).
 		Run([]apitest.Case{
 			{
+				Name: "Error getting user from context",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, api.QueryParameterEnvironments, "test")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "unknown user")
+				},
+			},
+			{
 				Name: "InvalidAssetGroupTagID",
 				Input: func(input *apitest.Input) {
+					user := setupUser()
+					userCtx := setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "invalid")
 				},
 				Test: func(output apitest.Output) {
@@ -1590,6 +1515,9 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 			{
 				Name: "DatabaseGetAssetGroupTagError",
 				Input: func(input *apitest.Input) {
+					user := setupUser()
+					userCtx := setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 				},
 				Setup: func() {
@@ -1603,8 +1531,35 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 				},
 			},
 			{
+				Name: "DatabaseError - Error getting eTAC flag ",
+				Input: func(input *apitest.Input) {
+					user := setupUser()
+					user.AllEnvironments = true
+					userCtx := setupUserCtx(user)
+
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, api.QueryParameterEnvironments, "test")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						Return(appcfg.FeatureFlag{Enabled: true}, errors.New("db error"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "unable to get feature flag")
+				},
+			},
+			{
 				Name: "GraphDatabaseError",
 				Input: func(input *apitest.Input) {
+					user := setupUser()
+					userCtx := setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 				},
 				Setup: func() {
@@ -1614,6 +1569,9 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 					mockGraphDb.EXPECT().
 						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any()).
 						Return(map[string]int{}, fmt.Errorf("GetAssetGroupTag Nodes fail"))
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -1622,13 +1580,26 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 			{
 				Name: "Success with environments",
 				Input: func(input *apitest.Input) {
+					user := setupUser()
+					userCtx := setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.AddQueryParam(input, "environments", "testenv")
 				},
 				Setup: func() {
+					envs := []database.EnvironmentAccess{
+						{
+							Environment: "testenv",
+						},
+					}
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).
+						Return(envs, nil)
 					mockGraphDb.EXPECT().
 						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any(), []graph.Criteria{
 							query.Or(
@@ -1649,12 +1620,18 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 			{
 				Name: "Success",
 				Input: func(input *apitest.Input) {
+					user := setupUser()
+					userCtx := setupUserCtx(user)
+					apitest.SetContext(input, userCtx)
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraphDb.EXPECT().
 						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any()).
 						Return(map[string]int{ad.Domain.String(): 2}, nil)

@@ -508,22 +508,11 @@ type getAssetGroupTagResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http.Request) {
-	var (
-		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
-	)
-	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if hasAccess, err := checkUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-		} else if !hasAccess {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseForbidden, request), response)
-		}
 		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.CreatedBy)); err == nil {
 			assetGroupTag.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
 		}
@@ -544,11 +533,22 @@ type GetAssetGroupTagMemberCountsResponse struct {
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
 	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
 
-	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		if hasAccess, err := checkUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+			return
+		} else if !hasAccess {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseForbidden, request), response)
+			return
+		}
 		filters := []graph.Criteria{}
 		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
