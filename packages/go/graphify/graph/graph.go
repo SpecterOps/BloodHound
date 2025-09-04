@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -414,32 +415,31 @@ func initializeGraphDatabase(ctx context.Context, postgresConnection string) (gr
 
 }
 
-// todo: commented this out for now.
 func ingestData(ctx context.Context, service GraphService, filepaths []string, database graph.Database) error {
 	var errs []error
 
-	// for _, filepath := range filepaths {
-	// 	err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-	// 		timestampedBatch := graphify.NewIngestContext(batch, time.Now().UTC())
+	for _, filepath := range filepaths {
+		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
+			ingestCtx := graphify.NewIngestContext(ctx, batch, graphify.WithIngestTime(time.Now().UTC()))
 
-	// 		file, err := os.Open(filepath)
-	// 		if err != nil {
-	// 			return fmt.Errorf("error opening JSON file %s: %w", filepath, err)
-	// 		}
-	// 		defer file.Close()
+			file, err := os.Open(filepath)
+			if err != nil {
+				return fmt.Errorf("error opening JSON file %s: %w", filepath, err)
+			}
+			defer file.Close()
 
-	// 		// ingest file into database
-	// 		err = service.Ingest(ctx, timestampedBatch, file)
-	// 		if err != nil {
-	// 			errs = append(errs, fmt.Errorf("error ingesting file %s: %w", filepath, err))
-	// 		}
+			// ingest file into database
+			err = service.Ingest(ctx, ingestCtx, file)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("error ingesting file %s: %w", filepath, err))
+			}
 
-	// 		return nil
-	// 	})
-	// 	if err != nil {
-	// 		return fmt.Errorf("unrecoverable error occurred during batch operation: %w", err)
-	// 	}
-	// }
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("unrecoverable error occurred during batch operation: %w", err)
+		}
+	}
 
 	if len(errs) > 0 {
 		var errStrings []string
