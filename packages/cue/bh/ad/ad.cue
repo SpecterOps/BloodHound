@@ -1005,6 +1005,20 @@ ServicePrincipalNames: types.#StringEnum & {
 	representation: "serviceprincipalnames"
 }
 
+GPOStatusRaw: types.#StringEnum & {
+	symbol:         "GPOStatusRaw"
+	schema:         "ad"
+	name:           "GPO Status (Raw)"
+	representation: "gpostatusraw"
+}
+
+GPOStatus: types.#StringEnum & {
+	symbol:         "GPOStatus"
+	schema:         "ad"
+	name:           "GPO Status"
+	representation: "gpostatus"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1142,6 +1156,8 @@ Properties: [
 	NetBIOS,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
+	GPOStatusRaw,
+	GPOStatus,
 ]
 
 // Kinds
