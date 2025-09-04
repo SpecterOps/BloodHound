@@ -308,8 +308,8 @@ const MockRoles: Role[] = [
 ];
 
 const fetchRolesRequest = () => {
-    return rest.get('/api/v2/roles', async (_req, rest, ctx) => {
-        return rest(
+    return rest.get('/api/v2/roles', async (_req, res, ctx) => {
+        return res(
             ctx.json({
                 data: {
                     roles: MockRoles,
