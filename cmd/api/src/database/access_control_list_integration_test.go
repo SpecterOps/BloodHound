@@ -41,26 +41,32 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 		PrincipalName:   userPrincipal,
 		AllEnvironments: true,
 	})
+
 	require.NoError(t, err)
 
-	t.Run("UpdateEnvironmentListForUser", func(t *testing.T) {
-		environmentList, err := suite.BHDatabase.UpdateEnvironmentListForUser(suite.Context, newUser, []string{"1234", "123"})
+	t.Run("Updating ACL disables AllEnvironments", func(t *testing.T) {
+		err := suite.BHDatabase.UpdateUser(suite.Context, model.User{
+			Unique: model.Unique{
+				ID: newUser.ID,
+			},
+			EnvironmentAccessControl: []model.EnvironmentAccess{
+				{
+					Environment: "12345",
+				},
+				{
+					Environment: "54321"},
+			},
+		})
 		require.NoError(t, err)
-		assert.Len(t, environmentList, 2)
-		assert.Equal(t, "1234", environmentList[0].Environment)
-		assert.Equal(t, "123", environmentList[1].Environment)
+		updatedUser, err := suite.BHDatabase.GetUser(suite.Context, newUser.ID)
+		require.NoError(t, err)
+		assert.False(t, updatedUser.AllEnvironments)
 	})
 
 	t.Run("GetEnvironmentAccessListForUser", func(t *testing.T) {
 		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, newUser)
 		require.NoError(t, err)
 		assert.Len(t, result, 2)
-	})
-
-	t.Run("Updating ACL disables AllEnvironments", func(t *testing.T) {
-		updatedUser, err := suite.BHDatabase.GetUser(suite.Context, newUser.ID)
-		require.NoError(t, err)
-		assert.False(t, updatedUser.AllEnvironments)
 	})
 
 	t.Run("Deleting User Removes ACL", func(t *testing.T) {
