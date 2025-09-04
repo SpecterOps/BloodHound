@@ -55,7 +55,6 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
     const tierFlag = featureFlags?.data?.find((flag) => {
-        // TODO - is this changed in the DB?
         return flag.key === 'tier_management_engine';
     });
 

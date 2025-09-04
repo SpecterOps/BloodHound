@@ -52,7 +52,7 @@ interface Disabled {
     disabled_at: ISO_DATE_STRING | null;
     disabled_by: string | null;
 }
-// todo rename?
+
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
