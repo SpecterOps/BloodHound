@@ -146,11 +146,13 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 <Typography variant='button'>Group:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8}>
-                                <DropdownSelector
-                                    options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
-                                    selectedText={getAssetGroupSelectorLabel()}
-                                    onChange={handleAssetGroupSelectorChange}
-                                />
+                                <Box p={1}>
+                                    <DropdownSelector
+                                        options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
+                                        selectedText={getAssetGroupSelectorLabel()}
+                                        onChange={handleAssetGroupSelectorChange}
+                                    />
+                                </Box>
                             </Grid>
                             <Grid item xs={4} sx={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography variant='button'>Environment:</Typography>

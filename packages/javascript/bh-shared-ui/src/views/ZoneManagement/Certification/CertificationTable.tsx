@@ -1,5 +1,13 @@
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import {
+    CertificationAuto,
+    CertificationManual,
+    CertificationPending,
+    CertificationRevoked,
+    CertificationTypeMap,
+} from 'js-client-library';
 import { FC, useState } from 'react';
+import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 
 const CertificationTable: FC = () => {
     const mockPending = '9';
@@ -203,11 +211,31 @@ const CertificationTable: FC = () => {
         estimateSize: () => 79,
     };
 
+    const certOptions: DropdownOption[] = [
+        CertificationPending,
+        CertificationManual,
+        CertificationAuto,
+        CertificationRevoked,
+    ].map((certType) => {
+        return { key: certType, value: CertificationTypeMap[certType] };
+    });
+
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
             <div className='flex items-center'>
                 <h1 className='text-xl font-bold'>Certifications</h1>
                 <p>{`${mockPending} pending`}</p>
+            </div>
+            <div>
+                <DropdownSelector
+                    variant='transparent'
+                    options={certOptions}
+                    selectedText={
+                        <span className='flex items-center gap-3'>
+                            <AppIcon.CertStatus size={24} /> Status
+                        </span>
+                    }
+                    onChange={(_selectedCertificationType: DropdownOption) => {}}></DropdownSelector>
             </div>
             <DataTable
                 data={mockData ?? []}
