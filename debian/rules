@@ -16,11 +16,7 @@ override_dh_auto_build:
 
 execute_after_dh_install:
 	rm -rf debian/bloodhound/usr/share/gocode
-	rm -rf debian/bloodhound/usr/lib/bloodhound/cmd/ui/node_modules
-	rm -f debian/bloodhound/usr/lib/bloodhound/cmd/ui/.eslintrc.cjs
 
 override_dh_auto_test:
-override_dh_strip:
-override_dh_dwz: #https://bugs-devel.debian.org/cgi-bin/bugreport.cgi?bug=933541
 override_dh_shlibdeps:
 override_dh_golang:
