@@ -58,7 +58,6 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error)
-	GetSelectorNodes(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNode, int, error)
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -72,6 +71,7 @@ type AssetGroupTagSelectorNodeData interface {
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error)
+	GetSelectorNodes(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNode, int, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -895,7 +895,9 @@ func (s *BloodhoundDB) GetSelectorNodes(ctx context.Context, sqlFilter model.SQL
 			hybrid.created_at,
 			hybrid.asset_group_tag_id
 		FROM sort_on_created_at hybrid
-		%s %s;`,
+		%s 
+		ORDER BY hybrid.node_id ASC
+		%s;`,
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 		model.AssetGroupTag{}.TableName(),

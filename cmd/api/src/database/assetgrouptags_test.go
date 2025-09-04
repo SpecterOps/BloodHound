@@ -1347,11 +1347,11 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 	)
 
 	// create a test zone at position 2
-	tag0, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T1 Zone", "Test zone description", null.Int32From(2), null.BoolFrom(false), null.String{})
+	tier1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T1 Zone", "Test zone description", null.Int32From(2), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
 
 	// create a test zone at position 3
-	tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T2 Zone", "Test zone description", null.Int32From(3), null.BoolFrom(false), null.String{})
+	tier2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "Test T2 Zone", "Test zone description", null.Int32From(3), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
 
 	// Zone 0 is added by the migration and is ID 1
@@ -1367,25 +1367,25 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 	sel0_3, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 4", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel1, err := dbInst.CreateAssetGroupTagSelector(testCtx, tag0.ID, model.User{}, "Test T1 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel1, err := dbInst.CreateAssetGroupTagSelector(testCtx, tier1.ID, model.User{}, "Test T1 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel2, err := dbInst.CreateAssetGroupTagSelector(testCtx, tag1.ID, model.User{}, "Test T2 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel2, err := dbInst.CreateAssetGroupTagSelector(testCtx, tier2.ID, model.User{}, "Test T2 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
 
 	t.Run("Multiple nodes - verify highest tier wins", func(t *testing.T) {
 		testNodeId := uint64(1)
 
 		// a selector for T0 selects this node
-		err = dbInst.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertification(1), certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
+		err = dbInst.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
 		require.NoError(t, err)
 
 		// a selector for T1 also selects this node
-		err = dbInst.InsertSelectorNode(testCtx, 2, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertification(1), certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
+		err = dbInst.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
 		require.NoError(t, err)
 
 		// a selector for T2 also selects this node
-		err = dbInst.InsertSelectorNode(testCtx, 3, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertification(1), certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
+		err = dbInst.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
@@ -1412,11 +1412,11 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// a selector for T1 also selects this node
-		err = dbInst.InsertSelectorNode(testCtx, 2, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
+		err = dbInst.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
 		require.NoError(t, err)
 
 		// a selector for T2 also selects this node
-		err = dbInst.InsertSelectorNode(testCtx, 3, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
+		err = dbInst.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
@@ -1457,6 +1457,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.Equal(t, 1, count)
 		// it should be the one that had auto certify
 		require.Equal(t, "NodeSelectedByT0_CertAuto", nodeCertifications[0].NodeName)
+		require.Equal(t, model.AssetGroupCertificationAuto, nodeCertifications[0].Certified)
 	})
 
 	t.Run("Multiple nodes - verify earliest create date wins", func(t *testing.T) {

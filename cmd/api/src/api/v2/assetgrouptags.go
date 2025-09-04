@@ -1139,6 +1139,7 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 						return
 					}
 
+					originalName := filter.Name
 					switch filter.Name {
 					case "environments":
 						filter.Name = "node_environment_id"
@@ -1150,7 +1151,7 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 						filter.Name = "node_primary_kind"
 					}
 					translatedQueryFilter.AddFilter(filter)
-					translatedQueryFilter[filter.Name][i].IsStringData = assetGroupMemberWithCertification.IsStringColumn(filter.Name)
+					translatedQueryFilter[filter.Name][i].IsStringData = assetGroupMemberWithCertification.IsStringColumn(originalName)
 				}
 			}
 		}
