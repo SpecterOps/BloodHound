@@ -119,6 +119,7 @@ type BatchUpdater interface {
 	UpdateNodeBy(update graph.NodeUpdate) error
 	UpdateRelationshipBy(update graph.RelationshipUpdate) error
 	Nodes() graph.NodeQuery
+	Relationships() graph.RelationshipQuery
 }
 
 // ReadFileForIngest orchestrates the ingestion of a file into the graph database,

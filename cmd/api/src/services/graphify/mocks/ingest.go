@@ -121,6 +121,20 @@ func (mr *MockBatchUpdaterMockRecorder) Nodes() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Nodes", reflect.TypeOf((*MockBatchUpdater)(nil).Nodes))
 }
 
+// Relationships mocks base method.
+func (m *MockBatchUpdater) Relationships() graph.RelationshipQuery {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Relationships")
+	ret0, _ := ret[0].(graph.RelationshipQuery)
+	return ret0
+}
+
+// Relationships indicates an expected call of Relationships.
+func (mr *MockBatchUpdaterMockRecorder) Relationships() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Relationships", reflect.TypeOf((*MockBatchUpdater)(nil).Relationships))
+}
+
 // UpdateNodeBy mocks base method.
 func (m *MockBatchUpdater) UpdateNodeBy(update graph.NodeUpdate) error {
 	m.ctrl.T.Helper()
