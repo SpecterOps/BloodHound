@@ -137,11 +137,13 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 		return 0, 0, fmt.Errorf("get feature flag: %w", err)
 	} else {
 
-		failedIngestion := 0
+		var (
+			failedIngestion = 0
+			errs            = util.NewErrorCollector()
+		)
 
-		errs := util.NewErrorCollector()
 		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestContext := NewIngestContext(ctx, batch, WithIngestTime(ingestTime), WithChangeManager(s.changeManager))
+			ingestCtx := s.newIngestContext(ctx, batch, ingestTime, changelogFF.Enabled)
 
 			for _, filePath := range paths {
 				readOpts := ReadOptions{
@@ -149,20 +151,29 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 					FileType:           task.FileType,
 					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx)}
 
-				if err := processSingleFile(ctx, filePath, ingestContext, readOpts); err != nil {
+				if err := processSingleFile(ctx, filePath, ingestCtx, readOpts); err != nil {
 					failedIngestion++
 					errs.Add(err) // util.NewErrorCollector at fn scope
 					continue      // keep ingesting the rest
 				}
 			}
 
-			if changelogFF.Enabled {
+			if ingestCtx.HasChangelog() {
 				// this logs basic metrics for the changelog, how many hits/misses per file
 				s.changeManager.FlushStats()
 			}
+
 			return errs.Combined()
 		})
 	}
+}
+
+func (s *GraphifyService) newIngestContext(ctx context.Context, batch BatchUpdater, ingestTime time.Time, useChangelog bool) *IngestContext {
+	opts := []IngestOption{WithIngestTime(ingestTime)}
+	if useChangelog {
+		opts = append(opts, WithChangeManager(s.changeManager))
+	}
+	return NewIngestContext(ctx, batch, opts...)
 }
 
 func processSingleFile(ctx context.Context, filePath string, batch *IngestContext, readOpts ReadOptions) error {

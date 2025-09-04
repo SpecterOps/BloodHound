@@ -108,8 +108,6 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		startDelay := 0 * time.Second
 
 		var (
-			// todo: this pgxpool wire up needs thinkin
-			// if you go rawSQL route, then inject some neo flag into the graphifyService to prevent ingest from submitting.
 			cl             = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
 			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
