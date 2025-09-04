@@ -2893,7 +2893,6 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
-				mockDB.EXPECT().DeleteEnvironmentListForUser(gomock.Any(), gomock.Any())
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
@@ -2915,7 +2914,6 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
-				mockDB.EXPECT().DeleteEnvironmentListForUser(gomock.Any(), gomock.Any())
 				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},

@@ -540,12 +540,6 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 					return
 				}
 
-				// Delete the user's environment entries before setting them to the new request
-				if err := s.db.DeleteEnvironmentListForUser(request.Context(), user); err != nil {
-					api.HandleDatabaseError(request, response, err)
-					return
-				}
-
 				user.AllEnvironments = updateUserRequest.EnvironmentControlList.AllEnvironments
 
 				// If the user isn't granting access to all environments, give them access to each environment requested
