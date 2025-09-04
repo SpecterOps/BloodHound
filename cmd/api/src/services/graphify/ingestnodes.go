@@ -47,7 +47,7 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 func IngestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
 	var (
 		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
-		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime)
+		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime)
 		nodeUpdate           = graph.NodeUpdate{
 			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
 			IdentityKind: baseKind,
@@ -127,7 +127,7 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 	return nil
 }
 
-func NormalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
+func normalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
 	if properties == nil {
 		properties = make(map[string]any)
 	}

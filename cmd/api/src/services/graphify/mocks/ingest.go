@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	changelog "github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -80,4 +81,70 @@ func (m *MockChangeManager) Submit(ctx context.Context, change changelog.Change)
 func (mr *MockChangeManagerMockRecorder) Submit(ctx, change any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Submit", reflect.TypeOf((*MockChangeManager)(nil).Submit), ctx, change)
+}
+
+// MockBatchUpdater is a mock of BatchUpdater interface.
+type MockBatchUpdater struct {
+	ctrl     *gomock.Controller
+	recorder *MockBatchUpdaterMockRecorder
+	isgomock struct{}
+}
+
+// MockBatchUpdaterMockRecorder is the mock recorder for MockBatchUpdater.
+type MockBatchUpdaterMockRecorder struct {
+	mock *MockBatchUpdater
+}
+
+// NewMockBatchUpdater creates a new mock instance.
+func NewMockBatchUpdater(ctrl *gomock.Controller) *MockBatchUpdater {
+	mock := &MockBatchUpdater{ctrl: ctrl}
+	mock.recorder = &MockBatchUpdaterMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBatchUpdater) EXPECT() *MockBatchUpdaterMockRecorder {
+	return m.recorder
+}
+
+// Nodes mocks base method.
+func (m *MockBatchUpdater) Nodes() graph.NodeQuery {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Nodes")
+	ret0, _ := ret[0].(graph.NodeQuery)
+	return ret0
+}
+
+// Nodes indicates an expected call of Nodes.
+func (mr *MockBatchUpdaterMockRecorder) Nodes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Nodes", reflect.TypeOf((*MockBatchUpdater)(nil).Nodes))
+}
+
+// UpdateNodeBy mocks base method.
+func (m *MockBatchUpdater) UpdateNodeBy(update graph.NodeUpdate) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateNodeBy", update)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateNodeBy indicates an expected call of UpdateNodeBy.
+func (mr *MockBatchUpdaterMockRecorder) UpdateNodeBy(update any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeBy", reflect.TypeOf((*MockBatchUpdater)(nil).UpdateNodeBy), update)
+}
+
+// UpdateRelationshipBy mocks base method.
+func (m *MockBatchUpdater) UpdateRelationshipBy(update graph.RelationshipUpdate) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateRelationshipBy", update)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateRelationshipBy indicates an expected call of UpdateRelationshipBy.
+func (mr *MockBatchUpdaterMockRecorder) UpdateRelationshipBy(update any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRelationshipBy", reflect.TypeOf((*MockBatchUpdater)(nil).UpdateRelationshipBy), update)
 }

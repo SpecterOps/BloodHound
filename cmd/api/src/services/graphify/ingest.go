@@ -99,8 +99,6 @@ type ChangeManager interface {
 	FlushStats()
 }
 
-// at runtime: this is a graph.Batch
-// in our tests: we can mockgen it
 // BatchUpdater represents the ingestion-facing API for a dawgs BatchOperation
 type BatchUpdater interface {
 	UpdateNodeBy(update graph.NodeUpdate) error
