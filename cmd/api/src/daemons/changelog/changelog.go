@@ -12,30 +12,6 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-// ChangeManager represents the ingestion-facing API for the changelog daemon.
-//
-// It provides three responsibilities:
-//   - Deduplication: ResolveChange determines whether a proposed change is new or modified
-//     and therefore requires persistence, or whether it has already been seen.
-//   - Submission: Submit enqueues a change for asynchronous processing by the changelog loop.
-//   - Metrics: FlushStats logs and resets internal cache hit/miss statistics,
-//     allowing callers to observe deduplication efficiency over time.
-//
-// Typical usage in ingestion pipelines is:
-//  1. Call ResolveChange to decide if the update should be applied.
-//  2. If ResolveChange returns true, apply the update to the batch/DB.
-//  3. If ResolveChange returns false, Submit the change to the changelog. (this updates an entities lastseen prop for reconciliation)
-//
-// To generate mocks for this interface for unit testing seams in the application
-// please use:
-//
-//	mockgen -source=changelog.go -destination=mocks/changelog.go -package=mocks
-type ChangeManager interface {
-	ResolveChange(change Change) (bool, error)
-	Submit(ctx context.Context, change Change) bool
-	FlushStats()
-}
-
 type Changelog struct {
 	cache   *cache // pointer so we can replace it atomically
 	db      graph.Database

@@ -19,7 +19,6 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
@@ -43,10 +42,10 @@ type GraphifyService struct {
 	cfg     config.Configuration
 	schema  upload.IngestSchema
 
-	changeManager changelog.ChangeManager
+	changeManager ChangeManager
 }
 
-func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager changelog.ChangeManager) GraphifyService {
+func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager ChangeManager) GraphifyService {
 	return GraphifyService{
 		ctx:           ctx,
 		db:            db,
