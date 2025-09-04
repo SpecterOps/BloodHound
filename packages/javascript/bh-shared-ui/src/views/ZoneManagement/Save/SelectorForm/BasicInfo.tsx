@@ -42,7 +42,8 @@ import { FC, useCallback, useContext, useState, useEffect } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
-import { DeleteConfirmationDialog } from '../../../../components';
+import { AppIcon, DeleteConfirmationDialog, DropdownSelector } from '../../../../components';
+import { CertificationOption } from '../../../../components/CertificationSelector/types';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
@@ -108,6 +109,19 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
     if (isLoading) return <Skeleton />;
     if (isError) return <div>There was an error fetching the selector information.</div>;
+
+    const buttonStyle = {
+        borderRadius: '.5rem',
+        display: 'flex',
+        fontSize: 'medium',
+        paddingLeft: '1rem',
+        paddingRight: '1rem',
+    };
+
+    const buttonSpanStyle = {
+        display: 'flex',
+        alignItems: 'center',
+    };
 
     return (
         <div className={'max-lg:w-full w-96 h-[36rem] '}>
@@ -191,6 +205,25 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </FormItem>
                                 )}
                             />
+                            <div>
+                                <DropdownSelector
+                                    variant='transparent'
+                                    buttonClasses={''}
+                                    //buttonStyle={buttonStyle}
+                                    options={[
+                                        // TODO hard code these as a var
+                                        { key: 1, value: 'test1' },
+                                        { key: 2, value: 'test2' },
+                                    ]}
+                                    selectedText={
+                                        <span style={buttonSpanStyle} className='gap-3'>
+                                            <AppIcon.CertStatus size={24} /> Status
+                                        </span>
+                                    }
+                                    onChange={(_selectedAssetGroup: CertificationOption) => {
+                                        console.log('in the handler');
+                                    }}></DropdownSelector>
+                            </div>
                             <div>
                                 <Label className='text-base font-bold'>Selector Type</Label>
                                 <Select
