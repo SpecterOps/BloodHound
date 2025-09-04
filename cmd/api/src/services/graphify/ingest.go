@@ -40,22 +40,39 @@ type ReadOptions struct {
 type IngestContext struct {
 	Ctx context.Context
 	// Batch is the buffering/flushing mechanism that writes entities to the graph database
-	Batch graph.Batch
+	Batch BatchUpdater
 	// IngestTime is a single timestamp assigned to the lastseen property of every entity ignested per ingest run
 	IngestTime time.Time
-	// changeManager is the caching layer that deduplicates ingest payloads across ingest runs
-	changeManager    ChangeManager
-	changelogEnabled bool
+	// Manager is the caching layer that deduplicates ingest payloads across ingest runs
+	Manager ChangeManager
 }
 
-func NewIngestContext(ctx context.Context, batch graph.Batch, ingestTime time.Time, changeManager ChangeManager, changelogEnabled bool) *IngestContext {
-	return &IngestContext{
-		Ctx:              ctx,
-		Batch:            batch,
-		IngestTime:       ingestTime,
-		changeManager:    changeManager,
-		changelogEnabled: changelogEnabled,
+func NewIngestContext(ctx context.Context, batch BatchUpdater, opts ...IngestOption) *IngestContext {
+	ic := &IngestContext{
+		Ctx:   ctx,
+		Batch: batch,
 	}
+
+	for _, opt := range opts {
+		opt(ic)
+	}
+
+	return ic
+}
+
+// option helpers
+type IngestOption func(*IngestContext)
+
+func WithIngestTime(t time.Time) IngestOption {
+	return func(s *IngestContext) { s.IngestTime = t }
+}
+
+func WithChangeManager(manager ChangeManager) IngestOption {
+	return func(s *IngestContext) { s.Manager = manager }
+}
+
+func (s *IngestContext) HasChangelog() bool {
+	return s.Manager != nil
 }
 
 // ChangeManager represents the ingestion-facing API for the changelog daemon.
@@ -84,9 +101,11 @@ type ChangeManager interface {
 
 // at runtime: this is a graph.Batch
 // in our tests: we can mockgen it
+// BatchUpdater represents the ingestion-facing API for a dawgs BatchOperation
 type BatchUpdater interface {
 	UpdateNodeBy(update graph.NodeUpdate) error
 	UpdateRelationshipBy(update graph.RelationshipUpdate) error
+	Nodes() graph.NodeQuery
 }
 
 // ReadFileForIngest orchestrates the ingestion of a file into the graph database,

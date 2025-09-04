@@ -21,9 +21,7 @@ package graphify
 
 import (
 	"testing"
-	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -42,7 +40,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Exact match (happy path). Source and target node names both resolve unambiguously to nodes with objectids.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -57,8 +54,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
@@ -84,7 +80,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Only source matches. Target node is unmatched by name - update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -99,8 +94,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -116,7 +110,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Only target matches.	Source node is unmatched by name - update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -131,8 +124,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -148,7 +140,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Neither matches. No node resolves to source or target — update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -163,8 +154,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -180,7 +170,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Multiple matches for source — ambiguity, update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -195,8 +184,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -212,7 +200,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Multiple matches for target — ambiguity, update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -227,8 +214,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -244,7 +230,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Kind filters for endpoints are nil. Resolved by name only", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -259,8 +244,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
@@ -286,7 +270,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Mixed resolution strategy. Source uses MatchByName, Target uses MatchByID.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -301,8 +284,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
@@ -327,7 +309,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Mixed resolution strategy. Target uses MatchByName, Source uses MatchByID.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -342,8 +323,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
@@ -367,7 +347,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Source name matches 2 nodes with the same name but different kinds. Resolution should honor optional kind filter.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -382,8 +361,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
@@ -407,7 +385,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Both nodes match but with mismatched kinds. Filtered out due to kind mismatch — update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -422,8 +399,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -439,7 +415,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Empty or null Source or Target values — update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -454,8 +429,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
@@ -471,7 +445,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("ID match fallback. Both source/target use MatchByID.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -486,8 +459,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
@@ -511,7 +483,6 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Batch input, multiple updates returned.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		bloodhoundDB := integration.OpenDatabase(t)
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
@@ -555,8 +526,7 @@ func Test_ResolveRelationships(t *testing.T) {
 				}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					cl := changelog.NewChangelog(db, bloodhoundDB, changelog.DefaultOptions())
-					ingestContext := NewIngestContext(testContext.Context(), batch, time.Now().UTC(), cl, false)
+					ingestContext := NewIngestContext(testContext.Context(), batch)
 
 					updates, err := resolveRelationships(ingestContext, rels, graph.EmptyKind)
 					require.Nil(t, err)

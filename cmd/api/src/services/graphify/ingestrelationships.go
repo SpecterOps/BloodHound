@@ -41,7 +41,7 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 // maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
 func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.RelationshipUpdate) error {
-	if !ingestCtx.changelogEnabled {
+	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
 		return ingestCtx.Batch.UpdateRelationshipBy(update)
 	}
@@ -62,7 +62,7 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 		update.Relationship.Properties,
 	)
 
-	shouldSubmit, err := ingestCtx.changeManager.ResolveChange(change)
+	shouldSubmit, err := ingestCtx.Manager.ResolveChange(change)
 	if err != nil {
 		return fmt.Errorf("resolve edge change: %w", err)
 	}
@@ -73,7 +73,7 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	ingestCtx.changeManager.Submit(ingestCtx.Ctx, change)
+	ingestCtx.Manager.Submit(ingestCtx.Ctx, change)
 
 	return nil
 }

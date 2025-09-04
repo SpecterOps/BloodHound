@@ -141,7 +141,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 
 		errs := util.NewErrorCollector()
 		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestContext := NewIngestContext(ctx, batch, ingestTime, s.changeManager, changelogFF.Enabled)
+			ingestContext := NewIngestContext(ctx, batch, WithIngestTime(ingestTime), WithChangeManager(s.changeManager))
 
 			for _, filePath := range paths {
 				readOpts := ReadOptions{

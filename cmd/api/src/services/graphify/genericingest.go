@@ -57,7 +57,7 @@ func addKey(endpoint ein.IngestibleEndpoint, cache map[endpointKey]struct{}) {
 // uniqueness guarantees on a node's `Name` property.
 //
 // Returns a map of resolved object IDs. If no matches are found or the input is empty, an empty map is returned.
-func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
+func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
 	// seen deduplicates Name:Kind pairs from the input batch to ensure that each Name:Kind pairs is resolved once.
 	seen := map[endpointKey]struct{}{}
 

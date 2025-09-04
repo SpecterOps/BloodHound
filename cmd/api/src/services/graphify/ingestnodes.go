@@ -94,7 +94,7 @@ func validateNodeKinds(objectID string, kinds graph.Kinds) error {
 // maybeSubmitNodeUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
 func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) error {
-	if !ingestCtx.changelogEnabled {
+	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
 		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
@@ -111,7 +111,7 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 		update.Node.Properties,
 	)
 
-	shouldSubmit, err := ingestCtx.changeManager.ResolveChange(change)
+	shouldSubmit, err := ingestCtx.Manager.ResolveChange(change)
 	if err != nil {
 		return fmt.Errorf("resolve node change: %w", err)
 	}
@@ -122,7 +122,7 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	ingestCtx.changeManager.Submit(ingestCtx.Ctx, change)
+	ingestCtx.Manager.Submit(ingestCtx.Ctx, change)
 
 	return nil
 }
