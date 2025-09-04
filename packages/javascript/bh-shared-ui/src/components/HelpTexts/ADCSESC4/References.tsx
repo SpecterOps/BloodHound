@@ -53,7 +53,7 @@ const References: FC = () => {
             {references.map((reference) => {
                 return (
                     <React.Fragment key={reference.link}>
-                        <Link target='_blank' rel='noopener' href={reference.link}>
+                        <Link target='_blank' rel='noopener noreferrer' href={reference.link}>
                             {reference.label}
                         </Link>
                         <br />

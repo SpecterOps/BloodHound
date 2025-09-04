@@ -17,41 +17,35 @@
 import type { GetScheduledJobDisplayResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { useNotifications } from '../../providers';
-import { PERSIST_NOTIFICATION } from '../../utils';
-import { apiClient } from '../../utils/api';
-import { Permission } from '../../utils/permissions';
+import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
+import {
+    FETCH_ERROR_KEY,
+    FETCH_ERROR_MESSAGE,
+    FinishedJobParams,
+    NO_PERMISSION_KEY,
+    NO_PERMISSION_MESSAGE,
+    Permission,
+    apiClient,
+} from '../../utils';
 import { usePermissions } from '../usePermissions';
 
-interface FinishedJobParams {
-    page: number;
-    rowsPerPage: number;
-}
-
-export const NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the finished jobs details. Please
-    contact your administrator for details.`;
-export const NO_PERMISSION_KEY = 'finished-jobs-permission';
-
-export const FETCH_ERROR_MESSAGE = 'Unable to fetch jobs. Please try again.';
-export const FETCH_ERROR_KEY = 'finished-jobs-error';
-
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
-export const useFinishedJobsQuery = ({ page, rowsPerPage }: FinishedJobParams) => {
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.CLIENTS_MANAGE);
+export const useFinishedJobs = ({ page, rowsPerPage }: FinishedJobParams) => {
+    const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
+    const hasPermission = permissionsLoaded && checkPermission(Permission.CLIENTS_MANAGE);
 
     const { addNotification, dismissNotification } = useNotifications();
 
     useEffect(() => {
-        if (!hasPermission) {
+        if (permissionsLoaded && !hasPermission) {
             addNotification(NO_PERMISSION_MESSAGE, NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
         }
 
         return () => dismissNotification(NO_PERMISSION_KEY);
-    }, [addNotification, dismissNotification, hasPermission]);
+    }, [addNotification, dismissNotification, hasPermission, permissionsLoaded]);
 
     return useQuery<GetScheduledJobDisplayResponse>({
-        enabled: hasPermission,
+        enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
         queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),

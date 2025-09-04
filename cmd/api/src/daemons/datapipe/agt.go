@@ -414,7 +414,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	var (
 		countInserted int
 
-		certified   = model.AssetGroupCertificationNone
+		certified   = model.AssetGroupCertificationPending
 		certifiedBy null.String
 
 		nodesToUpdate []model.AssetGroupSelectorNode
@@ -441,7 +441,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationNone) ||
+			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationPending) ||
 				oldNode.NodeName != displayName ||
 				oldNode.NodePrimaryKind != primaryKind ||
 				oldNode.NodeEnvironmentId != envId ||
@@ -457,7 +457,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		if len(nodesToUpdate) > 0 {
 			for _, oldSelectorNode := range nodesToUpdate {
 				// Protect property updates from overwriting existing certification
-				if oldSelectorNode.Certified != model.AssetGroupCertificationNone {
+				if oldSelectorNode.Certified != model.AssetGroupCertificationPending {
 					certified = oldSelectorNode.Certified
 					certifiedBy = oldSelectorNode.CertifiedBy
 				}
@@ -495,7 +495,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 		return err
 	} else {
 		for _, tag := range tags {
-			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
+			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 				return err
 			} else {
 				var (
@@ -533,7 +533,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
 func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, nodesSeen cardinality.Duplex[uint64], additionalFilters ...graph.Criteria) error {
-	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
+	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 		return err
 	} else {
 		var (

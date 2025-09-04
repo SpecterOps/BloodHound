@@ -29,7 +29,10 @@ const Abuse: FC = () => {
 
             <Typography variant='body2'>
                 Next, log into the Azure web portal as the user with the “Intune Administrator” role activated. After
-                authenticating, access Endpoint Manager at https://endpoint.microsoft.com
+                authenticating, access Endpoint Manager at{' '}
+                <a target='_blank' rel='noopener noreferrer' href='https://endpoint.microsoft.com'>
+                    https://endpoint.microsoft.com
+                </a>
             </Typography>
 
             <Typography variant='body2'>

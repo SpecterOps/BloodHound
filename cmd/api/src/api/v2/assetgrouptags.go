@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -384,12 +385,15 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
-		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		queryParams = request.URL.Query()
+
+		assetTagIdStr  = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		environmentIds = queryParams[api.QueryParameterEnvironments]
+
 		selectorQueryFilter      = make(model.QueryParameterFilterMap)
 		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
 		selectorSeed             = model.SelectorSeed{}
 		assetGroupTagSelector    = model.AssetGroupTagSelector{}
-		queryParams              = request.URL.Query()
 	)
 
 	if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
@@ -397,7 +401,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagDefaultLimit); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if paramIncludeCounts, err := api.ParseOptionalBool(queryParams.Get(api.QueryParameterIncludeCounts), false); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specified for include counts", request), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
@@ -436,9 +440,11 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if sort, err := api.ParseSortParameters(model.AssetGroupTagSelector{}, queryParams); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 			api.HandleDatabaseError(request, response, err)
-		} else if selectors, count, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter, skip, limit); err != nil {
+		} else if selectors, count, err := s.DB.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter, sort, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			var (
@@ -463,10 +469,18 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 							}
 
 							// only count nodes that are actually tagged
-							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
+							filters := []graph.Criteria{
 								query.KindIn(query.Node(), assetGroupTag.ToKind()),
 								query.InIDs(query.NodeID(), nodeIds...),
-							)); err != nil {
+							}
+							if len(environmentIds) > 0 {
+								filters = append(filters, query.Or(
+									query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+									query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+								))
+							}
+
+							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 							} else {
 								memberCount = count
@@ -636,7 +650,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagDefaultLimit); err != nil {
@@ -687,7 +701,7 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseSortParameters(AssetGroupMember{}, queryParams); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagDefaultLimit); err != nil {
@@ -966,4 +980,94 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get History Records")()
 
 	s.assetGroupTagHistoryImplementation(response, request, "")
+}
+
+type CertifyMembersRequest struct {
+	MemberIDs []int                         `json:"member_ids"`
+	Action    model.AssetGroupCertification `json:"action"`
+	Note      string                        `json:"note,omitempty"`
+}
+
+func isValidCertType(certType model.AssetGroupCertification) bool {
+	switch certType {
+	case model.AssetGroupCertificationManual, model.AssetGroupCertificationRevoked:
+		return true
+	default:
+		return false
+	}
+}
+
+func recordEligibleForUpdate(record model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
+	if record.NodeId != lastProcessedNodeId {
+		return true
+	} else if record.Position == highestPriority {
+		return true
+	}
+	return false
+}
+
+type setSelectorNodeCertifier interface {
+	UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error
+}
+
+// certifyMembersBySelectorNodes updates the certification status for a given slice of selectorNodeRecords.
+// selectorNodeRecords supplied must be in order of nodeId, followed by position.
+// If there are duplicate nodeIds in selectorNodeRecords, only the lowest position (highest priority) selectorNodeRecords is updated,
+// and all lower-priority selectorNodeRecords are set to Pending Certification.
+func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, userId string, note null.String) error {
+	var (
+		certificationStatus model.AssetGroupCertification
+		certifiedBy         null.String
+
+		lastProcessedNodeId         graph.ID = 0
+		highestPriorityForGivenNode          = -1
+
+		inputs = []database.UpdateCertificationBySelectorNodeInput{}
+	)
+
+	// Only update the records with the highest priority for a given nodeID
+	for _, record := range selectorNodeRecords {
+		certificationStatus = model.AssetGroupCertificationPending
+		certifiedBy = null.String{}
+		if recordEligibleForUpdate(record, lastProcessedNodeId, highestPriorityForGivenNode) {
+			certificationStatus = requestAction
+			highestPriorityForGivenNode = record.Position
+			certifiedBy = userEmail
+			lastProcessedNodeId = record.NodeId
+			// don't actually update records that already match the request action or are auto-certified
+			if record.Certified == requestAction || record.Certified == model.AssetGroupCertificationAuto {
+				continue
+			}
+		}
+		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: record.AssetGroupTagId, SelectorId: record.SelectorId, CertifiedBy: certifiedBy, UserId: userId, CertificationStatus: certificationStatus, NodeId: record.NodeId, NodeName: record.NodeName, Note: note})
+		lastProcessedNodeId = record.NodeId
+	}
+	if len(inputs) > 0 {
+		return selectorNodeCertifier.UpdateCertificationBySelectorNode(ctx, inputs)
+	}
+	return nil
+}
+
+func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
+	var (
+		reqBody    CertifyMembersRequest
+		requestCtx = request.Context()
+	)
+	defer measure.ContextMeasure(requestCtx, slog.LevelDebug, "Asset Group Tag Certify Members")()
+	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseUnknownUser, request), response)
+	} else if !isValidCertType(reqBody.Action) {
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
+	} else if memberIds := reqBody.MemberIDs; len(memberIds) == 0 {
+		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupMemberIDsRequired, request), response)
+	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(requestCtx, reqBody.MemberIDs...); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, user.ID.String(), null.StringFrom(reqBody.Note)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		response.WriteHeader(http.StatusOK)
+	}
 }
