@@ -5,7 +5,6 @@
   "root_url": "http://127.0.0.1:8080/",
   "work_dir": "/opt/bloodhound/work",
   "log_level": "INFO",
-  "log_path": "bloodhound.log",
   "graph_driver": "neo4j",
   "tls": {
     "cert_file": "",
@@ -14,7 +13,7 @@
   "collectors_base_path": "/etc/bloodhound/collectors",
   "default_admin": {
     "principal_name": "admin",
-    "first_name": "Bloodhound",
+    "first_name": "BloodHound",
     "last_name": "Admin",
     "email_address": "spam@example.com"
   }

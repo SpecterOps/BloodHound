@@ -33,15 +33,9 @@ get:
     - Community
     - Enterprise
   parameters:
-    - name: environments
-      description: Environment IDs
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
+    - $ref: './../parameters/query.environments.yaml'
     - name: sort_by
       in: query
       description: >
@@ -54,7 +48,7 @@ get:
       description: OK
       content:
         application/json:
-          schema: 
+          schema:
             allOf:
             - $ref: './../schemas/api.response.pagination.yaml'
             - type: object
@@ -62,12 +56,12 @@ get:
                 data:
                   type: object
                   properties:
-                    members: 
+                    members:
                       type: array
                       items:
                         $ref: './../schemas/model.asset-group-tags-member.yaml'
     400:
-      $ref: './../responses/bad-request.yaml'     
+      $ref: './../responses/bad-request.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:

@@ -16,13 +16,18 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { GenericErrorBoundaryFallback } from 'bh-shared-ui';
+import {
+    FileUploadDialog,
+    GenericErrorBoundaryFallback,
+    useExecuteOnFileDrag,
+    useFileUploadDialogContext,
+} from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
-import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
+import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -40,6 +45,8 @@ const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
+    const isAuthExpired = useAppSelector(authExpiredSelector);
+    const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
 
     useEffect(() => {
@@ -48,6 +55,12 @@ const Content: React.FC = () => {
             dispatch(ListAssetGroups());
         }
     }, [authState, isFullyAuthenticated, dispatch]);
+
+    // Display ingest dialog when a processable file is dragged into the browser client
+    useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
+        condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired,
+        acceptedTypes: ['application/json', 'application/zip'],
+    });
 
     return (
         <Box className={classes.content}>
@@ -87,6 +100,9 @@ const Content: React.FC = () => {
                             );
                         })}
                     </Routes>
+                    {isFullyAuthenticated && (
+                        <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+                    )}
                 </Suspense>
             </ErrorBoundary>
         </Box>

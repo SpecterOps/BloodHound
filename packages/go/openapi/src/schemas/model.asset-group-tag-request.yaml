@@ -18,6 +18,7 @@ type: object
 properties:
   name:
     type: string
+    description: "Only alphanumeric characters, underscores, and spaces are allowed."
   type: 
     type: integer
   description:
@@ -26,3 +27,5 @@ properties:
     type: boolean
   position:
     type: integer
+  glyph:
+    $ref: './null.string.yaml'

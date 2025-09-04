@@ -16,7 +16,9 @@
 
 export * from './AttackPaths';
 export * from './BHCELogo';
+export * from './BHCELogoFull';
 export * from './BHELogo';
+export * from './BHELogoFull';
 export * from './BarChart';
 export * from './CalendarDay';
 export * from './CaretDown';
@@ -24,6 +26,7 @@ export * from './CaretUp';
 export * from './Compass';
 export * from './DataAlert';
 export * from './Diamond';
+export * from './Disabled';
 export * from './Download';
 export * from './EclipseCircle';
 export * from './Equals';
@@ -39,6 +42,7 @@ export * from './SortAsc';
 export * from './SortDesc';
 export * from './SortEmpty';
 export * from './TierZero';
+export * from './Upload';
 export * from './User';
 export * from './UserCog';
 export * from './VerticalEllipsis';

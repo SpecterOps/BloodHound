@@ -98,7 +98,10 @@ const WindowsAbuse: FC = () => {
             <br />
             There are several options for this step. You can obtain a session as SYSTEM on the host, which allows you to
             interact with AD as the computer account, by abusing control over the computer AD object (see{' '}
-            <Link target='blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/generic-all'>
+            <Link
+                target='blank'
+                rel='noopener noreferrer'
+                href='https://bloodhound.specterops.io/resources/edges/generic-all'>
                 GenericAll edge documentation
             </Link>
             ).
@@ -111,30 +114,22 @@ const WindowsAbuse: FC = () => {
                 <b>Step 5: </b>Enroll certificate as victim.
                 <br />
                 <br />
-                Use Certify as the victim computer to request enrollment in the affected template, specifying the
+                Use Certify (2.0) as the victim computer to request enrollment in the affected template, specifying the
                 affected EnterpriseCA:
             </Typography>
             <Typography component={'pre'}>
-                {'Certify.exe request /ca:SERVERCA-NAME /template:TEMPLATE /machine'}
+                {'Certify.exe request --ca SERVER\\CA-NAME --template TEMPLATE --machine'}
             </Typography>
-            <Typography variant='body2' className={classes.containsCodeEl}>
-                Save the certificate as <code>cert.pem</code> and the private key as <code>cert.key</code>.
+            <Typography variant='body2'>
+                The certificate PFX is printed to the console in a base64-encoded format.
             </Typography>
         </>
     );
 
     const step6 = (
         <>
-            <Typography variant='body2'>
-                <b>Step 6: </b>Convert the emitted certificate to PFX format:
-            </Typography>
-            <Typography component={'pre'}>{'certutil.exe -MergePFX cert.pem cert.pfx'}</Typography>
-        </>
-    );
-    const step7 = (
-        <>
             <Typography variant='body2' className={classes.containsCodeEl}>
-                <b>Step 7 (Optional): </b>Set <code>dNSHostName</code> and SPN of victim to the previous values.
+                <b>Step 6 (Optional): </b>Set <code>dNSHostName</code> and SPN of victim to the previous values.
                 <br />
                 <br />
                 To avoid issues in the environment, set the <code>dNSHostName</code> and SPN of the victim computer back
@@ -148,18 +143,18 @@ const WindowsAbuse: FC = () => {
             </Typography>
         </>
     );
-    const step8 = (
+    const step7 = (
         <>
             <Typography variant='body2'>
-                <b>Step 8: </b>Perform Kerberos authentication as targeted computer against affected DC using
+                <b>Step 7: </b>Perform Kerberos authentication as targeted computer against affected DC using
                 certificate.
                 <br />
                 <br />
                 Use Rubeus to request a ticket granting ticket (TGT) from an affected DC, specifying the target identity
-                to impersonate and the PFX-formatted certificate created in Step 6:
+                to impersonate and the PFX-formatted certificate created in Step 5:
             </Typography>
             <Typography component={'pre'}>
-                {'Rubeus.exe asktgt /certificate:cert.pfx /user:TARGET$ /domain:DOMAIN /dc:DOMAIN_CONTROLLER'}
+                {'Rubeus.exe asktgt /certificate:<cert base64> /user:TARGET$ /domain:DOMAIN /dc:DOMAIN_CONTROLLER'}
             </Typography>
         </>
     );
@@ -174,7 +169,6 @@ const WindowsAbuse: FC = () => {
             {step5}
             {step6}
             {step7}
-            {step8}
         </>
     );
 };

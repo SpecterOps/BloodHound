@@ -22,56 +22,56 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
                 https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
                 https://www.youtube.com/watch?v=z8thoG7gPd0
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
                 https://www.youtube.com/watch?v=z8thoG7gPd0
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.thehacker.recipes/ad/movement/dacl/forcechangepassword'>
                 https://www.thehacker.recipes/ad/movement/dacl/forcechangepassword
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
                 https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
                 https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/CravateRouge/bloodyAD'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/CravateRouge/bloodyAD'>
                 https://github.com/CravateRouge/bloodyAD
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync'>
                 https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/ly4k/Certipy'>
                 https://github.com/ly4k/Certipy
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Certify'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Certify'>
                 https://github.com/GhostPack/Certify
             </Link>
         </Box>

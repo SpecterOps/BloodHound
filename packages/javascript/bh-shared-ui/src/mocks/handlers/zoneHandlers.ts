@@ -52,12 +52,26 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         );
     }),
 
+    rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
     }),
 
     rest.get('/api/v2/users/*', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(
+            ctx.json({
+                data: {
+                    props: {},
+                },
+            })
+        );
     }),
 
     rest.get('/api/v2/config', async (_, res, ctx) => {

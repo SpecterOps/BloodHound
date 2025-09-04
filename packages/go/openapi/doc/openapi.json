@@ -2725,6 +2725,15 @@
           }
         },
         {
+          "name": "X-File-Upload-Name",
+          "description": "File upload name header, used to specify the name of the file being uploaded to improve error reporting.",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
           "name": "file_upload_job_id",
           "description": "The ID for the file upload job.",
           "in": "path",
@@ -2757,6 +2766,65 @@
         "responses": {
           "202": {
             "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/file-upload/{file_upload_job_id}/completed-tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "file_upload_job_id",
+          "description": "The ID for the file upload job.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCompletedTasks",
+        "summary": "Get Completed Tasks",
+        "description": "Get information about the individual completed file upload tasks associated with a job",
+        "tags": [
+          "Collection Uploads",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.file-upload-job.completed-tasks"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -5325,21 +5393,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5429,15 +5489,7 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
+            "$ref": "#/components/parameters/query.environments"
           }
         ],
         "responses": {
@@ -5502,7 +5554,7 @@
         },
         {
           "name": "asset_group_tag_selector_id",
-          "description": "ID of an asset group selector",
+          "description": "ID of an asset group tag selector",
           "in": "path",
           "required": true,
           "schema": {
@@ -5526,6 +5578,9 @@
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5619,6 +5674,17 @@
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `name`, and `created_at`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
           },
           {
             "name": "auto_certify",
@@ -6067,8 +6133,21 @@
                     "items": {
                       "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
                     }
+                  },
+                  "expansion": {
+                    "description": "Determine which expansion approach to use for member seeds. 0 - No expansion, 1 - Expand all, 2 - Expand containing members, 3 - Expand containing members and members containing the seed. Default fallback will be 1 - Expand all",
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2,
+                      3
+                    ]
                   }
-                }
+                },
+                "required": [
+                  "seeds"
+                ]
               }
             }
           }
@@ -6344,6 +6423,196 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "SearchAssetGroupTagHistory",
+        "summary": "Search history records",
+        "description": "Retrieves history records via search string input and filtering by action, asset_group_tag_id, email, and actor",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "requestBody": {
+          "description": "The request body for searching asset group tag history records",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "minLength": 3,
+                    "example": "UpdateTag"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `created_at`.",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/api.params.query.sort-by"
+                },
+                {
+                  "enum": [
+                    "created_at"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "description": "Filter by actor",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Filter by email",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "description": "Filter by action",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "description": "Filter by asset_group_tag_id",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-history"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/certifications": {
+      "post": {
+        "operationId": "CertifyOrRevokeObjects",
+        "summary": "Certify or Revoke Certification of Objects",
+        "description": "Manually certify/revoke certification of objects as belonging to the Zone they're selected by",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for certifying or revoking certification of objects.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "member_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "action": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2
+                    ]
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "member_ids",
+                  "action"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -9700,6 +9969,63 @@
         }
       }
     },
+    "/api/v2/domains/{object_id}/adcs-escalations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetDomainEntityAdcsEscalations",
+        "summary": "Get ADCS escalations of Domain entity",
+        "description": "Get a list, graph, or count of the ADCS escalations of this Domain.",
+        "tags": [
+          "Domains",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/gpos/{object_id}": {
       "parameters": [
         {
@@ -10120,6 +10446,60 @@
         }
       }
     },
+    "/api/v2/aiacas/{object_id}/pki-hierarchy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetAiaCaEntityPkiHierarchy",
+        "summary": "Get PKI hierarchy of AIA CA entity",
+        "description": "Get a list, graph, or count of the PKI hierarchy of this AIA CA.",
+        "tags": [
+          "AIA CAs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/rootcas/{object_id}": {
       "parameters": [
         {
@@ -10222,6 +10602,60 @@
         }
       }
     },
+    "/api/v2/rootcas/{object_id}/pki-hierarchy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetRootCaEntityPkiHierarchy",
+        "summary": "Get PKI hierarchy of Root CA entity",
+        "description": "Get a list, graph, or count of the PKI hierarchy of this Root CA.",
+        "tags": [
+          "Root CAs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/enterprisecas/{object_id}": {
       "parameters": [
         {
@@ -10283,6 +10717,117 @@
         "operationId": "GetEnterpriseCaEntityControllers",
         "summary": "Get Enterprise CA entity controllers",
         "description": "Get a list, graph, or count of the principals that can control this Enterprise CA.",
+        "tags": [
+          "Enterprise CAs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/enterprisecas/{object_id}/pki-hierarchy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetEnterpriseCaEntityPkiHierarchy",
+        "summary": "Get PKI hierarchy of Enterprise CA entity",
+        "description": "Get a list, graph, or count of the PKI hierarchy of this Enterprise CA.",
+        "tags": [
+          "Enterprise CAs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/enterprisecas/{object_id}/published-templates": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetEnterpriseCaEntityPublishedTemplates",
+        "summary": "Get published certificate templates of Enterprise CA entity",
+        "description": "Get a list, graph, or count of the published certificate templates of this Enterprise CA.",
         "tags": [
           "Enterprise CAs",
           "Community",
@@ -10426,6 +10971,60 @@
         }
       }
     },
+    "/api/v2/ntauthstores/{object_id}/trusted-cas": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetNtAuthStoreEntityTrustedCas",
+        "summary": "Get trusted Enterprise CAs of NT Auth Store entity",
+        "description": "Get a list, graph, or count of the trusted Enterprise CAs of this NT Auth Store.",
+        "tags": [
+          "NT Auth Stores",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/certtemplates/{object_id}": {
       "parameters": [
         {
@@ -10487,6 +11086,60 @@
         "operationId": "GetCertTemplateEntityControllers",
         "summary": "Get Cert Template entity controllers",
         "description": "Get a list, graph, or count of the principals that can control this Cert Template.",
+        "tags": [
+          "Cert Templates",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/certtemplates/{object_id}/published-to-cas": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetCertTemplateEntityPublishedToCAs",
+        "summary": "Get Enterprise CAs having Cert Template entity published",
+        "description": "Get a list, graph, or count of the Enterprise CAs having this Cert Template published.",
         "tags": [
           "Cert Templates",
           "Community",
@@ -12280,7 +12933,7 @@
       "post": {
         "operationId": "DeleteBloodHoundDatabase",
         "summary": "Delete your BloodHound data",
-        "description": "Wipes your Bloodhound data permanently.  Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
+        "description": "Wipes your BloodHound data permanently. Specify the data to delete in the request body. Possible data includes collected graph data, custom high value selectors, file ingest history, and data quality history.",
         "tags": [
           "Database",
           "Community",
@@ -16289,6 +16942,14 @@
           "$ref": "#/components/schemas/api.params.query.limit"
         }
       },
+      "query.environments": {
+        "name": "environments",
+        "description": "Environment IDs to filter response by",
+        "in": "query",
+        "schema": {
+          "$ref": "#/components/schemas/api.params.query.environments"
+        }
+      },
       "path.object-id": {
         "name": "object_id",
         "description": "The object id of the entity being operated on.",
@@ -17657,6 +18318,39 @@
               "last_ingest": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "total_files": {
+                "type": "integer"
+              },
+              "failed_files": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "model.file-upload-job.completed-tasks": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "parent_file_name": {
+                "type": "string"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -18219,6 +18913,9 @@
           },
           "analysis_enabled": {
             "$ref": "#/components/schemas/null.boolean"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
           }
         }
       },
@@ -18226,7 +18923,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Only alphanumeric characters, underscores, and spaces are allowed."
           },
           "type": {
             "type": "integer"
@@ -18239,6 +18937,9 @@
           },
           "position": {
             "type": "integer"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
           }
         }
       },
@@ -18246,7 +18947,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Only alphanumeric characters, underscores, and spaces are allowed."
           },
           "description": {
             "type": "string"
@@ -18257,6 +18959,12 @@
           "position": {
             "type": "integer"
           }
+        }
+      },
+      "api.params.query.environments": {
+        "type": "array",
+        "items": {
+          "type": "string"
         }
       },
       "model.asset-group-tags-selector-update": {
@@ -18615,11 +19323,20 @@
           "kind": {
             "type": "string"
           },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "objectId": {
             "type": "string"
           },
           "isTierZero": {
-            "type": "string"
+            "type": "boolean"
+          },
+          "isOwnedObject": {
+            "type": "boolean"
           },
           "lastSeen": {
             "type": "string",
@@ -19361,7 +20078,8 @@
               "environment_id",
               "impact_percentage",
               "impact_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -19396,6 +20114,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           },
@@ -19415,7 +20136,8 @@
               "impact_count",
               "exposure_percentage",
               "exposure_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -19474,6 +20196,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           }
@@ -19949,6 +20674,12 @@
                           },
                           "label": {
                             "type": "string"
+                          },
+                          "kinds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
                           }
                         }
                       }

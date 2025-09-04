@@ -130,7 +130,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                         The encrypted attributes can also be retrieved and decrypted using{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
                             lapsv2decrypt
                         </Link>{' '}
@@ -155,7 +155,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                     </Typography>
                     <Typography variant='body2'>Certify can be used to enroll a certificate:</Typography>
                     <Typography component={'pre'}>
-                        {'Certify.exe request /ca:SERVER\\CA-NAME /template:TEMPLATE'}
+                        {'Certify.exe request --ca SERVER\\CA-NAME --template TEMPLATE'}
                     </Typography>
                     <Typography variant='body2'>
                         The following additional requirements must be met for a principal to be able to enroll a

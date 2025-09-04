@@ -20,7 +20,7 @@
 # Global build args
 ################
 ARG SHARPHOUND_VERSION=v2.7.1
-ARG AZUREHOUND_VERSION=v2.6.0
+ARG AZUREHOUND_VERSION=v2.7.1
 
 ########
 # Package remote assets
@@ -112,7 +112,7 @@ COPY --from=ui-builder /build/cmd/ui/dist ./cmd/api/src/api/static/assets
 RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
 ########
-# Package Bloodhound
+# Package BloodHound
 ################
 FROM gcr.io/distroless/static-debian11 AS bloodhound
 ARG SHARPHOUND_VERSION

@@ -31,11 +31,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 )
 
 const (
@@ -104,7 +104,7 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 }
 
 func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -114,7 +114,7 @@ func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 // IngestGenericData writes generic graph data into the database using the provided batch.
@@ -125,7 +125,7 @@ func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 // base kind should be applied uniformly to all ingested entities, and instead the kind(s)
 // defined directly on each node or edge (if any) are used as-is.
 func IngestGenericData(batch *TimestampedBatch, sourceKind graph.Kind, converted ConvertedData) error {
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, sourceKind, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -135,11 +135,11 @@ func IngestGenericData(batch *TimestampedBatch, sourceKind graph.Kind, converted
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) error {
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -153,12 +153,12 @@ func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) erro
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) error {
 	defer measure.ContextLogAndMeasure(context.TODO(), slog.LevelDebug, "ingest azure data")()
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -172,7 +172,7 @@ func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) erro
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 // IngestWrapper dispatches the ingest process based on the metadata's type.
@@ -374,7 +374,7 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 
 func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
-		errs = util.NewErrorCollector()
+		errs = errorlist.NewBuilder()
 	)
 
 	for _, next := range nodes {
@@ -383,7 +383,8 @@ func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.Inges
 			errs.Add(err)
 		}
 	}
-	return errs.Combined()
+
+	return errs.Build()
 }
 
 // IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
@@ -394,7 +395,7 @@ func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.Inges
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs = util.NewErrorCollector()
+		errs = errorlist.NewBuilder()
 	)
 
 	updates, err := resolveRelationships(batch, relationships, baseKind)
@@ -408,7 +409,7 @@ func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relations
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelationship) error {
@@ -441,7 +442,7 @@ func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelatio
 
 func IngestDNRelationships(batch *TimestampedBatch, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs = util.NewErrorCollector()
+		errs = errorlist.NewBuilder()
 	)
 
 	for _, next := range relationships {
@@ -450,7 +451,7 @@ func IngestDNRelationships(batch *TimestampedBatch, relationships []ein.Ingestib
 			errs.Add(err)
 		}
 	}
-	return errs.Combined()
+	return errs.Build()
 }
 
 func ingestSession(batch *TimestampedBatch, nextSession ein.IngestibleSession) error {
@@ -485,7 +486,7 @@ func ingestSession(batch *TimestampedBatch, nextSession ein.IngestibleSession) e
 
 func IngestSessions(batch *TimestampedBatch, sessions []ein.IngestibleSession) error {
 	var (
-		errs = util.NewErrorCollector()
+		errs = errorlist.NewBuilder()
 	)
 
 	for _, next := range sessions {
@@ -494,5 +495,5 @@ func IngestSessions(batch *TimestampedBatch, sessions []ein.IngestibleSession) e
 			errs.Add(err)
 		}
 	}
-	return errs.Combined()
+	return errs.Build()
 }
