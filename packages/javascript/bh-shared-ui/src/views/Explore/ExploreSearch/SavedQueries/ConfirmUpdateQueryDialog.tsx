@@ -13,15 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogDescription,
-    DialogPortal,
-    DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { FC } from 'react';
 
 const ConfirmUpdateQueryDialog: FC<{
@@ -32,20 +25,18 @@ const ConfirmUpdateQueryDialog: FC<{
 }> = ({ open, handleApply, handleCancel, dialogContent }) => {
     return (
         <Dialog open={open}>
-            <DialogPortal>
-                <DialogContent>
-                    <DialogTitle>Update Query</DialogTitle>
-                    <DialogDescription>{dialogContent}</DialogDescription>
-                    <DialogActions>
-                        <Button variant='text' onClick={handleCancel}>
-                            Cancel
-                        </Button>
-                        <Button variant='text' onClick={handleApply}>
-                            Ok
-                        </Button>
-                    </DialogActions>
-                </DialogContent>
-            </DialogPortal>
+            <DialogContent>
+                <DialogTitle className='px-0'>Update Query</DialogTitle>
+                <DialogContentText>{dialogContent}</DialogContentText>
+                <DialogActions className='px-0'>
+                    <Button variant='text' onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant='text' onClick={handleApply}>
+                        Ok
+                    </Button>
+                </DialogActions>
+            </DialogContent>
         </Dialog>
     );
 };

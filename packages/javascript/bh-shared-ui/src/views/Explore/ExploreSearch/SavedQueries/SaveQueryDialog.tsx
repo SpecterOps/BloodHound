@@ -25,18 +25,10 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-    Dialog,
-    DialogActions,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogPortal,
-    DialogTitle,
     Input,
     Label,
-    VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { useMediaQuery, useTheme } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, useMediaQuery, useTheme } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
@@ -141,107 +133,101 @@ const SaveQueryDialog: React.FC<{
 
     return (
         <>
-            <Dialog open={open} onOpenChange={onClose}>
-                <DialogPortal>
-                    <DialogContent
-                        DialogOverlayProps={{
-                            blurBackground: false,
-                        }}
-                        maxWidth={lgDown ? 'md' : 'lg'}
-                        className='p-0 shadow-none bg-transparent'>
-                        <div className='grid grid-cols-12 gap-4'>
-                            <Card className='w-full col-span-8 p-2 rounded-lg'>
-                                <CardHeader>
-                                    <CardTitle>{cardTitle}</CardTitle>
-                                    <CardDescription>
-                                        To save your query to the Pre-built Query, add a name, optional description, and
-                                        set sharing permissions.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className='mb-2'>
-                                        <Label htmlFor='queryName'>Query Name</Label>
-                                        <Input
-                                            type='text'
-                                            id='queryName'
-                                            value={name}
-                                            onChange={(e) => {
-                                                setName(e.target.value);
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className='mb-2'>
-                                        <Label htmlFor='queryDescription'>Query Description</Label>
-                                        <Input
-                                            type='text'
-                                            id='queryDescription'
-                                            value={description}
-                                            onChange={(e) => {
-                                                setDescription(e.target.value);
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* [&_.cm-tooltip]:!top-2 */}
-
-                                    <div className='mb-2 '>
-                                        <Label>Cypher Query</Label>
-                                        <CypherEditor
-                                            ref={cypherEditorRef}
-                                            className={cn(
-                                                'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-40 max-h-40 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg [&_.cm-tooltip]:!top-5'
-                                            )}
-                                            value={localCypherQuery}
-                                            onValueChanged={(val: string) => {
-                                                setLocalCypherQuery(val);
-                                            }}
-                                            theme={theme.palette.mode}
-                                            schema={graphSchema(kindsQuery.data)}
-                                            lineWrapping
-                                            lint
-                                            placeholder='Cypher Query'
-                                            tooltipAbsolute={true}
-                                        />
-                                    </div>
-                                </CardContent>
-                                <CardFooter className='flex justify-end gap-4'>
-                                    {error ? (
-                                        <div>
-                                            An error occurred while attempting to save this query. Please try again.
-                                        </div>
-                                    ) : null}
-
-                                    <DialogActions className='flex justify-end gap-4'>
-                                        <DialogClose asChild>
-                                            <Button variant='text'>Cancel</Button>
-                                        </DialogClose>
-                                        <Button variant='text' disabled={saveDisabled} onClick={handleSave}>
-                                            Save
-                                        </Button>
-                                    </DialogActions>
-                                </CardFooter>
-                            </Card>
-                            <Card className='w-full col-span-4 p-2 rounded-lg'>
-                                <CardHeader>
-                                    <CardTitle>Manage Shared Queries</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <SavedQueryPermissions
-                                        sharedIds={sharedIds}
-                                        isPublic={isPublic}
-                                        setSharedIds={setSharedIds}
-                                        setIsPublic={setIsPublic}
+            <Dialog
+                open={open}
+                onClose={onClose}
+                maxWidth={lgDown ? 'md' : 'lg'}
+                sx={{
+                    '& .MuiPaper-root': {
+                        backgroundColor: 'transparent', // Or any desired color
+                        boxShadow: 'none',
+                    },
+                }}>
+                <DialogContent className='p-0 shadow-none !bg-none'>
+                    <div className='grid grid-cols-12 gap-4 !bg-transparent'>
+                        <Card className='w-full col-span-8 p-2 rounded-lg'>
+                            <CardHeader>
+                                <CardTitle>{cardTitle}</CardTitle>
+                                <CardDescription>
+                                    To save your query to the Pre-built Query, add a name, optional description, and set
+                                    sharing permissions.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className='mb-2'>
+                                    <Label htmlFor='queryName'>Query Name</Label>
+                                    <Input
+                                        type='text'
+                                        id='queryName'
+                                        value={name}
+                                        onChange={(e) => {
+                                            setName(e.target.value);
+                                        }}
                                     />
-                                </CardContent>
-                            </Card>
-                        </div>
-                        <VisuallyHidden>
-                            <DialogTitle>Save Custom Query</DialogTitle>
-                            <DialogDescription>Save Custom Query</DialogDescription>
-                        </VisuallyHidden>
-                    </DialogContent>
-                </DialogPortal>
+                                </div>
+
+                                <div className='mb-2'>
+                                    <Label htmlFor='queryDescription'>Query Description</Label>
+                                    <Input
+                                        type='text'
+                                        id='queryDescription'
+                                        value={description}
+                                        onChange={(e) => {
+                                            setDescription(e.target.value);
+                                        }}
+                                    />
+                                </div>
+                                <div className='mb-2 '>
+                                    <Label>Cypher Query</Label>
+                                    <CypherEditor
+                                        ref={cypherEditorRef}
+                                        className={cn(
+                                            'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-40 max-h-40 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
+                                        )}
+                                        value={localCypherQuery}
+                                        onValueChanged={(val: string) => {
+                                            setLocalCypherQuery(val);
+                                        }}
+                                        theme={theme.palette.mode}
+                                        schema={graphSchema(kindsQuery.data)}
+                                        lineWrapping
+                                        lint
+                                        placeholder='Cypher Query'
+                                        tooltipAbsolute={false}
+                                    />
+                                </div>
+                            </CardContent>
+                            <CardFooter className='flex justify-end gap-4'>
+                                {error ? (
+                                    <div>An error occurred while attempting to save this query. Please try again.</div>
+                                ) : null}
+
+                                <DialogActions className='flex justify-end gap-4'>
+                                    <Button variant='text' onClick={onClose}>
+                                        Cancel
+                                    </Button>
+
+                                    <Button variant='text' disabled={saveDisabled} onClick={handleSave}>
+                                        Save
+                                    </Button>
+                                </DialogActions>
+                            </CardFooter>
+                        </Card>
+                        <Card className='w-full col-span-4 p-2 rounded-lg'>
+                            <CardHeader>
+                                <CardTitle>Manage Shared Queries</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <SavedQueryPermissions
+                                    sharedIds={sharedIds}
+                                    isPublic={isPublic}
+                                    setSharedIds={setSharedIds}
+                                    setIsPublic={setIsPublic}
+                                />
+                            </CardContent>
+                        </Card>
+                    </div>
+                </DialogContent>
             </Dialog>
             <ConfirmUpdateQueryDialog
                 handleCancel={handleCancelConfirm}
