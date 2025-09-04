@@ -150,17 +150,18 @@ vi.mock('../../../../providers', async () => {
 
 describe('Tag Form', () => {
     const user = userEvent.setup();
-    const createNewTierPath = '/zone-management/save/tier/';
-    const createNewLabelPath = '/zone-management/save/label/';
-    const editExistingTierPath = '/zone-management/save/tier/1';
-    const editExistingLabelPath = '/zone-management/save/label/2';
-    const deletionTestsPath = '/zone-management/save/label/3';
+    // todo links to Details
+    const createNewZonePath = '/privilege-zones/zone/save/';
+    const createNewLabelPath = '/privilege-zones/label/save/';
+    const editExistingZonePath = '/privilege-zones/zone/1/save';
+    const editExistingLabelPath = '/privilege-zones/label/2/save';
+    const deletionTestsPath = '/privilege-zones/label/3/save';
 
-    it('renders the form for creating a new tier', async () => {
+    it('renders the form for creating a new zone', async () => {
         // Because there is no id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
 
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
 
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
@@ -170,12 +171,12 @@ describe('Tag Form', () => {
 
         render(
             <Routes>
-                <Route path={createNewTierPath} element={<TagForm />} />
+                <Route path={createNewZonePath} element={<TagForm />} />
             </Routes>,
-            { route: createNewTierPath }
+            { route: createNewZonePath }
         );
 
-        expect(await screen.findByText('Create new Tier')).toBeInTheDocument();
+        expect(await screen.findByText('Create new Zone')).toBeInTheDocument();
 
         const nameInput = screen.getByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
@@ -196,7 +197,7 @@ describe('Tag Form', () => {
         // Because there is no id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
 
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
 
         render(
             <Routes>
@@ -223,7 +224,7 @@ describe('Tag Form', () => {
     });
 
     it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '2', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
 
         const configResponse = {
             data: [
@@ -242,54 +243,54 @@ describe('Tag Form', () => {
 
         render(
             <Routes>
-                <Route path={editExistingTierPath} element={<TagForm />} />
+                <Route path={editExistingZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingTierPath }
+            { route: editExistingZonePath }
         );
 
-        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
-    it('renders the analysis toggle when multi tier analysis enabled is true and when editing an existing tier', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '2', labelId: undefined });
+    it('renders the analysis toggle when multi tier analysis enabled is true and when editing an existing zone', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
 
         render(
             <Routes>
-                <Route path={editExistingTierPath} element={<TagForm />} />
+                <Route path={editExistingZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingTierPath }
+            { route: editExistingZonePath }
         );
 
-        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
         expect(await screen.findByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
-    it('renders the form for editing an existing tier', async () => {
-        // This url has the tier id of 1 in the path
-        // and so this tier's data is filled into the form for the user to edit
+    it('renders the form for editing an existing zone', async () => {
+        // This url has the zone id of 1 in the path
+        // and so this zone's data is filled into the form for the user to edit
 
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
 
         render(
             <Routes>
-                <Route path={editExistingTierPath} element={<TagForm />} />
+                <Route path={editExistingZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingTierPath }
+            { route: editExistingZonePath }
         );
 
-        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
 
         const nameInput = await screen.findByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
         longWait(() => {
-            expect(nameInput).toHaveValue('Tier Zero');
+            expect(nameInput).toHaveValue('Zone Zero');
         });
 
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
         longWait(() => {
-            expect(descriptionInput).toHaveValue('Tier Zero Description');
+            expect(descriptionInput).toHaveValue('Zone Zero Description');
         });
 
         // The delete button should not render when editing T0
@@ -302,7 +303,7 @@ describe('Tag Form', () => {
         // This url has the label id of 2 in the path
         // and so this label's data is filled into the form for the user to edit
 
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '2' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
 
         render(
             <Routes>
@@ -337,7 +338,7 @@ describe('Tag Form', () => {
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '2' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
         render(<TagForm />, { route: createNewLabelPath });
 
         await act(async () => {
@@ -380,9 +381,9 @@ describe('Tag Form', () => {
         render(
             <Routes>
                 <Route path={'/'} element={<TagForm />} />
-                <Route path={createNewTierPath} element={<TagForm />} />
+                <Route path={createNewZonePath} element={<TagForm />} />
             </Routes>,
-            { route: createNewTierPath }
+            { route: createNewZonePath }
         );
 
         const nameInput = await screen.findByLabelText('Name');
@@ -392,22 +393,22 @@ describe('Tag Form', () => {
 
         await user.click(await screen.findByRole('button', { name: /Save/ }));
 
-        expect(screen.queryByText('Please provide a name for the tier')).not.toBeInTheDocument();
+        expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
         });
     });
 
-    it('handles creating a new tier', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
+    it('handles creating a new zone', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
 
         render(
             <Routes>
                 <Route path={'/'} element={<TagForm />} />
-                <Route path={createNewTierPath} element={<TagForm />} />
+                <Route path={createNewZonePath} element={<TagForm />} />
             </Routes>,
-            { route: createNewTierPath }
+            { route: createNewZonePath }
         );
 
         const nameInput = await screen.findByLabelText('Name');
@@ -424,7 +425,7 @@ describe('Tag Form', () => {
     });
 
     it('handles creating a new label', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
 
         render(
             <Routes>
@@ -448,7 +449,7 @@ describe('Tag Form', () => {
     });
 
     it('disables the confirm button until user types required text', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
 
         render(<TagForm />);
 
@@ -477,7 +478,7 @@ describe('Tag Form', () => {
     });
 
     it('opens and closes the dialog with the cancel button', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
 
         render(<TagForm />);
 
@@ -503,7 +504,7 @@ describe('Tag Form', () => {
     });
 
     it('open and closes dialog with confirm button after user inputs required text', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
         console.error = vi.fn();
 
         render(

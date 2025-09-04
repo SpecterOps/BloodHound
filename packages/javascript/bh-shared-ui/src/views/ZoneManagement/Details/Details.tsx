@@ -28,7 +28,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { ROUTE_PRIVILEGE_ZONES_DETAILS, ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
+import { DEFAULT_PRIVILEGE_ZONES_ROUTE, ROUTE_PRIVILEGE_ZONES_DETAILS, ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -44,16 +44,16 @@ export const getSavePath = (
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
-    // TODO - what should this route be to account for zone/label?
-    const savePath = `${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneId}/save`;
+    const tagType = zoneId ? 'zone' : 'label';
+    let tagPathId = '';
 
-    if (selectorId && labelId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${labelId}/save/selector/${selectorId}`;
-    if (selectorId && zoneId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneId}/save/selector/${selectorId}`;
+    if (zoneId || labelId) {
+        tagPathId = tagType === 'zone' ? zoneId ?? '' : labelId ?? '';
+    }
 
-    if (!selectorId && labelId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${labelId}/save`;
-    if (!selectorId && zoneId) return `${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneId}/save`;
+    const selectorPath = selectorId ? `/selector/${selectorId}` : '';
 
-    return savePath;
+    return `${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagPathId}/save${selectorPath}`;
 };
 
 export const getEditButtonState = (
@@ -77,8 +77,9 @@ const Details: FC = () => {
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const tagKind = zoneId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
-        { path: ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_DETAILS, caseSensitive: false, end: false },
+        { path: ROUTE_PRIVILEGE_ZONES_ROOT + '/' + DEFAULT_PRIVILEGE_ZONES_ROUTE + tagKind + ROUTE_PRIVILEGE_ZONES_DETAILS, caseSensitive: false, end: false },
     ]);
 
     const tagId = labelId === undefined ? zoneId : labelId;

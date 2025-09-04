@@ -42,24 +42,24 @@ describe('Details', async () => {
     it('renders', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId' element={<Details />} />
+                <Route path='/privilege-zones/zone/:zoneId/details' element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1' }
+            { route: '/privilege-zones/zone/1/details' }
         );
 
-        expect(await screen.findByText(/Tiers/)).toBeInTheDocument();
+        expect(await screen.findByText(/Zones/)).toBeInTheDocument();
 
         expect(await screen.findByTestId('zone-management_details_tiers-list')).toBeInTheDocument();
         expect(await screen.findByTestId('zone-management_details_selectors-list')).toBeInTheDocument();
         expect(await screen.findByTestId('zone-management_details_members-list')).toBeInTheDocument();
     });
 
-    it('has Tier Zero tier selected by default and no selectors or objects are selected', async () => {
+    it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId' element={<Details />} />
+                <Route path='/privilege-zones/zone/:zoneId/details' element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1' }
+            { route: '/privilege-zones/zone/1/details' }
         );
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');
@@ -70,7 +70,7 @@ describe('Details', async () => {
 
         longWait(() => {
             expect(screen.getByTestId('zone-management_details_tiers-list')).toBeInTheDocument();
-            // The Tier Zero tier is selected by default
+            // The Tier Zero zone is selected by default
             expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
         });
 
@@ -85,12 +85,12 @@ describe('Details', async () => {
         });
     });
 
-    it('handles object selection when a tier is already selected', async () => {
+    it('handles object selection when a zone is already selected', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId' element={<Details />} />
+                <Route path='/privilege-zones/zone/:zoneId/details' element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1' }
+            { route: '/privilege-zones/zone/1/details' }
         );
 
         longWait(async () => {
@@ -122,9 +122,9 @@ describe('Details', async () => {
     it('handles selector selection when a tier and object are already selected', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId/member/:memberId' element={<Details />} />
+                <Route path='/privilege-zones/zone/:zoneId/details/member/:memberId' element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1/member/7' }
+            { route: '/privilege-zones/zone/1/details/member/7' }
         );
 
         const selector7 = await screen.findByText('tier-0-selector-7');
@@ -146,22 +146,22 @@ describe('Details', async () => {
                 expect(li.childNodes).toHaveLength(1);
             });
 
-            // The Tier Zero tier is still selected when selecting a selector that is within it
+            // The Tier Zero zone is still selected when selecting a selector that is within it
             expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
 
             expect(await screen.findByRole('button', { name: /Edit/ })).toBeInTheDocument();
         });
     });
 
-    it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
+    it('will deselect both the selected selector and selected object when a different zone is selected', async () => {
         render(
             <Routes>
                 <Route
-                    path='/zone-management/details/tier/:tierId/selector/:selectorId/member/:memberId'
+                    path='/privilege-zones/zone/:zoneId/details/selector/:selectorId/member/:memberId'
                     element={<Details />}
                 />
             </Routes>,
-            { route: '/zone-management/details/tier/1/selector/7/member/7' }
+            { route: '/privilege-zones/zone/1/details/selector/7/member/7' }
         );
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');
@@ -171,8 +171,8 @@ describe('Details', async () => {
         let objectsListItems = await within(objects).findAllByRole('listitem');
 
         longWait(async () => {
-            expect(screen.getByText('Tier-2')).toBeInTheDocument();
-            await user.click(screen.getByText('Tier-2'));
+            expect(screen.getByText('Zone-2')).toBeInTheDocument();
+            await user.click(screen.getByText('Zone-2'));
 
             // This list rerenders with different list items so we have to grab those again
             selectorsListItems = await within(selectors).findAllByRole('listitem');

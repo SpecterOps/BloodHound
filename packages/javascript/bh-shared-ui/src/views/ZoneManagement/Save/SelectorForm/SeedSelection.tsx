@@ -44,13 +44,13 @@ import { SelectorFormInputs } from './types';
 
 const getSelectorExpansionMethod = (
     tagId: string,
-    tagKind: 'label' | 'tier',
+    tagKind: 'label' | 'zone',
     ownedId: string | undefined
 ): SeedExpansionMethod => {
     // Owned is a specific label that does not expansion
     if (tagId === ownedId) return SeedExpansionMethodNone;
 
-    return tagKind === 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+    return tagKind === 'zone' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
 
 const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {

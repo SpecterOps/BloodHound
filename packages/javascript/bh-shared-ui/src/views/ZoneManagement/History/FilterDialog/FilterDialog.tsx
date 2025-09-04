@@ -183,7 +183,7 @@ const FilterDialog: FC<{
                                 name='tag'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel aria-labelledby='tag'>Tier/Label</FormLabel>
+                                        <FormLabel aria-labelledby='tag'>Zone/Label</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value}
@@ -303,8 +303,8 @@ const FilterDialog: FC<{
                                                                 field.name,
                                                                 value
                                                                     ? DateTime.fromJSDate(value).toFormat(
-                                                                          LuxonFormat.ISO_8601
-                                                                      )
+                                                                        LuxonFormat.ISO_8601
+                                                                    )
                                                                     : ''
                                                             );
                                                         },
@@ -341,8 +341,8 @@ const FilterDialog: FC<{
                                                                 field.name,
                                                                 value
                                                                     ? DateTime.fromJSDate(value).toFormat(
-                                                                          LuxonFormat.ISO_8601
-                                                                      )
+                                                                        LuxonFormat.ISO_8601
+                                                                    )
                                                                     : ''
                                                             );
                                                         },
