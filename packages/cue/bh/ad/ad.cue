@@ -1648,6 +1648,10 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+ProtectAdminGroups: types.#Kind & {
+	symbol:         "ProtectAdminGroups"
+	schema:         "active_directory"
+}
 
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
@@ -1766,6 +1770,7 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	ProtectAdminGroups,
 ]
 
 // ACL Relationships
