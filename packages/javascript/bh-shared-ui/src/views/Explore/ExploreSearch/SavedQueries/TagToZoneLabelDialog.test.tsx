@@ -19,6 +19,7 @@ import TagToZoneLabelDialog from './TagToZoneLabelDialog';
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { vi } from 'vitest';
 import { render, screen } from '../../../../test-utils';
 
 const testZones = [

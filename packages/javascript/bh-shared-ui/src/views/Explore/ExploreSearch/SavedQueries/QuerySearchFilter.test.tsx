@@ -128,7 +128,7 @@ describe('QuerySearchFilter', () => {
         expect(testExport).toBeInTheDocument();
         expect(testExport).toBeDisabled();
 
-        const testDelete = screen.getByRole('button', { name: 'delete' });
+        const testDelete = screen.getByRole('button', { name: /delete/i });
         expect(testDelete).toBeInTheDocument();
         expect(testDelete).toBeDisabled();
     });

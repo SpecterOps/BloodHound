@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import { render } from '../../../../test-utils';
 import ConfirmUpdateQueryDialog from './ConfirmUpdateQueryDialog';
 

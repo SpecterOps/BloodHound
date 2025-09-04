@@ -24,7 +24,7 @@ import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
 import { getExportQuery, useDeleteSavedQuery, usePrebuiltQueries, useSavedQueries } from '../../../../hooks';
 import { useSelf } from '../../../../hooks/useSelf';
 import { useNotifications } from '../../../../providers';
-import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../../types';
+import { QueryLineItem, QueryListSection } from '../../../../types';
 import { cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
 import QuerySearchFilter from './QuerySearchFilter';
@@ -54,7 +54,7 @@ const CommonSearches = ({
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
     //master list of pre-made queries
-    const queryList = usePrebuiltQueries();
+    const queryList: QueryListSection[] = usePrebuiltQueries();
     const allCategories = queryList.map((item) => item.subheader);
     const uniqueCategoriesSet = new Set(allCategories);
     const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
@@ -103,7 +103,7 @@ const CommonSearches = ({
         setCategoryFilter(categories);
         setSource(source);
         //local array variable
-        let filteredData: QuerySearchType[] = queryList;
+        let filteredData: QueryListSection[] = queryList;
 
         if (searchTerm.length > 2) {
             filteredData = filteredData
@@ -116,11 +116,11 @@ const CommonSearches = ({
                 .filter((x) => x.queries.length);
         }
         if (platform) {
-            filteredData = filteredData.filter((obj) => obj.category.toLowerCase() === platform.toLowerCase());
+            filteredData = filteredData.filter((obj) => obj.category?.toLowerCase() === platform.toLowerCase());
         }
         if (categories.length) {
             filteredData = filteredData
-                .filter((item: QuerySearchType) => categories.includes(item.subheader))
+                .filter((item: QueryListSection) => categories.includes(item.subheader))
                 .filter((x) => x.queries.length);
         }
         if (source && source === 'prebuilt') {
