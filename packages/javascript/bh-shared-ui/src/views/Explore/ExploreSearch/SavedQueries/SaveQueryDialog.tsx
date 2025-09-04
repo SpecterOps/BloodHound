@@ -206,7 +206,6 @@ const SaveQueryDialog: React.FC<{
                                     <Button variant='text' onClick={onClose}>
                                         Cancel
                                     </Button>
-
                                     <Button variant='text' disabled={saveDisabled} onClick={handleSave}>
                                         Save
                                     </Button>
