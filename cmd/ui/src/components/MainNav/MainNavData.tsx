@@ -54,7 +54,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
-    const zoneFlag = featureFlags?.data?.find((flag) => {
+    const tierFlag = featureFlags?.data?.find((flag) => {
         // TODO - is this changed in the DB?
         return flag.key === 'tier_management_engine';
     });
@@ -67,10 +67,10 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: 'global_nav-explore',
         },
         {
-            label: zoneFlag?.enabled ? 'Privilege Zones' : 'Group Management',
+            label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: zoneFlag?.enabled ? ROUTE_PRIVILEGE_ZONES_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
-            testId: zoneFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
+            route: tierFlag?.enabled ? ROUTE_PRIVILEGE_ZONES_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
+            testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
         },
     ];
 

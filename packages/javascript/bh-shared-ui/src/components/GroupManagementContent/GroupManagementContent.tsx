@@ -32,8 +32,8 @@ import { SelectedEnvironment, SimpleEnvironmentSelector } from '../SimpleEnviron
 interface GroupManagementContentProps {
     globalEnvironment: SelectedEnvironment | null;
     showExplorePageLink: boolean;
-    zoneZeroLabel: string;
-    zoneZeroTag: string;
+    tierZeroLabel: string;
+    tierZeroTag: string;
     entityPanelComponent: ReactNode;
     domainSelectorErrorMessage: ReactNode;
     onShowNodeInExplore: () => void;
@@ -46,8 +46,8 @@ interface GroupManagementContentProps {
 const GroupManagementContent: FC<GroupManagementContentProps> = ({
     globalEnvironment,
     showExplorePageLink,
-    zoneZeroLabel,
-    zoneZeroTag,
+    tierZeroLabel,
+    tierZeroTag,
     entityPanelComponent,
     domainSelectorErrorMessage,
     onShowNodeInExplore,
@@ -63,7 +63,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
 
     const setInitialGroup = (data: AssetGroup[]) => {
         if (!selectedAssetGroupId && data?.length) {
-            const initialGroup = data.find((group) => group.tag === zoneZeroTag) || data[0];
+            const initialGroup = data.find((group) => group.tag === tierZeroTag) || data[0];
             setSelectedAssetGroupId(initialGroup.id);
         }
     };
@@ -100,7 +100,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
     };
 
     const getAssetGroupSelectorLabel = (): string => {
-        if (selectedAssetGroup?.tag === zoneZeroTag) return zoneZeroLabel;
+        if (selectedAssetGroup?.tag === tierZeroTag) return tierZeroLabel;
         return selectedAssetGroup?.name || 'Select a Group';
     };
 

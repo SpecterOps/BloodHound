@@ -109,7 +109,7 @@ const ContextMenu: FC<{
         );
     };
 
-    const zoneZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
         return value.position === 1;
     });
 
@@ -155,12 +155,12 @@ const ContextMenu: FC<{
                 <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
                 {checkPermission(Permission.GRAPH_DB_WRITE) && [
                     <AssetGroupMenuItem
-                        key={zoneZeroAssetGroup!.id}
-                        assetGroupId={zoneZeroAssetGroup!.id}
-                        assetGroupName={zoneZeroAssetGroup!.name}
+                        key={tierZeroAssetGroup!.id}
+                        assetGroupId={tierZeroAssetGroup!.id}
+                        assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${zoneZeroAssetGroup!.id}/details`}
-                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isZoneZero}
+                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${tierZeroAssetGroup!.id}/details`}
+                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
                         }}
@@ -168,7 +168,7 @@ const ContextMenu: FC<{
                             setDialogOpen(false);
                         }}
                         showConfirmationOnAdd
-                        confirmationOnAddMessage={`Are you sure you want to add this node to ${zoneZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
+                        confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
                     />,
                     <AssetGroupMenuItem
                         key={ownedAssetGroup!.id}
