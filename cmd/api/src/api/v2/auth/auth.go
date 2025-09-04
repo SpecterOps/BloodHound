@@ -367,9 +367,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		if err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
-		}
-
-		if etacFeatureFlag.Enabled {
+		} else if etacFeatureFlag.Enabled {
 			// Access to all environments will be denied by default
 			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
 			userTemplate.AllEnvironments = false
@@ -384,7 +382,18 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
 					return
 				}
+
 				userTemplate.AllEnvironments = createUserRequest.EnvironmentControlList.AllEnvironments
+
+				environments := make([]model.EnvironmentAccess, 0)
+				for _, environment := range createUserRequest.EnvironmentControlList.Environments {
+					newEnvironment := model.EnvironmentAccess{
+						UserID:      userTemplate.ID.String(),
+						Environment: environment,
+					}
+					environments = append(environments, newEnvironment)
+				}
+				userTemplate.EnvironmentAccessControl = environments
 			}
 		}
 
@@ -397,28 +406,6 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
-			// eTAC
-			if etacFeatureFlag.Enabled {
-				// In order to properly create the environment access rows for the new user, we need to wait for the user to be created
-				// to obtain the user's id to link the user to the new etac list
-				if createUserRequest.UpdateUserRequest.EnvironmentControlList != nil {
-					// If the user isn't granting access to all environments, give them access to each environment requested
-					if createUserRequest.UpdateUserRequest.EnvironmentControlList.AllEnvironments {
-						if err := s.db.DeleteEnvironmentListForUser(request.Context(), newUser); err != nil {
-							api.HandleDatabaseError(request, response, err)
-							return
-						}
-					} else {
-						if environments, err := s.db.UpdateEnvironmentListForUser(request.Context(), newUser, createUserRequest.EnvironmentControlList.Environments); err != nil {
-							api.HandleDatabaseError(request, response, err)
-							return
-						} else {
-							newUser.EnvironmentAccessControl = environments
-						}
-					}
-				}
-			}
-
 			api.WriteBasicResponse(request.Context(), newUser, http.StatusOK, response)
 		}
 

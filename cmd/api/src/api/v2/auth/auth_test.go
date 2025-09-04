@@ -1539,7 +1539,6 @@ func TestCreateUser_Success_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
-				mockDB.EXPECT().DeleteEnvironmentListForUser(gomock.Any(), gomock.Any()).Return(nil)
 				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			},
 			expectedStatus: http.StatusOK,
@@ -1570,11 +1569,6 @@ func TestCreateUser_Success_ETAC(t *testing.T) {
 				},
 			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User) {
-				mockDB.EXPECT().UpdateEnvironmentListForUser(gomock.Any(), gomock.Any(), []string{"12345", "54321"}).
-					Return([]model.EnvironmentAccess{
-						{Environment: "12345"},
-						{Environment: "54321"},
-					}, nil)
 				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 			},
 			expectedStatus: http.StatusOK,
