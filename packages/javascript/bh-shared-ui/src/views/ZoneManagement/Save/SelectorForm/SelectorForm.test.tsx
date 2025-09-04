@@ -83,9 +83,9 @@ mockCodemirrorLayoutMethods();
 
 describe('Selector Form', () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
-    const detailsPath = '/zone-management/details/tier/1/selector/777';
-    const createNewPath = '/zone-management/save/tier/1/selector';
-    const editExistingPath = '/zone-management/save/tier/1/selector/777';
+    const detailsPath = '/privilege-zones/zone/1/details/selector/777';
+    const createNewPath = '/privilege-zones/zone/1/save/selector';
+    const editExistingPath = '/privilege-zones/zone/1/save/selector/777';
 
     it('renders the form for creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
@@ -190,7 +190,7 @@ describe('Selector Form', () => {
         render(
             <Routes>
                 <Route path={'/'} element={<SelectorForm />} />
-                <Route path={'/zone-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />
+                <Route path={'/privilege-zones/zone/:zoneId/save/selector/:selectorId'} element={<SelectorForm />} />
             </Routes>,
             { route: editExistingPath }
         );
@@ -238,7 +238,7 @@ describe('Selector Form', () => {
                 <Routes>
                     <Route path={'/'} element={<SelectorForm />} />
                     <Route
-                        path={'/zone-management/save/tier/:tierId/selector/:selectorId'}
+                        path={'/privilege-zones/zone/:zoneId/save/selector/:selectorId'}
                         element={<SelectorForm />}
                     />
                 </Routes>,
