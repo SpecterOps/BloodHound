@@ -3786,7 +3786,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 			},
 		},
 		{
-			name: "GetSelectorNodes() returns db error",
+			name: "GetSelectorNodesCertification() returns db error",
 			buildRequest: func(name string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -3799,7 +3799,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{}, 0, errors.New("entity not found"))
+				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{}, 0, errors.New("entity not found"))
 			},
 			expected: expected{
 				responseCode: http.StatusInternalServerError,
@@ -3824,7 +3824,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 2, nil)
+				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 2, nil)
 			},
 
 			expected: expected{
@@ -3867,7 +3867,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodes(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 1, nil)
+				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 1, nil)
 			},
 
 			expected: expected{

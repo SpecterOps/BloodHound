@@ -1389,7 +1389,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
+		nodeCertifications, count, err := dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1420,7 +1420,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
+		nodeCertifications, count, err := dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1450,7 +1450,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
+		nodeCertifications, count, err := dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1479,7 +1479,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
+		nodeCertifications, count, err := dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1506,7 +1506,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)
+		nodeCertifications, count, err := dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)
 		require.NoError(t, err)
 
 		// verify 4 out of 4 nodes returned
@@ -1514,7 +1514,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.Equal(t, 4, count)
 
 		// skip the first 2
-		nodeCertifications, count, err = dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 2, 0)
+		nodeCertifications, count, err = dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 2, 0)
 		require.NoError(t, err)
 
 		// verify 2 out of 4 nodes returned
@@ -1523,7 +1523,7 @@ func TestDatabase_GetSelectorNodes(t *testing.T) {
 		require.Equal(t, "NodeSelectedByT0_Third", nodeCertifications[0].NodeName)
 
 		// limit to 2
-		nodeCertifications, count, err = dbInst.GetSelectorNodes(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 2)
+		nodeCertifications, count, err = dbInst.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 2)
 		require.NoError(t, err)
 
 		// verify 2 out of 4 nodes returned

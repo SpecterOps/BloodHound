@@ -1158,7 +1158,7 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 
 		if sqlFilter, err := translatedQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if selectorNodes, count, err := s.DB.GetSelectorNodes(requestContext, sqlFilter, skip, limit); err != nil {
+		} else if selectorNodes, count, err := s.DB.GetSelectorNodesCertification(requestContext, sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			// return paginated AssetGroupMemberWithCertification of matches and also a count
