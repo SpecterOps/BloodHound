@@ -14,10 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
@@ -88,14 +86,6 @@ const CommonSearches = ({
             },
         });
     };
-
-    if (userQueries.isLoading) {
-        return (
-            <Box mt={2} data-testid='common-searches-skeleton'>
-                <Skeleton />
-            </Box>
-        );
-    }
 
     const handleFilter = (searchTerm: string, platform: string, categories: string[], source: string) => {
         setSearchTerm(searchTerm);
