@@ -13,7 +13,7 @@ import (
 )
 
 type Changelog struct {
-	cache   *cache // pointer so we can replace it atomically
+	Cache   *cache // pointer so we can replace it atomically
 	db      graph.Database
 	loop    loop
 	options Options
@@ -161,7 +161,7 @@ func (s *Changelog) enable(ctx context.Context, size int) {
 
 	slog.InfoContext(ctx, "enabling changelog", "cache size", size)
 	cache := newCache(size)
-	s.cache = &cache
+	s.Cache = &cache
 }
 
 // disable resets the cache to free memory.
@@ -170,15 +170,20 @@ func (s *Changelog) disable(ctx context.Context) {
 	defer s.mu.Unlock()
 
 	slog.InfoContext(ctx, "disabling changelog, clearing cache")
-	s.cache = nil
+	s.Cache = nil
+}
+
+// dont fiddle with FF for test hook.
+func (s *Changelog) InitCacheForTest(ctx context.Context) {
+	s.enable(ctx, 10)
 }
 
 func (s *Changelog) GetStats() cacheStats {
-	return s.cache.getStats()
+	return s.Cache.getStats()
 }
 
 func (s *Changelog) FlushStats() {
-	stats := s.cache.resetStats()
+	stats := s.Cache.resetStats()
 	slog.Info("changelog metrics",
 		"hits", stats.Hits,
 		"misses", stats.Misses,
@@ -186,7 +191,7 @@ func (s *Changelog) FlushStats() {
 }
 
 func (s *Changelog) ResolveChange(change Change) (bool, error) {
-	return s.cache.shouldSubmit(change)
+	return s.Cache.shouldSubmit(change)
 }
 
 func (s *Changelog) Submit(ctx context.Context, change Change) bool {

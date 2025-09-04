@@ -48,6 +48,7 @@ type IntegrationTestSuite struct {
 	GraphDB         graph.Database
 	BHDatabase      *database.BloodhoundDB
 	WorkDir         string
+	Changelog       *changelog.Changelog
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing

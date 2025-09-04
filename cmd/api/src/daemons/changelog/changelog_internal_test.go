@@ -54,7 +54,7 @@ func TestFeatureFlagCacheSizing2(t *testing.T) {
 
 	go cl.Start(ctx)
 
-	if cl.cache != nil {
+	if cl.Cache != nil {
 		t.Fatalf("expected cache to be nil when feature flag is off")
 	}
 
@@ -62,7 +62,7 @@ func TestFeatureFlagCacheSizing2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// At this point the flag should have flipped to enabled
-	if cl.cache == nil {
+	if cl.Cache == nil {
 		t.Fatalf("expected cache to be allocated when feature flag flips on")
 	}
 
