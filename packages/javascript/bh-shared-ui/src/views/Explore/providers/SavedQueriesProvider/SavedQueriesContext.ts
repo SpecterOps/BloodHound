@@ -43,7 +43,7 @@ export const SavedQueriesContext = createContext<SavedQueriesContextType>({
 export const useSavedQueriesContext = () => {
     const context = useContext(SavedQueriesContext);
     if (!context) {
-        throw new Error('MyContext provider is missing!');
+        throw new Error('SavedQueriesContext provider is missing!');
     }
     return context;
 };

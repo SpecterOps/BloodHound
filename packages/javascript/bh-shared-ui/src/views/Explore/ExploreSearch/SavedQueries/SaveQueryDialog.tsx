@@ -183,12 +183,14 @@ const SaveQueryDialog: React.FC<{
                                         />
                                     </div>
 
-                                    <div className='mb-2'>
+                                    {/* [&_.cm-tooltip]:!top-2 */}
+
+                                    <div className='mb-2 '>
                                         <Label>Cypher Query</Label>
                                         <CypherEditor
                                             ref={cypherEditorRef}
                                             className={cn(
-                                                'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
+                                                'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-40 max-h-40 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg [&_.cm-tooltip]:!top-5'
                                             )}
                                             value={localCypherQuery}
                                             onValueChanged={(val: string) => {
@@ -199,7 +201,7 @@ const SaveQueryDialog: React.FC<{
                                             lineWrapping
                                             lint
                                             placeholder='Cypher Query'
-                                            tooltipAbsolute={false}
+                                            tooltipAbsolute={true}
                                         />
                                     </div>
                                 </CardContent>
