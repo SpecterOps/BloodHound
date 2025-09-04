@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, waitForElementToBeRemoved } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -82,9 +82,6 @@ describe('CommonSearches', () => {
                 />
             </QueryClientProvider>
         );
-
-        //wait for loading to complete
-        await waitForElementToBeRemoved(() => screen.getByTestId('common-searches-skeleton'));
 
         const header = screen.getByText(/Pre-built Queries/i);
         expect(header).toBeInTheDocument();

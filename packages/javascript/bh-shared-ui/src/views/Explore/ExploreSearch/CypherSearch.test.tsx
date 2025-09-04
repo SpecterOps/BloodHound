@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, waitForElementToBeRemoved } from '../../../test-utils';
+import { render } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
@@ -110,7 +110,6 @@ describe('CypherSearch', () => {
 
     it('should render', async () => {
         const { screen } = await setup();
-        await waitForElementToBeRemoved(() => screen.getByTestId('common-searches-skeleton'));
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
     });
@@ -118,7 +117,7 @@ describe('CypherSearch', () => {
     it('should call the setCypherQuery handler when the value in the editor changes', async () => {
         const { screen, user, state } = await setup();
         const searchbox = screen.getAllByRole('textbox');
-        await user.type(searchbox[0], CYPHER);
+        await user.type(searchbox[1], CYPHER);
         expect(state.setCypherQuery).toBeCalled();
         expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
     });
