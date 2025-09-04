@@ -21,7 +21,7 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
     AssetGroupTagTypes,
     CreateAssetGroupTagRequest,
     CreateSelectorRequest,
@@ -420,7 +420,7 @@ export const useOrderedTags = () => {
     const { isLoading, isError, data } = useAssetGroupTags();
 
     const orderedTags = (data ?? [])
-        ?.filter((tag) => tag.type === AssetGroupTagTypeTier)
+        ?.filter((tag) => tag.type === AssetGroupTagTypeZone)
         .sort((a, b) => {
             const aPos = a.position ?? 0;
             const bPos = b.position ?? 0;

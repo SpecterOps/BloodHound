@@ -20,7 +20,7 @@ import {
     AssetGroupTagMember,
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
@@ -48,7 +48,7 @@ const SearchBar: React.FC = () => {
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
-                tag_type: tagKind === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                tag_type: tagKind === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;

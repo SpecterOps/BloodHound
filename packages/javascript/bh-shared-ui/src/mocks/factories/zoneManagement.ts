@@ -21,7 +21,7 @@ import {
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
     AssetGroupTagSelectorSeed,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
@@ -32,7 +32,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         name: `Tier-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         glyph: null,
-        type: AssetGroupTagTypeTier,
+        type: AssetGroupTagTypeZone,
         position: tagId,
         description: faker.random.words(1000),
         created_at: faker.date.past().toISOString(),

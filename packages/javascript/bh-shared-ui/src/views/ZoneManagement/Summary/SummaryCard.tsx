@@ -18,7 +18,7 @@ import { Button, Card } from '@bloodhoundenterprise/doodleui';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
+import { AssetGroupTagTypeZone, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { useHighestPrivilegeTagId } from '../../../hooks';
@@ -45,7 +45,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
             className='w-full flex px-6 py-4 rounded-xl'
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, '_')}-list_item-${id}`}>
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {type === AssetGroupTagTypeTier && id !== topTagId && (
+                {type === AssetGroupTagTypeZone && id !== topTagId && (
                     <ZoneAnalysisIcon size={24} tooltip analysisEnabled={analysisEnabled} />
                 )}
                 <span className='text-2xl font-bold truncate min-w-0'>{title}</span>
@@ -68,7 +68,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                         // Prevent event bubbling for the view details action
                         e.stopPropagation();
                         navigate(
-                            `${ROUTE_PRIVILEGE_ZONES_ROOT}/${type === AssetGroupTagTypeTier ? 'tier' : 'label'}/${id}/${ROUTE_PRIVILEGE_ZONES_DETAILS}`
+                            `${ROUTE_PRIVILEGE_ZONES_ROOT}/${type === AssetGroupTagTypeZone ? 'tier' : 'label'}/${id}/${ROUTE_PRIVILEGE_ZONES_DETAILS}`
                         );
                     }}
                     className='flex items-center space-x-2 hover:underline'>

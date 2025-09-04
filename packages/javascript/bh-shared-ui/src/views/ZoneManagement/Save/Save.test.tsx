@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeTier } from 'js-client-library';
+import { AssetGroupTagTypeZone } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
@@ -27,11 +27,11 @@ const handlers = [
             ctx.json({
                 data: {
                     tags: [
-                        { position: 1, id: 42, type: AssetGroupTagTypeTier },
-                        { position: 2, id: 23, type: AssetGroupTagTypeTier },
-                        { position: 7, id: 1, type: AssetGroupTagTypeTier },
-                        { position: 3, id: 2, type: AssetGroupTagTypeTier },
-                        { position: 777, id: 3, type: AssetGroupTagTypeTier },
+                        { position: 1, id: 42, type: AssetGroupTagTypeZone },
+                        { position: 2, id: 23, type: AssetGroupTagTypeZone },
+                        { position: 7, id: 1, type: AssetGroupTagTypeZone },
+                        { position: 3, id: 2, type: AssetGroupTagTypeZone },
+                        { position: 777, id: 3, type: AssetGroupTagTypeZone },
                     ],
                 },
             })

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeTier } from 'js-client-library';
+import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
@@ -89,7 +89,7 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const zonesQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
+    const zonesQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone) });
 
     const labelsQuery = useTagsQuery({
         select: (tags) =>

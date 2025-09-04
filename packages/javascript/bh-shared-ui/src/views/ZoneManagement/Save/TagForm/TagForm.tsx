@@ -36,7 +36,7 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     AssetGroupTagTypeLabel,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
@@ -110,7 +110,7 @@ export const TagForm: FC = () => {
                     name: formData.name,
                     description: formData.description,
                     position: null,
-                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
                 };
 
                 const response = await createTagMutation.mutateAsync({
@@ -418,7 +418,7 @@ export const TagForm: FC = () => {
 
                 {showZoneList && (
                     <ZoneList
-                        zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
+                        zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeZone) || []}
                         setPosition={(position: number | undefined) => {
                             form.setValue('position', position, { shouldDirty: true });
                         }}
