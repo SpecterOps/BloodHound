@@ -23,32 +23,30 @@ properties:
   skip:
     type: integer
   data:
-    type: array
-    items:
-      type: object
-      properties:
-        members:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-                format: int64
-                description: The graph ID of this node
-              object_id:
-                type: string
-              environment_id:
-                type: string
-              primary_kind:
-                type: string
-              name:
-                type: string
-              created_at:
-                type: string
-                format: date-time
-              certified_by:
-                type: string
-              certified:
-                type: integer
-                description: 0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert
+    type: object
+    properties:
+      members:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: The graph ID of this node
+            object_id:
+              type: string
+            environment_id:
+              type: string
+            primary_kind:
+              type: string
+            name:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            certified_by:
+              type: string
+            certified:
+              type: integer
+              description: 0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert
