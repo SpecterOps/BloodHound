@@ -115,9 +115,9 @@ export type AssetGroupTagSelectorAutoCertifyType =
     | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
-    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Disabled',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Seeds Only',
-    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Members',
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off –  Automatic certification is disabled',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members – Only the first members are certified',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members – Every member is certified automatically',
 } as const;
 
 export interface AssetGroupTagSelectorCounts {

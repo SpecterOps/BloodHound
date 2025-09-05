@@ -36,10 +36,7 @@ import {
     Skeleton,
     Switch,
     Textarea,
-    Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useState } from 'react';
 import { Control } from 'react-hook-form';
@@ -219,22 +216,18 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 name='auto_certify'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <Tooltip
-                                            tooltip={'TODO tooltip text coming'}
-                                            contentProps={{ side: 'right', sideOffset: -140 }}>
-                                            <span className='flex'>
-                                                <FormLabel aria-labelledby='auto_certify'>
-                                                    Automatic Certification
-                                                </FormLabel>
-                                                <span className='flex justify-center items-center'>
-                                                    <FontAwesomeIcon
-                                                        className={'ml-[3px]'}
-                                                        size={'2xs'}
-                                                        icon={faInfoCircle}
-                                                    />
-                                                </span>
-                                            </span>
-                                        </Tooltip>
+                                        <span className='flex'>
+                                            <FormLabel aria-labelledby='auto_certify'>
+                                                Automatic Certification
+                                            </FormLabel>
+                                        </span>
+                                        <span className='text-xs'>
+                                            Choose how new objects are certified. <em>Initial members</em> means only
+                                            the first set of objects in this selector are certified automatically.{' '}
+                                            <em>All members</em> means every object, including those tied to initial
+                                            members, is certified automatically. <em>Off</em> means all certification is
+                                            manual.
+                                        </span>
                                         <Select
                                             data-testid='zone-management_save_selector-form_auto_certify-input'
                                             value={field.value?.toString()}
@@ -242,7 +235,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             defaultValue={field.value?.toString()}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder='Disabled' {...field} />
+                                                    <SelectValue placeholder='Off' {...field} />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectPortal>
