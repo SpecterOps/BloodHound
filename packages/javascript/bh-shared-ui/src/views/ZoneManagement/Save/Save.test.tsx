@@ -73,7 +73,7 @@ vi.mock('react-router-dom', async () => {
 
 describe('Create Update pages', () => {
     it('has the correct value for the links in the breadcrumbs', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(<Save />);
 
         await screen.findByTestId('zone-management_save_details-breadcrumb');

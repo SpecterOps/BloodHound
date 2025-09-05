@@ -100,7 +100,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('List', async () => {
-    vi.mocked(useParams).mockReturnValue({ tierId: '3', labelId: undefined });
+    vi.mocked(useParams).mockReturnValue({ zoneId: '3', labelId: undefined });
 
     it('shows a loading view when data is fetching', async () => {
         const testQuery = { isLoading: true, isError: false, data: undefined } as unknown as UseQueryResult<
