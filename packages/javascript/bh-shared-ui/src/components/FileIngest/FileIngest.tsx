@@ -32,7 +32,7 @@ const FileIngest: FC = () => {
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'file-upload-permission';
