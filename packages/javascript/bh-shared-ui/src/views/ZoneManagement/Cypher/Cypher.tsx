@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { SeedTypeCypher } from 'js-client-library';
-import { FC, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
+import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
@@ -36,6 +36,14 @@ export const Cypher: FC<{
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
     const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
+    const location = useLocation();
+    const receivedQuery = location.state?.query as unknown;
+
+    useEffect(() => {
+        if (!preview && typeof receivedQuery === 'string' && receivedQuery.length) {
+            setCypherQuery(receivedQuery);
+        }
+    }, [preview, receivedQuery]);
 
     const kindsQuery = useQuery({
         queryKey: ['graph-kinds'],

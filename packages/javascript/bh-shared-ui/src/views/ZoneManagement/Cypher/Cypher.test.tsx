@@ -70,11 +70,10 @@ describe('Cypher Search component for Zone Management', () => {
         expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument();
     });
 
-    test('the input text gets encoded into the "View in Explore" link', () => {
+    it('the input text gets encoded into the "View in Explore" link', () => {
         render(<Cypher initialInput='match(n) return n limit 5' />);
 
         const link = screen.getByRole('link', { name: 'View in Explore' });
-
         expect(link).toHaveAttribute(
             'href',
             '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=bWF0Y2gobikgcmV0dXJuIG4gbGltaXQgNQ=='

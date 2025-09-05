@@ -38,7 +38,7 @@ import {
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
@@ -60,6 +60,13 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const tagId = labelId === undefined ? tierId : labelId;
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const receivedData = location.state;
+
+    useEffect(() => {
+        if (receivedData) {
+            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+        }
+    }, []);
 
     const tagQuery = useQuery({
         queryKey: ['zone-management', 'tags', tagId],
