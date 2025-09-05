@@ -5393,21 +5393,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5497,15 +5489,7 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
+            "$ref": "#/components/parameters/query.environments"
           }
         ],
         "responses": {
@@ -5590,21 +5574,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5698,6 +5674,17 @@
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `name`, and `created_at`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
           },
           {
             "name": "auto_certify",
@@ -16955,6 +16942,14 @@
           "$ref": "#/components/schemas/api.params.query.limit"
         }
       },
+      "query.environments": {
+        "name": "environments",
+        "description": "Environment IDs to filter response by",
+        "in": "query",
+        "schema": {
+          "$ref": "#/components/schemas/api.params.query.environments"
+        }
+      },
       "path.object-id": {
         "name": "object_id",
         "description": "The object id of the entity being operated on.",
@@ -19026,6 +19021,12 @@
           "position": {
             "type": "integer"
           }
+        }
+      },
+      "api.params.query.environments": {
+        "type": "array",
+        "items": {
+          "type": "string"
         }
       },
       "model.asset-group-tags-selector-update": {

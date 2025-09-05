@@ -73,7 +73,12 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         '& a': {
             fontSize: '0.75rem',
             marginTop: '4px',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'normal',
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-word',
+            textDecoration: 'underline',
+            color: theme.palette.color.links,
+            cursor: 'pointer',
         },
         '& pre': {
             fontFamily: '"source-code-pro", "Menlo", "Monaco", "Consolas", "Courier New", "monospace"',
