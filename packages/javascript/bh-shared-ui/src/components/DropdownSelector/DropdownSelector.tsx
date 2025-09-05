@@ -54,7 +54,7 @@ const DropdownSelector: FC<{
                 <Button
                     variant={variant}
                     className={cn({
-                        'bg-transparent rounded-md border shadow-outer-0 hover:bg-neutral-3 text-black dark:text-white truncate':
+                        'bg-transparent rounded-md border shadow-outer-0 hover:bg-neutral-3 hover:text-primary text-black dark:text-white truncate':
                             !buttonPrimary,
                         uppercase: buttonPrimary,
                     })}
@@ -77,7 +77,7 @@ const DropdownSelector: FC<{
             <PopoverContent
                 data-testid='dropdown_context-selector-popover'
                 align={align}
-                className='flex flex-col gap-2 p-4 border border-neutral-light-5 w-80'>
+                className='flex flex-col gap-2 p-1 border border-neutral-light-5 w-80'>
                 <ul>
                     {options.map((option: DropdownOption) => {
                         return (
@@ -92,7 +92,9 @@ const DropdownSelector: FC<{
                                     <TooltipProvider>
                                         <TooltipRoot>
                                             <TooltipTrigger>
-                                                <span className='uppercase max-w-96 truncate'>{option.value}</span>
+                                                <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
+                                                    {option.value}
+                                                </span>
                                             </TooltipTrigger>
                                             <TooltipPortal>
                                                 <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>

@@ -37,12 +37,12 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useEffect, useState } from 'react';
+import { CertificationTypeMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { FC, useCallback, useContext, useState, useEffect } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
-import { AppIcon, DeleteConfirmationDialog, DropdownSelector } from '../../../../components';
+import { AppIcon, DeleteConfirmationDialog, DropdownOption, DropdownSelector } from '../../../../components';
 import { CertificationOption } from '../../../../components/CertificationSelector/types';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
@@ -110,18 +110,19 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     if (isLoading) return <Skeleton />;
     if (isError) return <div>There was an error fetching the selector information.</div>;
 
-    const buttonStyle = {
-        borderRadius: '.5rem',
-        display: 'flex',
-        fontSize: 'medium',
-        paddingLeft: '1rem',
-        paddingRight: '1rem',
-    };
-
     const buttonSpanStyle = {
         display: 'flex',
         alignItems: 'center',
     };
+
+    const certTypeOptions: DropdownOption[] = (() => {
+        const dropdownOptions: DropdownOption[] = [];
+        const certificationTypes = Object.entries(CertificationTypeMap);
+        certificationTypes.forEach((entry) => {
+            dropdownOptions.push({ key: entry[0] as unknown as number, value: entry[1] });
+        });
+        return dropdownOptions;
+    })();
 
     return (
         <div className={'max-lg:w-full w-96 h-[36rem] '}>
@@ -208,13 +209,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                             <div>
                                 <DropdownSelector
                                     variant='transparent'
-                                    buttonClasses={''}
-                                    //buttonStyle={buttonStyle}
-                                    options={[
-                                        // TODO hard code these as a var
-                                        { key: 1, value: 'test1' },
-                                        { key: 2, value: 'test2' },
-                                    ]}
+                                    options={certTypeOptions}
                                     selectedText={
                                         <span style={buttonSpanStyle} className='gap-3'>
                                             <AppIcon.CertStatus size={24} /> Status

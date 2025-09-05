@@ -118,6 +118,24 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto;
+
+export const CertificationTypeMap = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'Certified',
+    [CertificationAuto]: 'Automated Certification',
+};
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
