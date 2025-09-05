@@ -77,7 +77,11 @@ const DropdownSelector: FC<{
             <PopoverContent
                 data-testid='dropdown_context-selector-popover'
                 align={align}
-                className='flex flex-col gap-2 p-1 border border-neutral-light-5 w-80'>
+                className={cn(
+                    'flex flex-col gap-2 p-1 border border-neutral-light-5',
+                    { 'w-80': buttonPrimary },
+                    { 'w-full': !buttonPrimary }
+                )}>
                 <ul>
                     {options.map((option: DropdownOption) => {
                         return (
