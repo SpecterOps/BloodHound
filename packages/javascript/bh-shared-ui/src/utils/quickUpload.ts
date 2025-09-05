@@ -1,8 +1,12 @@
 //list of ids to be excluded from Quick Ingest -- useExecuteOnFileDrag
-const quickUploadExclusions = ['import-query-dialog'];
+export enum QuickUploadExclusionIds {
+    ImportQueryDialog = 'import-query-dialog',
+}
 
 export const getExcludedIds = () => {
-    for (const id of quickUploadExclusions) {
+    const ids = Object.values(QuickUploadExclusionIds);
+
+    for (const id of ids) {
         const element = document.getElementById(id);
         if (element) {
             return true;
