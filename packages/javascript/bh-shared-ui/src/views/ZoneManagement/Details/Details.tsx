@@ -35,7 +35,6 @@ import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
-import Certification from './Certification/Certification';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -99,8 +98,7 @@ const Details: FC = () => {
 
     return (
         <div>
-            <Certification />
-            {/* <div className='flex mt-6 gap-8'>
+            <div className='flex mt-6 gap-8'>
                 {InfoHeader && <InfoHeader />}
                 <div className='basis-1/3'>
                     {showEditButton && (
@@ -166,7 +164,7 @@ const Details: FC = () => {
                 <div className='basis-1/3'>
                     <SelectedDetails />
                 </div>
-            </div> */}
+            </div>
         </div>
     );
 };

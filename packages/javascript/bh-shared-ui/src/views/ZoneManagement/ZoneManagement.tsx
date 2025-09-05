@@ -31,6 +31,7 @@ import {
     ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS,
+    ROUTE_ZONE_MANAGEMENT_CERTIFICATIONS,
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
@@ -39,6 +40,7 @@ import { ZoneManagementContext } from './ZoneManagementContext';
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
+const Certification = React.lazy(() => import('./Certification/Certification'));
 
 const detailsPaths = [
     ROUTE_ZONE_MANAGEMENT_TIER_DETAILS,
@@ -56,6 +58,8 @@ const summaryPaths = [
     ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS,
     ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS,
 ];
+
+const certificationPaths = [ROUTE_ZONE_MANAGEMENT_CERTIFICATIONS];
 
 const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
@@ -79,6 +83,9 @@ const ZoneManagement: FC = () => {
         ...summaryPaths.map((path) => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
         }),
+        ...certificationPaths.map((path) => {
+            return { path, component: Certification, authenticationRequired: true, navigation: true };
+        }),
     ];
 
     return (
@@ -95,25 +102,20 @@ const ZoneManagement: FC = () => {
                         defaultValue='tier'
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
                         value={
-                            location.pathname.includes('label')
-                                ? 'label'
-                                : location.pathname.includes('certification')
-                                  ? 'certification'
+                            location.pathname.includes('certification')
+                                ? 'certification'
+                                : location.pathname.includes('label')
+                                  ? 'label'
                                   : 'tier'
                         }
                         onValueChange={(value) => {
-                            const isSummary = location.pathname.includes('summary');
-                            const path = isSummary ? 'summary' : 'details';
-                            // const id = value === 'tier' ? tagId : ownedId;
-                            let id: number | undefined;
                             if (value === 'tier') {
-                                id = tagId;
+                                navigate(`/zone-management/summary/tier/${tagId}`);
                             } else if (value === 'label') {
-                                id = ownedId;
+                                navigate(`/zone-management/summary/label/${ownedId}`);
                             } else if (value === 'certification') {
-                                // id = certificationId;
+                                navigate(`/zone-management/${ROUTE_ZONE_MANAGEMENT_CERTIFICATIONS}`);
                             }
-                            navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
                             <TabsTrigger value='tier' data-testid='zone-management_tab-list_tiers-tab'>
