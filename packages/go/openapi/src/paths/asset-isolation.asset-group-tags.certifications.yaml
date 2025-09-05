@@ -69,7 +69,7 @@ post:
 get:
   operationId: GetAssetGroupTagsCertifications
   summary: Get certifications for privilege zones
-  description: Retrieves certification status for nodes selected by a tier (privilege zone)
+  description: Retrieves certification status for nodes selected by a zone
   tags:
     - Asset Isolation
     - Enterprise

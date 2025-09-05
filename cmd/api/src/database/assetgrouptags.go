@@ -71,7 +71,7 @@ type AssetGroupTagSelectorNodeData interface {
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error)
-	GetSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error)
+	GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -828,7 +828,7 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx con
 	return nodes, count, nil
 }
 
-func (s *BloodhoundDB) GetSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
+func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
 	var (
 		nodes           []model.AssetGroupSelectorNodeExpanded
 		skipLimitString string
@@ -849,7 +849,7 @@ func (s *BloodhoundDB) GetSelectorNodesCertification(ctx context.Context, sqlFil
 
 	// Fetch a paginated list of nodes matching the filter and unique per node - selectorID combo. Any potential dupes are eliminated by first selecting the rows
 	// with the lowest position zone, then finding the row with highest value of certified and grabbing the earliest created_at date seen across rows.
-	query := fmt.Sprintf(`
+	baseQuery := fmt.Sprintf(`
 		WITH nodes_associated_with_min_pos AS (
 			SELECT 
 				n.*, 
@@ -878,8 +878,14 @@ func (s *BloodhoundDB) GetSelectorNodesCertification(ctx context.Context, sqlFil
 				sort.asset_group_tag_id
 			FROM nodes_associated_with_min_pos sort
 			WHERE sort.position = sort.min_position_for_node
-			ORDER BY sort.node_id, sort.certified DESC, sort.created_at ASC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
-		)
+			ORDER BY sort.node_id, sort.certified DESC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
+		)`,
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+		model.AssetGroupTag{}.TableName(),
+		model.AssetGroupTagTypeTier)
+
+	selectQuery := fmt.Sprintf(`
 		SELECT
 			hybrid.node_id,
 			hybrid.selector_id,
@@ -898,57 +904,19 @@ func (s *BloodhoundDB) GetSelectorNodesCertification(ctx context.Context, sqlFil
 		%s 
 		ORDER BY hybrid.node_id ASC
 		%s;`,
-		model.AssetGroupSelectorNode{}.TableName(),
-		model.AssetGroupTagSelector{}.TableName(),
-		model.AssetGroupTag{}.TableName(),
-		model.AssetGroupTagTypeTier,
 		sqlFilter.SQLString,
 		skipLimitString)
 
-	if result := s.db.WithContext(ctx).Raw(query).Find(&nodes); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(baseQuery + selectQuery).Find(&nodes); result.Error != nil {
 		return nil, 0, result.Error
 	} else {
 		// get a total count on the above query without pagination
 		countQuery := fmt.Sprintf(`
-			WITH nodes_associated_with_min_pos AS (
-				SELECT 
-					n.*, 
-					t.position,
-					s.asset_group_tag_id,
-					MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
-				FROM %s n
-				JOIN %s s ON n.selector_id = s.id
-				JOIN %s t ON s.asset_group_tag_id = t.id
-				WHERE t.type = %d
-			),
-			sort_on_created_at AS (
-				SELECT DISTINCT ON (sort.node_id)
-					sort.node_id,
-					sort.selector_id,
-					sort.certified,
-					sort.certified_by,
-					sort.source,
-					sort.node_primary_kind,
-					sort.node_environment_id,
-					sort.node_object_id,
-					sort.node_name,
-					sort.position,
-					sort.updated_at,
-					MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,
-					sort.asset_group_tag_id
-				FROM nodes_associated_with_min_pos sort
-				WHERE sort.position = sort.min_position_for_node
-				ORDER BY sort.node_id, sort.certified DESC, sort.created_at ASC
-			)
 			SELECT COUNT(*) 
 			FROM sort_on_created_at %s;`,
-			model.AssetGroupSelectorNode{}.TableName(),
-			model.AssetGroupTagSelector{}.TableName(),
-			model.AssetGroupTag{}.TableName(),
-			model.AssetGroupTagTypeTier,
 			sqlFilter.SQLString)
 
-		if result := s.db.WithContext(ctx).Raw(countQuery).Scan(&count); result.Error != nil {
+		if result := s.db.WithContext(ctx).Raw(baseQuery + countQuery).Scan(&count); result.Error != nil {
 			return nil, 0, result.Error
 		} else {
 			return nodes, count, nil

@@ -3786,7 +3786,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 			},
 		},
 		{
-			name: "GetSelectorNodesCertification() returns db error",
+			name: "GetAggregatedSelectorNodesCertification() returns db error",
 			buildRequest: func(name string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -3799,7 +3799,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{}, 0, errors.New("entity not found"))
+				mock.mockDatabase.EXPECT().GetAggregatedSelectorNodesCertification(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{}, 0, errors.New("entity not found"))
 			},
 			expected: expected{
 				responseCode: http.StatusInternalServerError,
@@ -3824,7 +3824,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).
+				mock.mockDatabase.EXPECT().GetAggregatedSelectorNodesCertification(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).
 					Return([]model.AssetGroupSelectorNodeExpanded{
 						{
 							AssetGroupSelectorNode: model.AssetGroupSelectorNode{
@@ -3875,7 +3875,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).
+				mock.mockDatabase.EXPECT().GetAggregatedSelectorNodesCertification(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).
 					Return([]model.AssetGroupSelectorNodeExpanded{
 						{
 							AssetGroupSelectorNode: model.AssetGroupSelectorNode{

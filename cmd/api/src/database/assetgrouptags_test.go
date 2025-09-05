@@ -1336,7 +1336,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 	}
 }
 
-func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
+func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1392,7 +1392,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1423,7 +1423,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1455,7 +1455,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1484,7 +1484,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
 		require.NoError(t, err)
 
 		// there should only be a single node returned
@@ -1511,7 +1511,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.NoError(t, err)
 
 		// filtering on the nodes from this test only
-		nodeCertifications, count, err := suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)
+		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)
 		require.NoError(t, err)
 
 		// verify 4 out of 4 nodes returned
@@ -1519,7 +1519,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.Equal(t, 4, count)
 
 		// skip the first 2
-		nodeCertifications, count, err = suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 2, 0)
+		nodeCertifications, count, err = suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 2, 0)
 		require.NoError(t, err)
 
 		// verify 2 out of 4 nodes returned
@@ -1528,7 +1528,7 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.Equal(t, "NodeSelectedByT0_Third", nodeCertifications[0].NodeName)
 
 		// limit to 2
-		nodeCertifications, count, err = suite.BHDatabase.GetSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 2)
+		nodeCertifications, count, err = suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 2)
 		require.NoError(t, err)
 
 		// verify 2 out of 4 nodes returned

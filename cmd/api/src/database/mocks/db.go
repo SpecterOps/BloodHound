@@ -874,6 +874,22 @@ func (mr *MockDatabaseMockRecorder) GetAggregateADDataQualityStats(ctx, domainSI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAggregateADDataQualityStats), ctx, domainSIDs, start, end)
 }
 
+// GetAggregatedSelectorNodesCertification mocks base method.
+func (m *MockDatabase) GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAggregatedSelectorNodesCertification", ctx, sqlFilter, skip, limit)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNodeExpanded)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAggregatedSelectorNodesCertification indicates an expected call of GetAggregatedSelectorNodesCertification.
+func (mr *MockDatabaseMockRecorder) GetAggregatedSelectorNodesCertification(ctx, sqlFilter, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregatedSelectorNodesCertification", reflect.TypeOf((*MockDatabase)(nil).GetAggregatedSelectorNodesCertification), ctx, sqlFilter, skip, limit)
+}
+
 // GetAllAssetGroups mocks base method.
 func (m *MockDatabase) GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()
@@ -1794,22 +1810,6 @@ func (mr *MockDatabaseMockRecorder) GetSelectorNodesBySelectorIdsFilteredAndPagi
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, sqlFilter, sort, skip, limit}, selectorIds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodesBySelectorIdsFilteredAndPaginated", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodesBySelectorIdsFilteredAndPaginated), varargs...)
-}
-
-// GetSelectorNodesCertification mocks base method.
-func (m *MockDatabase) GetSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSelectorNodesCertification", ctx, sqlFilter, skip, limit)
-	ret0, _ := ret[0].([]model.AssetGroupSelectorNodeExpanded)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetSelectorNodesCertification indicates an expected call of GetSelectorNodesCertification.
-func (mr *MockDatabaseMockRecorder) GetSelectorNodesCertification(ctx, sqlFilter, skip, limit any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodesCertification", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodesCertification), ctx, sqlFilter, skip, limit)
 }
 
 // GetSelectorsByMemberId mocks base method.

@@ -1074,9 +1074,9 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 
 type AssetGroupMemberWithCertification struct {
 	AssetGroupMember
-	CreatedAt     time.Time                     `json:"created_at"`
-	CertifiedBy   string                        `json:"certified_by"`
-	Certification model.AssetGroupCertification `json:"certified"`
+	CreatedAt   time.Time                     `json:"created_at"`
+	CertifiedBy string                        `json:"certified_by"`
+	Certified   model.AssetGroupCertification `json:"certified"`
 }
 
 // note some of these filters do not match the db column names and require translation to work
@@ -1132,13 +1132,13 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 				api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			} else {
-
 				for i, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
 
+					// some of the API filter names do not match the DB column names - so we have to do a translation here
 					originalName := filter.Name
 					switch filter.Name {
 					case "environments":
@@ -1158,13 +1158,13 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 
 		if sqlFilter, err := translatedQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if selectorNodes, count, err := s.DB.GetSelectorNodesCertification(requestContext, sqlFilter, skip, limit); err != nil {
+		} else if selectorNodes, count, err := s.DB.GetAggregatedSelectorNodesCertification(requestContext, sqlFilter, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			// return paginated AssetGroupMemberWithCertification of matches and also a count
-			members := make([]AssetGroupMemberWithCertification, 0)
-			for _, selNode := range selectorNodes {
-				member := AssetGroupMemberWithCertification{
+			members := make([]AssetGroupMemberWithCertification, len(selectorNodes))
+			for i, selNode := range selectorNodes {
+				members[i] = AssetGroupMemberWithCertification{
 					AssetGroupMember: AssetGroupMember{
 						NodeId:          selNode.NodeId,
 						ObjectID:        selNode.NodeObjectId,
@@ -1173,15 +1173,12 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 						Name:            selNode.NodeName,
 						AssetGroupTagId: selNode.AssetGroupTagId,
 					},
-					CreatedAt:     selNode.CreatedAt,
-					CertifiedBy:   selNode.CertifiedBy.ValueOrZero(),
-					Certification: selNode.Certified,
+					CreatedAt:   selNode.CreatedAt,
+					CertifiedBy: selNode.CertifiedBy.ValueOrZero(),
+					Certified:   selNode.Certified,
 				}
-
-				members = append(members, member)
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersWithCertificationResponse{Members: members}, limit, skip, count, http.StatusOK, response)
-
 		}
 	}
 }
