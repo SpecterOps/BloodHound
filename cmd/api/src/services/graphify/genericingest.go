@@ -57,7 +57,7 @@ func addKey(endpoint ein.IngestibleEndpoint, cache map[endpointKey]struct{}) {
 // uniqueness guarantees on a node's `Name` property.
 //
 // Returns a map of resolved object IDs. If no matches are found or the input is empty, an empty map is returned.
-func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
+func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
 	// seen deduplicates Name:Kind pairs from the input batch to ensure that each Name:Kind pairs is resolved once.
 	seen := map[endpointKey]struct{}{}
 
@@ -153,7 +153,7 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 // Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
 //
 // Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelationship, sourceKind graph.Kind) ([]graph.RelationshipUpdate, error) {
+func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) ([]graph.RelationshipUpdate, error) {
 	if cache, err := resolveAllEndpointsByName(batch.Batch, rels); err != nil {
 		return nil, err
 	} else {

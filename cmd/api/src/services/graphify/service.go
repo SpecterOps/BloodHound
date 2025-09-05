@@ -41,14 +41,17 @@ type GraphifyService struct {
 	graphdb graph.Database
 	cfg     config.Configuration
 	schema  upload.IngestSchema
+
+	changeManager ChangeManager
 }
 
-func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema) GraphifyService {
+func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, changeManager ChangeManager) GraphifyService {
 	return GraphifyService{
-		ctx:     ctx,
-		db:      db,
-		graphdb: graphDb,
-		cfg:     cfg,
-		schema:  schema,
+		ctx:           ctx,
+		db:            db,
+		graphdb:       graphDb,
+		cfg:           cfg,
+		schema:        schema,
+		changeManager: changeManager,
 	}
 }

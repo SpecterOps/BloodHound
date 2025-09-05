@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/api/bhapi"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/api/toolapi"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/gc"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -107,7 +108,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		startDelay := 0 * time.Second
 
 		var (
-			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema)
+			cl             = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
+			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer     = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
@@ -133,6 +135,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			bhapi.NewDaemon(cfg, routerInst.Handler()),
 			gc.NewDataPruningDaemon(connections.RDMS),
 			datapipeDaemon,
+			cl,
 		}, nil
 	}
 }

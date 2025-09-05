@@ -1,0 +1,13 @@
+{
+    "graph": {
+        "nodes": [
+            {
+                "id": "123",
+                "kinds": ["kindA", "kindB"],
+                "properties": {
+                    "hello": "world"
+                }
+            }
+        ]
+    }
+}
