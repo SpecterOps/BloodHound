@@ -122,6 +122,10 @@ func (s RoleAssignments) GetNodeSet(bm cardinality.Duplex[uint64]) graph.NodeSet
 	return s.GetNodeKindSet(bm).AllNodes()
 }
 
+func (s RoleAssignments) ServicePrincipals() cardinality.Duplex[uint64] {
+	return s.Principals.Get(azure.ServicePrincipal).IDBitmap()
+}
+
 func (s RoleAssignments) Users() cardinality.Duplex[uint64] {
 	return s.Principals.Get(azure.User).IDBitmap()
 }
@@ -146,6 +150,12 @@ func (s RoleAssignments) UsersWithoutRoles() cardinality.Duplex[uint64] {
 func (s RoleAssignments) UsersWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
 	result := s.PrincipalsWithRole(roleTemplateIDs...)
 	result.And(s.Users())
+	return result
+}
+
+func (s RoleAssignments) ServicePrincipalsWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
+	result := s.PrincipalsWithRole(roleTemplateIDs...)
+	result.And(s.ServicePrincipals())
 	return result
 }
 
