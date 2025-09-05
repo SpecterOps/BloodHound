@@ -237,6 +237,15 @@ func (s AssetGroupTagSelector) IsStringColumn(filter string) bool {
 	return filter == "name" || filter == "description"
 }
 
+func (s AssetGroupTagSelector) IsSortable(criteria string) bool {
+	switch criteria {
+	case "id", "name", "created_at":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"auto_certify": {Equals, NotEquals},

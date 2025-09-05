@@ -91,7 +91,10 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 See the ADCS ESC1 abuse information for details on the execution of the remaining part of that attack:{' '}
-                <Link target='_blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/adcs-esc1'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.specterops.io/resources/edges/adcs-esc1'>
                     BloodHound Docs: ADCSESC1
                 </Link>
                 .
@@ -126,7 +129,10 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 See the ADCS ESC6 abuse information for details on the execution of the remaining part of that attack:{' '}
-                <Link target='_blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/adcs-esc6a'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.specterops.io/resources/edges/adcs-esc6a'>
                     BloodHound Docs: ADCSESC6a
                 </Link>
                 .
@@ -150,7 +156,7 @@ const Abuse: FC = () => {
                 See the ADCS ESC11 abuse information for details on the execution of the remaining part of that attack:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://bloodhound.specterops.io/resources/edges/coerce-and-relay-ntlm-to-adcs-rpc'>
                     BloodHound Docs: CoerceAndRelayNTLMToADCSRPC
                 </Link>
@@ -170,7 +176,10 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 See the ADCS ESC16 abuse information for details on the execution of the remaining part of that attack:{' '}
-                <Link target='_blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/adcs-esc16'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.specterops.io/resources/edges/adcs-esc16'>
                     BloodHound Docs: ADCSESC16
                 </Link>
                 .
@@ -179,7 +188,10 @@ const Abuse: FC = () => {
             <Typography variant='body1'>Abuse a CDP to coerce and relay the CA server</Typography>
             <Typography variant='body2'>
                 For more information, please refer to this blogpost:{' '}
-                <Link target='_blank' rel='noopener' href='https://www.tarlogic.com/blog/ad-cs-manageca-rce/'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://www.tarlogic.com/blog/ad-cs-manageca-rce/'>
                     AD CS: from ManageCA to RCE
                 </Link>
                 .
@@ -188,7 +200,10 @@ const Abuse: FC = () => {
             <Typography variant='body1'>Abuse a CDP to obtain RCE on the CA server via a webshell</Typography>
             <Typography variant='body2'>
                 For more information, please refer to this blogpost:{' '}
-                <Link target='_blank' rel='noopener' href='https://www.tarlogic.com/blog/ad-cs-manageca-rce/'>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://www.tarlogic.com/blog/ad-cs-manageca-rce/'>
                     AD CS: from ManageCA to RCE
                 </Link>
                 .

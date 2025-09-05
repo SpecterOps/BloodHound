@@ -14,18 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faUpload } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
-import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
 const MainNavLogoTextImage: FC<{
-    mainNavLogoData: MainNavLogoDataObject['project'] | MainNavLogoDataObject['specterOps'];
+    mainNavLogoData: MainNavLogoDataObject['specterOps'];
 }> = ({ mainNavLogoData }) => {
     return (
         <img
@@ -38,10 +35,27 @@ const MainNavLogoTextImage: FC<{
     );
 };
 
-const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: boolean; onClick?: () => void }> = ({
+const baseLinkContainerStyles = 'w-full min-h-10 overflow-hidden rounded';
+
+export const MainNavLogo: FC<{ data: MainNavLogoDataObject; allowHover: boolean }> = (props) => {
+    const { data, allowHover } = props;
+    return (
+        <div className={baseLinkContainerStyles} data-testid='global_nav-home'>
+            <AppLink
+                className={cn({
+                    'cursor-pointer': allowHover,
+                })}
+                to={{ pathname: data.project.route }}>
+                {data.project.icon}
+            </AppLink>
+        </div>
+    );
+};
+
+const MainNavListItem: FC<{ children: ReactNode; route?: string; allowHover: boolean; onClick?: () => void }> = ({
     children,
     route,
-    hoverActive,
+    allowHover,
     onClick = () => {},
 }) => {
     const location = useLocation();
@@ -51,13 +65,14 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
         <li
             onClick={onClick}
             className={cn(
-                'h-10 px-2 mx-2 flex items-center rounded text-neutral-dark-1 dark:text-neutral-light-1',
+                baseLinkContainerStyles,
+                'px-2 flex items-center text-neutral-dark-1 dark:text-neutral-light-1',
                 {
                     'text-primary dark:text-primary dark:hover:text-primary bg-neutral-light-4 cursor-default':
                         isActiveRoute,
                 },
                 {
-                    'hover:text-secondary dark:hover:text-secondary-variant-2': hoverActive && !isActiveRoute,
+                    'hover:text-secondary dark:hover:text-secondary-variant-2': allowHover && !isActiveRoute,
                 }
             )}>
             {children}
@@ -65,10 +80,10 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; hoverActive: bo
     );
 };
 
-const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverActive: boolean; testId: string }> = ({
+const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; allowHover: boolean; testId: string }> = ({
     onClick,
     children,
-    hoverActive,
+    allowHover,
     testId,
 }) => {
     return (
@@ -77,8 +92,8 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
         <div
             role='button'
             onClick={onClick}
-            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
-                'group-hover:w-full cursor-pointer': hoverActive,
+            className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
+                'group-hover:w-full cursor-pointer': allowHover,
             })}
             data-testid={testId}>
             {children}
@@ -89,15 +104,15 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; hoverAct
 const MainNavItemLink: FC<{
     route: string;
     children: ReactNode;
-    hoverActive: boolean;
+    allowHover: boolean;
     testId: string;
-}> = ({ route, children, hoverActive, testId }) => {
+}> = ({ route, children, allowHover, testId }) => {
     return (
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed
         <AppLink
             to={{ pathname: route }}
-            className={cn('h-10 w-auto absolute left-4 flex items-center gap-x-2 hover:underline cursor-default', {
-                'group-hover:w-full cursor-pointer': hoverActive,
+            className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
+                'group-hover:w-full cursor-pointer': allowHover,
             })}
             data-testid={testId}>
             {children}
@@ -105,11 +120,7 @@ const MainNavItemLink: FC<{
     );
 };
 
-const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; hoverActive: boolean }> = ({
-    icon,
-    label,
-    hoverActive,
-}) => {
+const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string }> = ({ icon, label }) => {
     return (
         // Note: The min-h here is to keep spacing between the logo and the list below.
         <>
@@ -118,20 +129,14 @@ const MainNavItemLabel: FC<{ icon: ReactNode; label: ReactNode | string; hoverAc
             </span>
             <span
                 data-testid='global_nav-item-label-text'
-                className={cn(
-                    'whitespace-nowrap min-h-10 font-medium text-xl opacity-0 hidden transition-opacity duration-200 ease-in',
-                    {
-                        'group-hover:w-full group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-x-5':
-                            hoverActive,
-                    }
-                )}>
+                className='whitespace-nowrap min-h-10 font-medium text-xl transition-opacity duration-200 ease-in w-full opacity-100 flex items-center gap-x-5'>
                 {label}
             </span>
         </>
     );
 };
 
-const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => {
+const MainNavVersionNumber: FC<{ allowHover: boolean }> = ({ allowHover }) => {
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;
 
@@ -143,12 +148,12 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
                     'w-9 flex absolute top-3 left-3 duration-300 ease-in-out text-xs font-medium text-neutral-dark-1 dark:text-neutral-light-1',
                     {
                         'group-hover:w-auto group-hover:overflow-x-hidden group-hover:whitespace-nowrap group-hover:left-16':
-                            hoverActive,
+                            allowHover,
                     }
                 )}>
                 <span
                     className={cn('opacity-0 hidden duration-300 ease-in-out', {
-                        'group-hover:opacity-100 group-hover:block': hoverActive,
+                        'group-hover:opacity-100 group-hover:block': allowHover,
                     })}>
                     BloodHound:&nbsp;{apiVersion}
                 </span>
@@ -157,7 +162,7 @@ const MainNavVersionNumber: FC<{ hoverActive: boolean }> = ({ hoverActive }) => 
     );
 };
 
-const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ children, hoverActive }) => {
+const MainNavPoweredBy: FC<{ children: ReactNode; allowHover: boolean }> = ({ children, allowHover }) => {
     return (
         // Note: The min-h allows for the version number to keep its position when the nav is scrollable
         <div className='relative w-full flex min-h-10 h-10 overflow-x-hidden' data-testid='global_nav-powered-by'>
@@ -165,13 +170,13 @@ const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ c
                 className={cn(
                     'w-full flex absolute bottom-3 left-3 duration-300 ease-in-out text-xs whitespace-nowrap font-medium text-neutral-dark-1 dark:text-neutral-light-1',
                     {
-                        'group-hover:left-12': hoverActive,
+                        'group-hover:left-12': allowHover,
                     }
                 )}>
                 <span
                     className={cn('opacity-0 hidden duration-300 ease-in-out ', {
                         'group-hover:opacity-100 group-hover:flex group-hover:items-center group-hover:gap-1':
-                            hoverActive,
+                            allowHover,
                     })}>
                     powered by&nbsp;
                     {children}
@@ -183,56 +188,41 @@ const MainNavPoweredBy: FC<{ children: ReactNode; hoverActive: boolean }> = ({ c
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const { isMouseDragging } = useIsMouseDragging();
-    const { setShowFileIngestDialog } = useFileUploadDialogContext();
+
+    const allowHover = !isMouseDragging;
 
     return (
         <nav
             className={cn(
-                'z-nav fixed top-0 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-2 print:hidden group',
+                'z-nav fixed top-0 px-2 left-0 h-full w-nav-width duration-300 ease-in flex flex-col items-center pt-4 shadow-sm bg-neutral-2 print:hidden group',
                 {
-                    'hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden': !isMouseDragging,
+                    'hover:w-nav-width-expanded hover:overflow-y-auto hover:overflow-x-hidden': allowHover,
                 }
             )}>
-            <MainNavItemLink
-                route={mainNavData.logo.project.route}
-                testId='global_nav-home'
-                hoverActive={!isMouseDragging}>
-                <MainNavItemLabel
-                    icon={mainNavData.logo.project.icon}
-                    label={<MainNavLogoTextImage mainNavLogoData={mainNavData.logo.project} />}
-                    hoverActive={!isMouseDragging}
-                />
-            </MainNavItemLink>
+            <MainNavLogo data={mainNavData.logo} allowHover={allowHover} />
             {/* Note: min height here is to keep the version number in bottom of nav */}
-            <div className='h-full min-h-[625px] w-full flex flex-col justify-between mt-6'>
-                <ul className='flex flex-col gap-4 mt-8' data-testid='global_nav-primary-list'>
-                    <MainNavListItem key={0} hoverActive={!isMouseDragging}>
-                        <div
-                            className='cursor-pointer flex flex-row items-center relative top-1 left-[2px]'
-                            onClick={() => setShowFileIngestDialog(true)}>
-                            <MainNavItemLabel
-                                icon={<FontAwesomeIcon size='lg' icon={faUpload} className='pr-2.5 pb-1' />}
-                                label='Quick Ingest'
-                                hoverActive={!isMouseDragging}
-                            />
-                        </div>
-                    </MainNavListItem>
-
+            <div className='h-full min-h-[665px] w-full flex flex-col justify-between'>
+                <ul className='flex flex-col gap-4 mt-4' data-testid='global_nav-primary-list'>
                     {mainNavData.primaryList.map((listDataItem: MainNavDataListItem, itemIndex: number) => (
                         <MainNavListItem
-                            key={itemIndex + 1}
-                            route={listDataItem.route as string}
-                            hoverActive={!isMouseDragging}>
-                            <MainNavItemLink
-                                route={listDataItem.route as string}
-                                hoverActive={!isMouseDragging}
-                                testId={listDataItem.testId}>
-                                <MainNavItemLabel
-                                    icon={listDataItem.icon}
-                                    label={listDataItem.label}
-                                    hoverActive={!isMouseDragging}
-                                />
-                            </MainNavItemLink>
+                            key={itemIndex}
+                            allowHover={!isMouseDragging}
+                            route={listDataItem.route as string}>
+                            {listDataItem.onClick && !listDataItem.route ? (
+                                <MainNavItemAction
+                                    onClick={listDataItem.onClick}
+                                    allowHover={!isMouseDragging}
+                                    testId={listDataItem.testId}>
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
+                                </MainNavItemAction>
+                            ) : (
+                                <MainNavItemLink
+                                    route={listDataItem.route as string}
+                                    allowHover={!isMouseDragging}
+                                    testId={listDataItem.testId}>
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
+                                </MainNavItemLink>
+                            )}
                         </MainNavListItem>
                     ))}
                 </ul>
@@ -242,37 +232,29 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                             <MainNavListItem
                                 key={itemIndex}
                                 route={listDataItem.route as string}
-                                hoverActive={!isMouseDragging}>
+                                allowHover={allowHover}>
                                 <MainNavItemLink
                                     route={listDataItem.route as string}
-                                    hoverActive={!isMouseDragging}
+                                    allowHover={allowHover}
                                     testId={listDataItem.testId}>
-                                    <MainNavItemLabel
-                                        icon={listDataItem.icon}
-                                        label={listDataItem.label}
-                                        hoverActive={!isMouseDragging}
-                                    />
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                                 </MainNavItemLink>
                             </MainNavListItem>
                         ) : (
-                            <MainNavListItem key={itemIndex} hoverActive={!isMouseDragging}>
+                            <MainNavListItem key={itemIndex} allowHover={allowHover}>
                                 <MainNavItemAction
-                                    onClick={(() => listDataItem.functionHandler as () => void)()}
-                                    hoverActive={!isMouseDragging}
+                                    onClick={listDataItem.functionHandler ?? (() => {})}
+                                    allowHover={allowHover}
                                     testId={listDataItem.testId}>
-                                    <MainNavItemLabel
-                                        icon={listDataItem.icon}
-                                        label={listDataItem.label}
-                                        hoverActive={!isMouseDragging}
-                                    />
+                                    <MainNavItemLabel icon={listDataItem.icon} label={listDataItem.label} />
                                 </MainNavItemAction>
                             </MainNavListItem>
                         )
                     )}
                 </ul>
             </div>
-            <MainNavVersionNumber hoverActive={!isMouseDragging} />
-            <MainNavPoweredBy hoverActive={!isMouseDragging}>
+            <MainNavVersionNumber allowHover={allowHover} />
+            <MainNavPoweredBy allowHover={allowHover}>
                 <MainNavLogoTextImage mainNavLogoData={mainNavData.logo.specterOps} />
             </MainNavPoweredBy>
         </nav>

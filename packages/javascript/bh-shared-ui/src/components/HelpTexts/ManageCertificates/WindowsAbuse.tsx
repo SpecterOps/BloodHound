@@ -31,7 +31,7 @@ const Abuse: FC = () => {
                 Authentication Mechanism Assurance (AMA). See{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://github.com/GhostPack/Certify/wiki/4-%E2%80%90-Escalation-Techniques#managecertificates'>
                     Certify wiki - Escalation Techniques - ManageCertificates
                 </Link>{' '}
