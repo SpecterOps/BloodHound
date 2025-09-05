@@ -158,6 +158,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 		return []IngestFileData{}, fmt.Errorf("get feature flag: %w", err)
 	} else {
 		errs := errorlist.NewBuilder()
+
 		return fileData, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			ingestCtx := s.newIngestContext(ctx, batch, ingestTime, changelogFF.Enabled)
 
@@ -178,11 +179,6 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 					errs.Add(err) // graphifyErrorBuilder at fn scope
 					continue      // keep ingesting the rest
 				}
-			}
-
-			if ingestCtx.HasChangelog() {
-				// this logs basic metrics for the changelog, how many hits/misses per file
-				s.changeManager.FlushStats()
 			}
 
 			return errs.Build()
@@ -233,32 +229,68 @@ func (s *GraphifyService) getAllTasks() model.IngestTasks {
 }
 
 func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
+	tasks := s.getAllTasks()
+	if len(tasks) == 0 {
+		// nothing to do
+		return
+	}
 
-	for _, task := range s.getAllTasks() {
-		start := time.Now()
-		slog.Info("ingest starting", "timestamp", start)
-		defer func() {
-			slog.Info("ingest finished", "timestamp", time.Now(), "duration", time.Since(start))
-		}()
-		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
-		// handling assumes that all failures should be logged and not returned.
-		if s.ctx.Err() != nil {
-			return
-		}
+	start := time.Now()
+	slog.InfoContext(s.ctx,
+		"ingest run starting",
+		"task_count", len(tasks),
+	)
 
-		if s.cfg.DisableIngest {
-			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
-			return
-		}
+	defer func() {
+		slog.InfoContext(s.ctx,
+			"ingest run finished",
+			"duration", time.Since(start),
+			"task_count", len(tasks),
+		)
+	}()
+
+	if s.ctx.Err() != nil {
+		return
+	}
+
+	if s.cfg.DisableIngest {
+		slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
+		return
+	}
+
+	for _, task := range tasks {
 		fileData, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
 
-		if errors.Is(err, fs.ErrNotExist) {
-			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.StoredFileName, err))
-		} else if err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.StoredFileName, err))
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			slog.WarnContext(s.ctx,
+				"ingest file missing",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+				"err", err,
+			)
+		case err != nil:
+			slog.ErrorContext(s.ctx,
+				"ingest task failed",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+				"err", err,
+			)
+		default:
+			slog.InfoContext(s.ctx,
+				"ingest task processed",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+			)
 		}
 
 		updateJob(task.JobId.ValueOrZero(), fileData)
 		s.clearFileTask(task)
 	}
+
+	// todo: add guard by lifting ingestCtx constructor to this func
+	// if ingestCtx.HasChangelog() {
+	// this logs basic metrics for the changelog, how many hits/misses per file
+	s.changeManager.FlushStats()
+	// }
 }

@@ -41,10 +41,10 @@ func (s *loop) start(ctx context.Context) error {
 
 	defer func() {
 		idle.Stop()
-		slog.InfoContext(ctx, "shutting down changelog")
+		slog.InfoContext(ctx, "shutting down changelog loop")
 	}()
 
-	slog.InfoContext(ctx, "starting changelog")
+	slog.InfoContext(ctx, "starting changelog loop")
 
 	for {
 		select {

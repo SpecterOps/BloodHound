@@ -17,13 +17,14 @@ module github.com/specterops/bloodhound
 
 go 1.24.4
 
-replace github.com/specterops/dawgs v0.2.0 => ../../dawgs
+replace github.com/specterops/dawgs v0.2.1 => ../../dawgs
 
 require (
 	cuelang.org/go v0.13.2
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/RoaringBitmap/roaring/v2 v2.6.0
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/crewjam/saml v0.5.1
@@ -100,7 +101,6 @@ require (
 	github.com/butuzov/mirror v1.3.0 // indirect
 	github.com/catenacyber/perfsprint v0.9.1 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect
