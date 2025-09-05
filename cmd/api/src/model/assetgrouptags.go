@@ -54,10 +54,10 @@ const (
 type AssetGroupCertification int
 
 const (
-	AssetGroupCertificationRevoked AssetGroupCertification = -1
-	AssetGroupCertificationNone    AssetGroupCertification = 0
-	AssetGroupCertificationManual  AssetGroupCertification = 1
-	AssetGroupCertificationAuto    AssetGroupCertification = 2
+	AssetGroupCertificationPending AssetGroupCertification = 0
+	AssetGroupCertificationRevoked AssetGroupCertification = 1
+	AssetGroupCertificationManual  AssetGroupCertification = 2
+	AssetGroupCertificationAuto    AssetGroupCertification = 3
 )
 
 type AssetGroupSelectorNodeSource int
@@ -237,6 +237,15 @@ func (s AssetGroupTagSelector) IsStringColumn(filter string) bool {
 	return filter == "name" || filter == "description"
 }
 
+func (s AssetGroupTagSelector) IsSortable(criteria string) bool {
+	switch criteria {
+	case "id", "name", "created_at":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"auto_certify": {Equals, NotEquals},
@@ -282,4 +291,10 @@ func GetAssetGroupMemberProperties(node *graph.Node) (primaryKind, displayName, 
 	envId, _ = node.Properties.GetWithFallback(ad.DomainSID.String(), "", azure.TenantID.String()).String()
 
 	return primaryKind, displayName, objectId, envId
+}
+
+type AssetGroupSelectorNodeExpanded struct {
+	AssetGroupSelectorNode
+	AssetGroupTagId int `json:"asset_group_tag_id"`
+	Position        int `json:"position"`
 }

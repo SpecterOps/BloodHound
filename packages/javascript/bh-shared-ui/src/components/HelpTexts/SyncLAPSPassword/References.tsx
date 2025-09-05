@@ -20,11 +20,14 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://github.com/simondotsh/DirSync'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/simondotsh/DirSync'>
                 https://github.com/simondotsh/DirSync
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://simondotsh.com/infosec/2022/07/11/dirsync.html'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://simondotsh.com/infosec/2022/07/11/dirsync.html'>
                 https://simondotsh.com/infosec/2022/07/11/dirsync.html
             </Link>
         </Box>

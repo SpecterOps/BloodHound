@@ -30,10 +30,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 )
 
 const (
@@ -179,7 +179,7 @@ func IngestWrapper(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metad
 }
 
 func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -189,7 +189,7 @@ func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 // IngestGenericData writes generic graph data into the database using the provided batch.
@@ -200,7 +200,7 @@ func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 // base kind should be applied uniformly to all ingested entities, and instead the kind(s)
 // defined directly on each node or edge (if any) are used as-is.
 func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted ConvertedData) error {
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, sourceKind, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -210,11 +210,11 @@ func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted Co
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -228,12 +228,12 @@ func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 	defer measure.ContextLogAndMeasure(context.TODO(), slog.LevelDebug, "ingest azure data")()
-	errs := util.NewErrorCollector()
+	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
@@ -247,7 +247,7 @@ func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 		errs.Add(err)
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 // basicIngestHandler defines the function signature for all ingest paths except for the OpenGraph

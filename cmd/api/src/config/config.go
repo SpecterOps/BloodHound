@@ -124,6 +124,10 @@ type SAMLConfiguration struct {
 	ServiceProviderCertificateCAChain string `json:"sp_ca_chain"`
 }
 
+type UIConfiguration struct {
+	EnableUserAnalytics bool `json:"enable_user_analytics"`
+}
+
 type DefaultAdminConfiguration struct {
 	PrincipalName string `json:"principal_name"`
 	Password      string `json:"password"`
@@ -164,6 +168,7 @@ type Configuration struct {
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
+	UI                           UIConfiguration           `json:"ui"`
 }
 
 func (s Configuration) TempDirectory() string {
@@ -279,16 +284,21 @@ func GetConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	}
 }
 
-func GetTextLoggerEnabled() (bool, error) {
-	if enableTextLogger := os.Getenv(BHAPIEnvironmentVariablePrefix + "_enable_text_logger"); enableTextLogger == "" {
-		return false, nil
-	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
-		return false, fmt.Errorf("failed to parse %s to bool: %v", BHAPIEnvironmentVariablePrefix+"_enable_text_logger", err)
-	} else if enabled {
-		return true, nil
-	}
+func GetTextLoggerEnabled() bool {
+	const env = BHAPIEnvironmentVariablePrefix + "_enable_text_logger"
 
-	return false, nil
+	if enableTextLogger := os.Getenv(env); enableTextLogger == "" {
+		return false
+	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
+		slog.Warn(
+			"Failed to parse text logger environment variable",
+			slog.String("env_key", env),
+			slog.String("err", err.Error()),
+		)
+		return false
+	} else {
+		return enabled
+	}
 }
 
 const (

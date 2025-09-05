@@ -30,8 +30,9 @@ export const BaseSVG: React.FC<
     }
 > = (props) => {
     const { size = 16, name, children, ...rest } = props;
+
     return (
-        <svg {...rest} width={size} height={size}>
+        <svg width={size} height={size} {...rest}>
             {children}
             <VisuallyHidden>{`app-icon-${name}`}</VisuallyHidden>
         </svg>

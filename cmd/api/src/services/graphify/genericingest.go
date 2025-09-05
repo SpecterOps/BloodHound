@@ -22,10 +22,10 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util"
 )
 
 type endpointKey struct {
@@ -159,7 +159,7 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 	} else {
 		var (
 			updates []graph.RelationshipUpdate
-			errs    = util.NewErrorCollector()
+			errs    = errorlist.NewBuilder()
 		)
 
 		for _, rel := range rels {
@@ -202,7 +202,7 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 			updates = append(updates, update)
 		}
 
-		return updates, errs.Combined()
+		return updates, errs.Build()
 	}
 }
 

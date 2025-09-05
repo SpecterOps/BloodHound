@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 )
 
 type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)
@@ -41,7 +41,7 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = util.NewErrorCollector()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -74,14 +74,14 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
-		errs          = util.NewErrorCollector()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -116,7 +116,7 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
@@ -124,7 +124,7 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedGroupData{}
 		count         = 0
-		errs          = util.NewErrorCollector()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -155,14 +155,14 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
-		errs          = util.NewErrorCollector()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -192,14 +192,14 @@ func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }
 
 func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
-		errs          = util.NewErrorCollector()
+		errs          = errorlist.NewBuilder()
 	)
 
 	for decoder.More() {
@@ -230,5 +230,5 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 		}
 	}
 
-	return errs.Combined()
+	return errs.Build()
 }

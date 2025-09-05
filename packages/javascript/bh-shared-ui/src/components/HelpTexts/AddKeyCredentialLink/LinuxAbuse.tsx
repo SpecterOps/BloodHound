@@ -23,7 +23,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
         <>
             <Typography variant='body2'>
                 To abuse this permission, use{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/ShutdownRepo/pywhisker'>
                     pyWhisker
                 </Link>
                 .

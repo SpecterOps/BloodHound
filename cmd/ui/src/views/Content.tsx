@@ -100,7 +100,9 @@ const Content: React.FC = () => {
                             );
                         })}
                     </Routes>
-                    <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+                    {isFullyAuthenticated && (
+                        <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
+                    )}
                 </Suspense>
             </ErrorBoundary>
         </Box>
