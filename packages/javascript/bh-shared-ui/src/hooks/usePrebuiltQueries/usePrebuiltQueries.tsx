@@ -17,7 +17,8 @@ import { QueryScope, SavedQuery } from 'js-client-library';
 import { useMemo } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../commonSearchesAGT';
-import { useFeatureFlag, useSavedQueries } from '../../hooks';
+import { useFeatureFlag } from '../../hooks/useFeatureFlags';
+import { useSavedQueries } from '../../hooks/useSavedQueries';
 import { QueryLineItem } from '../../types';
 import { useSelf } from '../useSelf';
 

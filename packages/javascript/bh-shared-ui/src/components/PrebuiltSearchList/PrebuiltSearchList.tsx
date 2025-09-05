@@ -16,7 +16,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { groupBy } from 'lodash';
+import groupBy from 'lodash/groupBy';
 import { FC, useEffect, useRef, useState } from 'react';
 import { QueryListSection } from '../../types';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
