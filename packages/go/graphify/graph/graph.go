@@ -420,7 +420,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 
 	for _, filepath := range filepaths {
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestCtx := graphify.NewIngestContext(ctx, batch, graphify.WithIngestTime(time.Now().UTC()))
+			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now().UTC()), graphify.WithBatchUpdater(batch))
 
 			file, err := os.Open(filepath)
 			if err != nil {

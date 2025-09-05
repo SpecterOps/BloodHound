@@ -150,18 +150,16 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) ([]IngestFileData, error) {
+func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
 	if fileData, err := s.extractIngestFiles(task.StoredFileName, task.OriginalFileName, task.FileType); err != nil {
 		return []IngestFileData{}, err
-	} else if changelogFF, err := s.db.GetFlagByKey(ctx, appcfg.FeatureChangelog); err != nil {
-		return []IngestFileData{}, fmt.Errorf("get feature flag: %w", err)
 	} else {
 		errs := errorlist.NewBuilder()
 
-		return fileData, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestCtx := s.newIngestContext(ctx, batch, ingestTime, changelogFF.Enabled)
-
+		return fileData, s.graphdb.BatchOperation(ic.Ctx, func(batch graph.Batch) error {
+			// bind batch to ingest context now that its in scope.
+			ic.BindBatchUpdater(batch)
 			for i, data := range fileData {
 				readOpts := ReadOptions{
 					IngestSchema:       s.schema,
@@ -169,7 +167,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx),
 				}
 
-				if err := processSingleFile(ctx, data, ingestCtx, readOpts); err != nil {
+				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
 					var graphifyError errorlist.Error
 					if ok := errors.As(err, &graphifyError); ok {
 						fileData[i].Errors = append(fileData[i].Errors, graphifyError.AsStrings()...)
@@ -186,12 +184,14 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 	}
 }
 
-func (s *GraphifyService) newIngestContext(ctx context.Context, batch BatchUpdater, ingestTime time.Time, useChangelog bool) *IngestContext {
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool) *IngestContext {
 	opts := []IngestOption{WithIngestTime(ingestTime)}
+
 	if useChangelog {
 		opts = append(opts, WithChangeManager(s.changeManager))
 	}
-	return NewIngestContext(ctx, batch, opts...)
+
+	return NewIngestContext(ctx, opts...)
 }
 
 func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
@@ -258,8 +258,16 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		return
 	}
 
+	// Lookup feature flag once per run
+	changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog)
+	if err != nil {
+		slog.ErrorContext(s.ctx, "get changelog feature flag failed", "err", err)
+		return
+	}
+
 	for _, task := range tasks {
-		fileData, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), changelogFF.Enabled)
+		fileData, err := s.ProcessIngestFile(ingestCtx, task)
 
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
@@ -288,9 +296,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		s.clearFileTask(task)
 	}
 
-	// todo: add guard by lifting ingestCtx constructor to this func
-	// if ingestCtx.HasChangelog() {
-	// this logs basic metrics for the changelog, how many hits/misses per file
-	s.changeManager.FlushStats()
-	// }
+	if changelogFF.Enabled {
+		s.changeManager.FlushStats()
+	}
 }

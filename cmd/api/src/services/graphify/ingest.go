@@ -62,10 +62,9 @@ type IngestContext struct {
 	Manager ChangeManager
 }
 
-func NewIngestContext(ctx context.Context, batch BatchUpdater, opts ...IngestOption) *IngestContext {
+func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
 	ic := &IngestContext{
-		Ctx:   ctx,
-		Batch: batch,
+		Ctx: ctx,
 	}
 
 	for _, opt := range opts {
@@ -84,6 +83,14 @@ func WithIngestTime(t time.Time) IngestOption {
 
 func WithChangeManager(manager ChangeManager) IngestOption {
 	return func(s *IngestContext) { s.Manager = manager }
+}
+
+func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
+	return func(s *IngestContext) { s.Batch = batchUpdater }
+}
+
+func (ic *IngestContext) BindBatchUpdater(batch BatchUpdater) {
+	ic.Batch = batch
 }
 
 func (s *IngestContext) HasChangelog() bool {

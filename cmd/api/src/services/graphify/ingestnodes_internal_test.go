@@ -58,7 +58,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 			ctx              = context.Background()
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
-			ingestCtx        = NewIngestContext(ctx, mockBatchUpdater)
+			ingestCtx        = NewIngestContext(ctx, WithBatchUpdater(mockBatchUpdater))
 
 			node       = graph.PrepareNode(graph.NewProperties().Set("hello", "world"), graph.StringKind("kindA"))
 			nodeUpdate = graph.NodeUpdate{Node: node}
@@ -77,7 +77,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 			ctrl              = gomock.NewController(t)
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
-			ingestCtx         = NewIngestContext(ctx, mockBatchUpdater, WithChangeManager(mockChangeManager))
+			ingestCtx         = NewIngestContext(ctx, WithBatchUpdater(mockBatchUpdater), WithChangeManager(mockChangeManager))
 
 			objectID   = "1234"
 			node       = graph.PrepareNode(graph.NewProperties().Set("objectid", objectID), graph.StringKind("kindA"))
@@ -99,7 +99,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 			ctrl              = gomock.NewController(t)
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
-			ingestCtx         = NewIngestContext(ctx, mockBatchUpdater, WithChangeManager(mockChangeManager))
+			ingestCtx         = NewIngestContext(ctx, WithBatchUpdater(mockBatchUpdater), WithChangeManager(mockChangeManager))
 
 			objectID   = "1234"
 			node       = graph.PrepareNode(graph.NewProperties().Set("objectid", objectID), graph.StringKind("kindA"))

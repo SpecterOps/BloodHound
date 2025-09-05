@@ -122,7 +122,7 @@ func TestIngestNode(t *testing.T) {
 
 		// open up a batchOp
 		testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestCtx := graphify.NewIngestContext(testSuite.Context, batch)
+			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithBatchUpdater(batch))
 
 			// function under test
 			err := graphify.IngestNode(ingestCtx, sourceKind,
@@ -187,8 +187,8 @@ func TestIngestNode(t *testing.T) {
 			// inject changelog here to simulate it being toggled on
 			ingestCtx := graphify.NewIngestContext(
 				testSuite.Context,
-				batch,
-				graphify.WithChangeManager(testSuite.Changelog))
+				graphify.WithChangeManager(testSuite.Changelog),
+				graphify.WithBatchUpdater(batch))
 
 			// function under test
 			err := graphify.IngestNode(ingestCtx, sourceKind,
@@ -252,7 +252,7 @@ func TestIngestNode(t *testing.T) {
 			// inject changelog here to simulate it being toggled on
 			ingestCtx := graphify.NewIngestContext(
 				testSuite.Context,
-				batch,
+				graphify.WithBatchUpdater(batch),
 				graphify.WithChangeManager(testSuite.Changelog))
 
 			// function under test. ingest same node twice

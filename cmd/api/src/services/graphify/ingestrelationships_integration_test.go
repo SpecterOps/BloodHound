@@ -51,7 +51,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := graphify.NewIngestContext(testContext.Context(), batch)
+					ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -98,7 +98,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := graphify.NewIngestContext(testContext.Context(), batch)
+					ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -155,7 +155,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := graphify.NewIngestContext(testContext.Context(), batch)
+					ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -202,7 +202,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := graphify.NewIngestContext(testContext.Context(), batch)
+					ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -259,7 +259,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := graphify.NewIngestContext(testContext.Context(), batch)
+					ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.Nil(t, err)
@@ -325,7 +325,7 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					ingestContext := graphify.NewIngestContext(testContext.Context(), batch)
+					ingestContext := graphify.NewIngestContext(testContext.Context(), graphify.WithBatchUpdater(batch))
 
 					err := graphify.IngestRelationships(ingestContext, graph.EmptyKind, rels)
 					require.ErrorContains(t, err, "skipping invalid relationship")
