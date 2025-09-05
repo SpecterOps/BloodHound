@@ -16,6 +16,10 @@
 
 import { DateTime, Interval } from 'luxon';
 
+export const NOW_DATETIME = DateTime.local();
+export const NOW = NOW_DATETIME.toJSDate();
+export const FIVE_YEARS_AGO = NOW_DATETIME.minus({ years: 5 }).toJSDate();
+
 export const LUXON_DATETIME_REGEX = /(\d\d\d\d)-(\d||\d\d)-(\d||\d\d) (\d||\d\d):\d\d ..T \(GMT-\d\d\d\d\)/;
 
 export enum LuxonFormat {
