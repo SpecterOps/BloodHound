@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeTier } from 'js-client-library';
+import { AssetGroupTagTypeZone } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
@@ -27,11 +27,11 @@ const handlers = [
             ctx.json({
                 data: {
                     tags: [
-                        { position: 1, id: 42, type: AssetGroupTagTypeTier },
-                        { position: 2, id: 23, type: AssetGroupTagTypeTier },
-                        { position: 7, id: 1, type: AssetGroupTagTypeTier },
-                        { position: 3, id: 2, type: AssetGroupTagTypeTier },
-                        { position: 777, id: 3, type: AssetGroupTagTypeTier },
+                        { position: 1, id: 42, type: AssetGroupTagTypeZone },
+                        { position: 2, id: 23, type: AssetGroupTagTypeZone },
+                        { position: 7, id: 1, type: AssetGroupTagTypeZone },
+                        { position: 3, id: 2, type: AssetGroupTagTypeZone },
+                        { position: 777, id: 3, type: AssetGroupTagTypeZone },
                     ],
                 },
             })
@@ -73,7 +73,7 @@ vi.mock('react-router-dom', async () => {
 
 describe('Create Update pages', () => {
     it('has the correct value for the links in the breadcrumbs', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(<Save />);
 
         await screen.findByTestId('zone-management_save_details-breadcrumb');
@@ -81,7 +81,7 @@ describe('Create Update pages', () => {
         waitFor(async () => {
             expect(screen.getByTestId('zone-management_save_details-breadcrumb')).toHaveAttribute(
                 'href',
-                '/zone-management/details/tier/42`'
+                '/privilege-zones/zone/42/details`'
             );
         });
     });

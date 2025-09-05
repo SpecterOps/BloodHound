@@ -44,7 +44,7 @@ const LoadingRow = (index: number, style: React.CSSProperties) => (
 );
 
 /**
- * @description This component is used to render the Objects/Members list for a given Tier, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
+ * @description This component is used to render the Objects/Members list for a given Zone, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
  * @param props
  * @param {selected} props.selected The currently selected Object/Member. This selection can be null.
  * @param {onClick} props.onClick The click handler for when a particular member is selected. This is primarily used for setting the selected entity in the parent component.

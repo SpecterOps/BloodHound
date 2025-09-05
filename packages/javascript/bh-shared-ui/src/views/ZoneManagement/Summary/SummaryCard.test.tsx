@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { AssetGroupTagTypeTier, ConfigurationKey } from 'js-client-library';
+import { AssetGroupTagTypeZone, ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { longWait, render, screen, within } from '../../../test-utils';
@@ -49,7 +49,7 @@ const server = setupServer();
 describe('SummaryCard', () => {
     const props = {
         title: 'Test Tier',
-        type: AssetGroupTagTypeTier,
+        type: AssetGroupTagTypeZone,
         selectorCount: 7,
         memberCount: 13,
         id: 99,
@@ -86,7 +86,7 @@ describe('SummaryCard', () => {
         await user.click(await screen.findByText('View Details'));
 
         await longWait(() => {
-            expect(mockNavigate).toHaveBeenCalledWith('/zone-management/details/tier/99');
+            expect(mockNavigate).toHaveBeenCalledWith('/privilege-zones/zone/99/details');
         });
     });
 
@@ -125,7 +125,7 @@ describe('SummaryCard', () => {
     it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
         const props = {
             title: 'Test Tier',
-            type: AssetGroupTagTypeTier,
+            type: AssetGroupTagTypeZone,
             selectorCount: 7,
             memberCount: 13,
             id: 3,

@@ -20,17 +20,18 @@ import {
     AssetGroupTagMember,
     AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, useZonePathParams } from '../../../hooks';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
 
 type SectorMap =
-    | { Tiers: 'tags'; Selectors: 'selectors'; Members: 'members' }
+    | { Zones: 'tags'; Selectors: 'selectors'; Members: 'members' }
     | { Labels: 'tags'; Selectors: 'selectors'; Members: 'members' };
 
 type SearchItem = AssetGroupTag | AssetGroupTagSelector | AssetGroupTagMember;
@@ -43,11 +44,11 @@ const SearchBar: React.FC = () => {
     const { tagId, tagKind } = useZonePathParams();
 
     const searchQuery = useQuery({
-        queryKey: ['zone-management', 'search', debouncedInputValue, tagId, tagKind],
+        queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, tagKind],
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
-                tag_type: tagKind === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                tag_type: tagKind === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
@@ -62,11 +63,11 @@ const SearchBar: React.FC = () => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`/zone-management/details/${tagKind}/${item.id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${item.id}/details`);
         } else if (isSelector(item)) {
-            navigate(`/zone-management/details/${tagKind}/${item.asset_group_tag_id}/selector/${item.id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${item.asset_group_tag_id}/details/selector/${item.id}`);
         } else {
-            navigate(`/zone-management/details/${tagKind}/${item.asset_group_tag_id}/member/${item.id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${item.asset_group_tag_id}/details/member/${item.id}`);
         }
     };
 
@@ -92,7 +93,7 @@ const SearchBar: React.FC = () => {
     const sectorMap: SectorMap =
         tagKind === 'label'
             ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
-            : { Tiers: 'tags', Selectors: 'selectors', Members: 'members' };
+            : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
 
     return (
         <div {...getComboboxProps()} className='relative w-4/6'>

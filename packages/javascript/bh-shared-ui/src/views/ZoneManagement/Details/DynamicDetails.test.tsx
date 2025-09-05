@@ -81,7 +81,7 @@ describe('DynamicDetails', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders details for a selected tier', async () => {
+    it('renders details for a selected zone', async () => {
         const testTag = {
             isLoading: false,
             isError: false,

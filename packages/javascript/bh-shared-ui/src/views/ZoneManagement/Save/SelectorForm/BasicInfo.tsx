@@ -45,6 +45,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
@@ -56,13 +57,13 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const location = useLocation();
     const navigate = useAppNavigate();
 
-    const { tierId = '', labelId, selectorId = '' } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
 
     const tagQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId],
+        queryKey: ['privilege-zones', 'tags', tagId],
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTag(tagId);
             return response.data.data['tag'];
@@ -91,7 +92,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             setDeleteDialogOpen(false);
 
-            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details`);
         } catch (error) {
             handleError(error, 'deleting', 'selector', addNotification);
         }
@@ -139,7 +140,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                         </div>
                     )}
                     <p className='font-bold'>
-                        {location.pathname.includes('label') ? 'Label' : 'Tier'}:{' '}
+                        {location.pathname.includes('label') ? 'Label' : 'Zone'}:{' '}
                         <span className='font-normal'>{tagQuery.data?.name}</span>
                     </p>
                     <div className='flex flex-col gap-6 mt-6'>

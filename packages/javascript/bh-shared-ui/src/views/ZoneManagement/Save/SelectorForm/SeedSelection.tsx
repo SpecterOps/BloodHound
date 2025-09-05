@@ -44,13 +44,13 @@ import { SelectorFormInputs } from './types';
 
 const getSelectorExpansionMethod = (
     tagId: string,
-    tagKind: 'label' | 'tier',
+    tagKind: 'label' | 'zone',
     ownedId: string | undefined
 ): SeedExpansionMethod => {
     // Owned is a specific label that does not expansion
     if (tagId === ownedId) return SeedExpansionMethodNone;
 
-    return tagKind === 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+    return tagKind === 'zone' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
 
 const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
@@ -61,7 +61,7 @@ const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorForm
     const expansion = getSelectorExpansionMethod(tagId, tagKind, ownedId?.toString());
 
     const previewQuery = useQuery({
-        queryKey: ['zone-management', 'preview-selectors', selectorType, seeds, expansion],
+        queryKey: ['privilege-zones', 'preview-selectors', selectorType, seeds, expansion],
         queryFn: async ({ signal }) => {
             return apiClient
                 .assetGroupTagsPreviewSelectors({ seeds, expansion }, { signal })

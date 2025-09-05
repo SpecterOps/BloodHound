@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeTier } from 'js-client-library';
+import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
@@ -28,7 +28,7 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { ROUTE_ZONE_MANAGEMENT_DETAILS, ROUTE_ZONE_MANAGEMENT_ROOT } from '../../../routes';
+import { DEFAULT_PRIVILEGE_ZONES_ROUTE, ROUTE_PRIVILEGE_ZONES_DETAILS, ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -40,31 +40,32 @@ import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
 
 export const getSavePath = (
-    tierId: string | undefined,
+    zoneId: string | undefined,
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
-    const savePath = '/zone-management/save';
+    const tagType = zoneId ? 'zone' : 'label';
+    let tagPathId = '';
 
-    if (selectorId && labelId) return `/zone-management/save/label/${labelId}/selector/${selectorId}`;
-    if (selectorId && tierId) return `/zone-management/save/tier/${tierId}/selector/${selectorId}`;
+    if (zoneId || labelId) {
+        tagPathId = tagType === 'zone' ? zoneId ?? '' : labelId ?? '';
+    }
 
-    if (!selectorId && labelId) return `/zone-management/save/label/${labelId}`;
-    if (!selectorId && tierId) return `/zone-management/save/tier/${tierId}`;
+    const selectorPath = selectorId ? `/selector/${selectorId}` : '';
 
-    return savePath;
+    return `${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagPathId}/save${selectorPath}`;
 };
 
 export const getEditButtonState = (
     memberId?: string,
     selectorsQuery?: UseQueryResult,
-    tiersQuery?: UseQueryResult,
+    zonesQuery?: UseQueryResult,
     labelsQuery?: UseQueryResult
 ) => {
     return (
         !!memberId ||
-        (selectorsQuery?.isLoading && tiersQuery?.isLoading && labelsQuery?.isLoading) ||
-        (selectorsQuery?.isError && tiersQuery?.isError && labelsQuery?.isError)
+        (selectorsQuery?.isLoading && zonesQuery?.isLoading && labelsQuery?.isLoading) ||
+        (selectorsQuery?.isError && zonesQuery?.isError && labelsQuery?.isError)
     );
 };
 
@@ -76,12 +77,13 @@ const Details: FC = () => {
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const tagKind = zoneId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
-        { path: ROUTE_ZONE_MANAGEMENT_ROOT + ROUTE_ZONE_MANAGEMENT_DETAILS, caseSensitive: false, end: false },
+        { path: ROUTE_PRIVILEGE_ZONES_ROOT + '/' + DEFAULT_PRIVILEGE_ZONES_ROUTE + tagKind + ROUTE_PRIVILEGE_ZONES_DETAILS, caseSensitive: false, end: false },
     ]);
 
-    const tagId = labelId === undefined ? tierId : labelId;
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -89,7 +91,7 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tiersQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
+    const zonesQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone) });
 
     const labelsQuery = useTagsQuery({
         select: (tags) =>
@@ -102,7 +104,7 @@ const Details: FC = () => {
 
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
 
-    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
 
     return (
         <div className='h-full'>
@@ -114,7 +116,7 @@ const Details: FC = () => {
                 <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <AppLink to={getSavePath(tierId, labelId, selectorId)}>Edit</AppLink>
+                            <AppLink to={getSavePath(zoneId, labelId, selectorId)}>Edit</AppLink>
                         </Button>
                     )}
                 </div>
@@ -127,16 +129,16 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${id}/details`);
                             }}
                         />
                     ) : (
                         <TagList
-                            title={'Tiers'}
-                            listQuery={tiersQuery}
+                            title={'Zones'}
+                            listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
+                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${id}/details`);
                             }}
                         />
                     )}
@@ -145,7 +147,9 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
-                            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+                            navigate(
+                                `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
+                            );
                         }}
                         selected={selectorId}
                         sortOrder={selectorsListSortOrder}
@@ -156,7 +160,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -167,7 +171,9 @@ const Details: FC = () => {
                             listQuery={tagMembersQuery}
                             selected={memberId}
                             onClick={(id) => {
-                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
+                                navigate(
+                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
+                                );
                             }}
                             sortOrder={membersListSortOrder}
                             onChangeSortOrder={setMembersListSortOrder}

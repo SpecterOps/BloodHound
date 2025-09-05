@@ -53,12 +53,12 @@ interface Disabled {
     disabled_by: string | null;
 }
 
-export const AssetGroupTagTypeTier = 1 as const;
+export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
 
 export type AssetGroupTagTypes =
-    | typeof AssetGroupTagTypeTier
+    | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 

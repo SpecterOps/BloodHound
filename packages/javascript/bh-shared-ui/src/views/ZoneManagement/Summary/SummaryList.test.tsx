@@ -51,7 +51,7 @@ const mockData: AssetGroupTag[] = [
     },
     {
         id: 2,
-        name: 'Mock Tier 2',
+        name: 'Mock Zone 2',
         kind_id: 20,
         type: 1,
         position: 2,
@@ -81,7 +81,7 @@ describe('SummaryList', () => {
             isError: false,
         } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
+        render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => { }} />);
 
         expect(screen.getAllByTestId('zone-management_tiers-list_loading-skeleton')).toHaveLength(3);
     });
@@ -92,7 +92,7 @@ describe('SummaryList', () => {
             isError: true,
         } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
+        render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => { }} />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
@@ -103,11 +103,11 @@ describe('SummaryList', () => {
             data: mockData,
         } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
+        render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => { }} />);
 
         const cards = await screen.findAllByTestId('zone-management_summary-list_card');
         expect(cards[0]).toHaveTextContent('Mock Tier 1');
-        expect(cards[1]).toHaveTextContent('Mock Tier 2');
+        expect(cards[1]).toHaveTextContent('Mock Zone 2');
     });
 
     it('renders a down arrow only for items of type 1', async () => {
@@ -116,7 +116,7 @@ describe('SummaryList', () => {
             data: mockData,
         } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
+        render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => { }} />);
 
         const arrows = await screen.findAllByTestId('zone-management_summary-list_down-arrow');
         expect(arrows).toHaveLength(expectedCount);
@@ -130,7 +130,7 @@ describe('SummaryList', () => {
             data: [mockData[0]],
         } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={onSelect} />);
+        render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={onSelect} />);
 
         await userEvent.click(await screen.findByTestId('zone-management_summary-list_card'));
         expect(onSelect).toHaveBeenCalledWith(mockData[0].id);

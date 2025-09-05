@@ -36,7 +36,7 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     AssetGroupTagTypeLabel,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
@@ -70,7 +70,7 @@ export const TagForm: FC = () => {
         privilegeZoneAnalysisEnabled,
         disableNameInput,
         isLabelLocation,
-        isUpdateTierLocation,
+        isUpdateZoneLocation,
         showAnalysisToggle,
         showDeleteButton,
         formTitle,
@@ -84,9 +84,9 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
-    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
-    const showSalesMessage = isUpdateTierLocation && SalesMessage;
-    const showTierList = isUpdateTierLocation && TierList;
+    const { ZoneList, SalesMessage } = useContext(ZoneManagementContext);
+    const showSalesMessage = isUpdateZoneLocation && SalesMessage;
+    const showZoneList = isUpdateZoneLocation && ZoneList;
 
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
@@ -110,7 +110,7 @@ export const TagForm: FC = () => {
                     name: formData.name,
                     description: formData.description,
                     position: null,
-                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
                 };
 
                 const response = await createTagMutation.mutateAsync({
@@ -133,7 +133,7 @@ export const TagForm: FC = () => {
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
                 if (!isDirty) {
-                    addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                    addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     });
                     return;
@@ -150,7 +150,7 @@ export const TagForm: FC = () => {
 
                 addNotification(
                     `${tagKindDisplay} was updated successfully!`,
-                    `zone-management_update-${tagKind}_success_${tagId}`,
+                    `privilege-zones_update-${tagKind}_success_${tagId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -179,7 +179,7 @@ export const TagForm: FC = () => {
 
             addNotification(
                 `${tagKindDisplay} was deleted successfully!`,
-                `zone-management_delete-${tagKind}_success_${tagId}`,
+                `privilege-zones_delete-${tagKind}_success_${tagId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -416,13 +416,13 @@ export const TagForm: FC = () => {
                     </div>
                 </div>
 
-                {showTierList && (
-                    <TierList
-                        tiers={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
+                {showZoneList && (
+                    <ZoneList
+                        zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeZone) || []}
                         setPosition={(position: number | undefined) => {
                             form.setValue('position', position, { shouldDirty: true });
                         }}
-                        name={tagQuery.data?.name || 'New Tier'}
+                        name={tagQuery.data?.name || 'New Zone'}
                     />
                 )}
             </form>

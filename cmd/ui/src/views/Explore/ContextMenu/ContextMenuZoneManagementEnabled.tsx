@@ -19,6 +19,7 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     NodeResponse,
     Permission,
+    ROUTE_PRIVILEGE_ZONES_ROOT,
     apiClient,
     isNode,
     useExploreParams,
@@ -158,7 +159,7 @@ const ContextMenu: FC<{
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
+                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${tierZeroAssetGroup!.id}/details`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
@@ -174,7 +175,7 @@ const ContextMenu: FC<{
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
+                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${ownedAssetGroup!.id}/details`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                     />,
                 ]}

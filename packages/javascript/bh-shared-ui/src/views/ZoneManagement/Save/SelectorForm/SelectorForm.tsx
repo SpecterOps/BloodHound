@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { useZonePathParams } from '../../../../hooks';
 import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../../routes';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { handleError } from '../utils';
@@ -145,7 +146,7 @@ const SelectorForm: FC = () => {
             if (isEmpty(diffedValues)) {
                 addNotification(
                     'No changes to selector detected',
-                    `zone-management_update-selector_no-changes-warn_${selectorId}`,
+                    `privilege-zones_update-selector_no-changes-warn_${selectorId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -161,7 +162,7 @@ const SelectorForm: FC = () => {
 
             addNotification(
                 'Selector was updated successfully!',
-                `zone-management_update-selector_success_${selectorId}`,
+                `privilege-zones_update-selector_success_${selectorId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -183,7 +184,9 @@ const SelectorForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            navigate(`/zone-management/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`);
+            navigate(
+                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${location.pathname.includes('label') ? 'label' : 'zone'}/${tagId}/details`
+            );
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
         }

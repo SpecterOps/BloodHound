@@ -19,7 +19,7 @@ import {
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypes,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import React, { FC } from 'react';
 import { UseQueryResult } from 'react-query';
@@ -32,12 +32,12 @@ type SummaryListProps = {
     onSelect: (id: number) => void;
     listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string;
-    title: 'Tiers' | 'Labels';
+    title: 'Zones' | 'Labels';
 };
 
 const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, title }) => {
     const targetTypes: AssetGroupTagTypes[] =
-        title === 'Tiers' ? [AssetGroupTagTypeTier] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+        title === 'Zones' ? [AssetGroupTagTypeZone] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
     return (
         <div className='flex flex-col w-full h-full space-y-4'>
@@ -79,7 +79,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                                 analysisEnabled={listItem.analysis_enabled}
                                             />
                                         </li>
-                                        {listItem.type === AssetGroupTagTypeTier ? (
+                                        {listItem.type === AssetGroupTagTypeZone ? (
                                             <div
                                                 key={listItem.id}
                                                 className='flex justify-center my-2 pl-6 last:hidden'>

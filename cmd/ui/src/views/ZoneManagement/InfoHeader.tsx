@@ -19,6 +19,7 @@ import {
     AZ_PLATFORM,
     AppLink,
     EnvironmentAggregation,
+    ROUTE_PRIVILEGE_ZONES_ROOT,
     SelectedEnvironment,
     SelectorValueTypes,
     SimpleEnvironmentSelector,
@@ -43,8 +44,8 @@ const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggreg
 
 const InfoHeader: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tierId = topTagId?.toString(), labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId = topTagId?.toString(), labelId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
 
@@ -79,7 +80,7 @@ const InfoHeader: FC = () => {
                 <Button variant='primary' disabled={!tagId} asChild>
                     <AppLink
                         data-testid='zone-management_create-selector-link'
-                        to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                        to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector`}>
                         Create Selector
                     </AppLink>
                 </Button>

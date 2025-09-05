@@ -23,7 +23,7 @@ import SearchBar from './SearchBar';
 const mockResults = {
     data: {
         data: {
-            tags: [{ id: 1, name: 'Test Tier A' }],
+            tags: [{ id: 1, name: 'Test Zone A' }],
             selectors: [{ id: 123, name: 'Test Selector A', asset_group_tag_id: 1 }],
             members: [{ id: 456, name: 'Test Member A', asset_group_tag_id: 1 }],
         },
@@ -54,6 +54,6 @@ describe('SearchBar', () => {
         await user.type(input, 'ab');
 
         // Nothing should appear
-        expect(screen.queryByText('Tiers')).not.toBeInTheDocument();
+        expect(screen.queryByText('Zones')).not.toBeInTheDocument();
     });
 });

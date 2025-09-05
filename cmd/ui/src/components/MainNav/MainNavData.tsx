@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, MainNavData, useFeatureFlags, useFileUploadDialogContext } from 'bh-shared-ui';
+import { AppIcon, MainNavData, ROUTE_PRIVILEGE_ZONES_ROOT, useFeatureFlags, useFileUploadDialogContext } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -61,8 +61,8 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
         {
             label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
-            testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
+            route: tierFlag?.enabled ? ROUTE_PRIVILEGE_ZONES_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
+            testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
         },
         {
             label: 'Quick Upload',
