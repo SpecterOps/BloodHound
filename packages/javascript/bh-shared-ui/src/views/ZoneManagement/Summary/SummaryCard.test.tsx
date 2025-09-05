@@ -86,7 +86,7 @@ describe('SummaryCard', () => {
         await user.click(await screen.findByText('View Details'));
 
         await longWait(() => {
-            expect(mockNavigate).toHaveBeenCalledWith('/zone-management/details/tier/99');
+            expect(mockNavigate).toHaveBeenCalledWith('/privilege-zones/zone/99/details');
         });
     });
 

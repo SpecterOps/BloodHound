@@ -81,7 +81,7 @@ describe('Create Update pages', () => {
         waitFor(async () => {
             expect(screen.getByTestId('zone-management_save_details-breadcrumb')).toHaveAttribute(
                 'href',
-                '/zone-management/details/tier/42`'
+                '/privilege-zones/zone/42/details`'
             );
         });
     });
