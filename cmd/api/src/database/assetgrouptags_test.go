@@ -1430,6 +1430,8 @@ func TestDatabase_GetSelectorNodesCertification(t *testing.T) {
 		require.Equal(t, 1, count)
 		// it should have the highest certification value associated with T0
 		require.Equal(t, model.AssetGroupCertificationManual, nodeCertifications[0].Certified)
+		// it should be associated with T0
+		require.Equal(t, 1, nodeCertifications[0].AssetGroupTagId)
 		// it should have a timestamp of the first node inserted for this tier
 		require.True(t, nodeCertifications[0].CreatedAt.Before(timeBeforeSel0_1_NodeInserted))
 	})

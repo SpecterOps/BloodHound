@@ -3799,7 +3799,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNode{}, 0, errors.New("entity not found"))
+				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{}, 0, errors.New("entity not found"))
 			},
 			expected: expected{
 				responseCode: http.StatusInternalServerError,
@@ -3824,7 +3824,15 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 2, nil)
+				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).
+					Return([]model.AssetGroupSelectorNodeExpanded{
+						{
+							AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+								NodeId:   1,
+								NodeName: "TestNode",
+							},
+						},
+					}, 2, nil)
 			},
 
 			expected: expected{
@@ -3867,7 +3875,16 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).Return([]model.AssetGroupSelectorNode{{NodeId: 1, NodeName: "TestNode"}}, 1, nil)
+				mock.mockDatabase.EXPECT().GetSelectorNodesCertification(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).
+					Return([]model.AssetGroupSelectorNodeExpanded{
+						{
+							AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+								NodeId:   1,
+								NodeName: "TestNode",
+							},
+							AssetGroupTagId: 1,
+						},
+					}, 1, nil)
 			},
 
 			expected: expected{
@@ -3885,6 +3902,7 @@ func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
 									"environment_id": "",
 									"primary_kind": "",
 									"name": "TestNode",
+									"asset_group_tag_id": 1,
 									"created_at": "0001-01-01T00:00:00Z",
 									"certified_by": "",
 									"certified": 0

@@ -1166,11 +1166,12 @@ func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter,
 			for _, selNode := range selectorNodes {
 				member := AssetGroupMemberWithCertification{
 					AssetGroupMember: AssetGroupMember{
-						NodeId:        selNode.NodeId,
-						ObjectID:      selNode.NodeObjectId,
-						EnvironmentID: selNode.NodeEnvironmentId,
-						PrimaryKind:   selNode.NodePrimaryKind,
-						Name:          selNode.NodeName,
+						NodeId:          selNode.NodeId,
+						ObjectID:        selNode.NodeObjectId,
+						EnvironmentID:   selNode.NodeEnvironmentId,
+						PrimaryKind:     selNode.NodePrimaryKind,
+						Name:            selNode.NodeName,
+						AssetGroupTagId: selNode.AssetGroupTagId,
 					},
 					CreatedAt:     selNode.CreatedAt,
 					CertifiedBy:   selNode.CertifiedBy.ValueOrZero(),

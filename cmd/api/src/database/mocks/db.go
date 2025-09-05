@@ -1797,10 +1797,10 @@ func (mr *MockDatabaseMockRecorder) GetSelectorNodesBySelectorIdsFilteredAndPagi
 }
 
 // GetSelectorNodesCertification mocks base method.
-func (m *MockDatabase) GetSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNode, int, error) {
+func (m *MockDatabase) GetSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSelectorNodesCertification", ctx, sqlFilter, skip, limit)
-	ret0, _ := ret[0].([]model.AssetGroupSelectorNode)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNodeExpanded)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
