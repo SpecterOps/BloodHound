@@ -29,7 +29,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
             <Typography variant='body2'>
                 When a kerberos ticket is created for {sourceName}, it will include the SID for {targetName}, and
                 therefore grant
-                {sourceName} the same privileges and permissions as
+                {sourceName} the same privileges and permissions as 
                 {targetName}.
             </Typography>
         </>
