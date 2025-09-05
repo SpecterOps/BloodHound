@@ -33,6 +33,7 @@ export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';
 export * from './queries';
+export * from './quickUpload';
 export * from './searchParams';
 export * from './testHelpers';
 export * from './theme';

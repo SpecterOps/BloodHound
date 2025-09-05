@@ -186,7 +186,8 @@ const ImportQueryDialog: React.FC<{
                     DialogOverlayProps={{
                         blurBackground: false,
                     }}
-                    maxWidth='sm'>
+                    maxWidth='sm'
+                    id='import-query-dialog'>
                     <DialogTitle>Upload Files</DialogTitle>
 
                     {fileUploadStep === FileUploadStep.ADD_FILES && (
