@@ -37,13 +37,12 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { CertificationTypeMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
-import { AppIcon, DeleteConfirmationDialog, DropdownOption, DropdownSelector } from '../../../../components';
-import { CertificationOption } from '../../../../components/CertificationSelector/types';
+import { DeleteConfirmationDialog } from '../../../../components';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
@@ -109,20 +108,6 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
     if (isLoading) return <Skeleton />;
     if (isError) return <div>There was an error fetching the selector information.</div>;
-
-    const buttonSpanStyle = {
-        display: 'flex',
-        alignItems: 'center',
-    };
-
-    const certTypeOptions: DropdownOption[] = (() => {
-        const dropdownOptions: DropdownOption[] = [];
-        const certificationTypes = Object.entries(CertificationTypeMap);
-        certificationTypes.forEach((entry) => {
-            dropdownOptions.push({ key: entry[0] as unknown as number, value: entry[1] });
-        });
-        return dropdownOptions;
-    })();
 
     return (
         <div className={'max-lg:w-full w-96 h-[36rem] '}>
@@ -206,19 +191,6 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </FormItem>
                                 )}
                             />
-                            <div>
-                                <DropdownSelector
-                                    variant='transparent'
-                                    options={certTypeOptions}
-                                    selectedText={
-                                        <span style={buttonSpanStyle} className='gap-3'>
-                                            <AppIcon.CertStatus size={24} /> Status
-                                        </span>
-                                    }
-                                    onChange={(_selectedAssetGroup: CertificationOption) => {
-                                        console.log('in the handler');
-                                    }}></DropdownSelector>
-                            </div>
                             <div>
                                 <Label className='text-base font-bold'>Selector Type</Label>
                                 <Select
