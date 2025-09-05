@@ -1,9 +1,9 @@
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
-import { EntityKinds, apiClient } from '../../../../utils';
-import EntitySelectorsInformation from '../EntitySelectorsInformation';
+import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
+import { EntityKinds, apiClient } from '../../../utils';
+import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
 
 const Certification: FC = () => {
@@ -11,42 +11,6 @@ const Certification: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
 
     const mockMemberId = 1;
-
-    const mockObjectData = [
-        {
-            type: 1,
-            name: 'object 1',
-            environment: 'env',
-            zone: '1',
-            first_seen: '',
-            certified: 'AUTO',
-            certified_by: 'test@specterops.io',
-            object_id: '1',
-            primary_kind: 'User',
-        },
-        {
-            type: 1,
-            name: 'object 2',
-            environment: 'env',
-            zone: '1',
-            first_seen: '',
-            certified: 'AUTO',
-            certified_by: 'test@specterops.io',
-            object_id: '2',
-            primary_kind: 'User',
-        },
-        {
-            type: 1,
-            name: 'object 3',
-            environment: 'env',
-            zone: '1',
-            first_seen: '',
-            certified: 'AUTO',
-            certified_by: 'test@specterops.io',
-            object_id: '3',
-            primary_kind: 'User',
-        },
-    ];
 
     const memberQuery = useQuery({
         queryKey: ['zone-management', 'tags', tagId, 'member', mockMemberId],

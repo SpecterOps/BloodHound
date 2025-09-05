@@ -83,7 +83,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                 </div>
             </Card>
             {tagId !== topTagId?.toString() && tagId !== ownedId?.toString() && SalesMessage && <SalesMessage />}
-            <ObjectCountPanel tagId={data.id.toString()} />
+            {data.id !== null && <ObjectCountPanel tagId={data.id.toString()} />}
         </div>
     );
 };
