@@ -96,6 +96,9 @@ const DropdownSelector: FC<{
                                                 <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
                                                     {option.value}
                                                 </span>
+                                                <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
+                                                    {option.value}
+                                                </span>
                                             </TooltipTrigger>
                                             <TooltipPortal>
                                                 <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
