@@ -62,6 +62,7 @@ func (s *Changelog) Start(ctx context.Context) {
 
 	go func() {
 		defer close(s.done)
+		// this loop owns updating the lastseen property
 		s.runLoop(cctx)
 	}()
 

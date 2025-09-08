@@ -40,7 +40,7 @@ type cacheStats struct {
 // downstream. If the change is identical to the cached version, it returns false.
 func (s *cache) shouldSubmit(change Change) (bool, error) {
 	idHash := change.IdentityKey()
-	dataHash, err := change.Hash()
+	contentHash, err := change.Hash()
 
 	if err != nil {
 		return false, fmt.Errorf("hash proposed change: %w", err)
@@ -51,14 +51,14 @@ func (s *cache) shouldSubmit(change Change) (bool, error) {
 
 	// try to diff against the storedHash snapshot
 	if storedHash, ok := s.data[idHash]; ok {
-		if storedHash == dataHash {
+		if storedHash == contentHash {
 			s.stats.Hits++
 			return false, nil // unchanged
 		}
 	}
 
 	// new or modified -> update cache to the new snapshot
-	s.data[idHash] = dataHash
+	s.data[idHash] = contentHash
 	s.stats.Misses++
 	return true, nil
 }
