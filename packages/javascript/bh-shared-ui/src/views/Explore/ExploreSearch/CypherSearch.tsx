@@ -221,6 +221,7 @@ const CypherSearchInner = ({
         setShowSaveQueryDialog(false);
         createSavedQueryMutation.reset();
         setSharedIds([]);
+        setIsPublic(false);
     };
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
