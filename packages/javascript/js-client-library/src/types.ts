@@ -133,7 +133,7 @@ export const CertificationTypeMap = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'Certified',
-    [CertificationAuto]: 'Automated Certification',
+    [CertificationAuto]: 'Automatic Certification',
 };
 
 export interface AssetGroupTagSelectorCounts {

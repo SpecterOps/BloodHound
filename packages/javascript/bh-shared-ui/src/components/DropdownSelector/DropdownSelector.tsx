@@ -54,7 +54,7 @@ const DropdownSelector: FC<{
                 <Button
                     variant={variant}
                     className={cn({
-                        'bg-transparent rounded-md border shadow-outer-0 hover:bg-neutral-3 hover:text-primary text-black dark:text-white truncate':
+                        'rounded-md border shadow-outer-0 hover:bg-neutral-3 hover:text-primary text-black dark:text-white truncate':
                             !buttonPrimary,
                         uppercase: buttonPrimary,
                     })}
@@ -75,7 +75,6 @@ const DropdownSelector: FC<{
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                data-testid='dropdown_context-selector-popover'
                 align={align}
                 className={cn(
                     'flex flex-col gap-2 p-1 border border-neutral-light-5',
@@ -111,6 +110,7 @@ const DropdownSelector: FC<{
                                         <FontAwesomeIcon
                                             style={{ width: '10%', alignSelf: 'center' }}
                                             icon={option.icon}
+                                            data-testid={`dropdown-icon-${option.icon.iconName}`}
                                             size='sm'
                                         />
                                     )}

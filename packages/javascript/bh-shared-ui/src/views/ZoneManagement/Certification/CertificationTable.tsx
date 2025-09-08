@@ -218,7 +218,7 @@ const CertificationTable: FC = () => {
 
     const certOptions: DropdownOption[] = (() => {
         const dropdownOptions: DropdownOption[] = [];
-        const order = [CertificationAuto, CertificationManual, CertificationPending, CertificationRevoked];
+        const order = [CertificationPending, CertificationManual, CertificationAuto, CertificationRevoked];
         order.forEach((certType) => {
             dropdownOptions.push({ key: certType as unknown as number, value: CertificationTypeMap[certType] });
         });
