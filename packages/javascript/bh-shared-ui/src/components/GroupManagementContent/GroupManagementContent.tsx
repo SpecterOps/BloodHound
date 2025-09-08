@@ -151,7 +151,6 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                         options={listAssetGroups.data ? mapAssetGroups(listAssetGroups.data) : []}
                                         selectedText={getAssetGroupSelectorLabel()}
                                         onChange={handleAssetGroupSelectorChange}
-                                        fullWidth
                                     />
                                 </Box>
                             </Grid>
