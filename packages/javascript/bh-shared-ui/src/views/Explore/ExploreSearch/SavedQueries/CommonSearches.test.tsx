@@ -19,6 +19,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { vi } from 'vitest';
 import CommonSearches from './CommonSearches';
 
 const server = setupServer(
