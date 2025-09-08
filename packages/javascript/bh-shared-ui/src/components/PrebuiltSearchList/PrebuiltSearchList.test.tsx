@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
+import { render, screen } from '../../test-utils';
 import PrebuiltSearchList from './PrebuiltSearchList';
 
 describe('PrebuiltSearchList', () => {
@@ -47,9 +48,9 @@ describe('PrebuiltSearchList', () => {
     ];
 
     it('renders a list of pre-built searches', async () => {
-        const testClickHandler = vitest.fn();
-        const testDeleteHandler = vitest.fn();
-        const testClearFiltersHandler = vitest.fn();
+        const testClickHandler = vi.fn();
+        const testDeleteHandler = vi.fn();
+        const testClearFiltersHandler = vi.fn();
 
         render(
             <PrebuiltSearchList
@@ -69,9 +70,9 @@ describe('PrebuiltSearchList', () => {
 
     it('calls clickHandler when a line item is clicked', async () => {
         const user = userEvent.setup();
-        const testClickHandler = vitest.fn();
-        const testDeleteHandler = vitest.fn();
-        const testClearFiltersHandler = vitest.fn();
+        const testClickHandler = vi.fn();
+        const testDeleteHandler = vi.fn();
+        const testClearFiltersHandler = vi.fn();
 
         render(
             <PrebuiltSearchList
@@ -94,9 +95,9 @@ describe('PrebuiltSearchList', () => {
 
     it('clicking a delete button calls deleteHandler', async () => {
         const user = userEvent.setup();
-        const testClickHandler = vitest.fn();
-        const testDeleteHandler = vitest.fn();
-        const testClearFiltersHandler = vitest.fn();
+        const testClickHandler = vi.fn();
+        const testDeleteHandler = vi.fn();
+        const testClearFiltersHandler = vi.fn();
 
         render(
             <PrebuiltSearchList
