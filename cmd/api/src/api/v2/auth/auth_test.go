@@ -1709,7 +1709,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			assertBody: func(t *testing.T, body string) {
-
+				assert.Contains(t, body, "domain or tenant not found: 54321")
 			},
 		},
 	}
@@ -3038,7 +3038,9 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
-			assertBody:     func(t *testing.T, _ string) {},
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, "domain or tenant not found: 54321")
+			},
 			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
 				mockGraphDB.EXPECT().FetchNodesByObjectIDsAndKinds(gomock.Any(), graph.Kinds{ad.Domain, azure.Tenant}, []string{"12345", "54321"}).Return(graph.NodeSet{
 					graph.ID(1): {
