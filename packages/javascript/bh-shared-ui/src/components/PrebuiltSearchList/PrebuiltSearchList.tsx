@@ -131,11 +131,11 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             <span className='text-xs italic'>{subheader}</span>
                                                         )}
                                                     </div>
-                                                    {canEdit && (
+                                                    {canEdit && typeof id === 'number' && (
                                                         <ListItemActionMenu
-                                                            id={id as number}
+                                                            id={id}
                                                             query={query}
-                                                            deleteQuery={() => handleDelete(id as number)}
+                                                            deleteQuery={() => handleDelete(id)}
                                                         />
                                                     )}
                                                 </li>
