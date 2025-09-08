@@ -24,6 +24,7 @@ import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
 import {
     useCreateSavedQuery,
+    useFeatureFlag,
     usePermissions,
     useQueryPermissions,
     useUpdateQueryPermissions,
@@ -52,6 +53,9 @@ const CypherSearchInner = ({
         useSavedQueriesContext();
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
+
+    const { data: featureFlagData, isLoading, isError } = useFeatureFlag('tier_management_engine');
+    const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [messageState, setMessageState] = useState({
@@ -289,7 +293,7 @@ const CypherSearchInner = ({
                         </div>
                     </div>
                     <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                        {checkPermission(Permission.GRAPH_DB_WRITE) && (
+                        {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
                             <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                         )}
                         <Button
