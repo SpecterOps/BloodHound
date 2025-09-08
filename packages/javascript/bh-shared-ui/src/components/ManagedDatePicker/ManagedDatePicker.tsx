@@ -1,9 +1,25 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { DatePicker } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
-import { FC, useEffect, useState } from 'react';
-import { FIVE_YEARS_AGO, LuxonFormat, NOW } from '../../utils';
+import { FC, useEffect, useId, useState } from 'react';
+import { LuxonFormat, fiveYearsAgo, now } from '../../utils';
 
-const DATE_FORMAT = 'yyyy-mm-dd';
+const DATE_FORMAT_MASK = 'yyyy-mm-dd';
 
 export const VALIDATIONS = {
     isAfterDate: (after: Date | undefined, errorMessage: string) => ({
@@ -11,8 +27,7 @@ export const VALIDATIONS = {
             if (!after || !date) {
                 return true;
             }
-            const [first, second] = [DateTime.fromJSDate(date), DateTime.fromJSDate(after)];
-            return first >= second;
+            return date.getTime() >= after.getTime();
         },
         errorMessage,
     }),
@@ -21,15 +36,18 @@ export const VALIDATIONS = {
             if (!before || !date) {
                 return true;
             }
-            const [first, second] = [DateTime.fromJSDate(before), DateTime.fromJSDate(date)];
-            return first >= second;
+            return before.getTime() >= date.getTime();
         },
         errorMessage,
     }),
 };
 
 /** Returns true if date passes validations, otherwise return false and runs onInvalid */
-const validateDate = (date: Date, validations: Props['validations'] = [], onInvalid: (errors: string[]) => void) => {
+const validateDate = (
+    date: Date,
+    validations: NonNullable<Props['validations']> = [],
+    onInvalid: (errors: string[]) => void
+) => {
     const errors = validations.reduce((agg: string[], { rule, errorMessage }) => {
         if (!rule(date)) {
             agg.push(errorMessage);
@@ -64,11 +82,11 @@ type Props = {
  * API, calendar/input synchronization, validation, and input hints.
  */
 export const ManagedDatePicker: FC<Props> = ({
-    fromDate = FIVE_YEARS_AGO,
-    hint = DATE_FORMAT,
+    fromDate = fiveYearsAgo(),
+    hint = DATE_FORMAT_MASK,
     onDateChange,
     onValidation,
-    toDate = NOW,
+    toDate = now(),
     validations = [],
     value,
 }) => {
@@ -102,7 +120,6 @@ export const ManagedDatePicker: FC<Props> = ({
         const dateString = event.target.value;
         setInputDateString(dateString);
         setValidationError('');
-        onValidation?.(true);
 
         if (dateString === '') {
             onDateChange();
@@ -115,6 +132,7 @@ export const ManagedDatePicker: FC<Props> = ({
             return;
         }
 
+        onValidation?.(true);
         setCalendarDate(dateTime.toJSDate());
     };
 
@@ -148,17 +166,20 @@ export const ManagedDatePicker: FC<Props> = ({
         }
     };
 
+    const errorId = useId();
     return (
         <>
             <DatePicker
                 className='bg-transparent dark:bg-transparent pl-2'
                 onChange={syncDateInput}
-                onFocus={() => setPlaceholder(DATE_FORMAT)}
+                onFocus={() => setPlaceholder(DATE_FORMAT_MASK)}
                 onBlur={updateHintAndValidate}
                 placeholder={placeholder}
                 // `value` only represents input buffer
                 value={inputDateString}
                 variant={'underlined'}
+                aria-invalid={Boolean(validationError)}
+                aria-describedby={validationError ? errorId : undefined}
                 calendarProps={{
                     fromDate: fromDate,
                     mode: 'single',
@@ -169,7 +190,11 @@ export const ManagedDatePicker: FC<Props> = ({
                     toDate: toDate,
                 }}
             />
-            {validationError && <span className='text-error text-sm'>{validationError}</span>}
+            {validationError && (
+                <span className='text-error text-sm' id={errorId}>
+                    {validationError}
+                </span>
+            )}
         </>
     );
 };

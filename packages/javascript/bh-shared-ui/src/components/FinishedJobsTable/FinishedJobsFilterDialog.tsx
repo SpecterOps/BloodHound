@@ -66,7 +66,9 @@ export const FinishedJobsFilterDialog: React.FC<Props> = () => {
     };
 
     const setDateRange = (changed: DateRangeChange) => {
-        const [key, value] = typedEntries(changed)[0];
+        const entries = typedEntries(changed);
+        if (entries.length === 0) return;
+        const [key, value] = entries[0];
 
         if (value === undefined) {
             filters.deleteKeys(key);

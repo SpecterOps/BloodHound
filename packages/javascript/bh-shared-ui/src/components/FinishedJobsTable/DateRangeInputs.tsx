@@ -26,7 +26,7 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
 
     return (
         <div className='flex flex-col gap-2 w-56'>
-            <Label htmlFor='status'>Date Range</Label>
+            <Label>Date Range</Label>
 
             <ManagedDatePicker
                 hint='Start Date'

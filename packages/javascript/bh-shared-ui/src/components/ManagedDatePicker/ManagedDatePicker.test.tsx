@@ -26,13 +26,13 @@ const originalTZ = process.env.TZ;
 
 const DEFAULT_VALIDATIONS = [VALIDATIONS.isBeforeDate(JAN_2, 'Date is not before Jan 2nd')];
 
-type RenderDatePickeOptions = {
+type RenderDatePickerOptions = {
     hint?: string;
     value?: Date;
     validations?: typeof DEFAULT_VALIDATIONS;
 };
 
-const renderDatePicker = (props: RenderDatePickeOptions = {}) => {
+const renderDatePicker = (props: RenderDatePickerOptions = {}) => {
     const { hint, value, validations } = props;
     const user = userEvent.setup();
 
@@ -126,7 +126,7 @@ describe('ManagedDatePicker - date validation', () => {
         expect(onValidationMock).toHaveBeenCalledWith(true);
     });
 
-    it('returns false when validations fails', async () => {
+    it('returns false when validations fail', async () => {
         const { onValidationMock, openCalendar, selectDate } = renderDatePicker({ validations: DEFAULT_VALIDATIONS });
 
         await openCalendar();
@@ -162,8 +162,6 @@ describe('ManagedDatePicker - date validation', () => {
         expect(screen.getByText('Date is not before Jan 2nd')).toBeInTheDocument();
 
         await typeInput('{backspace}'.repeat(1));
-
-        screen.logTestingPlaygroundURL();
 
         expect(screen.queryByText('Date is not before Jan 2nd')).not.toBeInTheDocument();
     });

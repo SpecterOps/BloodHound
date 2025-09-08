@@ -137,6 +137,8 @@ export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 export * from './LoginForm';
 export { default as LoginForm } from './LoginForm';
 
+export * from './ManagedDatePicker';
+
 export * from './MaskedInput';
 
 export * from './MenuItem';
