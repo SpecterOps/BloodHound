@@ -119,7 +119,7 @@ func TestIngestNode(t *testing.T) {
 		)
 
 		// open up a batchOp
-		testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithBatchUpdater(batch))
 
 			// function under test
@@ -135,7 +135,9 @@ func TestIngestNode(t *testing.T) {
 			return nil
 		})
 
-		testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		require.NoError(t, err)
+
+		err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			count, err := tx.Nodes().Filter(filter).Count()
 			require.NoError(t, err)
 			require.Equal(t, int64(1), count)
@@ -165,6 +167,8 @@ func TestIngestNode(t *testing.T) {
 			})
 			return nil
 		})
+
+		require.NoError(t, err)
 	})
 
 	t.Run("ingested node gets created with changelog on", func(t *testing.T) {
@@ -181,7 +185,7 @@ func TestIngestNode(t *testing.T) {
 		)
 
 		// open up a batchOp
-		testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			// inject changelog here to simulate it being toggled on
 			ingestCtx := graphify.NewIngestContext(
 				testSuite.Context,
@@ -201,7 +205,9 @@ func TestIngestNode(t *testing.T) {
 			return nil
 		})
 
-		testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		require.NoError(t, err)
+
+		err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			count, err := tx.Nodes().Filter(filter).Count()
 			require.NoError(t, err)
 			require.Equal(t, int64(1), count)
@@ -231,6 +237,8 @@ func TestIngestNode(t *testing.T) {
 			})
 			return nil
 		})
+
+		require.NoError(t, err)
 	})
 
 	t.Run("ingested node gets deduped with changelog on", func(t *testing.T) {
@@ -246,7 +254,7 @@ func TestIngestNode(t *testing.T) {
 		)
 
 		// open up a batchOp
-		testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			// inject changelog here to simulate it being toggled on
 			ingestCtx := graphify.NewIngestContext(
 				testSuite.Context,
@@ -267,7 +275,9 @@ func TestIngestNode(t *testing.T) {
 			return nil
 		})
 
-		testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		require.NoError(t, err)
+
+		err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			count, err := tx.Nodes().Filter(filter).Count()
 			require.NoError(t, err)
 			require.Equal(t, int64(1), count)
@@ -297,5 +307,7 @@ func TestIngestNode(t *testing.T) {
 			})
 			return nil
 		})
+
+		require.NoError(t, err)
 	})
 }

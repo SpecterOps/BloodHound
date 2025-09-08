@@ -88,7 +88,12 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	ingestCtx.Manager.Submit(ingestCtx.Ctx, change)
+	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
+		slog.WarnContext(ingestCtx.Ctx, "changelog submit dropped",
+			slog.String("sourceObjectID", sourceObjectID),
+			slog.String("targetObjectID", targetObjectID),
+			slog.String("kind", update.Relationship.Kind.String()))
+	}
 
 	return nil
 }

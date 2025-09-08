@@ -71,6 +71,11 @@ func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext 
 		opt(ic)
 	}
 
+	// avoid a zero IngestTime as it breaks lastseen semantics.
+	if ic.IngestTime.IsZero() {
+		ic.IngestTime = time.Now()
+	}
+
 	return ic
 }
 

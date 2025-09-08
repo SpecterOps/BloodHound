@@ -99,7 +99,7 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
 
-	objectid, err := update.Node.Properties.Get("objectid").String()
+	objectid, err := update.Node.Properties.Get(common.ObjectID.String()).String()
 	if err != nil {
 		return fmt.Errorf("reading objectid failed: %w", err)
 	}
@@ -122,7 +122,9 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	ingestCtx.Manager.Submit(ingestCtx.Ctx, change)
+	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
+		slog.WarnContext(ingestCtx.Ctx, "changelog submit dropped", slog.String("objectid", objectid))
+	}
 
 	return nil
 }

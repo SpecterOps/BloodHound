@@ -145,9 +145,15 @@ func (s EdgeChange) Apply(batch graph.Batch) error {
 }
 
 func getTimeProp(props *graph.Properties, key string) (time.Time, error) {
+	if props == nil {
+		return time.Time{}, fmt.Errorf("missing properties for %q", key)
+	}
 	return props.Get(key).Time()
 }
 
 func getStringProp(props *graph.Properties, key string) (string, error) {
+	if props == nil {
+		return "", fmt.Errorf("missing properties for %q", key)
+	}
 	return props.Get(key).String()
 }

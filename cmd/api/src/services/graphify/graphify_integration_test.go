@@ -162,7 +162,14 @@ func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
 			t.Logf("Failed to close GraphDB: %v", err)
 		}
 	}
+
 	if suite.BHDatabase != nil {
 		suite.BHDatabase.Close(suite.Context)
+	}
+
+	if suite.Changelog != nil {
+		if err := suite.Changelog.Stop(suite.Context); err != nil {
+			t.Logf("failed to stop changelog")
+		}
 	}
 }

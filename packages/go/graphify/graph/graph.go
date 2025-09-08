@@ -418,9 +418,11 @@ func initializeGraphDatabase(ctx context.Context, postgresConnection string) (gr
 func ingestData(ctx context.Context, service GraphService, filepaths []string, database graph.Database) error {
 	var errs []error
 
+	ingestTime := time.Now().UTC()
+
 	for _, filepath := range filepaths {
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now().UTC()), graphify.WithBatchUpdater(batch))
+			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(ingestTime), graphify.WithBatchUpdater(batch))
 
 			file, err := os.Open(filepath)
 			if err != nil {

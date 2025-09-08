@@ -241,14 +241,6 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		"task_count", len(tasks),
 	)
 
-	defer func() {
-		slog.InfoContext(s.ctx,
-			"ingest run finished",
-			"duration", time.Since(start),
-			"task_count", len(tasks),
-		)
-	}()
-
 	if s.ctx.Err() != nil {
 		return
 	}
@@ -258,15 +250,16 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		return
 	}
 
-	// Lookup feature flag once per run
-	changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog)
-	if err != nil {
-		slog.ErrorContext(s.ctx, "get changelog feature flag failed", "err", err)
-		return
+	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
+	flagEnabled := false
+	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
+		slog.WarnContext(s.ctx, "get changelog feature flag failed", "err", err)
+	} else {
+		flagEnabled = changelogFF.Enabled
 	}
 
 	for _, task := range tasks {
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), changelogFF.Enabled)
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagEnabled)
 		fileData, err := s.ProcessIngestFile(ingestCtx, task)
 
 		switch {
@@ -296,7 +289,13 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		s.clearFileTask(task)
 	}
 
-	if changelogFF.Enabled {
+	slog.InfoContext(s.ctx,
+		"ingest run finished",
+		"duration", time.Since(start),
+		"task_count", len(tasks),
+	)
+
+	if flagEnabled {
 		s.changeManager.FlushStats()
 	}
 }
