@@ -28,7 +28,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FC, useState } from 'react';
-import { cn } from '../../utils/theme';
+import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
 import { DropdownOption } from './types';
 
