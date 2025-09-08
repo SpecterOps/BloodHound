@@ -30,7 +30,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
-
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -373,27 +372,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			userTemplate.AllEnvironments = false
 
 			if createUserRequest.EnvironmentControlList != nil {
-				if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
+				err := handleETACRequest(*createUserRequest.EnvironmentControlList, roles, &userTemplate)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 					return
 				}
-
-				if len(createUserRequest.EnvironmentControlList.Environments) != 0 && createUserRequest.EnvironmentControlList.AllEnvironments {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
-					return
-				}
-
-				userTemplate.AllEnvironments = createUserRequest.EnvironmentControlList.AllEnvironments
-
-				environments := make([]model.EnvironmentAccess, 0)
-				for _, environment := range createUserRequest.EnvironmentControlList.Environments {
-					newEnvironment := model.EnvironmentAccess{
-						UserID:      userTemplate.ID.String(),
-						Environment: environment,
-					}
-					environments = append(environments, newEnvironment)
-				}
-				userTemplate.EnvironmentAccessControl = environments
 			}
 		}
 
@@ -410,6 +393,37 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 	}
+}
+
+// handleETACRequest will modify the user passed in to assign an etac list or grant all environment access
+// and will return an error on bad requests
+func handleETACRequest(etacRequest v2.UpdateUserETACListRequest, roles model.Roles, user *model.User, ) error {
+	// Administrators and Power Users may not have an ETAC list applied to them
+	if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+		return errors.New(api.ErrorResponseETACInvalidRoles)
+	}
+
+	// The user may not request all environments and have an ETAC list applied to them
+	if len(etacRequest.Environments) != 0 && etacRequest.AllEnvironments {
+		return errors.New(api.ErrorResponseETACBadRequest)
+	}
+
+	user.AllEnvironments = etacRequest.AllEnvironments
+
+	if etacRequest.AllEnvironments {
+		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
+	} else {
+		environments := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
+		for _, environment := range etacRequest.Environments {
+			environments = append(environments, model.EnvironmentAccess{
+				UserID:      user.ID.String(),
+				Environment: environment,
+			})
+		}
+		user.EnvironmentAccessControl = environments
+	}
+
+	return nil
 }
 
 func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *http.Request) {
@@ -530,33 +544,13 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 					effectiveRoles = roles
 				}
 
-				if effectiveRoles.Has(model.Role{Name: auth.RoleAdministrator}) || effectiveRoles.Has(model.Role{Name: auth.RolePowerUser}) {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACInvalidRoles, request), response)
+				err := handleETACRequest(*updateUserRequest.EnvironmentControlList, effectiveRoles, &user)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 					return
-				}
-
-				if len(updateUserRequest.EnvironmentControlList.Environments) != 0 && updateUserRequest.EnvironmentControlList.AllEnvironments {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseETACBadRequest, request), response)
-					return
-				}
-
-				user.AllEnvironments = updateUserRequest.EnvironmentControlList.AllEnvironments
-
-				// If the user isn't granting access to all environments, give them access to each environment requested
-				if updateUserRequest.EnvironmentControlList.AllEnvironments {
-					user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
-				} else {
-					environments := make([]model.EnvironmentAccess, 0)
-					for _, environment := range updateUserRequest.EnvironmentControlList.Environments {
-						newEnvironment := model.EnvironmentAccess{
-							UserID:      user.ID.String(),
-							Environment: environment,
-						}
-						environments = append(environments, newEnvironment)
-					}
-					user.EnvironmentAccessControl = environments
 				}
 			}
+
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
