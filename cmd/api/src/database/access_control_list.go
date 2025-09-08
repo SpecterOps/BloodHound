@@ -54,7 +54,7 @@ func (s *BloodhoundDB) DeleteEnvironmentListForUser(ctx context.Context, user mo
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.WithContext(ctx).Delete(&model.EnvironmentAccess{}, "user_id = ?", user.ID.String())
+		result := tx.WithContext(ctx).Exec("DELETE FROM environment_access_control WHERE user_id = ?", user.ID.String())
 		return CheckError(result)
 	})
 }

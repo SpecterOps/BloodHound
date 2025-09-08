@@ -81,4 +81,36 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, result, 0)
 	})
+
+	t.Run("DeleteEnvironmentListForUser", func(t *testing.T) {
+		newUser, err := suite.BHDatabase.CreateUser(context.Background(), model.User{
+			FirstName:       null.StringFrom("First"),
+			LastName:        null.StringFrom("Last"),
+			EmailAddress:    null.StringFrom(user2Principal),
+			PrincipalName:   user2Principal,
+			AllEnvironments: false,
+			EnvironmentAccessControl: []model.EnvironmentAccess{
+				{
+					Environment: "12345",
+				},
+				{
+					Environment: "54321",
+				},
+			},
+		})
+
+		require.NoError(t, err)
+		updatedUser, err := suite.BHDatabase.GetUser(suite.Context, newUser.ID)
+		require.NoError(t, err)
+		assert.False(t, updatedUser.AllEnvironments)
+		require.Len(t, updatedUser.EnvironmentAccessControl, 2)
+
+		err = suite.BHDatabase.DeleteEnvironmentListForUser(suite.Context, newUser)
+		require.NoError(t, err)
+
+		result, err := suite.BHDatabase.GetEnvironmentAccessListForUser(suite.Context, newUser)
+		require.NoError(t, err)
+
+		assert.Len(t, result, 0)
+	})
 }
