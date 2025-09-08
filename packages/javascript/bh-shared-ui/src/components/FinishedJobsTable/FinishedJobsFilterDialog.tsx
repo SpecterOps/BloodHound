@@ -29,9 +29,10 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import React, { useState } from 'react';
 import { useObjectState } from '../../hooks';
-import { getCollectionState, isCollectionKey, type FinishedJobsFilter } from '../../utils';
+import { getCollectionState, isCollectionKey, typedEntries, type FinishedJobsFilter } from '../../utils';
 import { AppIcon } from '../AppIcon';
 import { DataCollectedSelect } from './DataCollectedSelect';
+import { DateRangeChange, DateRangeInputs } from './DateRangeInputs';
 import { SELECT_NONE, StatusSelect } from './StatusSelect';
 
 type Props = {
@@ -61,6 +62,18 @@ export const FinishedJobsFilterDialog: React.FC<Props> = () => {
             filters.deleteKeys(key);
         } else {
             filters.applyState({ [key]: true });
+        }
+    };
+
+    const setDateRange = (changed: DateRangeChange) => {
+        const entries = typedEntries(changed);
+        if (entries.length === 0) return;
+        const [key, value] = entries[0];
+
+        if (value === undefined) {
+            filters.deleteKeys(key);
+        } else {
+            filters.applyState(changed);
         }
     };
 
@@ -102,8 +115,11 @@ export const FinishedJobsFilterDialog: React.FC<Props> = () => {
                     </DialogDescription>
 
                     <DialogDescription asChild>
-                        {/* TODO: BED-6405 */}
-                        <span>Date Range Inputs</span>
+                        <DateRangeInputs
+                            start={filters.state.start_time}
+                            end={filters.state.end_time}
+                            onChange={setDateRange}
+                        />
                     </DialogDescription>
 
                     <DialogDescription asChild>
