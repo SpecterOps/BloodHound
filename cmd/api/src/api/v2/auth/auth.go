@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
@@ -62,9 +63,10 @@ type ManagementResource struct {
 	authenticator              api.Authenticator // Used for secrets
 	OIDC                       oidc.Service
 	SAML                       saml.Service
+	GraphQuery                 queries.Graph
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -74,6 +76,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		authenticator:              authenticator,
 		OIDC:                       &oidc.Client{},
 		SAML:                       &saml.Client{},
+		GraphQuery:                 graphQuery,
 	}
 }
 
@@ -372,7 +375,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			userTemplate.AllEnvironments = false
 
 			if createUserRequest.EnvironmentControlList != nil {
-				err := handleETACRequest(*createUserRequest.EnvironmentControlList, roles, &userTemplate)
+				err := handleETACRequest(request.Context(), *createUserRequest.EnvironmentControlList, roles, &userTemplate, s.GraphQuery)
 				if err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 					return
@@ -513,7 +516,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 					effectiveRoles = roles
 				}
 
-				err := handleETACRequest(*updateUserRequest.EnvironmentControlList, effectiveRoles, &user)
+				err := handleETACRequest(request.Context(), *updateUserRequest.EnvironmentControlList, effectiveRoles, &user, s.GraphQuery)
 				if err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 					return
