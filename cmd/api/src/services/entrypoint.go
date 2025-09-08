@@ -134,8 +134,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return []daemons.Daemon{
 			bhapi.NewDaemon(cfg, routerInst.Handler()),
 			gc.NewDataPruningDaemon(connections.RDMS),
-			datapipeDaemon,
 			cl,
+			datapipeDaemon,
 		}, nil
 	}
 }

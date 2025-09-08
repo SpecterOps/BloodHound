@@ -15,8 +15,12 @@ type Change interface {
 }
 
 var (
-	propLastSeen          = "lastseen"
-	propObjectID          = "objectid"
+	propLastSeen = "lastseen"
+	propObjectID = "objectid"
+	// ignoredPropertiesKeys defines a set of node/edge properties that are
+	// excluded from content hashing. These fields are typically volatile
+	// (timestamps, collection metadata, environment-specific IDs) and are
+	// not meaningful indicators of a substantive graph change.
 	ignoredPropertiesKeys = map[string]struct{}{
 		propLastSeen:    {},
 		propObjectID:    {},

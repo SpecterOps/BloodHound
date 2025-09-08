@@ -12,6 +12,8 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+// Changelog is a long-running daemon that manages change deduplication
+// and buffering for graph ingestion.
 type Changelog struct {
 	Cache *cache
 	db    graph.Database
@@ -31,7 +33,7 @@ type Changelog struct {
 type Options struct {
 	BatchSize     int
 	FlushInterval time.Duration // interval for force flush when ingest is quiet (clears out leftovers in buffer)
-	PollInterval  time.Duration // interval for FF check
+	PollInterval  time.Duration // interval for Feature Flag check
 }
 
 func DefaultOptions() Options {
@@ -127,6 +129,9 @@ func (s *Changelog) Name() string {
 	return "Changelog Daemon"
 }
 
+// dbFlagGetter returns a closure that checks whether the changelog feature
+// is enabled and, if so, reports the current graph size (nodes + edges).
+// This allows the changelog to size its in-memory cache relative to the graph.
 func dbFlagGetter(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer) func(context.Context) (bool, int, error) {
 	return func(ctx context.Context) (bool, int, error) {
 		flag, err := flagProvider.GetFlagByKey(ctx, appcfg.FeatureChangelog)

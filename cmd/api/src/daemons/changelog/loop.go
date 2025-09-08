@@ -31,7 +31,7 @@ func newLoop(ctx context.Context, flusher flusher, batchSize int, flushInterval 
 		readerC:       readerC,
 		flushInterval: flushInterval,
 		batchSize:     batchSize,
-		changeBuffer:  newChangeBuffer(flusher),
+		changeBuffer:  newChangeBuffer(flusher, batchSize),
 	}
 }
 
@@ -118,9 +118,9 @@ type changeBuffer struct {
 	flusher flusher
 }
 
-func newChangeBuffer(flusher flusher) *changeBuffer {
+func newChangeBuffer(flusher flusher, batchSize int) *changeBuffer {
 	return &changeBuffer{
-		buf:     make([]Change, 0),
+		buf:     make([]Change, batchSize),
 		flusher: flusher,
 	}
 }
