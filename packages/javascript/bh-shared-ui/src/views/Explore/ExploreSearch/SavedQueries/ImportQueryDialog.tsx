@@ -180,7 +180,13 @@ const ImportQueryDialog: React.FC<{
     };
 
     return (
-        <Dialog open={open} onOpenChange={handleClose}>
+        <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    handleClose();
+                }
+            }}>
             <DialogPortal>
                 <DialogContent
                     DialogOverlayProps={{
