@@ -15,7 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, MainNavData, useFeatureFlags, useFileUploadDialogContext } from 'bh-shared-ui';
+import {
+    AppIcon,
+    MainNavData,
+    Permission,
+    useFeatureFlags,
+    useFileUploadDialogContext,
+    usePermissions,
+} from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -43,7 +50,9 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
 
 export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
+    const { checkPermission } = usePermissions();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
     const tierFlag = featureFlags?.data?.find((flag) => {
@@ -71,6 +80,15 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: 'quick-file-ingest',
         },
     ];
+
+    if (hasPermissionToUpload) {
+        primaryList.push({
+            label: 'Quick Upload',
+            icon: <AppIcon.Upload size={24} />,
+            onClick: () => setShowFileIngestDialog(true),
+            testId: 'quick-file-ingest',
+        });
+    }
 
     return primaryList;
 };
