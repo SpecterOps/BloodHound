@@ -94,8 +94,8 @@ func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 	return func(s *IngestContext) { s.Batch = batchUpdater }
 }
 
-func (ic *IngestContext) BindBatchUpdater(batch BatchUpdater) {
-	ic.Batch = batch
+func (s *IngestContext) BindBatchUpdater(batch BatchUpdater) {
+	s.Batch = batch
 }
 
 func (s *IngestContext) HasChangelog() bool {
