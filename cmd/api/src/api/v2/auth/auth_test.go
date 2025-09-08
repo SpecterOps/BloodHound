@@ -3104,14 +3104,12 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			require.Equal(t, rr.Code, http.StatusOK)
 
 			// update user
-			userID, err := uuid.NewV4()
-			require.Nil(t, err)
 			updatePayload, err := json.Marshal(tc.updateRequest)
 			require.Nil(t, err)
-			updateEndpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", userID)
+			updateEndpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", goodUserID)
 			req, err = http.NewRequestWithContext(ctx, http.MethodPatch, updateEndpoint, bytes.NewReader(updatePayload))
 			require.Nil(t, err)
-			req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: userID.String()})
+			req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: goodUserID.String()})
 			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
 			response := httptest.NewRecorder()

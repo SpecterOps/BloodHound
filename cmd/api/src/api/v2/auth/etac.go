@@ -80,7 +80,7 @@ func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserETACListReq
 }
 
 func nodeSetToObjectIDSlice(set graph.NodeSet) ([]string, error) {
-	objectIDs := make([]string, len(set))
+	objectIDs := make([]string, 0, len(set))
 	for _, node := range set {
 		objectID, err := node.Properties.Get(common.ObjectID.String()).String()
 		if err != nil {
