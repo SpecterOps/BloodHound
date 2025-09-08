@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 allOf:
-  - $ref: './../schemas/api.response.pagination'
+  - $ref: './../schemas/api.response.pagination.yaml'
   - type: object
     properties:
       data:

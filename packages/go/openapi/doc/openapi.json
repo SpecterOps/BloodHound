@@ -6630,7 +6630,7 @@
       "get": {
         "operationId": "GetAssetGroupTagsCertifications",
         "summary": "Get certifications for privilege zones",
-        "description": "Retrieves certification status for nodes selected by a tier (privilege zone)",
+        "description": "Retrieves certification status for nodes selected by a zone",
         "tags": [
           "Asset Isolation",
           "Enterprise",
@@ -19161,59 +19161,61 @@
         }
       },
       "model.asset-group-tags-certification-response": {
-        "type": "object",
-        "properties": {
-          "count": {
-            "type": "integer"
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/api.response.pagination"
           },
-          "limit": {
-            "type": "integer"
-          },
-          "skip": {
-            "type": "integer"
-          },
-          "data": {
+          {
             "type": "object",
             "properties": {
-              "members": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64",
-                      "description": "The graph ID of this node"
-                    },
-                    "object_id": {
-                      "type": "string"
-                    },
-                    "environment_id": {
-                      "type": "string"
-                    },
-                    "primary_kind": {
-                      "type": "string"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "certified_by": {
-                      "type": "string"
-                    },
-                    "certified": {
-                      "type": "integer",
-                      "description": "0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert"
+              "data": {
+                "type": "object",
+                "properties": {
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "The graph ID of this node"
+                        },
+                        "object_id": {
+                          "type": "string"
+                        },
+                        "environment_id": {
+                          "type": "string"
+                        },
+                        "primary_kind": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "asset_group_tag_id": {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "certified_by": {
+                          "type": "string"
+                        },
+                        "certified": {
+                          "type": "integer",
+                          "description": "0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert"
+                        }
+                      }
                     }
                   }
                 }
               }
             }
           }
-        }
+        ]
       },
       "model.bh-graph.item-border": {
         "type": "object",
