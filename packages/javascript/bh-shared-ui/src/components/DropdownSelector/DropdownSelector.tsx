@@ -56,11 +56,8 @@ const DropdownSelector: FC<{
                     className={cn({
                         'rounded-md border shadow-outer-0 hover:bg-neutral-3 hover:text-primary text-black dark:text-white truncate':
                             !buttonPrimary,
-                        uppercase: buttonPrimary,
+                        'w-full uppercase': buttonPrimary,
                     })}
-                    style={{
-                        width: fullWidth ? '100%' : '',
-                    }}
                     data-testid='dropdown_context-selector'>
                     <span className={cn('inline-flex justify-between gap-4 items-center', { 'w-full': buttonPrimary })}>
                         <span>{selectedText}</span>
