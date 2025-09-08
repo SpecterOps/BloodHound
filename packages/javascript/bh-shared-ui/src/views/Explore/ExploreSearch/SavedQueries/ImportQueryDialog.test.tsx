@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '../../../../test-utils';
 import ImportQueryDialog from './ImportQueryDialog';
 
