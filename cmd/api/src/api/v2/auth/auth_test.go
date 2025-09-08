@@ -516,7 +516,6 @@ func TestManagementResource_GetPermission(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
-		mockGraphDB  *graphMocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
