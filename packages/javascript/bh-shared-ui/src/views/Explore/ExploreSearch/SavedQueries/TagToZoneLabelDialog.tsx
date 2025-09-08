@@ -31,7 +31,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeTier } from 'js-client-library';
+import {
+    AssetGroupTag,
+    AssetGroupTagTypeLabel,
+    AssetGroupTagTypeOwned,
+    AssetGroupTagTypeTier,
+} from 'js-client-library';
 import { useTagsQuery } from '../../../../hooks';
 import { QueryLineItem } from '../../../../types';
 import { useAppNavigate } from '../../../../utils';
@@ -50,8 +55,9 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const tiersQuery = useTagsQuery();
 
-    const isLabelTagType = (tag: any) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
-    const isTierTagType = (tag: any) => tag.type === AssetGroupTagTypeTier;
+    const isLabelTagType = (tag: AssetGroupTag) =>
+        tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
+    const isTierTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeTier;
 
     const typeMatcher = isLabel ? isLabelTagType : isTierTagType;
     const zoneLabelList = tiersQuery.data?.filter(typeMatcher);
