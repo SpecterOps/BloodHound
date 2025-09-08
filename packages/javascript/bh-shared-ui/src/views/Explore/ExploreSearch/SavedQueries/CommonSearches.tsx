@@ -94,6 +94,7 @@ const CommonSearches = ({
         setSource(source);
         //local array variable
         let filteredData: QueryListSection[] = queryList;
+        const hasSelf = typeof selfId === 'string' && selfId.length > 0;
 
         if (searchTerm.length > 2) {
             filteredData = filteredData
@@ -121,19 +122,27 @@ const CommonSearches = ({
                 }))
                 .filter((x) => x.queries.length);
         } else if (source && source === 'owned') {
-            filteredData = filteredData
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
-                }))
-                .filter((x) => x.queries.length);
+            if (!hasSelf) {
+                filteredData = [];
+            } else {
+                filteredData = filteredData
+                    .map((obj) => ({
+                        ...obj,
+                        queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
+                    }))
+                    .filter((x) => x.queries.length);
+            }
         } else if (source && source === 'shared') {
-            filteredData = filteredData
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
-                }))
-                .filter((x) => x.queries.length);
+            if (!hasSelf) {
+                filteredData = [];
+            } else {
+                filteredData = filteredData
+                    .map((obj) => ({
+                        ...obj,
+                        queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
+                    }))
+                    .filter((x) => x.queries.length);
+            }
         }
         setFilteredList(filteredData);
     };
