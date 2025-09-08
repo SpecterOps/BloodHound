@@ -51,8 +51,11 @@ export const updateSavedQuery = (savedQuery: UpdateUserQueryRequest): Promise<Sa
     return apiClient.updateUserQuery(savedQuery).then((response) => response.data.data);
 };
 
-export const importSavedQuery = (savedQuery: FormData | Blob | object): Promise<Blob | BasicResponse<any>> => {
-    return apiClient.importUserQuery(savedQuery).then((response) => {
+export const importSavedQuery = (
+    savedQuery: FormData | Blob | object,
+    options?: RequestOptions
+): Promise<BasicResponse<any>> => {
+    return apiClient.importUserQuery(savedQuery, options).then((response) => {
         return response.data;
     });
 };
