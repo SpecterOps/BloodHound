@@ -1,5 +1,5 @@
 import { DataTable } from '@bloodhoundenterprise/doodleui';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 const CertificationTable: FC = () => {
     const mockPending = '9';
@@ -116,30 +116,67 @@ const CertificationTable: FC = () => {
         },
     ];
 
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+
+    const toggleRow = (id: number) => {
+        setSelectedRows((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    };
+
+    const toggleAll = () => {
+        if (selectedRows.length === mockData.length) {
+            setSelectedRows([]);
+        } else {
+            setSelectedRows(mockData.map((row) => row.id));
+        }
+    };
+
+    const allSelected = selectedRows.length === mockData.length;
+    const someSelected = selectedRows.length > 0 && !allSelected;
+
     const columns = [
         {
-            header: () => <div className='pl-8 text-left'>Severity</div>,
-            id: 'name',
+            header: () => (
+                <div className='pl-8'>
+                    <input
+                        type='checkbox'
+                        checked={allSelected}
+                        ref={(el) => {
+                            if (el) el.indeterminate = someSelected;
+                        }}
+                        onChange={toggleAll}
+                    />
+                </div>
+            ),
+            id: 'bulk-certify',
+            cell: ({ row }: { row: { original: (typeof mockData)[number] } }) => (
+                <div className='pl-8'>
+                    <input
+                        type='checkbox'
+                        checked={selectedRows.includes(row.original.id)}
+                        onChange={() => toggleRow(row.original.id)}
+                    />
+                </div>
+            ),
         },
         {
             header: () => <div className='pl-8 text-left'>Type</div>,
-            id: 'action',
+            id: 'type',
         },
         {
             header: () => <div className='pl-8 text-left'>Member Name</div>,
-            id: 'date',
+            id: 'name',
         },
         {
             header: () => <div className='pl-8 text-left'>Domain</div>,
-            id: 'tier',
+            id: 'domain',
         },
         {
             header: () => <div className='pl-8 text-left'>Zone</div>,
-            id: 'author',
+            id: 'zone',
         },
         {
             header: () => <div className='pl-8 text-center'>First Seen</div>,
-            id: 'notes',
+            id: 'first-seen',
         },
     ];
 
@@ -173,7 +210,7 @@ const CertificationTable: FC = () => {
                 <p>{`${mockPending} pending`}</p>
             </div>
             <DataTable
-                data={mockData}
+                data={mockData ?? []}
                 TableHeaderProps={tableHeaderProps}
                 TableHeadProps={tableHeadProps}
                 TableProps={tableProps}
