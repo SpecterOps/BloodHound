@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
     AssetGroupTagMember,
