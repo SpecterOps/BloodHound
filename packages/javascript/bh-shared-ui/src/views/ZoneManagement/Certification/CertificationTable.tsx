@@ -240,9 +240,7 @@ const CertificationTable: FC = () => {
                             <AppIcon.CertStatus size={24} /> Status
                         </span>
                     }
-                    onChange={(selectedCertificationType: DropdownOption) => {
-                        console.log('in the handler, selected type: ', selectedCertificationType);
-                    }}></DropdownSelector>
+                    onChange={(_selectedCertificationType: DropdownOption) => {}}></DropdownSelector>
             </div>
             <DataTable
                 data={mockData ?? []}
