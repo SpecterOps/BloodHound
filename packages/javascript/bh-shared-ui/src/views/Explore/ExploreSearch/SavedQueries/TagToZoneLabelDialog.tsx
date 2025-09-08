@@ -86,7 +86,13 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const continueDisabled = (isLabel && !label) || (!isLabel && !zone);
 
     return (
-        <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
+        <Dialog
+            open={dialogOpen}
+            onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setDialogOpen(false);
+                }
+            }}>
             <DialogPortal>
                 <DialogContent
                     DialogOverlayProps={{
