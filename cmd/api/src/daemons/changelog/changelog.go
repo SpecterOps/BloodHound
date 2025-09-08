@@ -13,12 +13,14 @@ import (
 )
 
 type Changelog struct {
-	Cache   *cache // pointer so we can replace it atomically
-	db      graph.Database
-	loop    loop
+	Cache *cache
+	db    graph.Database
+	loop  loop
+
 	options Options
 
-	mu         sync.RWMutex // protects cache swaps
+	// protects cache swaps. runloop and runpoller need access to cache syncrhonized
+	mu         sync.RWMutex
 	flagGetter func(context.Context) (bool, int, error)
 
 	// clean shutdown
@@ -161,7 +163,7 @@ func (s *Changelog) enable(ctx context.Context, size int) {
 
 	slog.InfoContext(ctx, "enabling changelog", "cache size", size)
 	cache := newCache(size)
-	s.Cache = &cache
+	s.Cache = cache
 }
 
 // disable resets the cache to free memory.
@@ -179,10 +181,25 @@ func (s *Changelog) InitCacheForTest(ctx context.Context) {
 }
 
 func (s *Changelog) GetStats() cacheStats {
+	s.mu.RLock()
+	c := s.Cache
+	s.mu.RUnlock()
+
+	if c == nil { // cache may be nil when feature is disabled.
+		return cacheStats{}
+	}
 	return s.Cache.getStats()
 }
 
 func (s *Changelog) FlushStats() {
+	s.mu.RLock()
+	c := s.Cache
+	s.mu.RUnlock()
+
+	if c == nil { // cache may be nil when feature is disabled.
+		return
+	}
+
 	stats := s.Cache.resetStats()
 	slog.Info("changelog metrics",
 		"hits", stats.Hits,
@@ -191,6 +208,14 @@ func (s *Changelog) FlushStats() {
 }
 
 func (s *Changelog) ResolveChange(change Change) (bool, error) {
+	s.mu.RLock()
+	c := s.Cache
+	s.mu.RUnlock()
+
+	if c == nil { // treat as pass-through when disabled.
+		return true, nil
+	}
+
 	return s.Cache.shouldSubmit(change)
 }
 

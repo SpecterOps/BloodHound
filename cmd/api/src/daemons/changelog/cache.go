@@ -14,18 +14,18 @@ import (
 // It also maintains simple hit/miss counters for observability, which can be reset between ingest batches.
 type cache struct {
 	data  map[uint64]uint64
-	mutex *sync.Mutex
+	mu    sync.Mutex
 	stats cacheStats
 }
 
-func newCache(size int) cache {
+func newCache(size int) *cache {
 	if size == 0 {
 		size = 1_000_000
 	}
 
-	return cache{
+	return &cache{
 		data:  make(map[uint64]uint64, size),
-		mutex: &sync.Mutex{},
+		mu:    sync.Mutex{},
 		stats: cacheStats{},
 	}
 }
@@ -46,8 +46,8 @@ func (s *cache) shouldSubmit(change Change) (bool, error) {
 		return false, fmt.Errorf("hash proposed change: %w", err)
 	}
 
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	// try to diff against the storedHash snapshot
 	if storedHash, ok := s.data[idHash]; ok {
@@ -64,14 +64,14 @@ func (s *cache) shouldSubmit(change Change) (bool, error) {
 }
 
 func (s *cache) getStats() cacheStats {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return s.stats
 }
 
 func (s *cache) resetStats() cacheStats {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	old := s.stats
 	s.stats = cacheStats{} // zero it out
 	return old

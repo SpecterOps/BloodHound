@@ -31,9 +31,11 @@ func TestChangeCache(t *testing.T) {
 				Kinds:      nil,
 				Properties: &graph.Properties{Map: map[string]any{"a": 1}},
 			}
-			idHash      = change.IdentityKey()
-			dataHash, _ = change.Hash()
+			idHash        = change.IdentityKey()
+			dataHash, err = change.Hash()
 		)
+
+		require.NoError(t, err)
 
 		// simulate a full cache
 		c.data[idHash] = dataHash
@@ -51,9 +53,11 @@ func TestChangeCache(t *testing.T) {
 				Kinds:      nil,
 				Properties: &graph.Properties{Map: map[string]any{"a": 1}},
 			}
-			idHash      = oldChange.IdentityKey()
-			dataHash, _ = oldChange.Hash()
+			idHash        = oldChange.IdentityKey()
+			dataHash, err = oldChange.Hash()
 		)
+
+		require.NoError(t, err)
 
 		// simulate a populated cache
 		c.data[idHash] = dataHash
@@ -77,9 +81,11 @@ func TestChangeCache(t *testing.T) {
 				Kinds:      nil,
 				Properties: &graph.Properties{Map: map[string]any{"a": 1}},
 			}
-			idHash      = oldChange.IdentityKey()
-			dataHash, _ = oldChange.Hash()
+			idHash        = oldChange.IdentityKey()
+			dataHash, err = oldChange.Hash()
 		)
+
+		require.NoError(t, err)
 
 		// simulate a populated cache
 		c.data[idHash] = dataHash
@@ -119,9 +125,11 @@ func TestChangeCache(t *testing.T) {
 				Kind:         graph.StringKind("a"),
 				Properties:   &graph.Properties{Map: map[string]any{"a": 1}},
 			}
-			idHash      = oldChange.IdentityKey()
-			dataHash, _ = oldChange.Hash()
+			idHash        = oldChange.IdentityKey()
+			dataHash, err = oldChange.Hash()
 		)
+
+		require.NoError(t, err)
 
 		// simulate a populated cache
 		c.data[idHash] = dataHash

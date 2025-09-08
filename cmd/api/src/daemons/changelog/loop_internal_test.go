@@ -25,9 +25,9 @@ func TestLoop(t *testing.T) {
 		// Run one iteration
 		go func() { _ = loop.start(ctx) }()
 
-		time.Sleep(50 * time.Millisecond)
-
-		require.Len(t, db.flushedChanges, 2)
+		require.Eventually(t, func() bool {
+			return db.flushedLen() == 2
+		}, 500*time.Millisecond, 5*time.Millisecond)
 	})
 
 	t.Run("flushes edges on batch size", func(t *testing.T) {
@@ -43,9 +43,10 @@ func TestLoop(t *testing.T) {
 
 		// Run one iteration
 		go func() { _ = loop.start(ctx) }()
-		time.Sleep(50 * time.Millisecond)
 
-		require.Len(t, db.flushedChanges, 2)
+		require.Eventually(t, func() bool {
+			return db.flushedLen() == 2
+		}, 500*time.Millisecond, 5*time.Millisecond)
 	})
 
 	t.Run("no flush happens before batch size", func(t *testing.T) {
@@ -61,9 +62,11 @@ func TestLoop(t *testing.T) {
 
 		// Run one iteration
 		go func() { _ = loop.start(ctx) }()
-		time.Sleep(50 * time.Millisecond)
 
-		require.Len(t, db.flushedChanges, 0) // nothing was flushed because buffer never reached batch_size
+		// nothing was flushed because buffer never reached batch_size
+		require.Eventually(t, func() bool {
+			return db.flushedLen() == 0
+		}, 500*time.Millisecond, 5*time.Millisecond)
 	})
 
 	t.Run("timer triggers flush after inactivity", func(t *testing.T) {
@@ -71,16 +74,17 @@ func TestLoop(t *testing.T) {
 		defer cancel()
 
 		db := &mockFlusher{}
-		loop := newLoop(ctx, db, 3, 5*time.Second)
-		loop.flushInterval = 20 * time.Millisecond // best effort
+		loop := newLoop(ctx, db, 3, 20*time.Millisecond)
 
 		// Inject two changes. explicitly cast the NodeChange bc generics jank
 		require.True(t, channels.Submit(ctx, loop.writerC, Change(NodeChange{NodeID: "1"})))
 
 		go func() { _ = loop.start(ctx) }()
-		time.Sleep(50 * time.Millisecond) // wait longer than flush interval
 
-		require.Len(t, db.flushedChanges, 1)
+		require.Eventually(t, func() bool { // wait longer than flush interval
+			return db.flushedLen() == 1
+		}, 500*time.Millisecond, 25*time.Millisecond)
+
 	})
 }
 
@@ -89,9 +93,16 @@ type mockFlusher struct {
 	flushedChanges []Change
 }
 
-func (m *mockFlusher) flush(_ context.Context, changes []Change) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.flushedChanges = append(m.flushedChanges, changes...)
+func (s *mockFlusher) flush(_ context.Context, changes []Change) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.flushedChanges = append(s.flushedChanges, changes...)
 	return nil
+}
+
+// coderabbit suggestion. "directly reading flushedChanges without locking can race with the goroutine appending to it"
+func (s *mockFlusher) flushedLen() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.flushedChanges)
 }
