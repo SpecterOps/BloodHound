@@ -38,7 +38,7 @@ import {
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useEffect useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
