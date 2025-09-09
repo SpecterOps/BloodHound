@@ -221,13 +221,20 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                                 Automatic Certification
                                             </FormLabel>
                                         </span>
-                                        <span className='text-xs'>
-                                            Choose how new objects are certified. <em>Initial members</em> means only
-                                            the first set of objects in this selector are certified automatically.{' '}
-                                            <em>All members</em> means every object, including those tied to initial
-                                            members, is certified automatically. <em>Off</em> means all certification is
-                                            manual.
-                                        </span>
+                                        <p className='text-xs [&>p]:mt-2'>
+                                            Choose how new objects are certified.
+                                            <p>
+                                                <em>Initial members</em> - only the first set of objects in this
+                                                selector are certified automatically.
+                                            </p>
+                                            <p>
+                                                <em>All members</em> - every object, including those tied to initial
+                                                members, is certified automatically.
+                                            </p>
+                                            <p>
+                                                <em>Off</em> - all certification is manual.
+                                            </p>
+                                        </p>
                                         <Select
                                             data-testid='zone-management_save_selector-form_auto_certify-input'
                                             value={field.value?.toString()}
