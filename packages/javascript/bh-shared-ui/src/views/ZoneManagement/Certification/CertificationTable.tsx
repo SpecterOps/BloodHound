@@ -216,14 +216,14 @@ const CertificationTable: FC = () => {
         alignItems: 'center',
     };
 
-    const certOptions: DropdownOption[] = (() => {
-        const dropdownOptions: DropdownOption[] = [];
-        const order = [CertificationPending, CertificationManual, CertificationAuto, CertificationRevoked];
-        order.forEach((certType) => {
-            dropdownOptions.push({ key: certType as unknown as number, value: CertificationTypeMap[certType] });
-        });
-        return dropdownOptions;
-    })();
+    const certOptions: DropdownOption[] = [
+        CertificationPending,
+        CertificationManual,
+        CertificationAuto,
+        CertificationRevoked,
+    ].map((certType) => {
+        return { key: certType, value: CertificationTypeMap[certType] };
+    });
 
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
