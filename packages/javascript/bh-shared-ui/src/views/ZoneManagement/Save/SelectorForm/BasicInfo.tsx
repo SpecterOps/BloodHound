@@ -37,7 +37,7 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { CertificationTypeMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useState, useEffect } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';

@@ -39,7 +39,7 @@ const DropdownSelector: FC<{
     fullWidth?: boolean;
     onChange: (selection: DropdownOption) => void;
     align?: 'center' | 'start' | 'end';
-}> = ({ variant = 'primary', options, selectedText, align = 'start', onChange, fullWidth }) => {
+}> = ({ variant = 'primary', options, selectedText, align = 'start', onChange }) => {
     const [open, setOpen] = useState<boolean>(false);
 
     const handleClose = () => setOpen(false);
