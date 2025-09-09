@@ -211,11 +211,6 @@ const CertificationTable: FC = () => {
         estimateSize: () => 79,
     };
 
-    const buttonSpanStyle = {
-        display: 'flex',
-        alignItems: 'center',
-    };
-
     const certOptions: DropdownOption[] = [
         CertificationPending,
         CertificationManual,
@@ -236,7 +231,7 @@ const CertificationTable: FC = () => {
                     variant='transparent'
                     options={certOptions}
                     selectedText={
-                        <span style={buttonSpanStyle} className='gap-3'>
+                        <span className='flex items-center gap-3'>
                             <AppIcon.CertStatus size={24} /> Status
                         </span>
                     }
