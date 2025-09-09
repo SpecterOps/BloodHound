@@ -73,6 +73,7 @@ const Details: FC = () => {
     const location = useLocation();
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
+    const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { tierId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
@@ -88,13 +89,14 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const tiersQuery = useTagsQuery((tag) => tag.type === AssetGroupTagTypeTier);
+    const tiersQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeTier) });
 
-    const labelsQuery = useTagsQuery(
-        (tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned
-    );
+    const labelsQuery = useTagsQuery({
+        select: (tags) =>
+            tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
+    });
 
-    const selectorsQuery = useSelectorsInfiniteQuery(tagId);
+    const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
 
     const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
 
@@ -103,7 +105,7 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, tiersQuery, labelsQuery);
 
     return (
-        <div>
+        <div className='h-full'>
             <div className='flex mt-6'>
                 <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
                 <div className='w-1/3 flex justify-end'>
@@ -117,8 +119,8 @@ const Details: FC = () => {
                     )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+            <div className='flex gap-8 mt-4 h-full'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
                     {location.pathname.includes('label') ? (
                         <TagList
                             title={'Labels'}
@@ -141,10 +143,12 @@ const Details: FC = () => {
 
                     <SelectorsList
                         listQuery={selectorsQuery}
-                        selected={selectorId}
+                        onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
                         }}
+                        selected={selectorId}
+                        sortOrder={selectorsListSortOrder}
                     />
                     {selectorId !== undefined ? (
                         <MembersList
@@ -170,7 +174,7 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='basis-1/3'>
+                <div className='basis-1/3 h-full'>
                     <SelectedDetails />
                 </div>
             </div>

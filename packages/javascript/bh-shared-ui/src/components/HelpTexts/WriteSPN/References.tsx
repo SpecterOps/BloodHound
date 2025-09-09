@@ -22,18 +22,21 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
                 https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://blog.harmj0y.net/redteaming/kerberoasting-revisited/'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://blog.harmj0y.net/redteaming/kerberoasting-revisited/'>
                 https://blog.harmj0y.net/redteaming/kerberoasting-revisited/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4728'>
                 https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4728
             </Link>

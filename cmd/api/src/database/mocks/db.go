@@ -295,6 +295,21 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(ctx, stats any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), ctx, stats)
 }
 
+// CreateCompletedTask mocks base method.
+func (m *MockDatabase) CreateCompletedTask(ctx context.Context, task model.CompletedTask) (model.CompletedTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCompletedTask", ctx, task)
+	ret0, _ := ret[0].(model.CompletedTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCompletedTask indicates an expected call of CreateCompletedTask.
+func (mr *MockDatabaseMockRecorder) CreateCompletedTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCompletedTask", reflect.TypeOf((*MockDatabase)(nil).CreateCompletedTask), ctx, task)
+}
+
 // CreateCompositionInfo mocks base method.
 func (m *MockDatabase) CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
 	m.ctrl.T.Helper()
@@ -859,6 +874,22 @@ func (mr *MockDatabaseMockRecorder) GetAggregateADDataQualityStats(ctx, domainSI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAggregateADDataQualityStats), ctx, domainSIDs, start, end)
 }
 
+// GetAggregatedSelectorNodesCertification mocks base method.
+func (m *MockDatabase) GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAggregatedSelectorNodesCertification", ctx, sqlFilter, skip, limit)
+	ret0, _ := ret[0].([]model.AssetGroupSelectorNodeExpanded)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAggregatedSelectorNodesCertification indicates an expected call of GetAggregatedSelectorNodesCertification.
+func (mr *MockDatabaseMockRecorder) GetAggregatedSelectorNodesCertification(ctx, sqlFilter, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregatedSelectorNodesCertification", reflect.TypeOf((*MockDatabase)(nil).GetAggregatedSelectorNodesCertification), ctx, sqlFilter, skip, limit)
+}
+
 // GetAllAssetGroups mocks base method.
 func (m *MockDatabase) GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()
@@ -1212,9 +1243,9 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectors(ctx, sqlFilter, li
 }
 
 // GetAssetGroupTagSelectorsByTagId mocks base method.
-func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error) {
+func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) (model.AssetGroupTagSelectors, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, skip, limit)
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", ctx, assetGroupTagId)
 	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -1222,9 +1253,25 @@ func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 }
 
 // GetAssetGroupTagSelectorsByTagId indicates an expected call of GetAssetGroupTagSelectorsByTagId.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, skip, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTagId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagId", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagId), ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagId", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagId), ctx, assetGroupTagId)
+}
+
+// GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated mocks base method.
+func (m *MockDatabase) GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated", ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, sort, skip, limit)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated indicates an expected call of GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, sort, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated), ctx, assetGroupTagId, selectorSqlFilter, selectorSeedSqlFilter, sort, skip, limit)
 }
 
 // GetAssetGroupTags mocks base method.
@@ -1302,6 +1349,21 @@ func (m *MockDatabase) GetAzureDataQualityStats(ctx context.Context, tenantId st
 func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(ctx, tenantId, start, end, sort_by, limit, skip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAzureDataQualityStats), ctx, tenantId, start, end, sort_by, limit, skip)
+}
+
+// GetCompletedTasks mocks base method.
+func (m *MockDatabase) GetCompletedTasks(ctx context.Context, ingestJobId int64) ([]model.CompletedTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCompletedTasks", ctx, ingestJobId)
+	ret0, _ := ret[0].([]model.CompletedTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCompletedTasks indicates an expected call of GetCompletedTasks.
+func (mr *MockDatabaseMockRecorder) GetCompletedTasks(ctx, ingestJobId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompletedTasks", reflect.TypeOf((*MockDatabase)(nil).GetCompletedTasks), ctx, ingestJobId)
 }
 
 // GetConfigurationParameter mocks base method.

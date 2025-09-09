@@ -2725,6 +2725,15 @@
           }
         },
         {
+          "name": "X-File-Upload-Name",
+          "description": "File upload name header, used to specify the name of the file being uploaded to improve error reporting.",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
           "name": "file_upload_job_id",
           "description": "The ID for the file upload job.",
           "in": "path",
@@ -2757,6 +2766,65 @@
         "responses": {
           "202": {
             "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/file-upload/{file_upload_job_id}/completed-tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "file_upload_job_id",
+          "description": "The ID for the file upload job.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCompletedTasks",
+        "summary": "Get Completed Tasks",
+        "description": "Get information about the individual completed file upload tasks associated with a job",
+        "tags": [
+          "Collection Uploads",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.file-upload-job.completed-tasks"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -5325,21 +5393,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5429,15 +5489,7 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
+            "$ref": "#/components/parameters/query.environments"
           }
         ],
         "responses": {
@@ -5522,21 +5574,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5630,6 +5674,17 @@
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `name`, and `created_at`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
           },
           {
             "name": "auto_certify",
@@ -6501,6 +6556,11 @@
       }
     },
     "/api/v2/asset-group-tags/certifications": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
       "post": {
         "operationId": "CertifyOrRevokeObjects",
         "summary": "Certify or Revoke Certification of Objects",
@@ -6558,6 +6618,119 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "get": {
+        "operationId": "GetAssetGroupTagsCertifications",
+        "summary": "Get certifications for privilege zones",
+        "description": "Retrieves certification status for nodes selected by a zone",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "certified",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "certified_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "description": "For example, you can filter a date range of records by doing `created_at=gt:2025-07-08T17:00:00Z&created_at=lt:2025-07-30T17:00:00Z` (UTC)",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "environments",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-certification-response"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -7649,6 +7822,193 @@
           },
           "204": {
             "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/{saved_query_id}/export": {
+      "parameters": [
+        {
+          "name": "saved_query_id",
+          "description": "ID of the saved query",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ExportSavedQuery",
+        "summary": "Export a saved query",
+        "description": "Export an existing saved query by ID",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/import": {
+      "post": {
+        "operationId": "ImportSavedQueries",
+        "summary": "Import one or more cypher queries.",
+        "description": "Import one or more cypher queries.\n\nThe request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.\n\nThe underlying JSON file(s) is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "Request body should be a JSON or Zip file.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/zip": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "415": {
+            "$ref": "#/components/responses/unsupported-media-type"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/export": {
+      "parameters": [
+        {
+          "name": "scope",
+          "description": "Scope of saved queries, only the first scope parameter is used.",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "all",
+              "public",
+              "shared",
+              "owned"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ExportSavedQueries",
+        "summary": "Export one or more saved queries",
+        "description": "Export existing saved queries using the scope parameter.",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -16887,6 +17247,14 @@
           "$ref": "#/components/schemas/api.params.query.limit"
         }
       },
+      "query.environments": {
+        "name": "environments",
+        "description": "Environment IDs to filter response by",
+        "in": "query",
+        "schema": {
+          "$ref": "#/components/schemas/api.params.query.environments"
+        }
+      },
       "path.object-id": {
         "name": "object_id",
         "description": "The object id of the entity being operated on.",
@@ -18255,6 +18623,39 @@
               "last_ingest": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "total_files": {
+                "type": "integer"
+              },
+              "failed_files": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "model.file-upload-job.completed-tasks": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "parent_file_name": {
+                "type": "string"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -18865,6 +19266,12 @@
           }
         }
       },
+      "api.params.query.environments": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
       "model.asset-group-tags-selector-update": {
         "type": "object",
         "allOf": [
@@ -18939,6 +19346,63 @@
             }
           }
         }
+      },
+      "model.asset-group-tags-certification-response": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/api.response.pagination"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "The graph ID of this node"
+                        },
+                        "object_id": {
+                          "type": "string"
+                        },
+                        "environment_id": {
+                          "type": "string"
+                        },
+                        "primary_kind": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "asset_group_tag_id": {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "certified_by": {
+                          "type": "string"
+                        },
+                        "certified": {
+                          "type": "integer",
+                          "description": "0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "model.bh-graph.item-border": {
         "type": "object",
@@ -19976,7 +20440,8 @@
               "environment_id",
               "impact_percentage",
               "impact_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -20011,6 +20476,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           },
@@ -20030,7 +20498,8 @@
               "impact_count",
               "exposure_percentage",
               "exposure_count",
-              "accepted_until"
+              "accepted_until",
+              "asset_group"
             ],
             "properties": {
               "target_id": {
@@ -20089,6 +20558,9 @@
               "accepted_until": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "asset_group": {
+                "type": "string"
               }
             }
           }
@@ -20511,6 +20983,27 @@
               "format": "binary"
             },
             "example": "[this request has a binary response]"
+          }
+        }
+      },
+      "unsupported-media-type": {
+        "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/api.error-wrapper"
+            },
+            "example": {
+              "http_status": 415,
+              "timestamp": "2024-02-19T19:27:43.866Z",
+              "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "errors": [
+                {
+                  "context": "clients",
+                  "message": "invalid content-type: [application/incorrect]; Content type must be application/json or application/zip"
+                }
+              ]
+            }
           }
         }
       },

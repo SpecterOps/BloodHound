@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker/locale/en';
 import {
     AssetGroupTag,
     AssetGroupTagMemberInfo,
@@ -32,6 +32,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         id: tagId,
         name: `Tier-${tagId - 1}`,
         kind_id: faker.datatype.number(),
+        glyph: null,
         type: AssetGroupTagTypeTier,
         position: tagId,
         description: faker.random.words(1000),

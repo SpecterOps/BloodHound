@@ -20,32 +20,35 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://blog.harmj0y.net/redteaming/the-trustpocalypse/'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://blog.harmj0y.net/redteaming/the-trustpocalypse/'>
                 https://blog.harmj0y.net/redteaming/the-trustpocalypse/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.harmj0y.net/redteaming/a-guide-to-attacking-domain-trusts/'>
                 https://blog.harmj0y.net/redteaming/a-guide-to-attacking-domain-trusts/
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?p=1772'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?p=1772'>
                 https://adsecurity.org/?p=1772
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?tag=sidhistory'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://adsecurity.org/?tag=sidhistory'>
                 https://adsecurity.org/?tag=sidhistory
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/techniques/T1178/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1178/'>
                 https://attack.mitre.org/techniques/T1178/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/'>
                 https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/
             </Link>
