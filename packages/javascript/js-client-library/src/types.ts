@@ -129,7 +129,7 @@ export type CertificationType =
     | typeof CertificationManual
     | typeof CertificationAuto;
 
-export const CertificationTypeMap = {
+export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
     [CertificationManual]: 'Certified',
