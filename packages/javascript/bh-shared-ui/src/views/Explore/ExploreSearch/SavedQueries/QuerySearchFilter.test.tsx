@@ -133,4 +133,23 @@ describe('QuerySearchFilter', () => {
         expect(testDelete).toBeInTheDocument();
         expect(testDelete).toBeDisabled();
     });
+
+    it('does a thing', async () => {
+        const user = userEvent.setup();
+        render(
+            <QuerySearchFilter
+                queryFilterHandler={testHandleFilter}
+                exportHandler={testHandleExport}
+                deleteHandler={testHandleDeleteQuery}
+                categories={testCategories}
+                searchTerm={''}
+                platform={''}
+                categoryFilter={[]}
+                source={''}></QuerySearchFilter>
+        );
+        const searchInput = screen.getByPlaceholderText(/search/i);
+        expect(searchInput).toBeInTheDocument();
+        await user.type(searchInput, 'abc');
+        expect(testHandleFilter).toBeCalledTimes(3);
+    });
 });
