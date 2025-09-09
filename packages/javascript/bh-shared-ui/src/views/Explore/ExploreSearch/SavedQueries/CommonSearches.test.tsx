@@ -227,4 +227,67 @@ describe('CommonSearches', () => {
         expect(handleToggle).toBeCalledTimes(1);
         expect(screen.getByText(/chevron-down/i)).toBeInTheDocument();
     });
+
+    it('renders a search bar', async () => {
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={true}
+                />
+            </QueryClientProvider>
+        );
+        const searchInput = screen.getByPlaceholderText(/search/i);
+        expect(searchInput).toBeInTheDocument();
+        const allDomainAdminsLineItem = screen.getByText(/all domain admins/i);
+        expect(allDomainAdminsLineItem).toBeInTheDocument();
+    });
+
+    it('displays a reset button on failed search', async () => {
+        const user = userEvent.setup();
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={true}
+                />
+            </QueryClientProvider>
+        );
+        const searchInput = screen.getByPlaceholderText(/search/i);
+        expect(searchInput).toBeInTheDocument();
+        const allDomainAdminsLineItem = screen.getByText(/all domain admins/i);
+        expect(allDomainAdminsLineItem).toBeInTheDocument();
+        await user.type(searchInput, 'abc');
+        const resetButton = screen.getByRole('button', { name: /reset filters/i });
+        expect(resetButton).toBeInTheDocument();
+        expect(allDomainAdminsLineItem).not.toBeInTheDocument();
+        await user.click(resetButton);
+        expect(resetButton).not.toBeInTheDocument();
+    });
+
+    it('displays correct search results', async () => {
+        const user = userEvent.setup();
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={true}
+                />
+            </QueryClientProvider>
+        );
+        const searchInput = screen.getByPlaceholderText(/search/i);
+        const allDomainAdminsLineItem = screen.getByText(/all domain admins/i);
+        const azureLineItem = screen.getByText(/Devices with unsupported operating systems/i);
+        expect(azureLineItem).toBeInTheDocument();
+        expect(allDomainAdminsLineItem).toBeInTheDocument();
+        await user.type(searchInput, 'kerb');
+        expect(screen.getByText(/All Kerberoastable users/i)).toBeInTheDocument();
+        expect(azureLineItem).not.toBeInTheDocument();
+    });
 });

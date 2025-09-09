@@ -134,7 +134,7 @@ describe('QuerySearchFilter', () => {
         expect(testDelete).toBeDisabled();
     });
 
-    it('does a thing', async () => {
+    it('renders a search bar', async () => {
         const user = userEvent.setup();
         render(
             <QuerySearchFilter
