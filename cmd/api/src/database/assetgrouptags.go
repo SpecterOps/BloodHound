@@ -54,7 +54,8 @@ type AssetGroupTagSelectorData interface {
 	UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
-	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error)
+	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) (model.AssetGroupTagSelectors, int, error)
+	GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error)
 }
@@ -70,6 +71,7 @@ type AssetGroupTagSelectorNodeData interface {
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error)
+	GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -504,7 +506,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-		if selectors, _, err := bhdb.GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
+		if selectors, _, err := bhdb.GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTag.ID); err != nil {
 			return err
 		} else {
 			for _, selector := range selectors {
@@ -548,11 +550,16 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	return nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error) {
+func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) (model.AssetGroupTagSelectors, int, error) {
+	return s.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx, assetGroupTagId, model.SQLFilter{}, model.SQLFilter{}, model.Sort{}, 0, 0)
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error) {
 	var (
 		results         = model.AssetGroupTagSelectors{}
 		skipLimitString string
 		totalRowCount   int
+		orderSQL        string
 	)
 
 	var selectorSqlFilterStr string
@@ -565,6 +572,20 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 		selectorSeedSqlFilterStr = " WHERE " + selectorSeedSqlFilter.SQLString
 	}
 
+	if len(sort) == 0 {
+		sort = append(sort, model.SortItem{Column: "id", Direction: model.AscendingSortDirection})
+	}
+
+	var sortColumns []string
+	for _, item := range sort {
+		dirString := "ASC"
+		if item.Direction == model.DescendingSortDirection {
+			dirString = "DESC"
+		}
+		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
+	}
+	orderSQL = "ORDER BY " + strings.Join(sortColumns, ", ")
+
 	if limit > 0 {
 		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
 	}
@@ -573,15 +594,19 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
-	baseSqlStr := fmt.Sprintf(`
-		WITH selectors AS (
-			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
-		), seeds AS (
-			SELECT selector_id, type, value FROM %s %s
-		)`,
-		model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
+	var (
+		baseSqlStr = fmt.Sprintf(`
+			WITH selectors AS (
+				SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
+			), seeds AS (
+				SELECT selector_id, type, value FROM %s %s
+			)`,
+			model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
 
-	sqlStr := fmt.Sprintf("%s SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY selectors.id %s", baseSqlStr, skipLimitString)
+		filteredSqlStr = fmt.Sprintf(`, filtered AS ( SELECT DISTINCT s.id distinct_id, s.* FROM selectors s JOIN seeds sd ON sd.selector_id = s.id %s %s)`, orderSQL, skipLimitString)
+
+		sqlStr = fmt.Sprintf("%s %s SELECT * FROM seeds JOIN filtered f ON seeds.selector_id = f.distinct_id %s", baseSqlStr, filteredSqlStr, orderSQL)
+	)
 
 	if rows, err := s.db.WithContext(ctx).Raw(sqlStr, append(append([]any{assetGroupTagId}, selectorSqlFilter.Params...), selectorSeedSqlFilter.Params...)...).Rows(); err != nil {
 		return model.AssetGroupTagSelectors{}, 0, err
@@ -801,6 +826,102 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx con
 	}
 
 	return nodes, count, nil
+}
+
+func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
+	var (
+		nodes           []model.AssetGroupSelectorNodeExpanded
+		skipLimitString string
+		count           int
+	)
+
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = "WHERE " + sqlFilter.SQLString
+	}
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	// Fetch a paginated list of nodes matching the filter and unique per node - selectorID combo. Any potential dupes are eliminated by first selecting the rows
+	// with the lowest position zone, then finding the row with highest value of certified and grabbing the earliest created_at date seen across rows.
+	baseQuery := fmt.Sprintf(`
+		WITH nodes_associated_with_min_pos AS (
+			SELECT 
+				n.*, 
+				t.position,
+				s.asset_group_tag_id,
+				MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
+			FROM %s n
+			JOIN %s s ON n.selector_id = s.id
+			JOIN %s t ON s.asset_group_tag_id = t.id
+			WHERE t.type = %d
+		),
+		sort_on_created_at AS (
+			SELECT DISTINCT ON (sort.node_id)
+				sort.node_id,
+				sort.selector_id,
+				sort.certified,
+				sort.certified_by,
+				sort.source,
+				sort.node_primary_kind,
+				sort.node_environment_id,
+				sort.node_object_id,
+				sort.node_name,
+				sort.position,
+				sort.updated_at,
+				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,    -- make a column that tracks the earliest created_at for a given node_id
+				sort.asset_group_tag_id
+			FROM nodes_associated_with_min_pos sort
+			WHERE sort.position = sort.min_position_for_node
+			ORDER BY sort.node_id, sort.certified DESC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
+		)`,
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+		model.AssetGroupTag{}.TableName(),
+		model.AssetGroupTagTypeTier)
+
+	selectQuery := fmt.Sprintf(`
+		SELECT
+			hybrid.node_id,
+			hybrid.selector_id,
+			hybrid.certified,
+			hybrid.certified_by,  
+			hybrid.source,
+			hybrid.node_primary_kind,
+			hybrid.node_environment_id,
+			hybrid.node_object_id,
+			hybrid.node_name,
+			hybrid.position,
+			hybrid.updated_at,
+			hybrid.created_at,
+			hybrid.asset_group_tag_id
+		FROM sort_on_created_at hybrid
+		%s 
+		ORDER BY hybrid.node_id ASC
+		%s;`,
+		sqlFilter.SQLString,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(baseQuery + selectQuery).Find(&nodes); result.Error != nil {
+		return nil, 0, result.Error
+	} else {
+		// get a total count on the above query without pagination
+		countQuery := fmt.Sprintf(`
+			SELECT COUNT(*) 
+			FROM sort_on_created_at %s;`,
+			sqlFilter.SQLString)
+
+		if result := s.db.WithContext(ctx).Raw(baseQuery + countQuery).Scan(&count); result.Error != nil {
+			return nil, 0, result.Error
+		} else {
+			return nodes, count, nil
+		}
+	}
 }
 
 func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {

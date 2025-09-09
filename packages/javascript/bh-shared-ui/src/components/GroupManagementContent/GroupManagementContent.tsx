@@ -22,7 +22,7 @@ import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../utils/api';
-import AssetGroupEdit from '../AssetGroupEdit';
+import AssetGroupEdit from '../AssetGroupEdit/AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
 import { FILTERABLE_PARAMS } from '../AssetGroupFilters/AssetGroupFilters';
 import AssetGroupMemberList from '../AssetGroupMemberList';

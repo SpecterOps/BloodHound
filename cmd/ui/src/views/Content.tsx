@@ -19,6 +19,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
+    getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
 } from 'bh-shared-ui';
@@ -31,7 +32,6 @@ import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-
 const useStyles = makeStyles({
     content: {
         position: 'relative',
@@ -58,7 +58,7 @@ const Content: React.FC = () => {
 
     // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
-        condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired,
+        condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds(),
         acceptedTypes: ['application/json', 'application/zip'],
     });
 

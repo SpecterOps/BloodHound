@@ -20,7 +20,7 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://blog.netspi.com/attacking-azure-cloud-shell/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://blog.netspi.com/attacking-azure-cloud-shell/'>
                 https://blog.netspi.com/attacking-azure-cloud-shell/
             </Link>
         </Box>

@@ -99,8 +99,6 @@ export { default as FileIngest } from './FileIngest';
 export * from './FileUploadDialog';
 export { default as FileUploadDialog } from './FileUploadDialog';
 
-export * from './FinishedJobsTable';
-
 export * from './GenericErrorBoundaryFallback';
 export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryFallback';
 
@@ -136,6 +134,8 @@ export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 
 export * from './LoginForm';
 export { default as LoginForm } from './LoginForm';
+
+export * from './ManagedDatePicker';
 
 export * from './MaskedInput';
 

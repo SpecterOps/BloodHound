@@ -35,6 +35,7 @@ import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
+import { useListDisplayRoles } from '../../hooks';
 import { apiClient } from '../../utils';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
@@ -55,15 +56,12 @@ const UpdateUserForm: React.FC<{
         }
     );
 
-    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
-        apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
-    );
+    const getListDisplayRolesQuery = useListDisplayRoles();
 
     const listSSOProvidersQuery = useQuery(['listSSOProviders'], ({ signal }) =>
         apiClient.listSSOProviders({ signal }).then((res) => res.data.data)
     );
-
-    if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
+    if (getUserQuery.isLoading || getListDisplayRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
             <>
                 <DialogContent>
@@ -86,7 +84,7 @@ const UpdateUserForm: React.FC<{
         );
     }
 
-    if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
+    if (getUserQuery.isError || getListDisplayRolesQuery.isError || listSSOProvidersQuery.isError) {
         return (
             <>
                 <DialogContent>
@@ -119,7 +117,7 @@ const UpdateUserForm: React.FC<{
                 SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
                 roles: getUserQuery.data.roles?.map((role: any) => role.id) || [],
             }}
-            roles={getRolesQuery.data}
+            roles={getListDisplayRolesQuery.data}
             SSOProviders={listSSOProvidersQuery.data}
             hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}

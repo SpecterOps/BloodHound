@@ -22,7 +22,7 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.netspi.com/running-powershell-scripts-on-azure-vms/'>
                 https://blog.netspi.com/running-powershell-scripts-on-azure-vms/
             </Link>
