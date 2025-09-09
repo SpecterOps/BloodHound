@@ -84,7 +84,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                <div className='mt-4' hidden>
+                <div className='mt-4'>
                     <DetailField label='Certification' value={data.require_certify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
