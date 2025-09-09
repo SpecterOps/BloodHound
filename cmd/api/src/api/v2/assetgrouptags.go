@@ -71,8 +71,9 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
-type patchAssetGroupTagSelectorRequest struct {
+type assetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
+	AutoCertify *int    `json:"auto_certify"`
 	Description *string `json:"description"`
 	Disabled    *bool   `json:"disabled"`
 }
@@ -168,36 +169,51 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 	return nil
 }
 
+func validateAutoCertifyInputWithFallback(assetGroupTag model.AssetGroupTag, autoCertify *int) error {
+	if autoCertify == nil {
+		return nil
+	}
+
+	if assetGroupTag.Type != model.AssetGroupTagTypeTier && *autoCertify != 0 {
+		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones)
+	}
+
+	switch *autoCertify {
+	case model.Disabled, model.AllParentsChildrenAndSeeds, model.SeedsOnly:
+		return nil
+	default:
+		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyInvalid)
+	}
+}
+
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		sel = model.AssetGroupTagSelector{
-			AutoCertify: null.BoolFrom(false), // default if unset
-		}
-		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		createSelectorRequest assetGroupTagSelectorRequest
+		assetTagIdStr         = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
+	} else if err := json.NewDecoder(request.Body).Decode(&createSelectorRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if errs := validation.Validate(sel); len(errs) > 0 {
+	} else if errs := validation.Validate(createSelectorRequest.AssetGroupTagSelector); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if err := validateSelectorSeeds(s.GraphQuery, sel.Seeds); err != nil {
+	} else if err := validateSelectorSeeds(s.GraphQuery, createSelectorRequest.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
+	} else if err := validateAutoCertifyInputWithFallback(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, *createSelectorRequest.Description, false, true, *createSelectorRequest.AutoCertify, createSelectorRequest.Seeds); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Request analysis if scheduled analysis isn't enabled
-		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if !config.Enabled {
+		if !config.Enabled {
 			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
@@ -209,7 +225,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  patchAssetGroupTagSelectorRequest
+		selUpdateReq  assetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -220,7 +236,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -247,9 +263,13 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			}
 		}
 
-		// we can update AutoCertify on a default selector
-		if selUpdateReq.AutoCertify.Valid {
-			selector.AutoCertify = selUpdateReq.AutoCertify
+		// we can update AutoCertify on a default selector (as long as the selector is not tied to label)
+		if selUpdateReq.AutoCertify != nil {
+			if err := validateAutoCertifyInputWithFallback(assetGroupTag, selUpdateReq.AutoCertify); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			selector.AutoCertify = *selUpdateReq.AutoCertify
 		}
 
 		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != nil || len(selUpdateReq.Seeds) > 0) {

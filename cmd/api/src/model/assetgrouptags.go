@@ -78,8 +78,11 @@ const (
 )
 
 const (
-	TierZeroGlyph = "gem"
-	OwnedGlyph    = "skull"
+	TierZeroGlyph              = "gem"
+	OwnedGlyph                 = "skull"
+	Disabled                   = 0
+	AllParentsChildrenAndSeeds = 1
+	SeedsOnly                  = 2
 )
 
 type AssetGroupTag struct {
@@ -211,7 +214,7 @@ type AssetGroupTagSelector struct {
 	DisabledBy      null.String `json:"disabled_by"`
 	Name            string      `json:"name" validate:"required"`
 	Description     string      `json:"description"`
-	AutoCertify     null.Bool   `json:"auto_certify"`
+	AutoCertify     int         `json:"auto_certify"`
 	IsDefault       bool        `json:"is_default"`
 	AllowDisable    bool        `json:"allow_disable"`
 

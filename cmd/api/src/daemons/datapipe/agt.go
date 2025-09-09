@@ -413,17 +413,8 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
 	var (
 		countInserted int
-
-		certified   = model.AssetGroupCertificationPending
-		certifiedBy null.String
-
 		nodesToUpdate []model.AssetGroupSelectorNode
 	)
-
-	if selector.AutoCertify.ValueOrZero() {
-		certified = model.AssetGroupCertificationAuto
-		certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
-	}
 
 	// 1. Grab the graph nodes
 	nodesWithSrcSet := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod, -1)
@@ -433,7 +424,18 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
-			primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node.Node)
+			var (
+				certified                                 = model.AssetGroupCertificationPending
+				certifiedBy                               null.String
+				primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(node.Node)
+			)
+
+			// 2 and 1 will be values inside the model
+			if (selector.AutoCertify == 2 && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == 1 {
+				certified = model.AssetGroupCertificationAuto
+				certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
+			}
+
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
 				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
@@ -441,7 +443,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationPending) ||
+			} else if (certified != 0 && oldNode.Certified == model.AssetGroupCertificationPending) ||
 				oldNode.NodeName != displayName ||
 				oldNode.NodePrimaryKind != primaryKind ||
 				oldNode.NodeEnvironmentId != envId ||
@@ -456,10 +458,18 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		// Update the selected nodes that need updating
 		if len(nodesToUpdate) > 0 {
 			for _, oldSelectorNode := range nodesToUpdate {
+				var (
+					certified   = model.AssetGroupCertificationPending
+					certifiedBy null.String
+				)
+
 				// Protect property updates from overwriting existing certification
 				if oldSelectorNode.Certified != model.AssetGroupCertificationPending {
 					certified = oldSelectorNode.Certified
 					certifiedBy = oldSelectorNode.CertifiedBy
+				} else if (selector.AutoCertify == 2 && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == 1 {
+					certified = model.AssetGroupCertificationAuto
+					certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 				}
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
@@ -571,7 +581,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 				for _, nodeDb := range selectedNodes {
 					if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
 						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
-						if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
+						if tag.RequireCertify.Bool && nodeDb.Certified <= model.AssetGroupCertificationRevoked {
 							continue
 						}
 
