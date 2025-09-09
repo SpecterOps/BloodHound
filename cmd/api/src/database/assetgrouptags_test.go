@@ -48,7 +48,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = 1
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -89,7 +89,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = 1
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -131,8 +131,8 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 		updateDescription = "updated description"
 		isDefault         = false
 		allowDisable      = true
-		autoCertify       = null.BoolFrom(false)
-		updateAutoCert    = null.BoolFrom(true)
+		autoCertify       = 0
+		updateAutoCert    = 2
 		disabledTime      = null.TimeFrom(time.Date(2025, time.March, 25, 12, 0, 0, 0, time.UTC))
 		testSeeds         = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
@@ -829,16 +829,16 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", "", null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, 1, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, 2, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, 1, []model.SelectorSeed{})
 	require.NoError(t, err)
 
 	t.Run("single item count", func(t *testing.T) {
@@ -880,7 +880,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = null.BoolFrom(false)
+		autoCertify   = 1
 		test1Selector = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -889,7 +889,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			},
 			AllowDisable: true,
-			AutoCertify:  autoCertify,
+			AutoCertify:  1,
 		}
 		test2Selector = model.AssetGroupTagSelector{
 			Name:            "test2 selector name",
@@ -899,7 +899,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 				{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 			},
 			AllowDisable: true,
-			AutoCertify:  autoCertify,
+			AutoCertify:  1,
 		}
 	)
 
@@ -1017,7 +1017,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 		testMemberId    = 1
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = 2
 		test1Selector   = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -1043,7 +1043,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = 2
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -1111,7 +1111,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = null.BoolFrom(false)
+		autoCertify   = 0
 		test1Selector = model.AssetGroupTagSelector{
 			Name:        "test selector name",
 			Description: "test description",
@@ -1159,7 +1159,7 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 		source               = 1
 		isDefault            = false
 		allowDisable         = true
-		autoCertify          = null.BoolFrom(false)
+		autoCertify          = 2
 		test1Selector        = model.AssetGroupTagSelector{
 			Name:        "test selector name",
 			Description: "test description",
@@ -1279,7 +1279,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 		source          = 1
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = null.BoolFrom(false)
+		autoCertify     = 2
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
