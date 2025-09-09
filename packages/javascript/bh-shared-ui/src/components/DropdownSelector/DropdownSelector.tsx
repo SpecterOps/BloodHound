@@ -27,6 +27,7 @@ import {
     TooltipTrigger,
 } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { PopperContentProps } from '@radix-ui/react-popper';
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
@@ -37,7 +38,7 @@ const DropdownSelector: FC<{
     options: DropdownOption[];
     selectedText: JSX.Element | string;
     onChange: (selection: DropdownOption) => void;
-    align?: 'center' | 'start' | 'end';
+    align?: PopperContentProps['align'];
 }> = ({ variant = 'primary', options, selectedText, align = 'start', onChange }) => {
     const [open, setOpen] = useState<boolean>(false);
 
