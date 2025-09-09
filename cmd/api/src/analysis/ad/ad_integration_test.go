@@ -1638,3 +1638,70 @@ func findNodeByID(nodes []arrows.Node, id string) (*arrows.Node, bool) {
 	}
 	return nil, false
 }
+
+func TestProtectAdminGroups(t *testing.T) {
+	var (
+		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
+
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/ProtectAdminGroupsHarness.json")
+	require.NoError(t, err)
+
+	// Split edges into test edges and the other edges
+	testEdges := []arrows.Edge{}
+	otherEdges := []arrows.Edge{}
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.ProtectAdminGroups.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
+	require.NoError(t, err)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		if _, err := adAnalysis.PostProtectAdminGroups(testCtx.Context(), graphDB); err != nil {
+			t.Fatalf("error creating ProtectAdminGroups edges in integration test; %v", err)
+		} else {
+			if err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.ProtectAdminGroups)
+				})); err != nil {
+					t.Fatalf("error fetching ProtectAdminGroups edges in integration test; %v", err)
+				} else {
+					require.Equal(t, len(testEdges), len(results))
+				}
+
+				for _, testEdge := range testEdges {
+					if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
+						t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
+					} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
+						t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
+					} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+					})); err != nil || len(fromGraphNodeId) != 1 {
+						t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
+					} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+					})); err != nil || len(toGraphNodeId) != 1 {
+						t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
+					} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.ProtectAdminGroups); err != nil {
+						t.Fatalf("error fetching ProtectAdminGroups edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
+					} else {
+						require.NotNil(t, edge)
+					}
+				}
+
+				return nil
+			}); err != nil {
+				t.Fatalf("error in ProtectAdminGroups integration test; %v", err)
+			}
+		}
+		assert.NoError(t, err)
+		return nil
+	})
+}
