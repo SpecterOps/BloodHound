@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -72,13 +72,14 @@ func (s NodeChange) Hash() (uint64, error) {
 		props = graph.NewProperties()
 	}
 
-	if propertiesHash, err := props.Hash(ignoredPropertiesKeys); err != nil {
+	h := xxhash.New()
+
+	if err := props.HashInto(h, ignoredPropertiesKeys); err != nil {
 		return 0, fmt.Errorf("node properties hash error: %w", err)
-	} else if kindsHash, err := s.Kinds.Hash(); err != nil {
+	} else if err := s.Kinds.HashInto(h); err != nil {
 		return 0, fmt.Errorf("node kinds hash error: %w", err)
 	} else {
-		combined := append(propertiesHash, kindsHash...)
-		return xxhash.Sum64(combined), nil
+		return h.Sum64(), nil
 	}
 }
 
@@ -136,10 +137,12 @@ func (s EdgeChange) Hash() (uint64, error) {
 		props = graph.NewProperties()
 	}
 
-	if dataHash, err := props.Hash(ignoredPropertiesKeys); err != nil {
+	h := xxhash.New()
+
+	if err := props.HashInto(h, ignoredPropertiesKeys); err != nil {
 		return 0, fmt.Errorf("edge properties hash error: %w", err)
 	} else {
-		return xxhash.Sum64(dataHash), nil
+		return h.Sum64(), nil
 	}
 }
 
