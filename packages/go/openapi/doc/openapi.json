@@ -5866,25 +5866,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "seeds": {
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "name",
-                      "seeds"
-                    ]
-                  }
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-response",
+                "required": [
+                  "name",
+                  "seeds"
                 ]
               }
             }
@@ -6018,19 +6003,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "disabled": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
               }
             }
           }
@@ -18764,6 +18737,16 @@
           }
         }
       },
+      "null.time.response": {
+        "type": "string",
+        "nullable": true,
+        "format": "date-time",
+        "description": "An RFC-3339 formatted string"
+      },
+      "null.string.response": {
+        "type": "string",
+        "nullable": true
+      },
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
@@ -18775,41 +18758,8 @@
           }
         }
       },
-      "model.asset-group-tags-selector-create": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "auto_certify": {
-            "type": "boolean"
-          },
-          "seeds": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-            }
-          }
-        }
-      },
-      "null.time.response": {
-        "type": "string",
-        "nullable": true,
-        "format": "date-time",
-        "description": "An RFC-3339 formatted string"
-      },
-      "null.string.response": {
-        "type": "string",
-        "nullable": true
-      },
       "model.asset-group-tags-selector-response": {
         "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-          },
           {
             "type": "object",
             "properties": {
@@ -18839,11 +18789,26 @@
               "disabled_by": {
                 "$ref": "#/components/schemas/null.string.response"
               },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "auto_certify": {
+                "type": "integer"
+              },
               "is_default": {
                 "type": "boolean"
               },
               "allow_disable": {
                 "type": "boolean"
+              },
+              "seeds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                }
               }
             }
           }
@@ -18966,22 +18931,6 @@
         "items": {
           "type": "string"
         }
-      },
-      "model.asset-group-tags-selector-update": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "disabled": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
       },
       "model.asset-group-tags-history": {
         "type": "object",

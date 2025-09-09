@@ -142,7 +142,6 @@ get:
     500:
       $ref: './../responses/internal-server-error.yaml'
 
-
 post:
   operationId: CreateAssetGroupTagSelector
   summary: Create Asset Group Tag Selector
@@ -157,17 +156,10 @@ post:
     content:
       application/json:
         schema:
-          allOf:
-            - $ref: './../schemas/model.asset-group-tags-selector-create.yaml'
-            - type: object
-              properties:
-                name:
-                  type: "string"
-                seeds:
-                  type: "array"
-              required:
-                - name
-                - seeds
+          $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
+          required:
+            - name
+            - seeds
 
   responses:
     201:
@@ -179,7 +171,6 @@ post:
             properties:
               data:
                 $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
-
     400:
       $ref: './../responses/bad-request.yaml'
     401:

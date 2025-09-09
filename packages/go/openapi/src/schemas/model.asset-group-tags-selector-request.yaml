@@ -15,14 +15,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: object
-properties:
-  name:
-    type: string
-  description:
-    type: string
-  auto_certify:
-    type: boolean
-  seeds:
-    type: array
-    items:
-      $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
+$ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+auto_certify:
+  type: integer
+description:
+  type: string
+disabled:
+  type: boolean
+
