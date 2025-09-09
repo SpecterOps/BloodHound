@@ -73,12 +73,6 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
         },
-        {
-            label: 'Quick Upload',
-            icon: <AppIcon.Upload size={24} />,
-            onClick: () => setShowFileIngestDialog(true),
-            testId: 'quick-file-ingest',
-        },
     ];
 
     if (hasPermissionToUpload) {
