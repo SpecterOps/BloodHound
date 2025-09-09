@@ -28,7 +28,7 @@ const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+                data: createAuthStateWithPermissions([Permission.GRAPH_DB_INGEST]).user,
             })
         );
     }),

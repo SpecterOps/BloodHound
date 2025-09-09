@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
     AssetGroupTagMember,
@@ -240,8 +241,15 @@ export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCount
 export type SavedQuery = {
     id: number;
     name: string;
+    description: string;
     query: string;
     user_id: string;
+};
+
+export type SavedQueryPermissionsResponse = {
+    shared_to_user_ids: string[];
+    query_id: number | undefined;
+    public: boolean;
 };
 
 export type FileIngestJob = TimestampFields & {
@@ -358,3 +366,5 @@ export type ScheduledJobDisplay = {
 };
 
 export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
+
+export type GetExportQueryResponse = AxiosResponse<Blob>;

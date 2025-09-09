@@ -61,6 +61,27 @@ const server = setupServer(
                 data: [],
             })
         );
+    }),
+    rest.get(`/api/v2/self`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { id: '4e09c965-65bd-4f15-ae71-5075a6fed14b', roles: ['Administrator'] },
+            })
+        );
+    }),
+    rest.get(`/api/v2/saved-queries/:id/permissions`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    rest.get(`/api/v2/saved-queries`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
@@ -108,8 +129,8 @@ describe('ExploreSearch rendering per tab', async () => {
 
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
-        expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /run/ })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /app-icon-info/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {
