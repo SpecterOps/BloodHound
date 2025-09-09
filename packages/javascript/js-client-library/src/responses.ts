@@ -368,3 +368,39 @@ export type ScheduledJobDisplay = {
 export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
 
 export type GetExportQueryResponse = AxiosResponse<Blob>;
+
+export type Client = {
+    configured_user: string;
+    events: {
+        id: number;
+        client_id: string;
+        session_collection: boolean;
+        local_group_collection: boolean;
+        ad_structure_collection: boolean;
+        cert_services_collection: boolean;
+        ca_registry_collection: boolean;
+        dc_registry_collection: boolean;
+        all_trusted_domains: boolean;
+        ous: OuDetails[];
+        domains: DomainDetails[];
+        rrule: string;
+    }[];
+    hostname: string;
+    id: string;
+    ip_address: string;
+    last_checkin: string;
+    name: string;
+    token: unknown;
+    current_job_id: null | number;
+    current_task_id: null | number;
+    current_job: ScheduledJobDisplay;
+    current_task: ScheduledJobDisplay;
+    completed_job_count: number;
+    completed_task_count: number;
+    domain_controller: null;
+    version: string;
+    user_sid: string;
+    type: string;
+};
+
+export type GetClientResponse = PaginatedResponse<Client[]>;
