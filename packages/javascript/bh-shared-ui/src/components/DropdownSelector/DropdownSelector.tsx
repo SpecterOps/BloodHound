@@ -36,7 +36,6 @@ const DropdownSelector: FC<{
     variant?: ButtonProps['variant'];
     options: DropdownOption[];
     selectedText: JSX.Element | string;
-    fullWidth?: boolean;
     onChange: (selection: DropdownOption) => void;
     align?: 'center' | 'start' | 'end';
 }> = ({ variant = 'primary', options, selectedText, align = 'start', onChange }) => {
