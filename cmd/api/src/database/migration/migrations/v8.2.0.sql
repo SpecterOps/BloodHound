@@ -25,3 +25,28 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+-- Migration that changes the auto_certify column to an enum-like integer flag so that we can
+-- adjust certification behavior on object-based selectors & autocertify for default selectors
+ALTER TABLE asset_group_tag_selectors ADD COLUMN IF NOT EXISTS auto_certify_int INTEGER NOT NULL DEFAULT 0;
+
+-- 0 means disabled 
+-- 1 is enabled for all objects (seeds, children, parents) 
+-- 2 is enabled for seeds only
+UPDATE asset_group_tag_selectors selectors
+SET auto_certify_int = CASE
+    WHEN selectors.is_default THEN 2                      
+    WHEN selectors.auto_certify = TRUE THEN 1             
+    WHEN EXISTS (                                         
+        SELECT *
+        FROM asset_group_tag_selector_seeds seeds
+        WHERE seeds.type = 1 AND seeds.selector_id = selectors.id
+    ) THEN 2
+    ELSE 0
+END
+FROM asset_group_tags tags
+WHERE selectors.asset_group_tag_id = tags.id;
+
+-- Replace old column with the new one (Do this step once you know you have the above correct and done)
+--ALTER TABLE asset_group_tag_selectors DROP COLUMN auto_certify_int;
+-- ALTER TABLE asset_group_tag_selectors RENAME COLUMN auto_certify_int TO auto_certify;

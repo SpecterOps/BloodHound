@@ -207,7 +207,7 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(ctx, tagType, user, name
 }
 
 // CreateAssetGroupTagSelector mocks base method.
-func (m *MockDatabase) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name, description string, isDefault, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
+func (m *MockDatabase) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name, description string, isDefault, allowDisable bool, autoCertify int, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssetGroupTagSelector", ctx, assetGroupTagId, user, name, description, isDefault, allowDisable, autoCertify, seeds)
 	ret0, _ := ret[0].(model.AssetGroupTagSelector)
