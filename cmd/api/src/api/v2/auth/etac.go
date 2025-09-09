@@ -64,8 +64,8 @@ func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironment
 							Environment: environment,
 						})
 					}
-					user.EnvironmentAccessControl = environments
 				}
+				user.EnvironmentAccessControl = environments
 			}
 		}
 	}
