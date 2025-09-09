@@ -74,6 +74,7 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if fileInfo, err := assetFile.Stat(); err != nil || fileInfo == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		assetFile.Close()
 	} else {
 		defer assetFile.Close()
 
