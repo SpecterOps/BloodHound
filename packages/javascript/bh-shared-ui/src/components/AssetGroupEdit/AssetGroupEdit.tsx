@@ -25,7 +25,7 @@ import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
-import { SubHeader } from '../../views/Explore';
+import { SubHeader } from '../../views/Explore/fragments';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import AssetGroupChangelogTable from './AssetGroupChangelogTable';
 import { AssetGroupChangelog, AssetGroupChangelogEntry, ChangelogAction } from './types';

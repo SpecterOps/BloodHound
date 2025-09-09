@@ -20,6 +20,7 @@ import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
     Permission,
+    getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
     usePermissions,
@@ -33,7 +34,6 @@ import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-
 const useStyles = makeStyles({
     content: {
         position: 'relative',
@@ -60,9 +60,11 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
+    const permitFileUploadModalLaunch =
+        !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds() && !!hasPermissionToUpload;
     // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
-        condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired && !!hasPermissionToUpload,
+        condition: () => permitFileUploadModalLaunch,
         acceptedTypes: ['application/json', 'application/zip'],
     });
 

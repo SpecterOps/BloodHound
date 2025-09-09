@@ -104,6 +104,8 @@ export * from './useSavedQueries';
 
 export * from './useSearch';
 
+export * from './usePrebuiltQueries';
+
 export * from './useSelectedTagName';
 
 export * from './useShowNavBar';
