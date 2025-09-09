@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -201,6 +202,208 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			actual, err := api.CheckUserAccessToEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
+
+			require.NoError(t, err)
+			assert.Equal(t, testCase.expected, actual)
+		})
+	}
+}
+
+func Test_FilterUserEnvironments(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+		mockUser     model.User
+	}
+	type input struct {
+		environments []string
+		user         model.User
+	}
+	type testData struct {
+		name       string
+		setupMocks func(t *testing.T, mock *mock)
+		input      input
+		expected   []string
+	}
+
+	userUuid, err := uuid.NewV4()
+
+	require.NoError(t, err)
+
+	testCases := []testData{
+		{
+			name: "Positive Test - Feature Flag off, return all envs",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+			},
+			input: input{
+				environments: []string{"1", "2", "3"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
+			expected: []string{"1", "2", "3"},
+		},
+		{
+			name: "Positive Test - Exact Match",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				envs := []database.EnvironmentAccess{
+					{
+						UserID:      userUuid.String(),
+						Environment: "1",
+					},
+					{
+						UserID:      userUuid.String(),
+						Environment: "2",
+					},
+					{
+						UserID:      userUuid.String(),
+						Environment: "3",
+					},
+				}
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+			},
+			input: input{
+				environments: []string{"1", "2", "3"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
+			expected: []string{"1", "2", "3"},
+		},
+		{
+			name: "Positive Test - Partial Match",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				envs := []database.EnvironmentAccess{
+					{
+						UserID:      userUuid.String(),
+						Environment: "1",
+					},
+					{
+						UserID:      userUuid.String(),
+						Environment: "2",
+					},
+					{
+						UserID:      userUuid.String(),
+						Environment: "3",
+					},
+				}
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+			},
+			input: input{
+				environments: []string{"1", "2"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			}, expected: []string{"1", "2"},
+		},
+		{
+			name: "Negative Test - Extra Environment",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				envs := []database.EnvironmentAccess{
+					{
+						UserID:      userUuid.String(),
+						Environment: "1",
+					},
+					{
+						UserID:      userUuid.String(),
+						Environment: "2",
+					},
+					{
+						UserID:      userUuid.String(),
+						Environment: "3",
+					},
+				}
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+			},
+			input: input{
+				environments: []string{"1", "2", "4"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
+			expected: []string{"1", "2"},
+		},
+		{
+			name: "Negative Test - No Allowed Environments",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				envs := []database.EnvironmentAccess{}
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+			},
+			input: input{
+				environments: []string{"1", "2", "4"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: false,
+				},
+			},
+			expected: []string{},
+		},
+		{
+			name: "Positive Test - All Environments True",
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+
+			},
+			input: input{
+				environments: []string{"1", "2", "4"},
+				user: model.User{
+					Unique: model.Unique{
+						ID: userUuid,
+					},
+					AllEnvironments: true,
+				},
+			},
+			expected: []string{"1", "2", "4"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockUser:     testCase.input.user,
+			}
+
+			testCase.setupMocks(t, mocks)
+
+			actual, err := api.FilterUserEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
 
 			require.NoError(t, err)
 			assert.Equal(t, testCase.expected, actual)

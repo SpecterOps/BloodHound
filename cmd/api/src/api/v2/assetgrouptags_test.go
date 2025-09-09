@@ -25,6 +25,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+
 	"strings"
 	"testing"
 	"time"
@@ -96,9 +97,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, database.ErrNotFound)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -107,71 +105,16 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					apitest.Equal(output, 0, len(resp.Tags))
 				},
 			},
-			// {
-			// 	Name: "InvalidIncludeCounts",
-			// 	Input: func(input *apitest.Input) {
-			// 		user := setupUser()
-			// 		userCtx := setupUserCtx(user)
-			// 		apitest.SetContext(input, userCtx)
-			// 		apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "blah")
-			// 	},
-			// 	Setup: func() {
-			// 		mockDB.EXPECT().
-			// 			GetAssetGroupTags(gomock.Any(), gomock.Any()).
-			// 			Return(model.AssetGroupTags{}, database.ErrNotFound)
-			// 		mockDB.EXPECT().
-			// 			GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-			// 			Return(appcfg.FeatureFlag{Enabled: false}, nil)
-			// 	},
-			// 	Test: func(output apitest.Output) {
-			// 		apitest.StatusCode(output, http.StatusBadRequest)
-			// 	},
-			// },
 			{
-				Name: "DatabaseError - Error getting eTAC flag ",
-				Input: func(input *apitest.Input) {
-					user := setupUser()
-					user.AllEnvironments = true
-					userCtx := setupUserCtx(user)
-
-					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.AddQueryParam(input, api.QueryParameterEnvironments, "test")
-				},
-				Setup: func() {
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: true}, errors.New("db error"))
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "unable to get feature flag")
-				},
-			},
-			{
-				Name: "User does not have access to environment error",
+				Name: "InvalidIncludeCounts",
 				Input: func(input *apitest.Input) {
 					user := setupUser()
 					userCtx := setupUserCtx(user)
 					apitest.SetContext(input, userCtx)
-					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.AddQueryParam(input, api.QueryParameterEnvironments, "test")
-				},
-				Setup: func() {
-					envs := []database.EnvironmentAccess{
-						{
-							Environment: "not test",
-						},
-					}
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).
-						Return(envs, nil)
-
+					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "blah")
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusForbidden)
+					apitest.StatusCode(output, http.StatusBadRequest)
 				},
 			},
 			{
@@ -205,9 +148,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, database.ErrNotFound)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -233,9 +173,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
 						}, nil)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -264,9 +201,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
 						}, nil)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -294,9 +228,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeTier},
 						}, nil)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -322,6 +253,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					userCtx := setupUserCtx(user)
 					apitest.SetContext(input, userCtx)
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
+					apitest.AddQueryParam(input, api.QueryParameterEnvironments, "env")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -373,6 +305,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					userCtx := setupUserCtx(user)
 					apitest.SetContext(input, userCtx)
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
+					apitest.AddQueryParam(input, api.QueryParameterEnvironments, "env")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -395,9 +328,6 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						CountNodesByKind(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(int64(4), nil).
 						Times(1)
-					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					expectedMemberCounts := map[int]int64{

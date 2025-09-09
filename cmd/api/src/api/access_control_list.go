@@ -18,9 +18,11 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, user model.User, environments ...string) (bool, error) {
@@ -48,4 +50,39 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 	}
 
 	return true, nil
+}
+
+func FilterUserEnvironments(ctx context.Context, db database.Database, user model.User, environments ...string) ([]string, error) {
+	flag, err := db.GetFlagByKey(ctx, appcfg.FeatureEnvironmentAccessControl)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get feature flag: %w", err)
+	}
+
+	// If feature flag is off, return all environments
+	if !flag.Enabled {
+		return environments, nil
+	}
+
+	if user.AllEnvironments {
+		return environments, nil
+	}
+
+	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	allowedMap := make(map[string]struct{}, len(allowedList))
+	for _, envAccess := range allowedList {
+		allowedMap[envAccess.Environment] = struct{}{}
+	}
+
+	filtered := make([]string, 0, len(environments))
+	for _, env := range environments {
+		if _, ok := allowedMap[env]; ok {
+			filtered = append(filtered, env)
+		}
+	}
+
+	return filtered, nil
 }

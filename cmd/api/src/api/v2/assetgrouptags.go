@@ -91,13 +91,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
-		if hasAccess, err := checkUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-			return
-		} else if !hasAccess {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseForbidden, request), response)
-			return
-		}
+
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupTag{}, name); err != nil {
 				api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
@@ -118,11 +112,13 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 		} else if tags, err := s.DB.GetAssetGroupTags(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 		} else {
+
 			var (
 				resp = GetAssetGroupTagsResponse{
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
 				selectorCounts map[int]int
+				filteredEnvs   []string
 			)
 
 			if paramIncludeCounts {
@@ -134,15 +130,22 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
+				envs, err := api.FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
+				if err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+					return
+				}
+				filteredEnvs = envs
 			}
 
 			for _, tag := range tags {
+
 				filters := []graph.Criteria{}
 				tview := AssetGroupTagView{AssetGroupTag: tag}
-				if paramIncludeCounts {
+				if paramIncludeCounts && len(filteredEnvs) > 0 {
 					filters = append(filters, query.Or(
-						query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-						query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+						query.In(query.NodeProperty(ad.DomainSID.String()), filteredEnvs),
+						query.In(query.NodeProperty(azure.TenantID.String()), filteredEnvs),
 					))
 					if n, err := s.GraphQuery.CountNodesByKind(rCtx, filters, tag.ToKind()); err != nil {
 						api.HandleDatabaseError(request, response, err)
@@ -556,18 +559,17 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if hasAccess, err := checkUserAccessToEnvironments(request.Context(), s.DB, user, environmentIds...); err != nil {
+		filteredEnvs, err := api.FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
+		if err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 			return
-		} else if !hasAccess {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseForbidden, request), response)
-			return
 		}
+
 		filters := []graph.Criteria{}
-		if len(environmentIds) > 0 {
+		if len(filteredEnvs) > 0 {
 			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+				query.In(query.NodeProperty(ad.DomainSID.String()), filteredEnvs),
+				query.In(query.NodeProperty(azure.TenantID.String()), filteredEnvs),
 			))
 		}
 
