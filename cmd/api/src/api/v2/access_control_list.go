@@ -23,7 +23,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-type UpdateUserETACListRequest struct {
+type UpdateUserEnvironmentRequest struct {
 	Environments    []string `json:"environments"`
 	AllEnvironments bool     `json:"all_environments"`
 }

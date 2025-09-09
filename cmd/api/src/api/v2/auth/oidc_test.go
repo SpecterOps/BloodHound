@@ -45,7 +45,7 @@ import (
 
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
+		mockCtrl             = gomock.NewController(t)
 		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 	defer mockCtrl.Finish()
@@ -166,9 +166,9 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
+		mockCtrl             = gomock.NewController(t)
 		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
-		baseProvider      = model.SSOProvider{
+		baseProvider         = model.SSOProvider{
 			Type: model.SessionAuthProviderOIDC,
 			Name: "Gotham Net",
 			OIDCProvider: &model.OIDCProvider{
@@ -390,9 +390,9 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 				}, nil)
 				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
 			}, expected: expected{
-			responseCode:   http.StatusFound,
-			responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
-		},
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+			},
 		},
 		{
 			name: "Success: OIDC Login, Redirect to Provider - Found",

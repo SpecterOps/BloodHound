@@ -71,7 +71,7 @@ type UpdateUserRequest struct {
 	SSOProviderID  null.Int32 `json:"sso_provider_id"`
 	IsDisabled     *bool      `json:"is_disabled,omitempty"`
 
-	EnvironmentControlList *UpdateUserETACListRequest `json:"environment_control_list,omitempty"`
+	EnvironmentAccessControl *UpdateUserEnvironmentRequest `json:"environment_access_control,omitempty"`
 }
 
 type CreateUserRequest struct {

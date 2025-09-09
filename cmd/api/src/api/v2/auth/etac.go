@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
@@ -35,59 +34,56 @@ import (
 
 // handleETACRequest will modify the user passed in to assign an etac list or grant all environment access
 // and will return an error on bad requests
-func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserETACListRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
-	// Administrators and Power Users may not have an ETAC list applied to them
-	if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-		return errors.New(api.ErrorResponseETACInvalidRoles)
-	}
-
-	// The user may not request all environments and have an ETAC list applied to them
-	if len(etacRequest.Environments) != 0 && etacRequest.AllEnvironments {
-		return errors.New(api.ErrorResponseETACBadRequest)
-	}
-
+// Administrators and Power Users may not have an ETAC list applied to them
+// The user may not request all environments and have an ETAC list applied to them
+func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironmentRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
 	user.AllEnvironments = etacRequest.AllEnvironments
 
-	if etacRequest.AllEnvironments {
+	if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
+		return errors.New(api.ErrorResponseETACInvalidRoles)
+	} else if len(etacRequest.Environments) != 0 && etacRequest.AllEnvironments {
+		return errors.New(api.ErrorResponseETACBadRequest)
+	} else if etacRequest.AllEnvironments {
 		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
 	} else {
-		nodes, err := graphDB.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{
+		if nodes, err := graphDB.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{
 			ad.Domain, azure.Tenant,
-		}, etacRequest.Environments...)
-		if err != nil {
+		}, etacRequest.Environments...); err != nil {
 			return fmt.Errorf("error fetching environments: %w", err)
-		}
-
-		objectIDs, err := nodeSetToObjectIDSlice(nodes)
-		if err != nil {
-			return err
-		}
-
-		environments := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
-		for _, environment := range etacRequest.Environments {
-			if !slices.Contains(objectIDs, environment) {
-				return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
+		} else {
+			if objectIDs, err := nodeSetToObjectIDSlice(nodes); err != nil {
+				return err
+			} else {
+				environments := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
+				for _, environment := range etacRequest.Environments {
+					if _, ok := objectIDs[environment]; !ok {
+						return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
+					} else {
+						environments = append(environments, model.EnvironmentAccess{
+							UserID:      user.ID.String(),
+							Environment: environment,
+						})
+					}
+					user.EnvironmentAccessControl = environments
+				}
 			}
-			environments = append(environments, model.EnvironmentAccess{
-				UserID:      user.ID.String(),
-				Environment: environment,
-			})
 		}
-		user.EnvironmentAccessControl = environments
 	}
 
 	return nil
 }
 
-func nodeSetToObjectIDSlice(set graph.NodeSet) ([]string, error) {
-	objectIDs := make([]string, 0, len(set))
-	for _, node := range set {
-		objectID, err := node.Properties.Get(common.ObjectID.String()).String()
-		if err != nil {
-			return objectIDs, err
-		}
+func nodeSetToObjectIDSlice(set graph.NodeSet) (map[string]bool, error) {
+	var (
+		objectIDs = make(map[string]bool)
+	)
 
-		objectIDs = append(objectIDs, objectID)
+	for _, node := range set {
+		if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+			return objectIDs, err
+		} else {
+			objectIDs[objectID] = true
+		}
 	}
 
 	return objectIDs, nil

@@ -374,9 +374,8 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
 			userTemplate.AllEnvironments = false
 
-			if createUserRequest.EnvironmentControlList != nil {
-				err := handleETACRequest(request.Context(), *createUserRequest.EnvironmentControlList, roles, &userTemplate, s.GraphQuery)
-				if err != nil {
+			if createUserRequest.EnvironmentAccessControl != nil {
+				if err := handleETACRequest(request.Context(), *createUserRequest.EnvironmentAccessControl, roles, &userTemplate, s.GraphQuery); err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 					return
 				}
@@ -509,20 +508,18 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if etacFeatureFlag.Enabled {
-			if updateUserRequest.EnvironmentControlList != nil {
+			if updateUserRequest.EnvironmentAccessControl != nil {
 				// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
 				effectiveRoles := user.Roles
 				if updateUserRequest.Roles != nil {
 					effectiveRoles = roles
 				}
 
-				err := handleETACRequest(request.Context(), *updateUserRequest.EnvironmentControlList, effectiveRoles, &user, s.GraphQuery)
-				if err != nil {
+				if err := handleETACRequest(request.Context(), *updateUserRequest.EnvironmentAccessControl, effectiveRoles, &user, s.GraphQuery); err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 					return
 				}
 			}
-
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {

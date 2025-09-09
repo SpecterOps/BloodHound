@@ -40,7 +40,7 @@ properties:
     description: ID of the SSO provider for this user
   is_disabled:
     type: boolean
-  environment_control_list:
+  environment_access_control:
     type: object
     additionalProperties: false
     description: Sets an environment access control list to the user. When all_environments is set to true, a user's existing environment list is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.
