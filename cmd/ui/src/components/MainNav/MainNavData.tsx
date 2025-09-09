@@ -60,7 +60,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     });
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
-    const primaryList = [
+    const primaryList: MainNavData['primaryList'] = [
         {
             label: 'Explore',
             icon: <AppIcon.LineChart size={24} />,
