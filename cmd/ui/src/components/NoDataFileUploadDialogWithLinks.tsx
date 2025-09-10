@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FileUploadDialog } from 'bh-shared-ui';
+import { FileUploadDialog, QuickUploadExclusionIds } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
