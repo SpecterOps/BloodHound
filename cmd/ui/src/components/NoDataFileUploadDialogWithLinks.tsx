@@ -36,7 +36,7 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
             headerText='Upload Data to Start Mapping Your Environment'
             description={
                 // This id prevents the drag event from triggering a second quick upload dialog (see getExcludedIds function)
-                <div className='font-normal' id='default-no-data-import-query-dialog'>
+                <div className='font-normal' id={QuickUploadExclusionIds.DefaultNoDataDialog}>
                     <p className='pb-3'>
                         Easily upload data by dragging and dropping files anywhere in the interface, or use the upload
                         button in the main navigation.
