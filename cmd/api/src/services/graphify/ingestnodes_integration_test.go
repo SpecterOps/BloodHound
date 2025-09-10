@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-//go:build slow_integration
+//go:build integration
 
 package graphify_test
 
@@ -21,255 +21,162 @@ import (
 	"context"
 	"testing"
 
-	"github.com/peterldowns/pgtestdb"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/ein"
-	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
-	"github.com/specterops/dawgs"
-	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
-func setupTestSuite(t *testing.T) IntegrationTestSuite {
-	t.Helper()
+// testNodeData represents a test node for ingestion
+type testNodeData struct {
+	ObjectID   string
+	SourceKind graph.Kind
+	Labels     graph.Kinds
+	Properties map[string]any
+}
 
-	var (
-		ctx      = context.Background()
-		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
-	)
-
-	//#region Setup for dbs
-	pool, err := pg.NewPool(connConf.URL())
-	require.NoError(t, err)
-
-	gormDB, err := database.OpenDatabase(connConf.URL())
-	require.NoError(t, err)
-
-	db := database.NewBloodhoundDB(gormDB, auth.NewIdentityResolver())
-
-	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: 1024 * 1024 * 1024 * 2,
-		ConnectionString:      connConf.URL(),
-		Pool:                  pool,
-	})
-	require.NoError(t, err)
-
-	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema())
-	require.NoError(t, err)
-
-	err = db.Migrate(ctx)
-	require.NoError(t, err)
-
-	err = graphDB.AssertSchema(ctx, graphschema.DefaultGraphSchema())
-	require.NoError(t, err)
-
-	ingestSchema, err := upload.LoadIngestSchema()
-	require.NoError(t, err)
-
-	//#endregion
-
-	cfg := config.Configuration{}
-
-	cl := changelog.NewChangelog(graphDB, db, changelog.DefaultOptions())
-	cl.InitCacheForTest(ctx)
-	cl.Start(ctx)
-
-	return IntegrationTestSuite{
-		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
-		GraphDB:         graphDB,
-		BHDatabase:      db,
-		Changelog:       cl,
+// createTestNode creates a standard test node
+func createTestNode() testNodeData {
+	return testNodeData{
+		ObjectID:   "ABC123",
+		SourceKind: graph.StringKind("hellobase"),
+		Labels:     graph.Kinds{graph.StringKind("labelA"), graph.StringKind("labelB")},
+		Properties: map[string]any{
+			"hello": "world",
+			"1":     2,
+		},
 	}
 }
 
-// new setup helper that does exactly what IngestNode needs
+// ingestTestNode performs node ingestion with optional changelog
+func ingestTestNode(t *testing.T, suite IntegrationTestSuite, nodeData testNodeData, withChangelog bool) {
+	t.Helper()
+
+	ctx := suite.Context
+	propertyBag := graph.NewProperties().SetAll(nodeData.Properties)
+
+	err := suite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+		var ingestCtx *graphify.IngestContext
+
+		if withChangelog {
+			ingestCtx = graphify.NewIngestContext(ctx,
+				graphify.WithBatchUpdater(batch),
+				graphify.WithChangeManager(suite.Changelog))
+		} else {
+			ingestCtx = graphify.NewIngestContext(ctx,
+				graphify.WithBatchUpdater(batch))
+		}
+
+		return graphify.IngestNode(ingestCtx, nodeData.SourceKind,
+			ein.IngestibleNode{
+				ObjectID:    nodeData.ObjectID,
+				Labels:      nodeData.Labels,
+				PropertyMap: propertyBag.Map,
+			})
+	})
+
+	require.NoError(t, err)
+}
+
+// verifyNodeExists verifies that exactly one node exists with the specific ObjectID and expected properties
+func verifyNodeExists(t *testing.T, suite IntegrationTestSuite, nodeData testNodeData) {
+	t.Helper()
+
+	ctx := suite.Context
+	// Filter for the specific node by ObjectID
+	nodeFilter := query.And(
+		query.Not(query.Kind(query.Node(), common.MigrationData)),
+		query.Equals(query.NodeProperty(common.ObjectID.String()), nodeData.ObjectID),
+	)
+
+	err := suite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		count, err := tx.Nodes().Filter(nodeFilter).Count()
+		require.NoError(t, err)
+		require.Equal(t, int64(1), count, "Expected exactly one node with ObjectID %s", nodeData.ObjectID)
+
+		return tx.Nodes().Filter(nodeFilter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				// Verify ObjectID
+				objectid, _ := node.Properties.Get(common.ObjectID.String()).String()
+				require.Equal(t, nodeData.ObjectID, objectid)
+
+				// Verify LastSeen was added
+				lastseen, _ := node.Properties.Get(common.LastSeen.String()).String()
+				require.NotEmpty(t, lastseen)
+
+				// Verify kinds (should include source kind + labels)
+				expectedKinds := nodeData.Labels.Add(nodeData.SourceKind)
+				for _, actualKind := range node.Kinds {
+					require.Contains(t, expectedKinds, actualKind)
+				}
+
+				// Verify original properties are preserved
+				for key, expectedValue := range nodeData.Properties {
+					actualValue := node.Properties.Get(key)
+					require.NotNil(t, actualValue, "Property %s should exist", key)
+					require.EqualValues(t, expectedValue, actualValue.Any())
+				}
+			}
+			return nil
+		})
+	})
+
+	require.NoError(t, err)
+}
+
 func TestIngestNode(t *testing.T) {
 	t.Parallel()
 
-	var (
-		ctx       = context.Background()
-		testSuite = setupTestSuite(t)
-		// when counting and querying the nodes table, we want to filter out this default node that always gets created on graph startup
-		filter = query.Not(query.Kind(query.Node(), common.MigrationData))
-	)
-
+	// Use the shared setup function from the main integration test file
+	testSuite := setupIntegrationTestSuite(t, "fixtures")
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
+	// Initialize changelog for tests that need it
+	cl := changelog.NewChangelog(testSuite.GraphDB, testSuite.BHDatabase, changelog.DefaultOptions())
+	cl.InitCacheForTest(testSuite.Context)
+	cl.Start(testSuite.Context)
+	testSuite.Changelog = cl
+	defer cl.Stop(context.Background())
+
 	t.Run("ingested node gets created", func(t *testing.T) {
-
-		var (
-			ingestedPropertyBag = graph.NewProperties().SetAll(map[string]any{
-				"hello": "world",
-				"1":     2,
-			})
-			// clone here because ingestNode decorates the incoming propety bag with additional properties like lastseen
-			expectedPropertyBag = ingestedPropertyBag.Clone()
-			sourceKind          = graph.StringKind("hellobase")
-			ingestedKinds       = graph.Kinds{graph.StringKind("labelA"), graph.StringKind("labelB")}
-		)
-
-		// open up a batchOp
-		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
-			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithBatchUpdater(batch))
-
-			// function under test
-			err := graphify.IngestNode(ingestCtx, sourceKind,
-				ein.IngestibleNode{
-					ObjectID:    "ABC123",
-					Labels:      ingestedKinds,
-					PropertyMap: ingestedPropertyBag.Map,
-				})
-
-			require.NoError(t, err)
-
-			return nil
-		})
-
-		require.NoError(t, err)
-
-		err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			count, err := tx.Nodes().Filter(filter).Count()
-			require.NoError(t, err)
-			require.Equal(t, int64(1), count)
-
-			tx.Nodes().Filter(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-				for node := range cursor.Chan() {
-					objectid, _ := node.Properties.Get(common.ObjectID.String()).String()
-					require.Equal(t, "ABC123", objectid)
-
-					lastseen, _ := node.Properties.Get(common.LastSeen.String()).String()
-					require.NotEmpty(t, lastseen)
-
-					// kinds assert
-					expectedKinds := ingestedKinds.Add(sourceKind)
-					actualKinds := node.Kinds
-					for _, actualKind := range actualKinds {
-						require.Contains(t, expectedKinds, actualKind)
-					}
-
-					actualPropertyBag := node.Properties.Map
-					for k, v := range expectedPropertyBag.Map {
-						require.EqualValues(t, v, actualPropertyBag[k])
-					}
-
-				}
-				return nil
-			})
-			return nil
-		})
-
-		require.NoError(t, err)
+		nodeData := createTestNode()
+		ingestTestNode(t, testSuite, nodeData, false)
+		verifyNodeExists(t, testSuite, nodeData)
 	})
 
 	t.Run("ingested node gets created with changelog on", func(t *testing.T) {
-
-		var (
-			ingestedPropertyBag = graph.NewProperties().SetAll(map[string]any{
-				"hello": "world",
-				"1":     2,
-			})
-			// clone here because ingestNode decorates the incoming propety bag with additional properties like lastseen
-			expectedPropertyBag = ingestedPropertyBag.Clone()
-			sourceKind          = graph.StringKind("hellobase")
-			ingestedKinds       = graph.Kinds{graph.StringKind("labelA"), graph.StringKind("labelB")}
-		)
-
-		// open up a batchOp
-		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
-			// inject changelog here to simulate it being toggled on
-			ingestCtx := graphify.NewIngestContext(
-				testSuite.Context,
-				graphify.WithChangeManager(testSuite.Changelog),
-				graphify.WithBatchUpdater(batch))
-
-			// function under test
-			err := graphify.IngestNode(ingestCtx, sourceKind,
-				ein.IngestibleNode{
-					ObjectID:    "ABC123",
-					Labels:      ingestedKinds,
-					PropertyMap: ingestedPropertyBag.Map,
-				})
-
-			require.NoError(t, err)
-
-			return nil
-		})
-
-		require.NoError(t, err)
-
-		err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			count, err := tx.Nodes().Filter(filter).Count()
-			require.NoError(t, err)
-			require.Equal(t, int64(1), count)
-
-			tx.Nodes().Filter(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-				for node := range cursor.Chan() {
-					objectid, _ := node.Properties.Get(common.ObjectID.String()).String()
-					require.Equal(t, "ABC123", objectid)
-
-					lastseen, _ := node.Properties.Get(common.LastSeen.String()).String()
-					require.NotEmpty(t, lastseen)
-
-					// kinds assert
-					expectedKinds := ingestedKinds.Add(sourceKind)
-					actualKinds := node.Kinds
-					for _, actualKind := range actualKinds {
-						require.Contains(t, expectedKinds, actualKind)
-					}
-
-					actualPropertyBag := node.Properties.Map
-					for k, v := range expectedPropertyBag.Map {
-						require.EqualValues(t, v, actualPropertyBag[k])
-					}
-
-				}
-				return nil
-			})
-			return nil
-		})
-
-		require.NoError(t, err)
+		nodeData := createTestNode()
+		nodeData.ObjectID = "ABC124" // Use different ID to avoid conflicts
+		ingestTestNode(t, testSuite, nodeData, true)
+		verifyNodeExists(t, testSuite, nodeData)
 	})
 
 	t.Run("ingested node gets deduped with changelog on", func(t *testing.T) {
-		var (
-			ingestedPropertyBag = graph.NewProperties().SetAll(map[string]any{
-				"hello": "world",
-				"1":     2,
-			})
-			// clone here because ingestNode decorates the incoming propety bag with additional properties like lastseen
-			expectedPropertyBag = ingestedPropertyBag.Clone()
-			sourceKind          = graph.StringKind("hellobase")
-			ingestedKinds       = graph.Kinds{graph.StringKind("labelA"), graph.StringKind("labelB")}
-		)
+		nodeData := createTestNode()
+		nodeData.ObjectID = "ABC125" // Use different ID to avoid conflicts
 
-		// open up a batchOp
+		// Ingest the same node twice with changelog enabled
+		ctx := testSuite.Context
+		propertyBag := graph.NewProperties().SetAll(nodeData.Properties)
+
 		err := testSuite.GraphDB.BatchOperation(ctx, func(batch graph.Batch) error {
-			// inject changelog here to simulate it being toggled on
-			ingestCtx := graphify.NewIngestContext(
-				testSuite.Context,
+			ingestCtx := graphify.NewIngestContext(ctx,
 				graphify.WithBatchUpdater(batch),
 				graphify.WithChangeManager(testSuite.Changelog))
 
-			// function under test. ingest same node twice
 			node := ein.IngestibleNode{
-				ObjectID:    "ABC123",
-				Labels:      ingestedKinds,
-				PropertyMap: ingestedPropertyBag.Map,
+				ObjectID:    nodeData.ObjectID,
+				Labels:      nodeData.Labels,
+				PropertyMap: propertyBag.Map,
 			}
-			err := graphify.IngestNode(ingestCtx, sourceKind, node)
+
+			// Ingest same node twice - second should be deduplicated
+			err := graphify.IngestNode(ingestCtx, nodeData.SourceKind, node)
 			require.NoError(t, err)
-			err = graphify.IngestNode(ingestCtx, sourceKind, node)
+			err = graphify.IngestNode(ingestCtx, nodeData.SourceKind, node)
 			require.NoError(t, err)
 
 			return nil
@@ -277,37 +184,7 @@ func TestIngestNode(t *testing.T) {
 
 		require.NoError(t, err)
 
-		err = testSuite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			count, err := tx.Nodes().Filter(filter).Count()
-			require.NoError(t, err)
-			require.Equal(t, int64(1), count)
-
-			tx.Nodes().Filter(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-				for node := range cursor.Chan() {
-					objectid, _ := node.Properties.Get(common.ObjectID.String()).String()
-					require.Equal(t, "ABC123", objectid)
-
-					lastseen, _ := node.Properties.Get(common.LastSeen.String()).String()
-					require.NotEmpty(t, lastseen)
-
-					// kinds assert
-					expectedKinds := ingestedKinds.Add(sourceKind)
-					actualKinds := node.Kinds
-					for _, actualKind := range actualKinds {
-						require.Contains(t, expectedKinds, actualKind)
-					}
-
-					actualPropertyBag := node.Properties.Map
-					for k, v := range expectedPropertyBag.Map {
-						require.EqualValues(t, v, actualPropertyBag[k])
-					}
-
-				}
-				return nil
-			})
-			return nil
-		})
-
-		require.NoError(t, err)
+		// Verify only one node exists (deduplication worked)
+		verifyNodeExists(t, testSuite, nodeData)
 	})
 }
