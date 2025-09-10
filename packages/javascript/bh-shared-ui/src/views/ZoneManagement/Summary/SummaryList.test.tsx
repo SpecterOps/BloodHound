@@ -16,14 +16,14 @@ vi.mock('../../../components/AppIcon/Icons/DownArrow', () => ({
 }));
 
 vi.mock('./SummaryCard', () => ({
-    default: ({ title }: { title: string }) => <div data-testid='zone-management_summary-list_card'>{title}</div>,
+    default: ({ title }: { title: string }) => <div data-testid='zone-management_zone-list_card'>{title}</div>,
 }));
 
 vi.mock('../Details/utils', () => ({
     itemSkeletons: [
-        () => <li key='skeleton-1' data-testid='zone-management_summary-list_loading-skeleton' />,
-        () => <li key='skeleton-2' data-testid='zone-management_summary-list_loading-skeleton' />,
-        () => <li key='skeleton-3' data-testid='zone-management_summary-list_loading-skeleton' />,
+        () => <li key='skeleton-1' data-testid='zone-management_zone-list_loading-skeleton' />,
+        () => <li key='skeleton-2' data-testid='zone-management_zone-list_loading-skeleton' />,
+        () => <li key='skeleton-3' data-testid='zone-management_zone-list_loading-skeleton' />,
     ],
 }));
 
@@ -83,7 +83,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => { }} />);
 
-        expect(screen.getAllByTestId('zone-management_tiers-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('zone-management_zones-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('shows an error message when query fails', async () => {
@@ -105,7 +105,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => { }} />);
 
-        const cards = await screen.findAllByTestId('zone-management_summary-list_card');
+        const cards = await screen.findAllByTestId('zone-management_zone-list_card');
         expect(cards[0]).toHaveTextContent('Mock Tier 1');
         expect(cards[1]).toHaveTextContent('Mock Zone 2');
     });
@@ -132,7 +132,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={onSelect} />);
 
-        await userEvent.click(await screen.findByTestId('zone-management_summary-list_card'));
+        await userEvent.click(await screen.findByTestId('zone-management_zone-list_card'));
         expect(onSelect).toHaveBeenCalledWith(mockData[0].id);
     });
 });

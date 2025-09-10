@@ -49,7 +49,7 @@ describe('Details', async () => {
 
         expect(await screen.findByText(/Zones/)).toBeInTheDocument();
 
-        expect(await screen.findByTestId('zone-management_details_tiers-list')).toBeInTheDocument();
+        expect(await screen.findByTestId('zone-management_details_zones-list')).toBeInTheDocument();
         expect(await screen.findByTestId('zone-management_details_selectors-list')).toBeInTheDocument();
         expect(await screen.findByTestId('zone-management_details_members-list')).toBeInTheDocument();
     });
@@ -69,9 +69,9 @@ describe('Details', async () => {
         const objectsListItems = await within(objects).findAllByRole('listitem');
 
         longWait(() => {
-            expect(screen.getByTestId('zone-management_details_tiers-list')).toBeInTheDocument();
+            expect(screen.getByTestId('zone-management_details_zones-list')).toBeInTheDocument();
             // The Tier Zero zone is selected by default
-            expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+            expect(screen.getByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
         });
 
         // No selector is selected to begin with
@@ -106,7 +106,7 @@ describe('Details', async () => {
 
         longWait(() => {
             // The Tier Zero tier is still selected when selecting an object that is within it
-            expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+            expect(screen.getByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
         });
 
         // No selector is selected
@@ -147,7 +147,7 @@ describe('Details', async () => {
             });
 
             // The Tier Zero zone is still selected when selecting a selector that is within it
-            expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+            expect(screen.getByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
 
             expect(await screen.findByRole('button', { name: /Edit/ })).toBeInTheDocument();
         });
@@ -187,7 +187,7 @@ describe('Details', async () => {
             });
 
             expect(
-                await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-3')
+                await screen.findByTestId('zone-management_details_zones-list_active-zones-item-3')
             ).toBeInTheDocument();
         });
     });

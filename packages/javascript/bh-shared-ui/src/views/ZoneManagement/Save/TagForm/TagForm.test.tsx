@@ -284,13 +284,13 @@ describe('Tag Form', () => {
         const nameInput = await screen.findByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
         longWait(() => {
-            expect(nameInput).toHaveValue('Zone Zero');
+            expect(nameInput).toHaveValue('Tier Zero');
         });
 
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
         longWait(() => {
-            expect(descriptionInput).toHaveValue('Zone Zero Description');
+            expect(descriptionInput).toHaveValue('Tier Zero Description');
         });
 
         // The delete button should not render when editing T0

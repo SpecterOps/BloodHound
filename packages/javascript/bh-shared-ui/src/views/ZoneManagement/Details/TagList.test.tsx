@@ -130,7 +130,7 @@ describe('List', async () => {
     it('renders a non sortable list for Zones', async () => {
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
-        expect(await screen.findByTestId('zone-management_details_tiers-list_static-order')).toBeInTheDocument();
+        expect(await screen.findByTestId('zone-management_details_zones-list_static-order')).toBeInTheDocument();
         expect(screen.queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
     });
 
@@ -152,7 +152,7 @@ describe('List', async () => {
 
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
-        const listItem = await screen.findByTestId('zone-management_details_tiers-list_item-2');
+        const listItem = await screen.findByTestId('zone-management_details_zones-list_item-2');
         expect(listItem).toBeInTheDocument();
 
         const icon = within(listItem).queryByTestId('analysis_disabled_icon');
@@ -168,7 +168,7 @@ describe('List', async () => {
 
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
-        const listItem = screen.getByTestId('zone-management_details_tiers-list_item-2');
+        const listItem = screen.getByTestId('zone-management_details_zones-list_item-2');
         expect(listItem).toBeInTheDocument();
 
         const icon = await within(listItem).findByTestId('analysis_disabled_icon');
@@ -184,11 +184,11 @@ describe('List', async () => {
 
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
-        const listItem1 = screen.getByTestId('zone-management_details_tiers-list_item-1');
+        const listItem1 = screen.getByTestId('zone-management_details_zones-list_item-1');
         expect(listItem1).toBeInTheDocument();
         expect(await within(listItem1).queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
 
-        const listItem2 = screen.getByTestId('zone-management_details_tiers-list_item-2');
+        const listItem2 = screen.getByTestId('zone-management_details_zones-list_item-2');
         expect(listItem2).toBeInTheDocument();
 
         expect(await within(listItem2).findByTestId('analysis_disabled_icon')).toBeInTheDocument();
@@ -197,6 +197,6 @@ describe('List', async () => {
     it('handles rendering a selected item', async () => {
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
-        expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        expect(await screen.findByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
     });
 });

@@ -59,11 +59,12 @@ export const AssetGroupTagTypeOwned = 3 as const;
 
 export type AssetGroupTagTypes =
     | typeof AssetGroupTagTypeZone
+
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 
 export const AssetGroupTagTypesMap = {
-    1: 'tier',
+    1: 'zone',
     2: 'label',
     3: 'owned',
 } as const;

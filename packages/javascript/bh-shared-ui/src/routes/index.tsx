@@ -20,7 +20,7 @@ export const ROUTE_PRIVILEGE_ZONES_ROOT = '/privilege-zones';
 
 export const ROUTE_PRIVILEGE_ZONES_SUMMARY = '/summary';
 export const ROUTE_PRIVILEGE_ZONES_SUMMARY_ZONE_DETAILS = `/zone/:zoneId/summary`;
-export const ROUTE_PRIVILEGE_ZONES_SUMMARY_LABEL_DETAILS = `label/:labelId/summary`;
+export const ROUTE_PRIVILEGE_ZONES_SUMMARY_LABEL_DETAILS = `/label/:labelId/summary`;
 
 export const ROUTE_PRIVILEGE_ZONES_DETAILS = '/details';
 export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/zone/:zoneId/details`;

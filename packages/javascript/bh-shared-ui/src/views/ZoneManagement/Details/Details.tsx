@@ -28,7 +28,11 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import { DEFAULT_PRIVILEGE_ZONES_ROUTE, ROUTE_PRIVILEGE_ZONES_DETAILS, ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
+import {
+    DEFAULT_PRIVILEGE_ZONES_ROUTE,
+    ROUTE_PRIVILEGE_ZONES_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ROOT,
+} from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -80,7 +84,15 @@ const Details: FC = () => {
     const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
     const tagKind = zoneId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
-        { path: ROUTE_PRIVILEGE_ZONES_ROOT + '/' + DEFAULT_PRIVILEGE_ZONES_ROUTE + tagKind + ROUTE_PRIVILEGE_ZONES_DETAILS, caseSensitive: false, end: false },
+        {
+            path:
+                ROUTE_PRIVILEGE_ZONES_ROOT + '/' +
+                DEFAULT_PRIVILEGE_ZONES_ROUTE +
+                tagKind +
+                ROUTE_PRIVILEGE_ZONES_DETAILS,
+            caseSensitive: false,
+            end: false,
+        },
     ]);
 
     const tagId = labelId === undefined ? zoneId : labelId;
@@ -138,7 +150,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${id}/details`);
+                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${id}/details`);
                             }}
                         />
                     )}
@@ -148,7 +160,7 @@ const Details: FC = () => {
                         onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(
-                                `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
+                                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
                             );
                         }}
                         selected={selectorId}
@@ -160,7 +172,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
+                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -172,7 +184,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
+                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}

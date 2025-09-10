@@ -35,7 +35,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import { useTagsQuery } from '../../../../hooks';
 import { QueryLineItem } from '../../../../types';
@@ -57,7 +57,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
-    const isTierTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeTier;
+    const isTierTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
 
     const typeMatcher = isLabel ? isLabelTagType : isTierTagType;
     const zoneLabelList = tiersQuery.data?.filter(typeMatcher);
