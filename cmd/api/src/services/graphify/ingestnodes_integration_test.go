@@ -136,7 +136,6 @@ func TestIngestNode(t *testing.T) {
 
 	// Initialize changelog for tests that need it
 	cl := changelog.NewChangelog(testSuite.GraphDB, testSuite.BHDatabase, changelog.DefaultOptions())
-	cl.InitCacheForTest(testSuite.Context)
 	cl.Start(testSuite.Context)
 	testSuite.Changelog = cl
 	defer cl.Stop(context.Background())

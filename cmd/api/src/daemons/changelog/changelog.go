@@ -75,11 +75,6 @@ func (s *Changelog) Name() string {
 	return "Changelog Daemon"
 }
 
-// InitCacheForTest initializes the cache for testing purposes without feature flag polling.
-func (s *Changelog) InitCacheForTest(ctx context.Context) {
-	s.flagManager.initCacheForTest(ctx)
-}
-
 func (s *Changelog) FlushStats() {
 	c := s.flagManager.getCache()
 	if c == nil { // cache may be nil when feature is disabled.
