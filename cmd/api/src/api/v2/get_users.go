@@ -48,6 +48,10 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 	)
 
 	for _, column := range sortByColumns {
+		if column == "" {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "sort_by column cannot be empty", request), response)
+			return
+		}
 		var descending bool
 		if string(column[0]) == "-" {
 			descending = true
