@@ -35,7 +35,7 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
             onClose={() => setShowDialog(false)}
             headerText='Upload Data to Start Mapping Your Environment'
             description={
-                <div className='font-normal'>
+                <div className='font-normal' id='default-no-data-import-query-dialog'>
                     <p className='pb-3'>
                         Easily upload data by dragging and dropping files anywhere in the interface, or use the upload
                         button in the main navigation.
