@@ -25,3 +25,12 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+INSERT INTO permissions(created_at, updated_at, authority, name)
+VALUES (
+        current_timestamp,
+        current_timestamp,
+        'users',
+        'Read'
+       )
+ON CONFLICT DO NOTHING;

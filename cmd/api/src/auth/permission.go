@@ -47,6 +47,7 @@ type PermissionSet struct {
 
 	SavedQueriesRead  model.Permission
 	SavedQueriesWrite model.Permission
+	ReadUsers         model.Permission
 
 	WipeDB model.Permission
 }
@@ -72,6 +73,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.GraphDBWrite,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
+		s.ReadUsers,
 		s.WipeDB,
 	}
 }
@@ -91,6 +93,7 @@ func Permissions() PermissionSet {
 		AuthManageProviders:                 model.NewPermission("auth", "ManageProviders"),
 		AuthManageSelf:                      model.NewPermission("auth", "ManageSelf"),
 		AuthManageUsers:                     model.NewPermission("auth", "ManageUsers"),
+		ReadUsers:                           model.NewPermission("users", "Read"),
 
 		ClientsManage:  model.NewPermission("clients", "Manage"),
 		ClientsRead:    model.NewPermission("clients", "Read"),
