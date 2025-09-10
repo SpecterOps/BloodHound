@@ -186,19 +186,19 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "id", model.SQLFilter{}).Return(model.Users{
 						{
 							FirstName: null.String{
-								sql.NullString{
+								NullString: sql.NullString{
 									String: "Test",
 									Valid:  true,
 								},
 							},
 							LastName: null.String{
-								sql.NullString{
+								NullString: sql.NullString{
 									String: "User1",
 									Valid:  true,
 								},
 							},
 							EmailAddress: null.String{
-								sql.NullString{
+								NullString: sql.NullString{
 									String: "testuser1@email.com", // should not show up in response
 									Valid:  true,
 								},
@@ -210,19 +210,19 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 						},
 						{
 							FirstName: null.String{
-								sql.NullString{
+								NullString: sql.NullString{
 									String: "Test",
 									Valid:  true,
 								},
 							},
 							LastName: null.String{
-								sql.NullString{
+								NullString: sql.NullString{
 									String: "User2",
 									Valid:  true,
 								},
 							},
 							EmailAddress: null.String{
-								sql.NullString{
+								NullString: sql.NullString{
 									String: "testuser2@email.com", // should not show up in response
 									Valid:  true,
 								},
