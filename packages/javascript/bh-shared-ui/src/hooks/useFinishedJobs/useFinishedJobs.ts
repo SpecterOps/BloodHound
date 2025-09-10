@@ -48,15 +48,18 @@ export const useFinishedJobs = ({ filters = {}, page, rowsPerPage }: FinishedJob
         enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
-        queryFn: () =>
+        queryFn: ({ signal }) =>
             apiClient
-                .getFinishedJobs({
-                    ...filters,
-                    skip: rowsPerPage * page,
-                    limit: rowsPerPage,
-                    hydrate_domains: false,
-                    hydrate_ous: false,
-                })
+                .getFinishedJobs(
+                    {
+                        ...filters,
+                        skip: rowsPerPage * page,
+                        limit: rowsPerPage,
+                        hydrate_domains: false,
+                        hydrate_ous: false,
+                    },
+                    { signal }
+                )
                 .then((res) => res.data),
         queryKey: ['finished-jobs', { ...filters, page, rowsPerPage }],
     });

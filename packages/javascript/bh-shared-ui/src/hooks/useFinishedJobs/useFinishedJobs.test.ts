@@ -96,7 +96,7 @@ afterAll(() => server.close());
 describe('useFinishedJobs', () => {
     it('requests finished jobs', async () => {
         checkPermissionMock.mockImplementation(() => true);
-        const { result } = renderHook(() => useFinishedJobs({ filters: {}, page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(result.current.data.data.length).toBe(10);
@@ -110,18 +110,21 @@ describe('useFinishedJobs', () => {
         );
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(apiClient.getFinishedJobs).toHaveBeenCalledWith({
-            client_id: 'abcd',
-            hydrate_domains: false,
-            hydrate_ous: false,
-            limit: 10,
-            skip: 0,
-        });
+        expect(apiClient.getFinishedJobs).toHaveBeenCalledWith(
+            expect.objectContaining({
+                client_id: 'abcd',
+                hydrate_domains: false,
+                hydrate_ous: false,
+                limit: 10,
+                skip: 0,
+            }),
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        );
     });
 
     it('shows "no permission" notification if lacking permission', async () => {
         checkPermissionMock.mockImplementation(() => false);
-        const { result } = renderHook(() => useFinishedJobs({ filters: {}, page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(
@@ -133,7 +136,7 @@ describe('useFinishedJobs', () => {
 
     it('does not request finished jobs if lacking permission', async () => {
         checkPermissionMock.mockImplementation(() => false);
-        const { result } = renderHook(() => useFinishedJobs({ filters: {}, page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.data).toBeUndefined();
     });
@@ -141,7 +144,7 @@ describe('useFinishedJobs', () => {
     it('shows an error notification if there is an error fetching', async () => {
         server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
         checkPermissionMock.mockImplementation(() => true);
-        const { result } = renderHook(() => useFinishedJobs({ filters: {}, page: 0, rowsPerPage: 10 }));
+        const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(addNotificationMock).toHaveBeenCalledWith(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY);
@@ -149,7 +152,7 @@ describe('useFinishedJobs', () => {
 
     it('dismisses the "no permission" notification on unmount', async () => {
         checkPermissionMock.mockImplementation(() => false);
-        const { unmount } = renderHook(() => useFinishedJobs({ filters: {}, page: 0, rowsPerPage: 10 }));
+        const { unmount } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
         unmount();
         expect(dismissNotificationMock).toHaveBeenCalledWith(NO_PERMISSION_KEY);
     });

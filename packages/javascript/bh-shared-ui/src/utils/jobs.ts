@@ -35,13 +35,13 @@ type JobsFilterParams = {
     client_id?: string;
     end_time?: string;
     start_time?: string;
-    status?: number;
+    status?: JobStatusCode;
 };
 
 export type FinishedJobsFilter = EnabledCollections & JobsFilterParams;
 
 export interface FinishedJobParams {
-    filters: FinishedJobsFilter;
+    filters?: FinishedJobsFilter;
     page: number;
     rowsPerPage: number;
 }

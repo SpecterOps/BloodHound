@@ -449,13 +449,13 @@ export type Client = {
     last_checkin: string;
     name: string;
     token: unknown;
-    current_job_id: null | number;
-    current_task_id: null | number;
+    current_job_id: number | null;
+    current_task_id: number | null;
     current_job: ScheduledJobDisplay;
     current_task: ScheduledJobDisplay;
     completed_job_count: number;
     completed_task_count: number;
-    domain_controller: null;
+    domain_controller: unknown;
     version: string;
     user_sid: string;
     type: string;
