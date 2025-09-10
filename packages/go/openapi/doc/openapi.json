@@ -1743,8 +1743,8 @@
         }
       ],
       "get": {
-        "operationId": "ListUsers",
-        "summary": "List Users",
+        "operationId": "ListUsersMinimal",
+        "summary": "List Users Minimal",
         "description": "Returns all BloodHound user details without any sensitive data.",
         "tags": [
           "BloodHound Users",
