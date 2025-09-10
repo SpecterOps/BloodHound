@@ -54,7 +54,6 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableMigrations:                false,
 			EnableCypherMutations:            false,
 			RecreateDefaultAdmin:             false,
-			EnableEmbeddedCollectorsDownload: false,
 			GraphQueryMemoryLimit:            2,     // 2 GiB by default
 			EnableTextLogger:                 false, // Default to JSON logging
 			TLS:                              TLSConfiguration{},
