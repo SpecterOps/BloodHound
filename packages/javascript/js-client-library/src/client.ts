@@ -67,6 +67,7 @@ import {
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
+    GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -691,7 +692,7 @@ class BHEAPIClient {
         hydrateOUs?: boolean,
         options?: RequestOptions
     ) =>
-        this.baseClient.get(
+        this.baseClient.get<GetClientResponse>(
             '/api/v2/clients',
             Object.assign(
                 {
