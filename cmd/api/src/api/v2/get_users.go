@@ -115,7 +115,7 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 }
 
 // Below is needed to allow sorting and filtering on the ListUsersMinimal endpoint.
-// Using the model.User columns is not ideal as they would allow users to filter/sort on columns they should not have access to.
+// Using the model.User columns is not ideal as that would allow users to filter/sort on columns they may not have access to.
 
 // IsSortable - determines if the passed column can be sorted on or not
 func (s UserMinimal) IsSortable(column string) bool {
