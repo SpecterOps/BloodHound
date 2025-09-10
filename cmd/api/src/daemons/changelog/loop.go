@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -118,6 +118,11 @@ func (s *dbFlusher) flush(ctx context.Context, changes []Change) error {
 
 	return s.db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, ch := range changes {
+			if ch == nil { // defensive, shouldn't get this
+				slog.DebugContext(ctx, "changelog shouldn't be flushing nil interfaces")
+				continue
+			}
+
 			if err := ch.Apply(batch); err != nil {
 				return err
 			}
@@ -135,7 +140,7 @@ type changeBuffer struct {
 
 func newChangeBuffer(flusher flusher, batchSize int) *changeBuffer {
 	return &changeBuffer{
-		buf:     make([]Change, batchSize),
+		buf:     make([]Change, 0, batchSize),
 		flusher: flusher,
 	}
 }

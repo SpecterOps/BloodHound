@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,7 +61,7 @@ func DefaultOptions() Options {
 
 func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options) *Changelog {
 	return &Changelog{
-		flagGetter: dbFlagGetter(dawgsDB, flagProvider),
+		flagGetter: flagGetter(dawgsDB, flagProvider),
 		options:    opts,
 		db:         dawgsDB,
 	}
@@ -145,10 +145,10 @@ func (s *Changelog) Name() string {
 	return "Changelog Daemon"
 }
 
-// dbFlagGetter returns a closure that checks whether the changelog feature
+// flagGetter returns a closure that checks whether the changelog feature
 // is enabled and, if so, reports the current graph size (nodes + edges).
 // This allows the changelog to size its in-memory cache relative to the graph.
-func dbFlagGetter(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer) func(context.Context) (bool, int, error) {
+func flagGetter(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer) func(context.Context) (bool, int, error) {
 	return func(ctx context.Context) (bool, int, error) {
 		flag, err := flagProvider.GetFlagByKey(ctx, appcfg.FeatureChangelog)
 		if err != nil {
