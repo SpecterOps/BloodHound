@@ -47,7 +47,6 @@ const DropdownSelector: FC<{
     const buttonPrimary = variant === 'primary';
 
     const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
-    const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
     return (
         <Popover open={open} onOpenChange={handleOpenChange}>
@@ -93,9 +92,6 @@ const DropdownSelector: FC<{
                                     <TooltipProvider>
                                         <TooltipRoot>
                                             <TooltipTrigger>
-                                                <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
-                                                    {option.value}
-                                                </span>
                                                 <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
                                                     {option.value}
                                                 </span>
