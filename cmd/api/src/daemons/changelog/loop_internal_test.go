@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -103,15 +103,92 @@ func TestLoop(t *testing.T) {
 	})
 }
 
+func TestChangeBuffer(t *testing.T) {
+	t.Run("buffer not full, no flush", func(t *testing.T) {
+		var (
+			batchSize   = 5
+			ctx         = context.Background()
+			mockFlusher = &mockFlusher{}
+			buffer      = newChangeBuffer(mockFlusher, batchSize)
+		)
+
+		buffer.add(Change(NodeChange{}))
+
+		require.NoError(t, buffer.tryFlush(ctx, batchSize))
+		require.Equal(t, 0, mockFlusher.flushedLen())
+	})
+
+	t.Run("buffer full, flush", func(t *testing.T) {
+		var (
+			batchSize   = 3
+			ctx         = context.Background()
+			mockFlusher = &mockFlusher{}
+			buffer      = newChangeBuffer(mockFlusher, batchSize)
+		)
+		// x3
+		buffer.add(Change(NodeChange{}))
+		buffer.add(Change(NodeChange{}))
+		buffer.add(Change(NodeChange{}))
+
+		require.NoError(t, buffer.tryFlush(ctx, batchSize))
+		require.Equal(t, 3, mockFlusher.flushedLen())
+	})
+
+	t.Run("buffer above threshold, flush", func(t *testing.T) {
+		var (
+			batchSize   = 2
+			ctx         = context.Background()
+			mockFlusher = &mockFlusher{}
+			buffer      = newChangeBuffer(mockFlusher, batchSize)
+		)
+		// x3
+		buffer.add(Change(NodeChange{}))
+		buffer.add(Change(NodeChange{}))
+		buffer.add(Change(NodeChange{}))
+
+		require.NoError(t, buffer.tryFlush(ctx, batchSize))
+		require.Equal(t, 3, mockFlusher.flushedLen())
+	})
+
+	t.Run("force flush", func(t *testing.T) {
+		var (
+			batchSize   = 5
+			ctx         = context.Background()
+			mockFlusher = &mockFlusher{}
+			buffer      = newChangeBuffer(mockFlusher, batchSize)
+		)
+
+		buffer.add(Change(NodeChange{}))
+
+		require.NoError(t, buffer.tryFlush(ctx, 0))
+		require.Equal(t, 1, mockFlusher.flushedLen())
+	})
+
+	t.Run("no flush on empty buffer ", func(t *testing.T) {
+		var (
+			batchSize   = 5
+			ctx         = context.Background()
+			mockFlusher = &mockFlusher{}
+			buffer      = newChangeBuffer(mockFlusher, batchSize)
+		)
+
+		require.NoError(t, buffer.tryFlush(ctx, 0))
+		require.Equal(t, 0, mockFlusher.flushedLen())
+		require.Equal(t, 0, mockFlusher.called)
+	})
+}
+
 type mockFlusher struct {
 	mu             sync.Mutex
 	flushedChanges []Change
+	called         int
 }
 
 func (s *mockFlusher) flush(_ context.Context, changes []Change) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.flushedChanges = append(s.flushedChanges, changes...)
+	s.called++
 	return nil
 }
 
