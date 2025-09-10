@@ -17,6 +17,7 @@
 //list of ids to be excluded from Quick Ingest -- useExecuteOnFileDrag
 export enum QuickUploadExclusionIds {
     ImportQueryDialog = 'import-query-dialog',
+    DefaultNoDataDialog = 'default-no-data-import-query-dialog',
 }
 
 export const getExcludedIds = () => {
