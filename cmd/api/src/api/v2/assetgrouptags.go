@@ -1071,3 +1071,114 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		response.WriteHeader(http.StatusOK)
 	}
 }
+
+type AssetGroupMemberWithCertification struct {
+	AssetGroupMember
+	CreatedAt   time.Time                     `json:"created_at"`
+	CertifiedBy string                        `json:"certified_by"`
+	Certified   model.AssetGroupCertification `json:"certified"`
+}
+
+// note some of these filters do not match the db column names and require translation to work
+func (AssetGroupMemberWithCertification) ValidFilters() map[string][]model.FilterOperator {
+	return map[string][]model.FilterOperator{
+		"asset_group_tag_id": {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"certified":          {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"certified_by":       {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"created_at":         {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
+		"environments":       {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"name":               {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"object_id":          {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"primary_kind":       {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+	}
+}
+
+func (AssetGroupMemberWithCertification) IsStringColumn(filter string) bool {
+	switch filter {
+	case "environments",
+		"primary_kind",
+		"certified_by",
+		"name",
+		"object_id":
+		return true
+	default:
+		return false
+	}
+}
+
+type GetAssetGroupMembersWithCertificationResponse struct {
+	Members []AssetGroupMemberWithCertification `json:"members"`
+}
+
+func (s *Resources) GetAssetGroupTagCertifications(response http.ResponseWriter, request *http.Request) {
+	var (
+		requestContext                    = request.Context()
+		defaultSkip                       = 0
+		defaultLimit                      = AssetGroupTagDefaultLimit
+		assetGroupMemberWithCertification = AssetGroupMemberWithCertification{}
+		queryParams                       = request.URL.Query()
+		translatedQueryFilter             = make(model.QueryParameterFilterMap)
+	)
+	// Parse Query Parameters
+	if skip, err := ParseSkipQueryParameter(queryParams, defaultSkip); err != nil {
+		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, defaultLimit); err != nil {
+		api.WriteErrorResponse(requestContext, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(assetGroupMemberWithCertification, name); err != nil {
+				api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+
+					// some of the API filter names do not match the DB column names - so we have to do a translation here
+					originalName := filter.Name
+					switch filter.Name {
+					case "environments":
+						filter.Name = "node_environment_id"
+					case "name":
+						filter.Name = "node_name"
+					case "object_id":
+						filter.Name = "node_object_id"
+					case "primary_kind":
+						filter.Name = "node_primary_kind"
+					}
+					translatedQueryFilter.AddFilter(filter)
+					translatedQueryFilter[filter.Name][i].IsStringData = assetGroupMemberWithCertification.IsStringColumn(originalName)
+				}
+			}
+		}
+
+		if sqlFilter, err := translatedQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(requestContext, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if selectorNodes, count, err := s.DB.GetAggregatedSelectorNodesCertification(requestContext, sqlFilter, skip, limit); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// return paginated AssetGroupMemberWithCertification of matches and also a count
+			members := make([]AssetGroupMemberWithCertification, len(selectorNodes))
+			for i, selNode := range selectorNodes {
+				members[i] = AssetGroupMemberWithCertification{
+					AssetGroupMember: AssetGroupMember{
+						NodeId:          selNode.NodeId,
+						ObjectID:        selNode.NodeObjectId,
+						EnvironmentID:   selNode.NodeEnvironmentId,
+						PrimaryKind:     selNode.NodePrimaryKind,
+						Name:            selNode.NodeName,
+						AssetGroupTagId: selNode.AssetGroupTagId,
+					},
+					CreatedAt:   selNode.CreatedAt,
+					CertifiedBy: selNode.CertifiedBy.ValueOrZero(),
+					Certified:   selNode.Certified,
+				}
+			}
+			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersWithCertificationResponse{Members: members}, limit, skip, count, http.StatusOK, response)
+		}
+	}
+}
