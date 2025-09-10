@@ -365,6 +365,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 		}
 
 		// eTAC
+		userTemplate.AllEnvironments = true
 		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return

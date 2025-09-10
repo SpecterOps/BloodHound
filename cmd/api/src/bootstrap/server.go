@@ -103,10 +103,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 				Roles: model.Roles{
 					adminRole,
 				},
-				PrincipalName: cfg.DefaultAdmin.PrincipalName,
-				EmailAddress:  null.NewString(cfg.DefaultAdmin.EmailAddress, true),
-				FirstName:     null.NewString(cfg.DefaultAdmin.FirstName, true),
-				LastName:      null.NewString(cfg.DefaultAdmin.LastName, true),
+				PrincipalName:   cfg.DefaultAdmin.PrincipalName,
+				EmailAddress:    null.NewString(cfg.DefaultAdmin.EmailAddress, true),
+				FirstName:       null.NewString(cfg.DefaultAdmin.FirstName, true),
+				LastName:        null.NewString(cfg.DefaultAdmin.LastName, true),
+				AllEnvironments: true,
 			}
 
 			authSecret = model.AuthSecret{
