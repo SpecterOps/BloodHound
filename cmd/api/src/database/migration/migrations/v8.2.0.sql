@@ -25,3 +25,9 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_agt_history_actor ON asset_group_history USING btree (actor);
+CREATE INDEX IF NOT EXISTS idx_agt_history_action ON asset_group_history USING btree (action);
+CREATE INDEX IF NOT EXISTS idx_agt_history_target ON asset_group_history USING btree (target);
+CREATE INDEX IF NOT EXISTS idx_agt_history_email ON asset_group_history USING btree (email);
+CREATE INDEX IF NOT EXISTS idx_agt_history_env_id ON asset_group_history USING btree (environment_id);
