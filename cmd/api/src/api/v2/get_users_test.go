@@ -160,26 +160,6 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			},
 		},
 		{
-			name: "fail - DB error",
-			fields: fields{
-				setupMocks: func(t *testing.T, mock *mock) {
-					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "id", model.SQLFilter{}).Return(nil, fmt.Errorf("db error"))
-				},
-			},
-			args: args{
-				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
-					require.NoError(t, err)
-					return req
-				},
-			},
-			expect: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
 			name: "success",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {

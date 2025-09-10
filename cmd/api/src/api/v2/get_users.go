@@ -82,6 +82,7 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 
 			if validPredicates, err := users.GetValidFilterPredicatesAsStrings(name); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
 			} else {
 				for i, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
@@ -122,7 +123,8 @@ func (s UserMinimal) IsSortable(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
-		"principal_name":
+		"principal_name",
+		"id":
 		return true
 	default:
 		return false
@@ -134,13 +136,8 @@ func (s UserMinimal) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
 		"first_name":     {model.Equals, model.NotEquals},
 		"last_name":      {model.Equals, model.NotEquals},
-		"email_address":  {model.Equals, model.NotEquals},
 		"principal_name": {model.Equals, model.NotEquals},
 		"id":             {model.Equals, model.NotEquals},
-		"last_login":     {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"created_at":     {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"updated_at":     {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
-		"deleted_at":     {model.Equals, model.GreaterThan, model.GreaterThanOrEquals, model.LessThan, model.LessThanOrEquals, model.NotEquals},
 	}
 }
 

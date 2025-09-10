@@ -54,4 +54,4 @@ ON (
     OR
     (r.name = 'Power User' AND (p.authority, p.name) IN (
         ('users', 'Read')
-)));
+))) ON CONFLICT DO NOTHING;
