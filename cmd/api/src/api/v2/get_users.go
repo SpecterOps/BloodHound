@@ -28,10 +28,10 @@ import (
 )
 
 type UsersMinimalResponse struct {
-	Users []UsersMinimal `json:"users"`
+	Users []UserMinimal `json:"users"`
 }
 
-type UsersMinimal struct {
+type UserMinimal struct {
 	ID            uuid.UUID `json:"id"`
 	PrincipalName string    `json:"principal_name"`
 	FirstName     string    `json:"first_name"`
@@ -43,7 +43,7 @@ type UsersMinimal struct {
 func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string
-		users         UsersMinimal
+		users         UserMinimal
 		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
 	)
 
@@ -100,9 +100,9 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 		} else if users, err := s.DB.GetAllUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			usersMinimal := make([]UsersMinimal, 0)
+			usersMinimal := make([]UserMinimal, 0)
 			for _, user := range users {
-				usersMinimal = append(usersMinimal, UsersMinimal{
+				usersMinimal = append(usersMinimal, UserMinimal{
 					ID:            user.ID,
 					PrincipalName: user.PrincipalName,
 					FirstName:     user.FirstName.String,
@@ -118,7 +118,7 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 // Using the model.User columns is not ideal as they would allow users to filter/sort on columns they should not have access to.
 
 // IsSortable - determines if the passed column can be sorted on or not
-func (s UsersMinimal) IsSortable(column string) bool {
+func (s UserMinimal) IsSortable(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
@@ -130,7 +130,7 @@ func (s UsersMinimal) IsSortable(column string) bool {
 }
 
 // ValidFilters - returns a map of columns and their valid filters
-func (s UsersMinimal) ValidFilters() map[string][]model.FilterOperator {
+func (s UserMinimal) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
 		"first_name":     {model.Equals, model.NotEquals},
 		"last_name":      {model.Equals, model.NotEquals},
@@ -145,7 +145,7 @@ func (s UsersMinimal) ValidFilters() map[string][]model.FilterOperator {
 }
 
 // IsString - determines if the passed column is a string or not
-func (s UsersMinimal) IsString(column string) bool {
+func (s UserMinimal) IsString(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
@@ -157,7 +157,7 @@ func (s UsersMinimal) IsString(column string) bool {
 }
 
 // GetFilterableColumns - returns a list of filterable columns
-func (s UsersMinimal) GetFilterableColumns() []string {
+func (s UserMinimal) GetFilterableColumns() []string {
 	columns := make([]string, 0)
 	for column := range s.ValidFilters() {
 		columns = append(columns, column)
@@ -166,7 +166,7 @@ func (s UsersMinimal) GetFilterableColumns() []string {
 }
 
 // GetValidFilterPredicatesAsStrings - returns a list of predicates that a column can be filtered on
-func (s UsersMinimal) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
+func (s UserMinimal) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
 	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
 		return []string{}, fmt.Errorf("the specified column cannot be filtered")
 	} else {
