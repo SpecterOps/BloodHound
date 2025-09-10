@@ -26,3 +26,7 @@ export const abbreviatedNumber = (num: number, fractionDigits: number = 1) => {
     const formattedNumber = (num / Math.pow(1000, log1000)).toFixed(fractionDigits);
     return formattedNumber + abbreviations[log1000];
 };
+
+export const commaSeparatedNumber = (num: number) => {
+    return new Intl.NumberFormat('en-US').format(num);
+};
