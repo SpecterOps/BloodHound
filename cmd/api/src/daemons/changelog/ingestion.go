@@ -24,7 +24,9 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-// manages buffering and flushing of changes to graph
+// ingestionCoordinator manages the lifecycle of change ingestion into the graph.
+// It runs a reconciliation loop that buffers incoming Change events and periodically
+// flushes them into the database. Its main purpose is to apply lastseen timestamps
 type ingestionCoordinator struct {
 	db            graph.Database
 	batchSize     int
