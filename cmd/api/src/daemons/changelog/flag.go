@@ -102,11 +102,6 @@ func (s *featureFlagManager) getCache() *cache {
 	return s.cache
 }
 
-// initCacheForTest initializes the cache for testing purposes without feature flag polling.
-func (s *featureFlagManager) initCacheForTest(ctx context.Context) {
-	s.enable(ctx, 10)
-}
-
 // flagGetter returns a closure that checks whether the changelog feature
 // is enabled and, if so, reports the current graph size (nodes + edges).
 // This allows the changelog to size its in-memory cache relative to the graph.
