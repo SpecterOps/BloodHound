@@ -22,28 +22,15 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 // Changelog is a long-running daemon that manages change deduplication
-// and buffering for graph ingestion.
+// and buffering for graph ingestion. It coordinates between feature flag
+// management and ingestion processing.
 type Changelog struct {
-	db      graph.Database
-	loop    loop
-	options Options
-
-	// Feature flag management
+	options     Options
 	flagManager *featureFlagManager
-
-	// clean shutdown
-	cancel context.CancelFunc
-	done   chan struct{}
-}
-
-// Cache provides backward compatibility access to the cache instance.
-// This property delegates to the featureFlagManager's cache.
-func (s *Changelog) Cache() *cache {
-	return s.flagManager.getCache()
+	coordinator *ingestionCoordinator
 }
 
 type Options struct {
@@ -62,54 +49,26 @@ func DefaultOptions() Options {
 
 func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options) *Changelog {
 	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval)
+	coordinator := newIngestionCoordinator(dawgsDB)
+
 	return &Changelog{
 		flagManager: flagManager,
+		coordinator: coordinator,
 		options:     opts,
-		db:          dawgsDB,
 	}
 }
 
 // Start begins a long-running loop that buffers and flushes node/edge updates
 func (s *Changelog) Start(ctx context.Context) {
-	var cctx context.Context
-	cctx, s.cancel = context.WithCancel(ctx)
-	s.done = make(chan struct{})
-
-	s.loop = newLoop(cctx, newDBFlusher(s.db), s.options.BatchSize, s.options.FlushInterval)
-
-	go func() {
-		defer close(s.done)
-		// this loop owns updating the lastseen property
-		s.runLoop(cctx)
-	}()
+	// Start ingestion coordination
+	s.coordinator.start(ctx, s.options.BatchSize, s.options.FlushInterval)
 
 	// Start feature flag polling
-	s.flagManager.start(cctx)
-}
-
-// runLoop owns the changelog’s inner ingestion loop.
-func (s *Changelog) runLoop(ctx context.Context) {
-	if err := s.loop.start(ctx); err != nil {
-		slog.ErrorContext(ctx, "changelog loop exited with error", "err", err)
-	}
+	s.flagManager.start(ctx)
 }
 
 func (s *Changelog) Stop(ctx context.Context) error {
-	if s.cancel == nil {
-		return nil // never started
-	}
-
-	// tell loop to stop
-	s.cancel()
-
-	// wait until loop exits or context times out
-	select {
-	case <-s.done:
-		slog.Info("changelog shutdown complete")
-		return nil
-	case <-ctx.Done():
-		return ctx.Err() // caller's timeout
-	}
+	return s.coordinator.stop(ctx)
 }
 
 func (s *Changelog) Name() string {
@@ -119,14 +78,6 @@ func (s *Changelog) Name() string {
 // InitCacheForTest initializes the cache for testing purposes without feature flag polling.
 func (s *Changelog) InitCacheForTest(ctx context.Context) {
 	s.flagManager.initCacheForTest(ctx)
-}
-
-func (s *Changelog) GetStats() cacheStats {
-	c := s.flagManager.getCache()
-	if c == nil { // cache may be nil when feature is disabled.
-		return cacheStats{}
-	}
-	return c.getStats()
 }
 
 func (s *Changelog) FlushStats() {
@@ -152,5 +103,5 @@ func (s *Changelog) ResolveChange(change Change) (bool, error) {
 }
 
 func (s *Changelog) Submit(ctx context.Context, change Change) bool {
-	return channels.Submit(ctx, s.loop.writerC, change)
+	return s.coordinator.submit(ctx, change)
 }
