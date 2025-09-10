@@ -1304,12 +1304,13 @@ func TestCreateUser_Failure(t *testing.T) {
 	badRole := []int32{3}
 
 	badUser := model.User{
-		Roles:         model.Roles{},
-		PrincipalName: "Bad User",
-		FirstName:     null.StringFrom("bad"),
-		LastName:      null.StringFrom("bad"),
-		EmailAddress:  null.StringFrom("bad"),
-		EULAAccepted:  true,
+		Roles:           model.Roles{},
+		PrincipalName:   "Bad User",
+		FirstName:       null.StringFrom("bad"),
+		LastName:        null.StringFrom("bad"),
+		EmailAddress:    null.StringFrom("bad"),
+		EULAAccepted:    true,
+		AllEnvironments: true,
 	}
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
