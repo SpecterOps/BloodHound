@@ -48,5 +48,5 @@ FROM asset_group_tags tags
 WHERE selectors.asset_group_tag_id = tags.id;
 
 -- Replace old column with the new one (Do this step once you know you have the above correct and done)
---ALTER TABLE asset_group_tag_selectors DROP COLUMN auto_certify_int;
--- ALTER TABLE asset_group_tag_selectors RENAME COLUMN auto_certify_int TO auto_certify;
+ALTER TABLE asset_group_tag_selectors DROP COLUMN auto_certify;
+ALTER TABLE asset_group_tag_selectors RENAME COLUMN auto_certify_int TO auto_certify;

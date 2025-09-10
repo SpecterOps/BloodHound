@@ -5866,7 +5866,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/model.asset-group-tags-selector-response",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                  },
+                  {
+                    "type": "object"
+                  }
+                ],
                 "required": [
                   "name",
                   "seeds"
@@ -6003,7 +6010,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
               }
             }
           }
@@ -18759,60 +18766,62 @@
         }
       },
       "model.asset-group-tags-selector-response": {
-        "allOf": [
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "asset_group_tag_id": {
-                "type": "integer"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_by": {
-                "type": "string"
-              },
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "name": {
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "auto_certify": {
-                "type": "integer"
-              },
-              "is_default": {
-                "type": "boolean"
-              },
-              "allow_disable": {
-                "type": "boolean"
-              },
-              "seeds": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-                }
-              }
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "asset_group_tag_id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "disabled_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "disabled_by": {
+            "$ref": "#/components/schemas/null.string.response"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "auto_certify": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllParentsChildrenAndSeeds), or 2 (SeedsOnly)"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "allow_disable": {
+            "type": "boolean"
+          },
+          "seeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
             }
           }
-        ]
+        }
       },
       "api.params.predicate.filter.integer-strict": {
         "type": "integer",
@@ -18931,6 +18940,33 @@
         "items": {
           "type": "string"
         }
+      },
+      "model.asset-group-tags-selector-request": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "auto_certify": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllParentsChildrenAndSeeds), or 2 (SeedsOnly)"
+              },
+              "description": {
+                "type": "string"
+              },
+              "disabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
       },
       "model.asset-group-tags-history": {
         "type": "object",

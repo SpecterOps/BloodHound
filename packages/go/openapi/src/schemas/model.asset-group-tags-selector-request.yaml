@@ -14,12 +14,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: object
-$ref: './../schemas/model.asset-group-tags-selector-response.yaml'
-auto_certify:
-  type: integer
-description:
-  type: string
-disabled:
-  type: boolean
+allOf:
+  - $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+  - type: object
+    properties:
+      auto_certify:
+        type: integer
+        enum: [0,1,2]
+        description: auto_certify must be an input value of 0 (Disabled), 1 (AllParentsChildrenAndSeeds), or 2 (SeedsOnly)
+      description:
+        type: string
+      disabled:
+        type: boolean
 

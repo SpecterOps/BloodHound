@@ -156,8 +156,10 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
-          required:
+          allOf:
+            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
+            - type: object
+          required: 
             - name
             - seeds
 
