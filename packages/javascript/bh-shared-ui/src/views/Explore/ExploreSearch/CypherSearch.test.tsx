@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render } from '../../../test-utils';
+import { render, within } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
@@ -25,22 +25,21 @@ const CYPHER = 'match (n) return n limit 5';
 
 describe('CypherSearch', () => {
     const setup = async () => {
-        const testPerformSearch = vi.fn();
         const state = {
             cypherQuery: '',
             setCypherQuery: vi.fn(),
-            performSearch: testPerformSearch,
+            performSearch: vi.fn(),
         };
         const autoRun = true;
         const handleAutoRun = () => {};
-        const testOnRunSearchClick = vi.fn();
+        const handleCypherSearch = vi.fn();
 
         const screen = await render(
             <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
         );
         const user = await userEvent.setup();
 
-        return { state, screen, user, testOnRunSearchClick };
+        return { state, screen, user, handleCypherSearch };
     };
 
     const server = setupServer(
@@ -96,6 +95,13 @@ describe('CypherSearch', () => {
                     data: [],
                 })
             );
+        }),
+        rest.get('/api/v2/bloodhound-users', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
         })
     );
 
@@ -120,5 +126,114 @@ describe('CypherSearch', () => {
         await user.type(searchbox[1], CYPHER);
         expect(state.setCypherQuery).toBeCalled();
         expect(state.setCypherQuery).toHaveBeenCalledTimes(CYPHER.length);
+    });
+    it('should call performSearch on click Run with cypher populated', async () => {
+        const state = {
+            cypherQuery: CYPHER,
+            setCypherQuery: vi.fn(),
+            performSearch: vi.fn(),
+        };
+        const autoRun = true;
+        const handleAutoRun = () => {};
+
+        const screen = await render(
+            <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
+        );
+        const user = await userEvent.setup();
+        const saveBtn = screen.getByRole('button', { name: /save/i });
+        expect(saveBtn).toBeInTheDocument();
+
+        const runBtn = screen.getByRole('button', { name: /run/i });
+        expect(runBtn).toBeInTheDocument();
+
+        await user.click(runBtn);
+        expect(state.performSearch).toHaveBeenCalled();
+    });
+
+    it('should not performSearh if cypher is not populated', async () => {
+        const { screen, user, state } = await setup();
+        const runBtn = screen.getByRole('button', { name: /run/i });
+        expect(runBtn).toBeInTheDocument();
+        await user.click(runBtn);
+        expect(state.performSearch).not.toHaveBeenCalled();
+    });
+    it('should fire save query dialog with Save New flow', async () => {
+        const state = {
+            cypherQuery: CYPHER,
+            setCypherQuery: vi.fn(),
+            performSearch: vi.fn(),
+        };
+        const autoRun = true;
+        const handleAutoRun = () => {};
+
+        const screen = await render(
+            <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
+        );
+        const user = await userEvent.setup();
+        const saveBtn = screen.getByRole('button', { name: /save/i });
+        expect(saveBtn).toBeInTheDocument();
+        await user.click(saveBtn);
+        const saveDialog = screen.getByRole('dialog');
+
+        expect(saveDialog).toBeInTheDocument();
+
+        //Save New Flow
+        const queryName = screen.getByRole('textbox', { name: /query name/i });
+        const queryDescription = screen.getByRole('textbox', { name: /query description/i });
+
+        //Name and Description are empty
+        expect(queryName).toHaveValue('');
+        expect(queryDescription).toHaveValue('');
+
+        const dialogContainer = within(saveDialog);
+        const searchbox = dialogContainer.getAllByRole('textbox');
+        //Cypher is populated
+        expect(searchbox[2]).toHaveTextContent(CYPHER);
+    });
+
+    it('should fire the Save Query modal with the Save As New flow', async () => {
+        const state = {
+            cypherQuery: CYPHER,
+            setCypherQuery: vi.fn(),
+            performSearch: vi.fn(),
+        };
+        const autoRun = true;
+        const handleAutoRun = () => {};
+
+        const screen = await render(
+            <CypherSearch cypherSearchState={state} autoRun={autoRun} setAutoRun={handleAutoRun} />
+        );
+        const user = await userEvent.setup();
+
+        const dropdownBtn = screen.getByRole('button', { name: /app-icon-caret-down/i });
+
+        expect(dropdownBtn).toBeInTheDocument();
+        await user.click(dropdownBtn);
+        const dropDialog = screen.getByRole('dialog');
+        expect(dropDialog).toBeInTheDocument();
+        const saveAsBtn = screen.getByText(/save as/i);
+        expect(saveAsBtn).toBeInTheDocument();
+        await user.click(saveAsBtn);
+
+        const saveDialog = screen.getByRole('dialog');
+        expect(saveDialog).toBeInTheDocument();
+        screen.debug(saveDialog);
+
+        //Save As New Flow
+
+        //correct title
+        expect(screen.getByText(/save as new query/i)).toBeInTheDocument();
+
+        const queryName = screen.getByRole('textbox', { name: /query name/i });
+        const queryDescription = screen.getByRole('textbox', { name: /query description/i });
+
+        // Name and Description are empty
+        expect(queryName).toHaveValue('');
+        expect(queryDescription).toHaveValue('');
+
+        const dialogContainer = within(saveDialog);
+        const searchbox = dialogContainer.getAllByRole('textbox');
+        // Cypher is populated
+        expect(searchbox[2]).toHaveTextContent(CYPHER);
     });
 });

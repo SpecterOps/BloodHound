@@ -202,7 +202,7 @@ describe('CommonSearches', () => {
         //AD query present
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
 
-        //Axure query not present
+        //Azure query not present
         const adText = screen.queryByText(/All members of high privileged roles/i);
         expect(adText).toBeNull();
     });
