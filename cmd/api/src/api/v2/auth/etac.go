@@ -51,12 +51,12 @@ func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironment
 		}, etacRequest.Environments...); err != nil {
 			return fmt.Errorf("error fetching environments: %w", err)
 		} else {
-			if objectIDs, err := nodeSetToObjectIDSlice(nodes); err != nil {
+			if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
 				return err
 			} else {
 				environments := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
 				for _, environment := range etacRequest.Environments {
-					if _, ok := objectIDs[environment]; !ok {
+					if _, ok := nodesByObject[environment]; !ok {
 						return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
 					} else {
 						environments = append(environments, model.EnvironmentAccess{
@@ -73,7 +73,7 @@ func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironment
 	return nil
 }
 
-func nodeSetToObjectIDSlice(set graph.NodeSet) (map[string]bool, error) {
+func nodeSetToObjectIDMap(set graph.NodeSet) (map[string]bool, error) {
 	var (
 		objectIDs = make(map[string]bool)
 	)

@@ -18140,7 +18140,7 @@
           "environment_access_control": {
             "type": "object",
             "additionalProperties": false,
-            "description": "Sets an environment access control list to the user. When all_environments is set to true, a user's existing environment list is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "description": "Sets an environment access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
             "properties": {
               "all_environments": {
                 "type": "boolean"
