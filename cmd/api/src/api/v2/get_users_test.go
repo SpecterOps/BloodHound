@@ -68,6 +68,24 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 		expect expected
 	}{
 		{
+			name: "fail - empty sort column",
+			args: args{
+				func() *http.Request {
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					require.NoError(t, err)
+					query := req.URL.Query()
+					query.Add("sort_by", "")
+					req.URL.RawQuery = query.Encode()
+					return req
+				},
+			},
+			expect: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"sort_by column cannot be empty"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "fail - invalid sort column",
 			args: args{
 				func() *http.Request {
