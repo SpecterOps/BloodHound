@@ -251,6 +251,8 @@ paths:
   # user management
   /api/v2/bloodhound-users:
     $ref: './paths/bh-users.bloodhound-users.yaml'
+  /api/v2/bloodhound-users/minimal:
+    $ref: './paths/bh-users.bloodhound-users-minimal.yaml'
   /api/v2/bloodhound-users/{user_id}:
     $ref: './paths/bh-users.bloodhound-users.id.yaml'
   /api/v2/bloodhound-users/{user_id}/secret:

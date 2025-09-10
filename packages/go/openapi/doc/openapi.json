@@ -1736,6 +1736,101 @@
         }
       }
     },
+    "/api/v2/bloodhound-users/minimal": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListUsers",
+        "summary": "List Users",
+        "description": "Returns all BloodHound user details without any sensitive data.",
+        "tags": [
+          "BloodHound Users",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are id, first_name, last_name and principal_name.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "first_name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "last_name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "principal_name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.users-minimal"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/bloodhound-users/{user_id}": {
       "parameters": [
         {
@@ -18431,6 +18526,33 @@
             "type": "boolean"
           }
         }
+      },
+      "model.users-minimal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "first_name": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  }
+                ]
+              },
+              "last_name": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "principal_name": {
+                "type": "string",
+                "readOnly": true
+              }
+            }
+          }
+        ]
       },
       "enum.mfa-activation-status": {
         "type": "string",
