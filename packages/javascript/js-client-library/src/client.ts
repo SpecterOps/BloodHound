@@ -92,6 +92,13 @@ import {
 } from './responses';
 import * as types from './types';
 
+/** Return the value as a string with the given prefix */
+const prefixValue = (prefix: string, value: any) => (value !== undefined ? `${prefix}:${value.toString()}` : undefined);
+
+/** Return a copy of the object with all keys having undefined values have been stripped out  */
+const omitUndefined = (obj: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined));
+
 class BHEAPIClient {
     baseClient: AxiosInstance;
 
@@ -743,22 +750,59 @@ class BHEAPIClient {
         this.baseClient.post(`/api/v2/clients/${clientId}/jobs`, scheduledJob, options);
 
     getFinishedJobs = (
-        skip: number,
-        limit: number,
-        hydrateDomains?: boolean,
-        hydrateOUs?: boolean,
+        {
+            limit,
+            skip,
+            status,
+            start_time,
+            end_time,
+            client_id,
+            ad_structure_collection,
+            ca_registry_collection,
+            cert_services_collection,
+            dc_registry_collection,
+            hydrate_domains = false,
+            hydrate_ous = false,
+            local_group_collection,
+            session_collection,
+        }: {
+            limit: number;
+            skip: number;
+            status?: number;
+            start_time?: string;
+            end_time?: string;
+            client_id?: string;
+            ad_structure_collection?: boolean;
+            ca_registry_collection?: boolean;
+            cert_services_collection?: boolean;
+            dc_registry_collection?: boolean;
+            hydrate_domains?: boolean;
+            hydrate_ous?: boolean;
+            local_group_collection?: boolean;
+            session_collection?: boolean;
+        },
         options?: RequestOptions
     ) =>
         this.baseClient.get<GetScheduledJobDisplayResponse>(
             '/api/v2/jobs/finished',
             Object.assign(
                 {
-                    params: {
+                    params: omitUndefined({
                         skip,
                         limit,
-                        hydrate_domains: hydrateDomains,
-                        hydrate_ous: hydrateOUs,
-                    },
+                        hydrate_domains,
+                        hydrate_ous,
+                        status: prefixValue('eq', status),
+                        start_time: prefixValue('gte', start_time),
+                        end_time: prefixValue('lte', end_time),
+                        client_id: prefixValue('eq', client_id),
+                        ad_structure_collection: prefixValue('eq', ad_structure_collection),
+                        ca_registry_collection: prefixValue('eq', ca_registry_collection),
+                        cert_services_collection: prefixValue('eq', cert_services_collection),
+                        dc_registry_collection: prefixValue('eq', dc_registry_collection),
+                        local_group_collection: prefixValue('eq', local_group_collection),
+                        session_collection: prefixValue('eq', session_collection),
+                    }),
                 },
                 options
             )
