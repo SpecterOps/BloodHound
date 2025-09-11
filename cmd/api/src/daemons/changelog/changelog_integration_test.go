@@ -29,197 +29,204 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testChangelogConfig provides consistent changelog configuration for tests
+type testChangelogConfig struct {
+	BatchSize     int
+	FlushInterval time.Duration
+	PollInterval  time.Duration
+}
+
+func defaultTestConfig() testChangelogConfig {
+	return testChangelogConfig{
+		BatchSize:     3,
+		FlushInterval: 100 * time.Millisecond,
+		PollInterval:  50 * time.Millisecond,
+	}
+}
+
+// changelogHarness encapsulates common changelog test setup and teardown
+type changelogHarness struct {
+	suite     *IntegrationTestSuite
+	changelog *Changelog
+	ctx       context.Context
+	t         *testing.T
+}
+
+func setupChangelogTest(t *testing.T, config testChangelogConfig) *changelogHarness {
+	suite := setupIntegrationTest(t)
+
+	changelog := NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options{
+		BatchSize:     config.BatchSize,
+		FlushInterval: config.FlushInterval,
+		PollInterval:  config.PollInterval,
+	})
+
+	return &changelogHarness{
+		suite:     &suite,
+		changelog: changelog,
+		ctx:       suite.Context,
+		t:         t,
+	}
+}
+
+func (s *changelogHarness) enableAndStart() {
+	s.suite.enableChangelog(s.t)
+	s.changelog.Start(s.ctx)
+}
+
+func (s *changelogHarness) waitForCacheInit() {
+	time.Sleep(200 * time.Millisecond)
+}
+
+func (s *changelogHarness) enableChangelog() {
+	s.suite.enableChangelog(s.t)
+}
+
+func (s *changelogHarness) disableChangelog() {
+	s.suite.disableChangelog(s.t)
+}
+
+func (s *changelogHarness) close() {
+	s.changelog.Stop(context.Background())
+	teardownIntegrationTest(s.t, s.suite)
+}
+
+// createTestChange creates a standardized test change
+func createTestChange(objectID string, kind string, extraProps map[string]any) Change {
+	props := map[string]any{
+		"objectid": objectID,
+		"lastseen": time.Now(),
+	}
+
+	// Add any extra properties
+	for k, v := range extraProps {
+		props[k] = v
+	}
+
+	return NewNodeChange(objectID, graph.Kinds{graph.StringKind(kind)},
+		graph.NewProperties().SetAll(props))
+}
+
+// assertChangeSubmission tests a change and verifies the expected submission result
+func (s *changelogHarness) assertChangeSubmission(change Change, expectedSubmit bool, description string) {
+	shouldSubmit, err := s.changelog.ResolveChange(change)
+	require.NoError(s.t, err, "ResolveChange failed for %s", description)
+	require.Equal(s.t, expectedSubmit, shouldSubmit, "Unexpected submission result for %s", description)
+}
+
+// submitChange submits a change and verifies it was accepted
+func (s *changelogHarness) submitChange(change Change) {
+	submitted := s.changelog.Submit(s.ctx, change)
+	require.True(s.t, submitted, "Change submission was rejected")
+}
+
+// assertNodesExistInDB verifies that nodes with the given objectIDs exist in the database
+func (s *changelogHarness) assertNodesExistInDB(objectIDs []string, expectedCount int) {
+	var nodeCount int
+	err := s.suite.GraphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {
+		criteria := make([]graph.Criteria, len(objectIDs))
+		for i, id := range objectIDs {
+			criteria[i] = query.Equals(query.NodeProperty("objectid"), id)
+		}
+
+		return tx.Nodes().Filterf(func() graph.Criteria {
+			return query.Or(criteria...)
+		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for range cursor.Chan() {
+				nodeCount++
+			}
+			return cursor.Error()
+		})
+	})
+	require.NoError(s.t, err, "Database query failed")
+	require.Equal(s.t, expectedCount, nodeCount, "Unexpected number of nodes in database")
+}
+
 func TestChangelogIntegration(t *testing.T) {
 	t.Parallel()
 
 	t.Run("coordinator and flag manager startup coordination", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
+		harness := setupChangelogTest(t, defaultTestConfig())
+		defer harness.close()
 
-		var (
-			changelog = NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options{
-				BatchSize:     3,
-				FlushInterval: 100 * time.Millisecond,
-				PollInterval:  50 * time.Millisecond,
-			})
-			ctx = suite.Context
-		)
-
-		// enable changelog by getting existing flag and setting it
-		suite.enableChangelog(t)
-
-		// Start changelog - both coordinator and flag manager should start
-		changelog.Start(ctx)
-		defer changelog.Stop(context.Background())
+		harness.enableAndStart()
 
 		// Initially cache should be nil until flag manager polls
-		shouldSubmit, err := changelog.ResolveChange(
-			NewNodeChange("test1", graph.Kinds{graph.StringKind("User")},
-				graph.NewProperties().SetAll(map[string]any{
-					"objectid": "test1",
-					"lastseen": time.Now(),
-				})))
-		require.NoError(t, err)
-		require.True(t, shouldSubmit) // Should pass-through when cache is nil
+		change1 := createTestChange("test1", "User", nil)
+		harness.assertChangeSubmission(change1, true, "initial change before cache init")
 
 		// Wait for flag manager to initialize cache
-		time.Sleep(200 * time.Millisecond)
+		harness.waitForCacheInit()
 
 		// Now cache should be available and working
-		change := NewNodeChange("test2", graph.Kinds{graph.StringKind("User")},
-			graph.NewProperties().SetAll(map[string]any{
-				"objectid": "test2",
-				"lastseen": time.Now(),
-			}))
-
-		shouldSubmit, err = changelog.ResolveChange(change)
-		require.NoError(t, err)
-		require.True(t, shouldSubmit) // First time should be submitted
+		change2 := createTestChange("test2", "User", nil)
+		harness.assertChangeSubmission(change2, true, "first submission after cache init")
 
 		// Same change should be deduplicated
-		shouldSubmit, err = changelog.ResolveChange(change)
-		require.NoError(t, err)
-		require.False(t, shouldSubmit) // Should be deduplicated
+		harness.assertChangeSubmission(change2, false, "duplicate change")
 	})
 
 	t.Run("feature flag enable/disable affects cache behavior", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
+		harness := setupChangelogTest(t, defaultTestConfig())
+		defer harness.close()
 
-		var (
-			changelog = NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options{
-				BatchSize:     3,
-				FlushInterval: 100 * time.Millisecond,
-				PollInterval:  50 * time.Millisecond,
-			})
-			ctx = suite.Context
-		)
+		harness.enableAndStart()
+		harness.waitForCacheInit()
 
-		// enable changelog
-		suite.enableChangelog(t)
-
-		changelog.Start(ctx)
-		defer changelog.Stop(context.Background())
-
-		// Wait for initial cache setup
-		time.Sleep(200 * time.Millisecond)
-
-		change := NewNodeChange("toggle-test", graph.Kinds{graph.StringKind("User")},
-			graph.NewProperties().SetAll(map[string]any{
-				"objectid": "toggle-test",
-				"lastseen": time.Now(),
-			}))
+		change := createTestChange("toggle-test", "User", nil)
 
 		// With cache enabled, first submission should work
-		shouldSubmit, err := changelog.ResolveChange(change)
-		require.NoError(t, err)
-		require.True(t, shouldSubmit)
+		harness.assertChangeSubmission(change, true, "first submission with cache enabled")
 
 		// Second submission should be deduplicated
-		shouldSubmit, err = changelog.ResolveChange(change)
-		require.NoError(t, err)
-		require.False(t, shouldSubmit)
+		harness.assertChangeSubmission(change, false, "duplicate with cache enabled")
 
 		// Disable feature flag
-		suite.disableChangelog(t)
-
-		time.Sleep(200 * time.Millisecond) // Wait for flag manager to poll and disable cache
+		harness.disableChangelog()
+		harness.waitForCacheInit() // Wait for flag manager to poll and disable cache
 
 		// With cache disabled, should pass-through (always true)
-		shouldSubmit, err = changelog.ResolveChange(change)
-		require.NoError(t, err)
-		require.True(t, shouldSubmit) // Pass-through when disabled
+		harness.assertChangeSubmission(change, true, "submission with cache disabled")
 
 		// Re-enable feature flag
-		suite.enableChangelog(t)
-
-		time.Sleep(200 * time.Millisecond) // Wait for flag manager to poll and re-enable cache
+		harness.enableChangelog()
+		harness.waitForCacheInit() // Wait for flag manager to poll and re-enable cache
 
 		// Cache should be fresh after re-enabling, so same change should be submittable again
-		shouldSubmit, err = changelog.ResolveChange(change)
-		require.NoError(t, err)
-		require.True(t, shouldSubmit) // Fresh cache after re-enable
+		harness.assertChangeSubmission(change, true, "submission after cache re-enabled")
 	})
 
 	t.Run("end-to-end flow with real database operations", func(t *testing.T) {
-		suite := setupIntegrationTest(t)
-		defer teardownIntegrationTest(t, &suite)
+		config := testChangelogConfig{
+			BatchSize:     2,
+			FlushInterval: 50 * time.Millisecond,
+			PollInterval:  50 * time.Millisecond,
+		}
+		harness := setupChangelogTest(t, config)
+		defer harness.close()
 
-		var (
-			changelog = NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options{
-				BatchSize:     2,
-				FlushInterval: 50 * time.Millisecond,
-				PollInterval:  50 * time.Millisecond,
-			})
-			ctx = suite.Context
-		)
+		harness.enableAndStart()
+		harness.waitForCacheInit()
 
-		suite.enableChangelog(t)
-
-		changelog.Start(ctx)
-		defer changelog.Stop(context.Background())
-
-		// Wait for cache initialization
-		time.Sleep(200 * time.Millisecond)
-
-		// Create changes
-		change1 := NewNodeChange("e2e-1", graph.Kinds{graph.StringKind("NK1")},
-			graph.NewProperties().SetAll(map[string]any{
-				"objectid": "e2e-1",
-				"lastseen": time.Now(),
-				"name":     "End to End User 1",
-			}))
-
-		change2 := NewNodeChange("e2e-2", graph.Kinds{graph.StringKind("NK2")},
-			graph.NewProperties().SetAll(map[string]any{
-				"objectid": "e2e-2",
-				"lastseen": time.Now(),
-				"name":     "End to End Computer 1",
-			}))
+		// Create changes with different node kinds
+		change1 := createTestChange("e2e-1", "NK1", map[string]any{"name": "End to End User 1"})
+		change2 := createTestChange("e2e-2", "NK2", map[string]any{"name": "End to End Computer 1"})
 
 		// Test full flow: ResolveChange -> Submit -> Database
-		shouldSubmit, err := changelog.ResolveChange(change1)
-		require.NoError(t, err)
-		require.True(t, shouldSubmit)
+		harness.assertChangeSubmission(change1, true, "first change resolution")
+		harness.submitChange(change1)
 
-		submitted := changelog.Submit(ctx, change1)
-		require.True(t, submitted)
-
-		shouldSubmit, err = changelog.ResolveChange(change2)
-		require.NoError(t, err)
-		require.True(t, shouldSubmit)
-
-		submitted = changelog.Submit(ctx, change2)
-		require.True(t, submitted)
+		harness.assertChangeSubmission(change2, true, "second change resolution")
+		harness.submitChange(change2)
 
 		// Wait for batch processing
-		time.Sleep(200 * time.Millisecond)
+		harness.waitForCacheInit()
 
 		// Verify nodes were created in database
-		var nodeCount int
-		err = suite.GraphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			return tx.Nodes().Filterf(func() graph.Criteria {
-				return query.Or(
-					query.Equals(query.NodeProperty("objectid"), "e2e-1"),
-					query.Equals(query.NodeProperty("objectid"), "e2e-2"),
-				)
-			}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-				for range cursor.Chan() {
-					nodeCount++
-				}
-				return cursor.Error()
-			})
-		})
-		require.NoError(t, err)
-		require.Equal(t, 2, nodeCount)
+		harness.assertNodesExistInDB([]string{"e2e-1", "e2e-2"}, 2)
 
 		// Test deduplication - same changes should not be submitted again
-		shouldSubmit, err = changelog.ResolveChange(change1)
-		require.NoError(t, err)
-		require.False(t, shouldSubmit) // Should be deduplicated
-
-		shouldSubmit, err = changelog.ResolveChange(change2)
-		require.NoError(t, err)
-		require.False(t, shouldSubmit) // Should be deduplicated
+		harness.assertChangeSubmission(change1, false, "first change deduplication")
+		harness.assertChangeSubmission(change2, false, "second change deduplication")
 	})
 }
