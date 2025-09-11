@@ -124,6 +124,8 @@ export const ManagedDatePicker: FC<Props> = ({
         if (dateString === '') {
             onDateChange();
             setCalendarDate(undefined);
+            onValidation?.(true);
+            return;
         }
 
         const dateTime = DateTime.fromFormat(dateString, LuxonFormat.ISO_8601);
