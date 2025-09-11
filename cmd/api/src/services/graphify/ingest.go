@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+//
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/ingest.go -package=mocks -source=ingest.go
 package graphify
 
 import (
@@ -111,11 +113,6 @@ func (s *IngestContext) HasChangelog() bool {
 //   - Metrics: FlushStats logs and resets internal cache hit/miss statistics,
 //     allowing callers to observe deduplication efficiency over time.
 //
-// Typical usage in ingestion pipelines is:
-//  1. Call ResolveChange to decide if the update should be applied.
-//  2. If ResolveChange returns true, apply the update to the batch/DB.
-//  3. If ResolveChange returns false, Submit the change to the changelog. (this updates an entities lastseen prop for reconciliation)
-//
 // To generate mocks for this interface for unit testing seams in the application
 // please use:
 //
@@ -124,6 +121,7 @@ type ChangeManager interface {
 	ResolveChange(change changelog.Change) (bool, error)
 	Submit(ctx context.Context, change changelog.Change) bool
 	FlushStats()
+	ClearCache(ctx context.Context)
 }
 
 // BatchUpdater represents the ingestion-facing API for a dawgs BatchOperation
