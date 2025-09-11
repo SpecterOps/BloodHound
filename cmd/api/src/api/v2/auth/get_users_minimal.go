@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package v2
+package auth
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ type UserMinimal struct {
 
 // ListActiveUsersMinimal - Returns a list of Users without any sensitive data. At the time, this is used in the saved queries
 // workflow to return a list of users with whom a query can be shared with.
-func (s Resources) ListActiveUsersMinimal(response http.ResponseWriter, request *http.Request) {
+func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter, request *http.Request) {
 	var (
 		users       UserMinimal
 		queryParams = request.URL.Query()
@@ -94,7 +94,7 @@ func (s Resources) ListActiveUsersMinimal(response http.ResponseWriter, request 
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if activeUsers, err := s.DB.GetAllActiveUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if activeUsers, err := s.db.GetAllActiveUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			usersMinimal := make([]UserMinimal, 0)

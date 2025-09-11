@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package v2_test
+package auth_test
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -251,21 +251,16 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			mockCtrl := gomock.NewController(t)
-			databaseMock := &mock{
-				mockDatabase: mocks.NewMockDatabase(mockCtrl),
-			}
+			resource, mockDB := apitest.NewAuthManagementResource(mockCtrl)
 
 			defer mockCtrl.Finish()
 
 			if tt.fields.setupMocks != nil {
-				tt.fields.setupMocks(t, databaseMock)
-			}
-			s := v2.Resources{
-				DB: databaseMock.mockDatabase,
+				tt.fields.setupMocks(t, &mock{mockDB})
 			}
 			response := httptest.NewRecorder()
 			request := tt.args.buildRequest()
-			s.ListActiveUsersMinimal(response, request)
+			resource.ListActiveUsersMinimal(response, request)
 			statusCode, header, body := test.ProcessResponse(t, response)
 			assert.Equal(t, tt.expect.responseCode, statusCode)
 			assert.Equal(t, tt.expect.responseHeader, header)
