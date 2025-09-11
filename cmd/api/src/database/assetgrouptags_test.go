@@ -1358,22 +1358,22 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	require.NoError(t, err)
 
 	// Zone 0 is added by the migration and is ID 1
-	sel0, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel0, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector", "description", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel0_1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 2", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel0_1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 2", "description", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel0_2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 3", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel0_2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 3", "description", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel0_3, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 4", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel0_3, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 4", "description", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier1.ID, model.User{}, "Test T1 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier1.ID, model.User{}, "Test T1 selector", "description", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	sel2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier2.ID, model.User{}, "Test T2 selector", "description", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	sel2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier2.ID, model.User{}, "Test T2 selector", "description", false, true, 0, []model.SelectorSeed{})
 	require.NoError(t, err)
 
 	t.Run("Multiple nodes - verify highest tier wins", func(t *testing.T) {
