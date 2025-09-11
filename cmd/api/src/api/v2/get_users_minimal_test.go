@@ -81,7 +81,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"sort_by column cannot be empty"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"the specified column cannot be sorted because it is empty: "}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -99,7 +99,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"column format does not support sorting: awfawf"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"the specified column cannot be sorted: awfawf"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -161,7 +161,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - DB error",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
-					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "id", model.SQLFilter{}).Return(nil, fmt.Errorf("db error"))
+					mock.mockDatabase.EXPECT().GetAllActiveUsers(gomock.Any(), "id", model.SQLFilter{}).Return(nil, fmt.Errorf("db error"))
 				},
 			},
 			args: args{
@@ -181,7 +181,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "success",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
-					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "id", model.SQLFilter{}).Return(model.Users{
+					mock.mockDatabase.EXPECT().GetAllActiveUsers(gomock.Any(), "id", model.SQLFilter{}).Return(model.Users{
 						{
 							FirstName: null.String{
 								NullString: sql.NullString{
@@ -265,7 +265,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			}
 			response := httptest.NewRecorder()
 			request := tt.args.buildRequest()
-			s.ListUsersMinimal(response, request)
+			s.ListActiveUsersMinimal(response, request)
 			statusCode, header, body := test.ProcessResponse(t, response)
 			assert.Equal(t, tt.expect.responseCode, statusCode)
 			assert.Equal(t, tt.expect.responseHeader, header)

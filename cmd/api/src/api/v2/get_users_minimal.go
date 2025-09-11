@@ -38,40 +38,32 @@ type UserMinimal struct {
 	LastName      string    `json:"last_name"`
 }
 
-// ListUsersMinimal - Returns a list of Users without any sensitive data. At the time, this is used in the saved queries
-// to workflow to return a list of users with whom a query can be shared with.
-func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.Request) {
+// ListActiveUsersMinimal - Returns a list of Users without any sensitive data. At the time, this is used in the saved queries
+// workflow to return a list of users with whom a query can be shared with.
+func (s Resources) ListActiveUsersMinimal(response http.ResponseWriter, request *http.Request) {
 	var (
-		order         []string
-		users         UserMinimal
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
+		users       UserMinimal
+		queryParams = request.URL.Query()
+		order       = make([]string, 0)
 	)
 
-	for _, column := range sortByColumns {
-		if column == "" {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "sort_by column cannot be empty", request), response)
-			return
-		}
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !users.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, column), request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
+	orderBy, err := api.ParseSortParameters(UserMinimal{}, queryParams)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
 	}
 	// ensure deterministic ordering if not provided
-	if len(order) == 0 {
-		order = append(order, "id")
+	if len(orderBy) == 0 {
+		orderBy = append(orderBy, model.SortItem{
+			Column: "id",
+		})
+	}
+	for _, column := range orderBy {
+		if column.Direction == model.DescendingSortDirection {
+			order = append(order, column.Column+" desc")
+		} else {
+			order = append(order, column.Column)
+		}
 	}
 	queryParameterFilterParser := model.NewQueryParameterFilterParser()
 	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
@@ -94,7 +86,7 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 						return
 					}
 
-					queryFilters[name][i].IsStringData = users.IsString(filter.Name)
+					queryFilters[name][i].IsStringData = users.IsStringColumn(filter.Name)
 				}
 			}
 		}
@@ -102,11 +94,11 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 			return
-		} else if users, err := s.DB.GetAllUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if activeUsers, err := s.DB.GetAllActiveUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			usersMinimal := make([]UserMinimal, 0)
-			for _, user := range users {
+			for _, user := range activeUsers {
 				usersMinimal = append(usersMinimal, UserMinimal{
 					ID:            user.ID,
 					PrincipalName: user.PrincipalName,
@@ -119,7 +111,7 @@ func (s Resources) ListUsersMinimal(response http.ResponseWriter, request *http.
 	}
 }
 
-// Below is needed to allow sorting and filtering on the ListUsersMinimal endpoint.
+// Below is needed to allow sorting and filtering on the ListActiveUsersMinimal endpoint.
 // Using the model.User columns is not ideal as that would allow users to filter/sort on columns they may not have access to.
 
 // IsSortable - determines if the passed column can be sorted on or not
@@ -138,15 +130,15 @@ func (s UserMinimal) IsSortable(column string) bool {
 // ValidFilters - returns a map of columns and their valid filters
 func (s UserMinimal) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
-		"first_name":     {model.Equals, model.NotEquals},
-		"last_name":      {model.Equals, model.NotEquals},
-		"principal_name": {model.Equals, model.NotEquals},
+		"first_name":     {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"last_name":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"principal_name": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
 		"id":             {model.Equals, model.NotEquals},
 	}
 }
 
-// IsString - determines if the passed column is a string or not
-func (s UserMinimal) IsString(column string) bool {
+// IsStringColumn - determines if the passed column is a string or not
+func (s UserMinimal) IsStringColumn(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
