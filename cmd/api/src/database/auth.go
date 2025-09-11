@@ -28,11 +28,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"gorm.io/gorm"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -339,6 +340,26 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 		result = cursor.Where(filter.SQLString, filter.Params...).Find(&users)
 	} else {
 		result = cursor.Find(&users)
+	}
+
+	return users, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetAllActiveUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
+	var (
+		users  model.Users
+		result *gorm.DB
+		cursor = s.preload(model.UserAssociations()).WithContext(ctx)
+	)
+
+	if order != "" {
+		cursor = cursor.Order(order)
+	}
+
+	if filter.SQLString != "" {
+		result = cursor.Where(filter.SQLString, filter.Params...).Where("NOT is_disabled").Find(&users)
+	} else {
+		result = cursor.Where("NOT is_disabled").Find(&users)
 	}
 
 	return users, CheckError(result)

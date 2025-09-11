@@ -735,7 +735,6 @@ INSERT INTO permissions (authority, name, created_at, updated_at) VALUES
  ('graphdb', 'Write', current_timestamp, current_timestamp),
  ('saved_queries', 'Read', current_timestamp, current_timestamp),
  ('saved_queries', 'Write', current_timestamp, current_timestamp),
- ('users', 'Read', current_timestamp, current_timestamp),
  ('clients', 'Read', current_timestamp, current_timestamp),
  ('db', 'Wipe', current_timestamp, current_timestamp),
  ('graphdb', 'Mutate', current_timestamp, current_timestamp);
@@ -769,7 +768,6 @@ JOIN permissions p
         ('graphdb', 'Write'),
         ('saved_queries', 'Read'),
         ('saved_queries', 'Write'),
-        ('users', 'Read'),
         ('clients', 'Read'),
         ('graphdb', 'Mutate'),
         ('db', 'Wipe')
@@ -783,7 +781,6 @@ JOIN permissions p
         ('clients', 'Read'),
         ('saved_queries', 'Write'),
         ('saved_queries', 'Read'),
-        ('users', 'Read'),
         ('graphdb', 'Read')
     ))
     OR
@@ -793,7 +790,6 @@ JOIN permissions p
         ('auth', 'ManageSelf'),
         ('auth', 'CreateToken'),
         ('saved_queries', 'Read'),
-        ('users', 'Read'),
         ('graphdb', 'Read')
     ))
     OR
@@ -817,7 +813,6 @@ JOIN permissions p
         ('graphdb', 'Read'),
         ('saved_queries', 'Read'),
         ('saved_queries', 'Write'),
-        ('users', 'Read'),
         ('graphdb', 'Mutate')
     ))
   );

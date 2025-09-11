@@ -24,14 +24,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -232,6 +233,52 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	} else if len(usersResponse) > 1 {
 		t.Fatalf("User '%s' exists but should have been deleted. Response: %v", createdUsers[1].PrincipalName, usersResponse)
 	}
+}
+
+func TestBloodhoundDB_GetAllActiveUsers(t *testing.T) {
+
+	var (
+		ctx           = context.Background()
+		dbInst, roles = initAndGetRoles(t)
+		adminRole, _  = roles.FindByName(auth.RoleAdministrator)
+		userRole, _   = roles.FindByName(auth.RoleUser)
+
+		users = model.Users{
+			{
+				Roles:         model.Roles{adminRole},
+				FirstName:     null.StringFrom("First"),
+				LastName:      null.StringFrom("Last"),
+				EmailAddress:  null.StringFrom(userPrincipal),
+				PrincipalName: userPrincipal,
+			},
+			{
+				Roles:         model.Roles{userRole},
+				FirstName:     null.StringFrom("First2"),
+				LastName:      null.StringFrom("Last2"),
+				EmailAddress:  null.StringFrom(user2Principal),
+				PrincipalName: user2Principal,
+			},
+			{
+				Roles:         model.Roles{userRole},
+				FirstName:     null.StringFrom("First3"),
+				LastName:      null.StringFrom("Last3"),
+				EmailAddress:  null.StringFrom(user3Principal),
+				PrincipalName: user3Principal,
+				IsDisabled:    true,
+			},
+		}
+
+		want = users[:2]
+	)
+
+	for _, user := range users {
+		if _, err := dbInst.CreateUser(ctx, user); err != nil {
+			require.NoError(t, err)
+		}
+	}
+	got, err := dbInst.GetAllActiveUsers(t.Context(), "id", model.SQLFilter{})
+	require.NoError(t, err)
+	assert.Equal(t, len(want), len(got))
 }
 
 func TestDatabase_UpdateUserAuth(t *testing.T) {

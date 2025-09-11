@@ -30,8 +30,8 @@ INSERT INTO permissions(created_at, updated_at, authority, name)
 VALUES (
         current_timestamp,
         current_timestamp,
-        'users',
-        'Read'
+        'auth',
+        'ReadUsers'
        )
 ON CONFLICT DO NOTHING;
 
@@ -39,19 +39,6 @@ INSERT INTO roles_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 JOIN permissions p
-ON (
-    (r.name = 'Administrator' AND (p.authority, p.name) IN (
-        ('users', 'Read')
-    ))
-    OR
-    (r.name = 'User' AND (p.authority, p.name) IN (
-        ('users', 'Read')
-    ))
-    OR
-    (r.name = 'Read-Only' AND (p.authority, p.name) IN (
-        ('users', 'Read')
-    ))
-    OR
-    (r.name = 'Power User' AND (p.authority, p.name) IN (
-        ('users', 'Read')
-))) ON CONFLICT DO NOTHING;
+ON (p.authority, p.name) = ('auth', 'ReadUsers')
+WHERE r.name IN ('Administrator', 'User', 'Read-Only', 'Power User')
+ON CONFLICT DO NOTHING;
