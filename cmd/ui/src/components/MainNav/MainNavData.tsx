@@ -18,9 +18,11 @@ import { Switch } from '@bloodhoundenterprise/doodleui';
 import {
     AppIcon,
     MainNavData,
+    Permission,
     ROUTE_PRIVILEGE_ZONES_ROOT,
     useFeatureFlags,
     useFileUploadDialogContext,
+    usePermissions,
 } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
@@ -49,7 +51,9 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
 
 export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
+    const { checkPermission } = usePermissions();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
     const tierFlag = featureFlags?.data?.find((flag) => {
@@ -57,7 +61,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     });
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
-    const primaryList = [
+    const primaryList: MainNavData['primaryList'] = [
         {
             label: 'Explore',
             icon: <AppIcon.LineChart size={24} />,
@@ -70,13 +74,16 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             route: tierFlag?.enabled ? ROUTE_PRIVILEGE_ZONES_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
         },
-        {
+    ];
+
+    if (hasPermissionToUpload) {
+        primaryList.push({
             label: 'Quick Upload',
             icon: <AppIcon.Upload size={24} />,
             onClick: () => setShowFileIngestDialog(true),
             testId: 'quick-file-ingest',
-        },
-    ];
+        });
+    }
 
     return primaryList;
 };
