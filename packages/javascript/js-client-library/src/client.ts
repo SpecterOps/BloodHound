@@ -643,11 +643,13 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
-    getPostureHistory = (dataType: string, options?: RequestOptions) =>
-        this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
+    getPostureHistory = (dataType: string, options?: RequestOptions) => {
+        console.log({ dataType });
+        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
             ...options,
             paramsSerializer: { indexes: null },
         });
+    };
 
     /* explore search */
 
