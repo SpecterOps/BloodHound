@@ -1736,7 +1736,7 @@
         }
       }
     },
-    "/api/v2/bloodhound-users/minimal": {
+    "/api/v2/bloodhound-users-minimal": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
