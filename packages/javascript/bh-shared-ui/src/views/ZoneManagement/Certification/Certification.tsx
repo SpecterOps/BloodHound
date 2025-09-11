@@ -6,6 +6,7 @@ import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { EntityKinds, apiClient } from '../../../utils';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
+import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
 
 const Certification: FC = () => {
     const { tierId, labelId } = useParams();
@@ -77,32 +78,58 @@ const Certification: FC = () => {
         type: memberQuery.data?.primary_kind as EntityKinds,
     };
 
+    const showDialog = (choice: string) => {
+        setIsDialogOpen(true);
+        setCertifyOrRevoke(choice);
+    };
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    // TODO -- make this type safe
+    const [certifyOrRevoke, setCertifyOrRevoke] = useState('');
+
+    const handleConfirm = (withNote: boolean, certifyNote?: string) => {
+        console.log('Confirmed! Note: ', certifyNote);
+        // TODO -- input sanitization?
+        setIsDialogOpen(false);
+        // TODO -- make API call
+    };
+
     return (
-        <div className='flex gap-8 mt-4'>
-            <div className='basis-2/3'>
-                <CertificationTable
-                    data={data}
-                    isLoading={isLoading}
-                    isFetching={isFetching}
-                    isSuccess={isSuccess}
-                    fetchNextPage={fetchNextPage}
-                />
-            </div>
-            <div className='basis-1/3'>
-                <div className='w-[400px] max-w-[400px]'>
-                    <EntityInfoPanel
-                        DataTable={EntityInfoDataTable}
-                        selectedNode={selectedNode}
-                        additionalTables={[
-                            {
-                                sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
-                                TableComponent: EntitySelectorsInformation,
-                            },
-                        ]}
+        <>
+            <div className='flex gap-8 mt-4'>
+                <div className='basis-2/3'>
+                    <div className='flex gap-4 mb-4'>
+                        <Button onClick={() => showDialog('certify')}>Certify</Button>
+                        <Button variant='secondary' onClick={() => showDialog('revoke')}>
+                            Revoke
+                        </Button>
+                    </div>
+
+                    <CertificationTable
+                        data={data}
+                        isLoading={isLoading}
+                        isFetching={isFetching}
+                        isSuccess={isSuccess}
+                        fetchNextPage={fetchNextPage}
                     />
                 </div>
+                <div className='basis-1/3'>
+                    <div className='w-[400px] max-w-[400px]'>
+                        <EntityInfoPanel
+                            DataTable={EntityInfoDataTable}
+                            selectedNode={selectedNode}
+                            additionalTables={[
+                                {
+                                    sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
+                                    TableComponent: EntitySelectorsInformation,
+                                },
+                            ]}
+                        />
+                    </div>
+                </div>
             </div>
-        </div>
+            {isDialogOpen && <CertifyMembersConfirmDialog open={isDialogOpen} onConfirm={handleConfirm} />}
+        </>
     );
 };
 
