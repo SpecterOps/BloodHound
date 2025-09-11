@@ -23,7 +23,7 @@ import { useOnClickOutside } from '../../hooks';
 import SearchResultItem from '../SearchResultItem';
 import { FlatNode, GraphNodes } from './types';
 
-export const PLACEHOLDER_TEXT = 'Search Current Results';
+export const PLACEHOLDER_TEXT = 'Search node in results';
 export const NO_RESULTS_TEXT = 'No result found in current results';
 
 const LIST_ITEM_HEIGHT = 38;
