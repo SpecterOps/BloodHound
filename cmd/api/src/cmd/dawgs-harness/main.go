@@ -37,6 +37,7 @@ import (
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/size"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
 func fatalf(format string, args ...any) {
@@ -44,14 +45,14 @@ func fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
-func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.TestSuite {
+func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg config.DatabaseConfiguration) tests.TestSuite {
 	var (
 		pool *pgxpool.Pool
 		err  error
 	)
 
 	if driverName == pg.DriverName {
-		pool, err = pg.NewPool(connectionStr)
+		pool, err = pg.NewPool(cfg)
 		if err != nil {
 			fatalf("Failed creating a new pgxpool: %s", err)
 		}
@@ -141,10 +142,14 @@ func main() {
 
 	bhlog.ConfigureDefaultText(os.Stdout)
 
+	cfg := config.NewDefaultConfiguration(); err != nil {
+		return configuration, fmt.Errorf("failed to create default configuration: %w", err)
+	}
+
 	switch testType {
 	case "both":
 		n4jTestSuite := execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg)
 		})
 
 		fmt.Println()
@@ -153,7 +158,7 @@ func main() {
 		time.Sleep(time.Second * 3)
 
 		pgTestSuite := execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg)
 		})
 		fmt.Println()
 
@@ -161,12 +166,12 @@ func main() {
 
 	case "postgres":
 		execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg)
 		})
 
 	case "neo4j":
 		execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg)
 		})
 	}
 }
