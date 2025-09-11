@@ -1522,6 +1522,11 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		}
 	}
 
+	propMap[ad.VulnerableNetlogonSecurityDescriptorCollected.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected
+	if computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected {
+		propMap[ad.VulnerableNetlogonSecurityDescriptor.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Value
+	}
+
 	return IngestibleNode{
 		ObjectID:    computer.ObjectIdentifier,
 		PropertyMap: propMap,

@@ -145,8 +145,9 @@ type CARegistryData struct {
 }
 
 type DCRegistryData struct {
-	CertificateMappingMethods           CertificateMappingMethods
-	StrongCertificateBindingEnforcement StrongCertificateBindingEnforcement
+	CertificateMappingMethods            CertificateMappingMethods
+	StrongCertificateBindingEnforcement  StrongCertificateBindingEnforcement
+	VulnerableNetlogonSecurityDescriptor VulnerableNetlogonSecurityDescriptor
 }
 
 type CertificateMappingMethods struct {
@@ -157,6 +158,11 @@ type CertificateMappingMethods struct {
 type StrongCertificateBindingEnforcement struct {
 	APIResult
 	Value int
+}
+
+type VulnerableNetlogonSecurityDescriptor struct {
+	APIResult
+	Value string
 }
 
 type GPO IngestBase
