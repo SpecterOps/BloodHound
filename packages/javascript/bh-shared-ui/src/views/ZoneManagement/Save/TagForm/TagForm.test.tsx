@@ -150,7 +150,6 @@ vi.mock('../../../../providers', async () => {
 
 describe('Tag Form', () => {
     const user = userEvent.setup();
-    // todo links to Details
     const createNewZonePath = '/privilege-zones/zone/save/';
     const createNewLabelPath = '/privilege-zones/label/save/';
     const editExistingZonePath = '/privilege-zones/zone/1/save';

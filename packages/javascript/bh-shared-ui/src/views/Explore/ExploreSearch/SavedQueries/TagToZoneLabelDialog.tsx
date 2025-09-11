@@ -53,14 +53,14 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useAppNavigate();
 
-    const tiersQuery = useTagsQuery();
+    const zonesQuery = useTagsQuery();
 
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
-    const isTierTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
+    const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
 
-    const typeMatcher = isLabel ? isLabelTagType : isTierTagType;
-    const zoneLabelList = tiersQuery.data?.filter(typeMatcher);
+    const typeMatcher = isLabel ? isLabelTagType : isZoneTagType;
+    const zoneLabelList = zonesQuery.data?.filter(typeMatcher);
 
     const [zone, setZone] = useState('');
     const [label, setLabel] = useState('');
@@ -79,9 +79,10 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const onContinue = () => {
         if (isLabel) {
-            navigate(`/zone-management/save/label/${label}/selector`, { state: stateToPass });
+            // todo should this be the id versus label/zone?
+            navigate(`/privilege-zones/label/${label}/save/selector`, { state: stateToPass });
         } else {
-            navigate(`/zone-management/save/tier/${zone}/selector`, { state: stateToPass });
+            navigate(`/privilege-zones/zone/${zone}/save/selector`, { state: stateToPass });
         }
     };
 
