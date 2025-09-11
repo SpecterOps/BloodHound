@@ -48,6 +48,7 @@ type BHCEPipeline struct {
 	ingestSchema        upload.IngestSchema
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
+	changelog           *changelog.Changelog
 }
 
 func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
@@ -60,6 +61,7 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		ingestSchema:        ingestSchema,
 		jobService:          job.NewJobService(ctx, db),
 		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		changelog:           cl,
 	}
 }
 
@@ -87,6 +89,11 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 		return fmt.Errorf("deleting ingest tasks during data deletion: %v", err)
 	} else if err := PurgeGraphData(ctx, deleteRequest, s.graphdb, s.db); err != nil {
 		return fmt.Errorf("purging graph data failed: %w", err)
+	}
+
+	// Clear changelog cache to ensure consistency after graph data deletion
+	if s.changelog != nil {
+		s.changelog.ClearCache(ctx)
 	}
 
 	return nil

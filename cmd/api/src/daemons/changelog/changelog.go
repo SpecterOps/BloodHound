@@ -100,3 +100,10 @@ func (s *Changelog) ResolveChange(change Change) (bool, error) {
 func (s *Changelog) Submit(ctx context.Context, change Change) bool {
 	return s.coordinator.submit(ctx, change)
 }
+
+// ClearCache forcibly clears the changelog cache, typically called during
+// graph data deletion to ensure cache consistency. This is safe to call
+// whether the changelog is enabled or disabled.
+func (s *Changelog) ClearCache(ctx context.Context) {
+	s.flagManager.clearCache(ctx)
+}

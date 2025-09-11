@@ -95,6 +95,20 @@ func (s *featureFlagManager) disable(ctx context.Context) {
 	s.cache = nil
 }
 
+// clearCache forcibly clears the cache regardless of feature flag state.
+// This is used during graph data deletion to ensure cache consistency.
+func (s *featureFlagManager) clearCache(ctx context.Context) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.cache != nil {
+		slog.InfoContext(ctx, "forcibly clearing changelog cache due to graph data deletion")
+		s.cache.clear()
+	} else {
+		slog.InfoContext(ctx, "changelog cache already cleared (feature disabled)")
+	}
+}
+
 // getCache returns the current cache instance, which may be nil if disabled.
 func (s *featureFlagManager) getCache() *cache {
 	s.mu.RLock()

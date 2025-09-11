@@ -22,15 +22,16 @@ import (
 
 // cache is an in-memory deduplication layer for changelog entries.
 //
-// It maps a change's identity hash to its most recent content hash,
+// It maps a change's identity hash to its content hash,
 // allowing the changelog to decide whether an incoming change
 // is new/modified (submit) or unchanged (skip).
 //
 // It also maintains simple hit/miss counters for observability, which can be reset between ingest batches.
 type cache struct {
-	data  map[uint64]uint64
-	mu    sync.Mutex
-	stats cacheStats
+	data     map[uint64]uint64
+	mu       sync.Mutex
+	stats    cacheStats
+	capacity int // store the original capacity for clearing
 }
 
 func newCache(size int) *cache {
@@ -39,9 +40,10 @@ func newCache(size int) *cache {
 	}
 
 	return &cache{
-		data:  make(map[uint64]uint64, size),
-		mu:    sync.Mutex{},
-		stats: cacheStats{},
+		data:     make(map[uint64]uint64, size),
+		mu:       sync.Mutex{},
+		stats:    cacheStats{},
+		capacity: size,
 	}
 }
 
@@ -84,4 +86,19 @@ func (s *cache) resetStats() cacheStats {
 	old := s.stats
 	s.stats = cacheStats{} // zero it out
 	return old
+}
+
+// getCapacity returns the original capacity of the cache
+func (s *cache) getCapacity() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.capacity
+}
+
+// clear removes all entries from the cache while preserving capacity
+func (s *cache) clear() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data = make(map[uint64]uint64, s.capacity)
+	s.stats = cacheStats{} // also reset stats
 }

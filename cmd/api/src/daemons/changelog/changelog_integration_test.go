@@ -230,3 +230,93 @@ func TestChangelogIntegration(t *testing.T) {
 		harness.assertChangeSubmission(change2, false, "second change deduplication")
 	})
 }
+
+func TestCacheClearFunctionality(t *testing.T) {
+	t.Parallel()
+
+	t.Run("ClearCache clears active cache", func(t *testing.T) {
+		harness := setupChangelogTest(t, defaultTestConfig())
+		defer harness.close()
+
+		harness.enableAndStart()
+		harness.waitForCacheInit()
+
+		// Add some data to the cache
+		change1 := createTestChange("clear-test-1", "User", nil)
+		change2 := createTestChange("clear-test-2", "User", nil)
+
+		// First submissions should be new
+		harness.assertChangeSubmission(change1, true, "first change before clear")
+		harness.assertChangeSubmission(change2, true, "second change before clear")
+
+		// Second submissions should be deduplicated
+		harness.assertChangeSubmission(change1, false, "first change duplicate before clear")
+		harness.assertChangeSubmission(change2, false, "second change duplicate before clear")
+
+		// Clear the cache
+		harness.changelog.ClearCache(harness.ctx)
+
+		// After clearing, same changes should be submittable again
+		harness.assertChangeSubmission(change1, true, "first change after clear")
+		harness.assertChangeSubmission(change2, true, "second change after clear")
+
+		// And they should be deduplicated again
+		harness.assertChangeSubmission(change1, false, "first change duplicate after clear")
+		harness.assertChangeSubmission(change2, false, "second change duplicate after clear")
+	})
+
+	t.Run("ClearCache is safe when changelog disabled", func(t *testing.T) {
+		harness := setupChangelogTest(t, defaultTestConfig())
+		defer harness.close()
+
+		// Don't enable changelog - it should remain disabled
+		harness.changelog.Start(harness.ctx)
+		harness.waitForCacheInit()
+
+		// Clearing cache when disabled should not panic or error
+		require.NotPanics(t, func() {
+			harness.changelog.ClearCache(harness.ctx)
+		})
+
+		// Changes should still pass through (always return true when disabled)
+		change := createTestChange("disabled-test", "User", nil)
+		harness.assertChangeSubmission(change, true, "change with disabled changelog")
+		harness.assertChangeSubmission(change, true, "same change with disabled changelog")
+	})
+
+	t.Run("Cache maintains capacity after clear", func(t *testing.T) {
+		config := testChangelogConfig{
+			BatchSize:     3,
+			FlushInterval: 100 * time.Millisecond,
+			PollInterval:  50 * time.Millisecond,
+		}
+		harness := setupChangelogTest(t, config)
+		defer harness.close()
+
+		harness.enableAndStart()
+		harness.waitForCacheInit()
+
+		// Get the cache and verify it has the expected capacity
+		cache := harness.changelog.flagManager.getCache()
+		require.NotNil(t, cache)
+
+		originalCapacity := cache.getCapacity()
+		require.Greater(t, originalCapacity, 0)
+
+		// Add some data
+		change := createTestChange("capacity-test", "User", nil)
+		harness.assertChangeSubmission(change, true, "change before clear")
+
+		// Clear the cache
+		harness.changelog.ClearCache(harness.ctx)
+
+		// Verify capacity is maintained
+		clearedCache := harness.changelog.flagManager.getCache()
+		require.NotNil(t, clearedCache)
+		require.Equal(t, originalCapacity, clearedCache.getCapacity())
+
+		// Verify cache still works after clear
+		harness.assertChangeSubmission(change, true, "change after clear")
+		harness.assertChangeSubmission(change, false, "duplicate after clear")
+	})
+}
