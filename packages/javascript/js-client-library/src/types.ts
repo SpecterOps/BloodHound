@@ -59,7 +59,6 @@ export const AssetGroupTagTypeOwned = 3 as const;
 
 export type AssetGroupTagTypes =
     | typeof AssetGroupTagTypeZone
-
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 

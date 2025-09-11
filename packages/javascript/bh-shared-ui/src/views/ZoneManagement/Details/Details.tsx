@@ -86,7 +86,8 @@ const Details: FC = () => {
     const environments = useEnvironmentIdList([
         {
             path:
-                ROUTE_PRIVILEGE_ZONES_ROOT + '/' +
+                ROUTE_PRIVILEGE_ZONES_ROOT +
+                '/' +
                 DEFAULT_PRIVILEGE_ZONES_ROUTE +
                 tagKind +
                 ROUTE_PRIVILEGE_ZONES_DETAILS,

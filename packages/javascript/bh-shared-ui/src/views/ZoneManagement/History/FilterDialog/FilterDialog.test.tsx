@@ -38,7 +38,7 @@ describe('Privilege Zones History Filter Dialog', () => {
         expect(screen.getByText('Filter')).toBeInTheDocument();
 
         expect(screen.getByLabelText('Action')).toBeInTheDocument();
-        expect(screen.getByLabelText('Tier/Label')).toBeInTheDocument();
+        expect(screen.getByLabelText('Zone/Label')).toBeInTheDocument();
         expect(screen.getByLabelText('Made By')).toBeInTheDocument();
         expect(screen.getByLabelText('Start Date')).toBeInTheDocument();
         expect(screen.getByLabelText('End Date')).toBeInTheDocument();
