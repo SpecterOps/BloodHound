@@ -29,6 +29,7 @@ const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
 const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
 const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
+const GLOBAL_SET_AUTO_RUN_QUERIES = 'app/global/GLOBALSETAUTORUNQUERIES';
 const GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS = 'app/global/GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS';
 
 export {
@@ -39,6 +40,7 @@ export {
     GLOBAL_SET_ASSET_GROUPS,
     GLOBAL_SET_ASSET_GROUP_EDIT,
     GLOBAL_SET_ASSET_GROUP_INDEX,
+    GLOBAL_SET_AUTO_RUN_QUERIES,
     GLOBAL_SET_DARK_MODE,
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
@@ -50,6 +52,7 @@ export {
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
+    autoRunQueries: boolean;
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
@@ -91,6 +94,11 @@ export interface SetExploreLayoutAction {
     exploreLayout: BaseGraphLayoutOptions;
 }
 
+export interface SetAutoRunQueriesAction {
+    type: typeof GLOBAL_SET_AUTO_RUN_QUERIES;
+    autoRunQueries: boolean;
+}
+
 export type GlobalViewActionTypes =
     | AddSnackbarAction
     | RemoveSnackbarAction
@@ -98,6 +106,7 @@ export type GlobalViewActionTypes =
     | SetDarkModeAction
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
+    | SetAutoRunQueriesAction
     | SetSelectedExploreTableColumns;
 
 export interface SetDomainAction {

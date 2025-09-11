@@ -63,6 +63,7 @@ export default {
         'lodash/capitalize',
         'lodash/cloneDeep',
         'lodash/find',
+        'lodash/groupBy',
         'lodash/isEmpty',
         'lodash/isEqual',
         'lodash/orderBy',

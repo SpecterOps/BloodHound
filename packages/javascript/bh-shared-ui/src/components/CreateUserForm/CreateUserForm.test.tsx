@@ -103,7 +103,7 @@ describe('CreateUserForm', () => {
         render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+        const button = await screen.findByRole('button', { name: 'Save' });
         await user.type(screen.getByLabelText(/principal/i), ' ');
         await user.type(screen.getByLabelText(/first/i), ' ');
         await user.type(screen.getByLabelText(/last/i), ' ');
@@ -131,7 +131,7 @@ describe('CreateUserForm', () => {
         render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+        const button = await screen.findByRole('button', { name: 'Save' });
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');
@@ -178,7 +178,7 @@ describe('CreateUserForm', () => {
         render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+        const button = await screen.findByRole('button', { name: 'Save' });
         await user.type(screen.getByLabelText(/principal/i), ' dd');
         await user.type(screen.getByLabelText(/first/i), ' bsg!');
         await user.type(screen.getByLabelText(/last/i), 'asdfw ');
