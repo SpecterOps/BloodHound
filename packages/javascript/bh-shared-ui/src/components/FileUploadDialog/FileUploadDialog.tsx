@@ -17,6 +17,8 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { ReactNode } from 'react';
+import { usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { AppLink } from '../Navigation';
@@ -29,6 +31,9 @@ const FileUploadDialog: React.FC<{
     headerText?: ReactNode;
     description?: ReactNode;
 }> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
+    const { checkPermission } = usePermissions();
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+
     const {
         currentlyUploading,
         getFileUploadAcceptedTypes,
@@ -45,7 +50,9 @@ const FileUploadDialog: React.FC<{
         handleSubmit,
         handleRemoveFile,
         onClose,
-    } = useFileUploadDialogHandlers({ onCloseProp });
+    } = useFileUploadDialogHandlers({ onCloseProp, hasPermissionToUpload });
+
+    if (!hasPermissionToUpload) return null;
 
     return (
         <Dialog
