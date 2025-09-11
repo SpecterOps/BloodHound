@@ -349,7 +349,7 @@ func (s *BloodhoundDB) GetAllActiveUsers(ctx context.Context, order string, filt
 	var (
 		users  model.Users
 		result *gorm.DB
-		cursor = s.preload(model.UserAssociations()).WithContext(ctx)
+		cursor = s.db.WithContext(ctx).Select("id, principal_name, first_name, last_name, is_disabled")
 	)
 
 	if order != "" {
