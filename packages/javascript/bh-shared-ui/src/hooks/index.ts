@@ -96,11 +96,15 @@ export * from './useMountEffect';
 
 export * from './usePermissions';
 
+export * from './useListDisplayRoles';
+
 export * from './usePreviousValue';
 
 export * from './useSavedQueries';
 
 export * from './useSearch';
+
+export * from './usePrebuiltQueries';
 
 export * from './useSelectedTagName';
 

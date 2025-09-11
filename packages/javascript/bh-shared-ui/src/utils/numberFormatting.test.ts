@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { abbreviatedNumber } from './abbreviatedNumber';
+import { abbreviatedNumber, commaSeparatedNumber } from './numberFormatting';
 
-describe('abbreviatedNumber', () => {
+describe('numberFormatting', () => {
     it('returns numbers as strings', () => {
         const result = abbreviatedNumber(1);
         expect(typeof result).toBe('string');
@@ -39,5 +39,14 @@ describe('abbreviatedNumber', () => {
         expect(millions).toBe('31.0M');
         expect(billions).toBe('220.0B');
         expect(trillions).toBe('8.7T');
+    });
+    it('returns a comma separated number when provided with a number > 999', () => {
+        const formattedThousandNumber = commaSeparatedNumber(1842);
+        const formattedMillionNumber = commaSeparatedNumber(1000000);
+        const formattedBillionNumber = commaSeparatedNumber(1000000000);
+
+        expect(formattedThousandNumber).toBe('1,842');
+        expect(formattedMillionNumber).toBe('1,000,000');
+        expect(formattedBillionNumber).toBe('1,000,000,000');
     });
 });

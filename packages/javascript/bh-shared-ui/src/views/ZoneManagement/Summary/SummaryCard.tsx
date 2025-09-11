@@ -24,7 +24,7 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { useHighestPrivilegeTagId } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
-import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
+import { abbreviatedNumber } from '../../../utils/numberFormatting';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 
 type SummaryCardProps = {
