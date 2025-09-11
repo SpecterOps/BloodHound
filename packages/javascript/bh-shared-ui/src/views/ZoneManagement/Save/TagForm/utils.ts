@@ -36,8 +36,8 @@ export const useTagFormUtils = () => {
 
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
-    const isLabelLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${tagId}/save`);
-    const isZoneLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${tagId}/save`);
+    const isLabelLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/label`);
+    const isZoneLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone`);
 
     const tagKind: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
     const tagKindDisplay: 'Label' | 'Zone' = capitalize(tagKind) as 'Label' | 'Zone';
