@@ -20,6 +20,7 @@ import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
+import { ROUTE_PRIVILEGE_ZONES_ROOT, ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS, ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS, ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS } from '../../../routes';
 
 vi.mock('../../../hooks/useMeasure', () => ({
     useMeasure: vi.fn().mockImplementation(() => [200, 200]),
@@ -42,7 +43,7 @@ describe('Details', async () => {
     it('renders', async () => {
         render(
             <Routes>
-                <Route path='/privilege-zones/zone/:zoneId/details' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
             </Routes>,
             { route: '/privilege-zones/zone/1/details' }
         );
@@ -57,7 +58,7 @@ describe('Details', async () => {
     it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
         render(
             <Routes>
-                <Route path='/privilege-zones/zone/:zoneId/details' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
             </Routes>,
             { route: '/privilege-zones/zone/1/details' }
         );
@@ -88,7 +89,7 @@ describe('Details', async () => {
     it('handles object selection when a zone is already selected', async () => {
         render(
             <Routes>
-                <Route path='/privilege-zones/zone/:zoneId/details' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
             </Routes>,
             { route: '/privilege-zones/zone/1/details' }
         );
@@ -122,7 +123,7 @@ describe('Details', async () => {
     it('handles selector selection when a tier and object are already selected', async () => {
         render(
             <Routes>
-                <Route path='/privilege-zones/zone/:zoneId/details/member/:memberId' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS} element={<Details />} />
             </Routes>,
             { route: '/privilege-zones/zone/1/details/member/7' }
         );
@@ -157,7 +158,7 @@ describe('Details', async () => {
         render(
             <Routes>
                 <Route
-                    path='/privilege-zones/zone/:zoneId/details/selector/:selectorId/member/:memberId'
+                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS}
                     element={<Details />}
                 />
             </Routes>,
