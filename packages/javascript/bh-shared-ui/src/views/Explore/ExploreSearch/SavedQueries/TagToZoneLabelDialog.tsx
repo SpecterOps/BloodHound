@@ -62,8 +62,8 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const typeMatcher = isLabel ? isLabelTagType : isZoneTagType;
     const zoneLabelList = zonesQuery.data?.filter(typeMatcher);
 
-    const [zone, setZone] = useState('');
-    const [label, setLabel] = useState('');
+    const [zoneId, setZone] = useState('');
+    const [labelId, setLabel] = useState('');
 
     const handleValueChange = (val: string) => {
         if (isLabel) {
@@ -79,10 +79,9 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const onContinue = () => {
         if (isLabel) {
-            // todo should this be the id versus label/zone?
-            navigate(`/privilege-zones/label/${label}/save/selector`, { state: stateToPass });
+            navigate(`/privilege-zones/label/${labelId}/save/selector`, { state: stateToPass });
         } else {
-            navigate(`/privilege-zones/zone/${zone}/save/selector`, { state: stateToPass });
+            navigate(`/privilege-zones/zone/${zoneId}/save/selector`, { state: stateToPass });
         }
     };
 
@@ -90,7 +89,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
 
-    const continueDisabled = (isLabel && !label) || (!isLabel && !zone);
+    const continueDisabled = (isLabel && !labelId) || (!isLabel && !zoneId);
 
     return (
         <Dialog

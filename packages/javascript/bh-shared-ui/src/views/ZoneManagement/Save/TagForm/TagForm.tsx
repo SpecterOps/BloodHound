@@ -74,7 +74,7 @@ export const TagForm: FC = () => {
         showAnalysisToggle,
         showDeleteButton,
         formTitle,
-        tagType: tagType,
+        tagType,
         tagTypeDisplay,
         handleCreateNavigate,
         handleUpdateNavigate,
