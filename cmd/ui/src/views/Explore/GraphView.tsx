@@ -132,8 +132,8 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    const isLoading = graphHasDataQuery.isLoading || graphQuery.isLoading || customIconsQuery.isLoading;
-    const isError = graphHasDataQuery.isError || graphQuery.isError || customIconsQuery.isError;
+    const isLoading = graphHasDataQuery.isLoading || customIconsQuery.isLoading;
+    const isError = graphHasDataQuery.isError || customIconsQuery.isError;
 
     if (isLoading) {
         return (
@@ -226,7 +226,7 @@ const GraphView: FC = () => {
                 }
             />
 
-            <GraphProgress loading={isLoading} />
+            <GraphProgress loading={graphQuery.isLoading} />
             <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
                 <ExploreTable
