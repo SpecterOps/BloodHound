@@ -124,10 +124,6 @@ type SAMLConfiguration struct {
 	ServiceProviderCertificateCAChain string `json:"sp_ca_chain"`
 }
 
-type UIConfiguration struct {
-	EnableUserAnalytics bool `json:"enable_user_analytics"`
-}
-
 type DefaultAdminConfiguration struct {
 	PrincipalName string `json:"principal_name"`
 	Password      string `json:"password"`
@@ -168,7 +164,7 @@ type Configuration struct {
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
-	UI                           UIConfiguration           `json:"ui"`
+	EnableUserAnalytics          bool                      `json:"enable_user_analytics"`
 }
 
 func (s Configuration) TempDirectory() string {

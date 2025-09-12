@@ -19,8 +19,9 @@ package config
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/dawgs/drivers/neo4j"
+
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
 )
 
 // NewDefaultConfiguration returns a new Configuration struct containing all documented
@@ -82,9 +83,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 				LastName:      "User",
 				ExpireNow:     true,
 			},
-			UI: UIConfiguration{
-				EnableUserAnalytics: false,
-			},
+			EnableUserAnalytics: false,
 		}, nil
 	}
 }
