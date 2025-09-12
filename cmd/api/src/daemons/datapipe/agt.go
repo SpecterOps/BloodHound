@@ -430,7 +430,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(node.Node)
 			)
 
-			if (selector.AutoCertify == model.SeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.AllParentsChildrenAndSeeds {
+			if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
 				certified = model.AssetGroupCertificationAuto
 				certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 			}
@@ -466,7 +466,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				if oldSelectorNode.Certified != model.AssetGroupCertificationPending {
 					certified = oldSelectorNode.Certified
 					certifiedBy = oldSelectorNode.CertifiedBy
-				} else if (selector.AutoCertify == model.SeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.AllParentsChildrenAndSeeds {
+				} else if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
 					certified = model.AssetGroupCertificationAuto
 					certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 				}

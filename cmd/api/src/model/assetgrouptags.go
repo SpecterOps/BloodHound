@@ -77,12 +77,17 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
+type SelectorAutoCertifyMethod int
+
 const (
-	TierZeroGlyph              = "gem"
-	OwnedGlyph                 = "skull"
-	Disabled                   = 0
-	AllParentsChildrenAndSeeds = 1
-	SeedsOnly                  = 2
+	SelectorAutoCertifyMethodDisabled   SelectorAutoCertifyMethod = 0
+	SelectorAutoCertifyMethodAllMembers SelectorAutoCertifyMethod = 1
+	SelectorAutoCertifyMethodSeedsOnly  SelectorAutoCertifyMethod = 2
+)
+
+const (
+	TierZeroGlyph = "gem"
+	OwnedGlyph    = "skull"
 )
 
 type AssetGroupTag struct {
@@ -204,19 +209,19 @@ func (s SelectorSeed) ValidFilters() map[string][]FilterOperator {
 type AssetGroupTagSelectors []AssetGroupTagSelector
 
 type AssetGroupTagSelector struct {
-	ID              int         `json:"id"`
-	AssetGroupTagId int         `json:"asset_group_tag_id"`
-	CreatedAt       time.Time   `json:"created_at"`
-	CreatedBy       string      `json:"created_by"`
-	UpdatedAt       time.Time   `json:"updated_at"`
-	UpdatedBy       string      `json:"updated_by"`
-	DisabledAt      null.Time   `json:"disabled_at"`
-	DisabledBy      null.String `json:"disabled_by"`
-	Name            string      `json:"name" validate:"required"`
-	Description     string      `json:"description"`
-	AutoCertify     int         `json:"auto_certify"`
-	IsDefault       bool        `json:"is_default"`
-	AllowDisable    bool        `json:"allow_disable"`
+	ID              int                       `json:"id"`
+	AssetGroupTagId int                       `json:"asset_group_tag_id"`
+	CreatedAt       time.Time                 `json:"created_at"`
+	CreatedBy       string                    `json:"created_by"`
+	UpdatedAt       time.Time                 `json:"updated_at"`
+	UpdatedBy       string                    `json:"updated_by"`
+	DisabledAt      null.Time                 `json:"disabled_at"`
+	DisabledBy      null.String               `json:"disabled_by"`
+	Name            string                    `json:"name" validate:"required"`
+	Description     string                    `json:"description"`
+	AutoCertify     SelectorAutoCertifyMethod `json:"auto_certify"`
+	IsDefault       bool                      `json:"is_default"`
+	AllowDisable    bool                      `json:"allow_disable"`
 
 	Seeds []SelectorSeed `json:"seeds,omitempty" validate:"required" gorm:"-"`
 }

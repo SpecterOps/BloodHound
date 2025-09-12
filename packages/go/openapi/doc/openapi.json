@@ -19112,7 +19112,7 @@
               1,
               2
             ],
-            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllParentsChildrenAndSeeds), or 2 (SeedsOnly)"
+            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
           },
           "is_default": {
             "type": "boolean"
@@ -19261,7 +19261,7 @@
                   1,
                   2
                 ],
-                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllParentsChildrenAndSeeds), or 2 (SeedsOnly)"
+                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
               },
               "description": {
                 "type": "string"

@@ -48,7 +48,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = 1
+		autoCertify     = model.SelectorAutoCertifyMethodAllMembers
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -89,7 +89,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = 1
+		autoCertify     = model.SelectorAutoCertifyMethodAllMembers
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -131,8 +131,8 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 		updateDescription = "updated description"
 		isDefault         = false
 		allowDisable      = true
-		autoCertify       = 0
-		updateAutoCert    = 2
+		autoCertify       = model.SelectorAutoCertifyMethodDisabled
+		updateAutoCert    = model.SelectorAutoCertifyMethodSeedsOnly
 		disabledTime      = null.TimeFrom(time.Date(2025, time.March, 25, 12, 0, 0, 0, time.UTC))
 		testSeeds         = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
@@ -880,7 +880,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = 1
+		autoCertify   = model.SelectorAutoCertifyMethodAllMembers
 		test1Selector = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -889,7 +889,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			},
 			AllowDisable: true,
-			AutoCertify:  1,
+			AutoCertify:  model.SelectorAutoCertifyMethodAllMembers,
 		}
 		test2Selector = model.AssetGroupTagSelector{
 			Name:            "test2 selector name",
@@ -899,7 +899,7 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 				{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 			},
 			AllowDisable: true,
-			AutoCertify:  1,
+			AutoCertify:  model.SelectorAutoCertifyMethodAllMembers,
 		}
 	)
 
@@ -1017,7 +1017,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 		testMemberId    = 1
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = 2
+		autoCertify     = model.SelectorAutoCertifyMethodSeedsOnly
 		test1Selector   = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -1043,7 +1043,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		testDescription = "test description"
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = 2
+		autoCertify     = model.SelectorAutoCertifyMethodSeedsOnly
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
@@ -1111,7 +1111,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = 0
+		autoCertify   = model.SelectorAutoCertifyMethodDisabled
 		test1Selector = model.AssetGroupTagSelector{
 			Name:        "test selector name",
 			Description: "test description",
@@ -1159,7 +1159,7 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 		source               = 1
 		isDefault            = false
 		allowDisable         = true
-		autoCertify          = 2
+		autoCertify          = model.SelectorAutoCertifyMethodSeedsOnly
 		test1Selector        = model.AssetGroupTagSelector{
 			Name:        "test selector name",
 			Description: "test description",
@@ -1279,7 +1279,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 		source          = 1
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = 2
+		autoCertify     = model.SelectorAutoCertifyMethodSeedsOnly
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},

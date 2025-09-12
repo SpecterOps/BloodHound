@@ -83,8 +83,8 @@ const (
 	ErrorResponseInvalidTagGlyph                                     = "the glyph specified is invalid"
 	ErrorResponseAssetGroupTagDuplicateGlyph                         = "asset group tag glyph must be unique"
 	ErrorResponseAssetGroupMemberIDsRequired                         = "asset group member IDs are required"
-	ErrorResponseAssetGroupAutoCertifyInvalid                        = "auto_certify must be an input value of 0 (Disabled), 1 (AllParentsChildrenAndSeeds), or 2 (SeedsOnly)"
-	ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones = "auto_certify is only available for asset group tags of tag_type = 1 or privilege zones"
+	ErrorResponseAssetGroupAutoCertifyInvalid                        = "auto_certify must be an input value of 0 to 2"
+	ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones = "auto_certify is only available for asset group tags of tag_type = 1 (zones)"
 	ErrorResponseUnknownUser                                         = "unknown user"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"

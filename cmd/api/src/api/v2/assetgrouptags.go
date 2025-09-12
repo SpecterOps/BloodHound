@@ -73,9 +73,9 @@ type GetAssetGroupTagsResponse struct {
 
 type assetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
-	AutoCertify *int    `json:"auto_certify"`
-	Description *string `json:"description"`
-	Disabled    *bool   `json:"disabled"`
+	AutoCertify *model.SelectorAutoCertifyMethod `json:"auto_certify"`
+	Description *string                          `json:"description"`
+	Disabled    *bool                            `json:"disabled"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -169,7 +169,7 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 	return nil
 }
 
-func validateAutoCertifyInputWithFallback(assetGroupTag model.AssetGroupTag, autoCertify *int) error {
+func validateAutoCertifyInput(assetGroupTag model.AssetGroupTag, autoCertify *model.SelectorAutoCertifyMethod) error {
 	if autoCertify == nil {
 		return nil
 	}
@@ -179,7 +179,7 @@ func validateAutoCertifyInputWithFallback(assetGroupTag model.AssetGroupTag, aut
 	}
 
 	switch *autoCertify {
-	case model.Disabled, model.AllParentsChildrenAndSeeds, model.SeedsOnly:
+	case model.SelectorAutoCertifyMethodDisabled, model.SelectorAutoCertifyMethodAllMembers, model.SelectorAutoCertifyMethodSeedsOnly:
 		return nil
 	default:
 		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyInvalid)
@@ -206,7 +206,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, createSelectorRequest.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err := validateAutoCertifyInputWithFallback(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
+	} else if err := validateAutoCertifyInput(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, *createSelectorRequest.Description, false, true, *createSelectorRequest.AutoCertify, createSelectorRequest.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -265,7 +265,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 
 		// we can update AutoCertify on a default selector (as long as the selector is not tied to label)
 		if selUpdateReq.AutoCertify != nil {
-			if err := validateAutoCertifyInputWithFallback(assetGroupTag, selUpdateReq.AutoCertify); err != nil {
+			if err := validateAutoCertifyInput(assetGroupTag, selUpdateReq.AutoCertify); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
