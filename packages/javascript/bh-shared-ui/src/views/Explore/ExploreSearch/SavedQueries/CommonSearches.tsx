@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import fileDownload from 'js-file-download';
@@ -45,6 +46,7 @@ const CommonSearches = ({
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [source, setSource] = useState('');
@@ -162,10 +164,14 @@ const CommonSearches = ({
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
-                <button onClick={onToggleCommonQueries} data-testid='common-queries-toggle'>
+                <Button
+                    onClick={onToggleCommonQueries}
+                    className='flex justify-start items-center w-full pl-0'
+                    data-testid='common-queries-toggle'
+                    variant={'text'}>
                     <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                </button>
-                <h5 className='my-4 font-bold text-lg'>Pre-built Queries</h5>
+                    <span className='my-4 font-semibold text-lg'>Pre-built Queries</span>
+                </Button>
             </div>
 
             <div className={cn({ hidden: !showCommonQueries })}>
