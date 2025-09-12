@@ -20,7 +20,6 @@ import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTagId } from '../../../hooks';
 import {
     useSelectorMembersInfiniteQuery,
     useSelectorsInfiniteQuery,
@@ -51,6 +50,7 @@ export const getSavePath = (
     const tagType = zoneId ? 'zone' : 'label';
     let tagPathId = '';
 
+    console.log(tagType, zoneId, labelId);
     if (zoneId || labelId) {
         tagPathId = tagType === 'zone' ? zoneId ?? '' : labelId ?? '';
     }
@@ -76,12 +76,9 @@ export const getEditButtonState = (
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
-
-    const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const { zoneId, labelId, selectorId, memberId } = useParams();
     const tagKind = zoneId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
         {
@@ -119,6 +116,7 @@ const Details: FC = () => {
 
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
 
+    console.log(zoneId, labelId);
     return (
         <div className='h-full'>
             <div className='flex mt-6'>

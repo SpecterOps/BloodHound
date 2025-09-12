@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
-import { useHighestPrivilegeTagId, useTagsQuery } from '../../../hooks';
+import { useTagsQuery } from '../../../hooks';
 import { ROUTE_PRIVILEGE_ZONES_ROOT, ROUTE_PRIVILEGE_ZONES_SUMMARY } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
@@ -37,8 +37,7 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), labelId, selectorId } = useParams();
+    const { zoneId, labelId, selectorId } = useParams();
     const tagId = labelId === undefined ? zoneId : labelId;
 
     const context = useContext(ZoneManagementContext);
