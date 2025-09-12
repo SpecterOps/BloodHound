@@ -132,18 +132,15 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    const isLoading = graphHasDataQuery.isLoading || customIconsQuery.isLoading;
-    const isError = graphHasDataQuery.isError || customIconsQuery.isError;
-
-    if (isLoading) {
+    if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
-                <GraphProgress loading={isLoading} />
+                <GraphProgress loading={graphHasDataQuery.isLoading} />
             </div>
         );
     }
 
-    if (isError) return <GraphViewErrorAlert />;
+    if (graphHasDataQuery.isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
