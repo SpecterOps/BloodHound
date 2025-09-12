@@ -24,13 +24,31 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ozontech/allure-go/pkg/allure"
+	"github.com/ozontech/allure-go/pkg/framework/provider"
+	"github.com/ozontech/allure-go/pkg/framework/runner"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFilter(t *testing.T) {
-	require.Equal(t, []int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
-	require.Equal(t, []string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
+	r := runner.NewRunner(t, "BHCE: Intergration Tests")
+
+	r.NewTest("Test IsOdd function", func(t provider.T) {
+		t.Title("Test isOdd function")
+		t.Description("check odd nums")
+		t.Severity(allure.CRITICAL)
+		t.Require().Equal([]int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
+	}, "Tag @ Test Level: isOdd")
+
+	r.NewTest("Test isLong function", func(t provider.T) {
+		t.Title("Test isLong function")
+		t.Description("check for long chars")
+		t.Severity(allure.CRITICAL)
+		t.Require().Equal([]string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
+	}, "Tag @ Test Level: isLong")
+
+	r.RunTests()
 }
 
 func TestMap(t *testing.T) {
