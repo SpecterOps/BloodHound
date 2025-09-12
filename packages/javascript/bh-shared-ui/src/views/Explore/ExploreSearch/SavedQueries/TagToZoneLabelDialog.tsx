@@ -35,7 +35,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import { useTagsQuery } from '../../../../hooks';
 import { QueryLineItem } from '../../../../types';
@@ -53,17 +53,17 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useAppNavigate();
 
-    const tiersQuery = useTagsQuery();
+    const zonesQuery = useTagsQuery();
 
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
-    const isTierTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeTier;
+    const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
 
-    const typeMatcher = isLabel ? isLabelTagType : isTierTagType;
-    const zoneLabelList = tiersQuery.data?.filter(typeMatcher);
+    const typeMatcher = isLabel ? isLabelTagType : isZoneTagType;
+    const zoneLabelList = zonesQuery.data?.filter(typeMatcher);
 
-    const [zone, setZone] = useState('');
-    const [label, setLabel] = useState('');
+    const [zoneId, setZone] = useState('');
+    const [labelId, setLabel] = useState('');
 
     const handleValueChange = (val: string) => {
         if (isLabel) {
@@ -79,9 +79,9 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const onContinue = () => {
         if (isLabel) {
-            navigate(`/zone-management/save/label/${label}/selector`, { state: stateToPass });
+            navigate(`/privilege-zones/label/${labelId}/save/selector`, { state: stateToPass });
         } else {
-            navigate(`/zone-management/save/tier/${zone}/selector`, { state: stateToPass });
+            navigate(`/privilege-zones/zone/${zoneId}/save/selector`, { state: stateToPass });
         }
     };
 
@@ -89,7 +89,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
 
-    const continueDisabled = (isLabel && !label) || (!isLabel && !zone);
+    const continueDisabled = (isLabel && !labelId) || (!isLabel && !zoneId);
 
     return (
         <Dialog

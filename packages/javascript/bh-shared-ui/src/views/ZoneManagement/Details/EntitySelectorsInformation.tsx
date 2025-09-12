@@ -24,11 +24,12 @@ import { getTagUrlValue, itemSkeletons } from '../../../views';
 
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams } from '../../../hooks';
+import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
-    const { tierId, labelId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId, labelId, memberId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
@@ -62,14 +63,14 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`);
         },
         [tagId, navigate, labelId]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector/${id}`);
         },
         [tagId, navigate, labelId]
     );

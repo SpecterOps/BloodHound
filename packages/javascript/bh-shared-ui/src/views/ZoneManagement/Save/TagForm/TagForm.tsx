@@ -36,7 +36,7 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     AssetGroupTagTypeLabel,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
@@ -70,12 +70,12 @@ export const TagForm: FC = () => {
         privilegeZoneAnalysisEnabled,
         disableNameInput,
         isLabelLocation,
-        isUpdateTierLocation,
+        isUpdateZoneLocation,
         showAnalysisToggle,
         showDeleteButton,
         formTitle,
-        tagKind,
-        tagKindDisplay,
+        tagType,
+        tagTypeDisplay,
         handleCreateNavigate,
         handleUpdateNavigate,
         handleDeleteNavigate,
@@ -84,9 +84,9 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
-    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
-    const showSalesMessage = isUpdateTierLocation && SalesMessage;
-    const showTierList = isUpdateTierLocation && TierList;
+    const { ZoneList, SalesMessage } = useContext(ZoneManagementContext);
+    const showSalesMessage = isUpdateZoneLocation && SalesMessage;
+    const showZoneList = isUpdateZoneLocation && ZoneList;
 
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
@@ -110,30 +110,30 @@ export const TagForm: FC = () => {
                     name: formData.name,
                     description: formData.description,
                     position: null,
-                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
                 };
 
                 const response = await createTagMutation.mutateAsync({
                     values: requestValues,
                 });
 
-                addNotification(`${tagKindDisplay} was created successfully!`, undefined, {
+                addNotification(`${tagTypeDisplay} was created successfully!`, undefined, {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
 
                 handleCreateNavigate(response.id);
             } catch (error) {
-                handleError(error, 'creating', tagKind, addNotification);
+                handleError(error, 'creating', tagType, addNotification);
             }
         },
-        [createTagMutation, addNotification, handleCreateNavigate, tagKind, tagKindDisplay, isLabelLocation]
+        [createTagMutation, addNotification, handleCreateNavigate, tagType, tagTypeDisplay, isLabelLocation]
     );
 
     const handleUpdateTag = useCallback(
         async (formData: UpdateAssetGroupTagRequest) => {
             try {
                 if (!isDirty) {
-                    addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                    addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     });
                     return;
@@ -149,8 +149,8 @@ export const TagForm: FC = () => {
                 });
 
                 addNotification(
-                    `${tagKindDisplay} was updated successfully!`,
-                    `zone-management_update-${tagKind}_success_${tagId}`,
+                    `${tagTypeDisplay} was updated successfully!`,
+                    `privilege-zones_update-${tagType}_success_${tagId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -158,7 +158,7 @@ export const TagForm: FC = () => {
 
                 handleUpdateNavigate();
             } catch (error) {
-                handleError(error, 'updating', tagKind, addNotification);
+                handleError(error, 'updating', tagType, addNotification);
             }
         },
         [
@@ -166,8 +166,8 @@ export const TagForm: FC = () => {
             handleUpdateNavigate,
             addNotification,
             updateTagMutation,
-            tagKind,
-            tagKindDisplay,
+            tagType,
+            tagTypeDisplay,
             isDirty,
             privilegeZoneAnalysisEnabled,
         ]
@@ -178,8 +178,8 @@ export const TagForm: FC = () => {
             await deleteTagMutation.mutateAsync(tagId);
 
             addNotification(
-                `${tagKindDisplay} was deleted successfully!`,
-                `zone-management_delete-${tagKind}_success_${tagId}`,
+                `${tagTypeDisplay} was deleted successfully!`,
+                `privilege-zones_delete-${tagType}_success_${tagId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -188,9 +188,9 @@ export const TagForm: FC = () => {
             setDeleteDialogOpen(false);
             handleDeleteNavigate();
         } catch (error) {
-            handleError(error, 'deleting', tagKind, addNotification);
+            handleError(error, 'deleting', tagType, addNotification);
         }
-    }, [tagId, deleteTagMutation, addNotification, handleDeleteNavigate, tagKind, tagKindDisplay]);
+    }, [tagId, deleteTagMutation, addNotification, handleDeleteNavigate, tagType, tagTypeDisplay]);
 
     const onSubmit: SubmitHandler<UpdateAssetGroupTagRequest | CreateAssetGroupTagRequest> = useCallback(
         (formData) => {
@@ -227,7 +227,7 @@ export const TagForm: FC = () => {
                         <Skeleton className='' />
                         <CardContent>
                             <div className='flex justify-between'>
-                                <span>{`${tagKindDisplay} Information`}</span>
+                                <span>{`${tagTypeDisplay} Information`}</span>
                             </div>
                             <div className='flex flex-col gap-6 mt-6'>
                                 <div className='grid gap-2'>
@@ -258,7 +258,7 @@ export const TagForm: FC = () => {
                                 }}>
                                 <span>
                                     <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                    {`Delete ${tagKindDisplay}`}
+                                    {`Delete ${tagTypeDisplay}`}
                                 </span>
                             </Button>
                         )}
@@ -292,14 +292,14 @@ export const TagForm: FC = () => {
                         </CardHeader>
                         <CardContent>
                             <div className='flex justify-between'>
-                                <span>{`${tagKindDisplay} Information`}</span>
+                                <span>{`${tagTypeDisplay} Information`}</span>
                             </div>
                             <div className='flex flex-col gap-6 mt-6'>
                                 <FormField
                                     control={form.control}
                                     name='name'
                                     rules={{
-                                        required: `Please provide a name for the ${tagKindDisplay}`,
+                                        required: `Please provide a name for the ${tagTypeDisplay}`,
                                         maxLength: {
                                             value: MAX_NAME_LENGTH,
                                             message: `Name cannot exceed ${MAX_NAME_LENGTH} characters. Please provide a shorter name`,
@@ -395,7 +395,7 @@ export const TagForm: FC = () => {
                                 }}>
                                 <span>
                                     <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                    {`Delete ${tagKindDisplay}`}
+                                    {`Delete ${tagTypeDisplay}`}
                                 </span>
                             </Button>
                         )}
@@ -416,20 +416,20 @@ export const TagForm: FC = () => {
                     </div>
                 </div>
 
-                {showTierList && (
-                    <TierList
-                        tiers={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
+                {showZoneList && (
+                    <ZoneList
+                        zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeZone) || []}
                         setPosition={(position: number | undefined) => {
                             form.setValue('position', position, { shouldDirty: true });
                         }}
-                        name={tagQuery.data?.name || 'New Tier'}
+                        name={tagQuery.data?.name || 'New Zone'}
                     />
                 )}
             </form>
             <DeleteConfirmationDialog
                 isLoading={tagQuery.isLoading}
-                itemName={tagQuery.data?.name || tagKind}
-                itemType={tagKind}
+                itemName={tagQuery.data?.name || tagType}
+                itemType={tagType}
                 onCancel={handleCancel}
                 onConfirm={handleDeleteTag}
                 open={deleteDialogOpen}

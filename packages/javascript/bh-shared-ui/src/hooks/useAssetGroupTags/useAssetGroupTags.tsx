@@ -19,10 +19,10 @@ import {
     AssetGroupTag,
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
+    AssetGroupTagType,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
-    AssetGroupTagTypes,
+    AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
     CreateSelectorRequest,
     RequestOptions,
@@ -68,7 +68,7 @@ export interface PatchSelectorParams extends DeleteSelectorParams {
 const PAGE_SIZE = 25;
 
 export const zoneManagementKeys = {
-    all: ['zone-management'] as const,
+    all: ['privilege-zones'] as const,
     tags: () => [...zoneManagementKeys.all, 'tags'] as const,
     tagDetail: (tagId: string | number) => [...zoneManagementKeys.tags(), 'tagId', tagId] as const,
     selectors: () => [...zoneManagementKeys.all, 'selectors'] as const,
@@ -432,7 +432,7 @@ export const useOrderedTags = () => {
     const { isLoading, isError, data } = useAssetGroupTags();
 
     const orderedTags = (data ?? [])
-        ?.filter((tag) => tag.type === AssetGroupTagTypeTier)
+        ?.filter((tag) => tag.type === AssetGroupTagTypeZone)
         .sort((a, b) => {
             const aPos = a.position ?? 0;
             const bPos = b.position ?? 0;
@@ -460,7 +460,7 @@ export const useHighestPrivilegeTagId = () => {
 
 export const useLabels = () => {
     const tagsQuery = useAssetGroupTags();
-    const labelTypes: AssetGroupTagTypes[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
     if (tagsQuery.isLoading || tagsQuery.isError) return [];
 

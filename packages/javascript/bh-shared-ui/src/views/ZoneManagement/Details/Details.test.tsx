@@ -18,6 +18,12 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
+import {
+    ROUTE_PRIVILEGE_ZONES_ROOT,
+    ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
+    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
+} from '../../../routes';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
 
@@ -42,24 +48,24 @@ describe('Details', async () => {
     it('renders', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1' }
+            { route: '/privilege-zones/zone/1/details' }
         );
 
-        expect(await screen.findByText(/Tiers/)).toBeInTheDocument();
+        expect(await screen.findByText(/Zones/)).toBeInTheDocument();
 
-        expect(await screen.findByTestId('zone-management_details_tiers-list')).toBeInTheDocument();
+        expect(await screen.findByTestId('zone-management_details_zones-list')).toBeInTheDocument();
         expect(await screen.findByTestId('zone-management_details_selectors-list')).toBeInTheDocument();
         expect(await screen.findByTestId('zone-management_details_members-list')).toBeInTheDocument();
     });
 
-    it('has Tier Zero tier selected by default and no selectors or objects are selected', async () => {
+    it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1' }
+            { route: '/privilege-zones/zone/1/details' }
         );
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');
@@ -69,9 +75,9 @@ describe('Details', async () => {
         const objectsListItems = await within(objects).findAllByRole('listitem');
 
         longWait(() => {
-            expect(screen.getByTestId('zone-management_details_tiers-list')).toBeInTheDocument();
-            // The Tier Zero tier is selected by default
-            expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+            expect(screen.getByTestId('zone-management_details_zones-list')).toBeInTheDocument();
+            // The Tier Zero zone is selected by default
+            expect(screen.getByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
         });
 
         // No selector is selected to begin with
@@ -85,12 +91,12 @@ describe('Details', async () => {
         });
     });
 
-    it('handles object selection when a tier is already selected', async () => {
+    it('handles object selection when a zone is already selected', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId' element={<Details />} />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
             </Routes>,
-            { route: '/zone-management/details/tier/1' }
+            { route: '/privilege-zones/zone/1/details' }
         );
 
         longWait(async () => {
@@ -106,7 +112,7 @@ describe('Details', async () => {
 
         longWait(() => {
             // The Tier Zero tier is still selected when selecting an object that is within it
-            expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+            expect(screen.getByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
         });
 
         // No selector is selected
@@ -122,9 +128,12 @@ describe('Details', async () => {
     it('handles selector selection when a tier and object are already selected', async () => {
         render(
             <Routes>
-                <Route path='/zone-management/details/tier/:tierId/member/:memberId' element={<Details />} />
+                <Route
+                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS}
+                    element={<Details />}
+                />
             </Routes>,
-            { route: '/zone-management/details/tier/1/member/7' }
+            { route: '/privilege-zones/zone/1/details/member/7' }
         );
 
         const selector7 = await screen.findByText('tier-0-selector-7');
@@ -146,22 +155,22 @@ describe('Details', async () => {
                 expect(li.childNodes).toHaveLength(1);
             });
 
-            // The Tier Zero tier is still selected when selecting a selector that is within it
-            expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+            // The Tier Zero zone is still selected when selecting a selector that is within it
+            expect(screen.getByTestId('zone-management_details_zones-list_active-zones-item-1')).toBeInTheDocument();
 
             expect(await screen.findByRole('button', { name: /Edit/ })).toBeInTheDocument();
         });
     });
 
-    it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
+    it('will deselect both the selected selector and selected object when a different zone is selected', async () => {
         render(
             <Routes>
                 <Route
-                    path='/zone-management/details/tier/:tierId/selector/:selectorId/member/:memberId'
+                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS}
                     element={<Details />}
                 />
             </Routes>,
-            { route: '/zone-management/details/tier/1/selector/7/member/7' }
+            { route: '/privilege-zones/zone/1/details/selector/7/member/7' }
         );
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');
@@ -171,8 +180,8 @@ describe('Details', async () => {
         let objectsListItems = await within(objects).findAllByRole('listitem');
 
         longWait(async () => {
-            expect(screen.getByText('Tier-2')).toBeInTheDocument();
-            await user.click(screen.getByText('Tier-2'));
+            expect(screen.getByText('Zone-2')).toBeInTheDocument();
+            await user.click(screen.getByText('Zone-2'));
 
             // This list rerenders with different list items so we have to grab those again
             selectorsListItems = await within(selectors).findAllByRole('listitem');
@@ -187,7 +196,7 @@ describe('Details', async () => {
             });
 
             expect(
-                await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-3')
+                await screen.findByTestId('zone-management_details_zones-list_active-zones-item-3')
             ).toBeInTheDocument();
         });
     });

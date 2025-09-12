@@ -23,11 +23,11 @@ import DynamicDetails from './DynamicDetails';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
-    const { tierId, labelId, selectorId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const { zoneId, labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? zoneId : labelId;
 
     const tagQuery = useQuery({
-        queryKey: ['zone-management', 'tag', tagId],
+        queryKey: ['privilege-zones', 'tag', tagId],
         queryFn: async () => {
             if (!tagId) return undefined;
             return apiClient.getAssetGroupTag(tagId).then((res) => {
@@ -38,7 +38,7 @@ export const SelectedDetails: FC = () => {
     });
 
     const selectorQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId, 'selectors', selectorId],
+        queryKey: ['privilege-zones', 'tags', tagId, 'selectors', selectorId],
         queryFn: async () => {
             if (!tagId || !selectorId) return undefined;
             return apiClient.getAssetGroupTagSelector(tagId, selectorId).then((res) => {
@@ -49,7 +49,7 @@ export const SelectedDetails: FC = () => {
     });
 
     const memberQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId, 'member', memberId],
+        queryKey: ['privilege-zones', 'tags', tagId, 'member', memberId],
         queryFn: async () => {
             if (!tagId || !memberId) return undefined;
             return apiClient.getAssetGroupTagMemberInfo(tagId, memberId).then((res) => {

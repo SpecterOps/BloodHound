@@ -17,7 +17,7 @@
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
     SeedTypeCypher,
     SeedTypeObjectId,
 } from 'js-client-library';
@@ -81,7 +81,7 @@ describe('DynamicDetails', () => {
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
-    it('renders details for a selected tier', async () => {
+    it('renders details for a selected zone', async () => {
         const testTag = {
             isLoading: false,
             isError: false,
@@ -99,7 +99,7 @@ describe('DynamicDetails', () => {
                 updated_at: '2024-07-26T02:15:04.556Z',
                 updated_by: 'Deontae34@hotmail.com',
                 position: 0,
-                type: 1 as AssetGroupTagTypes,
+                type: 1 as AssetGroupTagType,
             },
         } as unknown as UseQueryResult<AssetGroupTag | undefined>;
 
