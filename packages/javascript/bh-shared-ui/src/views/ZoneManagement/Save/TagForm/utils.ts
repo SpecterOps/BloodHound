@@ -40,7 +40,7 @@ export const useTagFormUtils = () => {
     const isZoneLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone`);
 
     const tagKind: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
-    const tagKindDisplay: 'Label' | 'Zone' = capitalize(tagKind) as 'Label' | 'Zone';
+    const tagTypeDisplay: 'Label' | 'Zone' = capitalize(tagKind) as 'Label' | 'Zone';
 
     const isUpdateZoneLocation = isZoneLocation && zoneId !== '';
     const isUpdateLabelLocation = isLabelLocation && labelId;
@@ -81,7 +81,7 @@ export const useTagFormUtils = () => {
         disableNameInput,
         formTitle,
         tagKind,
-        tagKindDisplay,
+        tagTypeDisplay,
         isLabelLocation,
         isZoneLocation,
         isUpdateZoneLocation,

@@ -24,7 +24,7 @@ export const useZonePathParams = () => {
     const isZoneLocation = zoneId !== '';
 
     const tagKind: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
-    const tagKindDisplay: 'Label' | 'Zone' = isLabelLocation ? 'Label' : 'Zone';
+    const tagTypeDisplay: 'Label' | 'Zone' = isLabelLocation ? 'Label' : 'Zone';
 
     return {
         tagId,
@@ -35,6 +35,6 @@ export const useZonePathParams = () => {
         isLabelLocation,
         isZoneLocation,
         tagKind,
-        tagKindDisplay,
+        tagTypeDisplay,
     };
 };
