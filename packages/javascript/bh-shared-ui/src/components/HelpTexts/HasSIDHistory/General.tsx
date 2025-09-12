@@ -27,7 +27,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                 {typeFormat(targetType)} {targetName}.
             </Typography>
             <Typography variant='body2'>
-                When a Kerberos ticket is created for {sourceName}, it will include the SID for {targetName} and therefore grant {sourceName} the same privileges and permissions as {targetName}.
+                When a Kerberos ticket is created for {sourceName}, it will include the SID for {targetName} and
+                therefore grant {sourceName} the same privileges and permissions as {targetName}.
             </Typography>
         </>
     );
