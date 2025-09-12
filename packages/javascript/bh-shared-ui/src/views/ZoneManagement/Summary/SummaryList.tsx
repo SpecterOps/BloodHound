@@ -16,9 +16,9 @@
 
 import {
     AssetGroupTag,
+    AssetGroupTagType,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagType,
     AssetGroupTagTypeZone,
 } from 'js-client-library';
 import React, { FC } from 'react';
