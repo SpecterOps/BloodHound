@@ -14,32 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Most of these routes are not being used, why do we have them?
 export const DEFAULT_PRIVILEGE_ZONES_ROUTE = 'zone/';
 export const ROUTE_PRIVILEGE_ZONES_ROOT = '/privilege-zones';
 
 export const ROUTE_PRIVILEGE_ZONES_SUMMARY = '/summary';
-export const ROUTE_PRIVILEGE_ZONES_SUMMARY_ZONE_DETAILS = `/zone/:zoneId/summary`;
-export const ROUTE_PRIVILEGE_ZONES_SUMMARY_LABEL_DETAILS = `/label/:labelId/summary`;
+export const ROUTE_PRIVILEGE_ZONES_SUMMARY_ZONE_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SUMMARY}`;
+export const ROUTE_PRIVILEGE_ZONES_SUMMARY_LABEL_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SUMMARY}`;
 
 export const ROUTE_PRIVILEGE_ZONES_DETAILS = '/details';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/zone/:zoneId/details`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS = `/label/:labelId/details`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS = `/zone/:zoneId/details/selector/:selectorId`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS = `/zone/:zoneId/details/member/:memberId`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS = `/zone/:zoneId/details/selector/:selectorId/member/:memberId`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS = `/label/:labelId/details/selector/:selectorId`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS = '/label/:labelId/details/member/:memberId';
+export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}/member/:memberId`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId/member/:memberId`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}/member/:memberId`;
 export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS =
-    '/label/:labelId/details/selector/:selectorId/member/:memberId';
+    `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId/member/:memberId`;
 
 export const ROUTE_PRIVILEGE_ZONES_SAVE = '/save';
-export const ROUTE_PRIVILEGE_ZONES_UPDATE_ZONE = '/zone/:zoneId/save';
-export const ROUTE_PRIVILEGE_ZONES_UPDATE_LABEL = '/label/:labelId/save';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_UPDATE_SELECTOR = '/zone/:zoneId/save/selector/:selectorId';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_CREATE_SELECTOR = '/zone/:zoneId/save/selector';
-export const ROUTE_PRIVILEGE_ZONES_LABEL_UPDATE_SELECTOR = '/label/:labelId/save/selector/:selectorId';
-export const ROUTE_PRIVILEGE_ZONES_LABEL_CREATE_SELECTOR = '/label/:labelId/save/selector';
+export const ROUTE_PRIVILEGE_ZONES_UPDATE_ZONE = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SAVE}`;
+export const ROUTE_PRIVILEGE_ZONES_UPDATE_LABEL = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SAVE}`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_UPDATE_SELECTOR = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector/:selectorId`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_CREATE_SELECTOR = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_UPDATE_SELECTOR = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector/:selectorId`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_CREATE_SELECTOR = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector`;
 
 export type Routable = {
     path: string;
