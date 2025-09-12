@@ -79,14 +79,14 @@ const Details: FC = () => {
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
     const { zoneId, labelId, selectorId, memberId } = useParams();
-    const tagKind = zoneId ? 'zone' : 'label';
+    const tagType = zoneId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
         {
             path:
                 ROUTE_PRIVILEGE_ZONES_ROOT +
                 '/' +
                 DEFAULT_PRIVILEGE_ZONES_ROUTE +
-                tagKind +
+                tagType +
                 ROUTE_PRIVILEGE_ZONES_DETAILS,
             caseSensitive: false,
             end: false,

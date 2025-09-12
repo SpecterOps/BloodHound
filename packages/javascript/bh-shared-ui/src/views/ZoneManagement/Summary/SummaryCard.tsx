@@ -18,7 +18,7 @@ import { Button, Card } from '@bloodhoundenterprise/doodleui';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagTypeZone, AssetGroupTagTypes } from 'js-client-library';
+import { AssetGroupTagTypeZone, AssetGroupTagType } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { useHighestPrivilegeTagId } from '../../../hooks';
@@ -29,7 +29,7 @@ import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 
 type SummaryCardProps = {
     title: string;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     selectorCount: number | undefined;
     memberCount: number | undefined;
     id: number;

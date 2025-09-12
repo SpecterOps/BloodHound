@@ -22,7 +22,7 @@ import {
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
     CreateAssetGroupTagRequest,
     CreateSelectorRequest,
     RequestOptions,
@@ -460,7 +460,7 @@ export const useHighestPrivilegeTagId = () => {
 
 export const useLabels = () => {
     const tagsQuery = useAssetGroupTags();
-    const labelTypes: AssetGroupTagTypes[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
     if (tagsQuery.isLoading || tagsQuery.isError) return [];
 

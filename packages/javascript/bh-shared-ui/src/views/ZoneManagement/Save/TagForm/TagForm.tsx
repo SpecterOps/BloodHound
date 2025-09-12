@@ -74,7 +74,7 @@ export const TagForm: FC = () => {
         showAnalysisToggle,
         showDeleteButton,
         formTitle,
-        tagKind,
+        tagType: tagType,
         tagTypeDisplay,
         handleCreateNavigate,
         handleUpdateNavigate,
@@ -123,10 +123,10 @@ export const TagForm: FC = () => {
 
                 handleCreateNavigate(response.id);
             } catch (error) {
-                handleError(error, 'creating', tagKind, addNotification);
+                handleError(error, 'creating', tagType, addNotification);
             }
         },
-        [createTagMutation, addNotification, handleCreateNavigate, tagKind, tagTypeDisplay, isLabelLocation]
+        [createTagMutation, addNotification, handleCreateNavigate, tagType, tagTypeDisplay, isLabelLocation]
     );
 
     const handleUpdateTag = useCallback(
@@ -150,7 +150,7 @@ export const TagForm: FC = () => {
 
                 addNotification(
                     `${tagTypeDisplay} was updated successfully!`,
-                    `privilege-zones_update-${tagKind}_success_${tagId}`,
+                    `privilege-zones_update-${tagType}_success_${tagId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -158,7 +158,7 @@ export const TagForm: FC = () => {
 
                 handleUpdateNavigate();
             } catch (error) {
-                handleError(error, 'updating', tagKind, addNotification);
+                handleError(error, 'updating', tagType, addNotification);
             }
         },
         [
@@ -166,7 +166,7 @@ export const TagForm: FC = () => {
             handleUpdateNavigate,
             addNotification,
             updateTagMutation,
-            tagKind,
+            tagType,
             tagTypeDisplay,
             isDirty,
             privilegeZoneAnalysisEnabled,
@@ -179,7 +179,7 @@ export const TagForm: FC = () => {
 
             addNotification(
                 `${tagTypeDisplay} was deleted successfully!`,
-                `privilege-zones_delete-${tagKind}_success_${tagId}`,
+                `privilege-zones_delete-${tagType}_success_${tagId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -188,9 +188,9 @@ export const TagForm: FC = () => {
             setDeleteDialogOpen(false);
             handleDeleteNavigate();
         } catch (error) {
-            handleError(error, 'deleting', tagKind, addNotification);
+            handleError(error, 'deleting', tagType, addNotification);
         }
-    }, [tagId, deleteTagMutation, addNotification, handleDeleteNavigate, tagKind, tagTypeDisplay]);
+    }, [tagId, deleteTagMutation, addNotification, handleDeleteNavigate, tagType, tagTypeDisplay]);
 
     const onSubmit: SubmitHandler<UpdateAssetGroupTagRequest | CreateAssetGroupTagRequest> = useCallback(
         (formData) => {
@@ -428,8 +428,8 @@ export const TagForm: FC = () => {
             </form>
             <DeleteConfirmationDialog
                 isLoading={tagQuery.isLoading}
-                itemName={tagQuery.data?.name || tagKind}
-                itemType={tagKind}
+                itemName={tagQuery.data?.name || tagType}
+                itemType={tagType}
                 onCancel={handleCancel}
                 onConfirm={handleDeleteTag}
                 open={deleteDialogOpen}

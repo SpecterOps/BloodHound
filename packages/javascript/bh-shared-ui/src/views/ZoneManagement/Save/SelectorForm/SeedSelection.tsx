@@ -44,21 +44,21 @@ import { SelectorFormInputs } from './types';
 
 const getSelectorExpansionMethod = (
     tagId: string,
-    tagKind: 'label' | 'zone',
+    tagType: 'label' | 'zone',
     ownedId: string | undefined
 ): SeedExpansionMethod => {
     // Owned is a specific label that does not expansion
     if (tagId === ownedId) return SeedExpansionMethodNone;
 
-    return tagKind === 'zone' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
+    return tagType === 'zone' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
 
 const SeedSelection: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
-    const { tagKind, tagId } = useZonePathParams();
+    const { tagType, tagId } = useZonePathParams();
     const ownedId = useOwnedTagId();
 
-    const expansion = getSelectorExpansionMethod(tagId, tagKind, ownedId?.toString());
+    const expansion = getSelectorExpansionMethod(tagId, tagType, ownedId?.toString());
 
     const previewQuery = useQuery({
         queryKey: ['privilege-zones', 'preview-selectors', selectorType, seeds, expansion],

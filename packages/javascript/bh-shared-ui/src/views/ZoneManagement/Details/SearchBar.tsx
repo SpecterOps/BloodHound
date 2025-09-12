@@ -41,14 +41,14 @@ const SearchBar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
     const navigate = useAppNavigate();
-    const { tagId, tagKind } = useZonePathParams();
+    const { tagId, tagType } = useZonePathParams();
 
     const searchQuery = useQuery({
-        queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, tagKind],
+        queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, tagType],
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
-                tag_type: tagKind === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
+                tag_type: tagType === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
@@ -63,11 +63,11 @@ const SearchBar: React.FC = () => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${item.id}/details`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${item.id}/details`);
         } else if (isSelector(item)) {
-            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${item.asset_group_tag_id}/details/selector/${item.id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${item.asset_group_tag_id}/details/selector/${item.id}`);
         } else {
-            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${item.asset_group_tag_id}/details/member/${item.id}`);
+            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${item.asset_group_tag_id}/details/member/${item.id}`);
         }
     };
 
@@ -91,7 +91,7 @@ const SearchBar: React.FC = () => {
     });
 
     const sectorMap: SectorMap =
-        tagKind === 'label'
+        tagType === 'label'
             ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
             : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
 

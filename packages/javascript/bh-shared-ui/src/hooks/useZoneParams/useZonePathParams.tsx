@@ -23,7 +23,7 @@ export const useZonePathParams = () => {
     const isLabelLocation = labelId !== undefined;
     const isZoneLocation = zoneId !== '';
 
-    const tagKind: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
+    const tagType: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
     const tagTypeDisplay: 'Label' | 'Zone' = isLabelLocation ? 'Label' : 'Zone';
 
     return {
@@ -34,7 +34,7 @@ export const useZonePathParams = () => {
         memberId,
         isLabelLocation,
         isZoneLocation,
-        tagKind,
+        tagType,
         tagTypeDisplay,
     };
 };

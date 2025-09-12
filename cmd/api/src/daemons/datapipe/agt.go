@@ -541,7 +541,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			selectorIds   []int
 			selectedNodes []model.AssetGroupSelectorNode
 
-			tagKind = tag.ToKind()
+			tagType = tag.ToKind()
 
 			oldTaggedNodes         = cardinality.NewBitmap64()
 			newTaggedNodes         = cardinality.NewBitmap64()
@@ -556,7 +556,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 		if selectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selectorIds...); err != nil {
 			return err
 		} else if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
-			filters := []graph.Criteria{query.Kind(query.Node(), tagKind)}
+			filters := []graph.Criteria{query.Kind(query.Node(), tagType)}
 			if additionalFilters != nil {
 				filters = append(filters, additionalFilters...)
 			}
@@ -602,7 +602,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 					node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
 				}
 
-				node.AddKinds(tagKind)
+				node.AddKinds(tagType)
 				err = tx.UpdateNode(node)
 				return err == nil
 			})
@@ -625,7 +625,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			// 5. Remove the old nodes
 			oldTaggedNodes.Each(func(nodeId uint64) bool {
 				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
-				node.DeleteKinds(tagKind)
+				node.DeleteKinds(tagType)
 				err = tx.UpdateNode(node)
 				return err == nil
 			})
@@ -700,13 +700,13 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 		return err
 	} else {
 		for _, tag := range tags {
-			tagKind := tag.ToKind()
+			tagType := tag.ToKind()
 			if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
+				if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagType))); err != nil {
 					return err
 				} else {
 					for _, node := range taggedNodeSet {
-						node.DeleteKinds(tagKind)
+						node.DeleteKinds(tagType)
 						if err := tx.UpdateNode(node); err != nil {
 							slog.WarnContext(ctx, "AGT: Error cleaning node", slog.String("nodeId", node.ID.String()), slog.String("err", err.Error()))
 						}
@@ -723,13 +723,13 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 }
 
 func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, assetGroupTag model.AssetGroupTag) error {
-	tagKind := assetGroupTag.ToKind()
+	tagType := assetGroupTag.ToKind()
 	if err := graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
+		if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagType))); err != nil {
 			return err
 		} else {
 			for _, node := range taggedNodeSet {
-				node.DeleteKinds(tagKind)
+				node.DeleteKinds(tagType)
 				if err = tx.UpdateNode(node); err != nil {
 					return err
 				}

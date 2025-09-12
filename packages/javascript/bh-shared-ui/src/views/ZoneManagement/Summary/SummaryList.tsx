@@ -18,7 +18,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
     AssetGroupTagTypeZone,
 } from 'js-client-library';
 import React, { FC } from 'react';
@@ -36,7 +36,7 @@ type SummaryListProps = {
 };
 
 const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, title }) => {
-    const targetTypes: AssetGroupTagTypes[] =
+    const targetTypes: AssetGroupTagType[] =
         title === 'Zones' ? [AssetGroupTagTypeZone] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
     return (

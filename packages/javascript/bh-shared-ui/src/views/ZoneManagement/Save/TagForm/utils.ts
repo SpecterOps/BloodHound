@@ -39,8 +39,8 @@ export const useTagFormUtils = () => {
     const isLabelLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/label`);
     const isZoneLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone`);
 
-    const tagKind: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
-    const tagTypeDisplay: 'Label' | 'Zone' = capitalize(tagKind) as 'Label' | 'Zone';
+    const tagType: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
+    const tagTypeDisplay: 'Label' | 'Zone' = capitalize(tagType) as 'Label' | 'Zone';
 
     const isUpdateZoneLocation = isZoneLocation && zoneId !== '';
     const isUpdateLabelLocation = isLabelLocation && labelId;
@@ -50,10 +50,10 @@ export const useTagFormUtils = () => {
         navigate(`${location.pathname}/${tagId}/selector`);
     };
 
-    const handleUpdateNavigate = () => navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${tagId}/details`);
+    const handleUpdateNavigate = () => navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagId}/details`);
 
     const handleDeleteNavigate = () =>
-        navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagKind}/${tagKind === 'zone' ? topTagId : ownedId}/details`);
+        navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagType === 'zone' ? topTagId : ownedId}/details`);
 
     const showAnalysisToggle = privilegeZoneAnalysisEnabled && isUpdateZoneLocation && zoneId !== topTagId?.toString();
 
@@ -80,7 +80,7 @@ export const useTagFormUtils = () => {
         privilegeZoneAnalysisEnabled,
         disableNameInput,
         formTitle,
-        tagKind,
+        tagType,
         tagTypeDisplay,
         isLabelLocation,
         isZoneLocation,
