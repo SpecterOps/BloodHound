@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
+import { Button, Checkbox, Label } from '@bloodhoundenterprise/doodleui';
+import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
@@ -226,9 +226,7 @@ const CypherSearchInner = ({
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
-    const handleAutoRunQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setAutoRun(event.target.checked);
-    };
+    const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
 
     const handleSaveAs = () => {
         setSelected({ query: '', id: undefined });
@@ -252,17 +250,16 @@ const CypherSearchInner = ({
                 <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} clearMessage={handleClearMessage} />
-                        <FormControlLabel
-                            className='mr-0 whitespace-nowrap'
-                            control={
-                                <Checkbox
-                                    checked={autoRun}
-                                    onChange={handleAutoRunQueryChange}
-                                    inputProps={{ 'aria-label': 'controlled' }}
-                                />
-                            }
-                            label='Auto-run selected query'
-                        />
+                        <div className='flex items-center gap-4 whitespace-nowrap pr-2'>
+                            <Checkbox
+                                id='auto-run-selected-query'
+                                checked={autoRun}
+                                onCheckedChange={handleAutoRunQueryChange}
+                            />
+                            <Label htmlFor='auto-run-selected-query' className='font-normal cursor-pointer'>
+                                Auto-run selected query
+                            </Label>
+                        </div>
                     </div>
 
                     <div className='flex gap-2 shrink-0 '>
