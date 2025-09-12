@@ -21,7 +21,7 @@ import { DEFAULT_PRIVILEGE_ZONES_ROUTE, ROUTE_PRIVILEGE_ZONES_SUMMARY } from '..
 
 const DetailsRoot: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
-    if (tagId) {
+    if (tagId !== undefined) {
         return <AppNavigate to={DEFAULT_PRIVILEGE_ZONES_ROUTE + tagId + ROUTE_PRIVILEGE_ZONES_SUMMARY} replace />;
     } else {
         return <Skeleton className='h-24' />;
