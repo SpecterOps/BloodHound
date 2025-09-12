@@ -35,11 +35,13 @@ import {
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+    AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
     CreateAssetGroupTagRequest,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
+import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
@@ -72,6 +74,7 @@ export const TagForm: FC = () => {
         isLabelLocation,
         isUpdateTierLocation,
         showAnalysisToggle,
+        isTierLocation,
         showDeleteButton,
         formTitle,
         tagKind,
@@ -88,16 +91,34 @@ export const TagForm: FC = () => {
     const showSalesMessage = isUpdateTierLocation && SalesMessage;
     const showTierList = isUpdateTierLocation && TierList;
 
+    const diffValues = (
+        data: AssetGroupTag | undefined,
+        formValues: UpdateAssetGroupTagRequest
+    ): Partial<UpdateAssetGroupTagRequest> => {
+        if (data === undefined) return formValues;
+        const workingCopy = { ...formValues };
+        const diffed: Partial<UpdateAssetGroupTagRequest> = {};
+
+        if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
+        if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+        if (data.type !== workingCopy.type) diffed.type = workingCopy.type;
+        if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+        if (data.require_certify != workingCopy.require_certify) diffed.require_certify = workingCopy.require_certify;
+        if (data.analysis_enabled !== workingCopy.analysis_enabled)
+            diffed.analysis_enabled = workingCopy.analysis_enabled;
+
+        return diffed;
+    };
+
     const form = useForm<UpdateAssetGroupTagRequest>({
         defaultValues: {
             name: '',
             description: '',
+            require_certify: false,
             analysis_enabled: false,
             position: -1,
         },
     });
-
-    const { isDirty } = form.formState;
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -109,6 +130,7 @@ export const TagForm: FC = () => {
                 const requestValues = {
                     name: formData.name,
                     description: formData.description,
+                    require_certify: formData.require_certify,
                     position: null,
                     type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
                 };
@@ -129,49 +151,46 @@ export const TagForm: FC = () => {
         [createTagMutation, addNotification, handleCreateNavigate, tagKind, tagKindDisplay, isLabelLocation]
     );
 
-    const handleUpdateTag = useCallback(
-        async (formData: UpdateAssetGroupTagRequest) => {
-            try {
-                if (!isDirty) {
-                    addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    });
-                    return;
-                }
-
-                const updatedValues = { ...formData };
-
-                if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
-
-                await updateTagMutation.mutateAsync({
-                    updatedValues,
-                    tagId,
+    const handleUpdateTag = useCallback(async () => {
+        try {
+            const diffedValues = diffValues(tagQuery.data, { ...form.getValues() });
+            if (isEmpty(diffedValues)) {
+                addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
-
-                addNotification(
-                    `${tagKindDisplay} was updated successfully!`,
-                    `zone-management_update-${tagKind}_success_${tagId}`,
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
-
-                handleUpdateNavigate();
-            } catch (error) {
-                handleError(error, 'updating', tagKind, addNotification);
+                return;
             }
-        },
-        [
-            tagId,
-            handleUpdateNavigate,
-            addNotification,
-            updateTagMutation,
-            tagKind,
-            tagKindDisplay,
-            isDirty,
-            privilegeZoneAnalysisEnabled,
-        ]
-    );
+
+            const updatedValues = { ...diffedValues };
+
+            if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+
+            await updateTagMutation.mutateAsync({
+                updatedValues,
+                tagId,
+            });
+
+            addNotification(
+                `${tagKindDisplay} was updated successfully!`,
+                `zone-management_update-${tagKind}_success_${tagId}`,
+                {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+
+            handleUpdateNavigate();
+        } catch (error) {
+            handleError(error, 'updating', tagKind, addNotification);
+        }
+    }, [
+        tagId,
+        handleUpdateNavigate,
+        addNotification,
+        updateTagMutation,
+        tagKind,
+        tagKindDisplay,
+        privilegeZoneAnalysisEnabled,
+    ]);
 
     const handleDeleteTag = useCallback(async () => {
         try {
@@ -197,7 +216,7 @@ export const TagForm: FC = () => {
             if (tagId === '') {
                 handleCreateTag(formData as CreateAssetGroupTagRequest);
             } else {
-                handleUpdateTag(formData);
+                handleUpdateTag();
             }
         },
         [tagId, handleCreateTag, handleUpdateTag]
@@ -211,6 +230,7 @@ export const TagForm: FC = () => {
                 name: tagQuery.data.name,
                 description: tagQuery.data.description,
                 position: tagQuery.data.position,
+                require_certify: tagQuery.data.require_certify || false,
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
             });
         }
@@ -340,6 +360,29 @@ export const TagForm: FC = () => {
                                         </FormItem>
                                     )}
                                 />
+                                {isTierLocation && (
+                                    <FormField
+                                        control={form.control}
+                                        name='require_certify'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Required Certification</FormLabel>
+                                                <FormControl>
+                                                    <Switch
+                                                        {...field}
+                                                        value={field.value?.toString()}
+                                                        data-testid='zone-management_save_tag-form_require_certify-toggle'
+                                                        checked={field.value || false}
+                                                        onCheckedChange={field.onChange}
+                                                        label='Enable this to mandate certification for all members within this zone'
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+
                                 {showAnalysisToggle && (
                                     <FormField
                                         control={form.control}

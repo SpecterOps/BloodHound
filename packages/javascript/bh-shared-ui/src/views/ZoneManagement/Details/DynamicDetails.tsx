@@ -15,7 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector, SeedTypeCypher, SeedTypesMap } from 'js-client-library';
+import {
+    AssetGroupTag,
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyMap,
+    SeedTypeCypher,
+    SeedTypesMap,
+} from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
@@ -78,8 +84,8 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                <div className='mt-4' hidden>
-                    <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
+                <div className='mt-4'>
+                    <DetailField label='Certification' value={data.require_certify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
             {tagId !== topTagId?.toString() && tagId !== ownedId?.toString() && SalesMessage && <SalesMessage />}
@@ -110,8 +116,11 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                <div className='mt-4' hidden>
-                    <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
+                <div className='mt-4'>
+                    <DetailField
+                        label='Automatic Certification'
+                        value={AssetGroupTagSelectorAutoCertifyMap[data.auto_certify] ?? 'Disabled'}
+                    />
                 </div>
                 <div className='mt-4'>
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
