@@ -26,6 +26,8 @@ VALUES (
        )
 ON CONFLICT DO NOTHING;
 
+-- This migration changes the auto_certify column type from a boolean to an integer type
+-- Then it converts the previous boolean values into enum-like integer values of 0, 1, or 2
 DO $$
 	BEGIN
 		IF (
@@ -33,8 +35,6 @@ DO $$
             FROM information_schema.columns
             WHERE table_name = 'asset_group_tag_selectors' AND column_name = 'auto_certify'
         ) = 'boolean' THEN
-		    -- Migration that changes the auto_certify column to an enum-like integer flag so that we can
-		    -- adjust certification behavior on object-based selectors & autocertify for default selectors
 		    ALTER TABLE asset_group_tag_selectors ADD COLUMN auto_certify_int INTEGER NOT NULL DEFAULT 0;
 		
 		    -- 0 means disabled 
