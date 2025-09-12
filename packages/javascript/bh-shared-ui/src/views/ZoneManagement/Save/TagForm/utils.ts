@@ -45,10 +45,8 @@ export const useTagFormUtils = () => {
     const isUpdateZoneLocation = isZoneLocation && zoneId !== '';
     const isUpdateLabelLocation = isLabelLocation && labelId;
 
-    const handleCreateNavigate = (tagId: number) => {
-        navigate(`${location.pathname}/${tagId}`, { replace: true });
-        navigate(`${location.pathname}/${tagId}/selector`);
-    };
+    const handleCreateNavigate = (tagId: number) =>
+        navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagId}/save/selector`);
 
     const handleUpdateNavigate = () => navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagId}/details`);
 
