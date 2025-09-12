@@ -1,8 +1,14 @@
-import { AssetGroupTagCertificationRecord } from 'js-client-library';
+import {
+    AssetGroupTagCertificationRecord,
+    CertificationManual,
+    CertificationRevoked,
+    UpdateCertificationRequest,
+} from 'js-client-library';
 import { FC, useState } from 'react';
-import { useInfiniteQuery, useQuery } from 'react-query';
+import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
+import { useNotifications } from '../../../providers';
 import { EntityKinds, apiClient } from '../../../utils';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
@@ -72,26 +78,71 @@ const Certification: FC = () => {
         search
     );
 
+    const { addNotification } = useNotifications();
+
+    const certifyMutation = useMutation({
+        mutationFn: async (requestBody: UpdateCertificationRequest) => {
+            return apiClient.updateAssetGroupTagCertification(requestBody);
+        },
+        onSuccess: () => {
+            const certificationType = certifyOrRevoke === CertificationManual ? 'Certification' : 'Revocation';
+            addNotification(`Selected ${certificationType} Successful`);
+            // TODO soft-refresh the page, keeping the selected filters active
+        },
+        onError: (error: any) => {
+            addNotification('There was an error updating certification.');
+        },
+    });
+
+    const createCertificationRequestBody = (
+        action: typeof CertificationManual | typeof CertificationRevoked,
+        objectIds: number[],
+        withNote: boolean,
+        note?: string
+    ): UpdateCertificationRequest => {
+        return {
+            member_ids: objectIds,
+            action: action,
+            note: withNote ? note : undefined,
+        };
+    };
+
+    const getSelectedMemberIds = () => {
+        //TODO unmock
+        return [1, 2, 3];
+    };
+
     const selectedNode = {
         id: memberQuery.data?.object_id,
         name: memberQuery.data?.name,
         type: memberQuery.data?.primary_kind as EntityKinds,
     };
 
-    const showDialog = (choice: string) => {
+    const showDialog = (choice: typeof CertificationManual | typeof CertificationRevoked) => {
         setIsDialogOpen(true);
         setCertifyOrRevoke(choice);
     };
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    // TODO -- make this type safe
-    const [certifyOrRevoke, setCertifyOrRevoke] = useState('');
+    // TODO -- is there a way to do this without setting a default value??
+    const [certifyOrRevoke, setCertifyOrRevoke] = useState<typeof CertificationRevoked | typeof CertificationManual>(
+        CertificationManual
+    );
 
     const handleConfirm = (withNote: boolean, certifyNote?: string) => {
         console.log('Confirmed! Note: ', certifyNote);
-        // TODO -- input sanitization?
         setIsDialogOpen(false);
+
+        const selectedMemberIds = getSelectedMemberIds();
+
+        if (selectedMemberIds.length === 0) {
+            addNotification('No objects selected');
+            return;
+        }
+        // TODO -- input sanitization for the note
+        const requestBody = createCertificationRequestBody(certifyOrRevoke, selectedMemberIds, withNote, certifyNote);
         // TODO -- make API call
+        certifyMutation.mutate(requestBody);
     };
 
     return (
@@ -99,8 +150,8 @@ const Certification: FC = () => {
             <div className='flex gap-8 mt-4'>
                 <div className='basis-2/3'>
                     <div className='flex gap-4 mb-4'>
-                        <Button onClick={() => showDialog('certify')}>Certify</Button>
-                        <Button variant='secondary' onClick={() => showDialog('revoke')}>
+                        <Button onClick={() => showDialog(CertificationManual)}>Certify</Button>
+                        <Button variant='secondary' onClick={() => showDialog(CertificationRevoked)}>
                             Revoke
                         </Button>
                     </div>
