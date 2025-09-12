@@ -60,6 +60,7 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
@@ -253,6 +254,32 @@ class BHEAPIClient {
     getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);
 
     /* asset group tags (AGT) */
+
+    getAssetGroupTagCertifications = (limit: number, skip: number, options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagsCertification>(
+            `/api/v2/certification`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                    },
+                },
+                options
+            )
+        );
+
+    searchAssetGroupTagCertifications = (limit: number, skip: number, query = '') =>
+        this.baseClient.post<AssetGroupTagsCertification>(
+            `/api/v2/certification`,
+            { query },
+            {
+                params: {
+                    skip,
+                    limit,
+                },
+            }
+        );
 
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);

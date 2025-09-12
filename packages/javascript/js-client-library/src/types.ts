@@ -53,6 +53,18 @@ interface Disabled {
     disabled_by: string | null;
 }
 
+export interface AssetGroupTagCertificationRecord {
+    id: number;
+    object_id: string;
+    environment_id: string;
+    primary_kind: string;
+    name: string;
+    created_at: string;
+    asset_group_tag_id: number;
+    certified_by: string;
+    certified: number;
+}
+
 export const AssetGroupTagTypeTier = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
@@ -105,6 +117,24 @@ export const SeedTypesMap = {
     [SeedTypeObjectId]: 'Object ID',
     [SeedTypeCypher]: 'Cypher',
 } as const;
+
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto;
+
+export const CertificationTypeMap: Record<CertificationType, string> = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'Certified',
+    [CertificationAuto]: 'Automatic Certification',
+};
 
 export interface AssetGroupTagSelectorCounts {
     members: number;
