@@ -45,8 +45,8 @@ import (
 
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 	defer mockCtrl.Finish()
 
@@ -166,9 +166,9 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		baseProvider      = model.SSOProvider{
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		baseProvider         = model.SSOProvider{
 			Type: model.SessionAuthProviderOIDC,
 			Name: "Gotham Net",
 			OIDCProvider: &model.OIDCProvider{
@@ -452,7 +452,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 
 			response := httptest.NewRecorder()
@@ -872,7 +872,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 			response := httptest.NewRecorder()
 

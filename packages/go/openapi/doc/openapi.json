@@ -17659,6 +17659,21 @@
           }
         }
       },
+      "model.environment-access-control": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The user UUID that associates the access control to a specific user",
+            "readOnly": true
+          },
+          "environment": {
+            "type": "string",
+            "description": "The environment id which a user has been granted access to"
+          }
+        }
+      },
       "model.user": {
         "allOf": [
           {
@@ -17743,6 +17758,14 @@
               "all_environments": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "environment_access_control": {
+                "description": "A collection of environments that a user has been granted access to as part of ETAC",
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.environment-access-control"
+                }
               }
             }
           }
@@ -18418,6 +18441,51 @@
           },
           "is_disabled": {
             "type": "boolean"
+          },
+          "environment_access_control": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Sets an environment access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "properties": {
+              "all_environments": {
+                "type": "boolean"
+              },
+              "environments": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "environment_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "all_environments"
+                ],
+                "not": {
+                  "required": [
+                    "environments"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "environments"
+                ],
+                "not": {
+                  "required": [
+                    "all_environments"
+                  ]
+                }
+              }
+            ]
           }
         }
       },

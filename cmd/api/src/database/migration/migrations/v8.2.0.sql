@@ -25,3 +25,6 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+-- Set all_environments to true for existing users
+UPDATE users SET all_environments = true;
