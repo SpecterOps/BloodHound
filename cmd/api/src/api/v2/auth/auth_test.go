@@ -1535,7 +1535,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
+					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
 						AllEnvironments: true,
 					},
 				},
@@ -1565,8 +1565,15 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-						Environments: []string{"12345", "54321"},
+					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
 					},
 				},
 				SetUserSecretRequest: v2.SetUserSecretRequest{
@@ -1627,8 +1634,15 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-						Environments: []string{"12345", "54321"},
+					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
 					},
 					Roles: []int32{1},
 				},
@@ -1661,8 +1675,15 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-						Environments:    []string{"12345", "54321"},
+					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
 						AllEnvironments: true,
 					},
 				},
@@ -1690,8 +1711,15 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-						Environments: []string{"12345", "54321"},
+					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
 					},
 				},
 				SetUserSecretRequest: v2.SetUserSecretRequest{
@@ -2939,7 +2967,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
-				EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
+				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
 					AllEnvironments: true,
 				},
 			},
@@ -2959,8 +2987,12 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
-				EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-					Environments:    []string{"12345"},
+				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+					},
 					AllEnvironments: false,
 				},
 			},
@@ -2988,8 +3020,12 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
-				EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-					Environments: []string{"12345"},
+				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+					},
 				},
 			},
 			returnedRoles:  nil,
@@ -3010,8 +3046,15 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
-				EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-					Environments:    []string{"12345", "54321"},
+				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+						{
+							EnvironmentID: "54321",
+						},
+					},
 					AllEnvironments: true,
 				},
 			},
@@ -3033,8 +3076,15 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
-				EnvironmentAccessControl: &v2.UpdateUserEnvironmentRequest{
-					Environments:    []string{"12345", "54321"},
+				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+						{
+							EnvironmentID: "54321",
+						},
+					},
 					AllEnvironments: false,
 				},
 			},

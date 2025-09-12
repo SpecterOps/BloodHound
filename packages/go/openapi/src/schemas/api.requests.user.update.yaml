@@ -51,7 +51,11 @@ properties:
         type: array
         uniqueItems: true
         items:
-          type: string
+          type: object
+          additionalProperties: false
+          properties:
+            environment_id:
+              type: string
     oneOf:
       - required: [all_environments]
         not:

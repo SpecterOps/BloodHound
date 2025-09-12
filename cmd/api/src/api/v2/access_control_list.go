@@ -23,9 +23,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-type UpdateUserEnvironmentRequest struct {
-	Environments    []string `json:"environments"`
-	AllEnvironments bool     `json:"all_environments"`
+type UpdateEnvironmentRequest struct {
+	EnvironmentID string `json:"environment_id"`
+}
+
+type UpdateUserEnvironmentAccessControlRequest struct {
+	Environments    []UpdateEnvironmentRequest `json:"environments"`
+	AllEnvironments bool                       `json:"all_environments"`
 }
 
 func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, user model.User, environments ...string) (bool, error) {

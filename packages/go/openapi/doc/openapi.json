@@ -18149,7 +18149,13 @@
                 "type": "array",
                 "uniqueItems": true,
                 "items": {
-                  "type": "string"
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "environment_id": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             },

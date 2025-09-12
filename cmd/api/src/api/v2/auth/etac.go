@@ -36,7 +36,11 @@ import (
 // and will return an error on bad requests
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
-func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironmentRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
+func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironmentAccessControlRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
+	var (
+		environments = make([]string, 0, len(etacRequest.Environments))
+	)
+
 	user.AllEnvironments = etacRequest.AllEnvironments
 
 	if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
@@ -46,26 +50,30 @@ func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironment
 	} else if etacRequest.AllEnvironments {
 		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
 	} else {
+		for _, environment := range etacRequest.Environments {
+			environments = append(environments, environment.EnvironmentID)
+		}
+
 		if nodes, err := graphDB.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{
 			ad.Domain, azure.Tenant,
-		}, etacRequest.Environments...); err != nil {
+		}, environments...); err != nil {
 			return fmt.Errorf("error fetching environments: %w", err)
 		} else {
 			if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
 				return err
 			} else {
-				environments := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
-				for _, environment := range etacRequest.Environments {
+				environmentAccessList := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
+				for _, environment := range environments {
 					if _, ok := nodesByObject[environment]; !ok {
 						return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
 					} else {
-						environments = append(environments, model.EnvironmentAccess{
+						environmentAccessList = append(environmentAccessList, model.EnvironmentAccess{
 							UserID:      user.ID.String(),
 							Environment: environment,
 						})
 					}
 				}
-				user.EnvironmentAccessControl = environments
+				user.EnvironmentAccessControl = environmentAccessList
 			}
 		}
 	}
