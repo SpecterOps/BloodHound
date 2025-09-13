@@ -25,3 +25,20 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+INSERT INTO permissions(created_at, updated_at, authority, name)
+VALUES (
+        current_timestamp,
+        current_timestamp,
+        'auth',
+        'ReadUsers'
+       )
+ON CONFLICT DO NOTHING;
+
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p
+ON (p.authority, p.name) = ('auth', 'ReadUsers')
+WHERE r.name IN ('Administrator', 'User', 'Read-Only', 'Power User')
+ON CONFLICT DO NOTHING;

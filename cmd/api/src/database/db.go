@@ -26,6 +26,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -33,8 +36,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 var (
@@ -113,6 +114,7 @@ type Database interface {
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
 	UpdateUser(ctx context.Context, user model.User) error
 	GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error)
+	GetAllActiveUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error)
 	GetUser(ctx context.Context, id uuid.UUID) (model.User, error)
 	DeleteUser(ctx context.Context, user model.User) error
 	LookupUser(ctx context.Context, principalName string) (model.User, error)
