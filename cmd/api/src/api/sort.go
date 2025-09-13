@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/query"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 var (
@@ -97,4 +98,36 @@ func ParseGraphSortParameters(s Sortable, params url.Values) (query.SortItems, e
 	}
 
 	return sortItems, nil
+}
+
+// BuildSQLSort takes our sort models and converts them into proper SQL form before sending them to the database.
+// This would be pushed down another layer in Phase II.
+// The identifierColumn should be used if query results need deterministic ordering.
+// If the identifier column is already present in the order string, adding a second, regardless of whether it matches
+// ASC or DESC, will act as a no op
+func BuildSQLSort(sort model.Sort, identifierColumn model.SortItem) ([]string, error) {
+	var sqlSort = make([]string, 0, len(sort))
+	for index, sortItem := range sort {
+		if sortItem.Column != "" {
+			sqlSort = append(sqlSort, buildSortString(sortItem))
+		} else {
+			return nil, fmt.Errorf("%w: column index: %d", ErrResponseDetailsColumnNotSortable, index)
+		}
+	}
+
+	if identifierColumn.Column != "" {
+		sqlSort = append(sqlSort, buildSortString(identifierColumn))
+	}
+
+	return sqlSort, nil
+}
+
+func buildSortString(sortItem model.SortItem) string {
+	var column string
+	if sortItem.Direction == model.DescendingSortDirection {
+		column = sortItem.Column + " desc"
+	} else {
+		column = sortItem.Column
+	}
+	return column
 }
