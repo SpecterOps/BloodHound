@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package auth
 
 import (
@@ -44,26 +45,14 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 	var (
 		users       UserMinimal
 		queryParams = request.URL.Query()
-		order       = make([]string, 0)
 	)
 
 	if orderBy, err := api.ParseSortParameters(UserMinimal{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
+	} else if order, err := api.BuildSQLSort(orderBy, model.SortItem{Column: "id"}); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		// ensure deterministic ordering if not provided
-		if len(orderBy) == 0 {
-			orderBy = append(orderBy, model.SortItem{
-				Column: "id",
-			})
-		}
-		for _, column := range orderBy {
-			if column.Direction == model.DescendingSortDirection {
-				order = append(order, column.Column+" desc")
-			} else {
-				order = append(order, column.Column)
-			}
-		}
 		queryParameterFilterParser := model.NewQueryParameterFilterParser()
 		if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
@@ -98,10 +87,10 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 				usersMinimal := make([]UserMinimal, 0)
 				for _, user := range activeUsers {
 					usersMinimal = append(usersMinimal, UserMinimal{
-						ID:            user.ID,
-						PrincipalName: user.PrincipalName,
-						FirstName:     user.FirstName.String,
-						LastName:      user.LastName.String,
+						ID:        user.ID,
+						Email:     user.EmailAddress.String,
+						FirstName: user.FirstName.String,
+						LastName:  user.LastName.String,
 					})
 				}
 				api.WriteBasicResponse(request.Context(), UsersMinimalResponse{Users: usersMinimal}, http.StatusOK, response)
@@ -111,7 +100,7 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 }
 
 // Below is needed to allow sorting and filtering on the ListActiveUsersMinimal endpoint.
-// Using the model.User columns is not ideal as that would allow users to filter/sort on columns they may not have access to.
+// Using the same filter as model.User is not ideal as that would allow users to filter/sort on columns they may not have access to.
 
 // IsSortable - determines if the passed column can be sorted on or not
 func (s UserMinimal) IsSortable(column string) bool {
