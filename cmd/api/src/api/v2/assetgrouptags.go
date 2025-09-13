@@ -206,20 +206,35 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, createSelectorRequest.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if err := validateAutoCertifyInput(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, *createSelectorRequest.Description, false, true, *createSelectorRequest.AutoCertify, createSelectorRequest.Seeds); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		if !config.Enabled {
-			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
-				api.HandleDatabaseError(request, response, err)
+		// defaults for optional pointer field request values
+		autoCertify := model.SelectorAutoCertifyMethodDisabled
+		if createSelectorRequest.AutoCertify != nil {
+			if err := validateAutoCertifyInput(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
+			autoCertify = *createSelectorRequest.AutoCertify
 		}
-		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+
+		description := ""
+		if createSelectorRequest.Description != nil {
+			description = *createSelectorRequest.Description
+		}
+
+		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, description, false, true, autoCertify, createSelectorRequest.Seeds); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			if !config.Enabled {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
+			api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+		}
 	}
 }
 

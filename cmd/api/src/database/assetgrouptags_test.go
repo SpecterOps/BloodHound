@@ -1279,7 +1279,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 		source          = 1
 		isDefault       = false
 		allowDisable    = true
-		autoCertify     = model.SelectorAutoCertifyMethodSeedsOnly
+		autoCertify     = model.SelectorAutoCertifyMethodDisabled
 		testSeeds       = []model.SelectorSeed{
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
