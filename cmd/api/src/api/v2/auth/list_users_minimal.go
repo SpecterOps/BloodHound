@@ -47,66 +47,65 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 		order       = make([]string, 0)
 	)
 
-	orderBy, err := api.ParseSortParameters(UserMinimal{}, queryParams)
-	if err != nil {
+	if orderBy, err := api.ParseSortParameters(UserMinimal{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	}
-	// ensure deterministic ordering if not provided
-	if len(orderBy) == 0 {
-		orderBy = append(orderBy, model.SortItem{
-			Column: "id",
-		})
-	}
-	for _, column := range orderBy {
-		if column.Direction == model.DescendingSortDirection {
-			order = append(order, column.Column+" desc")
-		} else {
-			order = append(order, column.Column)
-		}
-	}
-	queryParameterFilterParser := model.NewQueryParameterFilterParser()
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
 	} else {
-		for name, filters := range queryFilters {
-			if valid := slices.Contains(users.GetFilterableColumns(), name); !valid {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			}
-
-			if validPredicates, err := users.GetValidFilterPredicatesAsStrings(name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
+		// ensure deterministic ordering if not provided
+		if len(orderBy) == 0 {
+			orderBy = append(orderBy, model.SortItem{
+				Column: "id",
+			})
+		}
+		for _, column := range orderBy {
+			if column.Direction == model.DescendingSortDirection {
+				order = append(order, column.Column+" desc")
 			} else {
-				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
-					}
+				order = append(order, column.Column)
+			}
+		}
+		queryParameterFilterParser := model.NewQueryParameterFilterParser()
+		if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+			return
+		} else {
+			for name, filters := range queryFilters {
+				if valid := slices.Contains(users.GetFilterableColumns(), name); !valid {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+					return
+				}
 
-					queryFilters[name][i].IsStringData = users.IsStringColumn(filter.Name)
+				if validPredicates, err := users.GetValidFilterPredicatesAsStrings(name); err != nil {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+					return
+				} else {
+					for i, filter := range filters {
+						if !slices.Contains(validPredicates, string(filter.Operator)) {
+							api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+							return
+						}
+
+						queryFilters[name][i].IsStringData = users.IsStringColumn(filter.Name)
+					}
 				}
 			}
-		}
-
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
-		} else if activeUsers, err := s.db.GetAllActiveUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			usersMinimal := make([]UserMinimal, 0)
-			for _, user := range activeUsers {
-				usersMinimal = append(usersMinimal, UserMinimal{
-					ID:            user.ID,
-					PrincipalName: user.PrincipalName,
-					FirstName:     user.FirstName.String,
-					LastName:      user.LastName.String,
-				})
+			if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+				return
+			} else if activeUsers, err := s.db.GetAllActiveUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else {
+				usersMinimal := make([]UserMinimal, 0)
+				for _, user := range activeUsers {
+					usersMinimal = append(usersMinimal, UserMinimal{
+						ID:            user.ID,
+						PrincipalName: user.PrincipalName,
+						FirstName:     user.FirstName.String,
+						LastName:      user.LastName.String,
+					})
+				}
+				api.WriteBasicResponse(request.Context(), UsersMinimalResponse{Users: usersMinimal}, http.StatusOK, response)
 			}
-			api.WriteBasicResponse(request.Context(), UsersMinimalResponse{Users: usersMinimal}, http.StatusOK, response)
 		}
 	}
 }

@@ -18546,7 +18546,7 @@
               "last_name": {
                 "$ref": "#/components/schemas/null.string"
               },
-              "principal_name": {
+              "email": {
                 "type": "string",
                 "readOnly": true
               }

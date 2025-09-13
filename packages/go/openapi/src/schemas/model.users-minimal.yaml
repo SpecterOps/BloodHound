@@ -23,6 +23,6 @@ allOf:
           - $ref: './null.string.yaml'
       last_name:
         $ref: './null.string.yaml'
-      principal_name:
+      email:
         type: string
         readOnly: true
