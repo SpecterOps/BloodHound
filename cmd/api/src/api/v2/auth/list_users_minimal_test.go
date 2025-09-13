@@ -197,11 +197,10 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 							},
 							EmailAddress: null.String{
 								NullString: sql.NullString{
-									String: "testuser1@email.com", // should not show up in response
+									String: "testuser1@email.com",
 									Valid:  true,
 								},
 							},
-							PrincipalName: "TestUser1",
 							Unique: model.Unique{
 								ID: user1Id,
 							},
@@ -221,11 +220,10 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 							},
 							EmailAddress: null.String{
 								NullString: sql.NullString{
-									String: "testuser2@email.com", // should not show up in response
+									String: "testuser2@email.com",
 									Valid:  true,
 								},
 							},
-							PrincipalName: "TestUser2",
 							Unique: model.Unique{
 								ID: user2Id,
 							},
@@ -242,7 +240,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   fmt.Sprintf(`{"data":{"users":[{"first_name":"Test", "id":"%s", "last_name":"User1", "principal_name":"TestUser1"}, {"first_name":"Test", "id":"%s", "last_name":"User2", "principal_name":"TestUser2"}]}}`, user1Id, user2Id),
+				responseBody:   fmt.Sprintf(`{"data":{"users":[{"first_name":"Test", "id":"%s", "last_name":"User1", "email":"testuser1@email.com"}, {"first_name":"Test", "id":"%s", "last_name":"User2", "email":"testuser2@email.com"}]}}`, user1Id, user2Id),
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
