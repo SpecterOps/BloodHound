@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     http:/www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { NormalizedNodeItem } from '../VirtualizedNodeList';
+import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
@@ -25,10 +26,18 @@ import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
 import ADCSESC6b from './ADCSESC6b/ADCSESC6b';
 import ADCSESC9a from './ADCSESC9a/ADCSESC9a';
 import ADCSESC9b from './ADCSESC9b/ADCSESC9b';
-import AZAKSContributor from './AZAKSContributor/AZAKSContributor';
+import AddAllowedToAct from './AddAllowedToAct/AddAllowedToAct';
+import AddKeyCredentialLink from './AddKeyCredentialLink/AddKeyCredentialLink';
+import AddMember from './AddMember/AddMember';
+import AddSelf from './AddSelf/AddSelf';
+import AdminTo from './AdminTo/AdminTo';
+import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
+import AllowedToAct from './AllowedToAct/AllowedToAct';
+import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import AZAddMembers from './AZAddMembers/AZAddMembers';
 import AZAddOwner from './AZAddOwner/AZAddOwner';
 import AZAddSecret from './AZAddSecret/AZAddSecret';
+import AZAKSContributor from './AZAKSContributor/AZAKSContributor';
 import AZAppAdmin from './AZAppAdmin/AZAppAdmin';
 import AZAutomationContributor from './AZAutomationContributor/AZAutomationContributor';
 import AZAvereContributor from './AZAvereContributor/AZAvereContributor';
@@ -43,20 +52,779 @@ import AZGlobalAdmin from './AZGlobalAdmin/AZGlobalAdmin';
 import AZHasRole from './AZHasRole/AZHasRole';
 import AZKeyVaultKVContributor from './AZKeyVaultKVContributor/AZKeyVaultKVContributor';
 import AZLogicAppContributor from './AZLogicAppContributor/AZLogicAppContributor';
+import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
+import AZMemberOf from './AZMemberOf/AZMemberOf';
+import AZMGAccessReview_Read_All from './AZMGAccessReview_Read_All/AZMGAccessReview_Read_All';
+import AZMGAccessReview_ReadWrite_All from './AZMGAccessReview_ReadWrite_All/AZMGAccessReview_ReadWrite_All';
+import AZMGAccessReview_ReadWrite_Membership from './AZMGAccessReview_ReadWrite_Membership/AZMGAccessReview_ReadWrite_Membership';
+import AZMGAcronym_Read_All from './AZMGAcronym_Read_All/AZMGAcronym_Read_All';
 import AZMGAddMember from './AZMGAddMember/AZMGAddMember';
 import AZMGAddOwner from './AZMGAddOwner/AZMGAddOwner';
 import AZMGAddSecret from './AZMGAddSecret/AZMGAddSecret';
-import AZMGAppRoleAssignment_ReadWrite_All from './AZMGAppRoleAssignment_ReadWrite_All/AZMGAppRoleAssignment_ReadWrite_All';
+import AZMGAdministrativeUnit_Read_All from './AZMGAdministrativeUnit_Read_All/AZMGAdministrativeUnit_Read_All';
+import AZMGAdministrativeUnit_ReadWrite_All from './AZMGAdministrativeUnit_ReadWrite_All/AZMGAdministrativeUnit_ReadWrite_All';
+import AZMGAgentApplication_Create from './AZMGAgentApplication_Create/AZMGAgentApplication_Create';
+import AZMGAgentIdentity_Create from './AZMGAgentIdentity_Create/AZMGAgentIdentity_Create';
+import AZMGAgreement_Read_All from './AZMGAgreement_Read_All/AZMGAgreement_Read_All';
+import AZMGAgreement_ReadWrite_All from './AZMGAgreement_ReadWrite_All/AZMGAgreement_ReadWrite_All';
+import AZMGAgreementAcceptance_Read from './AZMGAgreementAcceptance_Read/AZMGAgreementAcceptance_Read';
+import AZMGAgreementAcceptance_Read_All from './AZMGAgreementAcceptance_Read_All/AZMGAgreementAcceptance_Read_All';
+import AZMGAiEnterpriseInteraction_Read from './AZMGAiEnterpriseInteraction_Read/AZMGAiEnterpriseInteraction_Read';
+import AZMGAiEnterpriseInteraction_Read_All from './AZMGAiEnterpriseInteraction_Read_All/AZMGAiEnterpriseInteraction_Read_All';
+import AZMGAnalytics_Read from './AZMGAnalytics_Read/AZMGAnalytics_Read';
+import AZMGAPIConnectors_Read_All from './AZMGAPIConnectors_Read_All/AZMGAPIConnectors_Read_All';
+import AZMGAPIConnectors_ReadWrite_All from './AZMGAPIConnectors_ReadWrite_All/AZMGAPIConnectors_ReadWrite_All';
+import AZMGAppCatalog_Read_All from './AZMGAppCatalog_Read_All/AZMGAppCatalog_Read_All';
+import AZMGAppCatalog_ReadWrite_All from './AZMGAppCatalog_ReadWrite_All/AZMGAppCatalog_ReadWrite_All';
+import AZMGAppCatalog_Submit from './AZMGAppCatalog_Submit/AZMGAppCatalog_Submit';
+import AZMGAppCertTrustConfiguration_Read_All from './AZMGAppCertTrustConfiguration_Read_All/AZMGAppCertTrustConfiguration_Read_All';
+import AZMGAppCertTrustConfiguration_ReadWrite_All from './AZMGAppCertTrustConfiguration_ReadWrite_All/AZMGAppCertTrustConfiguration_ReadWrite_All';
+import AZMGApplication_Read_All from './AZMGApplication_Read_All/AZMGApplication_Read_All';
 import AZMGApplication_ReadWrite_All from './AZMGApplication_ReadWrite_All/AZMGApplication_ReadWrite_All';
+import AZMGApplication_ReadWrite_OwnedBy from './AZMGApplication_ReadWrite_OwnedBy/AZMGApplication_ReadWrite_OwnedBy';
+import AZMGApplication_RemoteDesktopConfig_ReadWrite_All from './AZMGApplication_RemoteDesktopConfig_ReadWrite_All/AZMGApplication_RemoteDesktopConfig_ReadWrite_All';
+import AZMGAppRoleAssignment_ReadWrite_All from './AZMGAppRoleAssignment_ReadWrite_All/AZMGAppRoleAssignment_ReadWrite_All';
+import AZMGApprovalSolution_Read from './AZMGApprovalSolution_Read/AZMGApprovalSolution_Read';
+import AZMGApprovalSolution_Read_All from './AZMGApprovalSolution_Read_All/AZMGApprovalSolution_Read_All';
+import AZMGApprovalSolution_ReadWrite from './AZMGApprovalSolution_ReadWrite/AZMGApprovalSolution_ReadWrite';
+import AZMGApprovalSolution_ReadWrite_All from './AZMGApprovalSolution_ReadWrite_All/AZMGApprovalSolution_ReadWrite_All';
+import AZMGApprovalSolutionResponse_ReadWrite from './AZMGApprovalSolutionResponse_ReadWrite/AZMGApprovalSolutionResponse_ReadWrite';
+import AZMGAttackSimulation_Read_All from './AZMGAttackSimulation_Read_All/AZMGAttackSimulation_Read_All';
+import AZMGAttackSimulation_ReadWrite_All from './AZMGAttackSimulation_ReadWrite_All/AZMGAttackSimulation_ReadWrite_All';
+import AZMGAuditActivity_Read from './AZMGAuditActivity_Read/AZMGAuditActivity_Read';
+import AZMGAuditActivity_Write from './AZMGAuditActivity_Write/AZMGAuditActivity_Write';
+import AZMGAuditLog_Read_All from './AZMGAuditLog_Read_All/AZMGAuditLog_Read_All';
+import AZMGAuditLogsQuery_CRM_Read_All from './AZMGAuditLogsQuery_CRM_Read_All/AZMGAuditLogsQuery_CRM_Read_All';
+import AZMGAuditLogsQuery_Endpoint_Read_All from './AZMGAuditLogsQuery_Endpoint_Read_All/AZMGAuditLogsQuery_Endpoint_Read_All';
+import AZMGAuditLogsQuery_Entra_Read_All from './AZMGAuditLogsQuery_Entra_Read_All/AZMGAuditLogsQuery_Entra_Read_All';
+import AZMGAuditLogsQuery_Exchange_Read_All from './AZMGAuditLogsQuery_Exchange_Read_All/AZMGAuditLogsQuery_Exchange_Read_All';
+import AZMGAuditLogsQuery_OneDrive_Read_All from './AZMGAuditLogsQuery_OneDrive_Read_All/AZMGAuditLogsQuery_OneDrive_Read_All';
+import AZMGAuditLogsQuery_Read_All from './AZMGAuditLogsQuery_Read_All/AZMGAuditLogsQuery_Read_All';
+import AZMGAuditLogsQuery_SharePoint_Read_All from './AZMGAuditLogsQuery_SharePoint_Read_All/AZMGAuditLogsQuery_SharePoint_Read_All';
+import AZMGAuthenticationContext_Read_All from './AZMGAuthenticationContext_Read_All/AZMGAuthenticationContext_Read_All';
+import AZMGAuthenticationContext_ReadWrite_All from './AZMGAuthenticationContext_ReadWrite_All/AZMGAuthenticationContext_ReadWrite_All';
+import AZMGBackupRestore_Configuration_Read_All from './AZMGBackupRestore_Configuration_Read_All/AZMGBackupRestore_Configuration_Read_All';
+import AZMGBackupRestore_Configuration_ReadWrite_All from './AZMGBackupRestore_Configuration_ReadWrite_All/AZMGBackupRestore_Configuration_ReadWrite_All';
+import AZMGBackupRestore_Control_Read_All from './AZMGBackupRestore_Control_Read_All/AZMGBackupRestore_Control_Read_All';
+import AZMGBackupRestore_Control_ReadWrite_All from './AZMGBackupRestore_Control_ReadWrite_All/AZMGBackupRestore_Control_ReadWrite_All';
+import AZMGBackupRestore_Monitor_Read_All from './AZMGBackupRestore_Monitor_Read_All/AZMGBackupRestore_Monitor_Read_All';
+import AZMGBackupRestore_Restore_Read_All from './AZMGBackupRestore_Restore_Read_All/AZMGBackupRestore_Restore_Read_All';
+import AZMGBackupRestore_Restore_ReadWrite_All from './AZMGBackupRestore_Restore_ReadWrite_All/AZMGBackupRestore_Restore_ReadWrite_All';
+import AZMGBackupRestore_Search_Read_All from './AZMGBackupRestore_Search_Read_All/AZMGBackupRestore_Search_Read_All';
+import AZMGBillingConfiguration_ReadWrite_All from './AZMGBillingConfiguration_ReadWrite_All/AZMGBillingConfiguration_ReadWrite_All';
+import AZMGBitlockerKey_Read_All from './AZMGBitlockerKey_Read_All/AZMGBitlockerKey_Read_All';
+import AZMGBitlockerKey_ReadBasic_All from './AZMGBitlockerKey_ReadBasic_All/AZMGBitlockerKey_ReadBasic_All';
+import AZMGBookings_Manage_All from './AZMGBookings_Manage_All/AZMGBookings_Manage_All';
+import AZMGBookings_Read_All from './AZMGBookings_Read_All/AZMGBookings_Read_All';
+import AZMGBookings_ReadWrite_All from './AZMGBookings_ReadWrite_All/AZMGBookings_ReadWrite_All';
+import AZMGBookingsAppointment_ReadWrite_All from './AZMGBookingsAppointment_ReadWrite_All/AZMGBookingsAppointment_ReadWrite_All';
+import AZMGBookmark_Read_All from './AZMGBookmark_Read_All/AZMGBookmark_Read_All';
+import AZMGBrowserSiteLists_Read_All from './AZMGBrowserSiteLists_Read_All/AZMGBrowserSiteLists_Read_All';
+import AZMGBrowserSiteLists_ReadWrite_All from './AZMGBrowserSiteLists_ReadWrite_All/AZMGBrowserSiteLists_ReadWrite_All';
+import AZMGBusinessScenarioConfig_Read_All from './AZMGBusinessScenarioConfig_Read_All/AZMGBusinessScenarioConfig_Read_All';
+import AZMGBusinessScenarioConfig_Read_OwnedBy from './AZMGBusinessScenarioConfig_Read_OwnedBy/AZMGBusinessScenarioConfig_Read_OwnedBy';
+import AZMGBusinessScenarioConfig_ReadWrite_All from './AZMGBusinessScenarioConfig_ReadWrite_All/AZMGBusinessScenarioConfig_ReadWrite_All';
+import AZMGBusinessScenarioConfig_ReadWrite_OwnedBy from './AZMGBusinessScenarioConfig_ReadWrite_OwnedBy/AZMGBusinessScenarioConfig_ReadWrite_OwnedBy';
+import AZMGBusinessScenarioData_Read_OwnedBy from './AZMGBusinessScenarioData_Read_OwnedBy/AZMGBusinessScenarioData_Read_OwnedBy';
+import AZMGBusinessScenarioData_ReadWrite_OwnedBy from './AZMGBusinessScenarioData_ReadWrite_OwnedBy/AZMGBusinessScenarioData_ReadWrite_OwnedBy';
+import AZMGCalendars_Read from './AZMGCalendars_Read/AZMGCalendars_Read';
+import AZMGCalendars_Read_Shared from './AZMGCalendars_Read_Shared/AZMGCalendars_Read_Shared';
+import AZMGCalendars_ReadBasic from './AZMGCalendars_ReadBasic/AZMGCalendars_ReadBasic';
+import AZMGCalendars_ReadBasic_All from './AZMGCalendars_ReadBasic_All/AZMGCalendars_ReadBasic_All';
+import AZMGCalendars_ReadWrite from './AZMGCalendars_ReadWrite/AZMGCalendars_ReadWrite';
+import AZMGCalendars_ReadWrite_Shared from './AZMGCalendars_ReadWrite_Shared/AZMGCalendars_ReadWrite_Shared';
+import AZMGCallAiInsights_Read_All from './AZMGCallAiInsights_Read_All/AZMGCallAiInsights_Read_All';
+import AZMGCallDelegation_Read from './AZMGCallDelegation_Read/AZMGCallDelegation_Read';
+import AZMGCallDelegation_Read_All from './AZMGCallDelegation_Read_All/AZMGCallDelegation_Read_All';
+import AZMGCallDelegation_ReadWrite from './AZMGCallDelegation_ReadWrite/AZMGCallDelegation_ReadWrite';
+import AZMGCallDelegation_ReadWrite_All from './AZMGCallDelegation_ReadWrite_All/AZMGCallDelegation_ReadWrite_All';
+import AZMGCallEvents_Emergency_Read_All from './AZMGCallEvents_Emergency_Read_All/AZMGCallEvents_Emergency_Read_All';
+import AZMGCallEvents_Read from './AZMGCallEvents_Read/AZMGCallEvents_Read';
+import AZMGCallEvents_Read_All from './AZMGCallEvents_Read_All/AZMGCallEvents_Read_All';
+import AZMGCallRecord_PstnCalls_Read_All from './AZMGCallRecord_PstnCalls_Read_All/AZMGCallRecord_PstnCalls_Read_All';
+import AZMGCallRecordings_Read_All from './AZMGCallRecordings_Read_All/AZMGCallRecordings_Read_All';
+import AZMGCallRecords_Read_All from './AZMGCallRecords_Read_All/AZMGCallRecords_Read_All';
+import AZMGCalls_AccessMedia_All from './AZMGCalls_AccessMedia_All/AZMGCalls_AccessMedia_All';
+import AZMGCalls_Initiate_All from './AZMGCalls_Initiate_All/AZMGCalls_Initiate_All';
+import AZMGCalls_InitiateGroupCall_All from './AZMGCalls_InitiateGroupCall_All/AZMGCalls_InitiateGroupCall_All';
+import AZMGCalls_JoinGroupCall_All from './AZMGCalls_JoinGroupCall_All/AZMGCalls_JoinGroupCall_All';
+import AZMGCalls_JoinGroupCallAsGuest_All from './AZMGCalls_JoinGroupCallAsGuest_All/AZMGCalls_JoinGroupCallAsGuest_All';
+import AZMGCallTranscripts_Read_All from './AZMGCallTranscripts_Read_All/AZMGCallTranscripts_Read_All';
+import AZMGChangeManagement_Read_All from './AZMGChangeManagement_Read_All/AZMGChangeManagement_Read_All';
+import AZMGChannel_Create from './AZMGChannel_Create/AZMGChannel_Create';
+import AZMGChannel_Delete_All from './AZMGChannel_Delete_All/AZMGChannel_Delete_All';
+import AZMGChannel_ReadBasic_All from './AZMGChannel_ReadBasic_All/AZMGChannel_ReadBasic_All';
+import AZMGChannelMember_Read_All from './AZMGChannelMember_Read_All/AZMGChannelMember_Read_All';
+import AZMGChannelMember_ReadWrite_All from './AZMGChannelMember_ReadWrite_All/AZMGChannelMember_ReadWrite_All';
+import AZMGChannelMessage_Edit from './AZMGChannelMessage_Edit/AZMGChannelMessage_Edit';
+import AZMGChannelMessage_Read_All from './AZMGChannelMessage_Read_All/AZMGChannelMessage_Read_All';
+import AZMGChannelMessage_ReadWrite from './AZMGChannelMessage_ReadWrite/AZMGChannelMessage_ReadWrite';
+import AZMGChannelMessage_Send from './AZMGChannelMessage_Send/AZMGChannelMessage_Send';
+import AZMGChannelMessage_UpdatePolicyViolation_All from './AZMGChannelMessage_UpdatePolicyViolation_All/AZMGChannelMessage_UpdatePolicyViolation_All';
+import AZMGChannelSettings_Read_All from './AZMGChannelSettings_Read_All/AZMGChannelSettings_Read_All';
+import AZMGChannelSettings_ReadWrite_All from './AZMGChannelSettings_ReadWrite_All/AZMGChannelSettings_ReadWrite_All';
+import AZMGChat_Create from './AZMGChat_Create/AZMGChat_Create';
+import AZMGChat_ManageDeletion_All from './AZMGChat_ManageDeletion_All/AZMGChat_ManageDeletion_All';
+import AZMGChat_Read from './AZMGChat_Read/AZMGChat_Read';
+import AZMGChat_Read_All from './AZMGChat_Read_All/AZMGChat_Read_All';
+import AZMGChat_Read_WhereInstalled from './AZMGChat_Read_WhereInstalled/AZMGChat_Read_WhereInstalled';
+import AZMGChat_ReadBasic from './AZMGChat_ReadBasic/AZMGChat_ReadBasic';
+import AZMGChat_ReadBasic_All from './AZMGChat_ReadBasic_All/AZMGChat_ReadBasic_All';
+import AZMGChat_ReadBasic_WhereInstalled from './AZMGChat_ReadBasic_WhereInstalled/AZMGChat_ReadBasic_WhereInstalled';
+import AZMGChat_ReadWrite from './AZMGChat_ReadWrite/AZMGChat_ReadWrite';
+import AZMGChat_ReadWrite_All from './AZMGChat_ReadWrite_All/AZMGChat_ReadWrite_All';
+import AZMGChat_ReadWrite_WhereInstalled from './AZMGChat_ReadWrite_WhereInstalled/AZMGChat_ReadWrite_WhereInstalled';
+import AZMGChat_UpdatePolicyViolation_All from './AZMGChat_UpdatePolicyViolation_All/AZMGChat_UpdatePolicyViolation_All';
+import AZMGChatMember_Read from './AZMGChatMember_Read/AZMGChatMember_Read';
+import AZMGChatMember_Read_All from './AZMGChatMember_Read_All/AZMGChatMember_Read_All';
+import AZMGChatMember_Read_WhereInstalled from './AZMGChatMember_Read_WhereInstalled/AZMGChatMember_Read_WhereInstalled';
+import AZMGChatMember_ReadWrite from './AZMGChatMember_ReadWrite/AZMGChatMember_ReadWrite';
+import AZMGChatMember_ReadWrite_All from './AZMGChatMember_ReadWrite_All/AZMGChatMember_ReadWrite_All';
+import AZMGChatMember_ReadWrite_WhereInstalled from './AZMGChatMember_ReadWrite_WhereInstalled/AZMGChatMember_ReadWrite_WhereInstalled';
+import AZMGChatMessage_Read from './AZMGChatMessage_Read/AZMGChatMessage_Read';
+import AZMGChatMessage_Read_All from './AZMGChatMessage_Read_All/AZMGChatMessage_Read_All';
+import AZMGChatMessage_Send from './AZMGChatMessage_Send/AZMGChatMessage_Send';
+import AZMGCloudApp_Discovery_Read_All from './AZMGCloudApp_Discovery_Read_All/AZMGCloudApp_Discovery_Read_All';
+import AZMGCloudPC_Read_All from './AZMGCloudPC_Read_All/AZMGCloudPC_Read_All';
+import AZMGCloudPC_ReadWrite_All from './AZMGCloudPC_ReadWrite_All/AZMGCloudPC_ReadWrite_All';
+import AZMGCommunity_Read_All from './AZMGCommunity_Read_All/AZMGCommunity_Read_All';
+import AZMGCommunity_ReadWrite_All from './AZMGCommunity_ReadWrite_All/AZMGCommunity_ReadWrite_All';
+import AZMGConfigurationMonitoring_Read_All from './AZMGConfigurationMonitoring_Read_All/AZMGConfigurationMonitoring_Read_All';
+import AZMGConfigurationMonitoring_ReadWrite_All from './AZMGConfigurationMonitoring_ReadWrite_All/AZMGConfigurationMonitoring_ReadWrite_All';
+import AZMGConsentRequest_Create from './AZMGConsentRequest_Create/AZMGConsentRequest_Create';
+import AZMGConsentRequest_Read from './AZMGConsentRequest_Read/AZMGConsentRequest_Read';
+import AZMGConsentRequest_Read_All from './AZMGConsentRequest_Read_All/AZMGConsentRequest_Read_All';
+import AZMGConsentRequest_ReadApprove_All from './AZMGConsentRequest_ReadApprove_All/AZMGConsentRequest_ReadApprove_All';
+import AZMGConsentRequest_ReadWrite_All from './AZMGConsentRequest_ReadWrite_All/AZMGConsentRequest_ReadWrite_All';
+import AZMGContacts_OnPremisesSyncBehavior_ReadWrite_All from './AZMGContacts_OnPremisesSyncBehavior_ReadWrite_All/AZMGContacts_OnPremisesSyncBehavior_ReadWrite_All';
+import AZMGContacts_Read from './AZMGContacts_Read/AZMGContacts_Read';
+import AZMGContacts_Read_Shared from './AZMGContacts_Read_Shared/AZMGContacts_Read_Shared';
+import AZMGContacts_ReadWrite from './AZMGContacts_ReadWrite/AZMGContacts_ReadWrite';
+import AZMGContacts_ReadWrite_Shared from './AZMGContacts_ReadWrite_Shared/AZMGContacts_ReadWrite_Shared';
+import AZMGContent_Process_All from './AZMGContent_Process_All/AZMGContent_Process_All';
+import AZMGContent_Process_User from './AZMGContent_Process_User/AZMGContent_Process_User';
+import AZMGContentActivity_Read from './AZMGContentActivity_Read/AZMGContentActivity_Read';
+import AZMGContentActivity_Write from './AZMGContentActivity_Write/AZMGContentActivity_Write';
+import AZMGCopilotSettings_LimitedMode_Read from './AZMGCopilotSettings_LimitedMode_Read/AZMGCopilotSettings_LimitedMode_Read';
+import AZMGCopilotSettings_LimitedMode_ReadWrite from './AZMGCopilotSettings_LimitedMode_ReadWrite/AZMGCopilotSettings_LimitedMode_ReadWrite';
+import AZMGCrossTenantInformation_ReadBasic_All from './AZMGCrossTenantInformation_ReadBasic_All/AZMGCrossTenantInformation_ReadBasic_All';
+import AZMGCrossTenantUserProfileSharing_Read from './AZMGCrossTenantUserProfileSharing_Read/AZMGCrossTenantUserProfileSharing_Read';
+import AZMGCrossTenantUserProfileSharing_Read_All from './AZMGCrossTenantUserProfileSharing_Read_All/AZMGCrossTenantUserProfileSharing_Read_All';
+import AZMGCrossTenantUserProfileSharing_ReadWrite from './AZMGCrossTenantUserProfileSharing_ReadWrite/AZMGCrossTenantUserProfileSharing_ReadWrite';
+import AZMGCrossTenantUserProfileSharing_ReadWrite_All from './AZMGCrossTenantUserProfileSharing_ReadWrite_All/AZMGCrossTenantUserProfileSharing_ReadWrite_All';
+import AZMGCustomAuthenticationExtension_Read_All from './AZMGCustomAuthenticationExtension_Read_All/AZMGCustomAuthenticationExtension_Read_All';
+import AZMGCustomAuthenticationExtension_ReadWrite_All from './AZMGCustomAuthenticationExtension_ReadWrite_All/AZMGCustomAuthenticationExtension_ReadWrite_All';
+import AZMGCustomAuthenticationExtension_Receive_Payload from './AZMGCustomAuthenticationExtension_Receive_Payload/AZMGCustomAuthenticationExtension_Receive_Payload';
+import AZMGCustomDetection_Read_All from './AZMGCustomDetection_Read_All/AZMGCustomDetection_Read_All';
+import AZMGCustomDetection_ReadWrite_All from './AZMGCustomDetection_ReadWrite_All/AZMGCustomDetection_ReadWrite_All';
+import AZMGCustomSecAttributeAssignment_Read_All from './AZMGCustomSecAttributeAssignment_Read_All/AZMGCustomSecAttributeAssignment_Read_All';
+import AZMGCustomSecAttributeAssignment_ReadWrite_All from './AZMGCustomSecAttributeAssignment_ReadWrite_All/AZMGCustomSecAttributeAssignment_ReadWrite_All';
+import AZMGCustomSecAttributeAuditLogs_Read_All from './AZMGCustomSecAttributeAuditLogs_Read_All/AZMGCustomSecAttributeAuditLogs_Read_All';
+import AZMGCustomSecAttributeDefinition_Read_All from './AZMGCustomSecAttributeDefinition_Read_All/AZMGCustomSecAttributeDefinition_Read_All';
+import AZMGCustomSecAttributeDefinition_ReadWrite_All from './AZMGCustomSecAttributeDefinition_ReadWrite_All/AZMGCustomSecAttributeDefinition_ReadWrite_All';
+import AZMGCustomSecAttributeProvisioning_Read_All from './AZMGCustomSecAttributeProvisioning_Read_All/AZMGCustomSecAttributeProvisioning_Read_All';
+import AZMGCustomSecAttributeProvisioning_ReadWrite_All from './AZMGCustomSecAttributeProvisioning_ReadWrite_All/AZMGCustomSecAttributeProvisioning_ReadWrite_All';
+import AZMGCustomTags_Read_All from './AZMGCustomTags_Read_All/AZMGCustomTags_Read_All';
+import AZMGCustomTags_ReadWrite_All from './AZMGCustomTags_ReadWrite_All/AZMGCustomTags_ReadWrite_All';
+import AZMGDelegatedAdminRelationship_Read_All from './AZMGDelegatedAdminRelationship_Read_All/AZMGDelegatedAdminRelationship_Read_All';
+import AZMGDelegatedAdminRelationship_ReadWrite_All from './AZMGDelegatedAdminRelationship_ReadWrite_All/AZMGDelegatedAdminRelationship_ReadWrite_All';
+import AZMGDelegatedPermissionGrant_Read_All from './AZMGDelegatedPermissionGrant_Read_All/AZMGDelegatedPermissionGrant_Read_All';
+import AZMGDelegatedPermissionGrant_ReadWrite_All from './AZMGDelegatedPermissionGrant_ReadWrite_All/AZMGDelegatedPermissionGrant_ReadWrite_All';
+import AZMGDevice_Command from './AZMGDevice_Command/AZMGDevice_Command';
+import AZMGDevice_CreateFromOwnedTemplate from './AZMGDevice_CreateFromOwnedTemplate/AZMGDevice_CreateFromOwnedTemplate';
+import AZMGDevice_Read from './AZMGDevice_Read/AZMGDevice_Read';
+import AZMGDevice_Read_All from './AZMGDevice_Read_All/AZMGDevice_Read_All';
+import AZMGDevice_ReadWrite_All from './AZMGDevice_ReadWrite_All/AZMGDevice_ReadWrite_All';
+import AZMGDeviceLocalCredential_Read_All from './AZMGDeviceLocalCredential_Read_All/AZMGDeviceLocalCredential_Read_All';
+import AZMGDeviceLocalCredential_ReadBasic_All from './AZMGDeviceLocalCredential_ReadBasic_All/AZMGDeviceLocalCredential_ReadBasic_All';
+import AZMGDeviceManagementApps_Read_All from './AZMGDeviceManagementApps_Read_All/AZMGDeviceManagementApps_Read_All';
+import AZMGDeviceManagementApps_ReadWrite_All from './AZMGDeviceManagementApps_ReadWrite_All/AZMGDeviceManagementApps_ReadWrite_All';
+import AZMGDeviceManagementCloudCA_Read_All from './AZMGDeviceManagementCloudCA_Read_All/AZMGDeviceManagementCloudCA_Read_All';
+import AZMGDeviceManagementCloudCA_ReadWrite_All from './AZMGDeviceManagementCloudCA_ReadWrite_All/AZMGDeviceManagementCloudCA_ReadWrite_All';
+import AZMGDeviceManagementConfiguration_Read_All from './AZMGDeviceManagementConfiguration_Read_All/AZMGDeviceManagementConfiguration_Read_All';
+import AZMGDeviceManagementConfiguration_ReadWrite_All from './AZMGDeviceManagementConfiguration_ReadWrite_All/AZMGDeviceManagementConfiguration_ReadWrite_All';
+import AZMGDeviceManagementManagedDevices_PrivilegedOperations_All from './AZMGDeviceManagementManagedDevices_PrivilegedOperations_All/AZMGDeviceManagementManagedDevices_PrivilegedOperations_All';
+import AZMGDeviceManagementManagedDevices_Read_All from './AZMGDeviceManagementManagedDevices_Read_All/AZMGDeviceManagementManagedDevices_Read_All';
+import AZMGDeviceManagementManagedDevices_ReadWrite_All from './AZMGDeviceManagementManagedDevices_ReadWrite_All/AZMGDeviceManagementManagedDevices_ReadWrite_All';
+import AZMGDeviceManagementRBAC_Read_All from './AZMGDeviceManagementRBAC_Read_All/AZMGDeviceManagementRBAC_Read_All';
+import AZMGDeviceManagementRBAC_ReadWrite_All from './AZMGDeviceManagementRBAC_ReadWrite_All/AZMGDeviceManagementRBAC_ReadWrite_All';
+import AZMGDeviceManagementScripts_Read_All from './AZMGDeviceManagementScripts_Read_All/AZMGDeviceManagementScripts_Read_All';
+import AZMGDeviceManagementScripts_ReadWrite_All from './AZMGDeviceManagementScripts_ReadWrite_All/AZMGDeviceManagementScripts_ReadWrite_All';
+import AZMGDeviceManagementServiceConfig_Read_All from './AZMGDeviceManagementServiceConfig_Read_All/AZMGDeviceManagementServiceConfig_Read_All';
+import AZMGDeviceManagementServiceConfig_ReadWrite_All from './AZMGDeviceManagementServiceConfig_ReadWrite_All/AZMGDeviceManagementServiceConfig_ReadWrite_All';
+import AZMGDeviceTemplate_Create from './AZMGDeviceTemplate_Create/AZMGDeviceTemplate_Create';
+import AZMGDeviceTemplate_Read_All from './AZMGDeviceTemplate_Read_All/AZMGDeviceTemplate_Read_All';
+import AZMGDeviceTemplate_ReadWrite_All from './AZMGDeviceTemplate_ReadWrite_All/AZMGDeviceTemplate_ReadWrite_All';
+import AZMGDirectory_AccessAsUser_All from './AZMGDirectory_AccessAsUser_All/AZMGDirectory_AccessAsUser_All';
+import AZMGDirectory_Read_All from './AZMGDirectory_Read_All/AZMGDirectory_Read_All';
 import AZMGDirectory_ReadWrite_All from './AZMGDirectory_ReadWrite_All/AZMGDirectory_ReadWrite_All';
+import AZMGDirectoryRecommendations_Read_All from './AZMGDirectoryRecommendations_Read_All/AZMGDirectoryRecommendations_Read_All';
+import AZMGDirectoryRecommendations_ReadWrite_All from './AZMGDirectoryRecommendations_ReadWrite_All/AZMGDirectoryRecommendations_ReadWrite_All';
+import AZMGDomain_InternalFederation_Read_All from './AZMGDomain_InternalFederation_Read_All/AZMGDomain_InternalFederation_Read_All';
+import AZMGDomain_InternalFederation_ReadWrite_All from './AZMGDomain_InternalFederation_ReadWrite_All/AZMGDomain_InternalFederation_ReadWrite_All';
+import AZMGDomain_Read_All from './AZMGDomain_Read_All/AZMGDomain_Read_All';
+import AZMGDomain_ReadWrite_All from './AZMGDomain_ReadWrite_All/AZMGDomain_ReadWrite_All';
+import AZMGEAS_AccessAsUser_All from './AZMGEAS_AccessAsUser_All/AZMGEAS_AccessAsUser_All';
+import AZMGeDiscovery_Read_All from './AZMGeDiscovery_Read_All/AZMGeDiscovery_Read_All';
+import AZMGeDiscovery_ReadWrite_All from './AZMGeDiscovery_ReadWrite_All/AZMGeDiscovery_ReadWrite_All';
+import AZMGEduAdministration_Read from './AZMGEduAdministration_Read/AZMGEduAdministration_Read';
+import AZMGEduAdministration_Read_All from './AZMGEduAdministration_Read_All/AZMGEduAdministration_Read_All';
+import AZMGEduAdministration_ReadWrite from './AZMGEduAdministration_ReadWrite/AZMGEduAdministration_ReadWrite';
+import AZMGEduAdministration_ReadWrite_All from './AZMGEduAdministration_ReadWrite_All/AZMGEduAdministration_ReadWrite_All';
+import AZMGEduAssignments_Read from './AZMGEduAssignments_Read/AZMGEduAssignments_Read';
+import AZMGEduAssignments_Read_All from './AZMGEduAssignments_Read_All/AZMGEduAssignments_Read_All';
+import AZMGEduAssignments_ReadBasic from './AZMGEduAssignments_ReadBasic/AZMGEduAssignments_ReadBasic';
+import AZMGEduAssignments_ReadBasic_All from './AZMGEduAssignments_ReadBasic_All/AZMGEduAssignments_ReadBasic_All';
+import AZMGEduAssignments_ReadWrite from './AZMGEduAssignments_ReadWrite/AZMGEduAssignments_ReadWrite';
+import AZMGEduAssignments_ReadWrite_All from './AZMGEduAssignments_ReadWrite_All/AZMGEduAssignments_ReadWrite_All';
+import AZMGEduAssignments_ReadWriteBasic from './AZMGEduAssignments_ReadWriteBasic/AZMGEduAssignments_ReadWriteBasic';
+import AZMGEduAssignments_ReadWriteBasic_All from './AZMGEduAssignments_ReadWriteBasic_All/AZMGEduAssignments_ReadWriteBasic_All';
+import AZMGEduCurricula_Read from './AZMGEduCurricula_Read/AZMGEduCurricula_Read';
+import AZMGEduCurricula_Read_All from './AZMGEduCurricula_Read_All/AZMGEduCurricula_Read_All';
+import AZMGEduCurricula_ReadWrite from './AZMGEduCurricula_ReadWrite/AZMGEduCurricula_ReadWrite';
+import AZMGEduCurricula_ReadWrite_All from './AZMGEduCurricula_ReadWrite_All/AZMGEduCurricula_ReadWrite_All';
+import AZMGEduReports_Reading_Read_All from './AZMGEduReports_Reading_Read_All/AZMGEduReports_Reading_Read_All';
+import AZMGEduReports_Reading_ReadAnonymous_All from './AZMGEduReports_Reading_ReadAnonymous_All/AZMGEduReports_Reading_ReadAnonymous_All';
+import AZMGEduReports_Reflect_Read_All from './AZMGEduReports_Reflect_Read_All/AZMGEduReports_Reflect_Read_All';
+import AZMGEduReports_Reflect_ReadAnonymous_All from './AZMGEduReports_Reflect_ReadAnonymous_All/AZMGEduReports_Reflect_ReadAnonymous_All';
+import AZMGEduRoster_Read from './AZMGEduRoster_Read/AZMGEduRoster_Read';
+import AZMGEduRoster_Read_All from './AZMGEduRoster_Read_All/AZMGEduRoster_Read_All';
+import AZMGEduRoster_ReadBasic from './AZMGEduRoster_ReadBasic/AZMGEduRoster_ReadBasic';
+import AZMGEduRoster_ReadBasic_All from './AZMGEduRoster_ReadBasic_All/AZMGEduRoster_ReadBasic_All';
+import AZMGEduRoster_ReadWrite from './AZMGEduRoster_ReadWrite/AZMGEduRoster_ReadWrite';
+import AZMGEduRoster_ReadWrite_All from './AZMGEduRoster_ReadWrite_All/AZMGEduRoster_ReadWrite_All';
+import AZMGemail from './AZMGemail/AZMGemail';
+import AZMGEngagementConversation_Migration_All from './AZMGEngagementConversation_Migration_All/AZMGEngagementConversation_Migration_All';
+import AZMGEngagementConversation_ReadWrite_All from './AZMGEngagementConversation_ReadWrite_All/AZMGEngagementConversation_ReadWrite_All';
+import AZMGEngagementMeetingConversation_Read_All from './AZMGEngagementMeetingConversation_Read_All/AZMGEngagementMeetingConversation_Read_All';
+import AZMGEngagementRole_Read from './AZMGEngagementRole_Read/AZMGEngagementRole_Read';
+import AZMGEngagementRole_Read_All from './AZMGEngagementRole_Read_All/AZMGEngagementRole_Read_All';
+import AZMGEngagementRole_ReadWrite_All from './AZMGEngagementRole_ReadWrite_All/AZMGEngagementRole_ReadWrite_All';
+import AZMGEntitlementManagement_Read_All from './AZMGEntitlementManagement_Read_All/AZMGEntitlementManagement_Read_All';
+import AZMGEntitlementManagement_ReadWrite_All from './AZMGEntitlementManagement_ReadWrite_All/AZMGEntitlementManagement_ReadWrite_All';
+import AZMGEntitlementMgmt_SubjectAccess_ReadWrite from './AZMGEntitlementMgmt_SubjectAccess_ReadWrite/AZMGEntitlementMgmt_SubjectAccess_ReadWrite';
+import AZMGEventListener_Read_All from './AZMGEventListener_Read_All/AZMGEventListener_Read_All';
+import AZMGEventListener_ReadWrite_All from './AZMGEventListener_ReadWrite_All/AZMGEventListener_ReadWrite_All';
+import AZMGEWS_AccessAsUser_All from './AZMGEWS_AccessAsUser_All/AZMGEWS_AccessAsUser_All';
+import AZMGExternalConnection_Read_All from './AZMGExternalConnection_Read_All/AZMGExternalConnection_Read_All';
+import AZMGExternalConnection_ReadWrite_All from './AZMGExternalConnection_ReadWrite_All/AZMGExternalConnection_ReadWrite_All';
+import AZMGExternalConnection_ReadWrite_OwnedBy from './AZMGExternalConnection_ReadWrite_OwnedBy/AZMGExternalConnection_ReadWrite_OwnedBy';
+import AZMGExternalItem_Read_All from './AZMGExternalItem_Read_All/AZMGExternalItem_Read_All';
+import AZMGExternalItem_ReadWrite_All from './AZMGExternalItem_ReadWrite_All/AZMGExternalItem_ReadWrite_All';
+import AZMGExternalItem_ReadWrite_OwnedBy from './AZMGExternalItem_ReadWrite_OwnedBy/AZMGExternalItem_ReadWrite_OwnedBy';
+import AZMGExternalUserProfile_Read_All from './AZMGExternalUserProfile_Read_All/AZMGExternalUserProfile_Read_All';
+import AZMGExternalUserProfile_ReadWrite_All from './AZMGExternalUserProfile_ReadWrite_All/AZMGExternalUserProfile_ReadWrite_All';
+import AZMGFamily_Read from './AZMGFamily_Read/AZMGFamily_Read';
+import AZMGFileIngestion_Ingest from './AZMGFileIngestion_Ingest/AZMGFileIngestion_Ingest';
+import AZMGFileIngestionHybridOnboarding_Manage from './AZMGFileIngestionHybridOnboarding_Manage/AZMGFileIngestionHybridOnboarding_Manage';
+import AZMGFiles_Read from './AZMGFiles_Read/AZMGFiles_Read';
+import AZMGFiles_Read_All from './AZMGFiles_Read_All/AZMGFiles_Read_All';
+import AZMGFiles_Read_Selected from './AZMGFiles_Read_Selected/AZMGFiles_Read_Selected';
+import AZMGFiles_ReadWrite from './AZMGFiles_ReadWrite/AZMGFiles_ReadWrite';
+import AZMGFiles_ReadWrite_All from './AZMGFiles_ReadWrite_All/AZMGFiles_ReadWrite_All';
+import AZMGFiles_ReadWrite_AppFolder from './AZMGFiles_ReadWrite_AppFolder/AZMGFiles_ReadWrite_AppFolder';
+import AZMGFiles_ReadWrite_Selected from './AZMGFiles_ReadWrite_Selected/AZMGFiles_ReadWrite_Selected';
+import AZMGFiles_SelectedOperations_Selected from './AZMGFiles_SelectedOperations_Selected/AZMGFiles_SelectedOperations_Selected';
+import AZMGFileStorageContainer_Manage_All from './AZMGFileStorageContainer_Manage_All/AZMGFileStorageContainer_Manage_All';
+import AZMGFileStorageContainer_Selected from './AZMGFileStorageContainer_Selected/AZMGFileStorageContainer_Selected';
+import AZMGFileStorageContainerType_Manage_All from './AZMGFileStorageContainerType_Manage_All/AZMGFileStorageContainerType_Manage_All';
+import AZMGFileStorageContainerTypeReg_Manage_All from './AZMGFileStorageContainerTypeReg_Manage_All/AZMGFileStorageContainerTypeReg_Manage_All';
+import AZMGFileStorageContainerTypeReg_Selected from './AZMGFileStorageContainerTypeReg_Selected/AZMGFileStorageContainerTypeReg_Selected';
+import AZMGFinancials_ReadWrite_All from './AZMGFinancials_ReadWrite_All/AZMGFinancials_ReadWrite_All';
+import AZMGGoals_Export_Read_All from './AZMGGoals_Export_Read_All/AZMGGoals_Export_Read_All';
+import AZMGGoals_Export_ReadWrite_All from './AZMGGoals_Export_ReadWrite_All/AZMGGoals_Export_ReadWrite_All';
 import AZMGGrantAppRoles from './AZMGGrantAppRoles/AZMGGrantAppRoles';
 import AZMGGrantRole from './AZMGGrantRole/AZMGGrantRole';
-import AZMGGroupMember_ReadWrite_All from './AZMGGroupMember_ReadWrite_All/AZMGGroupMember_ReadWrite_All';
+import AZMGGroup_Conversation_Read_All from './AZMGGroup_Conversation_Read_All/AZMGGroup_Conversation_Read_All';
+import AZMGGroup_Conversation_ReadWrite_All from './AZMGGroup_Conversation_ReadWrite_All/AZMGGroup_Conversation_ReadWrite_All';
+import AZMGGroup_Create from './AZMGGroup_Create/AZMGGroup_Create';
+import AZMGGroup_OnPremisesSyncBehavior_ReadWrite_All from './AZMGGroup_OnPremisesSyncBehavior_ReadWrite_All/AZMGGroup_OnPremisesSyncBehavior_ReadWrite_All';
+import AZMGGroup_Read_All from './AZMGGroup_Read_All/AZMGGroup_Read_All';
 import AZMGGroup_ReadWrite_All from './AZMGGroup_ReadWrite_All/AZMGGroup_ReadWrite_All';
+import AZMGGroupMember_Read_All from './AZMGGroupMember_Read_All/AZMGGroupMember_Read_All';
+import AZMGGroupMember_ReadWrite_All from './AZMGGroupMember_ReadWrite_All/AZMGGroupMember_ReadWrite_All';
+import AZMGGroupSettings_Read_All from './AZMGGroupSettings_Read_All/AZMGGroupSettings_Read_All';
+import AZMGGroupSettings_ReadWrite_All from './AZMGGroupSettings_ReadWrite_All/AZMGGroupSettings_ReadWrite_All';
+import AZMGHealthMonitoringAlert_Read_All from './AZMGHealthMonitoringAlert_Read_All/AZMGHealthMonitoringAlert_Read_All';
+import AZMGHealthMonitoringAlert_ReadWrite_All from './AZMGHealthMonitoringAlert_ReadWrite_All/AZMGHealthMonitoringAlert_ReadWrite_All';
+import AZMGHealthMonitoringAlertConfig_Read_All from './AZMGHealthMonitoringAlertConfig_Read_All/AZMGHealthMonitoringAlertConfig_Read_All';
+import AZMGHealthMonitoringAlertConfig_ReadWrite_All from './AZMGHealthMonitoringAlertConfig_ReadWrite_All/AZMGHealthMonitoringAlertConfig_ReadWrite_All';
+import AZMGIdentityProvider_Read_All from './AZMGIdentityProvider_Read_All/AZMGIdentityProvider_Read_All';
+import AZMGIdentityProvider_ReadWrite_All from './AZMGIdentityProvider_ReadWrite_All/AZMGIdentityProvider_ReadWrite_All';
+import AZMGIdentityRiskEvent_Read_All from './AZMGIdentityRiskEvent_Read_All/AZMGIdentityRiskEvent_Read_All';
+import AZMGIdentityRiskEvent_ReadWrite_All from './AZMGIdentityRiskEvent_ReadWrite_All/AZMGIdentityRiskEvent_ReadWrite_All';
+import AZMGIdentityRiskyServicePrincipal_Read_All from './AZMGIdentityRiskyServicePrincipal_Read_All/AZMGIdentityRiskyServicePrincipal_Read_All';
+import AZMGIdentityRiskyServicePrincipal_ReadWrite_All from './AZMGIdentityRiskyServicePrincipal_ReadWrite_All/AZMGIdentityRiskyServicePrincipal_ReadWrite_All';
+import AZMGIdentityRiskyUser_Read_All from './AZMGIdentityRiskyUser_Read_All/AZMGIdentityRiskyUser_Read_All';
+import AZMGIdentityRiskyUser_ReadWrite_All from './AZMGIdentityRiskyUser_ReadWrite_All/AZMGIdentityRiskyUser_ReadWrite_All';
+import AZMGIdentityUserFlow_Read_All from './AZMGIdentityUserFlow_Read_All/AZMGIdentityUserFlow_Read_All';
+import AZMGIdentityUserFlow_ReadWrite_All from './AZMGIdentityUserFlow_ReadWrite_All/AZMGIdentityUserFlow_ReadWrite_All';
+import AZMGIMAP_AccessAsUser_All from './AZMGIMAP_AccessAsUser_All/AZMGIMAP_AccessAsUser_All';
+import AZMGIndustryData_DataConnector_Read_All from './AZMGIndustryData_DataConnector_Read_All/AZMGIndustryData_DataConnector_Read_All';
+import AZMGIndustryData_DataConnector_ReadWrite_All from './AZMGIndustryData_DataConnector_ReadWrite_All/AZMGIndustryData_DataConnector_ReadWrite_All';
+import AZMGIndustryData_DataConnector_Upload from './AZMGIndustryData_DataConnector_Upload/AZMGIndustryData_DataConnector_Upload';
+import AZMGIndustryData_InboundFlow_Read_All from './AZMGIndustryData_InboundFlow_Read_All/AZMGIndustryData_InboundFlow_Read_All';
+import AZMGIndustryData_InboundFlow_ReadWrite_All from './AZMGIndustryData_InboundFlow_ReadWrite_All/AZMGIndustryData_InboundFlow_ReadWrite_All';
+import AZMGIndustryData_OutboundFlow_Read_All from './AZMGIndustryData_OutboundFlow_Read_All/AZMGIndustryData_OutboundFlow_Read_All';
+import AZMGIndustryData_OutboundFlow_ReadWrite_All from './AZMGIndustryData_OutboundFlow_ReadWrite_All/AZMGIndustryData_OutboundFlow_ReadWrite_All';
+import AZMGIndustryData_ReadBasic_All from './AZMGIndustryData_ReadBasic_All/AZMGIndustryData_ReadBasic_All';
+import AZMGIndustryData_ReferenceDefinition_Read_All from './AZMGIndustryData_ReferenceDefinition_Read_All/AZMGIndustryData_ReferenceDefinition_Read_All';
+import AZMGIndustryData_ReferenceDefinition_ReadWrite_All from './AZMGIndustryData_ReferenceDefinition_ReadWrite_All/AZMGIndustryData_ReferenceDefinition_ReadWrite_All';
+import AZMGIndustryData_Run_Read_All from './AZMGIndustryData_Run_Read_All/AZMGIndustryData_Run_Read_All';
+import AZMGIndustryData_Run_Start from './AZMGIndustryData_Run_Start/AZMGIndustryData_Run_Start';
+import AZMGIndustryData_SourceSystem_Read_All from './AZMGIndustryData_SourceSystem_Read_All/AZMGIndustryData_SourceSystem_Read_All';
+import AZMGIndustryData_SourceSystem_ReadWrite_All from './AZMGIndustryData_SourceSystem_ReadWrite_All/AZMGIndustryData_SourceSystem_ReadWrite_All';
+import AZMGIndustryData_TimePeriod_Read_All from './AZMGIndustryData_TimePeriod_Read_All/AZMGIndustryData_TimePeriod_Read_All';
+import AZMGIndustryData_TimePeriod_ReadWrite_All from './AZMGIndustryData_TimePeriod_ReadWrite_All/AZMGIndustryData_TimePeriod_ReadWrite_All';
+import AZMGInformationProtectionConfig_Read from './AZMGInformationProtectionConfig_Read/AZMGInformationProtectionConfig_Read';
+import AZMGInformationProtectionConfig_Read_All from './AZMGInformationProtectionConfig_Read_All/AZMGInformationProtectionConfig_Read_All';
+import AZMGInformationProtectionContent_Sign_All from './AZMGInformationProtectionContent_Sign_All/AZMGInformationProtectionContent_Sign_All';
+import AZMGInformationProtectionContent_Write_All from './AZMGInformationProtectionContent_Write_All/AZMGInformationProtectionContent_Write_All';
+import AZMGInformationProtectionPolicy_Read from './AZMGInformationProtectionPolicy_Read/AZMGInformationProtectionPolicy_Read';
+import AZMGInformationProtectionPolicy_Read_All from './AZMGInformationProtectionPolicy_Read_All/AZMGInformationProtectionPolicy_Read_All';
+import AZMGInsights_UserMetric_Read_All from './AZMGInsights_UserMetric_Read_All/AZMGInsights_UserMetric_Read_All';
+import AZMGLearningAssignedCourse_Read from './AZMGLearningAssignedCourse_Read/AZMGLearningAssignedCourse_Read';
+import AZMGLearningAssignedCourse_Read_All from './AZMGLearningAssignedCourse_Read_All/AZMGLearningAssignedCourse_Read_All';
+import AZMGLearningAssignedCourse_ReadWrite_All from './AZMGLearningAssignedCourse_ReadWrite_All/AZMGLearningAssignedCourse_ReadWrite_All';
+import AZMGLearningContent_Read_All from './AZMGLearningContent_Read_All/AZMGLearningContent_Read_All';
+import AZMGLearningContent_ReadWrite_All from './AZMGLearningContent_ReadWrite_All/AZMGLearningContent_ReadWrite_All';
+import AZMGLearningProvider_Read from './AZMGLearningProvider_Read/AZMGLearningProvider_Read';
+import AZMGLearningProvider_ReadWrite from './AZMGLearningProvider_ReadWrite/AZMGLearningProvider_ReadWrite';
+import AZMGLearningSelfInitiatedCourse_Read from './AZMGLearningSelfInitiatedCourse_Read/AZMGLearningSelfInitiatedCourse_Read';
+import AZMGLearningSelfInitiatedCourse_Read_All from './AZMGLearningSelfInitiatedCourse_Read_All/AZMGLearningSelfInitiatedCourse_Read_All';
+import AZMGLearningSelfInitiatedCourse_ReadWrite_All from './AZMGLearningSelfInitiatedCourse_ReadWrite_All/AZMGLearningSelfInitiatedCourse_ReadWrite_All';
+import AZMGLicenseAssignment_Read_All from './AZMGLicenseAssignment_Read_All/AZMGLicenseAssignment_Read_All';
+import AZMGLicenseAssignment_ReadWrite_All from './AZMGLicenseAssignment_ReadWrite_All/AZMGLicenseAssignment_ReadWrite_All';
+import AZMGLifecycleWorkflows_CustomExt_Read_All from './AZMGLifecycleWorkflows_CustomExt_Read_All/AZMGLifecycleWorkflows_CustomExt_Read_All';
+import AZMGLifecycleWorkflows_CustomExt_ReadWrite_All from './AZMGLifecycleWorkflows_CustomExt_ReadWrite_All/AZMGLifecycleWorkflows_CustomExt_ReadWrite_All';
+import AZMGLifecycleWorkflows_Read_All from './AZMGLifecycleWorkflows_Read_All/AZMGLifecycleWorkflows_Read_All';
+import AZMGLifecycleWorkflows_ReadWrite_All from './AZMGLifecycleWorkflows_ReadWrite_All/AZMGLifecycleWorkflows_ReadWrite_All';
+import AZMGLifecycleWorkflows_Reports_Read_All from './AZMGLifecycleWorkflows_Reports_Read_All/AZMGLifecycleWorkflows_Reports_Read_All';
+import AZMGLifecycleWorkflows_Workflow_Activate from './AZMGLifecycleWorkflows_Workflow_Activate/AZMGLifecycleWorkflows_Workflow_Activate';
+import AZMGLifecycleWorkflows_Workflow_Read_All from './AZMGLifecycleWorkflows_Workflow_Read_All/AZMGLifecycleWorkflows_Workflow_Read_All';
+import AZMGLifecycleWorkflows_Workflow_ReadBasic_All from './AZMGLifecycleWorkflows_Workflow_ReadBasic_All/AZMGLifecycleWorkflows_Workflow_ReadBasic_All';
+import AZMGLifecycleWorkflows_Workflow_ReadWrite_All from './AZMGLifecycleWorkflows_Workflow_ReadWrite_All/AZMGLifecycleWorkflows_Workflow_ReadWrite_All';
+import AZMGListItems_SelectedOperations_Selected from './AZMGListItems_SelectedOperations_Selected/AZMGListItems_SelectedOperations_Selected';
+import AZMGLists_SelectedOperations_Selected from './AZMGLists_SelectedOperations_Selected/AZMGLists_SelectedOperations_Selected';
+import AZMGMail_Read from './AZMGMail_Read/AZMGMail_Read';
+import AZMGMail_Read_Shared from './AZMGMail_Read_Shared/AZMGMail_Read_Shared';
+import AZMGMail_ReadBasic from './AZMGMail_ReadBasic/AZMGMail_ReadBasic';
+import AZMGMail_ReadBasic_All from './AZMGMail_ReadBasic_All/AZMGMail_ReadBasic_All';
+import AZMGMail_ReadBasic_Shared from './AZMGMail_ReadBasic_Shared/AZMGMail_ReadBasic_Shared';
+import AZMGMail_ReadWrite from './AZMGMail_ReadWrite/AZMGMail_ReadWrite';
+import AZMGMail_ReadWrite_Shared from './AZMGMail_ReadWrite_Shared/AZMGMail_ReadWrite_Shared';
+import AZMGMail_Send from './AZMGMail_Send/AZMGMail_Send';
+import AZMGMail_Send_Shared from './AZMGMail_Send_Shared/AZMGMail_Send_Shared';
+import AZMGMailboxFolder_Read from './AZMGMailboxFolder_Read/AZMGMailboxFolder_Read';
+import AZMGMailboxFolder_Read_All from './AZMGMailboxFolder_Read_All/AZMGMailboxFolder_Read_All';
+import AZMGMailboxFolder_ReadWrite from './AZMGMailboxFolder_ReadWrite/AZMGMailboxFolder_ReadWrite';
+import AZMGMailboxFolder_ReadWrite_All from './AZMGMailboxFolder_ReadWrite_All/AZMGMailboxFolder_ReadWrite_All';
+import AZMGMailboxItem_ImportExport from './AZMGMailboxItem_ImportExport/AZMGMailboxItem_ImportExport';
+import AZMGMailboxItem_ImportExport_All from './AZMGMailboxItem_ImportExport_All/AZMGMailboxItem_ImportExport_All';
+import AZMGMailboxItem_Read from './AZMGMailboxItem_Read/AZMGMailboxItem_Read';
+import AZMGMailboxItem_Read_All from './AZMGMailboxItem_Read_All/AZMGMailboxItem_Read_All';
+import AZMGMailboxSettings_Read from './AZMGMailboxSettings_Read/AZMGMailboxSettings_Read';
+import AZMGMailboxSettings_ReadWrite from './AZMGMailboxSettings_ReadWrite/AZMGMailboxSettings_ReadWrite';
+import AZMGManagedTenants_Read_All from './AZMGManagedTenants_Read_All/AZMGManagedTenants_Read_All';
+import AZMGManagedTenants_ReadWrite_All from './AZMGManagedTenants_ReadWrite_All/AZMGManagedTenants_ReadWrite_All';
+import AZMGMember_Read_Hidden from './AZMGMember_Read_Hidden/AZMGMember_Read_Hidden';
+import AZMGMultiTenantOrganization_Read_All from './AZMGMultiTenantOrganization_Read_All/AZMGMultiTenantOrganization_Read_All';
+import AZMGMultiTenantOrganization_ReadBasic_All from './AZMGMultiTenantOrganization_ReadBasic_All/AZMGMultiTenantOrganization_ReadBasic_All';
+import AZMGMultiTenantOrganization_ReadWrite_All from './AZMGMultiTenantOrganization_ReadWrite_All/AZMGMultiTenantOrganization_ReadWrite_All';
+import AZMGMutualTlsOauthConfiguration_Read_All from './AZMGMutualTlsOauthConfiguration_Read_All/AZMGMutualTlsOauthConfiguration_Read_All';
+import AZMGMutualTlsOauthConfiguration_ReadWrite_All from './AZMGMutualTlsOauthConfiguration_ReadWrite_All/AZMGMutualTlsOauthConfiguration_ReadWrite_All';
+import AZMGNetworkAccess_Read_All from './AZMGNetworkAccess_Read_All/AZMGNetworkAccess_Read_All';
+import AZMGNetworkAccess_ReadWrite_All from './AZMGNetworkAccess_ReadWrite_All/AZMGNetworkAccess_ReadWrite_All';
+import AZMGNetworkAccess_Reports_Read_All from './AZMGNetworkAccess_Reports_Read_All/AZMGNetworkAccess_Reports_Read_All';
+import AZMGNetworkAccessBranch_Read_All from './AZMGNetworkAccessBranch_Read_All/AZMGNetworkAccessBranch_Read_All';
+import AZMGNetworkAccessBranch_ReadWrite_All from './AZMGNetworkAccessBranch_ReadWrite_All/AZMGNetworkAccessBranch_ReadWrite_All';
+import AZMGNetworkAccessPolicy_Read_All from './AZMGNetworkAccessPolicy_Read_All/AZMGNetworkAccessPolicy_Read_All';
+import AZMGNetworkAccessPolicy_ReadWrite_All from './AZMGNetworkAccessPolicy_ReadWrite_All/AZMGNetworkAccessPolicy_ReadWrite_All';
+import AZMGNotes_Create from './AZMGNotes_Create/AZMGNotes_Create';
+import AZMGNotes_Read from './AZMGNotes_Read/AZMGNotes_Read';
+import AZMGNotes_Read_All from './AZMGNotes_Read_All/AZMGNotes_Read_All';
+import AZMGNotes_ReadWrite from './AZMGNotes_ReadWrite/AZMGNotes_ReadWrite';
+import AZMGNotes_ReadWrite_All from './AZMGNotes_ReadWrite_All/AZMGNotes_ReadWrite_All';
+import AZMGNotes_ReadWrite_CreatedByApp from './AZMGNotes_ReadWrite_CreatedByApp/AZMGNotes_ReadWrite_CreatedByApp';
+import AZMGNotifications_ReadWrite_CreatedByApp from './AZMGNotifications_ReadWrite_CreatedByApp/AZMGNotifications_ReadWrite_CreatedByApp';
+import AZMGoffline_access from './AZMGoffline_access/AZMGoffline_access';
+import AZMGOnlineMeetingAiInsight_Read_All from './AZMGOnlineMeetingAiInsight_Read_All/AZMGOnlineMeetingAiInsight_Read_All';
+import AZMGOnlineMeetingAiInsight_Read_Chat from './AZMGOnlineMeetingAiInsight_Read_Chat/AZMGOnlineMeetingAiInsight_Read_Chat';
+import AZMGOnlineMeetingArtifact_Read_All from './AZMGOnlineMeetingArtifact_Read_All/AZMGOnlineMeetingArtifact_Read_All';
+import AZMGOnlineMeetingRecording_Read_All from './AZMGOnlineMeetingRecording_Read_All/AZMGOnlineMeetingRecording_Read_All';
+import AZMGOnlineMeetings_Read from './AZMGOnlineMeetings_Read/AZMGOnlineMeetings_Read';
+import AZMGOnlineMeetings_Read_All from './AZMGOnlineMeetings_Read_All/AZMGOnlineMeetings_Read_All';
+import AZMGOnlineMeetings_ReadWrite from './AZMGOnlineMeetings_ReadWrite/AZMGOnlineMeetings_ReadWrite';
+import AZMGOnlineMeetings_ReadWrite_All from './AZMGOnlineMeetings_ReadWrite_All/AZMGOnlineMeetings_ReadWrite_All';
+import AZMGOnlineMeetingTranscript_Read_All from './AZMGOnlineMeetingTranscript_Read_All/AZMGOnlineMeetingTranscript_Read_All';
+import AZMGOnPremDirectorySynchronization_Read_All from './AZMGOnPremDirectorySynchronization_Read_All/AZMGOnPremDirectorySynchronization_Read_All';
+import AZMGOnPremDirectorySynchronization_ReadWrite_All from './AZMGOnPremDirectorySynchronization_ReadWrite_All/AZMGOnPremDirectorySynchronization_ReadWrite_All';
+import AZMGOnPremisesPublishingProfiles_ReadWrite_All from './AZMGOnPremisesPublishingProfiles_ReadWrite_All/AZMGOnPremisesPublishingProfiles_ReadWrite_All';
+import AZMGopenid from './AZMGopenid/AZMGopenid';
+import AZMGOrganization_Read_All from './AZMGOrganization_Read_All/AZMGOrganization_Read_All';
+import AZMGOrganization_ReadWrite_All from './AZMGOrganization_ReadWrite_All/AZMGOrganization_ReadWrite_All';
+import AZMGOrganizationalBranding_Read_All from './AZMGOrganizationalBranding_Read_All/AZMGOrganizationalBranding_Read_All';
+import AZMGOrganizationalBranding_ReadWrite_All from './AZMGOrganizationalBranding_ReadWrite_All/AZMGOrganizationalBranding_ReadWrite_All';
+import AZMGOrgContact_Read_All from './AZMGOrgContact_Read_All/AZMGOrgContact_Read_All';
+import AZMGOrgSettings_AppsAndServices_Read_All from './AZMGOrgSettings_AppsAndServices_Read_All/AZMGOrgSettings_AppsAndServices_Read_All';
+import AZMGOrgSettings_AppsAndServices_ReadWrite_All from './AZMGOrgSettings_AppsAndServices_ReadWrite_All/AZMGOrgSettings_AppsAndServices_ReadWrite_All';
+import AZMGOrgSettings_DynamicsVoice_Read_All from './AZMGOrgSettings_DynamicsVoice_Read_All/AZMGOrgSettings_DynamicsVoice_Read_All';
+import AZMGOrgSettings_DynamicsVoice_ReadWrite_All from './AZMGOrgSettings_DynamicsVoice_ReadWrite_All/AZMGOrgSettings_DynamicsVoice_ReadWrite_All';
+import AZMGOrgSettings_Forms_Read_All from './AZMGOrgSettings_Forms_Read_All/AZMGOrgSettings_Forms_Read_All';
+import AZMGOrgSettings_Forms_ReadWrite_All from './AZMGOrgSettings_Forms_ReadWrite_All/AZMGOrgSettings_Forms_ReadWrite_All';
+import AZMGOrgSettings_Microsoft365Install_Read_All from './AZMGOrgSettings_Microsoft365Install_Read_All/AZMGOrgSettings_Microsoft365Install_Read_All';
+import AZMGOrgSettings_Microsoft365Install_ReadWrite_All from './AZMGOrgSettings_Microsoft365Install_ReadWrite_All/AZMGOrgSettings_Microsoft365Install_ReadWrite_All';
+import AZMGOrgSettings_Todo_Read_All from './AZMGOrgSettings_Todo_Read_All/AZMGOrgSettings_Todo_Read_All';
+import AZMGOrgSettings_Todo_ReadWrite_All from './AZMGOrgSettings_Todo_ReadWrite_All/AZMGOrgSettings_Todo_ReadWrite_All';
+import AZMGPartnerBilling_Read_All from './AZMGPartnerBilling_Read_All/AZMGPartnerBilling_Read_All';
+import AZMGPartnerSecurity_Read_All from './AZMGPartnerSecurity_Read_All/AZMGPartnerSecurity_Read_All';
+import AZMGPartnerSecurity_ReadWrite_All from './AZMGPartnerSecurity_ReadWrite_All/AZMGPartnerSecurity_ReadWrite_All';
+import AZMGPendingExternalUserProfile_Read_All from './AZMGPendingExternalUserProfile_Read_All/AZMGPendingExternalUserProfile_Read_All';
+import AZMGPendingExternalUserProfile_ReadWrite_All from './AZMGPendingExternalUserProfile_ReadWrite_All/AZMGPendingExternalUserProfile_ReadWrite_All';
+import AZMGPeople_Read from './AZMGPeople_Read/AZMGPeople_Read';
+import AZMGPeople_Read_All from './AZMGPeople_Read_All/AZMGPeople_Read_All';
+import AZMGPeopleSettings_Read_All from './AZMGPeopleSettings_Read_All/AZMGPeopleSettings_Read_All';
+import AZMGPeopleSettings_ReadWrite_All from './AZMGPeopleSettings_ReadWrite_All/AZMGPeopleSettings_ReadWrite_All';
+import AZMGPlace_Read_All from './AZMGPlace_Read_All/AZMGPlace_Read_All';
+import AZMGPlace_ReadWrite_All from './AZMGPlace_ReadWrite_All/AZMGPlace_ReadWrite_All';
+import AZMGPlaceDevice_Read_All from './AZMGPlaceDevice_Read_All/AZMGPlaceDevice_Read_All';
+import AZMGPlaceDevice_ReadWrite_All from './AZMGPlaceDevice_ReadWrite_All/AZMGPlaceDevice_ReadWrite_All';
+import AZMGPlaceDeviceTelemetry_ReadWrite_All from './AZMGPlaceDeviceTelemetry_ReadWrite_All/AZMGPlaceDeviceTelemetry_ReadWrite_All';
+import AZMGPolicy_Read_All from './AZMGPolicy_Read_All/AZMGPolicy_Read_All';
+import AZMGPolicy_Read_AuthenticationMethod from './AZMGPolicy_Read_AuthenticationMethod/AZMGPolicy_Read_AuthenticationMethod';
+import AZMGPolicy_Read_ConditionalAccess from './AZMGPolicy_Read_ConditionalAccess/AZMGPolicy_Read_ConditionalAccess';
+import AZMGPolicy_Read_DeviceConfiguration from './AZMGPolicy_Read_DeviceConfiguration/AZMGPolicy_Read_DeviceConfiguration';
+import AZMGPolicy_Read_IdentityProtection from './AZMGPolicy_Read_IdentityProtection/AZMGPolicy_Read_IdentityProtection';
+import AZMGPolicy_Read_PermissionGrant from './AZMGPolicy_Read_PermissionGrant/AZMGPolicy_Read_PermissionGrant';
+import AZMGPolicy_ReadWrite_AccessReview from './AZMGPolicy_ReadWrite_AccessReview/AZMGPolicy_ReadWrite_AccessReview';
+import AZMGPolicy_ReadWrite_ApplicationConfiguration from './AZMGPolicy_ReadWrite_ApplicationConfiguration/AZMGPolicy_ReadWrite_ApplicationConfiguration';
+import AZMGPolicy_ReadWrite_AuthenticationFlows from './AZMGPolicy_ReadWrite_AuthenticationFlows/AZMGPolicy_ReadWrite_AuthenticationFlows';
+import AZMGPolicy_ReadWrite_AuthenticationMethod from './AZMGPolicy_ReadWrite_AuthenticationMethod/AZMGPolicy_ReadWrite_AuthenticationMethod';
+import AZMGPolicy_ReadWrite_Authorization from './AZMGPolicy_ReadWrite_Authorization/AZMGPolicy_ReadWrite_Authorization';
+import AZMGPolicy_ReadWrite_ConditionalAccess from './AZMGPolicy_ReadWrite_ConditionalAccess/AZMGPolicy_ReadWrite_ConditionalAccess';
+import AZMGPolicy_ReadWrite_ConsentRequest from './AZMGPolicy_ReadWrite_ConsentRequest/AZMGPolicy_ReadWrite_ConsentRequest';
+import AZMGPolicy_ReadWrite_CrossTenantAccess from './AZMGPolicy_ReadWrite_CrossTenantAccess/AZMGPolicy_ReadWrite_CrossTenantAccess';
+import AZMGPolicy_ReadWrite_CrossTenantCapability from './AZMGPolicy_ReadWrite_CrossTenantCapability/AZMGPolicy_ReadWrite_CrossTenantCapability';
+import AZMGPolicy_ReadWrite_DeviceConfiguration from './AZMGPolicy_ReadWrite_DeviceConfiguration/AZMGPolicy_ReadWrite_DeviceConfiguration';
+import AZMGPolicy_ReadWrite_ExternalIdentities from './AZMGPolicy_ReadWrite_ExternalIdentities/AZMGPolicy_ReadWrite_ExternalIdentities';
+import AZMGPolicy_ReadWrite_FeatureRollout from './AZMGPolicy_ReadWrite_FeatureRollout/AZMGPolicy_ReadWrite_FeatureRollout';
+import AZMGPolicy_ReadWrite_FedTokenValidation from './AZMGPolicy_ReadWrite_FedTokenValidation/AZMGPolicy_ReadWrite_FedTokenValidation';
+import AZMGPolicy_ReadWrite_IdentityProtection from './AZMGPolicy_ReadWrite_IdentityProtection/AZMGPolicy_ReadWrite_IdentityProtection';
+import AZMGPolicy_ReadWrite_MobilityManagement from './AZMGPolicy_ReadWrite_MobilityManagement/AZMGPolicy_ReadWrite_MobilityManagement';
+import AZMGPolicy_ReadWrite_PermissionGrant from './AZMGPolicy_ReadWrite_PermissionGrant/AZMGPolicy_ReadWrite_PermissionGrant';
+import AZMGPolicy_ReadWrite_SecurityDefaults from './AZMGPolicy_ReadWrite_SecurityDefaults/AZMGPolicy_ReadWrite_SecurityDefaults';
+import AZMGPolicy_ReadWrite_TrustFramework from './AZMGPolicy_ReadWrite_TrustFramework/AZMGPolicy_ReadWrite_TrustFramework';
+import AZMGPOP_AccessAsUser_All from './AZMGPOP_AccessAsUser_All/AZMGPOP_AccessAsUser_All';
+import AZMGPresence_Read from './AZMGPresence_Read/AZMGPresence_Read';
+import AZMGPresence_Read_All from './AZMGPresence_Read_All/AZMGPresence_Read_All';
+import AZMGPresence_ReadWrite from './AZMGPresence_ReadWrite/AZMGPresence_ReadWrite';
+import AZMGPresence_ReadWrite_All from './AZMGPresence_ReadWrite_All/AZMGPresence_ReadWrite_All';
+import AZMGPrintConnector_Read_All from './AZMGPrintConnector_Read_All/AZMGPrintConnector_Read_All';
+import AZMGPrintConnector_ReadWrite_All from './AZMGPrintConnector_ReadWrite_All/AZMGPrintConnector_ReadWrite_All';
+import AZMGPrinter_Create from './AZMGPrinter_Create/AZMGPrinter_Create';
+import AZMGPrinter_FullControl_All from './AZMGPrinter_FullControl_All/AZMGPrinter_FullControl_All';
+import AZMGPrinter_Read_All from './AZMGPrinter_Read_All/AZMGPrinter_Read_All';
+import AZMGPrinter_ReadWrite_All from './AZMGPrinter_ReadWrite_All/AZMGPrinter_ReadWrite_All';
+import AZMGPrinterShare_Read_All from './AZMGPrinterShare_Read_All/AZMGPrinterShare_Read_All';
+import AZMGPrinterShare_ReadBasic_All from './AZMGPrinterShare_ReadBasic_All/AZMGPrinterShare_ReadBasic_All';
+import AZMGPrinterShare_ReadWrite_All from './AZMGPrinterShare_ReadWrite_All/AZMGPrinterShare_ReadWrite_All';
+import AZMGPrintJob_Create from './AZMGPrintJob_Create/AZMGPrintJob_Create';
+import AZMGPrintJob_Manage_All from './AZMGPrintJob_Manage_All/AZMGPrintJob_Manage_All';
+import AZMGPrintJob_Read from './AZMGPrintJob_Read/AZMGPrintJob_Read';
+import AZMGPrintJob_Read_All from './AZMGPrintJob_Read_All/AZMGPrintJob_Read_All';
+import AZMGPrintJob_ReadBasic from './AZMGPrintJob_ReadBasic/AZMGPrintJob_ReadBasic';
+import AZMGPrintJob_ReadBasic_All from './AZMGPrintJob_ReadBasic_All/AZMGPrintJob_ReadBasic_All';
+import AZMGPrintJob_ReadWrite from './AZMGPrintJob_ReadWrite/AZMGPrintJob_ReadWrite';
+import AZMGPrintJob_ReadWrite_All from './AZMGPrintJob_ReadWrite_All/AZMGPrintJob_ReadWrite_All';
+import AZMGPrintJob_ReadWriteBasic from './AZMGPrintJob_ReadWriteBasic/AZMGPrintJob_ReadWriteBasic';
+import AZMGPrintJob_ReadWriteBasic_All from './AZMGPrintJob_ReadWriteBasic_All/AZMGPrintJob_ReadWriteBasic_All';
+import AZMGPrintSettings_Read_All from './AZMGPrintSettings_Read_All/AZMGPrintSettings_Read_All';
+import AZMGPrintSettings_ReadWrite_All from './AZMGPrintSettings_ReadWrite_All/AZMGPrintSettings_ReadWrite_All';
+import AZMGPrintTaskDefinition_ReadWrite_All from './AZMGPrintTaskDefinition_ReadWrite_All/AZMGPrintTaskDefinition_ReadWrite_All';
+import AZMGPrivilegedAccess_Read_AzureAD from './AZMGPrivilegedAccess_Read_AzureAD/AZMGPrivilegedAccess_Read_AzureAD';
+import AZMGPrivilegedAccess_Read_AzureADGroup from './AZMGPrivilegedAccess_Read_AzureADGroup/AZMGPrivilegedAccess_Read_AzureADGroup';
+import AZMGPrivilegedAccess_Read_AzureResources from './AZMGPrivilegedAccess_Read_AzureResources/AZMGPrivilegedAccess_Read_AzureResources';
+import AZMGPrivilegedAccess_ReadWrite_AzureAD from './AZMGPrivilegedAccess_ReadWrite_AzureAD/AZMGPrivilegedAccess_ReadWrite_AzureAD';
+import AZMGPrivilegedAccess_ReadWrite_AzureADGroup from './AZMGPrivilegedAccess_ReadWrite_AzureADGroup/AZMGPrivilegedAccess_ReadWrite_AzureADGroup';
+import AZMGPrivilegedAccess_ReadWrite_AzureResources from './AZMGPrivilegedAccess_ReadWrite_AzureResources/AZMGPrivilegedAccess_ReadWrite_AzureResources';
+import AZMGPrivilegedAssignmentSchedule_Read_AzureADGroup from './AZMGPrivilegedAssignmentSchedule_Read_AzureADGroup/AZMGPrivilegedAssignmentSchedule_Read_AzureADGroup';
+import AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup from './AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup/AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup';
+import AZMGPrivilegedAssignmentSchedule_Remove_AzureADGroup from './AZMGPrivilegedAssignmentSchedule_Remove_AzureADGroup/AZMGPrivilegedAssignmentSchedule_Remove_AzureADGroup';
+import AZMGPrivilegedEligibilitySchedule_Read_AzureADGroup from './AZMGPrivilegedEligibilitySchedule_Read_AzureADGroup/AZMGPrivilegedEligibilitySchedule_Read_AzureADGroup';
+import AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup from './AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup/AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup';
+import AZMGPrivilegedEligibilitySchedule_Remove_AzureADGroup from './AZMGPrivilegedEligibilitySchedule_Remove_AzureADGroup/AZMGPrivilegedEligibilitySchedule_Remove_AzureADGroup';
+import AZMGprofile from './AZMGprofile/AZMGprofile';
+import AZMGProfilePhoto_Read_All from './AZMGProfilePhoto_Read_All/AZMGProfilePhoto_Read_All';
+import AZMGProfilePhoto_ReadWrite_All from './AZMGProfilePhoto_ReadWrite_All/AZMGProfilePhoto_ReadWrite_All';
+import AZMGProgramControl_Read_All from './AZMGProgramControl_Read_All/AZMGProgramControl_Read_All';
+import AZMGProgramControl_ReadWrite_All from './AZMGProgramControl_ReadWrite_All/AZMGProgramControl_ReadWrite_All';
+import AZMGProtectionScopes_Compute_All from './AZMGProtectionScopes_Compute_All/AZMGProtectionScopes_Compute_All';
+import AZMGProtectionScopes_Compute_User from './AZMGProtectionScopes_Compute_User/AZMGProtectionScopes_Compute_User';
+import AZMGProvisioningLog_Read_All from './AZMGProvisioningLog_Read_All/AZMGProvisioningLog_Read_All';
+import AZMGPublicKeyInfrastructure_Read_All from './AZMGPublicKeyInfrastructure_Read_All/AZMGPublicKeyInfrastructure_Read_All';
+import AZMGPublicKeyInfrastructure_ReadWrite_All from './AZMGPublicKeyInfrastructure_ReadWrite_All/AZMGPublicKeyInfrastructure_ReadWrite_All';
+import AZMGQnA_Read_All from './AZMGQnA_Read_All/AZMGQnA_Read_All';
+import AZMGRecordsManagement_Read_All from './AZMGRecordsManagement_Read_All/AZMGRecordsManagement_Read_All';
+import AZMGRecordsManagement_ReadWrite_All from './AZMGRecordsManagement_ReadWrite_All/AZMGRecordsManagement_ReadWrite_All';
+import AZMGReports_Read_All from './AZMGReports_Read_All/AZMGReports_Read_All';
+import AZMGReportSettings_Read_All from './AZMGReportSettings_Read_All/AZMGReportSettings_Read_All';
+import AZMGReportSettings_ReadWrite_All from './AZMGReportSettings_ReadWrite_All/AZMGReportSettings_ReadWrite_All';
+import AZMGResourceSpecificPermissionGrant_ReadForChat from './AZMGResourceSpecificPermissionGrant_ReadForChat/AZMGResourceSpecificPermissionGrant_ReadForChat';
+import AZMGResourceSpecificPermissionGrant_ReadForChat_All from './AZMGResourceSpecificPermissionGrant_ReadForChat_All/AZMGResourceSpecificPermissionGrant_ReadForChat_All';
+import AZMGResourceSpecificPermissionGrant_ReadForTeam from './AZMGResourceSpecificPermissionGrant_ReadForTeam/AZMGResourceSpecificPermissionGrant_ReadForTeam';
+import AZMGResourceSpecificPermissionGrant_ReadForTeam_All from './AZMGResourceSpecificPermissionGrant_ReadForTeam_All/AZMGResourceSpecificPermissionGrant_ReadForTeam_All';
+import AZMGResourceSpecificPermissionGrant_ReadForUser from './AZMGResourceSpecificPermissionGrant_ReadForUser/AZMGResourceSpecificPermissionGrant_ReadForUser';
+import AZMGResourceSpecificPermissionGrant_ReadForUser_All from './AZMGResourceSpecificPermissionGrant_ReadForUser_All/AZMGResourceSpecificPermissionGrant_ReadForUser_All';
+import AZMGRiskPreventionProviders_Read_All from './AZMGRiskPreventionProviders_Read_All/AZMGRiskPreventionProviders_Read_All';
+import AZMGRiskPreventionProviders_ReadWrite_All from './AZMGRiskPreventionProviders_ReadWrite_All/AZMGRiskPreventionProviders_ReadWrite_All';
+import AZMGRoleAssignmentSchedule_Read_Directory from './AZMGRoleAssignmentSchedule_Read_Directory/AZMGRoleAssignmentSchedule_Read_Directory';
+import AZMGRoleAssignmentSchedule_ReadWrite_Directory from './AZMGRoleAssignmentSchedule_ReadWrite_Directory/AZMGRoleAssignmentSchedule_ReadWrite_Directory';
+import AZMGRoleAssignmentSchedule_Remove_Directory from './AZMGRoleAssignmentSchedule_Remove_Directory/AZMGRoleAssignmentSchedule_Remove_Directory';
+import AZMGRoleEligibilitySchedule_Read_Directory from './AZMGRoleEligibilitySchedule_Read_Directory/AZMGRoleEligibilitySchedule_Read_Directory';
+import AZMGRoleEligibilitySchedule_ReadWrite_Directory from './AZMGRoleEligibilitySchedule_ReadWrite_Directory/AZMGRoleEligibilitySchedule_ReadWrite_Directory';
+import AZMGRoleEligibilitySchedule_Remove_Directory from './AZMGRoleEligibilitySchedule_Remove_Directory/AZMGRoleEligibilitySchedule_Remove_Directory';
+import AZMGRoleManagement_Read_All from './AZMGRoleManagement_Read_All/AZMGRoleManagement_Read_All';
+import AZMGRoleManagement_Read_CloudPC from './AZMGRoleManagement_Read_CloudPC/AZMGRoleManagement_Read_CloudPC';
+import AZMGRoleManagement_Read_Defender from './AZMGRoleManagement_Read_Defender/AZMGRoleManagement_Read_Defender';
+import AZMGRoleManagement_Read_Directory from './AZMGRoleManagement_Read_Directory/AZMGRoleManagement_Read_Directory';
+import AZMGRoleManagement_Read_Exchange from './AZMGRoleManagement_Read_Exchange/AZMGRoleManagement_Read_Exchange';
+import AZMGRoleManagement_ReadWrite_CloudPC from './AZMGRoleManagement_ReadWrite_CloudPC/AZMGRoleManagement_ReadWrite_CloudPC';
+import AZMGRoleManagement_ReadWrite_Defender from './AZMGRoleManagement_ReadWrite_Defender/AZMGRoleManagement_ReadWrite_Defender';
 import AZMGRoleManagement_ReadWrite_Directory from './AZMGRoleManagement_ReadWrite_Directory/AZMGRoleManagement_ReadWrite_Directory';
+import AZMGRoleManagement_ReadWrite_Exchange from './AZMGRoleManagement_ReadWrite_Exchange/AZMGRoleManagement_ReadWrite_Exchange';
+import AZMGRoleManagementAlert_Read_Directory from './AZMGRoleManagementAlert_Read_Directory/AZMGRoleManagementAlert_Read_Directory';
+import AZMGRoleManagementAlert_ReadWrite_Directory from './AZMGRoleManagementAlert_ReadWrite_Directory/AZMGRoleManagementAlert_ReadWrite_Directory';
+import AZMGRoleManagementPolicy_Read_AzureADGroup from './AZMGRoleManagementPolicy_Read_AzureADGroup/AZMGRoleManagementPolicy_Read_AzureADGroup';
+import AZMGRoleManagementPolicy_Read_Directory from './AZMGRoleManagementPolicy_Read_Directory/AZMGRoleManagementPolicy_Read_Directory';
+import AZMGRoleManagementPolicy_ReadWrite_AzureADGroup from './AZMGRoleManagementPolicy_ReadWrite_AzureADGroup/AZMGRoleManagementPolicy_ReadWrite_AzureADGroup';
+import AZMGRoleManagementPolicy_ReadWrite_Directory from './AZMGRoleManagementPolicy_ReadWrite_Directory/AZMGRoleManagementPolicy_ReadWrite_Directory';
+import AZMGSchedule_Read_All from './AZMGSchedule_Read_All/AZMGSchedule_Read_All';
+import AZMGSchedule_ReadWrite_All from './AZMGSchedule_ReadWrite_All/AZMGSchedule_ReadWrite_All';
+import AZMGSchedule_WorkingTime_ReadWrite_All from './AZMGSchedule_WorkingTime_ReadWrite_All/AZMGSchedule_WorkingTime_ReadWrite_All';
+import AZMGSchedulePermissions_ReadWrite_All from './AZMGSchedulePermissions_ReadWrite_All/AZMGSchedulePermissions_ReadWrite_All';
+import AZMGSearchConfiguration_Read_All from './AZMGSearchConfiguration_Read_All/AZMGSearchConfiguration_Read_All';
+import AZMGSearchConfiguration_ReadWrite_All from './AZMGSearchConfiguration_ReadWrite_All/AZMGSearchConfiguration_ReadWrite_All';
+import AZMGSecurityActions_Read_All from './AZMGSecurityActions_Read_All/AZMGSecurityActions_Read_All';
+import AZMGSecurityActions_ReadWrite_All from './AZMGSecurityActions_ReadWrite_All/AZMGSecurityActions_ReadWrite_All';
+import AZMGSecurityAlert_Read_All from './AZMGSecurityAlert_Read_All/AZMGSecurityAlert_Read_All';
+import AZMGSecurityAlert_ReadWrite_All from './AZMGSecurityAlert_ReadWrite_All/AZMGSecurityAlert_ReadWrite_All';
+import AZMGSecurityAnalyzedMessage_Read_All from './AZMGSecurityAnalyzedMessage_Read_All/AZMGSecurityAnalyzedMessage_Read_All';
+import AZMGSecurityAnalyzedMessage_ReadWrite_All from './AZMGSecurityAnalyzedMessage_ReadWrite_All/AZMGSecurityAnalyzedMessage_ReadWrite_All';
+import AZMGSecurityCopilotWorkspaces_Read_All from './AZMGSecurityCopilotWorkspaces_Read_All/AZMGSecurityCopilotWorkspaces_Read_All';
+import AZMGSecurityCopilotWorkspaces_ReadWrite_All from './AZMGSecurityCopilotWorkspaces_ReadWrite_All/AZMGSecurityCopilotWorkspaces_ReadWrite_All';
+import AZMGSecurityEvents_Read_All from './AZMGSecurityEvents_Read_All/AZMGSecurityEvents_Read_All';
+import AZMGSecurityEvents_ReadWrite_All from './AZMGSecurityEvents_ReadWrite_All/AZMGSecurityEvents_ReadWrite_All';
+import AZMGSecurityIdentitiesAccount_Read_All from './AZMGSecurityIdentitiesAccount_Read_All/AZMGSecurityIdentitiesAccount_Read_All';
+import AZMGSecurityIdentitiesActions_ReadWrite_All from './AZMGSecurityIdentitiesActions_ReadWrite_All/AZMGSecurityIdentitiesActions_ReadWrite_All';
+import AZMGSecurityIdentitiesHealth_Read_All from './AZMGSecurityIdentitiesHealth_Read_All/AZMGSecurityIdentitiesHealth_Read_All';
+import AZMGSecurityIdentitiesHealth_ReadWrite_All from './AZMGSecurityIdentitiesHealth_ReadWrite_All/AZMGSecurityIdentitiesHealth_ReadWrite_All';
+import AZMGSecurityIdentitiesSensors_Read_All from './AZMGSecurityIdentitiesSensors_Read_All/AZMGSecurityIdentitiesSensors_Read_All';
+import AZMGSecurityIdentitiesSensors_ReadWrite_All from './AZMGSecurityIdentitiesSensors_ReadWrite_All/AZMGSecurityIdentitiesSensors_ReadWrite_All';
+import AZMGSecurityIdentitiesUserActions_Read_All from './AZMGSecurityIdentitiesUserActions_Read_All/AZMGSecurityIdentitiesUserActions_Read_All';
+import AZMGSecurityIdentitiesUserActions_ReadWrite_All from './AZMGSecurityIdentitiesUserActions_ReadWrite_All/AZMGSecurityIdentitiesUserActions_ReadWrite_All';
+import AZMGSecurityIncident_Read_All from './AZMGSecurityIncident_Read_All/AZMGSecurityIncident_Read_All';
+import AZMGSecurityIncident_ReadWrite_All from './AZMGSecurityIncident_ReadWrite_All/AZMGSecurityIncident_ReadWrite_All';
+import AZMGSensitivityLabel_Evaluate from './AZMGSensitivityLabel_Evaluate/AZMGSensitivityLabel_Evaluate';
+import AZMGSensitivityLabel_Evaluate_All from './AZMGSensitivityLabel_Evaluate_All/AZMGSensitivityLabel_Evaluate_All';
+import AZMGSensitivityLabel_Read from './AZMGSensitivityLabel_Read/AZMGSensitivityLabel_Read';
+import AZMGSensitivityLabels_Read_All from './AZMGSensitivityLabels_Read_All/AZMGSensitivityLabels_Read_All';
+import AZMGServiceActivity_Exchange_Read_All from './AZMGServiceActivity_Exchange_Read_All/AZMGServiceActivity_Exchange_Read_All';
+import AZMGServiceActivity_Microsoft365Web_Read_All from './AZMGServiceActivity_Microsoft365Web_Read_All/AZMGServiceActivity_Microsoft365Web_Read_All';
+import AZMGServiceActivity_OneDrive_Read_All from './AZMGServiceActivity_OneDrive_Read_All/AZMGServiceActivity_OneDrive_Read_All';
+import AZMGServiceActivity_Teams_Read_All from './AZMGServiceActivity_Teams_Read_All/AZMGServiceActivity_Teams_Read_All';
+import AZMGServiceHealth_Read_All from './AZMGServiceHealth_Read_All/AZMGServiceHealth_Read_All';
+import AZMGServiceMessage_Read_All from './AZMGServiceMessage_Read_All/AZMGServiceMessage_Read_All';
+import AZMGServiceMessageViewpoint_Write from './AZMGServiceMessageViewpoint_Write/AZMGServiceMessageViewpoint_Write';
+import AZMGServicePrincipalEndpoint_Read_All from './AZMGServicePrincipalEndpoint_Read_All/AZMGServicePrincipalEndpoint_Read_All';
 import AZMGServicePrincipalEndpoint_ReadWrite_All from './AZMGServicePrincipalEndpoint_ReadWrite_All/AZMGServicePrincipalEndpoint_ReadWrite_All';
-import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
-import AZMemberOf from './AZMemberOf/AZMemberOf';
+import AZMGSharePointTenantSettings_Read_All from './AZMGSharePointTenantSettings_Read_All/AZMGSharePointTenantSettings_Read_All';
+import AZMGSharePointTenantSettings_ReadWrite_All from './AZMGSharePointTenantSettings_ReadWrite_All/AZMGSharePointTenantSettings_ReadWrite_All';
+import AZMGShortNotes_Read from './AZMGShortNotes_Read/AZMGShortNotes_Read';
+import AZMGShortNotes_Read_All from './AZMGShortNotes_Read_All/AZMGShortNotes_Read_All';
+import AZMGShortNotes_ReadWrite from './AZMGShortNotes_ReadWrite/AZMGShortNotes_ReadWrite';
+import AZMGShortNotes_ReadWrite_All from './AZMGShortNotes_ReadWrite_All/AZMGShortNotes_ReadWrite_All';
+import AZMGSignInIdentifier_Read_All from './AZMGSignInIdentifier_Read_All/AZMGSignInIdentifier_Read_All';
+import AZMGSignInIdentifier_ReadWrite_All from './AZMGSignInIdentifier_ReadWrite_All/AZMGSignInIdentifier_ReadWrite_All';
+import AZMGSites_Archive_All from './AZMGSites_Archive_All/AZMGSites_Archive_All';
+import AZMGSites_FullControl_All from './AZMGSites_FullControl_All/AZMGSites_FullControl_All';
+import AZMGSites_Manage_All from './AZMGSites_Manage_All/AZMGSites_Manage_All';
+import AZMGSites_Read_All from './AZMGSites_Read_All/AZMGSites_Read_All';
+import AZMGSites_ReadWrite_All from './AZMGSites_ReadWrite_All/AZMGSites_ReadWrite_All';
+import AZMGSites_Selected from './AZMGSites_Selected/AZMGSites_Selected';
+import AZMGSMTP_Send from './AZMGSMTP_Send/AZMGSMTP_Send';
+import AZMGSpiffeTrustDomain_Read_All from './AZMGSpiffeTrustDomain_Read_All/AZMGSpiffeTrustDomain_Read_All';
+import AZMGSpiffeTrustDomain_ReadWrite_All from './AZMGSpiffeTrustDomain_ReadWrite_All/AZMGSpiffeTrustDomain_ReadWrite_All';
+import AZMGStoryline_ReadWrite_All from './AZMGStoryline_ReadWrite_All/AZMGStoryline_ReadWrite_All';
+import AZMGSubjectRightsRequest_Read_All from './AZMGSubjectRightsRequest_Read_All/AZMGSubjectRightsRequest_Read_All';
+import AZMGSubjectRightsRequest_ReadWrite_All from './AZMGSubjectRightsRequest_ReadWrite_All/AZMGSubjectRightsRequest_ReadWrite_All';
+import AZMGSubscription_Read_All from './AZMGSubscription_Read_All/AZMGSubscription_Read_All';
+import AZMGSynchronization_Read_All from './AZMGSynchronization_Read_All/AZMGSynchronization_Read_All';
+import AZMGSynchronization_ReadWrite_All from './AZMGSynchronization_ReadWrite_All/AZMGSynchronization_ReadWrite_All';
+import AZMGSynchronizationData_User_Upload from './AZMGSynchronizationData_User_Upload/AZMGSynchronizationData_User_Upload';
+import AZMGSynchronizationData_User_Upload_OwnedBy from './AZMGSynchronizationData_User_Upload_OwnedBy/AZMGSynchronizationData_User_Upload_OwnedBy';
+import AZMGTasks_Read from './AZMGTasks_Read/AZMGTasks_Read';
+import AZMGTasks_Read_All from './AZMGTasks_Read_All/AZMGTasks_Read_All';
+import AZMGTasks_Read_Shared from './AZMGTasks_Read_Shared/AZMGTasks_Read_Shared';
+import AZMGTasks_ReadWrite from './AZMGTasks_ReadWrite/AZMGTasks_ReadWrite';
+import AZMGTasks_ReadWrite_All from './AZMGTasks_ReadWrite_All/AZMGTasks_ReadWrite_All';
+import AZMGTasks_ReadWrite_Shared from './AZMGTasks_ReadWrite_Shared/AZMGTasks_ReadWrite_Shared';
+import AZMGTeam_Create from './AZMGTeam_Create/AZMGTeam_Create';
+import AZMGTeam_ReadBasic_All from './AZMGTeam_ReadBasic_All/AZMGTeam_ReadBasic_All';
+import AZMGTeamMember_Read_All from './AZMGTeamMember_Read_All/AZMGTeamMember_Read_All';
+import AZMGTeamMember_ReadWrite_All from './AZMGTeamMember_ReadWrite_All/AZMGTeamMember_ReadWrite_All';
+import AZMGTeamMember_ReadWriteNonOwnerRole_All from './AZMGTeamMember_ReadWriteNonOwnerRole_All/AZMGTeamMember_ReadWriteNonOwnerRole_All';
+import AZMGTeamsActivity_Read from './AZMGTeamsActivity_Read/AZMGTeamsActivity_Read';
+import AZMGTeamsActivity_Read_All from './AZMGTeamsActivity_Read_All/AZMGTeamsActivity_Read_All';
+import AZMGTeamsActivity_Send from './AZMGTeamsActivity_Send/AZMGTeamsActivity_Send';
+import AZMGTeamsAppInstallation_ManageSelectedForChat from './AZMGTeamsAppInstallation_ManageSelectedForChat/AZMGTeamsAppInstallation_ManageSelectedForChat';
+import AZMGTeamsAppInstallation_ManageSelectedForChat_All from './AZMGTeamsAppInstallation_ManageSelectedForChat_All/AZMGTeamsAppInstallation_ManageSelectedForChat_All';
+import AZMGTeamsAppInstallation_ManageSelectedForTeam from './AZMGTeamsAppInstallation_ManageSelectedForTeam/AZMGTeamsAppInstallation_ManageSelectedForTeam';
+import AZMGTeamsAppInstallation_ManageSelectedForTeam_All from './AZMGTeamsAppInstallation_ManageSelectedForTeam_All/AZMGTeamsAppInstallation_ManageSelectedForTeam_All';
+import AZMGTeamsAppInstallation_ManageSelectedForUser from './AZMGTeamsAppInstallation_ManageSelectedForUser/AZMGTeamsAppInstallation_ManageSelectedForUser';
+import AZMGTeamsAppInstallation_ManageSelectedForUser_All from './AZMGTeamsAppInstallation_ManageSelectedForUser_All/AZMGTeamsAppInstallation_ManageSelectedForUser_All';
+import AZMGTeamsAppInstallation_Read_All from './AZMGTeamsAppInstallation_Read_All/AZMGTeamsAppInstallation_Read_All';
+import AZMGTeamsAppInstallation_ReadForChat from './AZMGTeamsAppInstallation_ReadForChat/AZMGTeamsAppInstallation_ReadForChat';
+import AZMGTeamsAppInstallation_ReadForChat_All from './AZMGTeamsAppInstallation_ReadForChat_All/AZMGTeamsAppInstallation_ReadForChat_All';
+import AZMGTeamsAppInstallation_ReadForTeam from './AZMGTeamsAppInstallation_ReadForTeam/AZMGTeamsAppInstallation_ReadForTeam';
+import AZMGTeamsAppInstallation_ReadForTeam_All from './AZMGTeamsAppInstallation_ReadForTeam_All/AZMGTeamsAppInstallation_ReadForTeam_All';
+import AZMGTeamsAppInstallation_ReadForUser from './AZMGTeamsAppInstallation_ReadForUser/AZMGTeamsAppInstallation_ReadForUser';
+import AZMGTeamsAppInstallation_ReadForUser_All from './AZMGTeamsAppInstallation_ReadForUser_All/AZMGTeamsAppInstallation_ReadForUser_All';
+import AZMGTeamsAppInstallation_ReadSelectedForChat from './AZMGTeamsAppInstallation_ReadSelectedForChat/AZMGTeamsAppInstallation_ReadSelectedForChat';
+import AZMGTeamsAppInstallation_ReadSelectedForChat_All from './AZMGTeamsAppInstallation_ReadSelectedForChat_All/AZMGTeamsAppInstallation_ReadSelectedForChat_All';
+import AZMGTeamsAppInstallation_ReadSelectedForTeam from './AZMGTeamsAppInstallation_ReadSelectedForTeam/AZMGTeamsAppInstallation_ReadSelectedForTeam';
+import AZMGTeamsAppInstallation_ReadSelectedForTeam_All from './AZMGTeamsAppInstallation_ReadSelectedForTeam_All/AZMGTeamsAppInstallation_ReadSelectedForTeam_All';
+import AZMGTeamsAppInstallation_ReadSelectedForUser from './AZMGTeamsAppInstallation_ReadSelectedForUser/AZMGTeamsAppInstallation_ReadSelectedForUser';
+import AZMGTeamsAppInstallation_ReadSelectedForUser_All from './AZMGTeamsAppInstallation_ReadSelectedForUser_All/AZMGTeamsAppInstallation_ReadSelectedForUser_All';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentForChat from './AZMGTeamsAppInstallation_ReadWriteAndConsentForChat/AZMGTeamsAppInstallation_ReadWriteAndConsentForChat';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentForChat_All from './AZMGTeamsAppInstallation_ReadWriteAndConsentForChat_All/AZMGTeamsAppInstallation_ReadWriteAndConsentForChat_All';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam from './AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam/AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam_All from './AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam_All/AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam_All';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentForUser from './AZMGTeamsAppInstallation_ReadWriteAndConsentForUser/AZMGTeamsAppInstallation_ReadWriteAndConsentForUser';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentForUser_All from './AZMGTeamsAppInstallation_ReadWriteAndConsentForUser_All/AZMGTeamsAppInstallation_ReadWriteAndConsentForUser_All';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat from './AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat/AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat_All from './AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat_All/AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat_All';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam from './AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam/AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam_All from './AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam_All/AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam_All';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser from './AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser/AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser';
+import AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser_All from './AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser_All/AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser_All';
+import AZMGTeamsAppInstallation_ReadWriteForChat from './AZMGTeamsAppInstallation_ReadWriteForChat/AZMGTeamsAppInstallation_ReadWriteForChat';
+import AZMGTeamsAppInstallation_ReadWriteForChat_All from './AZMGTeamsAppInstallation_ReadWriteForChat_All/AZMGTeamsAppInstallation_ReadWriteForChat_All';
+import AZMGTeamsAppInstallation_ReadWriteForTeam from './AZMGTeamsAppInstallation_ReadWriteForTeam/AZMGTeamsAppInstallation_ReadWriteForTeam';
+import AZMGTeamsAppInstallation_ReadWriteForTeam_All from './AZMGTeamsAppInstallation_ReadWriteForTeam_All/AZMGTeamsAppInstallation_ReadWriteForTeam_All';
+import AZMGTeamsAppInstallation_ReadWriteForUser from './AZMGTeamsAppInstallation_ReadWriteForUser/AZMGTeamsAppInstallation_ReadWriteForUser';
+import AZMGTeamsAppInstallation_ReadWriteForUser_All from './AZMGTeamsAppInstallation_ReadWriteForUser_All/AZMGTeamsAppInstallation_ReadWriteForUser_All';
+import AZMGTeamsAppInstallation_ReadWriteSelectedForChat from './AZMGTeamsAppInstallation_ReadWriteSelectedForChat/AZMGTeamsAppInstallation_ReadWriteSelectedForChat';
+import AZMGTeamsAppInstallation_ReadWriteSelectedForChat_All from './AZMGTeamsAppInstallation_ReadWriteSelectedForChat_All/AZMGTeamsAppInstallation_ReadWriteSelectedForChat_All';
+import AZMGTeamsAppInstallation_ReadWriteSelectedForTeam from './AZMGTeamsAppInstallation_ReadWriteSelectedForTeam/AZMGTeamsAppInstallation_ReadWriteSelectedForTeam';
+import AZMGTeamsAppInstallation_ReadWriteSelectedForTeam_All from './AZMGTeamsAppInstallation_ReadWriteSelectedForTeam_All/AZMGTeamsAppInstallation_ReadWriteSelectedForTeam_All';
+import AZMGTeamsAppInstallation_ReadWriteSelectedForUser from './AZMGTeamsAppInstallation_ReadWriteSelectedForUser/AZMGTeamsAppInstallation_ReadWriteSelectedForUser';
+import AZMGTeamsAppInstallation_ReadWriteSelectedForUser_All from './AZMGTeamsAppInstallation_ReadWriteSelectedForUser_All/AZMGTeamsAppInstallation_ReadWriteSelectedForUser_All';
+import AZMGTeamsAppInstallation_ReadWriteSelfForChat from './AZMGTeamsAppInstallation_ReadWriteSelfForChat/AZMGTeamsAppInstallation_ReadWriteSelfForChat';
+import AZMGTeamsAppInstallation_ReadWriteSelfForChat_All from './AZMGTeamsAppInstallation_ReadWriteSelfForChat_All/AZMGTeamsAppInstallation_ReadWriteSelfForChat_All';
+import AZMGTeamsAppInstallation_ReadWriteSelfForTeam from './AZMGTeamsAppInstallation_ReadWriteSelfForTeam/AZMGTeamsAppInstallation_ReadWriteSelfForTeam';
+import AZMGTeamsAppInstallation_ReadWriteSelfForTeam_All from './AZMGTeamsAppInstallation_ReadWriteSelfForTeam_All/AZMGTeamsAppInstallation_ReadWriteSelfForTeam_All';
+import AZMGTeamsAppInstallation_ReadWriteSelfForUser from './AZMGTeamsAppInstallation_ReadWriteSelfForUser/AZMGTeamsAppInstallation_ReadWriteSelfForUser';
+import AZMGTeamsAppInstallation_ReadWriteSelfForUser_All from './AZMGTeamsAppInstallation_ReadWriteSelfForUser_All/AZMGTeamsAppInstallation_ReadWriteSelfForUser_All';
+import AZMGTeamSettings_Read_All from './AZMGTeamSettings_Read_All/AZMGTeamSettings_Read_All';
+import AZMGTeamSettings_ReadWrite_All from './AZMGTeamSettings_ReadWrite_All/AZMGTeamSettings_ReadWrite_All';
+import AZMGTeamsPolicyUserAssign_ReadWrite_All from './AZMGTeamsPolicyUserAssign_ReadWrite_All/AZMGTeamsPolicyUserAssign_ReadWrite_All';
+import AZMGTeamsResourceAccount_Read_All from './AZMGTeamsResourceAccount_Read_All/AZMGTeamsResourceAccount_Read_All';
+import AZMGTeamsTab_Create from './AZMGTeamsTab_Create/AZMGTeamsTab_Create';
+import AZMGTeamsTab_Read_All from './AZMGTeamsTab_Read_All/AZMGTeamsTab_Read_All';
+import AZMGTeamsTab_ReadWrite_All from './AZMGTeamsTab_ReadWrite_All/AZMGTeamsTab_ReadWrite_All';
+import AZMGTeamsTab_ReadWriteForChat from './AZMGTeamsTab_ReadWriteForChat/AZMGTeamsTab_ReadWriteForChat';
+import AZMGTeamsTab_ReadWriteForChat_All from './AZMGTeamsTab_ReadWriteForChat_All/AZMGTeamsTab_ReadWriteForChat_All';
+import AZMGTeamsTab_ReadWriteForTeam from './AZMGTeamsTab_ReadWriteForTeam/AZMGTeamsTab_ReadWriteForTeam';
+import AZMGTeamsTab_ReadWriteForTeam_All from './AZMGTeamsTab_ReadWriteForTeam_All/AZMGTeamsTab_ReadWriteForTeam_All';
+import AZMGTeamsTab_ReadWriteForUser from './AZMGTeamsTab_ReadWriteForUser/AZMGTeamsTab_ReadWriteForUser';
+import AZMGTeamsTab_ReadWriteForUser_All from './AZMGTeamsTab_ReadWriteForUser_All/AZMGTeamsTab_ReadWriteForUser_All';
+import AZMGTeamsTab_ReadWriteSelfForChat from './AZMGTeamsTab_ReadWriteSelfForChat/AZMGTeamsTab_ReadWriteSelfForChat';
+import AZMGTeamsTab_ReadWriteSelfForChat_All from './AZMGTeamsTab_ReadWriteSelfForChat_All/AZMGTeamsTab_ReadWriteSelfForChat_All';
+import AZMGTeamsTab_ReadWriteSelfForTeam from './AZMGTeamsTab_ReadWriteSelfForTeam/AZMGTeamsTab_ReadWriteSelfForTeam';
+import AZMGTeamsTab_ReadWriteSelfForTeam_All from './AZMGTeamsTab_ReadWriteSelfForTeam_All/AZMGTeamsTab_ReadWriteSelfForTeam_All';
+import AZMGTeamsTab_ReadWriteSelfForUser from './AZMGTeamsTab_ReadWriteSelfForUser/AZMGTeamsTab_ReadWriteSelfForUser';
+import AZMGTeamsTab_ReadWriteSelfForUser_All from './AZMGTeamsTab_ReadWriteSelfForUser_All/AZMGTeamsTab_ReadWriteSelfForUser_All';
+import AZMGTeamsTelephoneNumber_Read_All from './AZMGTeamsTelephoneNumber_Read_All/AZMGTeamsTelephoneNumber_Read_All';
+import AZMGTeamsTelephoneNumber_ReadWrite_All from './AZMGTeamsTelephoneNumber_ReadWrite_All/AZMGTeamsTelephoneNumber_ReadWrite_All';
+import AZMGTeamsUserConfiguration_Read_All from './AZMGTeamsUserConfiguration_Read_All/AZMGTeamsUserConfiguration_Read_All';
+import AZMGTeamTemplates_Read from './AZMGTeamTemplates_Read/AZMGTeamTemplates_Read';
+import AZMGTeamTemplates_Read_All from './AZMGTeamTemplates_Read_All/AZMGTeamTemplates_Read_All';
+import AZMGTeamwork_Migrate_All from './AZMGTeamwork_Migrate_All/AZMGTeamwork_Migrate_All';
+import AZMGTeamwork_Read_All from './AZMGTeamwork_Read_All/AZMGTeamwork_Read_All';
+import AZMGTeamworkAppSettings_Read_All from './AZMGTeamworkAppSettings_Read_All/AZMGTeamworkAppSettings_Read_All';
+import AZMGTeamworkAppSettings_ReadWrite_All from './AZMGTeamworkAppSettings_ReadWrite_All/AZMGTeamworkAppSettings_ReadWrite_All';
+import AZMGTeamworkDevice_Read_All from './AZMGTeamworkDevice_Read_All/AZMGTeamworkDevice_Read_All';
+import AZMGTeamworkDevice_ReadWrite_All from './AZMGTeamworkDevice_ReadWrite_All/AZMGTeamworkDevice_ReadWrite_All';
+import AZMGTeamworkTag_Read from './AZMGTeamworkTag_Read/AZMGTeamworkTag_Read';
+import AZMGTeamworkTag_Read_All from './AZMGTeamworkTag_Read_All/AZMGTeamworkTag_Read_All';
+import AZMGTeamworkTag_ReadWrite from './AZMGTeamworkTag_ReadWrite/AZMGTeamworkTag_ReadWrite';
+import AZMGTeamworkTag_ReadWrite_All from './AZMGTeamworkTag_ReadWrite_All/AZMGTeamworkTag_ReadWrite_All';
+import AZMGTeamworkUserInteraction_Read_All from './AZMGTeamworkUserInteraction_Read_All/AZMGTeamworkUserInteraction_Read_All';
+import AZMGTermStore_Read_All from './AZMGTermStore_Read_All/AZMGTermStore_Read_All';
+import AZMGTermStore_ReadWrite_All from './AZMGTermStore_ReadWrite_All/AZMGTermStore_ReadWrite_All';
+import AZMGThreatAssessment_Read_All from './AZMGThreatAssessment_Read_All/AZMGThreatAssessment_Read_All';
+import AZMGThreatAssessment_ReadWrite_All from './AZMGThreatAssessment_ReadWrite_All/AZMGThreatAssessment_ReadWrite_All';
+import AZMGThreatHunting_Read_All from './AZMGThreatHunting_Read_All/AZMGThreatHunting_Read_All';
+import AZMGThreatIndicators_Read_All from './AZMGThreatIndicators_Read_All/AZMGThreatIndicators_Read_All';
+import AZMGThreatIndicators_ReadWrite_OwnedBy from './AZMGThreatIndicators_ReadWrite_OwnedBy/AZMGThreatIndicators_ReadWrite_OwnedBy';
+import AZMGThreatIntelligence_Read_All from './AZMGThreatIntelligence_Read_All/AZMGThreatIntelligence_Read_All';
+import AZMGThreatSubmission_Read from './AZMGThreatSubmission_Read/AZMGThreatSubmission_Read';
+import AZMGThreatSubmission_Read_All from './AZMGThreatSubmission_Read_All/AZMGThreatSubmission_Read_All';
+import AZMGThreatSubmission_ReadWrite from './AZMGThreatSubmission_ReadWrite/AZMGThreatSubmission_ReadWrite';
+import AZMGThreatSubmission_ReadWrite_All from './AZMGThreatSubmission_ReadWrite_All/AZMGThreatSubmission_ReadWrite_All';
+import AZMGThreatSubmissionPolicy_ReadWrite_All from './AZMGThreatSubmissionPolicy_ReadWrite_All/AZMGThreatSubmissionPolicy_ReadWrite_All';
+import AZMGTopic_Read_All from './AZMGTopic_Read_All/AZMGTopic_Read_All';
+import AZMGTrustFrameworkKeySet_Read_All from './AZMGTrustFrameworkKeySet_Read_All/AZMGTrustFrameworkKeySet_Read_All';
+import AZMGTrustFrameworkKeySet_ReadWrite_All from './AZMGTrustFrameworkKeySet_ReadWrite_All/AZMGTrustFrameworkKeySet_ReadWrite_All';
+import AZMGUnifiedGroupMember_Read_AsGuest from './AZMGUnifiedGroupMember_Read_AsGuest/AZMGUnifiedGroupMember_Read_AsGuest';
+import AZMGUser_ConvertToInternal_ReadWrite_All from './AZMGUser_ConvertToInternal_ReadWrite_All/AZMGUser_ConvertToInternal_ReadWrite_All';
+import AZMGUser_DeleteRestore_All from './AZMGUser_DeleteRestore_All/AZMGUser_DeleteRestore_All';
+import AZMGUser_EnableDisableAccount_All from './AZMGUser_EnableDisableAccount_All/AZMGUser_EnableDisableAccount_All';
+import AZMGUser_Export_All from './AZMGUser_Export_All/AZMGUser_Export_All';
+import AZMGUser_Invite_All from './AZMGUser_Invite_All/AZMGUser_Invite_All';
+import AZMGUser_LifeCycleInfo_Read_All from './AZMGUser_LifeCycleInfo_Read_All/AZMGUser_LifeCycleInfo_Read_All';
+import AZMGUser_LifeCycleInfo_ReadWrite_All from './AZMGUser_LifeCycleInfo_ReadWrite_All/AZMGUser_LifeCycleInfo_ReadWrite_All';
+import AZMGUser_Mail_ReadWrite_All from './AZMGUser_Mail_ReadWrite_All/AZMGUser_Mail_ReadWrite_All';
+import AZMGUser_ManageIdentities_All from './AZMGUser_ManageIdentities_All/AZMGUser_ManageIdentities_All';
+import AZMGUser_PasswordProfile_ReadWrite_All from './AZMGUser_PasswordProfile_ReadWrite_All/AZMGUser_PasswordProfile_ReadWrite_All';
+import AZMGUser_Phone_ReadWrite_All from './AZMGUser_Phone_ReadWrite_All/AZMGUser_Phone_ReadWrite_All';
+import AZMGUser_Read from './AZMGUser_Read/AZMGUser_Read';
+import AZMGUser_Read_All from './AZMGUser_Read_All/AZMGUser_Read_All';
+import AZMGUser_ReadBasic_All from './AZMGUser_ReadBasic_All/AZMGUser_ReadBasic_All';
+import AZMGUser_ReadWrite from './AZMGUser_ReadWrite/AZMGUser_ReadWrite';
+import AZMGUser_ReadWrite_All from './AZMGUser_ReadWrite_All/AZMGUser_ReadWrite_All';
+import AZMGUser_ReadWrite_CrossCloud from './AZMGUser_ReadWrite_CrossCloud/AZMGUser_ReadWrite_CrossCloud';
+import AZMGUser_RevokeSessions_All from './AZMGUser_RevokeSessions_All/AZMGUser_RevokeSessions_All';
+import AZMGUserActivity_ReadWrite_CreatedByApp from './AZMGUserActivity_ReadWrite_CreatedByApp/AZMGUserActivity_ReadWrite_CreatedByApp';
+import AZMGUserAuthenticationMethod_Read from './AZMGUserAuthenticationMethod_Read/AZMGUserAuthenticationMethod_Read';
+import AZMGUserAuthenticationMethod_Read_All from './AZMGUserAuthenticationMethod_Read_All/AZMGUserAuthenticationMethod_Read_All';
+import AZMGUserAuthenticationMethod_ReadWrite from './AZMGUserAuthenticationMethod_ReadWrite/AZMGUserAuthenticationMethod_ReadWrite';
+import AZMGUserAuthenticationMethod_ReadWrite_All from './AZMGUserAuthenticationMethod_ReadWrite_All/AZMGUserAuthenticationMethod_ReadWrite_All';
+import AZMGUserAuthMethod_Passkey_Read_All from './AZMGUserAuthMethod_Passkey_Read_All/AZMGUserAuthMethod_Passkey_Read_All';
+import AZMGUserAuthMethod_Passkey_ReadWrite_All from './AZMGUserAuthMethod_Passkey_ReadWrite_All/AZMGUserAuthMethod_Passkey_ReadWrite_All';
+import AZMGUserCloudClipboard_Read from './AZMGUserCloudClipboard_Read/AZMGUserCloudClipboard_Read';
+import AZMGUserNotification_ReadWrite_CreatedByApp from './AZMGUserNotification_ReadWrite_CreatedByApp/AZMGUserNotification_ReadWrite_CreatedByApp';
+import AZMGUserShiftPreferences_Read_All from './AZMGUserShiftPreferences_Read_All/AZMGUserShiftPreferences_Read_All';
+import AZMGUserShiftPreferences_ReadWrite_All from './AZMGUserShiftPreferences_ReadWrite_All/AZMGUserShiftPreferences_ReadWrite_All';
+import AZMGUserTeamwork_Read from './AZMGUserTeamwork_Read/AZMGUserTeamwork_Read';
+import AZMGUserTeamwork_Read_All from './AZMGUserTeamwork_Read_All/AZMGUserTeamwork_Read_All';
+import AZMGUserTimelineActivity_Write_CreatedByApp from './AZMGUserTimelineActivity_Write_CreatedByApp/AZMGUserTimelineActivity_Write_CreatedByApp';
+import AZMGUserWindowsSettings_Read_All from './AZMGUserWindowsSettings_Read_All/AZMGUserWindowsSettings_Read_All';
+import AZMGUserWindowsSettings_ReadWrite_All from './AZMGUserWindowsSettings_ReadWrite_All/AZMGUserWindowsSettings_ReadWrite_All';
+import AZMGVerifiedId_Profile_Read_All from './AZMGVerifiedId_Profile_Read_All/AZMGVerifiedId_Profile_Read_All';
+import AZMGVerifiedId_Profile_ReadWrite_All from './AZMGVerifiedId_Profile_ReadWrite_All/AZMGVerifiedId_Profile_ReadWrite_All';
+import AZMGVirtualAppointment_Read from './AZMGVirtualAppointment_Read/AZMGVirtualAppointment_Read';
+import AZMGVirtualAppointment_Read_All from './AZMGVirtualAppointment_Read_All/AZMGVirtualAppointment_Read_All';
+import AZMGVirtualAppointment_ReadWrite from './AZMGVirtualAppointment_ReadWrite/AZMGVirtualAppointment_ReadWrite';
+import AZMGVirtualAppointment_ReadWrite_All from './AZMGVirtualAppointment_ReadWrite_All/AZMGVirtualAppointment_ReadWrite_All';
+import AZMGVirtualAppointmentNotification_Send from './AZMGVirtualAppointmentNotification_Send/AZMGVirtualAppointmentNotification_Send';
+import AZMGVirtualEvent_Read from './AZMGVirtualEvent_Read/AZMGVirtualEvent_Read';
+import AZMGVirtualEvent_Read_All from './AZMGVirtualEvent_Read_All/AZMGVirtualEvent_Read_All';
+import AZMGVirtualEvent_ReadWrite from './AZMGVirtualEvent_ReadWrite/AZMGVirtualEvent_ReadWrite';
+import AZMGVirtualEventRegistration_Anon_ReadWrite_All from './AZMGVirtualEventRegistration_Anon_ReadWrite_All/AZMGVirtualEventRegistration_Anon_ReadWrite_All';
+import AZMGWindowsUpdates_ReadWrite_All from './AZMGWindowsUpdates_ReadWrite_All/AZMGWindowsUpdates_ReadWrite_All';
+import AZMGWorkforceIntegration_Read_All from './AZMGWorkforceIntegration_Read_All/AZMGWorkforceIntegration_Read_All';
+import AZMGWorkforceIntegration_ReadWrite_All from './AZMGWorkforceIntegration_ReadWrite_All/AZMGWorkforceIntegration_ReadWrite_All';
 import AZNodeResourceGroup from './AZNodeResourceGroup/AZNodeResourceGroup';
 import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
@@ -69,18 +837,10 @@ import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessA
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
 import AZVMContributor from './AZVMContributor/AZVMContributor';
 import AZWebsiteContributor from './AZWebsiteContributor/AZWebsiteContributor';
-import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
-import AddAllowedToAct from './AddAllowedToAct/AddAllowedToAct';
-import AddKeyCredentialLink from './AddKeyCredentialLink/AddKeyCredentialLink';
-import AddMember from './AddMember/AddMember';
-import AddSelf from './AddSelf/AddSelf';
-import AdminTo from './AdminTo/AdminTo';
-import AllExtendedRights from './AllExtendedRights/AllExtendedRights';
-import AllowedToAct from './AllowedToAct/AllowedToAct';
-import AllowedToDelegate from './AllowedToDelegate/AllowedToDelegate';
 import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import ClaimSpecialIdentity from './ClaimSpecialIdentity/ClaimSpecialIdentity';
+import CodeController from './CodeController/CodeController';
 import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRelayNTLMToLDAPS';
@@ -90,6 +850,7 @@ import Contains from './Contains/Contains';
 import CrossForestTrust from './CrossForestTrust/CrossForestTrust';
 import DCFor from './DCFor/DCFor';
 import DCSync from './DCSync/DCSync';
+import Default from './Default/Default';
 import DelegatedEnrollmentAgent from './DelegatedEnrollmentAgent/DelegatedEnrollmentAgent';
 import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import Enroll from './Enroll/Enroll';
@@ -98,14 +859,14 @@ import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
 import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ExtendedByPolicy from './ExtendedByPolicy/ExtendedByPolicy';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
-import GPLink from './GPLink/GPLink';
 import GenericAll from './GenericAll/GenericAll';
 import GenericWrite from './GenericWrite/GenericWrite';
 import GetChanges from './GetChanges/GetChanges';
 import GetChangesAll from './GetChangesAll/GetChangesAll';
 import GoldenCert from './GoldenCert/GoldenCert';
-import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
+import GPLink from './GPLink/GPLink';
 import HasSession from './HasSession/HasSession';
+import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasTrustKeys from './HasTrustKeys/HasTrustKeys';
 import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
@@ -121,12 +882,12 @@ import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
-import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
-import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
+import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
+import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
 import WriteDacl from './WriteDacl/WriteDacl';
@@ -150,128 +911,889 @@ export type EdgeInfoProps = {
 };
 
 const EdgeInfoComponents = {
-    GenericAll: GenericAll,
-    MemberOf: MemberOf,
-    AllExtendedRights: AllExtendedRights,
-    AdminTo: AdminTo,
-    HasSession: HasSession,
-    AddMember: AddMember,
-    ForceChangePassword: ForceChangePassword,
-    GenericWrite: GenericWrite,
-    Owns: Owns,
-    OwnsLimitedRights: OwnsLimitedRights,
-    OwnsRaw: OwnsRaw,
-    WriteDacl: WriteDacl,
-    WriteOwner: WriteOwner,
-    WriteOwnerLimitedRights: WriteOwnerLimitedRights,
-    WriteOwnerRaw: WriteOwnerRaw,
-    CanRDP: CanRDP,
-    ExecuteDCOM: ExecuteDCOM,
-    AllowedToDelegate: AllowedToDelegate,
-    CoerceToTGT: CoerceToTGT,
-    GetChanges: GetChanges,
-    GetChangesAll: GetChangesAll,
-    ReadLAPSPassword: ReadLAPSPassword,
-    Contains: Contains,
-    GPLink: GPLink,
-    AddAllowedToAct: AddAllowedToAct,
-    AllowedToAct: AllowedToAct,
-    SQLAdmin: SQLAdmin,
-    ReadGMSAPassword: ReadGMSAPassword,
-    HasSIDHistory: HasSIDHistory,
-    CrossForestTrust: CrossForestTrust,
-    SameForestTrust: SameForestTrust,
-    SpoofSIDHistory: SpoofSIDHistory,
     AbuseTGTDelegation: AbuseTGTDelegation,
-    CanPSRemote: CanPSRemote,
+    ADCSESC1: ADCSESC1,
+    ADCSESC10a: ADCSESC10a,
+    ADCSESC10b: ADCSESC10b,
+    ADCSESC13: ADCSESC13,
+    ADCSESC3: ADCSESC3,
+    ADCSESC4: ADCSESC4,
+    ADCSESC6a: ADCSESC6a,
+    ADCSESC6b: ADCSESC6b,
+    ADCSESC9a: ADCSESC9a,
+    ADCSESC9b: ADCSESC9b,
+    AddAllowedToAct: AddAllowedToAct,
+    AddKeyCredentialLink: AddKeyCredentialLink,
+    AddMember: AddMember,
+    AddSelf: AddSelf,
+    AdminTo: AdminTo,
+    AllExtendedRights: AllExtendedRights,
+    AllowedToAct: AllowedToAct,
+    AllowedToDelegate: AllowedToDelegate,
     AZAddMembers: AZAddMembers,
+    AZAddOwner: AZAddOwner,
     AZAddSecret: AZAddSecret,
+    AZAKSContributor: AZAKSContributor,
+    AZAppAdmin: AZAppAdmin,
+    AZAutomationContributor: AZAutomationContributor,
     AZAvereContributor: AZAvereContributor,
+    AZCloudAppAdmin: AZCloudAppAdmin,
     AZContains: AZContains,
     AZContributor: AZContributor,
     AZExecuteCommand: AZExecuteCommand,
     AZGetCertificates: AZGetCertificates,
     AZGetKeys: AZGetKeys,
     AZGetSecrets: AZGetSecrets,
+    AZGlobalAdmin: AZGlobalAdmin,
     AZHasRole: AZHasRole,
+    AZKeyVaultKVContributor: AZKeyVaultKVContributor,
+    AZLogicAppContributor: AZLogicAppContributor,
     AZManagedIdentity: AZManagedIdentity,
     AZMemberOf: AZMemberOf,
+    AZMGAccessReview_Read_All: AZMGAccessReview_Read_All,
+    AZMGAccessReview_ReadWrite_All: AZMGAccessReview_ReadWrite_All,
+    AZMGAccessReview_ReadWrite_Membership: AZMGAccessReview_ReadWrite_Membership,
+    AZMGAcronym_Read_All: AZMGAcronym_Read_All,
+    AZMGAddMember: AZMGAddMember,
+    AZMGAddOwner: AZMGAddOwner,
+    AZMGAddSecret: AZMGAddSecret,
+    AZMGAdministrativeUnit_Read_All: AZMGAdministrativeUnit_Read_All,
+    AZMGAdministrativeUnit_ReadWrite_All: AZMGAdministrativeUnit_ReadWrite_All,
+    AZMGAgentApplication_Create: AZMGAgentApplication_Create,
+    AZMGAgentIdentity_Create: AZMGAgentIdentity_Create,
+    AZMGAgreement_Read_All: AZMGAgreement_Read_All,
+    AZMGAgreement_ReadWrite_All: AZMGAgreement_ReadWrite_All,
+    AZMGAgreementAcceptance_Read: AZMGAgreementAcceptance_Read,
+    AZMGAgreementAcceptance_Read_All: AZMGAgreementAcceptance_Read_All,
+    AZMGAiEnterpriseInteraction_Read: AZMGAiEnterpriseInteraction_Read,
+    AZMGAiEnterpriseInteraction_Read_All: AZMGAiEnterpriseInteraction_Read_All,
+    AZMGAnalytics_Read: AZMGAnalytics_Read,
+    AZMGAPIConnectors_Read_All: AZMGAPIConnectors_Read_All,
+    AZMGAPIConnectors_ReadWrite_All: AZMGAPIConnectors_ReadWrite_All,
+    AZMGAppCatalog_Read_All: AZMGAppCatalog_Read_All,
+    AZMGAppCatalog_ReadWrite_All: AZMGAppCatalog_ReadWrite_All,
+    AZMGAppCatalog_Submit: AZMGAppCatalog_Submit,
+    AZMGAppCertTrustConfiguration_Read_All: AZMGAppCertTrustConfiguration_Read_All,
+    AZMGAppCertTrustConfiguration_ReadWrite_All: AZMGAppCertTrustConfiguration_ReadWrite_All,
+    AZMGApplication_Read_All: AZMGApplication_Read_All,
+    AZMGApplication_ReadWrite_All: AZMGApplication_ReadWrite_All,
+    AZMGApplication_ReadWrite_OwnedBy: AZMGApplication_ReadWrite_OwnedBy,
+    AZMGApplication_RemoteDesktopConfig_ReadWrite_All: AZMGApplication_RemoteDesktopConfig_ReadWrite_All,
+    AZMGAppRoleAssignment_ReadWrite_All: AZMGAppRoleAssignment_ReadWrite_All,
+    AZMGApprovalSolution_Read: AZMGApprovalSolution_Read,
+    AZMGApprovalSolution_Read_All: AZMGApprovalSolution_Read_All,
+    AZMGApprovalSolution_ReadWrite: AZMGApprovalSolution_ReadWrite,
+    AZMGApprovalSolution_ReadWrite_All: AZMGApprovalSolution_ReadWrite_All,
+    AZMGApprovalSolutionResponse_ReadWrite: AZMGApprovalSolutionResponse_ReadWrite,
+    AZMGAttackSimulation_Read_All: AZMGAttackSimulation_Read_All,
+    AZMGAttackSimulation_ReadWrite_All: AZMGAttackSimulation_ReadWrite_All,
+    AZMGAuditActivity_Read: AZMGAuditActivity_Read,
+    AZMGAuditActivity_Write: AZMGAuditActivity_Write,
+    AZMGAuditLog_Read_All: AZMGAuditLog_Read_All,
+    AZMGAuditLogsQuery_CRM_Read_All: AZMGAuditLogsQuery_CRM_Read_All,
+    AZMGAuditLogsQuery_Endpoint_Read_All: AZMGAuditLogsQuery_Endpoint_Read_All,
+    AZMGAuditLogsQuery_Entra_Read_All: AZMGAuditLogsQuery_Entra_Read_All,
+    AZMGAuditLogsQuery_Exchange_Read_All: AZMGAuditLogsQuery_Exchange_Read_All,
+    AZMGAuditLogsQuery_OneDrive_Read_All: AZMGAuditLogsQuery_OneDrive_Read_All,
+    AZMGAuditLogsQuery_Read_All: AZMGAuditLogsQuery_Read_All,
+    AZMGAuditLogsQuery_SharePoint_Read_All: AZMGAuditLogsQuery_SharePoint_Read_All,
+    AZMGAuthenticationContext_Read_All: AZMGAuthenticationContext_Read_All,
+    AZMGAuthenticationContext_ReadWrite_All: AZMGAuthenticationContext_ReadWrite_All,
+    AZMGBackupRestore_Configuration_Read_All: AZMGBackupRestore_Configuration_Read_All,
+    AZMGBackupRestore_Configuration_ReadWrite_All: AZMGBackupRestore_Configuration_ReadWrite_All,
+    AZMGBackupRestore_Control_Read_All: AZMGBackupRestore_Control_Read_All,
+    AZMGBackupRestore_Control_ReadWrite_All: AZMGBackupRestore_Control_ReadWrite_All,
+    AZMGBackupRestore_Monitor_Read_All: AZMGBackupRestore_Monitor_Read_All,
+    AZMGBackupRestore_Restore_Read_All: AZMGBackupRestore_Restore_Read_All,
+    AZMGBackupRestore_Restore_ReadWrite_All: AZMGBackupRestore_Restore_ReadWrite_All,
+    AZMGBackupRestore_Search_Read_All: AZMGBackupRestore_Search_Read_All,
+    AZMGBillingConfiguration_ReadWrite_All: AZMGBillingConfiguration_ReadWrite_All,
+    AZMGBitlockerKey_Read_All: AZMGBitlockerKey_Read_All,
+    AZMGBitlockerKey_ReadBasic_All: AZMGBitlockerKey_ReadBasic_All,
+    AZMGBookings_Manage_All: AZMGBookings_Manage_All,
+    AZMGBookings_Read_All: AZMGBookings_Read_All,
+    AZMGBookings_ReadWrite_All: AZMGBookings_ReadWrite_All,
+    AZMGBookingsAppointment_ReadWrite_All: AZMGBookingsAppointment_ReadWrite_All,
+    AZMGBookmark_Read_All: AZMGBookmark_Read_All,
+    AZMGBrowserSiteLists_Read_All: AZMGBrowserSiteLists_Read_All,
+    AZMGBrowserSiteLists_ReadWrite_All: AZMGBrowserSiteLists_ReadWrite_All,
+    AZMGBusinessScenarioConfig_Read_All: AZMGBusinessScenarioConfig_Read_All,
+    AZMGBusinessScenarioConfig_Read_OwnedBy: AZMGBusinessScenarioConfig_Read_OwnedBy,
+    AZMGBusinessScenarioConfig_ReadWrite_All: AZMGBusinessScenarioConfig_ReadWrite_All,
+    AZMGBusinessScenarioConfig_ReadWrite_OwnedBy: AZMGBusinessScenarioConfig_ReadWrite_OwnedBy,
+    AZMGBusinessScenarioData_Read_OwnedBy: AZMGBusinessScenarioData_Read_OwnedBy,
+    AZMGBusinessScenarioData_ReadWrite_OwnedBy: AZMGBusinessScenarioData_ReadWrite_OwnedBy,
+    AZMGCalendars_Read: AZMGCalendars_Read,
+    AZMGCalendars_Read_Shared: AZMGCalendars_Read_Shared,
+    AZMGCalendars_ReadBasic: AZMGCalendars_ReadBasic,
+    AZMGCalendars_ReadBasic_All: AZMGCalendars_ReadBasic_All,
+    AZMGCalendars_ReadWrite: AZMGCalendars_ReadWrite,
+    AZMGCalendars_ReadWrite_Shared: AZMGCalendars_ReadWrite_Shared,
+    AZMGCallAiInsights_Read_All: AZMGCallAiInsights_Read_All,
+    AZMGCallDelegation_Read: AZMGCallDelegation_Read,
+    AZMGCallDelegation_Read_All: AZMGCallDelegation_Read_All,
+    AZMGCallDelegation_ReadWrite: AZMGCallDelegation_ReadWrite,
+    AZMGCallDelegation_ReadWrite_All: AZMGCallDelegation_ReadWrite_All,
+    AZMGCallEvents_Emergency_Read_All: AZMGCallEvents_Emergency_Read_All,
+    AZMGCallEvents_Read: AZMGCallEvents_Read,
+    AZMGCallEvents_Read_All: AZMGCallEvents_Read_All,
+    AZMGCallRecord_PstnCalls_Read_All: AZMGCallRecord_PstnCalls_Read_All,
+    AZMGCallRecordings_Read_All: AZMGCallRecordings_Read_All,
+    AZMGCallRecords_Read_All: AZMGCallRecords_Read_All,
+    AZMGCalls_AccessMedia_All: AZMGCalls_AccessMedia_All,
+    AZMGCalls_Initiate_All: AZMGCalls_Initiate_All,
+    AZMGCalls_InitiateGroupCall_All: AZMGCalls_InitiateGroupCall_All,
+    AZMGCalls_JoinGroupCall_All: AZMGCalls_JoinGroupCall_All,
+    AZMGCalls_JoinGroupCallAsGuest_All: AZMGCalls_JoinGroupCallAsGuest_All,
+    AZMGCallTranscripts_Read_All: AZMGCallTranscripts_Read_All,
+    AZMGChangeManagement_Read_All: AZMGChangeManagement_Read_All,
+    AZMGChannel_Create: AZMGChannel_Create,
+    AZMGChannel_Delete_All: AZMGChannel_Delete_All,
+    AZMGChannel_ReadBasic_All: AZMGChannel_ReadBasic_All,
+    AZMGChannelMember_Read_All: AZMGChannelMember_Read_All,
+    AZMGChannelMember_ReadWrite_All: AZMGChannelMember_ReadWrite_All,
+    AZMGChannelMessage_Edit: AZMGChannelMessage_Edit,
+    AZMGChannelMessage_Read_All: AZMGChannelMessage_Read_All,
+    AZMGChannelMessage_ReadWrite: AZMGChannelMessage_ReadWrite,
+    AZMGChannelMessage_Send: AZMGChannelMessage_Send,
+    AZMGChannelMessage_UpdatePolicyViolation_All: AZMGChannelMessage_UpdatePolicyViolation_All,
+    AZMGChannelSettings_Read_All: AZMGChannelSettings_Read_All,
+    AZMGChannelSettings_ReadWrite_All: AZMGChannelSettings_ReadWrite_All,
+    AZMGChat_Create: AZMGChat_Create,
+    AZMGChat_ManageDeletion_All: AZMGChat_ManageDeletion_All,
+    AZMGChat_Read: AZMGChat_Read,
+    AZMGChat_Read_All: AZMGChat_Read_All,
+    AZMGChat_Read_WhereInstalled: AZMGChat_Read_WhereInstalled,
+    AZMGChat_ReadBasic: AZMGChat_ReadBasic,
+    AZMGChat_ReadBasic_All: AZMGChat_ReadBasic_All,
+    AZMGChat_ReadBasic_WhereInstalled: AZMGChat_ReadBasic_WhereInstalled,
+    AZMGChat_ReadWrite: AZMGChat_ReadWrite,
+    AZMGChat_ReadWrite_All: AZMGChat_ReadWrite_All,
+    AZMGChat_ReadWrite_WhereInstalled: AZMGChat_ReadWrite_WhereInstalled,
+    AZMGChat_UpdatePolicyViolation_All: AZMGChat_UpdatePolicyViolation_All,
+    AZMGChatMember_Read: AZMGChatMember_Read,
+    AZMGChatMember_Read_All: AZMGChatMember_Read_All,
+    AZMGChatMember_Read_WhereInstalled: AZMGChatMember_Read_WhereInstalled,
+    AZMGChatMember_ReadWrite: AZMGChatMember_ReadWrite,
+    AZMGChatMember_ReadWrite_All: AZMGChatMember_ReadWrite_All,
+    AZMGChatMember_ReadWrite_WhereInstalled: AZMGChatMember_ReadWrite_WhereInstalled,
+    AZMGChatMessage_Read: AZMGChatMessage_Read,
+    AZMGChatMessage_Read_All: AZMGChatMessage_Read_All,
+    AZMGChatMessage_Send: AZMGChatMessage_Send,
+    AZMGCloudApp_Discovery_Read_All: AZMGCloudApp_Discovery_Read_All,
+    AZMGCloudPC_Read_All: AZMGCloudPC_Read_All,
+    AZMGCloudPC_ReadWrite_All: AZMGCloudPC_ReadWrite_All,
+    AZMGCommunity_Read_All: AZMGCommunity_Read_All,
+    AZMGCommunity_ReadWrite_All: AZMGCommunity_ReadWrite_All,
+    AZMGConfigurationMonitoring_Read_All: AZMGConfigurationMonitoring_Read_All,
+    AZMGConfigurationMonitoring_ReadWrite_All: AZMGConfigurationMonitoring_ReadWrite_All,
+    AZMGConsentRequest_Create: AZMGConsentRequest_Create,
+    AZMGConsentRequest_Read: AZMGConsentRequest_Read,
+    AZMGConsentRequest_Read_All: AZMGConsentRequest_Read_All,
+    AZMGConsentRequest_ReadApprove_All: AZMGConsentRequest_ReadApprove_All,
+    AZMGConsentRequest_ReadWrite_All: AZMGConsentRequest_ReadWrite_All,
+    AZMGContacts_OnPremisesSyncBehavior_ReadWrite_All: AZMGContacts_OnPremisesSyncBehavior_ReadWrite_All,
+    AZMGContacts_Read: AZMGContacts_Read,
+    AZMGContacts_Read_Shared: AZMGContacts_Read_Shared,
+    AZMGContacts_ReadWrite: AZMGContacts_ReadWrite,
+    AZMGContacts_ReadWrite_Shared: AZMGContacts_ReadWrite_Shared,
+    AZMGContent_Process_All: AZMGContent_Process_All,
+    AZMGContent_Process_User: AZMGContent_Process_User,
+    AZMGContentActivity_Read: AZMGContentActivity_Read,
+    AZMGContentActivity_Write: AZMGContentActivity_Write,
+    AZMGCopilotSettings_LimitedMode_Read: AZMGCopilotSettings_LimitedMode_Read,
+    AZMGCopilotSettings_LimitedMode_ReadWrite: AZMGCopilotSettings_LimitedMode_ReadWrite,
+    AZMGCrossTenantInformation_ReadBasic_All: AZMGCrossTenantInformation_ReadBasic_All,
+    AZMGCrossTenantUserProfileSharing_Read: AZMGCrossTenantUserProfileSharing_Read,
+    AZMGCrossTenantUserProfileSharing_Read_All: AZMGCrossTenantUserProfileSharing_Read_All,
+    AZMGCrossTenantUserProfileSharing_ReadWrite: AZMGCrossTenantUserProfileSharing_ReadWrite,
+    AZMGCrossTenantUserProfileSharing_ReadWrite_All: AZMGCrossTenantUserProfileSharing_ReadWrite_All,
+    AZMGCustomAuthenticationExtension_Read_All: AZMGCustomAuthenticationExtension_Read_All,
+    AZMGCustomAuthenticationExtension_ReadWrite_All: AZMGCustomAuthenticationExtension_ReadWrite_All,
+    AZMGCustomAuthenticationExtension_Receive_Payload: AZMGCustomAuthenticationExtension_Receive_Payload,
+    AZMGCustomDetection_Read_All: AZMGCustomDetection_Read_All,
+    AZMGCustomDetection_ReadWrite_All: AZMGCustomDetection_ReadWrite_All,
+    AZMGCustomSecAttributeAssignment_Read_All: AZMGCustomSecAttributeAssignment_Read_All,
+    AZMGCustomSecAttributeAssignment_ReadWrite_All: AZMGCustomSecAttributeAssignment_ReadWrite_All,
+    AZMGCustomSecAttributeAuditLogs_Read_All: AZMGCustomSecAttributeAuditLogs_Read_All,
+    AZMGCustomSecAttributeDefinition_Read_All: AZMGCustomSecAttributeDefinition_Read_All,
+    AZMGCustomSecAttributeDefinition_ReadWrite_All: AZMGCustomSecAttributeDefinition_ReadWrite_All,
+    AZMGCustomSecAttributeProvisioning_Read_All: AZMGCustomSecAttributeProvisioning_Read_All,
+    AZMGCustomSecAttributeProvisioning_ReadWrite_All: AZMGCustomSecAttributeProvisioning_ReadWrite_All,
+    AZMGCustomTags_Read_All: AZMGCustomTags_Read_All,
+    AZMGCustomTags_ReadWrite_All: AZMGCustomTags_ReadWrite_All,
+    AZMGDelegatedAdminRelationship_Read_All: AZMGDelegatedAdminRelationship_Read_All,
+    AZMGDelegatedAdminRelationship_ReadWrite_All: AZMGDelegatedAdminRelationship_ReadWrite_All,
+    AZMGDelegatedPermissionGrant_Read_All: AZMGDelegatedPermissionGrant_Read_All,
+    AZMGDelegatedPermissionGrant_ReadWrite_All: AZMGDelegatedPermissionGrant_ReadWrite_All,
+    AZMGDevice_Command: AZMGDevice_Command,
+    AZMGDevice_CreateFromOwnedTemplate: AZMGDevice_CreateFromOwnedTemplate,
+    AZMGDevice_Read: AZMGDevice_Read,
+    AZMGDevice_Read_All: AZMGDevice_Read_All,
+    AZMGDevice_ReadWrite_All: AZMGDevice_ReadWrite_All,
+    AZMGDeviceLocalCredential_Read_All: AZMGDeviceLocalCredential_Read_All,
+    AZMGDeviceLocalCredential_ReadBasic_All: AZMGDeviceLocalCredential_ReadBasic_All,
+    AZMGDeviceManagementApps_Read_All: AZMGDeviceManagementApps_Read_All,
+    AZMGDeviceManagementApps_ReadWrite_All: AZMGDeviceManagementApps_ReadWrite_All,
+    AZMGDeviceManagementCloudCA_Read_All: AZMGDeviceManagementCloudCA_Read_All,
+    AZMGDeviceManagementCloudCA_ReadWrite_All: AZMGDeviceManagementCloudCA_ReadWrite_All,
+    AZMGDeviceManagementConfiguration_Read_All: AZMGDeviceManagementConfiguration_Read_All,
+    AZMGDeviceManagementConfiguration_ReadWrite_All: AZMGDeviceManagementConfiguration_ReadWrite_All,
+    AZMGDeviceManagementManagedDevices_PrivilegedOperations_All: AZMGDeviceManagementManagedDevices_PrivilegedOperations_All,
+    AZMGDeviceManagementManagedDevices_Read_All: AZMGDeviceManagementManagedDevices_Read_All,
+    AZMGDeviceManagementManagedDevices_ReadWrite_All: AZMGDeviceManagementManagedDevices_ReadWrite_All,
+    AZMGDeviceManagementRBAC_Read_All: AZMGDeviceManagementRBAC_Read_All,
+    AZMGDeviceManagementRBAC_ReadWrite_All: AZMGDeviceManagementRBAC_ReadWrite_All,
+    AZMGDeviceManagementScripts_Read_All: AZMGDeviceManagementScripts_Read_All,
+    AZMGDeviceManagementScripts_ReadWrite_All: AZMGDeviceManagementScripts_ReadWrite_All,
+    AZMGDeviceManagementServiceConfig_Read_All: AZMGDeviceManagementServiceConfig_Read_All,
+    AZMGDeviceManagementServiceConfig_ReadWrite_All: AZMGDeviceManagementServiceConfig_ReadWrite_All,
+    AZMGDeviceTemplate_Create: AZMGDeviceTemplate_Create,
+    AZMGDeviceTemplate_Read_All: AZMGDeviceTemplate_Read_All,
+    AZMGDeviceTemplate_ReadWrite_All: AZMGDeviceTemplate_ReadWrite_All,
+    AZMGDirectory_AccessAsUser_All: AZMGDirectory_AccessAsUser_All,
+    AZMGDirectory_Read_All: AZMGDirectory_Read_All,
+    AZMGDirectory_ReadWrite_All: AZMGDirectory_ReadWrite_All,
+    AZMGDirectoryRecommendations_Read_All: AZMGDirectoryRecommendations_Read_All,
+    AZMGDirectoryRecommendations_ReadWrite_All: AZMGDirectoryRecommendations_ReadWrite_All,
+    AZMGDomain_InternalFederation_Read_All: AZMGDomain_InternalFederation_Read_All,
+    AZMGDomain_InternalFederation_ReadWrite_All: AZMGDomain_InternalFederation_ReadWrite_All,
+    AZMGDomain_Read_All: AZMGDomain_Read_All,
+    AZMGDomain_ReadWrite_All: AZMGDomain_ReadWrite_All,
+    AZMGEAS_AccessAsUser_All: AZMGEAS_AccessAsUser_All,
+    AZMGeDiscovery_Read_All: AZMGeDiscovery_Read_All,
+    AZMGeDiscovery_ReadWrite_All: AZMGeDiscovery_ReadWrite_All,
+    AZMGEduAdministration_Read: AZMGEduAdministration_Read,
+    AZMGEduAdministration_Read_All: AZMGEduAdministration_Read_All,
+    AZMGEduAdministration_ReadWrite: AZMGEduAdministration_ReadWrite,
+    AZMGEduAdministration_ReadWrite_All: AZMGEduAdministration_ReadWrite_All,
+    AZMGEduAssignments_Read: AZMGEduAssignments_Read,
+    AZMGEduAssignments_Read_All: AZMGEduAssignments_Read_All,
+    AZMGEduAssignments_ReadBasic: AZMGEduAssignments_ReadBasic,
+    AZMGEduAssignments_ReadBasic_All: AZMGEduAssignments_ReadBasic_All,
+    AZMGEduAssignments_ReadWrite: AZMGEduAssignments_ReadWrite,
+    AZMGEduAssignments_ReadWrite_All: AZMGEduAssignments_ReadWrite_All,
+    AZMGEduAssignments_ReadWriteBasic: AZMGEduAssignments_ReadWriteBasic,
+    AZMGEduAssignments_ReadWriteBasic_All: AZMGEduAssignments_ReadWriteBasic_All,
+    AZMGEduCurricula_Read: AZMGEduCurricula_Read,
+    AZMGEduCurricula_Read_All: AZMGEduCurricula_Read_All,
+    AZMGEduCurricula_ReadWrite: AZMGEduCurricula_ReadWrite,
+    AZMGEduCurricula_ReadWrite_All: AZMGEduCurricula_ReadWrite_All,
+    AZMGEduReports_Reading_Read_All: AZMGEduReports_Reading_Read_All,
+    AZMGEduReports_Reading_ReadAnonymous_All: AZMGEduReports_Reading_ReadAnonymous_All,
+    AZMGEduReports_Reflect_Read_All: AZMGEduReports_Reflect_Read_All,
+    AZMGEduReports_Reflect_ReadAnonymous_All: AZMGEduReports_Reflect_ReadAnonymous_All,
+    AZMGEduRoster_Read: AZMGEduRoster_Read,
+    AZMGEduRoster_Read_All: AZMGEduRoster_Read_All,
+    AZMGEduRoster_ReadBasic: AZMGEduRoster_ReadBasic,
+    AZMGEduRoster_ReadBasic_All: AZMGEduRoster_ReadBasic_All,
+    AZMGEduRoster_ReadWrite: AZMGEduRoster_ReadWrite,
+    AZMGEduRoster_ReadWrite_All: AZMGEduRoster_ReadWrite_All,
+    AZMGemail: AZMGemail,
+    AZMGEngagementConversation_Migration_All: AZMGEngagementConversation_Migration_All,
+    AZMGEngagementConversation_ReadWrite_All: AZMGEngagementConversation_ReadWrite_All,
+    AZMGEngagementMeetingConversation_Read_All: AZMGEngagementMeetingConversation_Read_All,
+    AZMGEngagementRole_Read: AZMGEngagementRole_Read,
+    AZMGEngagementRole_Read_All: AZMGEngagementRole_Read_All,
+    AZMGEngagementRole_ReadWrite_All: AZMGEngagementRole_ReadWrite_All,
+    AZMGEntitlementManagement_Read_All: AZMGEntitlementManagement_Read_All,
+    AZMGEntitlementManagement_ReadWrite_All: AZMGEntitlementManagement_ReadWrite_All,
+    AZMGEntitlementMgmt_SubjectAccess_ReadWrite: AZMGEntitlementMgmt_SubjectAccess_ReadWrite,
+    AZMGEventListener_Read_All: AZMGEventListener_Read_All,
+    AZMGEventListener_ReadWrite_All: AZMGEventListener_ReadWrite_All,
+    AZMGEWS_AccessAsUser_All: AZMGEWS_AccessAsUser_All,
+    AZMGExternalConnection_Read_All: AZMGExternalConnection_Read_All,
+    AZMGExternalConnection_ReadWrite_All: AZMGExternalConnection_ReadWrite_All,
+    AZMGExternalConnection_ReadWrite_OwnedBy: AZMGExternalConnection_ReadWrite_OwnedBy,
+    AZMGExternalItem_Read_All: AZMGExternalItem_Read_All,
+    AZMGExternalItem_ReadWrite_All: AZMGExternalItem_ReadWrite_All,
+    AZMGExternalItem_ReadWrite_OwnedBy: AZMGExternalItem_ReadWrite_OwnedBy,
+    AZMGExternalUserProfile_Read_All: AZMGExternalUserProfile_Read_All,
+    AZMGExternalUserProfile_ReadWrite_All: AZMGExternalUserProfile_ReadWrite_All,
+    AZMGFamily_Read: AZMGFamily_Read,
+    AZMGFileIngestion_Ingest: AZMGFileIngestion_Ingest,
+    AZMGFileIngestionHybridOnboarding_Manage: AZMGFileIngestionHybridOnboarding_Manage,
+    AZMGFiles_Read: AZMGFiles_Read,
+    AZMGFiles_Read_All: AZMGFiles_Read_All,
+    AZMGFiles_Read_Selected: AZMGFiles_Read_Selected,
+    AZMGFiles_ReadWrite: AZMGFiles_ReadWrite,
+    AZMGFiles_ReadWrite_All: AZMGFiles_ReadWrite_All,
+    AZMGFiles_ReadWrite_AppFolder: AZMGFiles_ReadWrite_AppFolder,
+    AZMGFiles_ReadWrite_Selected: AZMGFiles_ReadWrite_Selected,
+    AZMGFiles_SelectedOperations_Selected: AZMGFiles_SelectedOperations_Selected,
+    AZMGFileStorageContainer_Manage_All: AZMGFileStorageContainer_Manage_All,
+    AZMGFileStorageContainer_Selected: AZMGFileStorageContainer_Selected,
+    AZMGFileStorageContainerType_Manage_All: AZMGFileStorageContainerType_Manage_All,
+    AZMGFileStorageContainerTypeReg_Manage_All: AZMGFileStorageContainerTypeReg_Manage_All,
+    AZMGFileStorageContainerTypeReg_Selected: AZMGFileStorageContainerTypeReg_Selected,
+    AZMGFinancials_ReadWrite_All: AZMGFinancials_ReadWrite_All,
+    AZMGGoals_Export_Read_All: AZMGGoals_Export_Read_All,
+    AZMGGoals_Export_ReadWrite_All: AZMGGoals_Export_ReadWrite_All,
+    AZMGGrantAppRoles: AZMGGrantAppRoles,
+    AZMGGrantRole: AZMGGrantRole,
+    AZMGGroup_Conversation_Read_All: AZMGGroup_Conversation_Read_All,
+    AZMGGroup_Conversation_ReadWrite_All: AZMGGroup_Conversation_ReadWrite_All,
+    AZMGGroup_Create: AZMGGroup_Create,
+    AZMGGroup_OnPremisesSyncBehavior_ReadWrite_All: AZMGGroup_OnPremisesSyncBehavior_ReadWrite_All,
+    AZMGGroup_Read_All: AZMGGroup_Read_All,
+    AZMGGroup_ReadWrite_All: AZMGGroup_ReadWrite_All,
+    AZMGGroupMember_Read_All: AZMGGroupMember_Read_All,
+    AZMGGroupMember_ReadWrite_All: AZMGGroupMember_ReadWrite_All,
+    AZMGGroupSettings_Read_All: AZMGGroupSettings_Read_All,
+    AZMGGroupSettings_ReadWrite_All: AZMGGroupSettings_ReadWrite_All,
+    AZMGHealthMonitoringAlert_Read_All: AZMGHealthMonitoringAlert_Read_All,
+    AZMGHealthMonitoringAlert_ReadWrite_All: AZMGHealthMonitoringAlert_ReadWrite_All,
+    AZMGHealthMonitoringAlertConfig_Read_All: AZMGHealthMonitoringAlertConfig_Read_All,
+    AZMGHealthMonitoringAlertConfig_ReadWrite_All: AZMGHealthMonitoringAlertConfig_ReadWrite_All,
+    AZMGIdentityProvider_Read_All: AZMGIdentityProvider_Read_All,
+    AZMGIdentityProvider_ReadWrite_All: AZMGIdentityProvider_ReadWrite_All,
+    AZMGIdentityRiskEvent_Read_All: AZMGIdentityRiskEvent_Read_All,
+    AZMGIdentityRiskEvent_ReadWrite_All: AZMGIdentityRiskEvent_ReadWrite_All,
+    AZMGIdentityRiskyServicePrincipal_Read_All: AZMGIdentityRiskyServicePrincipal_Read_All,
+    AZMGIdentityRiskyServicePrincipal_ReadWrite_All: AZMGIdentityRiskyServicePrincipal_ReadWrite_All,
+    AZMGIdentityRiskyUser_Read_All: AZMGIdentityRiskyUser_Read_All,
+    AZMGIdentityRiskyUser_ReadWrite_All: AZMGIdentityRiskyUser_ReadWrite_All,
+    AZMGIdentityUserFlow_Read_All: AZMGIdentityUserFlow_Read_All,
+    AZMGIdentityUserFlow_ReadWrite_All: AZMGIdentityUserFlow_ReadWrite_All,
+    AZMGIMAP_AccessAsUser_All: AZMGIMAP_AccessAsUser_All,
+    AZMGIndustryData_DataConnector_Read_All: AZMGIndustryData_DataConnector_Read_All,
+    AZMGIndustryData_DataConnector_ReadWrite_All: AZMGIndustryData_DataConnector_ReadWrite_All,
+    AZMGIndustryData_DataConnector_Upload: AZMGIndustryData_DataConnector_Upload,
+    AZMGIndustryData_InboundFlow_Read_All: AZMGIndustryData_InboundFlow_Read_All,
+    AZMGIndustryData_InboundFlow_ReadWrite_All: AZMGIndustryData_InboundFlow_ReadWrite_All,
+    AZMGIndustryData_OutboundFlow_Read_All: AZMGIndustryData_OutboundFlow_Read_All,
+    AZMGIndustryData_OutboundFlow_ReadWrite_All: AZMGIndustryData_OutboundFlow_ReadWrite_All,
+    AZMGIndustryData_ReadBasic_All: AZMGIndustryData_ReadBasic_All,
+    AZMGIndustryData_ReferenceDefinition_Read_All: AZMGIndustryData_ReferenceDefinition_Read_All,
+    AZMGIndustryData_ReferenceDefinition_ReadWrite_All: AZMGIndustryData_ReferenceDefinition_ReadWrite_All,
+    AZMGIndustryData_Run_Read_All: AZMGIndustryData_Run_Read_All,
+    AZMGIndustryData_Run_Start: AZMGIndustryData_Run_Start,
+    AZMGIndustryData_SourceSystem_Read_All: AZMGIndustryData_SourceSystem_Read_All,
+    AZMGIndustryData_SourceSystem_ReadWrite_All: AZMGIndustryData_SourceSystem_ReadWrite_All,
+    AZMGIndustryData_TimePeriod_Read_All: AZMGIndustryData_TimePeriod_Read_All,
+    AZMGIndustryData_TimePeriod_ReadWrite_All: AZMGIndustryData_TimePeriod_ReadWrite_All,
+    AZMGInformationProtectionConfig_Read: AZMGInformationProtectionConfig_Read,
+    AZMGInformationProtectionConfig_Read_All: AZMGInformationProtectionConfig_Read_All,
+    AZMGInformationProtectionContent_Sign_All: AZMGInformationProtectionContent_Sign_All,
+    AZMGInformationProtectionContent_Write_All: AZMGInformationProtectionContent_Write_All,
+    AZMGInformationProtectionPolicy_Read: AZMGInformationProtectionPolicy_Read,
+    AZMGInformationProtectionPolicy_Read_All: AZMGInformationProtectionPolicy_Read_All,
+    AZMGInsights_UserMetric_Read_All: AZMGInsights_UserMetric_Read_All,
+    AZMGLearningAssignedCourse_Read: AZMGLearningAssignedCourse_Read,
+    AZMGLearningAssignedCourse_Read_All: AZMGLearningAssignedCourse_Read_All,
+    AZMGLearningAssignedCourse_ReadWrite_All: AZMGLearningAssignedCourse_ReadWrite_All,
+    AZMGLearningContent_Read_All: AZMGLearningContent_Read_All,
+    AZMGLearningContent_ReadWrite_All: AZMGLearningContent_ReadWrite_All,
+    AZMGLearningProvider_Read: AZMGLearningProvider_Read,
+    AZMGLearningProvider_ReadWrite: AZMGLearningProvider_ReadWrite,
+    AZMGLearningSelfInitiatedCourse_Read: AZMGLearningSelfInitiatedCourse_Read,
+    AZMGLearningSelfInitiatedCourse_Read_All: AZMGLearningSelfInitiatedCourse_Read_All,
+    AZMGLearningSelfInitiatedCourse_ReadWrite_All: AZMGLearningSelfInitiatedCourse_ReadWrite_All,
+    AZMGLicenseAssignment_Read_All: AZMGLicenseAssignment_Read_All,
+    AZMGLicenseAssignment_ReadWrite_All: AZMGLicenseAssignment_ReadWrite_All,
+    AZMGLifecycleWorkflows_CustomExt_Read_All: AZMGLifecycleWorkflows_CustomExt_Read_All,
+    AZMGLifecycleWorkflows_CustomExt_ReadWrite_All: AZMGLifecycleWorkflows_CustomExt_ReadWrite_All,
+    AZMGLifecycleWorkflows_Read_All: AZMGLifecycleWorkflows_Read_All,
+    AZMGLifecycleWorkflows_ReadWrite_All: AZMGLifecycleWorkflows_ReadWrite_All,
+    AZMGLifecycleWorkflows_Reports_Read_All: AZMGLifecycleWorkflows_Reports_Read_All,
+    AZMGLifecycleWorkflows_Workflow_Activate: AZMGLifecycleWorkflows_Workflow_Activate,
+    AZMGLifecycleWorkflows_Workflow_Read_All: AZMGLifecycleWorkflows_Workflow_Read_All,
+    AZMGLifecycleWorkflows_Workflow_ReadBasic_All: AZMGLifecycleWorkflows_Workflow_ReadBasic_All,
+    AZMGLifecycleWorkflows_Workflow_ReadWrite_All: AZMGLifecycleWorkflows_Workflow_ReadWrite_All,
+    AZMGListItems_SelectedOperations_Selected: AZMGListItems_SelectedOperations_Selected,
+    AZMGLists_SelectedOperations_Selected: AZMGLists_SelectedOperations_Selected,
+    AZMGMail_Read: AZMGMail_Read,
+    AZMGMail_Read_Shared: AZMGMail_Read_Shared,
+    AZMGMail_ReadBasic: AZMGMail_ReadBasic,
+    AZMGMail_ReadBasic_All: AZMGMail_ReadBasic_All,
+    AZMGMail_ReadBasic_Shared: AZMGMail_ReadBasic_Shared,
+    AZMGMail_ReadWrite: AZMGMail_ReadWrite,
+    AZMGMail_ReadWrite_Shared: AZMGMail_ReadWrite_Shared,
+    AZMGMail_Send: AZMGMail_Send,
+    AZMGMail_Send_Shared: AZMGMail_Send_Shared,
+    AZMGMailboxFolder_Read: AZMGMailboxFolder_Read,
+    AZMGMailboxFolder_Read_All: AZMGMailboxFolder_Read_All,
+    AZMGMailboxFolder_ReadWrite: AZMGMailboxFolder_ReadWrite,
+    AZMGMailboxFolder_ReadWrite_All: AZMGMailboxFolder_ReadWrite_All,
+    AZMGMailboxItem_ImportExport: AZMGMailboxItem_ImportExport,
+    AZMGMailboxItem_ImportExport_All: AZMGMailboxItem_ImportExport_All,
+    AZMGMailboxItem_Read: AZMGMailboxItem_Read,
+    AZMGMailboxItem_Read_All: AZMGMailboxItem_Read_All,
+    AZMGMailboxSettings_Read: AZMGMailboxSettings_Read,
+    AZMGMailboxSettings_ReadWrite: AZMGMailboxSettings_ReadWrite,
+    AZMGManagedTenants_Read_All: AZMGManagedTenants_Read_All,
+    AZMGManagedTenants_ReadWrite_All: AZMGManagedTenants_ReadWrite_All,
+    AZMGMember_Read_Hidden: AZMGMember_Read_Hidden,
+    AZMGMultiTenantOrganization_Read_All: AZMGMultiTenantOrganization_Read_All,
+    AZMGMultiTenantOrganization_ReadBasic_All: AZMGMultiTenantOrganization_ReadBasic_All,
+    AZMGMultiTenantOrganization_ReadWrite_All: AZMGMultiTenantOrganization_ReadWrite_All,
+    AZMGMutualTlsOauthConfiguration_Read_All: AZMGMutualTlsOauthConfiguration_Read_All,
+    AZMGMutualTlsOauthConfiguration_ReadWrite_All: AZMGMutualTlsOauthConfiguration_ReadWrite_All,
+    AZMGNetworkAccess_Read_All: AZMGNetworkAccess_Read_All,
+    AZMGNetworkAccess_ReadWrite_All: AZMGNetworkAccess_ReadWrite_All,
+    AZMGNetworkAccess_Reports_Read_All: AZMGNetworkAccess_Reports_Read_All,
+    AZMGNetworkAccessBranch_Read_All: AZMGNetworkAccessBranch_Read_All,
+    AZMGNetworkAccessBranch_ReadWrite_All: AZMGNetworkAccessBranch_ReadWrite_All,
+    AZMGNetworkAccessPolicy_Read_All: AZMGNetworkAccessPolicy_Read_All,
+    AZMGNetworkAccessPolicy_ReadWrite_All: AZMGNetworkAccessPolicy_ReadWrite_All,
+    AZMGNotes_Create: AZMGNotes_Create,
+    AZMGNotes_Read: AZMGNotes_Read,
+    AZMGNotes_Read_All: AZMGNotes_Read_All,
+    AZMGNotes_ReadWrite: AZMGNotes_ReadWrite,
+    AZMGNotes_ReadWrite_All: AZMGNotes_ReadWrite_All,
+    AZMGNotes_ReadWrite_CreatedByApp: AZMGNotes_ReadWrite_CreatedByApp,
+    AZMGNotifications_ReadWrite_CreatedByApp: AZMGNotifications_ReadWrite_CreatedByApp,
+    AZMGoffline_access: AZMGoffline_access,
+    AZMGOnlineMeetingAiInsight_Read_All: AZMGOnlineMeetingAiInsight_Read_All,
+    AZMGOnlineMeetingAiInsight_Read_Chat: AZMGOnlineMeetingAiInsight_Read_Chat,
+    AZMGOnlineMeetingArtifact_Read_All: AZMGOnlineMeetingArtifact_Read_All,
+    AZMGOnlineMeetingRecording_Read_All: AZMGOnlineMeetingRecording_Read_All,
+    AZMGOnlineMeetings_Read: AZMGOnlineMeetings_Read,
+    AZMGOnlineMeetings_Read_All: AZMGOnlineMeetings_Read_All,
+    AZMGOnlineMeetings_ReadWrite: AZMGOnlineMeetings_ReadWrite,
+    AZMGOnlineMeetings_ReadWrite_All: AZMGOnlineMeetings_ReadWrite_All,
+    AZMGOnlineMeetingTranscript_Read_All: AZMGOnlineMeetingTranscript_Read_All,
+    AZMGOnPremDirectorySynchronization_Read_All: AZMGOnPremDirectorySynchronization_Read_All,
+    AZMGOnPremDirectorySynchronization_ReadWrite_All: AZMGOnPremDirectorySynchronization_ReadWrite_All,
+    AZMGOnPremisesPublishingProfiles_ReadWrite_All: AZMGOnPremisesPublishingProfiles_ReadWrite_All,
+    AZMGopenid: AZMGopenid,
+    AZMGOrganization_Read_All: AZMGOrganization_Read_All,
+    AZMGOrganization_ReadWrite_All: AZMGOrganization_ReadWrite_All,
+    AZMGOrganizationalBranding_Read_All: AZMGOrganizationalBranding_Read_All,
+    AZMGOrganizationalBranding_ReadWrite_All: AZMGOrganizationalBranding_ReadWrite_All,
+    AZMGOrgContact_Read_All: AZMGOrgContact_Read_All,
+    AZMGOrgSettings_AppsAndServices_Read_All: AZMGOrgSettings_AppsAndServices_Read_All,
+    AZMGOrgSettings_AppsAndServices_ReadWrite_All: AZMGOrgSettings_AppsAndServices_ReadWrite_All,
+    AZMGOrgSettings_DynamicsVoice_Read_All: AZMGOrgSettings_DynamicsVoice_Read_All,
+    AZMGOrgSettings_DynamicsVoice_ReadWrite_All: AZMGOrgSettings_DynamicsVoice_ReadWrite_All,
+    AZMGOrgSettings_Forms_Read_All: AZMGOrgSettings_Forms_Read_All,
+    AZMGOrgSettings_Forms_ReadWrite_All: AZMGOrgSettings_Forms_ReadWrite_All,
+    AZMGOrgSettings_Microsoft365Install_Read_All: AZMGOrgSettings_Microsoft365Install_Read_All,
+    AZMGOrgSettings_Microsoft365Install_ReadWrite_All: AZMGOrgSettings_Microsoft365Install_ReadWrite_All,
+    AZMGOrgSettings_Todo_Read_All: AZMGOrgSettings_Todo_Read_All,
+    AZMGOrgSettings_Todo_ReadWrite_All: AZMGOrgSettings_Todo_ReadWrite_All,
+    AZMGPartnerBilling_Read_All: AZMGPartnerBilling_Read_All,
+    AZMGPartnerSecurity_Read_All: AZMGPartnerSecurity_Read_All,
+    AZMGPartnerSecurity_ReadWrite_All: AZMGPartnerSecurity_ReadWrite_All,
+    AZMGPendingExternalUserProfile_Read_All: AZMGPendingExternalUserProfile_Read_All,
+    AZMGPendingExternalUserProfile_ReadWrite_All: AZMGPendingExternalUserProfile_ReadWrite_All,
+    AZMGPeople_Read: AZMGPeople_Read,
+    AZMGPeople_Read_All: AZMGPeople_Read_All,
+    AZMGPeopleSettings_Read_All: AZMGPeopleSettings_Read_All,
+    AZMGPeopleSettings_ReadWrite_All: AZMGPeopleSettings_ReadWrite_All,
+    AZMGPlace_Read_All: AZMGPlace_Read_All,
+    AZMGPlace_ReadWrite_All: AZMGPlace_ReadWrite_All,
+    AZMGPlaceDevice_Read_All: AZMGPlaceDevice_Read_All,
+    AZMGPlaceDevice_ReadWrite_All: AZMGPlaceDevice_ReadWrite_All,
+    AZMGPlaceDeviceTelemetry_ReadWrite_All: AZMGPlaceDeviceTelemetry_ReadWrite_All,
+    AZMGPolicy_Read_All: AZMGPolicy_Read_All,
+    AZMGPolicy_Read_AuthenticationMethod: AZMGPolicy_Read_AuthenticationMethod,
+    AZMGPolicy_Read_ConditionalAccess: AZMGPolicy_Read_ConditionalAccess,
+    AZMGPolicy_Read_DeviceConfiguration: AZMGPolicy_Read_DeviceConfiguration,
+    AZMGPolicy_Read_IdentityProtection: AZMGPolicy_Read_IdentityProtection,
+    AZMGPolicy_Read_PermissionGrant: AZMGPolicy_Read_PermissionGrant,
+    AZMGPolicy_ReadWrite_AccessReview: AZMGPolicy_ReadWrite_AccessReview,
+    AZMGPolicy_ReadWrite_ApplicationConfiguration: AZMGPolicy_ReadWrite_ApplicationConfiguration,
+    AZMGPolicy_ReadWrite_AuthenticationFlows: AZMGPolicy_ReadWrite_AuthenticationFlows,
+    AZMGPolicy_ReadWrite_AuthenticationMethod: AZMGPolicy_ReadWrite_AuthenticationMethod,
+    AZMGPolicy_ReadWrite_Authorization: AZMGPolicy_ReadWrite_Authorization,
+    AZMGPolicy_ReadWrite_ConditionalAccess: AZMGPolicy_ReadWrite_ConditionalAccess,
+    AZMGPolicy_ReadWrite_ConsentRequest: AZMGPolicy_ReadWrite_ConsentRequest,
+    AZMGPolicy_ReadWrite_CrossTenantAccess: AZMGPolicy_ReadWrite_CrossTenantAccess,
+    AZMGPolicy_ReadWrite_CrossTenantCapability: AZMGPolicy_ReadWrite_CrossTenantCapability,
+    AZMGPolicy_ReadWrite_DeviceConfiguration: AZMGPolicy_ReadWrite_DeviceConfiguration,
+    AZMGPolicy_ReadWrite_ExternalIdentities: AZMGPolicy_ReadWrite_ExternalIdentities,
+    AZMGPolicy_ReadWrite_FeatureRollout: AZMGPolicy_ReadWrite_FeatureRollout,
+    AZMGPolicy_ReadWrite_FedTokenValidation: AZMGPolicy_ReadWrite_FedTokenValidation,
+    AZMGPolicy_ReadWrite_IdentityProtection: AZMGPolicy_ReadWrite_IdentityProtection,
+    AZMGPolicy_ReadWrite_MobilityManagement: AZMGPolicy_ReadWrite_MobilityManagement,
+    AZMGPolicy_ReadWrite_PermissionGrant: AZMGPolicy_ReadWrite_PermissionGrant,
+    AZMGPolicy_ReadWrite_SecurityDefaults: AZMGPolicy_ReadWrite_SecurityDefaults,
+    AZMGPolicy_ReadWrite_TrustFramework: AZMGPolicy_ReadWrite_TrustFramework,
+    AZMGPOP_AccessAsUser_All: AZMGPOP_AccessAsUser_All,
+    AZMGPresence_Read: AZMGPresence_Read,
+    AZMGPresence_Read_All: AZMGPresence_Read_All,
+    AZMGPresence_ReadWrite: AZMGPresence_ReadWrite,
+    AZMGPresence_ReadWrite_All: AZMGPresence_ReadWrite_All,
+    AZMGPrintConnector_Read_All: AZMGPrintConnector_Read_All,
+    AZMGPrintConnector_ReadWrite_All: AZMGPrintConnector_ReadWrite_All,
+    AZMGPrinter_Create: AZMGPrinter_Create,
+    AZMGPrinter_FullControl_All: AZMGPrinter_FullControl_All,
+    AZMGPrinter_Read_All: AZMGPrinter_Read_All,
+    AZMGPrinter_ReadWrite_All: AZMGPrinter_ReadWrite_All,
+    AZMGPrinterShare_Read_All: AZMGPrinterShare_Read_All,
+    AZMGPrinterShare_ReadBasic_All: AZMGPrinterShare_ReadBasic_All,
+    AZMGPrinterShare_ReadWrite_All: AZMGPrinterShare_ReadWrite_All,
+    AZMGPrintJob_Create: AZMGPrintJob_Create,
+    AZMGPrintJob_Manage_All: AZMGPrintJob_Manage_All,
+    AZMGPrintJob_Read: AZMGPrintJob_Read,
+    AZMGPrintJob_Read_All: AZMGPrintJob_Read_All,
+    AZMGPrintJob_ReadBasic: AZMGPrintJob_ReadBasic,
+    AZMGPrintJob_ReadBasic_All: AZMGPrintJob_ReadBasic_All,
+    AZMGPrintJob_ReadWrite: AZMGPrintJob_ReadWrite,
+    AZMGPrintJob_ReadWrite_All: AZMGPrintJob_ReadWrite_All,
+    AZMGPrintJob_ReadWriteBasic: AZMGPrintJob_ReadWriteBasic,
+    AZMGPrintJob_ReadWriteBasic_All: AZMGPrintJob_ReadWriteBasic_All,
+    AZMGPrintSettings_Read_All: AZMGPrintSettings_Read_All,
+    AZMGPrintSettings_ReadWrite_All: AZMGPrintSettings_ReadWrite_All,
+    AZMGPrintTaskDefinition_ReadWrite_All: AZMGPrintTaskDefinition_ReadWrite_All,
+    AZMGPrivilegedAccess_Read_AzureAD: AZMGPrivilegedAccess_Read_AzureAD,
+    AZMGPrivilegedAccess_Read_AzureADGroup: AZMGPrivilegedAccess_Read_AzureADGroup,
+    AZMGPrivilegedAccess_Read_AzureResources: AZMGPrivilegedAccess_Read_AzureResources,
+    AZMGPrivilegedAccess_ReadWrite_AzureAD: AZMGPrivilegedAccess_ReadWrite_AzureAD,
+    AZMGPrivilegedAccess_ReadWrite_AzureADGroup: AZMGPrivilegedAccess_ReadWrite_AzureADGroup,
+    AZMGPrivilegedAccess_ReadWrite_AzureResources: AZMGPrivilegedAccess_ReadWrite_AzureResources,
+    AZMGPrivilegedAssignmentSchedule_Read_AzureADGroup: AZMGPrivilegedAssignmentSchedule_Read_AzureADGroup,
+    AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup: AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup,
+    AZMGPrivilegedAssignmentSchedule_Remove_AzureADGroup: AZMGPrivilegedAssignmentSchedule_Remove_AzureADGroup,
+    AZMGPrivilegedEligibilitySchedule_Read_AzureADGroup: AZMGPrivilegedEligibilitySchedule_Read_AzureADGroup,
+    AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup: AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup,
+    AZMGPrivilegedEligibilitySchedule_Remove_AzureADGroup: AZMGPrivilegedEligibilitySchedule_Remove_AzureADGroup,
+    AZMGprofile: AZMGprofile,
+    AZMGProfilePhoto_Read_All: AZMGProfilePhoto_Read_All,
+    AZMGProfilePhoto_ReadWrite_All: AZMGProfilePhoto_ReadWrite_All,
+    AZMGProgramControl_Read_All: AZMGProgramControl_Read_All,
+    AZMGProgramControl_ReadWrite_All: AZMGProgramControl_ReadWrite_All,
+    AZMGProtectionScopes_Compute_All: AZMGProtectionScopes_Compute_All,
+    AZMGProtectionScopes_Compute_User: AZMGProtectionScopes_Compute_User,
+    AZMGProvisioningLog_Read_All: AZMGProvisioningLog_Read_All,
+    AZMGPublicKeyInfrastructure_Read_All: AZMGPublicKeyInfrastructure_Read_All,
+    AZMGPublicKeyInfrastructure_ReadWrite_All: AZMGPublicKeyInfrastructure_ReadWrite_All,
+    AZMGQnA_Read_All: AZMGQnA_Read_All,
+    AZMGRecordsManagement_Read_All: AZMGRecordsManagement_Read_All,
+    AZMGRecordsManagement_ReadWrite_All: AZMGRecordsManagement_ReadWrite_All,
+    AZMGReports_Read_All: AZMGReports_Read_All,
+    AZMGReportSettings_Read_All: AZMGReportSettings_Read_All,
+    AZMGReportSettings_ReadWrite_All: AZMGReportSettings_ReadWrite_All,
+    AZMGResourceSpecificPermissionGrant_ReadForChat: AZMGResourceSpecificPermissionGrant_ReadForChat,
+    AZMGResourceSpecificPermissionGrant_ReadForChat_All: AZMGResourceSpecificPermissionGrant_ReadForChat_All,
+    AZMGResourceSpecificPermissionGrant_ReadForTeam: AZMGResourceSpecificPermissionGrant_ReadForTeam,
+    AZMGResourceSpecificPermissionGrant_ReadForTeam_All: AZMGResourceSpecificPermissionGrant_ReadForTeam_All,
+    AZMGResourceSpecificPermissionGrant_ReadForUser: AZMGResourceSpecificPermissionGrant_ReadForUser,
+    AZMGResourceSpecificPermissionGrant_ReadForUser_All: AZMGResourceSpecificPermissionGrant_ReadForUser_All,
+    AZMGRiskPreventionProviders_Read_All: AZMGRiskPreventionProviders_Read_All,
+    AZMGRiskPreventionProviders_ReadWrite_All: AZMGRiskPreventionProviders_ReadWrite_All,
+    AZMGRoleAssignmentSchedule_Read_Directory: AZMGRoleAssignmentSchedule_Read_Directory,
+    AZMGRoleAssignmentSchedule_ReadWrite_Directory: AZMGRoleAssignmentSchedule_ReadWrite_Directory,
+    AZMGRoleAssignmentSchedule_Remove_Directory: AZMGRoleAssignmentSchedule_Remove_Directory,
+    AZMGRoleEligibilitySchedule_Read_Directory: AZMGRoleEligibilitySchedule_Read_Directory,
+    AZMGRoleEligibilitySchedule_ReadWrite_Directory: AZMGRoleEligibilitySchedule_ReadWrite_Directory,
+    AZMGRoleEligibilitySchedule_Remove_Directory: AZMGRoleEligibilitySchedule_Remove_Directory,
+    AZMGRoleManagement_Read_All: AZMGRoleManagement_Read_All,
+    AZMGRoleManagement_Read_CloudPC: AZMGRoleManagement_Read_CloudPC,
+    AZMGRoleManagement_Read_Defender: AZMGRoleManagement_Read_Defender,
+    AZMGRoleManagement_Read_Directory: AZMGRoleManagement_Read_Directory,
+    AZMGRoleManagement_Read_Exchange: AZMGRoleManagement_Read_Exchange,
+    AZMGRoleManagement_ReadWrite_CloudPC: AZMGRoleManagement_ReadWrite_CloudPC,
+    AZMGRoleManagement_ReadWrite_Defender: AZMGRoleManagement_ReadWrite_Defender,
+    AZMGRoleManagement_ReadWrite_Directory: AZMGRoleManagement_ReadWrite_Directory,
+    AZMGRoleManagement_ReadWrite_Exchange: AZMGRoleManagement_ReadWrite_Exchange,
+    AZMGRoleManagementAlert_Read_Directory: AZMGRoleManagementAlert_Read_Directory,
+    AZMGRoleManagementAlert_ReadWrite_Directory: AZMGRoleManagementAlert_ReadWrite_Directory,
+    AZMGRoleManagementPolicy_Read_AzureADGroup: AZMGRoleManagementPolicy_Read_AzureADGroup,
+    AZMGRoleManagementPolicy_Read_Directory: AZMGRoleManagementPolicy_Read_Directory,
+    AZMGRoleManagementPolicy_ReadWrite_AzureADGroup: AZMGRoleManagementPolicy_ReadWrite_AzureADGroup,
+    AZMGRoleManagementPolicy_ReadWrite_Directory: AZMGRoleManagementPolicy_ReadWrite_Directory,
+    AZMGSchedule_Read_All: AZMGSchedule_Read_All,
+    AZMGSchedule_ReadWrite_All: AZMGSchedule_ReadWrite_All,
+    AZMGSchedule_WorkingTime_ReadWrite_All: AZMGSchedule_WorkingTime_ReadWrite_All,
+    AZMGSchedulePermissions_ReadWrite_All: AZMGSchedulePermissions_ReadWrite_All,
+    AZMGSearchConfiguration_Read_All: AZMGSearchConfiguration_Read_All,
+    AZMGSearchConfiguration_ReadWrite_All: AZMGSearchConfiguration_ReadWrite_All,
+    AZMGSecurityActions_Read_All: AZMGSecurityActions_Read_All,
+    AZMGSecurityActions_ReadWrite_All: AZMGSecurityActions_ReadWrite_All,
+    AZMGSecurityAlert_Read_All: AZMGSecurityAlert_Read_All,
+    AZMGSecurityAlert_ReadWrite_All: AZMGSecurityAlert_ReadWrite_All,
+    AZMGSecurityAnalyzedMessage_Read_All: AZMGSecurityAnalyzedMessage_Read_All,
+    AZMGSecurityAnalyzedMessage_ReadWrite_All: AZMGSecurityAnalyzedMessage_ReadWrite_All,
+    AZMGSecurityCopilotWorkspaces_Read_All: AZMGSecurityCopilotWorkspaces_Read_All,
+    AZMGSecurityCopilotWorkspaces_ReadWrite_All: AZMGSecurityCopilotWorkspaces_ReadWrite_All,
+    AZMGSecurityEvents_Read_All: AZMGSecurityEvents_Read_All,
+    AZMGSecurityEvents_ReadWrite_All: AZMGSecurityEvents_ReadWrite_All,
+    AZMGSecurityIdentitiesAccount_Read_All: AZMGSecurityIdentitiesAccount_Read_All,
+    AZMGSecurityIdentitiesActions_ReadWrite_All: AZMGSecurityIdentitiesActions_ReadWrite_All,
+    AZMGSecurityIdentitiesHealth_Read_All: AZMGSecurityIdentitiesHealth_Read_All,
+    AZMGSecurityIdentitiesHealth_ReadWrite_All: AZMGSecurityIdentitiesHealth_ReadWrite_All,
+    AZMGSecurityIdentitiesSensors_Read_All: AZMGSecurityIdentitiesSensors_Read_All,
+    AZMGSecurityIdentitiesSensors_ReadWrite_All: AZMGSecurityIdentitiesSensors_ReadWrite_All,
+    AZMGSecurityIdentitiesUserActions_Read_All: AZMGSecurityIdentitiesUserActions_Read_All,
+    AZMGSecurityIdentitiesUserActions_ReadWrite_All: AZMGSecurityIdentitiesUserActions_ReadWrite_All,
+    AZMGSecurityIncident_Read_All: AZMGSecurityIncident_Read_All,
+    AZMGSecurityIncident_ReadWrite_All: AZMGSecurityIncident_ReadWrite_All,
+    AZMGSensitivityLabel_Evaluate: AZMGSensitivityLabel_Evaluate,
+    AZMGSensitivityLabel_Evaluate_All: AZMGSensitivityLabel_Evaluate_All,
+    AZMGSensitivityLabel_Read: AZMGSensitivityLabel_Read,
+    AZMGSensitivityLabels_Read_All: AZMGSensitivityLabels_Read_All,
+    AZMGServiceActivity_Exchange_Read_All: AZMGServiceActivity_Exchange_Read_All,
+    AZMGServiceActivity_Microsoft365Web_Read_All: AZMGServiceActivity_Microsoft365Web_Read_All,
+    AZMGServiceActivity_OneDrive_Read_All: AZMGServiceActivity_OneDrive_Read_All,
+    AZMGServiceActivity_Teams_Read_All: AZMGServiceActivity_Teams_Read_All,
+    AZMGServiceHealth_Read_All: AZMGServiceHealth_Read_All,
+    AZMGServiceMessage_Read_All: AZMGServiceMessage_Read_All,
+    AZMGServiceMessageViewpoint_Write: AZMGServiceMessageViewpoint_Write,
+    AZMGServicePrincipalEndpoint_Read_All: AZMGServicePrincipalEndpoint_Read_All,
+    AZMGServicePrincipalEndpoint_ReadWrite_All: AZMGServicePrincipalEndpoint_ReadWrite_All,
+    AZMGSharePointTenantSettings_Read_All: AZMGSharePointTenantSettings_Read_All,
+    AZMGSharePointTenantSettings_ReadWrite_All: AZMGSharePointTenantSettings_ReadWrite_All,
+    AZMGShortNotes_Read: AZMGShortNotes_Read,
+    AZMGShortNotes_Read_All: AZMGShortNotes_Read_All,
+    AZMGShortNotes_ReadWrite: AZMGShortNotes_ReadWrite,
+    AZMGShortNotes_ReadWrite_All: AZMGShortNotes_ReadWrite_All,
+    AZMGSignInIdentifier_Read_All: AZMGSignInIdentifier_Read_All,
+    AZMGSignInIdentifier_ReadWrite_All: AZMGSignInIdentifier_ReadWrite_All,
+    AZMGSites_Archive_All: AZMGSites_Archive_All,
+    AZMGSites_FullControl_All: AZMGSites_FullControl_All,
+    AZMGSites_Manage_All: AZMGSites_Manage_All,
+    AZMGSites_Read_All: AZMGSites_Read_All,
+    AZMGSites_ReadWrite_All: AZMGSites_ReadWrite_All,
+    AZMGSites_Selected: AZMGSites_Selected,
+    AZMGSMTP_Send: AZMGSMTP_Send,
+    AZMGSpiffeTrustDomain_Read_All: AZMGSpiffeTrustDomain_Read_All,
+    AZMGSpiffeTrustDomain_ReadWrite_All: AZMGSpiffeTrustDomain_ReadWrite_All,
+    AZMGStoryline_ReadWrite_All: AZMGStoryline_ReadWrite_All,
+    AZMGSubjectRightsRequest_Read_All: AZMGSubjectRightsRequest_Read_All,
+    AZMGSubjectRightsRequest_ReadWrite_All: AZMGSubjectRightsRequest_ReadWrite_All,
+    AZMGSubscription_Read_All: AZMGSubscription_Read_All,
+    AZMGSynchronization_Read_All: AZMGSynchronization_Read_All,
+    AZMGSynchronization_ReadWrite_All: AZMGSynchronization_ReadWrite_All,
+    AZMGSynchronizationData_User_Upload: AZMGSynchronizationData_User_Upload,
+    AZMGSynchronizationData_User_Upload_OwnedBy: AZMGSynchronizationData_User_Upload_OwnedBy,
+    AZMGTasks_Read: AZMGTasks_Read,
+    AZMGTasks_Read_All: AZMGTasks_Read_All,
+    AZMGTasks_Read_Shared: AZMGTasks_Read_Shared,
+    AZMGTasks_ReadWrite: AZMGTasks_ReadWrite,
+    AZMGTasks_ReadWrite_All: AZMGTasks_ReadWrite_All,
+    AZMGTasks_ReadWrite_Shared: AZMGTasks_ReadWrite_Shared,
+    AZMGTeam_Create: AZMGTeam_Create,
+    AZMGTeam_ReadBasic_All: AZMGTeam_ReadBasic_All,
+    AZMGTeamMember_Read_All: AZMGTeamMember_Read_All,
+    AZMGTeamMember_ReadWrite_All: AZMGTeamMember_ReadWrite_All,
+    AZMGTeamMember_ReadWriteNonOwnerRole_All: AZMGTeamMember_ReadWriteNonOwnerRole_All,
+    AZMGTeamsActivity_Read: AZMGTeamsActivity_Read,
+    AZMGTeamsActivity_Read_All: AZMGTeamsActivity_Read_All,
+    AZMGTeamsActivity_Send: AZMGTeamsActivity_Send,
+    AZMGTeamsAppInstallation_ManageSelectedForChat: AZMGTeamsAppInstallation_ManageSelectedForChat,
+    AZMGTeamsAppInstallation_ManageSelectedForChat_All: AZMGTeamsAppInstallation_ManageSelectedForChat_All,
+    AZMGTeamsAppInstallation_ManageSelectedForTeam: AZMGTeamsAppInstallation_ManageSelectedForTeam,
+    AZMGTeamsAppInstallation_ManageSelectedForTeam_All: AZMGTeamsAppInstallation_ManageSelectedForTeam_All,
+    AZMGTeamsAppInstallation_ManageSelectedForUser: AZMGTeamsAppInstallation_ManageSelectedForUser,
+    AZMGTeamsAppInstallation_ManageSelectedForUser_All: AZMGTeamsAppInstallation_ManageSelectedForUser_All,
+    AZMGTeamsAppInstallation_Read_All: AZMGTeamsAppInstallation_Read_All,
+    AZMGTeamsAppInstallation_ReadForChat: AZMGTeamsAppInstallation_ReadForChat,
+    AZMGTeamsAppInstallation_ReadForChat_All: AZMGTeamsAppInstallation_ReadForChat_All,
+    AZMGTeamsAppInstallation_ReadForTeam: AZMGTeamsAppInstallation_ReadForTeam,
+    AZMGTeamsAppInstallation_ReadForTeam_All: AZMGTeamsAppInstallation_ReadForTeam_All,
+    AZMGTeamsAppInstallation_ReadForUser: AZMGTeamsAppInstallation_ReadForUser,
+    AZMGTeamsAppInstallation_ReadForUser_All: AZMGTeamsAppInstallation_ReadForUser_All,
+    AZMGTeamsAppInstallation_ReadSelectedForChat: AZMGTeamsAppInstallation_ReadSelectedForChat,
+    AZMGTeamsAppInstallation_ReadSelectedForChat_All: AZMGTeamsAppInstallation_ReadSelectedForChat_All,
+    AZMGTeamsAppInstallation_ReadSelectedForTeam: AZMGTeamsAppInstallation_ReadSelectedForTeam,
+    AZMGTeamsAppInstallation_ReadSelectedForTeam_All: AZMGTeamsAppInstallation_ReadSelectedForTeam_All,
+    AZMGTeamsAppInstallation_ReadSelectedForUser: AZMGTeamsAppInstallation_ReadSelectedForUser,
+    AZMGTeamsAppInstallation_ReadSelectedForUser_All: AZMGTeamsAppInstallation_ReadSelectedForUser_All,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentForChat: AZMGTeamsAppInstallation_ReadWriteAndConsentForChat,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentForChat_All: AZMGTeamsAppInstallation_ReadWriteAndConsentForChat_All,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam: AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam_All: AZMGTeamsAppInstallation_ReadWriteAndConsentForTeam_All,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentForUser: AZMGTeamsAppInstallation_ReadWriteAndConsentForUser,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentForUser_All: AZMGTeamsAppInstallation_ReadWriteAndConsentForUser_All,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat: AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat_All: AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForChat_All,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam: AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam_All: AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForTeam_All,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser: AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser,
+    AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser_All: AZMGTeamsAppInstallation_ReadWriteAndConsentSelfForUser_All,
+    AZMGTeamsAppInstallation_ReadWriteForChat: AZMGTeamsAppInstallation_ReadWriteForChat,
+    AZMGTeamsAppInstallation_ReadWriteForChat_All: AZMGTeamsAppInstallation_ReadWriteForChat_All,
+    AZMGTeamsAppInstallation_ReadWriteForTeam: AZMGTeamsAppInstallation_ReadWriteForTeam,
+    AZMGTeamsAppInstallation_ReadWriteForTeam_All: AZMGTeamsAppInstallation_ReadWriteForTeam_All,
+    AZMGTeamsAppInstallation_ReadWriteForUser: AZMGTeamsAppInstallation_ReadWriteForUser,
+    AZMGTeamsAppInstallation_ReadWriteForUser_All: AZMGTeamsAppInstallation_ReadWriteForUser_All,
+    AZMGTeamsAppInstallation_ReadWriteSelectedForChat: AZMGTeamsAppInstallation_ReadWriteSelectedForChat,
+    AZMGTeamsAppInstallation_ReadWriteSelectedForChat_All: AZMGTeamsAppInstallation_ReadWriteSelectedForChat_All,
+    AZMGTeamsAppInstallation_ReadWriteSelectedForTeam: AZMGTeamsAppInstallation_ReadWriteSelectedForTeam,
+    AZMGTeamsAppInstallation_ReadWriteSelectedForTeam_All: AZMGTeamsAppInstallation_ReadWriteSelectedForTeam_All,
+    AZMGTeamsAppInstallation_ReadWriteSelectedForUser: AZMGTeamsAppInstallation_ReadWriteSelectedForUser,
+    AZMGTeamsAppInstallation_ReadWriteSelectedForUser_All: AZMGTeamsAppInstallation_ReadWriteSelectedForUser_All,
+    AZMGTeamsAppInstallation_ReadWriteSelfForChat: AZMGTeamsAppInstallation_ReadWriteSelfForChat,
+    AZMGTeamsAppInstallation_ReadWriteSelfForChat_All: AZMGTeamsAppInstallation_ReadWriteSelfForChat_All,
+    AZMGTeamsAppInstallation_ReadWriteSelfForTeam: AZMGTeamsAppInstallation_ReadWriteSelfForTeam,
+    AZMGTeamsAppInstallation_ReadWriteSelfForTeam_All: AZMGTeamsAppInstallation_ReadWriteSelfForTeam_All,
+    AZMGTeamsAppInstallation_ReadWriteSelfForUser: AZMGTeamsAppInstallation_ReadWriteSelfForUser,
+    AZMGTeamsAppInstallation_ReadWriteSelfForUser_All: AZMGTeamsAppInstallation_ReadWriteSelfForUser_All,
+    AZMGTeamSettings_Read_All: AZMGTeamSettings_Read_All,
+    AZMGTeamSettings_ReadWrite_All: AZMGTeamSettings_ReadWrite_All,
+    AZMGTeamsPolicyUserAssign_ReadWrite_All: AZMGTeamsPolicyUserAssign_ReadWrite_All,
+    AZMGTeamsResourceAccount_Read_All: AZMGTeamsResourceAccount_Read_All,
+    AZMGTeamsTab_Create: AZMGTeamsTab_Create,
+    AZMGTeamsTab_Read_All: AZMGTeamsTab_Read_All,
+    AZMGTeamsTab_ReadWrite_All: AZMGTeamsTab_ReadWrite_All,
+    AZMGTeamsTab_ReadWriteForChat: AZMGTeamsTab_ReadWriteForChat,
+    AZMGTeamsTab_ReadWriteForChat_All: AZMGTeamsTab_ReadWriteForChat_All,
+    AZMGTeamsTab_ReadWriteForTeam: AZMGTeamsTab_ReadWriteForTeam,
+    AZMGTeamsTab_ReadWriteForTeam_All: AZMGTeamsTab_ReadWriteForTeam_All,
+    AZMGTeamsTab_ReadWriteForUser: AZMGTeamsTab_ReadWriteForUser,
+    AZMGTeamsTab_ReadWriteForUser_All: AZMGTeamsTab_ReadWriteForUser_All,
+    AZMGTeamsTab_ReadWriteSelfForChat: AZMGTeamsTab_ReadWriteSelfForChat,
+    AZMGTeamsTab_ReadWriteSelfForChat_All: AZMGTeamsTab_ReadWriteSelfForChat_All,
+    AZMGTeamsTab_ReadWriteSelfForTeam: AZMGTeamsTab_ReadWriteSelfForTeam,
+    AZMGTeamsTab_ReadWriteSelfForTeam_All: AZMGTeamsTab_ReadWriteSelfForTeam_All,
+    AZMGTeamsTab_ReadWriteSelfForUser: AZMGTeamsTab_ReadWriteSelfForUser,
+    AZMGTeamsTab_ReadWriteSelfForUser_All: AZMGTeamsTab_ReadWriteSelfForUser_All,
+    AZMGTeamsTelephoneNumber_Read_All: AZMGTeamsTelephoneNumber_Read_All,
+    AZMGTeamsTelephoneNumber_ReadWrite_All: AZMGTeamsTelephoneNumber_ReadWrite_All,
+    AZMGTeamsUserConfiguration_Read_All: AZMGTeamsUserConfiguration_Read_All,
+    AZMGTeamTemplates_Read: AZMGTeamTemplates_Read,
+    AZMGTeamTemplates_Read_All: AZMGTeamTemplates_Read_All,
+    AZMGTeamwork_Migrate_All: AZMGTeamwork_Migrate_All,
+    AZMGTeamwork_Read_All: AZMGTeamwork_Read_All,
+    AZMGTeamworkAppSettings_Read_All: AZMGTeamworkAppSettings_Read_All,
+    AZMGTeamworkAppSettings_ReadWrite_All: AZMGTeamworkAppSettings_ReadWrite_All,
+    AZMGTeamworkDevice_Read_All: AZMGTeamworkDevice_Read_All,
+    AZMGTeamworkDevice_ReadWrite_All: AZMGTeamworkDevice_ReadWrite_All,
+    AZMGTeamworkTag_Read: AZMGTeamworkTag_Read,
+    AZMGTeamworkTag_Read_All: AZMGTeamworkTag_Read_All,
+    AZMGTeamworkTag_ReadWrite: AZMGTeamworkTag_ReadWrite,
+    AZMGTeamworkTag_ReadWrite_All: AZMGTeamworkTag_ReadWrite_All,
+    AZMGTeamworkUserInteraction_Read_All: AZMGTeamworkUserInteraction_Read_All,
+    AZMGTermStore_Read_All: AZMGTermStore_Read_All,
+    AZMGTermStore_ReadWrite_All: AZMGTermStore_ReadWrite_All,
+    AZMGThreatAssessment_Read_All: AZMGThreatAssessment_Read_All,
+    AZMGThreatAssessment_ReadWrite_All: AZMGThreatAssessment_ReadWrite_All,
+    AZMGThreatHunting_Read_All: AZMGThreatHunting_Read_All,
+    AZMGThreatIndicators_Read_All: AZMGThreatIndicators_Read_All,
+    AZMGThreatIndicators_ReadWrite_OwnedBy: AZMGThreatIndicators_ReadWrite_OwnedBy,
+    AZMGThreatIntelligence_Read_All: AZMGThreatIntelligence_Read_All,
+    AZMGThreatSubmission_Read: AZMGThreatSubmission_Read,
+    AZMGThreatSubmission_Read_All: AZMGThreatSubmission_Read_All,
+    AZMGThreatSubmission_ReadWrite: AZMGThreatSubmission_ReadWrite,
+    AZMGThreatSubmission_ReadWrite_All: AZMGThreatSubmission_ReadWrite_All,
+    AZMGThreatSubmissionPolicy_ReadWrite_All: AZMGThreatSubmissionPolicy_ReadWrite_All,
+    AZMGTopic_Read_All: AZMGTopic_Read_All,
+    AZMGTrustFrameworkKeySet_Read_All: AZMGTrustFrameworkKeySet_Read_All,
+    AZMGTrustFrameworkKeySet_ReadWrite_All: AZMGTrustFrameworkKeySet_ReadWrite_All,
+    AZMGUnifiedGroupMember_Read_AsGuest: AZMGUnifiedGroupMember_Read_AsGuest,
+    AZMGUser_ConvertToInternal_ReadWrite_All: AZMGUser_ConvertToInternal_ReadWrite_All,
+    AZMGUser_DeleteRestore_All: AZMGUser_DeleteRestore_All,
+    AZMGUser_EnableDisableAccount_All: AZMGUser_EnableDisableAccount_All,
+    AZMGUser_Export_All: AZMGUser_Export_All,
+    AZMGUser_Invite_All: AZMGUser_Invite_All,
+    AZMGUser_LifeCycleInfo_Read_All: AZMGUser_LifeCycleInfo_Read_All,
+    AZMGUser_LifeCycleInfo_ReadWrite_All: AZMGUser_LifeCycleInfo_ReadWrite_All,
+    AZMGUser_Mail_ReadWrite_All: AZMGUser_Mail_ReadWrite_All,
+    AZMGUser_ManageIdentities_All: AZMGUser_ManageIdentities_All,
+    AZMGUser_PasswordProfile_ReadWrite_All: AZMGUser_PasswordProfile_ReadWrite_All,
+    AZMGUser_Phone_ReadWrite_All: AZMGUser_Phone_ReadWrite_All,
+    AZMGUser_Read: AZMGUser_Read,
+    AZMGUser_Read_All: AZMGUser_Read_All,
+    AZMGUser_ReadBasic_All: AZMGUser_ReadBasic_All,
+    AZMGUser_ReadWrite: AZMGUser_ReadWrite,
+    AZMGUser_ReadWrite_All: AZMGUser_ReadWrite_All,
+    AZMGUser_ReadWrite_CrossCloud: AZMGUser_ReadWrite_CrossCloud,
+    AZMGUser_RevokeSessions_All: AZMGUser_RevokeSessions_All,
+    AZMGUserActivity_ReadWrite_CreatedByApp: AZMGUserActivity_ReadWrite_CreatedByApp,
+    AZMGUserAuthenticationMethod_Read: AZMGUserAuthenticationMethod_Read,
+    AZMGUserAuthenticationMethod_Read_All: AZMGUserAuthenticationMethod_Read_All,
+    AZMGUserAuthenticationMethod_ReadWrite: AZMGUserAuthenticationMethod_ReadWrite,
+    AZMGUserAuthenticationMethod_ReadWrite_All: AZMGUserAuthenticationMethod_ReadWrite_All,
+    AZMGUserAuthMethod_Passkey_Read_All: AZMGUserAuthMethod_Passkey_Read_All,
+    AZMGUserAuthMethod_Passkey_ReadWrite_All: AZMGUserAuthMethod_Passkey_ReadWrite_All,
+    AZMGUserCloudClipboard_Read: AZMGUserCloudClipboard_Read,
+    AZMGUserNotification_ReadWrite_CreatedByApp: AZMGUserNotification_ReadWrite_CreatedByApp,
+    AZMGUserShiftPreferences_Read_All: AZMGUserShiftPreferences_Read_All,
+    AZMGUserShiftPreferences_ReadWrite_All: AZMGUserShiftPreferences_ReadWrite_All,
+    AZMGUserTeamwork_Read: AZMGUserTeamwork_Read,
+    AZMGUserTeamwork_Read_All: AZMGUserTeamwork_Read_All,
+    AZMGUserTimelineActivity_Write_CreatedByApp: AZMGUserTimelineActivity_Write_CreatedByApp,
+    AZMGUserWindowsSettings_Read_All: AZMGUserWindowsSettings_Read_All,
+    AZMGUserWindowsSettings_ReadWrite_All: AZMGUserWindowsSettings_ReadWrite_All,
+    AZMGVerifiedId_Profile_Read_All: AZMGVerifiedId_Profile_Read_All,
+    AZMGVerifiedId_Profile_ReadWrite_All: AZMGVerifiedId_Profile_ReadWrite_All,
+    AZMGVirtualAppointment_Read: AZMGVirtualAppointment_Read,
+    AZMGVirtualAppointment_Read_All: AZMGVirtualAppointment_Read_All,
+    AZMGVirtualAppointment_ReadWrite: AZMGVirtualAppointment_ReadWrite,
+    AZMGVirtualAppointment_ReadWrite_All: AZMGVirtualAppointment_ReadWrite_All,
+    AZMGVirtualAppointmentNotification_Send: AZMGVirtualAppointmentNotification_Send,
+    AZMGVirtualEvent_Read: AZMGVirtualEvent_Read,
+    AZMGVirtualEvent_Read_All: AZMGVirtualEvent_Read_All,
+    AZMGVirtualEvent_ReadWrite: AZMGVirtualEvent_ReadWrite,
+    AZMGVirtualEventRegistration_Anon_ReadWrite_All: AZMGVirtualEventRegistration_Anon_ReadWrite_All,
+    AZMGWindowsUpdates_ReadWrite_All: AZMGWindowsUpdates_ReadWrite_All,
+    AZMGWorkforceIntegration_Read_All: AZMGWorkforceIntegration_Read_All,
+    AZMGWorkforceIntegration_ReadWrite_All: AZMGWorkforceIntegration_ReadWrite_All,
+    AZNodeResourceGroup: AZNodeResourceGroup,
     AZOwns: AZOwns,
     AZPrivilegedAuthAdmin: AZPrivilegedAuthAdmin,
     AZPrivilegedRoleAdmin: AZPrivilegedRoleAdmin,
     AZResetPassword: AZResetPassword,
-    AZUserAccessAdministrator: AZUserAccessAdministrator,
-    AZGlobalAdmin: AZGlobalAdmin,
-    AZAppAdmin: AZAppAdmin,
-    AZCloudAppAdmin: AZCloudAppAdmin,
-    AZRunsAs: AZRunsAs,
-    AZVMAdminLogin: AZVMAdminLogin,
-    AZVMContributor: AZVMContributor,
-    WriteSPN: WriteSPN,
-    AddSelf: AddSelf,
-    AddKeyCredentialLink: AddKeyCredentialLink,
-    DCSync: DCSync,
-    SyncLAPSPassword: SyncLAPSPassword,
-    WriteAccountRestrictions: WriteAccountRestrictions,
-    WriteGPLink: WriteGPLink,
-    DumpSMSAPassword: DumpSMSAPassword,
-    AZMGAddMember: AZMGAddMember,
-    AZMGAddOwner: AZMGAddOwner,
-    AZMGAddSecret: AZMGAddSecret,
-    AZMGGrantAppRoles: AZMGGrantAppRoles,
-    AZMGGrantRole: AZMGGrantRole,
-    AZMGAppRoleAssignment_ReadWrite_All: AZMGAppRoleAssignment_ReadWrite_All,
-    AZMGApplication_ReadWrite_All: AZMGApplication_ReadWrite_All,
-    AZMGDirectory_ReadWrite_All: AZMGDirectory_ReadWrite_All,
-    AZMGGroupMember_ReadWrite_All: AZMGGroupMember_ReadWrite_All,
-    AZMGGroup_ReadWrite_All: AZMGGroup_ReadWrite_All,
-    AZMGRoleManagement_ReadWrite_Directory: AZMGRoleManagement_ReadWrite_Directory,
-    AZMGServicePrincipalEndpoint_ReadWrite_All: AZMGServicePrincipalEndpoint_ReadWrite_All,
-    AZWebsiteContributor: AZWebsiteContributor,
-    AZAddOwner: AZAddOwner,
-    AZAKSContributor: AZAKSContributor,
-    AZAutomationContributor: AZAutomationContributor,
-    AZKeyVaultKVContributor: AZKeyVaultKVContributor,
-    AZLogicAppContributor: AZLogicAppContributor,
-    AZNodeResourceGroup: AZNodeResourceGroup,
     AZRoleApprover: AZRoleApprover,
     AZRoleEligible: AZRoleEligible,
-    Enroll: Enroll,
-    EnterpriseCAFor: EnterpriseCAFor,
-    RootCAFor: RootCAFor,
-    PublishedTo: PublishedTo,
-    NTAuthStoreFor: NTAuthStoreFor,
-    IssuedSignedBy: IssuedSignedBy,
-    TrustedForNTAuth: TrustedForNTAuth,
-    HostsCAService: HostsCAService,
-    DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
-    EnrollOnBehalfOf: EnrollOnBehalfOf,
-    GoldenCert: GoldenCert,
-    ADCSESC1: ADCSESC1,
-    ADCSESC4: ADCSESC4,
-    ADCSESC3: ADCSESC3,
-    ADCSESC6a: ADCSESC6a,
-    ADCSESC6b: ADCSESC6b,
-    ADCSESC9a: ADCSESC9a,
-    ADCSESC9b: ADCSESC9b,
-    ADCSESC10a: ADCSESC10a,
-    ADCSESC10b: ADCSESC10b,
-    ADCSESC13: ADCSESC13,
-    ManageCA: ManageCA,
-    ManageCertificates: ManageCertificates,
-    WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
-    WritePKINameFlag: WritePKINameFlag,
-    DCFor: DCFor,
-    OIDGroupLink: OIDGroupLink,
-    ExtendedByPolicy: ExtendedByPolicy,
-    SyncedToADUser: SyncedToADUser,
-    SyncedToEntraUser: SyncedToEntraUser,
-    CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
+    AZRunsAs: AZRunsAs,
+    AZUserAccessAdministrator: AZUserAccessAdministrator,
+    AZVMAdminLogin: AZVMAdminLogin,
+    AZVMContributor: AZVMContributor,
+    AZWebsiteContributor: AZWebsiteContributor,
+    CanPSRemote: CanPSRemote,
+    CanRDP: CanRDP,
+    ClaimSpecialIdentity: ClaimSpecialIdentity,
+    CodeController: CodeController,
+    CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
-    CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
-    ClaimSpecialIdentity: ClaimSpecialIdentity,
+    CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
+    CoerceToTGT: CoerceToTGT,
+    Contains: Contains,
+    CrossForestTrust: CrossForestTrust,
+    DCFor: DCFor,
+    DCSync: DCSync,
+    Default: Default,
+    DelegatedEnrollmentAgent: DelegatedEnrollmentAgent,
+    DumpSMSAPassword: DumpSMSAPassword,
+    Enroll: Enroll,
+    EnrollOnBehalfOf: EnrollOnBehalfOf,
+    EnterpriseCAFor: EnterpriseCAFor,
+    ExecuteDCOM: ExecuteDCOM,
+    ExtendedByPolicy: ExtendedByPolicy,
+    ForceChangePassword: ForceChangePassword,
+    GenericAll: GenericAll,
+    GenericWrite: GenericWrite,
+    GetChanges: GetChanges,
+    GetChangesAll: GetChangesAll,
+    GoldenCert: GoldenCert,
+    GPLink: GPLink,
+    HasSession: HasSession,
+    HasSIDHistory: HasSIDHistory,
     HasTrustKeys: HasTrustKeys,
+    HostsCAService: HostsCAService,
+    IssuedSignedBy: IssuedSignedBy,
+    ManageCA: ManageCA,
+    ManageCertificates: ManageCertificates,
+    MemberOf: MemberOf,
+    NTAuthStoreFor: NTAuthStoreFor,
+    OIDGroupLink: OIDGroupLink,
+    Owns: Owns,
+    OwnsLimitedRights: OwnsLimitedRights,
+    OwnsRaw: OwnsRaw,
+    PublishedTo: PublishedTo,
+    ReadGMSAPassword: ReadGMSAPassword,
+    ReadLAPSPassword: ReadLAPSPassword,
+    RootCAFor: RootCAFor,
+    SameForestTrust: SameForestTrust,
+    SpoofSIDHistory: SpoofSIDHistory,
+    SQLAdmin: SQLAdmin,
+    SyncedToADUser: SyncedToADUser,
+    SyncedToEntraUser: SyncedToEntraUser,
+    SyncLAPSPassword: SyncLAPSPassword,
+    TrustedForNTAuth: TrustedForNTAuth,
+    WriteAccountRestrictions: WriteAccountRestrictions,
+    WriteDacl: WriteDacl,
+    WriteGPLink: WriteGPLink,
+    WriteOwner: WriteOwner,
+    WriteOwnerLimitedRights: WriteOwnerLimitedRights,
+    WriteOwnerRaw: WriteOwnerRaw,
+    WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
+    WritePKINameFlag: WritePKINameFlag,
+    WriteSPN: WriteSPN,
 };
 
 export default EdgeInfoComponents;
