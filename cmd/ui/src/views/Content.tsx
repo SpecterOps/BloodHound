@@ -19,9 +19,11 @@ import makeStyles from '@mui/styles/makeStyles';
 import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
+    Permission,
     getExcludedIds,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
+    usePermissions,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -48,6 +50,8 @@ const Content: React.FC = () => {
     const isAuthExpired = useAppSelector(authExpiredSelector);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const { checkPermission } = usePermissions();
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -56,9 +60,11 @@ const Content: React.FC = () => {
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 
+    const permitFileUploadModalLaunch =
+        !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds() && !!hasPermissionToUpload;
     // Display ingest dialog when a processable file is dragged into the browser client
     useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
-        condition: () => !!authState.sessionToken && !!authState.user && !isAuthExpired && !getExcludedIds(),
+        condition: () => permitFileUploadModalLaunch,
         acceptedTypes: ['application/json', 'application/zip'],
     });
 
