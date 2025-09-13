@@ -87,6 +87,7 @@ func Test_ParseSortParameters(t *testing.T) {
 }
 
 func TestBuildSQLSort(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		sort             model.Sort
 		identifierColumn model.SortItem
@@ -140,11 +141,12 @@ func TestBuildSQLSort(t *testing.T) {
 				sort:             []model.SortItem{{Column: ""}},
 				identifierColumn: model.SortItem{},
 			},
-			want: want{[]string{}, fmt.Errorf("the specified column cannot be sorted: column index: 0")},
+			want: want{[]string{}, fmt.Errorf("the specified column cannot be sorted because it is empty: column index: 0")},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := api.BuildSQLSort(tt.args.sort, tt.args.identifierColumn)
 			if tt.want.err != nil {
 				assert.EqualError(t, err, tt.want.err.Error())

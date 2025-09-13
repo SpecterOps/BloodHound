@@ -111,7 +111,7 @@ func BuildSQLSort(sort model.Sort, identifierColumn model.SortItem) ([]string, e
 		if sortItem.Column != "" {
 			sqlSort = append(sqlSort, buildSortString(sortItem))
 		} else {
-			return nil, fmt.Errorf("%w: column index: %d", ErrResponseDetailsColumnNotSortable, index)
+			return nil, fmt.Errorf("%w: column index: %d", ErrResponseDetailsColumnEmpty, index)
 		}
 	}
 
