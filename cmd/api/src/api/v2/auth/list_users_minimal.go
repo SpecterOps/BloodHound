@@ -32,10 +32,10 @@ type UsersMinimalResponse struct {
 }
 
 type UserMinimal struct {
-	ID            uuid.UUID `json:"id"`
-	PrincipalName string    `json:"principal_name"`
-	FirstName     string    `json:"first_name"`
-	LastName      string    `json:"last_name"`
+	ID        uuid.UUID `json:"id"`
+	Email     string    `json:"email"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
 }
 
 // ListActiveUsersMinimal - Returns a list of Users without any sensitive data. At the time, this is used in the saved queries
