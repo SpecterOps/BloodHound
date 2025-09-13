@@ -43,7 +43,7 @@ type UserMinimal struct {
 // workflow to return a list of users with whom a query can be shared with.
 func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter, request *http.Request) {
 	var (
-		users       UserMinimal
+		usersFilter UserMinimal
 		queryParams = request.URL.Query()
 	)
 
@@ -59,12 +59,12 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 			return
 		} else {
 			for name, filters := range queryFilters {
-				if valid := slices.Contains(users.GetFilterableColumns(), name); !valid {
+				if valid := slices.Contains(api.GetFilterableColumns(usersFilter), name); !valid {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 					return
 				}
 
-				if validPredicates, err := users.GetValidFilterPredicatesAsStrings(name); err != nil {
+				if validPredicates, err := api.GetValidFilterPredicatesAsStrings(usersFilter, name); err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 					return
 				} else {
@@ -74,12 +74,12 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 							return
 						}
 
-						queryFilters[name][i].IsStringData = users.IsStringColumn(filter.Name)
+						queryFilters[name][i].IsStringData = usersFilter.IsStringColumn(filter.Name)
 					}
 				}
 			}
 			if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 				return
 			} else if activeUsers, err := s.db.GetAllActiveUsers(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
 				api.HandleDatabaseError(request, response, err)
@@ -118,10 +118,10 @@ func (s UserMinimal) IsSortable(column string) bool {
 // ValidFilters - returns a map of columns and their valid filters
 func (s UserMinimal) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
-		"first_name":     {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"last_name":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"principal_name": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"id":             {model.Equals, model.NotEquals},
+		"first_name": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"last_name":  {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"email":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"id":         {model.Equals, model.NotEquals},
 	}
 }
 
@@ -130,31 +130,9 @@ func (s UserMinimal) IsStringColumn(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
-		"principal_name":
+		"email":
 		return true
 	default:
 		return false
-	}
-}
-
-// GetFilterableColumns - returns a list of filterable columns
-func (s UserMinimal) GetFilterableColumns() []string {
-	columns := make([]string, 0)
-	for column := range s.ValidFilters() {
-		columns = append(columns, column)
-	}
-	return columns
-}
-
-// GetValidFilterPredicatesAsStrings - returns a list of predicates that a column can be filtered on
-func (s UserMinimal) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
-	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
-		return []string{}, fmt.Errorf("the specified column cannot be filtered")
-	} else {
-		stringPredicates := make([]string, 0)
-		for _, predicate := range predicates {
-			stringPredicates = append(stringPredicates, string(predicate))
-		}
-		return stringPredicates, nil
 	}
 }

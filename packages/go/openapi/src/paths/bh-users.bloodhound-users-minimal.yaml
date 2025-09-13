@@ -25,7 +25,7 @@ get:
     - Enterprise
   parameters:
     - name: sort_by
-      description: Sortable columns are id, first_name, last_name and principal_name.
+      description: Sortable columns are id, first_name, last_name and email.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
