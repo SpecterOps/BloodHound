@@ -26,7 +26,7 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, useZonePathParams } from '../../../hooks';
-import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
+import { detailsPath, memberPath, privilegeZonesPath, selectorPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
 
@@ -63,11 +63,11 @@ const SearchBar: React.FC = () => {
         setIsOpen(false);
 
         if (isTag(item)) {
-            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${item.id}/details`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
         } else if (isSelector(item)) {
-            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${item.asset_group_tag_id}/details/selector/${item.id}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorPath}/${item.id}/${detailsPath}`);
         } else {
-            navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${item.asset_group_tag_id}/details/member/${item.id}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${memberPath}/${item.id}/${detailsPath}`);
         }
     };
 

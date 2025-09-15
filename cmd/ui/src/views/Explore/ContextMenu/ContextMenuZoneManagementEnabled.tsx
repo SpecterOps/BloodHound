@@ -17,9 +17,12 @@
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
 import {
+    zonePath,
+    labelPath,
     NodeResponse,
     Permission,
-    ROUTE_PRIVILEGE_ZONES_ROOT,
+    detailsPath,
+    privilegeZonesPath,
     apiClient,
     isNode,
     useExploreParams,
@@ -37,7 +40,7 @@ import CopyMenuItem from './CopyMenuItem';
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => {} }) => {
+}> = ({ contextMenu, onClose = () => { } }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();
@@ -159,7 +162,7 @@ const ContextMenu: FC<{
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone/${tierZeroAssetGroup!.id}/details`}
+                        removeNodePath={`/${privilegeZonesPath}/${zonePath}/${tierZeroAssetGroup!.id}/${detailsPath}`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
@@ -175,7 +178,7 @@ const ContextMenu: FC<{
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`${ROUTE_PRIVILEGE_ZONES_ROOT}/label/${ownedAssetGroup!.id}/details`}
+                        removeNodePath={`/${privilegeZonesPath}/${labelPath}/${ownedAssetGroup!.id}/${detailsPath}`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                     />,
                 ]}

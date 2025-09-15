@@ -13,31 +13,41 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+export const zonePath = 'zone';
+export const labelPath = 'label';
+export const DEFAULT_PRIVILEGE_ZONES_ROUTE = `/${zonePath}`;
 
-export const DEFAULT_PRIVILEGE_ZONES_ROUTE = 'zone/';
+export const privilegeZonesPath = 'privilege-zones';
 export const ROUTE_PRIVILEGE_ZONES_ROOT = '/privilege-zones';
 
+export const summaryPath = 'summary';
 export const ROUTE_PRIVILEGE_ZONES_SUMMARY = '/summary';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SUMMARY = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SUMMARY}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SUMMARY = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SUMMARY}`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_SUMMARY = `/${zonePath}/:zoneId/${summaryPath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_SUMMARY = `/${labelPath}/:labelId/${summaryPath}`;
 
+export const detailsPath = 'details';
 export const ROUTE_PRIVILEGE_ZONES_DETAILS = '/details';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}/member/:memberId`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId/member/:memberId`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}/member/:memberId`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_DETAILS}/selector/:selectorId/member/:memberId`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/${zonePath}/:zoneId/${detailsPath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS = `/${labelPath}/:labelId/${detailsPath}`;
 
+export const selectorPath = 'selector';
+export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${detailsPath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${detailsPath}`;
+
+export const memberPath = 'member';
+export const ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS = `/${zonePath}/:zoneId/${memberPath}/:memberId/${detailsPath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS = `/${labelPath}/:labelId/${memberPath}/:memberId/${detailsPath}`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${memberPath}/:memberId/${detailsPath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${memberPath}/:memberId/${detailsPath}`;
+
+export const savePath = 'save';
 export const ROUTE_PRIVILEGE_ZONES_SAVE = '/save';
-export const ROUTE_PRIVILEGE_ZONES_UPDATE_ZONE = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SAVE}`;
-export const ROUTE_PRIVILEGE_ZONES_UPDATE_LABEL = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SAVE}`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_UPDATE_SELECTOR = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector/:selectorId`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_CREATE_SELECTOR = `/${DEFAULT_PRIVILEGE_ZONES_ROUTE}:zoneId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_UPDATE_SELECTOR = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector/:selectorId`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_CREATE_SELECTOR = `/label/:labelId${ROUTE_PRIVILEGE_ZONES_SAVE}/selector`;
+export const ROUTE_PRIVILEGE_ZONES_UPDATE_ZONE = `/${zonePath}/:zoneId/${savePath}`;
+export const ROUTE_PRIVILEGE_ZONES_UPDATE_LABEL = `/${labelPath}/:labelId/${savePath}`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_UPDATE_SELECTOR = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${savePath}`;
+export const ROUTE_PRIVILEGE_ZONES_ZONE_CREATE_SELECTOR = `/${zonePath}/:zoneId/${selectorPath}/${savePath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_UPDATE_SELECTOR = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${savePath}`;
+export const ROUTE_PRIVILEGE_ZONES_LABEL_CREATE_SELECTOR = `/${labelPath}/:labelId/${selectorPath}/${savePath}`;
 
 export type Routable = {
     path: string;

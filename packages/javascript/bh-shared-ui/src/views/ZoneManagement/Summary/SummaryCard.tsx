@@ -22,7 +22,7 @@ import { AssetGroupTagType, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { useHighestPrivilegeTagId } from '../../../hooks';
-import { ROUTE_PRIVILEGE_ZONES_DETAILS, ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
+import { detailsPath, privilegeZonesPath } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/numberFormatting';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
@@ -68,7 +68,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                         // Prevent event bubbling for the view details action
                         e.stopPropagation();
                         navigate(
-                            `${ROUTE_PRIVILEGE_ZONES_ROOT}/${type === AssetGroupTagTypeZone ? 'zone' : 'label'}/${id}${ROUTE_PRIVILEGE_ZONES_DETAILS}`
+                            `/${privilegeZonesPath}/${type === AssetGroupTagTypeZone ? 'zone' : 'label'}/${id}/${detailsPath}`
                         );
                     }}
                     className='flex items-center space-x-2 hover:underline'>

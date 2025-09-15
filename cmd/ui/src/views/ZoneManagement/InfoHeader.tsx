@@ -19,7 +19,9 @@ import {
     AZ_PLATFORM,
     AppLink,
     EnvironmentAggregation,
-    ROUTE_PRIVILEGE_ZONES_ROOT,
+    privilegeZonesPath,
+    selectorPath,
+    savePath,
     SelectedEnvironment,
     SelectorValueTypes,
     SimpleEnvironmentSelector,
@@ -80,7 +82,7 @@ const InfoHeader: FC = () => {
                 <Button variant='primary' disabled={!tagId} asChild>
                     <AppLink
                         data-testid='zone-management_create-selector-link'
-                        to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/save/selector`}>
+                        to={`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${savePath}`}>
                         Create Selector
                     </AppLink>
                 </Button>

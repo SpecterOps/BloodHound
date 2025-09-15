@@ -27,7 +27,7 @@ import { FC } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
-import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../routes';
+import { detailsPath, privilegeZonesPath, savePath } from '../../../routes';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -49,7 +49,7 @@ const Save: FC = () => {
                         <BreadcrumbLink asChild>
                             <AppLink
                                 data-testid='zone-management_save_details-breadcrumb'
-                                to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagValue}/${tagValue === 'zone' ? topTagId : ownedId}/details`}>
+                                to={`/${privilegeZonesPath}/${tagValue}/${tagValue === 'zone' ? topTagId : ownedId}/${detailsPath}`}>
                                 {captitalizedPluralTagValue}
                             </AppLink>
                         </BreadcrumbLink>
@@ -61,7 +61,7 @@ const Save: FC = () => {
                                 <BreadcrumbLink asChild>
                                     <AppLink
                                         data-testid='zone-management_save_tag-breadcrumb'
-                                        to={`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagValue}/${tagId}/save`}>
+                                        to={`/${privilegeZonesPath}/${tagValue}/${tagId}/${savePath}`}>
                                         {`${capitalizedTagValue} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>

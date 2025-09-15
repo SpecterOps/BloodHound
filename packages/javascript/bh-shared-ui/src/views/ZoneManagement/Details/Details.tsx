@@ -31,6 +31,11 @@ import {
     DEFAULT_PRIVILEGE_ZONES_ROUTE,
     ROUTE_PRIVILEGE_ZONES_DETAILS,
     ROUTE_PRIVILEGE_ZONES_ROOT,
+    privilegeZonesPath,
+    savePath,
+    memberPath,
+    detailsPath,
+    selectorPath
 } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
@@ -50,14 +55,13 @@ export const getSavePath = (
     const tagType = zoneId ? 'zone' : 'label';
     let tagPathId = '';
 
-    console.log(tagType, zoneId, labelId);
     if (zoneId || labelId) {
         tagPathId = tagType === 'zone' ? zoneId ?? '' : labelId ?? '';
     }
 
-    const selectorPath = selectorId ? `/selector/${selectorId}` : '';
+    const selectorIdPath = selectorId ? `${selectorPath}/${selectorId}` : '';
 
-    return `${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagPathId}/save${selectorPath}`;
+    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${selectorIdPath}/${savePath}`;
 };
 
 export const getEditButtonState = (
@@ -84,7 +88,6 @@ const Details: FC = () => {
         {
             path:
                 ROUTE_PRIVILEGE_ZONES_ROOT +
-                '/' +
                 DEFAULT_PRIVILEGE_ZONES_ROUTE +
                 tagType +
                 ROUTE_PRIVILEGE_ZONES_DETAILS,
@@ -116,7 +119,6 @@ const Details: FC = () => {
 
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
 
-    console.log(zoneId, labelId);
     return (
         <div className='h-full'>
             <div className='flex mt-6'>
@@ -140,7 +142,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${id}/details`);
+                                navigate(`${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
                             }}
                         />
                     ) : (
@@ -149,7 +151,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${id}/details`);
+                                navigate(`${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
                             }}
                         />
                     )}
@@ -159,7 +161,7 @@ const Details: FC = () => {
                         onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(
-                                `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${id}`
+                                `${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${id}/${detailsPath}`
                             );
                         }}
                         selected={selectorId}
@@ -171,7 +173,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/selector/${selectorId}/member/${id}`
+                                    `${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${selectorId}/${memberPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -183,7 +185,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${ROUTE_PRIVILEGE_ZONES_ROOT}/${getTagUrlValue(labelId)}/${tagId}/details/member/${id}`
+                                    `${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${memberPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}

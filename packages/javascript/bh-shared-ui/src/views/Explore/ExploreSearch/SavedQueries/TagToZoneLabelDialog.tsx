@@ -40,6 +40,7 @@ import {
 import { useTagsQuery } from '../../../../hooks';
 import { QueryLineItem } from '../../../../types';
 import { useAppNavigate } from '../../../../utils';
+import { labelPath, privilegeZonesPath, savePath, selectorPath, zonePath } from '../../../../routes';
 
 type TagToZoneLabelDialogProps = {
     dialogOpen: boolean;
@@ -79,9 +80,9 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const onContinue = () => {
         if (isLabel) {
-            navigate(`/privilege-zones/label/${labelId}/save/selector`, { state: stateToPass });
+            navigate(`/${privilegeZonesPath}/${labelPath}/${labelId}/${selectorPath}/${savePath}`, { state: stateToPass });
         } else {
-            navigate(`/privilege-zones/zone/${zoneId}/save/selector`, { state: stateToPass });
+            navigate(`/${privilegeZonesPath}/${zonePath}/${zoneId}/${selectorPath}/${savePath}`, { state: stateToPass });
         }
     };
 

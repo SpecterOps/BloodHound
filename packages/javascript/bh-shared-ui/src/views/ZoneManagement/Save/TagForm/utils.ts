@@ -22,7 +22,7 @@ import {
     usePrivilegeZoneAnalysis,
     useZonePathParams,
 } from '../../../../hooks';
-import { ROUTE_PRIVILEGE_ZONES_ROOT } from '../../../../routes';
+import { detailsPath, labelPath, privilegeZonesPath, savePath, selectorPath, zonePath } from '../../../../routes';
 import { useAppNavigate } from '../../../../utils';
 
 export const useTagFormUtils = () => {
@@ -36,8 +36,8 @@ export const useTagFormUtils = () => {
 
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
-    const isLabelLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/label`);
-    const isZoneLocation = location.pathname.includes(`${ROUTE_PRIVILEGE_ZONES_ROOT}/zone`);
+    const isLabelLocation = location.pathname.includes(`/${privilegeZonesPath}/${labelPath}`);
+    const isZoneLocation = location.pathname.includes(`/${privilegeZonesPath}/${zonePath}`);
 
     const tagType: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
     const tagTypeDisplay: 'Label' | 'Zone' = capitalize(tagType) as 'Label' | 'Zone';
@@ -46,12 +46,12 @@ export const useTagFormUtils = () => {
     const isUpdateLabelLocation = isLabelLocation && labelId;
 
     const handleCreateNavigate = (tagId: number) =>
-        navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagId}/save/selector`);
+        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorPath}/${savePath}`);
 
-    const handleUpdateNavigate = () => navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagId}/details`);
+    const handleUpdateNavigate = () => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
 
     const handleDeleteNavigate = () =>
-        navigate(`${ROUTE_PRIVILEGE_ZONES_ROOT}/${tagType}/${tagType === 'zone' ? topTagId : ownedId}/details`);
+        navigate(`/${privilegeZonesPath}/${tagType}/${tagType === 'zone' ? topTagId : ownedId}/${detailsPath}`);
 
     const showAnalysisToggle = privilegeZoneAnalysisEnabled && isUpdateZoneLocation && zoneId !== topTagId?.toString();
 
