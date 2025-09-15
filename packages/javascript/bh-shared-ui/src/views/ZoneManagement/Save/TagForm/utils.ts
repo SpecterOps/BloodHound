@@ -45,8 +45,10 @@ export const useTagFormUtils = () => {
     const isUpdateZoneLocation = isZoneLocation && zoneId !== '';
     const isUpdateLabelLocation = isLabelLocation && labelId;
 
-    const handleCreateNavigate = (tagId: number) =>
+    const handleCreateNavigate = (tagId: number) => {
+        navigate(`${location.pathname}/${tagId}`, { replace: true });
         navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorPath}/${savePath}`);
+    };
 
     const handleUpdateNavigate = () => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
 

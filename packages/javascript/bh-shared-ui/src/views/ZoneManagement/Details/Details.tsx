@@ -129,8 +129,8 @@ const Details: FC = () => {
                 </div>
                 <div className='w-1/3 ml-8'>
                     {showEditButton && (
-                        <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <AppLink to={getSavePath(zoneId, labelId, selectorId)}>Edit</AppLink>
+                        <Button asChild variant={'secondary'} disabled={showEditButton || !getSavePath(zoneId, labelId, selectorId)}>
+                            <AppLink to={getSavePath(zoneId, labelId, selectorId) || ''}>Edit</AppLink>
                         </Button>
                     )}
                 </div>
