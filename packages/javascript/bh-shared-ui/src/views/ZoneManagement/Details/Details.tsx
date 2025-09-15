@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
 import {
     useSelectorMembersInfiniteQuery,
@@ -46,6 +46,7 @@ import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
+import { useTagFormUtils } from '../Save/TagForm/utils'
 
 export const getSavePath = (
     zoneId: string | undefined,
@@ -79,7 +80,7 @@ export const getEditButtonState = (
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
-    const location = useLocation();
+    const { isLabelLocation } = useTagFormUtils();
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
     const { zoneId, labelId, selectorId, memberId } = useParams();
@@ -136,7 +137,7 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4 h-full'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
-                    {location.pathname.includes('label') ? (
+                    {isLabelLocation ? (
                         <TagList
                             title={'Labels'}
                             listQuery={labelsQuery}

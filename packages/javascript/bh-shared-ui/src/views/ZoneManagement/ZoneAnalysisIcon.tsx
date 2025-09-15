@@ -40,7 +40,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
     wrapperClasses,
     analysisEnabled,
 }) => {
-    const { isLabelLocation } = useZonePathParams();
+    const { hasLabelId } = useZonePathParams();
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
     const ariaLabel = privilegeZoneAnalysisEnabled === false ? 'Upgrade available' : 'Analysis disabled';
     const iconProps = {
@@ -55,7 +55,7 @@ export const ZoneAnalysisIcon: FC<ZoneAnalysisIconProps> = ({
         ),
     };
 
-    if (isLabelLocation) return null;
+    if (hasLabelId) return null;
 
     if (privilegeZoneAnalysisEnabled === false) {
         return tooltip ? (

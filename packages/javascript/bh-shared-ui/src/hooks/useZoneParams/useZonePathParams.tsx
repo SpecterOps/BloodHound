@@ -20,11 +20,11 @@ export const useZonePathParams = () => {
     const { zoneId = '', labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? zoneId : labelId;
 
-    const isLabelLocation = labelId !== undefined;
-    const isZoneLocation = zoneId !== '';
+    const hasLabelId = labelId !== undefined;
+    const hasZoneId = zoneId !== '';
 
-    const tagType: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
-    const tagTypeDisplay: 'Label' | 'Zone' = isLabelLocation ? 'Label' : 'Zone';
+    const tagType: 'label' | 'zone' = hasLabelId ? 'label' : 'zone';
+    const tagTypeDisplay: 'Label' | 'Zone' = hasLabelId ? 'Label' : 'Zone';
 
     return {
         tagId,
@@ -32,8 +32,8 @@ export const useZonePathParams = () => {
         labelId,
         selectorId,
         memberId,
-        isLabelLocation,
-        isZoneLocation,
+        hasLabelId,
+        hasZoneId,
         tagType,
         tagTypeDisplay,
     };
