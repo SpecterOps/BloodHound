@@ -24,55 +24,65 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ozontech/allure-go/pkg/allure"
 	"github.com/ozontech/allure-go/pkg/framework/provider"
-	"github.com/ozontech/allure-go/pkg/framework/runner"
+	"github.com/ozontech/allure-go/pkg/framework/suite"
+	allurego "github.com/specterops/bloodhound/packages/go/allure.go"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/stretchr/testify/require"
 )
 
-func TestFilter(t *testing.T) {
-	r := runner.NewRunner(t, "BHCE: Intergration Tests")
-
-	r.NewTest("Test IsOdd function", func(t provider.T) {
-		t.Title("Test isOdd function")
-		t.Description("check odd nums")
-		t.Severity(allure.CRITICAL)
-		t.Require().Equal([]int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
-	}, "Tag @ Test Level: isOdd")
-
-	r.NewTest("Test isLong function", func(t provider.T) {
-		t.Title("Test isLong function")
-		t.Description("check for long chars")
-		t.Severity(allure.CRITICAL)
-		t.Require().Equal([]string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
-	}, "Tag @ Test Level: isLong")
-
-	r.RunTests()
+type SliceExtPkg struct {
+	allurego.SuiteManager
 }
 
-func TestMap(t *testing.T) {
-	require.Equal(t, []uint{1, 3, 4, 12}, slicesext.Map([]int{-1, -3, 4, -12}, abs))
-	require.Equal(t, []string{"abc", "def", "hij"}, slicesext.Map([]string{"ABC", "DEF", "HIJ"}, strings.ToLower))
-	require.Equal(t, []int{3, 6, 9, 12}, slicesext.Map([]int{1, 2, 3, 4}, triple))
+func (s *SliceExtPkg) TestFilter(t provider.T) {
+	t.Title("Test Filter function")
+	t.Description("Test isOdd and isLong functions")
+	t.Require().Equal([]int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
+	t.Require().Equal([]string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
+
+	s.AfterAll(t)
 }
 
-func TestFlatMap(t *testing.T) {
-	require.Equal(t, []string{"a", "a", "b", "b"}, slicesext.FlatMap([]string{"a", "b"}, duplicate[string]))
-	require.Equal(t, []int{1, 1, 2, 2}, slicesext.FlatMap([]int{1, 2}, duplicate[int]))
+func (s *SliceExtPkg) TestMap(t provider.T) {
+	t.Title("Test Map function")
+	t.Description("Test Map function")
+	t.Require().Equal([]uint{1, 3, 4, 12}, slicesext.Map([]int{-1, -3, 4, -12}, abs))
+	t.Require().Equal([]string{"abc", "def", "hij"}, slicesext.Map([]string{"ABC", "DEF", "HIJ"}, strings.ToLower))
+	t.Require().Equal([]int{3, 6, 9, 12}, slicesext.Map([]int{1, 2, 3, 4}, triple))
+
+	s.AfterAll(t)
 }
 
-func TestUnique(t *testing.T) {
+func (s *SliceExtPkg) TestFlatMap(t provider.T) {
+	t.Title("Test FlatMap function")
+	t.Description("Test FlatMap function")
+	t.Require().Equal([]string{"a", "a", "b", "b"}, slicesext.FlatMap([]string{"a", "b"}, duplicate[string]))
+	t.Require().Equal([]int{1, 1, 2, 2}, slicesext.FlatMap([]int{1, 2}, duplicate[int]))
+
+	s.AfterAll(t)
+}
+
+func (s *SliceExtPkg) TestUnique(t provider.T) {
+	t.Title("Test Unique function")
+	t.Description("Test Unique function")
 	var (
 		in  = []string{"a", "a", "b", "b"}
 		out = slicesext.Unique(in)
 	)
 
-	require.Equal(t, []string{"a", "b"}, out)
-	require.NotSame(t, &in, &out) // ensure we didn't mutate the original slice
-	require.Equal(t, []string{"a", "b"}, slicesext.Unique([]string{"a", "b", "b", "a"}))
-	require.Equal(t, []string{"a"}, slicesext.Unique([]string{"a"}))
-	require.Equal(t, []int{1, 2, 3}, slicesext.Unique([]int{1, 1, 2, 2, 3}))
+	t.Require().Equal([]string{"a", "b"}, out)
+	t.Require().NotSame(&in, &out) // ensure we didn't mutate the original slice
+	t.Require().Equal([]string{"a", "b"}, slicesext.Unique([]string{"a", "b", "b", "a"}))
+	t.Require().Equal([]string{"a"}, slicesext.Unique([]string{"a"}))
+	t.Require().Equal([]int{1, 2, 3}, slicesext.Unique([]int{1, 1, 2, 2, 3}))
+
+	s.AfterAll(t)
+}
+
+func TestSliceSuite(t *testing.T) {
+	t.Parallel()
+	suite.RunSuite(t, new(SliceExtPkg))
 }
 
 func BenchmarkSliceExtMap(b *testing.B) {

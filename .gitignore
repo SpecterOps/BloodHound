@@ -459,3 +459,6 @@ local-harnesses/*
 go.work*
 
 !go.work.template
+
+# integration tests allure results
+**/allure-results/*
