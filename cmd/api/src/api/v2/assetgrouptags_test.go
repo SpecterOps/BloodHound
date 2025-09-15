@@ -534,7 +534,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTag{Type: 1}, nil).Times(1)
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -558,7 +558,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTag{Type: 2}, nil).Times(1)
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeLabel}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -589,7 +589,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						CreateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTag{Type: 1}, nil).Times(1)
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil).Times(1)
 					mockGraphDb.EXPECT().
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).
 						Return(queries.PreparedQuery{}, nil).Times(1)
