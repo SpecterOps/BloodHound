@@ -1754,7 +1754,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are id, first_name, last_name and email.",
+            "description": "Sortable columns are id, first_name, last_name and email_address.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1775,7 +1775,7 @@
             }
           },
           {
-            "name": "email",
+            "name": "email_address",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"

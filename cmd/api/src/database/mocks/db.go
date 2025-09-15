@@ -890,21 +890,6 @@ func (mr *MockDatabaseMockRecorder) GetAggregatedSelectorNodesCertification(ctx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregatedSelectorNodesCertification", reflect.TypeOf((*MockDatabase)(nil).GetAggregatedSelectorNodesCertification), ctx, sqlFilter, skip, limit)
 }
 
-// GetAllActiveUsers mocks base method.
-func (m *MockDatabase) GetAllActiveUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllActiveUsers", ctx, order, filter)
-	ret0, _ := ret[0].(model.Users)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllActiveUsers indicates an expected call of GetAllActiveUsers.
-func (mr *MockDatabaseMockRecorder) GetAllActiveUsers(ctx, order, filter any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllActiveUsers", reflect.TypeOf((*MockDatabase)(nil).GetAllActiveUsers), ctx, order, filter)
-}
-
 // GetAllAssetGroups mocks base method.
 func (m *MockDatabase) GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error) {
 	m.ctrl.T.Helper()

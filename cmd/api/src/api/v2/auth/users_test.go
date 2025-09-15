@@ -161,7 +161,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - DB error",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
-					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "email", model.SQLFilter{}).Return(nil, fmt.Errorf("db error"))
+					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "email_address", model.SQLFilter{}).Return(nil, fmt.Errorf("db error"))
 				},
 			},
 			args: args{
@@ -181,7 +181,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "success",
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
-					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "email", model.SQLFilter{}).Return(model.Users{
+					mock.mockDatabase.EXPECT().GetAllUsers(gomock.Any(), "email_address", model.SQLFilter{}).Return(model.Users{
 						{
 							FirstName: null.String{
 								NullString: sql.NullString{
@@ -240,7 +240,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   fmt.Sprintf(`{"data":{"users":[{"first_name":"Test", "id":"%s", "last_name":"User1", "email":"testuser1@email.com"}, {"first_name":"Test", "id":"%s", "last_name":"User2", "email":"testuser2@email.com"}]}}`, user1Id, user2Id),
+				responseBody:   fmt.Sprintf(`{"data":{"users":[{"first_name":"Test", "id":"%s", "last_name":"User1", "email_address":"testuser1@email.com"}, {"first_name":"Test", "id":"%s", "last_name":"User2", "email_address":"testuser2@email.com"}]}}`, user1Id, user2Id),
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

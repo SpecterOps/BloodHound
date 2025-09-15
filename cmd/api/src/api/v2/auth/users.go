@@ -33,10 +33,10 @@ type UsersMinimalResponse struct {
 }
 
 type UserMinimal struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
+	ID           uuid.UUID `json:"id"`
+	EmailAddress string    `json:"email_address"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
 }
 
 // ListActiveUsersMinimal - Returns a list of Users without any sensitive data. At the time, this is used in the saved queries
@@ -50,7 +50,7 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 
 	if orderBy, err := api.ParseSortParameters(UserMinimal{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if order, err := api.BuildSQLSort(orderBy, model.SortItem{Column: "email"}); err != nil {
+	} else if order, err := api.BuildSQLSort(orderBy, model.SortItem{Column: "email_address"}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
@@ -83,10 +83,10 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 			for _, user := range activeUsers {
 				if !user.IsDisabled {
 					usersMinimal = append(usersMinimal, UserMinimal{
-						ID:        user.ID,
-						Email:     user.EmailAddress.String,
-						FirstName: user.FirstName.String,
-						LastName:  user.LastName.String,
+						ID:           user.ID,
+						EmailAddress: user.EmailAddress.String,
+						FirstName:    user.FirstName.String,
+						LastName:     user.LastName.String,
 					})
 				}
 			}
@@ -103,7 +103,7 @@ func (s UserMinimal) IsSortable(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
-		"email",
+		"email_address",
 		"id":
 		return true
 	default:
@@ -114,10 +114,10 @@ func (s UserMinimal) IsSortable(column string) bool {
 // ValidFilters - returns a map of columns and their valid filters
 func (s UserMinimal) ValidFilters() map[string][]model.FilterOperator {
 	return map[string][]model.FilterOperator{
-		"first_name": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"last_name":  {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"email":      {model.Equals, model.NotEquals, model.ApproximatelyEquals},
-		"id":         {model.Equals, model.NotEquals},
+		"first_name":    {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"last_name":     {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"email_address": {model.Equals, model.NotEquals, model.ApproximatelyEquals},
+		"id":            {model.Equals, model.NotEquals},
 	}
 }
 
@@ -126,7 +126,7 @@ func (s UserMinimal) IsStringColumn(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
-		"email":
+		"email_address":
 		return true
 	default:
 		return false

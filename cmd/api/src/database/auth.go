@@ -345,26 +345,6 @@ func (s *BloodhoundDB) GetAllUsers(ctx context.Context, order string, filter mod
 	return users, CheckError(result)
 }
 
-func (s *BloodhoundDB) GetAllActiveUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
-	var (
-		users  model.Users
-		result *gorm.DB
-		cursor = s.db.WithContext(ctx).Select("id, principal_name, first_name, last_name, is_disabled")
-	)
-
-	if order != "" {
-		cursor = cursor.Order(order)
-	}
-
-	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params...).Where("NOT is_disabled").Find(&users)
-	} else {
-		result = cursor.Where("NOT is_disabled").Find(&users)
-	}
-
-	return users, CheckError(result)
-}
-
 // GetUser returns the user associated with the provided ID
 // SELECT * FROM users WHERE id = ...
 func (s *BloodhoundDB) GetUser(ctx context.Context, id uuid.UUID) (model.User, error) {
