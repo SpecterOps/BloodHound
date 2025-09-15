@@ -37,7 +37,7 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: principal_name
+    - name: email
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'

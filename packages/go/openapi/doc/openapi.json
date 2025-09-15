@@ -1775,7 +1775,7 @@
             }
           },
           {
-            "name": "principal_name",
+            "name": "email",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
