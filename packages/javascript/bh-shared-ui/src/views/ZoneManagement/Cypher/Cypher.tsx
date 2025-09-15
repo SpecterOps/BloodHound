@@ -21,7 +21,7 @@ import { FC, useCallback, useContext, useEffect, useMemo, useRef, useState } fro
 import { useQuery } from 'react-query';
 import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
-import { encodeCypherQuery } from '../../../hooks';
+import { encodeCypherQuery, useZonePathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
 import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
 
@@ -32,12 +32,16 @@ export const Cypher: FC<{
     initialInput?: string;
 }> = ({ preview = true, initialInput = '' }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
+    const [showLabelWarning, setShowLabelWarning] = useState(false);
     const [stalePreview, setStalePreview] = useState(false);
+
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
     const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
+    const { isTierLocation } = useZonePathParams();
+
     const location = useLocation();
-    const receivedQuery = location.state?.query as unknown;
+    const receivedQuery = location.state?.query;
 
     useEffect(() => {
         if (!preview && typeof receivedQuery === 'string' && receivedQuery.length) {
@@ -66,8 +70,11 @@ export const Cypher: FC<{
             if (preview) return;
             setCypherQuery(value);
             setStalePreview(true);
+
+            if (value.includes(':Tag_') && isTierLocation) setShowLabelWarning(true);
+            else setShowLabelWarning(false);
         },
-        [preview, setCypherQuery]
+        [preview, setCypherQuery, isTierLocation]
     );
 
     const exploreUrl = useMemo(
@@ -117,7 +124,7 @@ export const Cypher: FC<{
                 <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                     <CypherEditor
                         className={cn(
-                            'flex flex-col border-solid border border-neutral-light-5 dark:border-neutral-dark-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
+                            'flex flex-col border-solid border border-neutral-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
                             {
                                 'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
                                     preview,
@@ -137,6 +144,12 @@ export const Cypher: FC<{
                         lint
                     />
                 </div>
+                {showLabelWarning && (
+                    <p className='text-error text-sm p-2'>
+                        Tag labels should only be used in cypher within the Explore page. Utilizing tag labels in a
+                        cypher based Selector seed may result in incomplete data.
+                    </p>
+                )}
             </CardContent>
         </Card>
     );

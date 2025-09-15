@@ -18,11 +18,12 @@ import userEvent from '@testing-library/user-event';
 import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { Route, Routes } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import SelectorForm from '.';
 import { zoneHandlers } from '../../../../mocks';
-import { act, longWait, render, screen, waitFor } from '../../../../test-utils';
+import { act, render, screen, waitFor } from '../../../../test-utils';
 import { apiClient, mockCodemirrorLayoutMethods } from '../../../../utils';
+import * as utils from '../utils';
 
 const testSelector = {
     id: 777,
@@ -55,13 +56,6 @@ const testSearchResults = {
 
 const handlers = [
     ...zoneHandlers,
-    rest.get('/api/v2/asset-group-tags/:tagId/selectors/777', async (_, res, ctx) => {
-        return res(
-            ctx.json({
-                data: testSelector,
-            })
-        );
-    }),
     rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
         return res(ctx.json({ data: { members: [] } }));
     }),
@@ -79,21 +73,29 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useParams: vi.fn(),
+        useNavigate: () => mockNavigate,
+    };
+});
+
+const handleErrorSpy = vi.spyOn(utils, 'handleError');
+
 mockCodemirrorLayoutMethods();
 
 describe('Selector Form', () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
-    const detailsPath = '/zone-management/details/tier/1/selector/777';
-    const createNewPath = '/zone-management/save/tier/1/selector';
-    const editExistingPath = '/zone-management/save/tier/1/selector/777';
 
     it('renders the form for creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
 
-        await act(async () => {
-            render(<SelectorForm />, { route: createNewPath });
-        });
+        render(<SelectorForm />);
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
@@ -120,155 +122,181 @@ describe('Selector Form', () => {
     });
 
     it('renders the form for editing an existing selector', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { selector: testSelector },
+                    })
+                );
+            })
+        );
         // This url has the selector id of 777 in the path
         // and so this selector's data is filled into the form for the user to edit
-        await act(async () => {
-            render(<SelectorForm />, { route: editExistingPath });
-        });
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+
+        render(<SelectorForm />);
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        longWait(async () => {
-            const selectorStatusSwitch = await screen.findByLabelText('Selector Status');
-            expect(selectorStatusSwitch).toBeInTheDocument();
-            expect(selectorStatusSwitch).toHaveValue('on');
-            expect(screen.getByText('Enabled')).toBeInTheDocument();
-        });
+        await waitFor(
+            async () => {
+                const selectorStatusSwitch = await screen.findByLabelText('Selector Status');
+                expect(selectorStatusSwitch).toBeInTheDocument();
+                expect(selectorStatusSwitch).toHaveValue('');
+                expect(screen.getByText('Disabled')).toBeInTheDocument();
+            },
+            { timeout: 5000 }
+        );
 
         const nameInput = screen.getByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
-        longWait(() => {
-            expect(nameInput).toHaveValue('foo');
-        });
+        await waitFor(
+            () => {
+                expect(nameInput).toHaveValue('foo');
+            },
+            { timeout: 5000 }
+        );
 
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
-        longWait(() => {
+        await waitFor(() => {
             expect(descriptionInput).toHaveValue('bar');
         });
 
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Cypher Search renders because that is the seed type of the first seed of this selector
-        longWait(() => {
+        await waitFor(() => {
             expect(screen.getByText('Cypher Search')).toBeInTheDocument();
         });
 
-        longWait(() => {
+        await waitFor(() => {
             // The delete button should render because this selector exists and can be deleted
             expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-            // The save button should not render when editing an existing selector
-            expect(screen.queryByRole('button', { name: /Save/ })).not.toBeInTheDocument();
-            // The save edits button should render because this selector exists and can be deleted
             expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
         });
 
         expect(screen.getByText('Sample Results')).toBeInTheDocument();
     });
 
-    it('changes the text from "Enabled" to "Disabled" when the Selector Status switch is toggled', async () => {
-        await act(async () => {
-            render(<SelectorForm />, { route: editExistingPath });
-        });
+    it('changes the text from "Disabled" to "Enabled" when the Selector Status switch is toggled', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { selector: testSelector },
+                    })
+                );
+            })
+        );
+
+        render(<SelectorForm />);
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        longWait(async () => {
+        await waitFor(async () => {
             const selectorStatusSwitch = screen.getByLabelText('Selector Status');
             expect(selectorStatusSwitch).toBeInTheDocument();
-            expect(selectorStatusSwitch).toHaveValue('on');
-            expect(screen.getByText('Enabled')).toBeInTheDocument();
-            await user.click(selectorStatusSwitch);
+            expect(selectorStatusSwitch).toHaveValue('');
             expect(screen.getByText('Disabled')).toBeInTheDocument();
+            await user.click(selectorStatusSwitch);
+            expect(screen.getByText('Enabled')).toBeInTheDocument();
         });
     });
 
     it('shows an error message when unable to delete a selector', async () => {
         console.error = vi.fn();
-
-        render(
-            <Routes>
-                <Route path={'/'} element={<SelectorForm />} />
-                <Route path={'/zone-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />
-            </Routes>,
-            { route: editExistingPath }
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { selector: testSelector },
+                    })
+                );
+            })
         );
+        render(<SelectorForm />);
 
-        longWait(async () => {
+        await waitFor(async () => {
             expect(await screen.findByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
-            await act(async () => {
-                user.click(screen.getByRole('button', { name: /Delete Selector/ }));
-            });
         });
 
-        longWait(async () => {
-            expect(screen.getByText('Delete foo?')).toBeInTheDocument();
+        await act(async () => {
+            user.click(screen.getByRole('button', { name: /Delete Selector/ }));
+        });
 
+        await waitFor(async () => {
+            expect(screen.getByText('Delete foo?')).toBeInTheDocument();
+        });
+
+        await act(async () => {
             await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this selector');
             await user.click(screen.getByRole('button', { name: /Confirm/ }));
+        });
 
-            expect(await screen.findByText('get rekt')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(handleErrorSpy).toBeCalled();
         });
     });
 
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
-        render(<SelectorForm />, { route: editExistingPath });
+        render(<SelectorForm />);
 
-        await user.click(screen.getByRole('button', { name: /Cancel/ }));
+        await user.click(await screen.findByRole('button', { name: /Cancel/ }));
 
-        longWait(() => {
-            expect(window.location.pathname).toBe(detailsPath);
+        await waitFor(() => {
+            expect(mockNavigate).toBeCalledWith(-1);
         });
     });
 
     test('a name value is required to submit the form', async () => {
-        render(<SelectorForm />, { route: createNewPath });
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '' });
+        render(<SelectorForm />);
 
-        await user.click(screen.getByRole('button', { name: /Save/ }));
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        });
 
-        longWait(() => {
-            expect(screen.getByText('Please provide a name for the selector')).toBeInTheDocument();
+        await act(async () => {
+            await user.click(screen.getByRole('button', { name: /Save/ }));
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('Please provide a name for the Selector')).toBeInTheDocument();
         });
     });
 
     test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
-        await act(async () => {
-            render(
-                <Routes>
-                    <Route path={'/'} element={<SelectorForm />} />
-                    <Route
-                        path={'/zone-management/save/tier/:tierId/selector/:selectorId'}
-                        element={<SelectorForm />}
-                    />
-                </Routes>,
-                { route: editExistingPath }
-            );
-        });
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+
+        render(<SelectorForm />);
 
         const nameInput = await screen.findByLabelText('Name');
 
         await user.click(nameInput);
         await user.paste('foo');
 
-        longWait(async () => {
-            expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-            await user.click(screen.getByRole('button', { name: /Save/ }));
+        await waitFor(async () => {
+            expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
+            await user.click(screen.getByRole('button', { name: /Save Edits/ }));
         });
 
-        expect(screen.queryByText('Please provide a name for the selector')).not.toBeInTheDocument();
+        expect(screen.queryByText('Please provide a name for the Selector')).not.toBeInTheDocument();
 
-        longWait(() => {
-            expect(window.location.pathname).toBe(detailsPath);
+        await waitFor(() => {
+            expect(mockNavigate).toBeCalled();
         });
     });
 
-    it.skip('handles creating a new selector', async () => {
+    it('handles creating a new selector', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: undefined });
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-        await act(async () => {
-            render(<SelectorForm />, { route: createNewPath });
-        });
+        render(<SelectorForm />);
 
         const nameInput = await screen.findByLabelText('Name');
 
@@ -292,8 +320,70 @@ describe('Selector Form', () => {
 
         await user.click(await screen.findByRole('button', { name: /Save/ }));
 
-        waitFor(() => {
+        await waitFor(() => {
             expect(createSelectorSpy).toBeCalled();
         });
+    });
+
+    it('shows a warning for using labels associated with tags in zone forms', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        render(<SelectorForm />);
+
+        const seedTypeSelect = await screen.findByLabelText('Selector Type');
+
+        await user.click(seedTypeSelect);
+
+        const cypherOption = await screen.findByRole('option', { name: /Cypher/ });
+
+        await act(async () => {
+            await user.click(cypherOption);
+        });
+
+        const textBoxes = screen.getAllByRole('textbox');
+        const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
+
+        await user.click(cypherTextBox!);
+
+        await act(async () => {
+            await user.paste('match(n:Tag_foo) return n');
+        });
+
+        await waitFor(() => {
+            expect(
+                screen.getByText(
+                    'Tag labels should only be used in cypher within the Explore page. Utilizing tag labels in a cypher based Selector seed may result in incomplete data.'
+                )
+            ).toBeInTheDocument();
+        });
+    });
+
+    it('does not show a warning for using labels associated with tags in label forms', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '1' });
+        render(<SelectorForm />);
+
+        const seedTypeSelect = await screen.findByLabelText('Selector Type');
+
+        await user.click(seedTypeSelect);
+
+        const cypherOption = await screen.findByRole('option', { name: /Cypher/ });
+
+        await act(async () => {
+            await user.click(cypherOption);
+        });
+
+        const textBoxes = screen.getAllByRole('textbox');
+        const cypherTextBox = textBoxes.find((box) => box.className === 'flex-1');
+
+        await user.click(cypherTextBox!);
+
+        await act(async () => {
+            await user.paste('match(n:Tag_foo) return n');
+        });
+
+        expect(
+            screen.queryByText(
+                'Tag labels should only be used in cypher within the Explore page. Utilizing tag labels in a cypher based Selector seed may result in incomplete data.'
+            )
+        ).not.toBeInTheDocument();
     });
 });

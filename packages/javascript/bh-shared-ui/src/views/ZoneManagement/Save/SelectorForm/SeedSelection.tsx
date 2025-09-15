@@ -47,7 +47,7 @@ const getSelectorExpansionMethod = (
     tagKind: 'label' | 'tier',
     ownedId: string | undefined
 ): SeedExpansionMethod => {
-    // Owned is a specific label that does not expansion
+    // Owned is a specific tag type that does not undergo expansion
     if (tagId === ownedId) return SeedExpansionMethodNone;
 
     return tagKind === 'tier' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
