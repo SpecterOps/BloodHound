@@ -142,7 +142,12 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 		if name, typeMatches := rawName.(string); typeMatches {
 			properties[common.Name.String()] = strings.ToUpper(name)
 		} else {
-			slog.Error(fmt.Sprintf("Bad type found for node name property during ingest. Expected string, got %T", rawName))
+			slog.Warn(
+				"Bad type found for node name property during ingest",
+				slog.Group(
+					"type_mismatch",
+					slog.String("expected", "string"),
+					slog.String("got", fmt.Sprintf("%T", rawName))))
 		}
 	}
 
@@ -150,7 +155,12 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 		if os, typeMatches := rawOS.(string); typeMatches {
 			properties[common.OperatingSystem.String()] = strings.ToUpper(os)
 		} else {
-			slog.Error(fmt.Sprintf("Bad type found for node operating system property during ingest. Expected string, got %T", rawOS))
+			slog.Warn(
+				"Bad type found for node operating system property during ingest",
+				slog.Group(
+					"type_mismatch",
+					slog.String("expected", "string"),
+					slog.String("got", fmt.Sprintf("%T", rawOS))))
 		}
 	}
 
@@ -158,7 +168,12 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 		if dn, typeMatches := rawDN.(string); typeMatches {
 			properties[ad.DistinguishedName.String()] = strings.ToUpper(dn)
 		} else {
-			slog.Error(fmt.Sprintf("Bad type found for node distinguished name property during ingest. Expected string, got %T", rawDN))
+			slog.Warn(
+				"Bad type found for node distinguished name property during ingest",
+				slog.Group(
+					"type_mismatch",
+					slog.String("expected", "string"),
+					slog.String("got", fmt.Sprintf("%T", rawDN))))
 		}
 	}
 
