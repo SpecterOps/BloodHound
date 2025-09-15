@@ -144,7 +144,7 @@ const Details: FC = () => {
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
+                                navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
                             }}
                         />
                     ) : (
@@ -153,7 +153,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
+                                navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
                             }}
                         />
                     )}
@@ -163,7 +163,7 @@ const Details: FC = () => {
                         onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(
-                                `${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${id}/${detailsPath}`
+                                `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${id}/${detailsPath}`
                             );
                         }}
                         selected={selectorId}
@@ -175,7 +175,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${selectorId}/${memberPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${selectorId}/${memberPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -187,7 +187,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${memberPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${memberPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}

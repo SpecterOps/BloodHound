@@ -123,7 +123,7 @@ describe('Selector Form', () => {
 
     it('renders the form for editing an existing selector', async () => {
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/save', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },

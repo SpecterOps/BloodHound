@@ -20,6 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { longWait, render, screen, within } from '../../../test-utils';
 import SummaryCard from './SummaryCard';
+import { detailsPath, privilegeZonesPath, zonePath } from '../../../routes';
 
 // Mock icons
 vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({
@@ -86,7 +87,7 @@ describe('SummaryCard', () => {
         await user.click(await screen.findByText('View Details'));
 
         await longWait(() => {
-            expect(mockNavigate).toHaveBeenCalledWith('/privilege-zones/zone/99/details');
+            expect(mockNavigate).toHaveBeenCalledWith(`/${privilegeZonesPath}/${zonePath}/99/${detailsPath}`);
         });
     });
 

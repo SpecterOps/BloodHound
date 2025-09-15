@@ -25,7 +25,7 @@ import { encodeCypherQuery, useZonePathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
 import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
 
-const emptyFunction = () => {};
+const emptyFunction = () => { };
 
 export const Cypher: FC<{
     preview?: boolean;
@@ -38,7 +38,7 @@ export const Cypher: FC<{
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
     const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
-    const { isTierLocation } = useZonePathParams();
+    const { hasZoneId } = useZonePathParams();
 
     const location = useLocation();
     const receivedQuery = location.state?.query;
@@ -71,10 +71,10 @@ export const Cypher: FC<{
             setCypherQuery(value);
             setStalePreview(true);
 
-            if (value.includes(':Tag_') && isTierLocation) setShowLabelWarning(true);
+            if (value.includes(':Tag_') && hasZoneId) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
-        [preview, setCypherQuery, isTierLocation]
+        [preview, setCypherQuery, hasZoneId]
     );
 
     const exploreUrl = useMemo(
