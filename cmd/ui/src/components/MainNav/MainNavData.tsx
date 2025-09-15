@@ -37,7 +37,7 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogoFull height='auto' width='155' className='rounded' />,
+            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded' />,
         },
         specterOps: {
             image: {
