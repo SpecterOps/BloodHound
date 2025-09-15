@@ -103,7 +103,7 @@ func (s UserMinimal) IsSortable(column string) bool {
 	switch column {
 	case "first_name",
 		"last_name",
-		"principal_name",
+		"email",
 		"id":
 		return true
 	default:
