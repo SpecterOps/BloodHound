@@ -31,8 +31,11 @@ type SavedQueryPermissionsProps = {
     setIsPublic: (isPublic: boolean) => void;
 };
 type ListUser = {
-    name: string;
     id: string;
+    user: {
+        name: string;
+        email: string;
+    };
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
@@ -56,8 +59,11 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             ?.filter((user: User) => user.id !== selfId)
             .map((user: User) => {
                 return {
-                    name: user.principal_name,
                     id: user.id,
+                    user: {
+                        name: `${user.first_name} ${user.last_name}`,
+                        email: user.email_address,
+                    },
                 };
             });
     }
@@ -119,14 +125,18 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 ),
             },
             {
-                accessorKey: 'name',
+                accessorKey: 'user',
                 header: () => {
                     return <span className='dark:text-neutral-light-1'>Name</span>;
                 },
                 cell: ({ row }) => {
+                    const name = row.original.user.name;
+                    const email = row.original.user.email;
+
                     return (
                         <div className='dark:text-neutral-light-1 text-nowrap text-black w-full'>
-                            {row.getValue('name')}
+                            <p className='underline mb-0.5'>{name}</p>
+                            <p className='text-neutral-600 dark:!text-neutral-300'>{email}</p>
                         </div>
                     );
                 },
@@ -141,7 +151,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const filteredUsers = useMemo(() => {
         if (!searchTerm) return usersList;
-        const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        const filtered = usersList?.filter((user) => user.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
         return filtered;
     }, [searchTerm, usersList]);
 
@@ -172,9 +182,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                                 TableHeadProps={{
                                     className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
                                 }}
-                                TableBodyProps={{ className: 'text-s font-roboto underline' }}
+                                TableBodyProps={{ className: 'text-s font-roboto' }}
                                 TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
-                                columns={getColumns()}
+                                columns={getColumns() as ListUser[]}
                                 data={filteredUsers}
                             />
                         ) : (
