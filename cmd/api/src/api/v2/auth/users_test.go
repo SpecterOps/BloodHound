@@ -71,7 +71,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - empty sort column",
 			args: args{
 				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 					require.NoError(t, err)
 					query := req.URL.Query()
 					query.Add("sort_by", "")
@@ -89,7 +89,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - invalid sort column",
 			args: args{
 				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 					require.NoError(t, err)
 					query := req.URL.Query()
 					query.Add("sort_by", "awfawf")
@@ -107,7 +107,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - parse query parameter filter error",
 			args: args{
 				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 					require.NoError(t, err)
 					query := req.URL.Query()
 					query.Add("id", "afwa:3")
@@ -125,7 +125,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - filter not supported for column",
 			args: args{
 				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 					require.NoError(t, err)
 					query := req.URL.Query()
 					query.Add("awfaw", "eq:3")
@@ -143,7 +143,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			name: "fail - filter predicate not supported for specified column",
 			args: args{
 				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 					require.NoError(t, err)
 					query := req.URL.Query()
 					query.Add("id", "lte:3")
@@ -166,7 +166,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 			},
 			args: args{
 				func() *http.Request {
-					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users/minimal", nil)
+					req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 					require.NoError(t, err)
 					return req
 				},
