@@ -40,8 +40,6 @@ func (s *SliceExtPkg) TestFilter(t provider.T) {
 	t.Description("Test isOdd and isLong functions")
 	t.Require().Equal([]int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
 	t.Require().Equal([]string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
-
-	s.AfterAll(t)
 }
 
 func (s *SliceExtPkg) TestMap(t provider.T) {
@@ -50,8 +48,6 @@ func (s *SliceExtPkg) TestMap(t provider.T) {
 	t.Require().Equal([]uint{1, 3, 4, 12}, slicesext.Map([]int{-1, -3, 4, -12}, abs))
 	t.Require().Equal([]string{"abc", "def", "hij"}, slicesext.Map([]string{"ABC", "DEF", "HIJ"}, strings.ToLower))
 	t.Require().Equal([]int{3, 6, 9, 12}, slicesext.Map([]int{1, 2, 3, 4}, triple))
-
-	s.AfterAll(t)
 }
 
 func (s *SliceExtPkg) TestFlatMap(t provider.T) {
@@ -59,8 +55,6 @@ func (s *SliceExtPkg) TestFlatMap(t provider.T) {
 	t.Description("Test FlatMap function")
 	t.Require().Equal([]string{"a", "a", "b", "b"}, slicesext.FlatMap([]string{"a", "b"}, duplicate[string]))
 	t.Require().Equal([]int{1, 1, 2, 2}, slicesext.FlatMap([]int{1, 2}, duplicate[int]))
-
-	s.AfterAll(t)
 }
 
 func (s *SliceExtPkg) TestUnique(t provider.T) {
@@ -76,8 +70,6 @@ func (s *SliceExtPkg) TestUnique(t provider.T) {
 	t.Require().Equal([]string{"a", "b"}, slicesext.Unique([]string{"a", "b", "b", "a"}))
 	t.Require().Equal([]string{"a"}, slicesext.Unique([]string{"a"}))
 	t.Require().Equal([]int{1, 2, 3}, slicesext.Unique([]int{1, 1, 2, 2, 3}))
-
-	s.AfterAll(t)
 }
 
 func TestSliceSuite(t *testing.T) {
