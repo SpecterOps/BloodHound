@@ -20,6 +20,7 @@ import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
 import Save from '.';
 import { render, screen, waitFor } from '../../../test-utils';
+import { detailsPath, privilegeZonesPath, zonePath } from '../../../routes';
 
 const handlers = [
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
@@ -81,7 +82,7 @@ describe('Create Update pages', () => {
         waitFor(async () => {
             expect(screen.getByTestId('zone-management_save_details-breadcrumb')).toHaveAttribute(
                 'href',
-                '/privilege-zones/zone/42/details`'
+                `${privilegeZonesPath}/${zonePath}/42/${detailsPath}`
             );
         });
     });

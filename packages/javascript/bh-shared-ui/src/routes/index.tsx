@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export const zonePath = 'zone';
-export const labelPath = 'label';
+export const zonePath = 'zones';
+export const labelPath = 'labels';
 export const DEFAULT_PRIVILEGE_ZONES_ROUTE = `/${zonePath}`;
 
 export const privilegeZonesPath = 'privilege-zones';
@@ -30,11 +30,11 @@ export const ROUTE_PRIVILEGE_ZONES_DETAILS = '/details';
 export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/${zonePath}/:zoneId/${detailsPath}`;
 export const ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS = `/${labelPath}/:labelId/${detailsPath}`;
 
-export const selectorPath = 'selector';
+export const selectorPath = 'selectors';
 export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${detailsPath}`;
 export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${detailsPath}`;
 
-export const memberPath = 'member';
+export const memberPath = 'members';
 export const ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS = `/${zonePath}/:zoneId/${memberPath}/:memberId/${detailsPath}`;
 export const ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS = `/${labelPath}/:labelId/${memberPath}/:memberId/${detailsPath}`;
 export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${memberPath}/:memberId/${detailsPath}`;
