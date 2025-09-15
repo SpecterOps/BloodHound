@@ -186,6 +186,7 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 			for _, file := range fileData {
 				job.TotalFiles += 1
 				completedTask := model.CompletedTask{
+					IngestJobId:    job.ID,
 					FileName:       file.Name,
 					ParentFileName: file.ParentFile,
 					Errors:         []string{},
