@@ -20,6 +20,7 @@ import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import {
     useSelectorMembersInfiniteQuery,
     useSelectorsInfiniteQuery,
@@ -53,7 +54,7 @@ export const getSavePath = (
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
-    const tagType = zoneId ? 'zone' : 'label';
+    const tagType = labelId ? 'zone' : 'label';
     let tagPathId = '';
 
     if (zoneId || labelId) {
@@ -83,8 +84,9 @@ const Details: FC = () => {
     const { isLabelLocation } = useTagFormUtils();
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
-    const { zoneId, labelId, selectorId, memberId } = useParams();
-    const tagType = zoneId ? 'zone' : 'label';
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
+    const tagType = labelId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
         {
             path:
