@@ -101,7 +101,7 @@ func ParseGraphSortParameters(s Sortable, params url.Values) (query.SortItems, e
 }
 
 // BuildSQLSort takes our sort models and converts them into proper SQL form before sending them to the database.
-// The identifierColumn should be used if query results need deterministic ordering.
+// The identifierColumn should be used if query results need consistent ordering.
 func BuildSQLSort(sort model.Sort, identifierColumn model.SortItem) ([]string, error) {
 	var (
 		sqlSort                  = make([]string, 0, len(sort))
