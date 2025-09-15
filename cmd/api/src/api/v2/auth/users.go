@@ -50,7 +50,7 @@ func (s ManagementResource) ListActiveUsersMinimal(response http.ResponseWriter,
 
 	if orderBy, err := api.ParseSortParameters(UserMinimal{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if order, err := api.BuildSQLSort(orderBy, model.SortItem{Column: "email_address"}); err != nil {
+	} else if order, err := api.BuildSQLSort(orderBy, model.SortItem{Column: "email_address", Direction: model.AscendingSortDirection}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
