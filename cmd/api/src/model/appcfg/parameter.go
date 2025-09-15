@@ -48,6 +48,7 @@ const (
 	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
 	TierManagementParameterKey ParameterKey = "analysis.tiering"
+	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
 )
 
 const (
@@ -427,4 +428,22 @@ func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Dura
 	}
 
 	return time.Hour * time.Duration(result.Hours)
+}
+
+// StaleClientUpdatedLogic
+
+type StaleClientUpdatedLogic struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) bool {
+	var result StaleClientUpdatedLogic
+
+	if cfg, err := service.GetConfigurationParameter(ctx, StaleClientUpdatedLogicKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch StaleClientLogic configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid StaleClientLogic configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
 }

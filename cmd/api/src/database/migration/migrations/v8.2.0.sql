@@ -25,3 +25,15 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+-- Add Stale Client Updated Logic rework parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES (
+         'pipeline.updated_stale_client',
+        'Stale Client Updated Logic',
+        'Is used to updated the logic used for if a job has become stale. With this enabled, rather than checking the last ingest time, the last checkin time of the client is checked to timeout the job.',
+        '"{""enabled"": true}"',
+           current_timestamp,
+           current_timestamp,
+       )
+  ON CONFLICT DO NOTHING;
