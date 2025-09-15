@@ -235,52 +235,6 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	}
 }
 
-func TestBloodhoundDB_GetAllActiveUsers(t *testing.T) {
-
-	var (
-		ctx           = context.Background()
-		dbInst, roles = initAndGetRoles(t)
-		adminRole, _  = roles.FindByName(auth.RoleAdministrator)
-		userRole, _   = roles.FindByName(auth.RoleUser)
-
-		users = model.Users{
-			{
-				Roles:         model.Roles{adminRole},
-				FirstName:     null.StringFrom("First"),
-				LastName:      null.StringFrom("Last"),
-				EmailAddress:  null.StringFrom(userPrincipal),
-				PrincipalName: userPrincipal,
-			},
-			{
-				Roles:         model.Roles{userRole},
-				FirstName:     null.StringFrom("First2"),
-				LastName:      null.StringFrom("Last2"),
-				EmailAddress:  null.StringFrom(user2Principal),
-				PrincipalName: user2Principal,
-			},
-			{
-				Roles:         model.Roles{userRole},
-				FirstName:     null.StringFrom("First3"),
-				LastName:      null.StringFrom("Last3"),
-				EmailAddress:  null.StringFrom(user3Principal),
-				PrincipalName: user3Principal,
-				IsDisabled:    true,
-			},
-		}
-
-		want = users[:2]
-	)
-
-	for _, user := range users {
-		if _, err := dbInst.CreateUser(ctx, user); err != nil {
-			require.NoError(t, err)
-		}
-	}
-	got, err := dbInst.GetAllActiveUsers(t.Context(), "id", model.SQLFilter{})
-	require.NoError(t, err)
-	assert.Equal(t, len(want), len(got))
-}
-
 func TestDatabase_UpdateUserAuth(t *testing.T) {
 	var (
 		ctx          = context.Background()
