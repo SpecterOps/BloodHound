@@ -19,8 +19,8 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
 import Save from '.';
-import { render, screen, waitFor } from '../../../test-utils';
 import { detailsPath, privilegeZonesPath, zonePath } from '../../../routes';
+import { render, screen, waitFor } from '../../../test-utils';
 
 const handlers = [
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {

@@ -17,19 +17,19 @@
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
 import {
-    zonePath,
-    labelPath,
     NodeResponse,
     Permission,
-    detailsPath,
-    privilegeZonesPath,
     apiClient,
+    detailsPath,
     isNode,
+    labelPath,
+    privilegeZonesPath,
     useExploreParams,
     useExploreSelectedItem,
     useNotifications,
     usePermissions,
     useTagsQuery,
+    zonePath,
 } from 'bh-shared-ui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
@@ -40,7 +40,7 @@ import CopyMenuItem from './CopyMenuItem';
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => { } }) => {
+}> = ({ contextMenu, onClose = () => {} }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();

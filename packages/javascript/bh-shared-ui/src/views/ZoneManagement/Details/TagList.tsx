@@ -22,10 +22,10 @@ import { SortableHeader } from '../../../components';
 import { useHighestPrivilegeTagId, useZonePathParams } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
+import { useTagFormUtils } from '../Save/TagForm/utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
-import { useTagFormUtils } from '../Save/TagForm/utils';
 
 type TagListProps = {
     title: 'Zones' | 'Labels';

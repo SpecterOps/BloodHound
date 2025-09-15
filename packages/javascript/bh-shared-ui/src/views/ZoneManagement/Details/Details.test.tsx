@@ -20,14 +20,14 @@ import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import {
     ROUTE_PRIVILEGE_ZONES_ROOT,
-    zonePath,
     ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
     ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
     ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
     detailsPath,
+    memberPath,
     privilegeZonesPath,
     selectorPath,
-    memberPath,
+    zonePath,
 } from '../../../routes';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';

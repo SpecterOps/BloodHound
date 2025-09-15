@@ -67,9 +67,7 @@ const Summary: FC = () => {
                         listQuery={tagsQuery}
                         selected={tagId as string}
                         onSelect={(id) =>
-                            navigate(
-                                `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${summaryPath}`
-                            )
+                            navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${summaryPath}`)
                         }
                     />
                 </div>

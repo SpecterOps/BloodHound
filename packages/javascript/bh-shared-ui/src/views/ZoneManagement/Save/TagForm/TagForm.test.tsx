@@ -20,8 +20,8 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
 import TagForm from '.';
-import { act, fireEvent, longWait, render, screen, waitFor, within } from '../../../../test-utils';
 import { labelPath, privilegeZonesPath, savePath, zonePath } from '../../../../routes';
+import { act, fireEvent, longWait, render, screen, waitFor, within } from '../../../../test-utils';
 
 const testTierZero = {
     id: 1,

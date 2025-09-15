@@ -32,14 +32,15 @@ import {
     DEFAULT_PRIVILEGE_ZONES_ROUTE,
     ROUTE_PRIVILEGE_ZONES_DETAILS,
     ROUTE_PRIVILEGE_ZONES_ROOT,
+    detailsPath,
+    memberPath,
     privilegeZonesPath,
     savePath,
-    memberPath,
-    detailsPath,
-    selectorPath
+    selectorPath,
 } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
+import { useTagFormUtils } from '../Save/TagForm/utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
 import { MembersList } from './MembersList';
@@ -47,7 +48,6 @@ import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
-import { useTagFormUtils } from '../Save/TagForm/utils'
 
 export const getSavePath = (
     zoneId: string | undefined,
@@ -89,11 +89,7 @@ const Details: FC = () => {
     const tagType = labelId ? 'zone' : 'label';
     const environments = useEnvironmentIdList([
         {
-            path:
-                ROUTE_PRIVILEGE_ZONES_ROOT +
-                DEFAULT_PRIVILEGE_ZONES_ROUTE +
-                tagType +
-                ROUTE_PRIVILEGE_ZONES_DETAILS,
+            path: ROUTE_PRIVILEGE_ZONES_ROOT + DEFAULT_PRIVILEGE_ZONES_ROUTE + tagType + ROUTE_PRIVILEGE_ZONES_DETAILS,
             caseSensitive: false,
             end: false,
         },
@@ -131,7 +127,10 @@ const Details: FC = () => {
                 </div>
                 <div className='w-1/3 ml-8'>
                     {showEditButton && (
-                        <Button asChild variant={'secondary'} disabled={showEditButton || !getSavePath(zoneId, labelId, selectorId)}>
+                        <Button
+                            asChild
+                            variant={'secondary'}
+                            disabled={showEditButton || !getSavePath(zoneId, labelId, selectorId)}>
                             <AppLink to={getSavePath(zoneId, labelId, selectorId) || ''}>Edit</AppLink>
                         </Button>
                     )}

@@ -19,8 +19,8 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import ZoneManagement from '.';
+import { detailsPath, labelPath, privilegeZonesPath, zonePath } from '../../routes';
 import { render, screen, waitFor } from '../../test-utils';
-import { detailsPath, zonePath, labelPath, privilegeZonesPath } from '../../routes';
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -86,7 +86,10 @@ describe('Zone Management', async () => {
     it('allows switching between the Zones and Labels tabs', async () => {
         render(
             <Routes>
-                <Route path={`/${privilegeZonesPath}/${zonePath}/:zoneId/${detailsPath}/*`} element={<ZoneManagement />} />
+                <Route
+                    path={`/${privilegeZonesPath}/${zonePath}/:zoneId/${detailsPath}/*`}
+                    element={<ZoneManagement />}
+                />
                 <Route path='/' element={<ZoneManagement />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonePath}/1/${detailsPath}` }

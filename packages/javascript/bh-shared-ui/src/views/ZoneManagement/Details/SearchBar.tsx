@@ -65,9 +65,13 @@ const SearchBar: React.FC = () => {
         if (isTag(item)) {
             navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
         } else if (isSelector(item)) {
-            navigate(`/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorPath}/${item.id}/${detailsPath}`);
+            navigate(
+                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorPath}/${item.id}/${detailsPath}`
+            );
         } else {
-            navigate(`/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${memberPath}/${item.id}/${detailsPath}`);
+            navigate(
+                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${memberPath}/${item.id}/${detailsPath}`
+            );
         }
     };
 
