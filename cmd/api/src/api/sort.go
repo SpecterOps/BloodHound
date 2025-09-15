@@ -101,13 +101,16 @@ func ParseGraphSortParameters(s Sortable, params url.Values) (query.SortItems, e
 }
 
 // BuildSQLSort takes our sort models and converts them into proper SQL form before sending them to the database.
-// This would be pushed down another layer in Phase II.
 // The identifierColumn should be used if query results need deterministic ordering.
-// If the identifier column is already present in the order string, adding a second, regardless of whether it matches
-// ASC or DESC, will act as a no op
 func BuildSQLSort(sort model.Sort, identifierColumn model.SortItem) ([]string, error) {
-	var sqlSort = make([]string, 0, len(sort))
+	var (
+		sqlSort                  = make([]string, 0, len(sort))
+		containsIdentifierColumn = false
+	)
 	for index, sortItem := range sort {
+		if sortItem.Column == identifierColumn.Column {
+			containsIdentifierColumn = true
+		}
 		if sortItem.Column != "" {
 			sqlSort = append(sqlSort, buildSortString(sortItem))
 		} else {
@@ -115,7 +118,7 @@ func BuildSQLSort(sort model.Sort, identifierColumn model.SortItem) ([]string, e
 		}
 	}
 
-	if identifierColumn.Column != "" {
+	if !containsIdentifierColumn && identifierColumn.Column != "" {
 		sqlSort = append(sqlSort, buildSortString(identifierColumn))
 	}
 
