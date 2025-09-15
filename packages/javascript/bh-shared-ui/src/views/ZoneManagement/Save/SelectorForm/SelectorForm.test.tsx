@@ -351,7 +351,7 @@ describe('Selector Form', () => {
         await waitFor(() => {
             expect(
                 screen.getByText(
-                    'Tag labels should only be used in cypher within the Explore page. Utilizing tag labels in a cypher based Selector seed may result in incomplete data.'
+                    'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Selector seed may result in incomplete data.'
                 )
             ).toBeInTheDocument();
         });
@@ -382,7 +382,7 @@ describe('Selector Form', () => {
 
         expect(
             screen.queryByText(
-                'Tag labels should only be used in cypher within the Explore page. Utilizing tag labels in a cypher based Selector seed may result in incomplete data.'
+                'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Selector seed may result in incomplete data.'
             )
         ).not.toBeInTheDocument();
     });

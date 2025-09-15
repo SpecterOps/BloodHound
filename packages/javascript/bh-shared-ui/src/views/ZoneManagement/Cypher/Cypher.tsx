@@ -146,8 +146,8 @@ export const Cypher: FC<{
                 </div>
                 {showLabelWarning && (
                     <p className='text-error text-sm p-2'>
-                        Tag labels should only be used in cypher within the Explore page. Utilizing tag labels in a
-                        cypher based Selector seed may result in incomplete data.
+                        Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege
+                        Zone labels in a cypher based Selector seed may result in incomplete data.
                     </p>
                 )}
             </CardContent>
