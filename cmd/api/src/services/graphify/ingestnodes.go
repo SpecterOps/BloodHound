@@ -144,6 +144,7 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 		} else {
 			slog.Warn(
 				"Bad type found for node name property during ingest",
+				slog.String("objectid", objectID),
 				slog.Group(
 					"type_mismatch",
 					slog.String("expected", "string"),
@@ -157,6 +158,7 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 		} else {
 			slog.Warn(
 				"Bad type found for node operating system property during ingest",
+				slog.String("objectid", objectID),
 				slog.Group(
 					"type_mismatch",
 					slog.String("expected", "string"),
@@ -170,6 +172,7 @@ func normalizeEinNodeProperties(properties map[string]any, objectID string, inge
 		} else {
 			slog.Warn(
 				"Bad type found for node distinguished name property during ingest",
+				slog.String("objectid", objectID),
 				slog.Group(
 					"type_mismatch",
 					slog.String("expected", "string"),
