@@ -32,10 +32,8 @@ type SavedQueryPermissionsProps = {
 };
 type ListUser = {
     id: string;
-    user: {
-        name: string;
-        email: string;
-    };
+    name: string;
+    email: string;
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
@@ -60,10 +58,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             .map((user: User) => {
                 return {
                     id: user.id,
-                    user: {
-                        name: `${user.first_name} ${user.last_name}`,
-                        email: user.email_address,
-                    },
+                    name: `${user.first_name} ${user.last_name}`,
+                    email: user.email_address,
                 };
             });
     }
@@ -125,13 +121,13 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 ),
             },
             {
-                accessorKey: 'user',
+                accessorKey: 'name',
                 header: () => {
                     return <span className='dark:text-neutral-light-1'>Name</span>;
                 },
                 cell: ({ row }) => {
-                    const name = row.original.user.name;
-                    const email = row.original.user.email;
+                    const name = row.original.name;
+                    const email = row.original.email;
 
                     return (
                         <div className='dark:text-neutral-light-1 text-nowrap text-black w-full'>
@@ -151,7 +147,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const filteredUsers = useMemo(() => {
         if (!searchTerm) return usersList;
-        const filtered = usersList?.filter((user) => user.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
         return filtered;
     }, [searchTerm, usersList]);
 
