@@ -34,31 +34,32 @@ func NewDefaultConfiguration() (Configuration, error) {
 		return Configuration{}, fmt.Errorf("failed to generate default password: %w", err)
 	} else {
 		return Configuration{
-			Version:                      0,
-			BindAddress:                  "127.0.0.1",
-			SlowQueryThreshold:           100, // Threshold in ms for caching queries
-			MaxGraphQueryCacheSize:       100, // Number of cache items for graph queries
-			MaxAPICacheSize:              200, // Number of cache items for API utilities
-			MetricsPort:                  ":2112",
-			RootURL:                      serde.MustParseURL("http://localhost"),
-			WorkDir:                      "/opt/bhe/work",
-			LogLevel:                     "INFO",
-			CollectorsBasePath:           "/etc/bloodhound/collectors",
-			CollectorsBucketURL:          serde.MustParseURL("https://bhe-hound-artifacts.s3.amazonaws.com/"),
-			DatapipeInterval:             60,
-			EnableStartupWaitPeriod:      true,
-			EnableAPILogging:             true,
-			DisableAnalysis:              false,
-			DisableCypherComplexityLimit: false,
-			DisableIngest:                false,
-			DisableMigrations:            false,
-			EnableCypherMutations:        false,
-			RecreateDefaultAdmin:         false,
-			GraphQueryMemoryLimit:        2,     // 2 GiB by default
-			EnableTextLogger:             false, // Default to JSON logging
-			TLS:                          TLSConfiguration{},
-			SAML:                         SAMLConfiguration{},
-			GraphDriver:                  neo4j.DriverName, // Default to PG as the graph driver
+			Version:                         0,
+			BindAddress:                     "127.0.0.1",
+			SlowQueryThreshold:              100, // Threshold in ms for caching queries
+			MaxGraphQueryCacheSize:          100, // Number of cache items for graph queries
+			MaxAPICacheSize:                 200, // Number of cache items for API utilities
+			MetricsPort:                     ":2112",
+			RootURL:                         serde.MustParseURL("http://localhost"),
+			WorkDir:                         "/opt/bhe/work",
+			LogLevel:                        "INFO",
+			CollectorsBasePath:              "/etc/bloodhound/collectors",
+			CollectorsBucketURL:             serde.MustParseURL("https://bhe-hound-artifacts.s3.amazonaws.com/"),
+			DatapipeInterval:                60,
+			EnableStartupWaitPeriod:         true,
+			EnableAPILogging:                true,
+			DisableAnalysis:                 false,
+			DisableCypherComplexityLimit:    false,
+			DisableIngest:                   false,
+			DisableMigrations:               false,
+			EnableCypherMutations:           false,
+			RecreateDefaultAdmin:            false,
+			ForceDownloadEmbeddedCollectors: false,
+			GraphQueryMemoryLimit:           2,     // 2 GiB by default
+			EnableTextLogger:                false, // Default to JSON logging
+			TLS:                             TLSConfiguration{},
+			SAML:                            SAMLConfiguration{},
+			GraphDriver:                     neo4j.DriverName, // Default to PG as the graph driver
 			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},
@@ -83,9 +84,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 				LastName:      "User",
 				ExpireNow:     true,
 			},
-			UI: UIConfiguration{
-				EnableUserAnalytics: false,
-			},
+			EnableUserAnalytics: false,
 		}, nil
 	}
 }
