@@ -84,6 +84,8 @@ const (
 	ErrorResponseAssetGroupTagDuplicateGlyph        = "asset group tag glyph must be unique"
 	ErrorResponseAssetGroupMemberIDsRequired        = "asset group member IDs are required"
 	ErrorResponseUnknownUser                        = "unknown user"
+	ErrorResponseETACBadRequest                     = "cannot specify environments when all_environments is true"
+	ErrorResponseETACInvalidRoles                   = "administrators and power users may not have an ETAC list applied to them"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
