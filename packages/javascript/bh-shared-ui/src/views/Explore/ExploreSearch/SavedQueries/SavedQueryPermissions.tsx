@@ -67,7 +67,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     }
 
     const usersList = useMemo(() => idMap(), [listUsersQuery.data, selfId]);
-    const allUserIds = useMemo(() => usersList?.map((x) => x.id) ?? [], [usersList]);
+    const allUserIds = useMemo(() => usersList?.map((x: ListUser) => x.id) ?? [], [usersList]);
 
     useEffect(() => {
         if (!data) return;
@@ -148,7 +148,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const filteredUsers = useMemo(() => {
         if (!searchTerm) return usersList;
-        const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        const filtered = usersList?.filter((user: ListUser) =>
+            user.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
         return filtered;
     }, [searchTerm, usersList]);
 
