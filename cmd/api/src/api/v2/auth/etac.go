@@ -37,58 +37,47 @@ import (
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
 func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
-	var (
-		allEnvironments = true
-	)
-
-	// Set allEnvironments to true by default, and only change it if the request contains an explicit set
-	// This avoids Go from defaulting the boolean to true when decoding the payload
-	if updateUserRequest.AllEnvironments.Valid {
-		allEnvironments = updateUserRequest.AllEnvironments.Bool
-	}
-
-	if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-		if !allEnvironments || (updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) > 0) {
+	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentAccessControl != nil {
+		// Admin / Power Users can only have all_environments set to true
+		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
+			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) > 0)) {
 			return errors.New(api.ErrorResponseETACInvalidRoles)
 		}
-	} else if (allEnvironments && updateUserRequest.AllEnvironments.Valid) && (updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) != 0) {
-		// Both all_environments and environment_access_control was set on the request
-		// A user may only have all_environments true or an environment access control list
-		return errors.New(api.ErrorResponseETACBadRequest)
-	} else if updateUserRequest.AllEnvironments.Valid {
-		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
-		user.AllEnvironments = allEnvironments
+		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
 	}
 
-	if updateUserRequest.EnvironmentAccessControl != nil {
-		var (
-			environments = make([]string, 0, len(updateUserRequest.EnvironmentAccessControl.Environments))
-		)
+	if updateUserRequest.EnvironmentAccessControl == nil || len(updateUserRequest.EnvironmentAccessControl.Environments) == 0 {
 		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
-		user.AllEnvironments = false
+		return nil
+	}
 
-		for _, environment := range updateUserRequest.EnvironmentAccessControl.Environments {
-			environments = append(environments, environment.EnvironmentID)
-		}
+	// Both all_environments and environment_access_control was set on the request
+	// A user may only have all_environments true or an environment access control list
+	if updateUserRequest.AllEnvironments.Bool {
+		return errors.New(api.ErrorResponseETACBadRequest)
+	}
 
-		if nodes, err := graphDB.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{
-			ad.Domain, azure.Tenant,
-		}, environments...); err != nil {
-			return fmt.Errorf("error fetching environments: %w", err)
-		} else {
-			if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
-				return err
+	// Validate provided environment ids exist in the graph prior to adding ETAC control
+	var envIds []string
+	for _, environment := range updateUserRequest.EnvironmentAccessControl.Environments {
+		envIds = append(envIds, environment.EnvironmentID)
+	}
+
+	if nodes, err := graphDB.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{
+		ad.Domain, azure.Tenant,
+	}, envIds...); err != nil {
+		return fmt.Errorf("error fetching environments: %w", err)
+	} else if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
+		return err
+	} else {
+		for _, envId := range envIds {
+			if _, ok := nodesByObject[envId]; !ok {
+				return errors.New(fmt.Sprintf("domain or tenant not found: %s", envId))
 			} else {
-				for _, environment := range environments {
-					if _, ok := nodesByObject[environment]; !ok {
-						return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
-					} else {
-						user.EnvironmentAccessControl = append(user.EnvironmentAccessControl, model.EnvironmentAccess{
-							UserID:        user.ID.String(),
-							EnvironmentID: environment,
-						})
-					}
-				}
+				user.EnvironmentAccessControl = append(user.EnvironmentAccessControl, model.EnvironmentAccess{
+					UserID:        user.ID.String(),
+					EnvironmentID: envId,
+				})
 			}
 		}
 	}

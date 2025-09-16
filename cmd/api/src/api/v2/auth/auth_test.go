@@ -1597,8 +1597,8 @@ func TestCreateUser_ETAC(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body string) {
-				assert.Contains(t, body, `"environment":"12345"`)
-				assert.Contains(t, body, `"environment":"54321"`)
+				assert.Contains(t, body, `"environment_id":"12345"`)
+				assert.Contains(t, body, `"environment_id":"54321"`)
 				assert.Contains(t, body, `"all_environments":false`)
 			},
 		},
