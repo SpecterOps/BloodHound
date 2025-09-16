@@ -59,7 +59,7 @@ const summaryPaths = [
     ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS,
 ];
 
-const certificationPaths = [ROUTE_ZONE_MANAGEMENT_CERTIFICATIONS];
+const certificationsPaths = [ROUTE_ZONE_MANAGEMENT_CERTIFICATIONS];
 
 const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
@@ -83,7 +83,7 @@ const ZoneManagement: FC = () => {
         ...summaryPaths.map((path) => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
         }),
-        ...certificationPaths.map((path) => {
+        ...certificationsPaths.map((path) => {
             return { path, component: Certification, authenticationRequired: true, navigation: true };
         }),
     ];
@@ -102,8 +102,8 @@ const ZoneManagement: FC = () => {
                         defaultValue='tier'
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
                         value={
-                            location.pathname.includes('certification')
-                                ? 'certification'
+                            location.pathname.includes('certifications')
+                                ? 'certifications'
                                 : location.pathname.includes('label')
                                   ? 'label'
                                   : 'tier'
@@ -113,7 +113,7 @@ const ZoneManagement: FC = () => {
                                 navigate(`/zone-management/summary/tier/${tagId}`);
                             } else if (value === 'label') {
                                 navigate(`/zone-management/summary/label/${ownedId}`);
-                            } else if (value === 'certification') {
+                            } else if (value === 'certifications') {
                                 navigate(`/zone-management/${ROUTE_ZONE_MANAGEMENT_CERTIFICATIONS}`);
                             }
                         }}>
@@ -124,8 +124,10 @@ const ZoneManagement: FC = () => {
                             <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
-                            <TabsTrigger value='certification' data-testid='zone-management_tab-list_certification-tab'>
-                                Certification
+                            <TabsTrigger
+                                value='certifications'
+                                data-testid='zone-management_tab-list_certifications-tab'>
+                                Certifications
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
