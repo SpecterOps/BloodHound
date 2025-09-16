@@ -14,9 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DialogContent, DialogOverlay, DialogTitle, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    Dialog,
+    DialogContent,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import { CreateUserRequest } from 'js-client-library';
-import React from 'react';
+import React, { useState } from 'react';
+import { usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
 import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 
 const CreateUserDialog: React.FC<{
@@ -44,21 +55,40 @@ const CreateUserDialog: React.FC<{
             .catch((err) => console.error(err));
     };
 
+    const [isOpen, setIsOpen] = useState(false);
+    const { checkPermission } = usePermissions();
+
+    const hasPermission = checkPermission(Permission.AUTH_MANAGE_USERS);
+
     return (
-        <DialogOverlay>
-            <DialogContent maxWidth='lg' className='!bg-transparent overflow-y-auto max-h-screen'>
-                <VisuallyHidden asChild>
-                    <DialogTitle>Create User</DialogTitle>
-                </VisuallyHidden>
-                <CreateUserForm
-                    error={error}
-                    isLoading={isLoading}
-                    onSubmit={handleOnSave}
-                    open={open}
-                    showEnvironmentAccessControls={showEnvironmentAccessControls}
-                />
-            </DialogContent>
-        </DialogOverlay>
+        <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
+            <DialogTrigger asChild>
+                <Button
+                    disabled={!hasPermission}
+                    onClick={() => {
+                        setIsOpen(true);
+                    }}
+                    data-testid='manage-users_button-create-user'>
+                    Create User
+                </Button>
+            </DialogTrigger>
+            <DialogPortal>
+                <DialogOverlay>
+                    <DialogContent maxWidth='lg' className='!bg-transparent overflow-y-auto max-h-screen'>
+                        <VisuallyHidden asChild>
+                            <DialogTitle>Create User</DialogTitle>
+                        </VisuallyHidden>
+                        <CreateUserForm
+                            error={error}
+                            isLoading={isLoading}
+                            onSubmit={handleOnSave}
+                            open={open}
+                            showEnvironmentAccessControls={showEnvironmentAccessControls}
+                        />
+                    </DialogContent>
+                </DialogOverlay>
+            </DialogPortal>
+        </Dialog>
     );
 };
 
