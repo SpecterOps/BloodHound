@@ -66,6 +66,7 @@ const CommonSearches = ({
 
     useEffect(() => {
         setFilteredList(queryList);
+        handleFilter(searchTerm, platform, categoryFilter, source);
     }, [userQueries.data]);
 
     const handleClick = (query: string, id: number | undefined) => {
