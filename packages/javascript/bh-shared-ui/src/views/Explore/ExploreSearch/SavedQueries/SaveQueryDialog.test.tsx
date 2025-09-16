@@ -550,11 +550,9 @@ describe('SaveQueryDialog', () => {
 
     it('should render an SavedQueryPermissions component', async () => {
         await act(async () => render(<SaveQueryDialogWithProvider />));
-
         // Table Header Rendered
         const nestedElement = await waitFor(() => screen.getByText(/Manage Shared Queries/i));
         expect(nestedElement).toBeInTheDocument();
-        screen.debug(nestedElement);
         const testTable = screen.getByRole('table');
         expect(testTable).toBeInTheDocument();
     });
