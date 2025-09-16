@@ -93,7 +93,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey:
 		return true
 	default:
 		return false
@@ -134,6 +134,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &FedEULACustomTextParameter{}
 	case SessionTTLHours:
 		v = &SessionTTLHoursParameter{}
+	case StaleClientUpdatedLogicKey:
+		v = &StaleClientUpdatedLogic{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
