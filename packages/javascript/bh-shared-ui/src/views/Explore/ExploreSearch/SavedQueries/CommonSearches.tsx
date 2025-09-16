@@ -137,7 +137,7 @@ const CommonSearches = ({
                     queries: obj.queries.filter((item: QueryLineItem) => !item.id),
                 }))
                 .filter((x) => x.queries.length);
-        } else if (source && source === 'owned') {
+        } else if (source && source === 'personal') {
             if (!hasSelf) {
                 filteredData = [];
             } else {
@@ -185,7 +185,7 @@ const CommonSearches = ({
                     data-testid='common-queries-toggle'
                     variant={'text'}>
                     <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                    <span className='my-4 font-semibold text-lg'>Pre-built Queries</span>
+                    <span className='my-4 font-semibold text-lg'>Saved Queries</span>
                 </Button>
             </div>
 

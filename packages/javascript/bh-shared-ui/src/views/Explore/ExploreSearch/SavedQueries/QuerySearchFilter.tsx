@@ -165,7 +165,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             onChange={(e) => handleSourceFilter(e.target.value)}>
                             <MenuItem value=''>All Sources</MenuItem>
                             <MenuItem value='prebuilt'>Prebuilt</MenuItem>
-                            <MenuItem value='owned'>Owned</MenuItem>
+                            <MenuItem value='personal'>Personal</MenuItem>
                             <MenuItem value='shared'>Shared</MenuItem>
                         </Select>
                     </FormControl>
