@@ -16,7 +16,7 @@
 
 // Deprecated: this suite of integration utils is deprecated and should be avoided
 // Integration tests should be updated to reflect the latest standards.
-// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
 package integration
 
@@ -42,7 +42,7 @@ import (
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
 // Integration tests should be updated to reflect the latest standards.
-// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
 func OpenDatabase(t *testing.T) database.Database {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
@@ -71,7 +71,7 @@ func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, error) {
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
 // Integration tests should be updated to reflect the latest standards.
-// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
 func GetPostgresConfig(cfg config.Configuration) pgtestdb.Config {
 	environmentMap := make(map[string]string)
@@ -121,7 +121,7 @@ func OpenCache(t *testing.T) cache.Cache {
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
 // Integration tests should be updated to reflect the latest standards.
-// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
 func SetupDB(t *testing.T) database.Database {
 	dbInst := OpenDatabase(t)
@@ -145,7 +145,7 @@ func Prepare(ctx context.Context, db database.Database) error {
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
 // Integration tests should be updated to reflect the latest standards.
-// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.
 func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {

@@ -55,7 +55,7 @@ func (s *GraphContext) End(t test.Context) {
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
 // Integration tests should be updated to reflect the latest standards.
-// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
 // for implementation guidance. Additional detailed information can be found in Confluence.t the latest standards.
 func NewGraphContext(t *testing.T, ctx test.Context, schema graph.Schema) *GraphContext {
 	graphContext := &GraphContext{
