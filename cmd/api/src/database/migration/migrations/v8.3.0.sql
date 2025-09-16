@@ -14,6 +14,20 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+
+-- Set all_environments to true for existing users
+UPDATE users SET all_environments = true;
+-- Rename environment to environment_id to prepare for data partitioning, if the column does not exist then we throw away the error for idempotence
+DO
+$$
+    BEGIN
+        ALTER TABLE environment_access_control
+            RENAME COLUMN environment TO environment_id;
+    EXCEPTION
+        WHEN undefined_column THEN
+    END;
+$$;
+
 -- This migration changes the auto_certify column type from a boolean to an integer type
 -- Then it converts the previous boolean values into enum-like integer values of 0, 1, or 2
 DO $$

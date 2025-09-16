@@ -72,6 +72,7 @@ const (
 	ErrorResponseUserDuplicateEmail                                  = "email must be unique"
 	ErrorResponseDetailsUniqueViolation                              = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented                               = "All good things to those who wait. Not implemented."
+	ErrorResponseUnknownUser                                         = "unknown user"
 	ErrorResponseAssetGroupTagExceededNameLimit                      = "asset group tag name is limited to 250 characters"
 	ErrorResponseAssetGroupTagDuplicateKindName                      = "asset group tag name must be unique"
 	ErrorResponseAssetGroupTagInvalid                                = "valid tag_type is required"
@@ -85,7 +86,8 @@ const (
 	ErrorResponseAssetGroupMemberIDsRequired                         = "asset group member IDs are required"
 	ErrorResponseAssetGroupAutoCertifyInvalid                        = "auto_certify must be an input value of 0 to 2"
 	ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones = "auto_certify is only available for asset group tags of tag_type = 1 (zones)"
-	ErrorResponseUnknownUser                                         = "unknown user"
+	ErrorResponseETACBadRequest                                      = "cannot specify environments when all_environments is true"
+	ErrorResponseETACInvalidRoles                                    = "administrators and power users may not have an ETAC list applied to them"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
