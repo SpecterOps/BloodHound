@@ -18,9 +18,8 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTagId } from '../../../hooks';
+import { useHighestPrivilegeTagId, useZonePathParams } from '../../../hooks';
 import {
     useSelectorMembersInfiniteQuery,
     useSelectorsInfiniteQuery,
@@ -39,9 +38,7 @@ import {
 } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
-import { useTagFormUtils } from '../Save/TagForm/utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { getTagUrlValue } from '../utils';
 import { MembersList } from './MembersList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
@@ -82,12 +79,22 @@ export const getEditButtonState = (
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
-    const { isLabelLocation } = useTagFormUtils();
+
+    const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const {
+        isLabelPage,
+        zoneId = topTagId?.toString(),
+        labelId,
+        selectorId,
+        memberId,
+        tagType,
+        tagId: defaultTagId,
+    } = useZonePathParams();
+    const tagId = !defaultTagId ? zoneId : defaultTagId;
+
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
-    const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
-    const tagType = !labelId ? zonesPath : labelsPath;
+
     const environments = useEnvironmentIdList([
         {
             path: `/${privilegeZonesPath}/${zonesPath}/${tagType}/${detailsPath}`,
@@ -95,8 +102,6 @@ const Details: FC = () => {
             end: false,
         },
     ]);
-
-    const tagId = labelId === undefined ? zoneId : labelId;
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -141,13 +146,13 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4 h-full'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
-                    {isLabelLocation ? (
+                    {isLabelPage ? (
                         <TagList
                             title={'Labels'}
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
+                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
                             }}
                         />
                     ) : (
@@ -156,7 +161,7 @@ const Details: FC = () => {
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${detailsPath}`);
+                                navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
                             }}
                         />
                     )}
@@ -166,7 +171,7 @@ const Details: FC = () => {
                         onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(
-                                `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
+                                `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
                             );
                         }}
                         selected={selectorId}
@@ -178,7 +183,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -190,7 +195,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${membersPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${tagType}/${tagId}/${membersPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -198,7 +203,7 @@ const Details: FC = () => {
                         />
                     )}
                 </div>
-                <div className='basis-1/3 h-full'>
+                <div className='flex basis-1/3 h-full'>
                     <SelectedDetails />
                 </div>
             </div>

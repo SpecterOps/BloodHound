@@ -54,25 +54,25 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useAppNavigate();
 
-    const zonesQuery = useTagsQuery();
+    const tagsQuery = useTagsQuery();
 
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
     const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
 
     const typeMatcher = isLabel ? isLabelTagType : isZoneTagType;
-    const zoneLabelList = zonesQuery.data?.filter(typeMatcher);
+    const zoneLabelList = tagsQuery.data?.filter(typeMatcher);
 
-    const [zoneId, setZone] = useState('');
-    const [labelId, setLabel] = useState('');
+    const [zoneId, setZoneId] = useState('');
+    const [labelId, setLabelId] = useState('');
 
     const handleValueChange = (val: string) => {
         if (isLabel) {
-            setLabel(val);
-            setZone('');
+            setLabelId(val);
+            setZoneId('');
         } else {
-            setZone(val);
-            setLabel('');
+            setZoneId(val);
+            setLabelId('');
         }
     };
 

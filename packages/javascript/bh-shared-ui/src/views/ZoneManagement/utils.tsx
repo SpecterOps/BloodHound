@@ -17,10 +17,6 @@
 import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { CSSProperties } from 'react';
 
-export const getTagUrlValue = (labelId: string | undefined) => {
-    return labelId === undefined ? 'zones' : 'labels';
-};
-
 export const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
     return (
         <li

@@ -17,14 +17,13 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
-import { Link, useParams } from 'react-router-dom';
-import { useTagsQuery } from '../../../hooks';
+import { AppLink } from '../../../components';
+import { useTagsQuery, useZonePathParams } from '../../../hooks';
 import { privilegeZonesPath, summaryPath } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
 import { SelectedDetails } from '../Details/SelectedDetails';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { getTagUrlValue } from '../utils';
 import SummaryList from './SummaryList';
 
 export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
@@ -37,8 +36,7 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const { zoneId, labelId, selectorId } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
+    const { zoneId, labelId, selectorId, tagId, tagType, tagTypeDisplayPlural } = useZonePathParams();
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -55,21 +53,19 @@ const Summary: FC = () => {
                 <InfoHeader />
                 <div className='basis-1/3'>
                     <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
-                        <Link data-testid='privilege-zones_edit-button' to={saveLink || ''}>
+                        <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
                             Edit
-                        </Link>
+                        </AppLink>
                     </Button>
                 </div>
             </div>
             <div className='flex gap-8 mt-4 w-full h-full'>
                 <div className='basis-2/3'>
                     <SummaryList
-                        title={labelId ? 'Labels' : 'Zones'}
+                        title={tagTypeDisplayPlural}
                         listQuery={tagsQuery}
-                        selected={tagId as string}
-                        onSelect={(id) =>
-                            navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${id}/${summaryPath}`)
-                        }
+                        selected={tagId}
+                        onSelect={(tagId) => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${summaryPath}`)}
                     />
                 </div>
                 <div className='basis-1/3'>

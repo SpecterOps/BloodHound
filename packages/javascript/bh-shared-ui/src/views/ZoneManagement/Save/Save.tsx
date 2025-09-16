@@ -22,25 +22,20 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@bloodhoundenterprise/doodleui';
-import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
-import { detailsPath, privilegeZonesPath, savePath } from '../../../routes';
+import { useHighestPrivilegeTagId, useOwnedTagId, useZonePathParams } from '../../../hooks';
+import { detailsPath, privilegeZonesPath, savePath, zonesPath } from '../../../routes';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
 const Save: FC = () => {
-    const location = useLocation();
-    const { zoneId, labelId } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
     const showSelectorForm = location.pathname.includes('selector');
-    const tagValue = location.pathname.includes('label') ? 'label' : 'zone';
-    const capitalizedTagValue = capitalize(tagValue);
-    const captitalizedPluralTagValue = capitalizedTagValue + 's';
+    const { tagType, tagTypeDisplay, tagTypeDisplayPlural, tagId } = useZonePathParams();
+
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
+
     return (
         <div>
             <Breadcrumb className='my-6'>
@@ -49,8 +44,8 @@ const Save: FC = () => {
                         <BreadcrumbLink asChild>
                             <AppLink
                                 data-testid='zone-management_save_details-breadcrumb'
-                                to={`/${privilegeZonesPath}/${tagValue}/${tagValue === 'zone' ? topTagId : ownedId}/${detailsPath}`}>
-                                {captitalizedPluralTagValue}
+                                to={`/${privilegeZonesPath}/${tagType}/${tagType === zonesPath ? topTagId : ownedId}/${detailsPath}`}>
+                                {tagTypeDisplayPlural}
                             </AppLink>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -61,8 +56,8 @@ const Save: FC = () => {
                                 <BreadcrumbLink asChild>
                                     <AppLink
                                         data-testid='zone-management_save_tag-breadcrumb'
-                                        to={`/${privilegeZonesPath}/${tagValue}/${tagId}/${savePath}`}>
-                                        {`${capitalizedTagValue} Details`}
+                                        to={`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`}>
+                                        {`${tagTypeDisplay} Details`}
                                     </AppLink>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
@@ -74,7 +69,7 @@ const Save: FC = () => {
                     ) : (
                         <>
                             <BreadcrumbItem>
-                                <BreadcrumbPage>{`${capitalizedTagValue} Details`}</BreadcrumbPage>
+                                <BreadcrumbPage>{`${tagTypeDisplay} Details`}</BreadcrumbPage>
                             </BreadcrumbItem>
                         </>
                     )}

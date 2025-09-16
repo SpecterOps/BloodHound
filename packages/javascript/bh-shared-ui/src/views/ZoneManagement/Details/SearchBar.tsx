@@ -41,19 +41,19 @@ const SearchBar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const debouncedInputValue = useDebouncedValue(query, 300);
     const navigate = useAppNavigate();
-    const { tagId, tagType } = useZonePathParams();
+    const { tagId, isLabelPage, tagType } = useZonePathParams();
 
     const searchQuery = useQuery({
-        queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, tagType],
+        queryKey: ['privilege-zones', 'search', debouncedInputValue, tagId, isLabelPage],
         queryFn: async () => {
             const body = {
                 query: debouncedInputValue,
-                tag_type: tagType === 'label' ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
+                tag_type: isLabelPage ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
             };
             const res = await apiClient.searchAssetGroupTags(body);
             return res.data.data;
         },
-        enabled: debouncedInputValue.length >= 3 && tagId !== undefined,
+        enabled: debouncedInputValue.length >= 3 && tagId !== '',
     });
 
     const results = searchQuery.data ?? { tags: [], selectors: [], members: [] };
@@ -94,10 +94,9 @@ const SearchBar: React.FC = () => {
         },
     });
 
-    const sectorMap: SectorMap =
-        tagType === 'label'
-            ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
-            : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
+    const sectorMap: SectorMap = isLabelPage
+        ? { Labels: 'tags', Selectors: 'selectors', Members: 'members' }
+        : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
 
     return (
         <div {...getComboboxProps()} className='relative w-4/6'>

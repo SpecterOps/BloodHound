@@ -93,7 +93,7 @@ describe('Selector Form', () => {
     it('renders the form for creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
 
         render(<SelectorForm />);
 
@@ -121,7 +121,7 @@ describe('Selector Form', () => {
         expect(screen.getByText('Sample Results')).toBeInTheDocument();
     });
 
-    it.only('renders the form for editing an existing selector', async () => {
+    it('renders the form for editing an existing selector', async () => {
         server.use(
             rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
                 return res(
@@ -133,7 +133,7 @@ describe('Selector Form', () => {
         );
         // This url has the selector id of 777 in the path
         // and so this selector's data is filled into the form for the user to edit
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
 
         render(<SelectorForm />);
 
@@ -182,7 +182,7 @@ describe('Selector Form', () => {
     });
 
     it('changes the text from "Disabled" to "Enabled" when the Selector Status switch is toggled', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
         server.use(
             rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
                 return res(
@@ -209,7 +209,7 @@ describe('Selector Form', () => {
 
     it('shows an error message when unable to delete a selector', async () => {
         console.error = vi.fn();
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
         server.use(
             rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
                 return res(
@@ -254,7 +254,7 @@ describe('Selector Form', () => {
     });
 
     test('a name value is required to submit the form', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '' });
         render(<SelectorForm />);
 
         await waitFor(() => {
@@ -271,7 +271,7 @@ describe('Selector Form', () => {
     });
 
     test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: '777' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
 
         render(<SelectorForm />);
 
@@ -293,7 +293,7 @@ describe('Selector Form', () => {
     });
 
     it('handles creating a new selector', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', selectorId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: undefined });
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
         render(<SelectorForm />);
@@ -326,7 +326,7 @@ describe('Selector Form', () => {
     });
 
     it('shows a warning for using labels associated with tags in zone forms', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(<SelectorForm />);
 
         const seedTypeSelect = await screen.findByLabelText('Selector Type');
@@ -358,7 +358,7 @@ describe('Selector Form', () => {
     });
 
     it('does not show a warning for using labels associated with tags in label forms', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '1' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
         render(<SelectorForm />);
 
         const seedTypeSelect = await screen.findByLabelText('Selector Type');

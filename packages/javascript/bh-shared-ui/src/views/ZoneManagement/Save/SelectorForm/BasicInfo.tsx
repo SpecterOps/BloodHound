@@ -41,13 +41,13 @@ import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-librar
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
+import { useZonePathParams } from '../../../../hooks';
 import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
-import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
@@ -57,8 +57,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const location = useLocation();
     const navigate = useAppNavigate();
 
-    const { zoneId = '', labelId, selectorId = '' } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
+    const { selectorId = '', tagId, tagType } = useZonePathParams();
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
     const receivedData = location.state;
@@ -99,11 +98,11 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
 
             setDeleteDialogOpen(false);
 
-            navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${detailsPath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
         } catch (error) {
             handleError(error, 'deleting', 'selector', addNotification);
         }
-    }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification, tagType]);
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 

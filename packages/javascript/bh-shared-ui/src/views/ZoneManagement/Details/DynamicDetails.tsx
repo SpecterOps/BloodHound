@@ -58,7 +58,9 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const ownedId = useOwnedTagId();
 
     return (
-        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]' data-testid='zone-management_tag-details-card'>
+        <div
+            className='max-h-full flex flex-col gap-8 max-w-[32rem] w-full'
+            data-testid='zone-management_tag-details-card'>
             <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}

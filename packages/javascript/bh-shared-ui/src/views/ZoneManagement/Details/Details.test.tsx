@@ -20,8 +20,8 @@ import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import {
     ROUTE_PRIVILEGE_ZONES_ROOT,
-    ROUTE_PZ_ZONE_OBJECT_DETAILS,
-    ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_MEMBER_DETAILS,
+    ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
     detailsPath,
     membersPath,
     privilegeZonesPath,
@@ -52,7 +52,7 @@ describe('Details', async () => {
     it('renders', async () => {
         render(
             <Routes>
-                <Route path={`/${privilegeZonesPath}/${zonesPath}/${detailsPath}`} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
@@ -67,7 +67,7 @@ describe('Details', async () => {
     it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
         render(
             <Routes>
-                <Route path={`/${privilegeZonesPath}/${zonesPath}/${detailsPath}`} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
@@ -98,7 +98,7 @@ describe('Details', async () => {
     it('handles object selection when a zone is already selected', async () => {
         render(
             <Routes>
-                <Route path={`/${privilegeZonesPath}/${zonesPath}/${detailsPath}`} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
@@ -132,10 +132,7 @@ describe('Details', async () => {
     it('handles selector selection when a zone and object are already selected', async () => {
         render(
             <Routes>
-                <Route
-                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PZ_ZONE_OBJECT_DETAILS}
-                    element={<Details />}
-                />
+                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PZ_ZONE_MEMBER_DETAILS} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${membersPath}/7/${detailsPath}` }
         );
@@ -170,7 +167,7 @@ describe('Details', async () => {
         render(
             <Routes>
                 <Route
-                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS}
+                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS}
                     element={<Details />}
                 />
             </Routes>,

@@ -505,7 +505,12 @@ describe('Tag Form', () => {
 
     it('open and closes dialog with confirm button after user inputs required text', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
-        console.error = vi.fn();
+
+        server.use(
+            rest.delete('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
+                return res(ctx.status(200));
+            })
+        );
 
         render(
             <Routes>
@@ -527,12 +532,18 @@ describe('Tag Form', () => {
         expect(confirmButton).toBeDisabled();
 
         const textField = screen.getByTestId('confirmation-dialog_challenge-text');
-        await user.type(textField, 'Delete this label');
 
-        expect(confirmButton).not.toBeDisabled();
+        await act(async () => {
+            await user.type(textField, 'Delete this label');
+        });
+
+        await waitFor(() => {
+            expect(confirmButton).not.toBeDisabled();
+        });
+
         await user.click(confirmButton);
 
-        waitFor(() => {
+        await waitFor(() => {
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
     });

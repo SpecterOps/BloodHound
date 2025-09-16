@@ -17,19 +17,17 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
 import { AppIcon } from '../../../components';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { getTagUrlValue, itemSkeletons } from '../../../views';
+import { itemSkeletons } from '../../../views';
 
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
-import { useExploreParams } from '../../../hooks';
+import { useExploreParams, useZonePathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
-    const { zoneId, labelId, memberId } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
+    const { memberId, tagType, tagId } = useZonePathParams();
 
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
@@ -63,16 +61,16 @@ const EntitySelectorsInformation: React.FC = () => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${id}/${detailsPath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`);
         },
-        [tagId, navigate, labelId]
+        [tagId, navigate, tagType]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${id}/${savePath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${savePath}`);
         },
-        [tagId, navigate, labelId]
+        [tagId, navigate, tagType]
     );
 
     if (memberInfoQuery.isLoading) {

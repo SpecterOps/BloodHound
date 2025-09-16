@@ -69,17 +69,18 @@ export const TagForm: FC = () => {
     const {
         privilegeZoneAnalysisEnabled,
         disableNameInput,
-        isLabelLocation,
+        isLabelPage,
         isUpdateZoneLocation,
         showAnalysisToggle,
         showDeleteButton,
         formTitle,
-        tagType,
+        tagType: tagTypePlural,
         tagTypeDisplay,
         handleCreateNavigate,
         handleUpdateNavigate,
         handleDeleteNavigate,
     } = useTagFormUtils();
+    const tagType = tagTypePlural.slice(0, -1) as 'label' | 'zone';
 
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
@@ -110,7 +111,7 @@ export const TagForm: FC = () => {
                     name: formData.name,
                     description: formData.description,
                     position: null,
-                    type: isLabelLocation ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
+                    type: isLabelPage ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
                 };
 
                 const response = await createTagMutation.mutateAsync({
@@ -126,7 +127,7 @@ export const TagForm: FC = () => {
                 handleError(error, 'creating', tagType, addNotification);
             }
         },
-        [createTagMutation, addNotification, handleCreateNavigate, tagType, tagTypeDisplay, isLabelLocation]
+        [createTagMutation, addNotification, handleCreateNavigate, tagType, tagTypeDisplay, isLabelPage]
     );
 
     const handleUpdateTag = useCallback(

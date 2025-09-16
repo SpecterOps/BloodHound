@@ -16,7 +16,7 @@ vi.mock('../../../components/AppIcon/Icons/DownArrow', () => ({
 }));
 
 vi.mock('./SummaryCard', () => ({
-    default: ({ title }: { title: string }) => <div data-testid='zone-management_zone-list_card'>{title}</div>,
+    default: ({ title }: { title: string }) => <div data-testid='zone-management_summary-list_card'>{title}</div>,
 }));
 
 vi.mock('../Details/utils', () => ({
@@ -30,7 +30,7 @@ vi.mock('../Details/utils', () => ({
 const mockData: AssetGroupTag[] = [
     {
         id: 1,
-        name: 'Mock Tier 1',
+        name: 'Mock Zone 1',
         kind_id: 10,
         type: 1,
         position: 1,
@@ -105,8 +105,8 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={() => {}} />);
 
-        const cards = await screen.findAllByTestId('zone-management_zone-list_card');
-        expect(cards[0]).toHaveTextContent('Mock Tier 1');
+        const cards = await screen.findAllByTestId('zone-management_summary-list_card');
+        expect(cards[0]).toHaveTextContent('Mock Zone 1');
         expect(cards[1]).toHaveTextContent('Mock Zone 2');
     });
 
@@ -132,7 +132,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Zones' selected='' listQuery={query} onSelect={onSelect} />);
 
-        await userEvent.click(await screen.findByTestId('zone-management_zone-list_card'));
+        await userEvent.click(await screen.findByTestId('zone-management_summary-list_card'));
         expect(onSelect).toHaveBeenCalledWith(mockData[0].id);
     });
 });

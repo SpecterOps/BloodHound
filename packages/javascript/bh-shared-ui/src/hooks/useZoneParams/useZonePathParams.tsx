@@ -14,17 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { labelsPath, privilegeZonesPath, summaryPath, zonesPath } from '../../routes';
 
 export const useZonePathParams = () => {
+    const location = useLocation();
     const { zoneId = '', labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? zoneId : labelId;
 
     const hasLabelId = labelId !== undefined;
     const hasZoneId = zoneId !== '';
 
-    const tagType: 'label' | 'zone' = hasLabelId ? 'label' : 'zone';
-    const tagTypeDisplay: 'Label' | 'Zone' = hasLabelId ? 'Label' : 'Zone';
+    const isSummaryPage = location.pathname.includes(summaryPath);
+    const isLabelPage = location.pathname.includes(`/${privilegeZonesPath}/${labelsPath}`);
+    const isZonePage = location.pathname.includes(`/${privilegeZonesPath}/${zonesPath}`);
+
+    const tagType: 'labels' | 'zones' = isLabelPage ? 'labels' : 'zones';
+    const tagTypeDisplay: 'Label' | 'Zone' = isLabelPage ? 'Label' : 'Zone';
+    const tagTypeDisplayPlural: 'Labels' | 'Zones' = isLabelPage ? 'Labels' : 'Zones';
 
     return {
         tagId,
@@ -34,7 +41,11 @@ export const useZonePathParams = () => {
         memberId,
         hasLabelId,
         hasZoneId,
+        isLabelPage,
+        isSummaryPage,
+        isZonePage,
         tagType,
         tagTypeDisplay,
+        tagTypeDisplayPlural,
     };
 };

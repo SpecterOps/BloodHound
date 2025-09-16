@@ -17,8 +17,6 @@
 import { AssetGroupTag } from 'js-client-library';
 import { createContext, FC } from 'react';
 import {
-    ROUTE_PZ_CREATE_LABEL,
-    ROUTE_PZ_CREATE_ZONE,
     ROUTE_PZ_LABEL_CREATE_SELECTOR,
     ROUTE_PZ_LABEL_UPDATE_SELECTOR,
     ROUTE_PZ_UPDATE_LABEL,
@@ -28,8 +26,6 @@ import {
 } from '../../routes';
 
 const savePaths = [
-    ROUTE_PZ_CREATE_ZONE,
-    ROUTE_PZ_CREATE_LABEL,
     ROUTE_PZ_UPDATE_ZONE,
     ROUTE_PZ_UPDATE_LABEL,
     ROUTE_PZ_ZONE_CREATE_SELECTOR,

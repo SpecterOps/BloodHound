@@ -25,14 +25,14 @@ import { encodeCypherQuery, useZonePathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
 import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
 
-const emptyFunction = () => { };
+const emptyFunction = () => {};
 
 export const Cypher: FC<{
     preview?: boolean;
     initialInput?: string;
 }> = ({ preview = true, initialInput = '' }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
-    const [showLabelWarning, setShowLabelWarning] = useState(false);
+    const [showLabelWarning, setShowLabelWarning] = useState(initialInput?.includes(':Tag_'));
     const [stalePreview, setStalePreview] = useState(false);
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);

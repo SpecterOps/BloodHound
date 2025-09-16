@@ -22,16 +22,15 @@ import {
     SelectedEnvironment,
     SelectorValueTypes,
     SimpleEnvironmentSelector,
-    getTagUrlValue,
     privilegeZonesPath,
     savePath,
     selectorsPath,
     useEnvironmentParams,
     useHighestPrivilegeTagId,
     useInitialEnvironment,
+    useZonePathParams,
 } from 'bh-shared-ui';
 import { FC, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {
     switch (type) {
@@ -46,8 +45,8 @@ const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggreg
 
 const InfoHeader: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { zoneId = topTagId?.toString(), labelId } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
+    const { tagId: defaultTagId, tagType } = useZonePathParams();
+    const tagId = !defaultTagId ? topTagId : defaultTagId;
 
     const { data: initialEnvironment } = useInitialEnvironment({ orderBy: 'name' });
 
@@ -82,7 +81,7 @@ const InfoHeader: FC = () => {
                 <Button variant='primary' disabled={!tagId} asChild>
                     <AppLink
                         data-testid='zone-management_create-selector-link'
-                        to={`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${savePath}`}>
+                        to={`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`}>
                         Create Selector
                     </AppLink>
                 </Button>

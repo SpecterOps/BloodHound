@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagType, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
-import { useHighestPrivilegeTagId } from '../../../hooks';
+import { useHighestPrivilegeTagId, useZonePathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/numberFormatting';
@@ -39,6 +39,7 @@ type SummaryCardProps = {
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysisEnabled }) => {
     const navigate = useAppNavigate();
     const { tagId: topTagId } = useHighestPrivilegeTagId();
+    const { tagType } = useZonePathParams();
 
     return (
         <Card
@@ -67,9 +68,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                     onClick={(e) => {
                         // Prevent event bubbling for the view details action
                         e.stopPropagation();
-                        navigate(
-                            `/${privilegeZonesPath}/${type === AssetGroupTagTypeZone ? 'zone' : 'label'}/${id}/${detailsPath}`
-                        );
+                        navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
                     }}
                     className='flex items-center space-x-2 hover:underline'>
                     <FontAwesomeIcon icon={faSquarePlus as IconProp} size='xl' />

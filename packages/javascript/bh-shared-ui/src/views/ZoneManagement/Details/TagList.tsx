@@ -22,7 +22,6 @@ import { SortableHeader } from '../../../components';
 import { useHighestPrivilegeTagId, useZonePathParams } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { useTagFormUtils } from '../Save/TagForm/utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isTag } from './utils';
@@ -45,12 +44,11 @@ type TagListProps = {
 export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { hasZoneId } = useZonePathParams();
-    const { isZoneLocation } = useTagFormUtils();
+    const { hasZoneId, isLabelPage } = useZonePathParams();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
-            {!isZoneLocation ? (
+            {isLabelPage ? (
                 <SortableHeader
                     title={title}
                     onSort={() => {
@@ -89,7 +87,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                     ) : listQuery.isSuccess ? (
                         listQuery.data
                             ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && isZoneLocation) {
+                                if (isTag(a) && isTag(b) && !isLabelPage) {
                                     // A tag can be a zone and also have position null it seems
                                     return (a.position || 0) - (b.position || 0);
                                 } else {
