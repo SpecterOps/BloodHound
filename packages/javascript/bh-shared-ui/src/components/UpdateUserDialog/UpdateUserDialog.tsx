@@ -14,7 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DialogContent, DialogTitle, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
+import {
+    Dialog,
+    DialogContent,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import { UpdateUserRequest } from 'js-client-library';
 import React from 'react';
 import UpdateUserForm, { UpdateUserRequestForm } from '../UpdateUserForm';
@@ -47,23 +54,29 @@ const UpdateUserDialog: React.FC<{
     };
 
     return (
-        <DialogContent
-            maxWidth='lg'
-            className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen'
-            data-testid='update-user-dialog'>
-            <VisuallyHidden asChild>
-                <DialogTitle>Edit User</DialogTitle>
-            </VisuallyHidden>
-            <UpdateUserForm
-                error={error}
-                isLoading={isLoading}
-                onSubmit={handleOnSave}
-                hasSelectedSelf={hasSelectedSelf}
-                open={open}
-                showEnvironmentAccessControls={showEnvironmentAccessControls}
-                userId={userId!}
-            />
-        </DialogContent>
+        <Dialog open={open} onOpenChange={onClose} data-testid='manage-users_update-user-dialog'>
+            <DialogPortal>
+                <DialogOverlay>
+                    <DialogContent
+                        maxWidth='lg'
+                        className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen'
+                        data-testid='update-user-dialog'>
+                        <VisuallyHidden asChild>
+                            <DialogTitle>Edit User</DialogTitle>
+                        </VisuallyHidden>
+                        <UpdateUserForm
+                            error={error}
+                            isLoading={isLoading}
+                            onSubmit={handleOnSave}
+                            hasSelectedSelf={hasSelectedSelf}
+                            open={open}
+                            showEnvironmentAccessControls={showEnvironmentAccessControls}
+                            userId={userId!}
+                        />
+                    </DialogContent>
+                </DialogOverlay>
+            </DialogPortal>
+        </Dialog>
     );
 };
 
