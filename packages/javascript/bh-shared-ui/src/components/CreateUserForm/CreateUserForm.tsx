@@ -55,7 +55,13 @@ const CreateUserForm: React.FC<{
     onSubmit: (user: CreateUserRequestForm) => void;
     open?: boolean;
     showEnvironmentAccessControls?: boolean;
-}> = ({ error, isLoading, onSubmit, open, showEnvironmentAccessControls }) => {
+}> = ({
+    error,
+    isLoading,
+    onSubmit,
+    //open,
+    showEnvironmentAccessControls,
+}) => {
     const defaultValues = {
         emailAddress: '',
         principal: '',
@@ -65,12 +71,10 @@ const CreateUserForm: React.FC<{
         needsPasswordReset: false,
         roles: [3],
         SSOProviderId: '',
-        /*
         environment_control_list: {
             environments: [],
             all_environments: false,
         },
-        */
     };
 
     const form = useForm<CreateUserRequestForm>({ defaultValues });
@@ -155,7 +159,7 @@ const CreateUserForm: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
                 {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
-                    <div className='flex gap-x-4 justify-center max-h-[800px]'>
+                    <div className='flex gap-x-4 justify-center'>
                         <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                             <DialogTitle>{'Create User'}</DialogTitle>
 
@@ -543,7 +547,7 @@ const CreateUserForm: React.FC<{
                                             data-testid='create-user-dialog_environments-checkboxes-select-all'>
                                             <FormField
                                                 name='allEnvironments'
-                                                //control={form.control}
+                                                //control={form.control}  // TODO: uncomment when form controls available via api
                                                 defaultValue={false}
                                                 render={() => (
                                                     <FormItem className='flex flex-row items-center'>
@@ -572,7 +576,7 @@ const CreateUserForm: React.FC<{
                                                             data-testid='create-user-dialog_environments-checkbox'>
                                                             <FormField
                                                                 name='environments'
-                                                                control={form.control}
+                                                                //control={form.control} // TODO: uncomment when form controls available via api
                                                                 defaultValue={false}
                                                                 render={({ field }) => (
                                                                     <FormItem className='flex flex-row items-center'>
