@@ -5868,23 +5868,15 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
                   },
                   {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "seeds": {
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "name",
-                      "seeds"
-                    ]
+                    "type": "object"
                   }
+                ],
+                "required": [
+                  "name",
+                  "seeds"
                 ]
               }
             }
@@ -6018,19 +6010,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "disabled": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
               }
             }
           }
@@ -19138,6 +19118,16 @@
           }
         }
       },
+      "null.time.response": {
+        "type": "string",
+        "nullable": true,
+        "format": "date-time",
+        "description": "An RFC-3339 formatted string"
+      },
+      "null.string.response": {
+        "type": "string",
+        "nullable": true
+      },
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
@@ -19149,9 +19139,35 @@
           }
         }
       },
-      "model.asset-group-tags-selector-create": {
+      "model.asset-group-tags-selector-response": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "asset_group_tag_id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "disabled_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "disabled_by": {
+            "$ref": "#/components/schemas/null.string.response"
+          },
           "name": {
             "type": "string"
           },
@@ -19159,6 +19175,18 @@
             "type": "string"
           },
           "auto_certify": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "allow_disable": {
             "type": "boolean"
           },
           "seeds": {
@@ -19168,60 +19196,6 @@
             }
           }
         }
-      },
-      "null.time.response": {
-        "type": "string",
-        "nullable": true,
-        "format": "date-time",
-        "description": "An RFC-3339 formatted string"
-      },
-      "null.string.response": {
-        "type": "string",
-        "nullable": true
-      },
-      "model.asset-group-tags-selector-response": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "asset_group_tag_id": {
-                "type": "integer"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_by": {
-                "type": "string"
-              },
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "is_default": {
-                "type": "boolean"
-              },
-              "allow_disable": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
       },
       "api.params.predicate.filter.integer-strict": {
         "type": "integer",
@@ -19341,15 +19315,26 @@
           "type": "string"
         }
       },
-      "model.asset-group-tags-selector-update": {
-        "type": "object",
+      "model.asset-group-tags-selector-request": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
           },
           {
             "type": "object",
             "properties": {
+              "auto_certify": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+              },
+              "description": {
+                "type": "string"
+              },
               "disabled": {
                 "type": "boolean"
               }

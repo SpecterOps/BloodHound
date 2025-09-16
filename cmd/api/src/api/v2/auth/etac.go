@@ -72,7 +72,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 	} else {
 		for _, envId := range envIds {
 			if _, ok := nodesByObject[envId]; !ok {
-				return errors.New(fmt.Sprintf("domain or tenant not found: %s", envId))
+				return fmt.Errorf("domain or tenant not found: %s", envId)
 			} else {
 				user.EnvironmentAccessControl = append(user.EnvironmentAccessControl, model.EnvironmentAccess{
 					UserID:        user.ID.String(),
