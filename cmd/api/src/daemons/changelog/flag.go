@@ -26,6 +26,16 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
+type LockResult struct {
+	Context   context.Context
+	IsPrimary bool
+}
+
+type HA interface {
+	TryLock() (LockResult, error)
+	Release() error
+}
+
 // featureFlagManager handles feature flag polling and cache lifecycle management.
 type featureFlagManager struct {
 	flagGetter   func(context.Context) (bool, int, error)
@@ -33,6 +43,24 @@ type featureFlagManager struct {
 
 	mu    sync.RWMutex
 	cache *cache
+
+	// HA aware
+	haMutex HA
+}
+
+// todo: we want to lock down the cache enabling/disabling to the primary api only
+func (s *featureFlagManager) isPrimary(ctx context.Context) (bool, context.Context) {
+	// We're going to try to get the HA lock. This will let us know if we're primary or not.
+	if lockResult, err := s.haMutex.TryLock(); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to validate HA election status: %v", err))
+		return false, ctx
+	} else if lockResult.IsPrimary {
+		// If we were not primary, but now we are, we need to get ready to be primary
+		return true, lockResult.Context
+	} else {
+		// If we're not primary, we don't do anything except note we aren't important right now
+		return false, ctx
+	}
 }
 
 func newFeatureFlagManager(flagGetter func(context.Context) (bool, int, error), pollInterval time.Duration) *featureFlagManager {
@@ -59,6 +87,13 @@ func (s *featureFlagManager) runPoller(ctx context.Context) {
 			return
 
 		case <-ticker.C:
+			active, primaryCtx := s.isPrimary(ctx)
+			if !active {
+				continue
+			}
+
+			// don't perform the following actions if we aren't the primary instance
+
 			flagEnabled, size, err := s.flagGetter(ctx)
 			if err != nil {
 				slog.WarnContext(ctx, "feature flag check failed", "err", err)
@@ -67,10 +102,10 @@ func (s *featureFlagManager) runPoller(ctx context.Context) {
 
 			switch {
 			case flagEnabled && !isEnabled:
-				s.enable(ctx, size)
+				s.enable(primaryCtx, size)
 				isEnabled = true
 			case !flagEnabled && isEnabled:
-				s.disable(ctx)
+				s.disable(primaryCtx)
 				isEnabled = false
 			}
 		}
