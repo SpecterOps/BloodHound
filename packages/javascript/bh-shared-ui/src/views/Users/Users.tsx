@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogOverlay, DialogPortal, DialogTrigger } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
@@ -189,7 +188,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                     </Typography>
                 }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    {/* TODO: IMPLEMENT FEATURE FLAG TO DISPLAY IF ON */}
+                    {/* TODO: https://specterops.atlassian.net/browse/BED-6229 */}
                     {/*
                     <FeatureFlag
                     flagKey='PUT_ETAC_FEATURE_FLAG_HERE'
@@ -199,35 +198,15 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                         }
                     />
                     */}
-                    <Dialog
+                    <CreateUserDialog
+                        error={createUserMutation.error}
+                        isLoading={createUserMutation.isLoading}
+                        onClose={toggleCreateUserDialog}
+                        onExited={createUserMutation.reset}
+                        onSave={createUserMutation.mutateAsync}
                         open={createUserDialogOpen}
-                        onOpenChange={toggleCreateUserDialog}
-                        data-testid='create-user-dialog'>
-                        <DialogTrigger asChild>
-                            <Button
-                                disabled={!hasPermission}
-                                onClick={() => {
-                                    setSelectedUserId(null);
-                                    toggleCreateUserDialog();
-                                }}
-                                data-testid='manage-users_button-create-user'>
-                                Create User
-                            </Button>
-                        </DialogTrigger>
-                        <DialogPortal>
-                            <DialogOverlay>
-                                <CreateUserDialog
-                                    error={createUserMutation.error}
-                                    isLoading={createUserMutation.isLoading}
-                                    onClose={toggleCreateUserDialog}
-                                    onExited={createUserMutation.reset}
-                                    onSave={createUserMutation.mutateAsync}
-                                    open={createUserDialogOpen}
-                                    showEnvironmentAccessControls={showEnvironmentAccessControls}
-                                />
-                            </DialogOverlay>
-                        </DialogPortal>
-                    </Dialog>
+                        showEnvironmentAccessControls={showEnvironmentAccessControls}
+                    />
                 </Box>
                 <Paper data-testid='manage-users_table'>
                     <UsersTable
@@ -244,21 +223,18 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 </Paper>
             </PageWithTitle>
 
-            <Dialog open={updateUserDialogOpen} onOpenChange={toggleUpdateUserDialog}>
-                <DialogPortal>
-                    <UpdateUserDialog
-                        error={updateUserMutation.error}
-                        hasSelectedSelf={hasSelectedSelf}
-                        isLoading={updateUserMutation.isLoading}
-                        onClose={toggleUpdateUserDialog}
-                        onExited={updateUserMutation.reset}
-                        onSave={updateUserMutation.mutateAsync}
-                        open={updateUserDialogOpen}
-                        showEnvironmentAccessControls={showEnvironmentAccessControls}
-                        userId={selectedUserId!}
-                    />
-                </DialogPortal>
-            </Dialog>
+            <UpdateUserDialog
+                error={updateUserMutation.error}
+                hasSelectedSelf={hasSelectedSelf}
+                isLoading={updateUserMutation.isLoading}
+                onClose={toggleUpdateUserDialog}
+                onExited={updateUserMutation.reset}
+                onSave={updateUserMutation.mutateAsync}
+                open={updateUserDialogOpen}
+                showEnvironmentAccessControls={showEnvironmentAccessControls}
+                userId={selectedUserId!}
+            />
+
             <ConfirmationDialog
                 open={enableUserDialogOpen}
                 text={'Are you sure you want to enable this user?'}
