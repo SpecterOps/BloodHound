@@ -36,21 +36,38 @@ import (
 // and will return an error on bad requests
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
-func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironmentAccessControlRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
+func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
 	var (
-		environments = make([]string, 0, len(etacRequest.Environments))
+		allEnvironments = true
 	)
 
-	user.AllEnvironments = etacRequest.AllEnvironments
+	// Set allEnvironments to true by default, and only change it if the request contains an explicit set
+	// This avoids Go from defaulting the boolean to true when decoding the payload
+	if updateUserRequest.AllEnvironments.Valid {
+		allEnvironments = updateUserRequest.AllEnvironments.Bool
+	}
 
 	if roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser}) {
-		return errors.New(api.ErrorResponseETACInvalidRoles)
-	} else if len(etacRequest.Environments) != 0 && etacRequest.AllEnvironments {
+		if !allEnvironments || (updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) > 0) {
+			return errors.New(api.ErrorResponseETACInvalidRoles)
+		}
+	} else if (allEnvironments && updateUserRequest.AllEnvironments.Valid) && (updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) != 0) {
+		// Both all_environments and environment_access_control was set on the request
+		// A user may only have all_environments true or an environment access control list
 		return errors.New(api.ErrorResponseETACBadRequest)
-	} else if etacRequest.AllEnvironments {
+	} else if updateUserRequest.AllEnvironments.Valid {
 		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
-	} else {
-		for _, environment := range etacRequest.Environments {
+		user.AllEnvironments = allEnvironments
+	}
+
+	if updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) > 0 {
+		var (
+			environments = make([]string, 0, len(updateUserRequest.EnvironmentAccessControl.Environments))
+		)
+		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0, len(updateUserRequest.EnvironmentAccessControl.Environments))
+		user.AllEnvironments = false
+
+		for _, environment := range updateUserRequest.EnvironmentAccessControl.Environments {
 			environments = append(environments, environment.EnvironmentID)
 		}
 
@@ -62,18 +79,16 @@ func handleETACRequest(ctx context.Context, etacRequest v2.UpdateUserEnvironment
 			if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
 				return err
 			} else {
-				environmentAccessList := make([]model.EnvironmentAccess, 0, len(etacRequest.Environments))
 				for _, environment := range environments {
 					if _, ok := nodesByObject[environment]; !ok {
 						return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
 					} else {
-						environmentAccessList = append(environmentAccessList, model.EnvironmentAccess{
+						user.EnvironmentAccessControl = append(user.EnvironmentAccessControl, model.EnvironmentAccess{
 							UserID:      user.ID.String(),
 							Environment: environment,
 						})
 					}
 				}
-				user.EnvironmentAccessControl = environmentAccessList
 			}
 		}
 	}

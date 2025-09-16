@@ -28,8 +28,7 @@ type UpdateEnvironmentRequest struct {
 }
 
 type UpdateUserEnvironmentAccessControlRequest struct {
-	Environments    []UpdateEnvironmentRequest `json:"environments"`
-	AllEnvironments bool                       `json:"all_environments"`
+	Environments []UpdateEnvironmentRequest `json:"environments"`
 }
 
 func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, user model.User, environments ...string) (bool, error) {

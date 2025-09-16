@@ -18137,14 +18137,15 @@
           "is_disabled": {
             "type": "boolean"
           },
+          "all_environments": {
+            "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
+            "type": "boolean"
+          },
           "environment_access_control": {
             "type": "object",
             "additionalProperties": false,
             "description": "Sets an environment access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
             "properties": {
-              "all_environments": {
-                "type": "boolean"
-              },
               "environments": {
                 "type": "array",
                 "uniqueItems": true,
@@ -18158,31 +18159,31 @@
                   }
                 }
               }
-            },
-            "oneOf": [
-              {
-                "required": [
-                  "all_environments"
-                ],
-                "not": {
-                  "required": [
-                    "environments"
-                  ]
-                }
-              },
-              {
-                "required": [
-                  "environments"
-                ],
-                "not": {
-                  "required": [
-                    "all_environments"
-                  ]
-                }
-              }
-            ]
+            }
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "all_environments"
+            ],
+            "not": {
+              "required": [
+                "environment_access_control"
+              ]
+            }
+          },
+          {
+            "required": [
+              "environment_access_control"
+            ],
+            "not": {
+              "required": [
+                "all_environments"
+              ]
+            }
+          }
+        ]
       },
       "api.requests.user.set-secret": {
         "type": "object",

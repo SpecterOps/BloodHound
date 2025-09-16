@@ -1534,10 +1534,9 @@ func TestCreateUser_ETAC(t *testing.T) {
 			},
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
-					Principal: "good user",
-					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
-						AllEnvironments: true,
-					},
+					Principal:                "good user",
+					AllEnvironments:          null.BoolFrom(true),
+					EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{},
 				},
 				SetUserSecretRequest: v2.SetUserSecretRequest{
 					Secret:             "abcDEF123456$$",
@@ -1684,8 +1683,8 @@ func TestCreateUser_ETAC(t *testing.T) {
 								EnvironmentID: "54321",
 							},
 						},
-						AllEnvironments: true,
 					},
+					AllEnvironments: null.BoolFrom(true),
 				},
 				SetUserSecretRequest: v2.SetUserSecretRequest{
 					Secret:             "abcDEF123456$$",
@@ -2966,10 +2965,9 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				}
 			},
 			updateRequest: v2.UpdateUserRequest{
-				IsDisabled: &isDisabled,
-				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
-					AllEnvironments: true,
-				},
+				IsDisabled:               &isDisabled,
+				AllEnvironments:          null.BoolFrom(true),
+				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{},
 			},
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
@@ -2986,14 +2984,14 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				}
 			},
 			updateRequest: v2.UpdateUserRequest{
-				IsDisabled: &isDisabled,
+				IsDisabled:      &isDisabled,
+				AllEnvironments: null.BoolFrom(false),
 				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
 							EnvironmentID: "12345",
 						},
 					},
-					AllEnvironments: false,
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -3045,7 +3043,8 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				}
 			},
 			updateRequest: v2.UpdateUserRequest{
-				IsDisabled: &isDisabled,
+				IsDisabled:      &isDisabled,
+				AllEnvironments: null.BoolFrom(true),
 				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
@@ -3055,7 +3054,6 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 							EnvironmentID: "54321",
 						},
 					},
-					AllEnvironments: true,
 				},
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -3075,7 +3073,8 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 				}
 			},
 			updateRequest: v2.UpdateUserRequest{
-				IsDisabled: &isDisabled,
+				IsDisabled:      &isDisabled,
+				AllEnvironments: null.BoolFrom(false),
 				EnvironmentAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
@@ -3085,7 +3084,6 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 							EnvironmentID: "54321",
 						},
 					},
-					AllEnvironments: false,
 				},
 			},
 			expectedStatus: http.StatusBadRequest,

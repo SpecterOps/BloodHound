@@ -13,15 +13,7 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
--- Add OpenGraph Phase 2 feature flag
-INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
-VALUES (
-           current_timestamp,
-           current_timestamp,
-           'open_graph_phase_2',
-           'Open Graph Phase 2',
-           'Open Graph Phase 2 features',
-           false,
-           false
-       )
-ON CONFLICT DO NOTHING;
+
+
+-- Set all_environments to true for existing users
+UPDATE users SET all_environments = true;
