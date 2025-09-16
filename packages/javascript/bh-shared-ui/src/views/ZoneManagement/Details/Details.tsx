@@ -29,14 +29,13 @@ import {
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import {
-    DEFAULT_PRIVILEGE_ZONES_ROUTE,
-    ROUTE_PRIVILEGE_ZONES_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ROOT,
     detailsPath,
-    memberPath,
+    labelsPath,
+    membersPath,
     privilegeZonesPath,
     savePath,
-    selectorPath,
+    selectorsPath,
+    zonesPath,
 } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
@@ -54,16 +53,18 @@ export const getSavePath = (
     labelId: string | undefined,
     selectorId: string | undefined
 ) => {
-    const tagType = labelId ? 'zone' : 'label';
+    const tagType = !labelId ? zonesPath : labelsPath;
     let tagPathId = '';
 
     if (zoneId || labelId) {
-        tagPathId = tagType === 'zone' ? zoneId ?? '' : labelId ?? '';
+        tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
     }
 
-    const selectorIdPath = selectorId ? `${selectorPath}/${selectorId}` : '';
+    if (tagPathId === '') return;
 
-    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${selectorIdPath}/${savePath}`;
+    const selectorIdPath = selectorId ? `${selectorsPath}/${selectorId}/${savePath}` : savePath;
+
+    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${selectorIdPath}`;
 };
 
 export const getEditButtonState = (
@@ -86,10 +87,10 @@ const Details: FC = () => {
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { zoneId = topTagId?.toString(), labelId, selectorId, memberId } = useParams();
-    const tagType = labelId ? 'zone' : 'label';
+    const tagType = !labelId ? zonesPath : labelsPath;
     const environments = useEnvironmentIdList([
         {
-            path: ROUTE_PRIVILEGE_ZONES_ROOT + DEFAULT_PRIVILEGE_ZONES_ROUTE + tagType + ROUTE_PRIVILEGE_ZONES_DETAILS,
+            path: `/${privilegeZonesPath}/${zonesPath}/${tagType}/${detailsPath}`,
             caseSensitive: false,
             end: false,
         },
@@ -118,6 +119,8 @@ const Details: FC = () => {
 
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
 
+    const saveLink = getSavePath(zoneId, labelId, selectorId);
+
     return (
         <div className='h-full'>
             <div className='flex mt-6'>
@@ -128,10 +131,10 @@ const Details: FC = () => {
                 <div className='w-1/3 ml-8'>
                     {showEditButton && (
                         <Button
-                            asChild
+                            asChild={showEditButton || !saveLink}
                             variant={'secondary'}
-                            disabled={showEditButton || !getSavePath(zoneId, labelId, selectorId)}>
-                            <AppLink to={getSavePath(zoneId, labelId, selectorId) || ''}>Edit</AppLink>
+                            disabled={showEditButton || !saveLink}>
+                            <AppLink to={saveLink || ''}>Edit</AppLink>
                         </Button>
                     )}
                 </div>
@@ -163,7 +166,7 @@ const Details: FC = () => {
                         onChangeSortOrder={setSelectorsListSortOrder}
                         onSelect={(id) => {
                             navigate(
-                                `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${id}/${detailsPath}`
+                                `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
                             );
                         }}
                         selected={selectorId}
@@ -175,7 +178,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${selectorId}/${memberPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}
@@ -187,7 +190,7 @@ const Details: FC = () => {
                             selected={memberId}
                             onClick={(id) => {
                                 navigate(
-                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${memberPath}/${id}/${detailsPath}`
+                                    `/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${membersPath}/${id}/${detailsPath}`
                                 );
                             }}
                             sortOrder={membersListSortOrder}

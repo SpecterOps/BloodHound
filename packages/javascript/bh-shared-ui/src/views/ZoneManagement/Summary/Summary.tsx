@@ -47,14 +47,15 @@ const Summary: FC = () => {
     const { InfoHeader } = context;
 
     const tagsQuery = useTagsQuery();
+    const saveLink = getSavePath(zoneId, labelId, selectorId);
 
     return (
         <div className='h-full'>
             <div className='flex mt-6 gap-8'>
                 <InfoHeader />
                 <div className='basis-1/3'>
-                    <Button asChild variant={'secondary'}>
-                        <Link data-testid='privilege-zones_edit-button' to={getSavePath(zoneId, labelId, selectorId)}>
+                    <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
+                        <Link data-testid='privilege-zones_edit-button' to={saveLink || ''}>
                             Edit
                         </Link>
                     </Button>
