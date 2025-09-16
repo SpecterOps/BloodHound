@@ -17,5 +17,13 @@
 
 -- Set all_environments to true for existing users
 UPDATE users SET all_environments = true;
--- Rename environment to environment_id to prepare for data partitioning
-ALTER TABLE IF EXISTS environment_access_control RENAME COLUMN environment TO environment_id;
+-- Rename environment to environment_id to prepare for data partitioning, if the column does not exist then we throw away the error for idempotence
+DO
+$$
+    BEGIN
+        ALTER TABLE environment_access_control
+            RENAME COLUMN environment_id TO environment_id;
+    EXCEPTION
+        WHEN undefined_column THEN
+    END;
+$$;
