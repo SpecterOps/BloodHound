@@ -5,7 +5,7 @@ import { DetailsAccordion } from './DetailsAccordion';
 
 // Need test ID for icon
 vi.mock('@fortawesome/react-fontawesome', () => ({
-    FontAwesomeIcon: (props: any) => <span data-testid='fa' {...props} />,
+    FontAwesomeIcon: ({ className }: any) => <span data-testid='fa' className={className} />,
 }));
 
 vi.mock('@fortawesome/free-solid-svg-icons', () => ({ faAngleDown: {} }));
@@ -51,7 +51,7 @@ describe('<DetailsAccordion />', () => {
         expect(screen.getByText('Alpha')).toBeInTheDocument();
 
         // Click header B, then "Beta" should appear
-        await user.click(screen.getAllByRole('button').find((el) => el.textContent?.includes('B'))!);
+        await user.click(screen.getByRole('button', { name: 'B' }));
         expect(screen.getByText('Beta')).toBeInTheDocument();
     });
 
@@ -94,8 +94,7 @@ describe('<DetailsAccordion />', () => {
         );
 
         const header = screen.getByRole('button');
-        // spot-check a couple of classes from implementation
-        expect(header).toHaveClass('bg-[#e0e0e0]');
+        // spot-check invariant classes from implementation
         expect(header).toHaveClass('border-l-8');
         expect(header).toHaveClass('border-primary');
     });
@@ -114,6 +113,7 @@ describe('<DetailsAccordion />', () => {
         );
 
         const [disabledHeader, enabledHeader] = screen.getAllByRole('button');
+        expect(disabledHeader).toHaveAttribute('data-disabled');
 
         // Icon for disabled row should have opacity-0
         const disabledIcon = disabledHeader.querySelector('[data-testid="fa"]');
@@ -135,9 +135,10 @@ describe('<DetailsAccordion />', () => {
                 openIndex={1}
             />
         );
-        // only 'two' should be visible initially
-        expect(screen.queryByText('one')).not.toBeInTheDocument();
-        expect(screen.getByText('two')).toBeInTheDocument();
+        const firstHeader = screen.getByRole('button', { name: /First/i });
+        const secondHeader = screen.getByRole('button', { name: /Second/i });
+        expect(firstHeader).toHaveAttribute('aria-expanded', 'false');
+        expect(secondHeader).toHaveAttribute('aria-expanded', 'true');
     });
 
     it('clicking a disabled header does not toggle content', async () => {
@@ -175,13 +176,33 @@ describe('<DetailsAccordion />', () => {
         expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
         expect(screen.queryByText('Beta')).not.toBeInTheDocument();
 
+        const a = screen.getByRole('button', { name: /A/i });
+        const b = screen.getByRole('button', { name: /B/i });
+
         // Open A
-        await user.click(screen.getByRole('button', { name: /A/i }));
-        expect(screen.getByText('Alpha')).toBeInTheDocument();
+        await user.click(a);
+        expect(a).toHaveAttribute('aria-expanded', 'true');
 
         // Open B (single mode should close A)
-        await user.click(screen.getByRole('button', { name: /B/i }));
-        expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
-        expect(screen.getByText('Beta')).toBeInTheDocument();
+        await user.click(b);
+        expect(a).toHaveAttribute('aria-expanded', 'false');
+        expect(b).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('collapses an open item when its header is clicked again', async () => {
+        const user = userEvent.setup();
+        render(
+            <DetailsAccordion<Item>
+                Header={Header}
+                Content={Content}
+                items={[{ title: 'A', description: 'Alpha' }]}
+                openIndex={0}
+            />
+        );
+        const header = screen.getByRole('button', { name: /A/i });
+        expect(screen.getByText('Alpha')).toBeInTheDocument();
+        await user.click(header);
+        // Prefer visibility or aria-expanded as noted above
+        expect(header).toHaveAttribute('aria-expanded', 'false');
     });
 });

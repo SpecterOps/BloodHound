@@ -2,11 +2,10 @@ import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from '@bl
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
-import { stubFalse } from 'lodash';
 
 import React, { ComponentType } from 'react';
 
-type DetailsAccordionProps<T extends Record<string, unknown>> = {
+export type DetailsAccordionProps<T extends Record<string, unknown>> = {
     /** If `true`, applies an accent style to the selected item’s header  */
     accent?: boolean;
 
@@ -28,7 +27,7 @@ type DetailsAccordionProps<T extends Record<string, unknown>> = {
     /** A single item or array of items to render */
     items?: T | T[];
 
-    /** Index of the item that should start open (`null` = none) */
+    /** Index of the item that should start open (`undefined` = none) */
     openIndex?: number;
 };
 
@@ -63,7 +62,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
     Empty,
     getKey,
     items,
-    itemDisabled = stubFalse,
+    itemDisabled = () => false,
     Header,
     openIndex,
 }: DetailsAccordionProps<T>) => {
@@ -73,8 +72,11 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
 
     const itemArray = Array.isArray(items) ? items : [items];
 
+    const defaultValue =
+        typeof openIndex === 'number' && openIndex >= 0 && openIndex < itemArray.length ? String(openIndex) : undefined;
+
     return (
-        <Accordion collapsible defaultValue={String(openIndex)} type='single'>
+        <Accordion collapsible defaultValue={defaultValue} type='single'>
             {itemArray.map((item, idx) => {
                 if (item === undefined) {
                     return null;
@@ -96,7 +98,11 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                                 isDisabled && 'hover:no-underline',
                                 accent && 'bg-[#e0e0e0] dark:bg-[#202020] border-l-8 border-primary'
                             )}>
-                            <FontAwesomeIcon icon={faAngleDown} className={clsx(isDisabled && 'opacity-0')} />
+                            <FontAwesomeIcon
+                                aria-hidden
+                                className={clsx(isDisabled && 'opacity-0')}
+                                icon={faAngleDown}
+                            />
                             <Header {...item} />
                         </AccordionHeader>
 
