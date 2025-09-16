@@ -70,7 +70,7 @@ export const ROUTES: Routable[] = [
     },
     {
         exact: true,
-        path: routes.ROUTE_ZONE_MANAGEMENT_ROOT,
+        path: routes.ROUTE_PRIVILEGE_ZONES_ROOT,
         component: ZoneManagement,
         authenticationRequired: true,
         navigation: true,
@@ -111,7 +111,7 @@ export const ROUTES: Routable[] = [
 
 export const ZONE_MANAGEMENT_ROUTE: Routable = {
     exact: true,
-    path: routes.ROUTE_ZONE_MANAGEMENT_ROOT,
+    path: routes.ROUTE_PRIVILEGE_ZONES_ROOT,
     component: ZoneManagement,
     authenticationRequired: true,
     navigation: true,
