@@ -74,6 +74,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const exportEnabled = selectedQuery?.id ? true : false;
+    const deleteEnabled = selectedQuery?.id && selectedQuery?.canEdit ? true : false;
 
     const importHandler = () => {
         setShowImportDialog(true);
@@ -108,7 +109,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         </Button>
                         <Button
                             aria-label='delete'
-                            disabled={!exportEnabled}
+                            disabled={!deleteEnabled}
                             className='ml-2'
                             variant='icon'
                             onClick={() => deleteHandler(selectedQuery?.id as number)}>
