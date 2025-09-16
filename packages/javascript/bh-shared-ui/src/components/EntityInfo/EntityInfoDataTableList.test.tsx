@@ -22,7 +22,7 @@ import { zoneHandlers } from '../../mocks';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import { EntityInfoDataTableProps, EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
-import EntitySelectorsInformation from '../../views/ZoneManagement/Details/EntitySelectorsInformation';
+import EntitySelectorsInformation from '../../views/PrivilegeZones/Details/EntitySelectorsInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
 import EntityInfoContent from './EntityInfoContent';
 

@@ -13,7 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { PrivilegeZones } from 'bh-shared-ui';
+import PrivilegeZonesProvider from './PrivilegeZonesProvider';
 
-export * from './explore';
-export * from './initial';
-export * as zoneMocks from './privilegeZones';
+import { FC } from 'react';
+
+const BHCEPrivilegeZones: FC = () => {
+    return (
+        <PrivilegeZonesProvider>
+            <PrivilegeZones />
+        </PrivilegeZonesProvider>
+    );
+};
+
+export default BHCEPrivilegeZones;

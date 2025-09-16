@@ -13,7 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { PrivilegeZonesContext, defaultPrivilegeZoneCtxValue } from 'bh-shared-ui';
+import InfoHeader from './InfoHeader';
 
-export * from './explore';
-export * from './initial';
-export * as zoneMocks from './privilegeZones';
+const PrivilegeZonesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <PrivilegeZonesContext.Provider value={{ ...defaultPrivilegeZoneCtxValue, InfoHeader }}>
+            {children}
+        </PrivilegeZonesContext.Provider>
+    );
+};
+
+export default PrivilegeZonesProvider;

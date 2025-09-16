@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './explore';
-export * from './initial';
-export * as zoneMocks from './privilegeZones';
+import PrivilegeZones from './PrivilegeZones';
+
+export * from './ZoneAnalysisIcon';
+export * from './PrivilegeZonesContext';
+export * from './utils';
+export default PrivilegeZones;

@@ -37,7 +37,7 @@ import {
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
 } from 'js-client-library';
-import { useTagsQuery } from '../../../../hooks';
+import { usePZPathParams, useTagsQuery } from '../../../../hooks';
 import { labelsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../../routes';
 import { QueryLineItem } from '../../../../types';
 import { useAppNavigate } from '../../../../utils';
@@ -53,9 +53,8 @@ type TagToZoneLabelDialogProps = {
 const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useAppNavigate();
-
     const tagsQuery = useTagsQuery();
-
+    const { tagTypeDisplay } = usePZPathParams();
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
     const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
@@ -65,7 +64,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const [zoneId, setZoneId] = useState('');
     const [labelId, setLabelId] = useState('');
-
+    const continueDisabled = (isLabel && !labelId) || (!isLabel && !zoneId);
     const handleValueChange = (val: string) => {
         if (isLabel) {
             setLabelId(val);
@@ -90,11 +89,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
         }
     };
 
-    const title = isLabel ? 'Label' : 'Zone';
-
-    const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
-
-    const continueDisabled = (isLabel && !labelId) || (!isLabel && !zoneId);
+    const description = `Pick a ${tagTypeDisplay} to create a new selector. All assets returned by the query will be added to your selector.`;
 
     return (
         <Dialog
@@ -110,13 +105,13 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
                         blurBackground: false,
                     }}
                     maxWidth='sm'>
-                    <DialogTitle>Tag Results to {title}</DialogTitle>
+                    <DialogTitle>Tag Results to {tagTypeDisplay}</DialogTitle>
 
                     <DialogDescription>{description}</DialogDescription>
 
                     <Select onValueChange={handleValueChange}>
                         <SelectTrigger className='w-60'>
-                            <SelectValue placeholder={`Select ${title}`} />
+                            <SelectValue placeholder={`Select ${tagTypeDisplay}`} />
                         </SelectTrigger>
                         <SelectPortal>
                             <SelectContent>
