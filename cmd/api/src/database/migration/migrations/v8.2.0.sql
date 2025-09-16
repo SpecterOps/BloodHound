@@ -26,6 +26,35 @@ VALUES (
        )
 ON CONFLICT DO NOTHING;
 
+INSERT INTO permissions(created_at, updated_at, authority, name)
+VALUES (
+        current_timestamp,
+        current_timestamp,
+        'auth',
+        'ReadUsers'
+       )
+ON CONFLICT DO NOTHING;
+
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p
+ON (p.authority, p.name) = ('auth', 'ReadUsers')
+WHERE r.name IN ('Administrator', 'User', 'Read-Only', 'Power User')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (
+           current_timestamp,
+           current_timestamp,
+           'changelog',
+           'Changelog',
+           'This flag allows the application to query the changelog daemon for deduplication of ingest payloads.',
+           false,
+           false
+       )
+ON CONFLICT DO NOTHING;
+
 -- Add Stale Client Updated Logic rework parameter
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES (
