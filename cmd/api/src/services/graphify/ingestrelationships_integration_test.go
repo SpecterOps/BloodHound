@@ -21,7 +21,6 @@ package graphify
 
 import (
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -29,8 +28,331 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
+
+// verify that nodes and edges are created or updated based on existing graph state
+func Test_IngestRelationships(t *testing.T) {
+	t.Run("Create rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "computer a", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "computer b", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was created
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+
+					require.Equal(t, int64(1), count)
+					require.Nil(t, err)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Update rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "computer a", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "computer b", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleRel{RelType: graph.StringKind("existing_edge_kind"), RelProps: map[string]any{"hello": "world"}},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was updated
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					rels := []*graph.Relationship{}
+					err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("existing_edge_kind")),
+						),
+					).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+						for rel := range cursor.Chan() {
+							rels = append(rels, rel)
+						}
+
+						return nil
+					})
+					require.Nil(t, err)
+					// was there only one exact match?
+					require.Len(t, rels, 1)
+					// were properties merged?
+					property, _ := rels[0].Properties.Get("hello").String()
+					require.Equal(t, "world", property)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Create rel using source/target nodes that specify objectid.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was created
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+
+					require.Equal(t, int64(1), count)
+					require.Nil(t, err)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Update rel using source/target nodes that specify objectid.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{RelType: graph.StringKind("existing_edge_kind"), RelProps: map[string]any{"hello": "world"}},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was updated
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					rels := []*graph.Relationship{}
+					err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("existing_edge_kind")),
+						),
+					).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+						for rel := range cursor.Chan() {
+							rels = append(rels, rel)
+						}
+
+						return nil
+					})
+					require.Nil(t, err)
+					// was there only one exact match?
+					require.Len(t, rels, 1)
+					// were properties merged?
+					property, _ := rels[0].Properties.Get("hello").String()
+					require.Equal(t, "world", property)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Create rel. Source/target nodes' objectid's dont exist. Both nodes get created and rel gets created.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "0001"},
+					ein.IngestibleEndpoint{Value: "0002"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					nodeIDs := map[string]graph.ID{}
+					// verify start and end nodes were created
+					_ = tx.Nodes().Filter(
+						query.Or(
+							query.Equals(query.Property(query.Node(), "objectid"), "0001"),
+							query.Equals(query.Property(query.Node(), "objectid"), "0002"),
+						)).
+						OrderBy(query.Order(query.Property(query.Node(), "objectid"), query.Ascending())).Fetch(
+						func(cursor graph.Cursor[*graph.Node]) error {
+							for node := range cursor.Chan() {
+								objectid, _ := node.Properties.Get("objectid").String()
+								nodeIDs[objectid] = node.ID
+							}
+							return nil
+						},
+					)
+
+					require.Len(t, nodeIDs, 2)
+
+					// verify rel created
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), nodeIDs["0001"]),
+							query.Equals(query.EndID(), nodeIDs["0002"]),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+
+					require.Equal(t, int64(1), count)
+					require.Nil(t, err)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Dont create rel. Source/target nodes' have names that don't resolve to objectids. Neither node gets created and rel creation is skipped.", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "bubba", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "lubba", MatchBy: ein.MatchByName},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					err := IngestRelationships(ingestContext, graph.EmptyKind, rels)
+					require.ErrorContains(t, err, "skipping invalid relationship")
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					// verify start and end nodes were not created
+					numNodes, _ := tx.Nodes().Filter(query.Or(
+						query.Equals(query.Property(query.Node(), "name"), "bubba"),
+						query.Equals(query.Property(query.Node(), "name"), "lubba"))).Count()
+					require.Zero(t, numNodes)
+
+					// verify rel not created
+					numRels, _ := tx.Relationships().Filter(query.Kind(query.Relationship(), graph.StringKind("related_to"))).Count()
+					require.Zero(t, numRels)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+}
 
 func Test_ResolveRelationships(t *testing.T) {
 	var (
@@ -41,6 +363,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Exact match (happy path). Source and target node names both resolve unambiguously to nodes with objectids.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -54,8 +377,8 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -79,6 +402,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Only source matches. Target node is unmatched by name - update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -92,8 +416,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -107,6 +432,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Only target matches.	Source node is unmatched by name - update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -120,8 +446,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -135,6 +462,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Neither matches. No node resolves to source or target — update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -148,8 +476,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -163,6 +492,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Multiple matches for source — ambiguity, update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -176,8 +506,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -191,6 +522,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Multiple matches for target — ambiguity, update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -204,8 +536,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -219,6 +552,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Kind filters for endpoints are nil. Resolved by name only", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -232,8 +566,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -257,6 +592,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Mixed resolution strategy. Source uses MatchByName, Target uses MatchByID.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -270,8 +606,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -294,6 +631,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Mixed resolution strategy. Target uses MatchByName, Source uses MatchByID.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -307,8 +645,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -330,6 +669,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Source name matches 2 nodes with the same name but different kinds. Resolution should honor optional kind filter.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -343,8 +683,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -366,6 +707,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Both nodes match but with mismatched kinds. Filtered out due to kind mismatch — update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -379,8 +721,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -394,6 +737,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Empty or null Source or Target values — update should be skipped.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -407,8 +751,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
@@ -422,6 +767,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("ID match fallback. Both source/target use MatchByID.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -435,8 +781,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -458,6 +805,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 	t.Run("Batch input, multiple updates returned.", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -500,8 +848,9 @@ func Test_ResolveRelationships(t *testing.T) {
 				}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					timestampedBatch := NewTimestampedBatch(batch, time.Now().UTC())
-					updates, err := resolveRelationships(timestampedBatch, rels, graph.EmptyKind)
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch))
+
+					updates, err := resolveRelationships(ingestContext, rels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 2)
 

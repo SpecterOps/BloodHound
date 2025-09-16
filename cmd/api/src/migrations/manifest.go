@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -45,6 +46,41 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	} else {
 		return version.GetVersion().GreaterThan(currentMigration), nil
 	}
+}
+
+func Version_813_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to revert MemberOf between well known groups")()
+
+	targetCriteria := query.And(
+		query.Kind(query.Start(), ad.Group),
+		query.Kind(query.End(), ad.Group),
+		query.Kind(query.Relationship(), ad.MemberOf),
+		query.Or(
+			query.And(
+				query.StringEndsWith(query.StartProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String()),
+				query.StringEndsWith(query.EndProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String()),
+			),
+			query.And(
+				query.StringEndsWith(query.StartProperty(common.ObjectID.String()), wellknown.EveryoneSIDSuffix.String()),
+				query.StringEndsWith(query.EndProperty(common.ObjectID.String()), wellknown.EveryoneSIDSuffix.String()),
+			),
+		),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 // Version_740_Migration is intended to split the TrustedBy edge to into SameForestTrust and CrossForestTrust edges
@@ -434,6 +470,10 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
 		Execute: Version_740_Migration,
+	},
+	{
+		Version: version.Version{Major: 8, Minor: 1, Patch: 3},
+		Execute: Version_813_Migration,
 	},
 }
 

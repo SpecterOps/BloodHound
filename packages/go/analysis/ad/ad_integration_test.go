@@ -280,24 +280,6 @@ func TestLinkWellKnownNodes(t *testing.T) {
 						wellKnownNodesDomain1[wellknown.EveryoneNodeNamePrefix],
 					},
 				}
-				expectationsMemberOfCrossDomain := map[string][]*graph.Node{
-					"authenticated users node is linked to authenticated users node (SameForestTrust)": {
-						wellKnownNodesDomain1[wellknown.AuthenticatedUsersNodeNamePrefix],
-						wellKnownNodesDomain2[wellknown.AuthenticatedUsersNodeNamePrefix],
-					},
-					"everyone node is linked to everyone node (SameForestTrust)": {
-						wellKnownNodesDomain1[wellknown.EveryoneNodeNamePrefix],
-						wellKnownNodesDomain2[wellknown.EveryoneNodeNamePrefix],
-					},
-					"authenticated users node is linked to authenticated users node (CrossForestTrust)": {
-						wellKnownNodesDomain1[wellknown.AuthenticatedUsersNodeNamePrefix],
-						wellKnownNodesDomain3[wellknown.AuthenticatedUsersNodeNamePrefix],
-					},
-					"everyone node is linked to everyone node (CrossForestTrust)": {
-						wellKnownNodesDomain1[wellknown.EveryoneNodeNamePrefix],
-						wellKnownNodesDomain3[wellknown.EveryoneNodeNamePrefix],
-					},
-				}
 				expectationsClaimSpecialIdentityDomain1 := map[string][]*graph.Node{
 					"everyone node is linked to network node": {
 						wellKnownNodesDomain1[wellknown.EveryoneNodeNamePrefix],
@@ -334,22 +316,6 @@ func TestLinkWellKnownNodes(t *testing.T) {
 				}
 
 				for name, nodes := range expectationsMemberOfDomain1 {
-					var expectedRelationship *graph.Relationship
-					err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-						rel, err := tx.Relationships().Filterf(func() graph.Criteria {
-							return query.And(
-								query.Equals(query.StartID(), nodes[0].ID),
-								query.Equals(query.EndID(), nodes[1].ID),
-								query.Kind(query.Relationship(), ad.MemberOf),
-							)
-						}).First()
-						expectedRelationship = rel
-						return err
-					})
-					require.NoError(t, err, name)
-					require.NotNil(t, expectedRelationship, name)
-				}
-				for name, nodes := range expectationsMemberOfCrossDomain {
 					var expectedRelationship *graph.Relationship
 					err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 						rel, err := tx.Relationships().Filterf(func() graph.Criteria {
