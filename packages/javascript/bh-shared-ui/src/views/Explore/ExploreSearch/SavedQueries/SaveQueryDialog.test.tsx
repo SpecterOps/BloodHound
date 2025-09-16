@@ -554,7 +554,6 @@ describe('SaveQueryDialog', () => {
         // Table Header Rendered
         const nestedElement = await waitFor(() => screen.getByText(/Manage Shared Queries/i));
         expect(nestedElement).toBeInTheDocument();
-        screen.debug(nestedElement);
         const loading = screen.getByText(/loading .../i);
         expect(loading).toBeInTheDocument();
     });
