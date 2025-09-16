@@ -41,7 +41,7 @@ const BASE_COLUMNS = [
         id: 'date',
     },
     {
-        header: () => <div className='pl-8 text-left'>Tier/Label</div>,
+        header: () => <div className='pl-8 text-left'>Zone/Label</div>,
         id: 'tier',
     },
     {
@@ -177,10 +177,11 @@ const HistoryContent = () => {
     const { data: tags, isLoading: isTagsLoading, isSuccess: isTagsSuccess } = useTagsQuery();
 
     const scrollRef = useRef<HTMLDivElement>(null);
-    //console.log('logHistory', logHistory);
+    console.log('logHistory', logHistory);
     const historyData = logHistory ?? { pages: [{ count: 0, data: { records: [] } }] };
+    console.log('history data', historyData);
     const totalDBRowCount = historyData.pages[0].count;
-    const historyItemsRaw = historyData.pages.flatMap((item) => item.data.records) || [];
+    const historyItemsRaw = historyData.pages.flatMap((item) => item.data.records);
     console.log('rawHistory', historyItemsRaw);
     const totalFetched = historyItemsRaw.length;
 

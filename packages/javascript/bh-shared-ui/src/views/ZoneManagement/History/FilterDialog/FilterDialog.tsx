@@ -78,7 +78,7 @@ const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 const FilterDialog: FC<{
     setFilters: (filters: AssetGroupTagHistoryFilters) => void;
-    filters: AssetGroupTagHistoryFilters;
+    filters?: AssetGroupTagHistoryFilters;
 }> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
