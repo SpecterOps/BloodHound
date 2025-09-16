@@ -44,7 +44,7 @@ type TagListProps = {
 export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { hasZoneId, isLabelPage } = useZonePathParams();
+    const { hasZoneId, isLabelPage, isZonePage } = useZonePathParams();
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
@@ -87,7 +87,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                     ) : listQuery.isSuccess ? (
                         listQuery.data
                             ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && !isLabelPage) {
+                                if (isTag(a) && isTag(b) && isZonePage) {
                                     // A tag can be a zone and also have position null it seems
                                     return (a.position || 0) - (b.position || 0);
                                 } else {

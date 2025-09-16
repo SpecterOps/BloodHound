@@ -51,11 +51,7 @@ export const getSavePath = (
     selectorId: string | undefined
 ) => {
     const tagType = !labelId ? zonesPath : labelsPath;
-    let tagPathId = '';
-
-    if (zoneId || labelId) {
-        tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
-    }
+    const tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
 
     if (tagPathId === '') return;
 
@@ -110,13 +106,13 @@ const Details: FC = () => {
 
     const zonesQuery = useTagsQuery({
         select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone),
-        enabled: !!tagId,
+        enabled: !!zoneId,
     });
 
     const labelsQuery = useTagsQuery({
         select: (tags) =>
             tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
-        enabled: !!tagId,
+        enabled: !!labelId,
     });
 
     const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);

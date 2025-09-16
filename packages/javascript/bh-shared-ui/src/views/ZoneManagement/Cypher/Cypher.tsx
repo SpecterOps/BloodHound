@@ -25,7 +25,7 @@ import { encodeCypherQuery, useZonePathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
 import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
 
-const emptyFunction = () => {};
+const emptyFunction = () => { };
 
 export const Cypher: FC<{
     preview?: boolean;
@@ -71,7 +71,7 @@ export const Cypher: FC<{
             setCypherQuery(value);
             setStalePreview(true);
 
-            if (value.includes(':Tag_') && hasZoneId) setShowLabelWarning(true);
+            if (hasZoneId && value.includes(':Tag_')) setShowLabelWarning(true);
             else setShowLabelWarning(false);
         },
         [preview, setCypherQuery, hasZoneId]

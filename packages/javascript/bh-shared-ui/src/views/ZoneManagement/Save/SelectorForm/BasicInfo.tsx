@@ -56,9 +56,7 @@ import { SelectorFormInputs } from './types';
 const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInputs> }> = ({ control }) => {
     const location = useLocation();
     const navigate = useAppNavigate();
-
-    const { selectorId = '', tagId, tagType } = useZonePathParams();
-
+    const { selectorId = '', tagId, tagType, tagTypeDisplay } = useZonePathParams();
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
     const receivedData = location.state;
 
@@ -78,11 +76,8 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     });
 
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
-
     const { addNotification } = useNotifications();
-
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
     const deleteSelectorMutation = useDeleteSelector();
 
     const handleDeleteSelector = useCallback(async () => {
@@ -146,7 +141,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                         </div>
                     )}
                     <p className='font-bold'>
-                        {location.pathname.includes('label') ? 'Label' : 'Zone'}:{' '}
+                        {tagTypeDisplay}:{' '}
                         <span className='font-normal'>{tagQuery.data?.name}</span>
                     </p>
                     <div className='flex flex-col gap-6 mt-6'>
