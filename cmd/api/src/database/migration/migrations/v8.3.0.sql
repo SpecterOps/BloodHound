@@ -22,7 +22,7 @@ DO
 $$
     BEGIN
         ALTER TABLE environment_access_control
-            RENAME COLUMN environment_id TO environment_id;
+            RENAME COLUMN environment TO environment_id;
     EXCEPTION
         WHEN undefined_column THEN
     END;
