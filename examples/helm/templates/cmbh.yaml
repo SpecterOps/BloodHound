@@ -28,7 +28,6 @@ data:
       "root_url": "http://{{ .Values.bloodhound.ingress.host }}",
       "work_dir": "/opt/bloodhound/work",
       "log_level": "INFO",
-      "log_path": "bloodhound.log",
       "database": {
         "connection": "user={{ .Values.appdb.container.env.POSTGRES_USER }} password={{ .Values.appdb.container.env.POSTGRES_PASSWORD }} dbname={{ .Values.appdb.container.env.POSTGRES_DB }} host={{ .Values.appdb.service.name }}"
       },

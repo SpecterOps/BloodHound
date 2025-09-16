@@ -30,7 +30,7 @@ import {
 import { usePermissions } from '../usePermissions';
 
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
-export const useFinishedJobs = ({ page, rowsPerPage }: FinishedJobParams) => {
+export const useFinishedJobs = ({ filters = {}, page, rowsPerPage }: FinishedJobParams) => {
     const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
     const hasPermission = permissionsLoaded && checkPermission(Permission.CLIENTS_MANAGE);
 
@@ -48,7 +48,19 @@ export const useFinishedJobs = ({ page, rowsPerPage }: FinishedJobParams) => {
         enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
-        queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),
-        queryKey: ['finished-jobs', { page, rowsPerPage }],
+        queryFn: ({ signal }) =>
+            apiClient
+                .getFinishedJobs(
+                    {
+                        ...filters,
+                        skip: rowsPerPage * page,
+                        limit: rowsPerPage,
+                        hydrate_domains: false,
+                        hydrate_ous: false,
+                    },
+                    { signal }
+                )
+                .then((res) => res.data),
+        queryKey: ['finished-jobs', { ...filters, page, rowsPerPage }],
     });
 };

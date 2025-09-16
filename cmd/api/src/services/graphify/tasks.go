@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
@@ -149,15 +150,16 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) ([]IngestFileData, error) {
+func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
 	if fileData, err := s.extractIngestFiles(task.StoredFileName, task.OriginalFileName, task.FileType); err != nil {
 		return []IngestFileData{}, err
 	} else {
 		errs := errorlist.NewBuilder()
-		return fileData, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
+		return fileData, s.graphdb.BatchOperation(ic.Ctx, func(batch graph.Batch) error {
+			// bind batch to ingest context now that its in scope.
+			ic.BindBatchUpdater(batch)
 			for i, data := range fileData {
 				readOpts := ReadOptions{
 					IngestSchema:       s.schema,
@@ -165,7 +167,7 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx),
 				}
 
-				if err := processSingleFile(ctx, data, timestampedBatch, readOpts); err != nil {
+				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
 					var graphifyError errorlist.Error
 					if ok := errors.As(err, &graphifyError); ok {
 						fileData[i].Errors = append(fileData[i].Errors, graphifyError.AsStrings()...)
@@ -182,7 +184,17 @@ func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.Inge
 	}
 }
 
-func processSingleFile(ctx context.Context, fileData IngestFileData, batch *TimestampedBatch, readOpts ReadOptions) error {
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool) *IngestContext {
+	opts := []IngestOption{WithIngestTime(ingestTime)}
+
+	if useChangelog {
+		opts = append(opts, WithChangeManager(s.changeManager))
+	}
+
+	return NewIngestContext(ctx, opts...)
+}
+
+func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
 	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
 	file, err := os.Open(fileData.Path)
@@ -199,7 +211,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, batch *Time
 		}
 	}()
 
-	if err := ReadFileForIngest(batch, file, readOpts); err != nil {
+	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", fileData.Path, err))
 		return err
 	}
@@ -217,27 +229,73 @@ func (s *GraphifyService) getAllTasks() model.IngestTasks {
 }
 
 func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
+	tasks := s.getAllTasks()
+	if len(tasks) == 0 {
+		// nothing to do
+		return
+	}
 
-	for _, task := range s.getAllTasks() {
-		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
-		// handling assumes that all failures should be logged and not returned.
-		if s.ctx.Err() != nil {
-			return
-		}
+	start := time.Now()
+	slog.InfoContext(s.ctx,
+		"ingest run starting",
+		"task_count", len(tasks),
+	)
 
-		if s.cfg.DisableIngest {
-			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
-			return
-		}
-		fileData, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
+	if s.ctx.Err() != nil {
+		return
+	}
 
-		if errors.Is(err, fs.ErrNotExist) {
-			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.StoredFileName, err))
-		} else if err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.StoredFileName, err))
+	if s.cfg.DisableIngest {
+		slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
+		return
+	}
+
+	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
+	flagEnabled := false
+	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
+		slog.WarnContext(s.ctx, "get changelog feature flag failed", "err", err)
+	} else {
+		flagEnabled = changelogFF.Enabled
+	}
+
+	for _, task := range tasks {
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagEnabled)
+		fileData, err := s.ProcessIngestFile(ingestCtx, task)
+
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			slog.WarnContext(s.ctx,
+				"ingest file missing",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+				"err", err,
+			)
+		case err != nil:
+			slog.ErrorContext(s.ctx,
+				"ingest task failed",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+				"err", err,
+			)
+		default:
+			slog.InfoContext(s.ctx,
+				"ingest task processed",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+			)
 		}
 
 		updateJob(task.JobId.ValueOrZero(), fileData)
 		s.clearFileTask(task)
+	}
+
+	slog.InfoContext(s.ctx,
+		"ingest run finished",
+		"duration", time.Since(start),
+		"task_count", len(tasks),
+	)
+
+	if flagEnabled {
+		s.changeManager.FlushStats()
 	}
 }

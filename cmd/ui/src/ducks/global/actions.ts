@@ -57,6 +57,12 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
         darkMode,
     };
 };
+export const setAutoRunQueries = (autoRunQueries: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_AUTO_RUN_QUERIES,
+        autoRunQueries,
+    };
+};
 
 export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.GlobalViewActionTypes => {
     return {

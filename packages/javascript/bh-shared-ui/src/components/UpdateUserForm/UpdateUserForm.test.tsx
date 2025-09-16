@@ -378,7 +378,7 @@ describe('UpdateUserForm', () => {
         render(<UpdateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
-        const button = screen.getByRole('button', { name: 'Save' });
+        const button = await screen.findByRole('button', { name: 'Save' });
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');

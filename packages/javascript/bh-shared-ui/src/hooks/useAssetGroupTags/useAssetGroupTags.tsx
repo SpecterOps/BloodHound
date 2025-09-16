@@ -116,7 +116,7 @@ const glyphTransformer = (glyph: string, darkMode?: boolean): string => {
     return glyphIconUrl;
 };
 
-interface GlyphUtils {
+export interface GlyphUtils {
     qualifier?: (glyph: string | null) => boolean;
     transformer: (glyph: string, darkMode?: boolean) => string;
 }

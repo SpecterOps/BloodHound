@@ -3,10 +3,18 @@
 
 BH_USER="bloodhound"
 
-# Ensure postgresql is running
-service postgresql@17-main start
+# Try to start each known postgresql service
+for i in postgresql@17-main postgresql; do
+	service $i start
+	if [ $? -eq 0 ]; then
+		echo "Started $i"
+		break
+	fi
+done
+
+# Wait for it to be available
 ATTEMPTS=0
-until $(su postgres -c "psql -l &> /dev/null") || test $ATTEMPTS -ge 15; do
+until $(su postgres -c "psql -l &> /dev/null") || test $ATTEMPTS -ge 5; do
 	echo "Waiting for Postgres..."
 	sleep 2
 	let "ATTEMPTS=ATTEMPTS+1"

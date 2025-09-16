@@ -45,6 +45,19 @@ const server = setupServer(
                 ],
             })
         );
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'open_graph_phase_2',
+                        enabled: true,
+                        user_updatable: true,
+                    },
+                ],
+            })
+        );
     })
 );
 

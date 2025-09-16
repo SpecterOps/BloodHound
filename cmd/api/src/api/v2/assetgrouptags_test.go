@@ -3667,3 +3667,284 @@ func TestResources_CertifyMembers(t *testing.T) {
 		})
 	}
 }
+
+func TestResources_GetAssetGroupTagCertifications(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *mocks_db.MockDatabase
+	}
+
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func(testName string) *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "invalid skip parameter",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/asset-group-tags/certifications",
+						RawQuery: "skip=non-numeric",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"query parameter \"skip\" is malformed: error converting skip value non-numeric to int: strconv.Atoi: parsing \"non-numeric\": invalid syntax"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "invalid limit parameter",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/asset-group-tags/certifications",
+						RawQuery: "limit=non-numeric",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"query parameter \"limit\" is malformed: error converting limit value non-numeric to int: strconv.Atoi: parsing \"non-numeric\": invalid syntax"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "invalid filter parameter",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/asset-group-tags/certifications",
+						RawQuery: "node_name=xyz:test",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "filter non-existent column",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/asset-group-tags/certifications",
+						RawQuery: "non-existent-column=eq:test",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"errors":[{"context":"","message":"the specified column cannot be filtered: non-existent-column"}],
+									"http_status":400,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "GetAggregatedSelectorNodesCertification() returns db error",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags/certifications",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAggregatedSelectorNodesCertification(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]model.AssetGroupSelectorNodeExpanded{}, 0, errors.New("entity not found"))
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],
+									"http_status":500,"request_id":"",
+									"timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success with a filter",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/asset-group-tags/certifications",
+						RawQuery: "name=eq:test",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAggregatedSelectorNodesCertification(gomock.Any(), model.SQLFilter{SQLString: "node_name = 'test'"}, 0, v2.AssetGroupTagDefaultLimit).
+					Return([]model.AssetGroupSelectorNodeExpanded{
+						{
+							AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+								NodeId:   1,
+								NodeName: "TestNode",
+							},
+						},
+					}, 2, nil)
+			},
+
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `
+					{
+							"count": 2,
+							"limit": 50,
+							"skip": 0,
+							"data": {
+								"members": [
+								{
+									"id": 1,
+									"object_id": "",
+									"environment_id": "",
+									"primary_kind": "",
+									"name": "TestNode",
+									"created_at": "0001-01-01T00:00:00Z",
+									"certified_by": "",
+									"certified": 0
+								}
+							]
+						}
+					}
+				`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success with no filter",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/asset-group-tags/certifications",
+					},
+					Method: http.MethodGet,
+				}
+				return request
+			},
+
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockDatabase.EXPECT().GetAggregatedSelectorNodesCertification(gomock.Any(), model.SQLFilter{}, 0, v2.AssetGroupTagDefaultLimit).
+					Return([]model.AssetGroupSelectorNodeExpanded{
+						{
+							AssetGroupSelectorNode: model.AssetGroupSelectorNode{
+								NodeId:   1,
+								NodeName: "TestNode",
+							},
+							AssetGroupTagId: 1,
+						},
+					}, 1, nil)
+			},
+
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseBody: `
+					{
+							"count": 1,
+							"limit": 50,
+							"skip": 0,
+							"data": {
+								"members": [
+								{
+									"id": 1,
+									"object_id": "",
+									"environment_id": "",
+									"primary_kind": "",
+									"name": "TestNode",
+									"asset_group_tag_id": 1,
+									"created_at": "0001-01-01T00:00:00Z",
+									"certified_by": "",
+									"certified": 0
+								}
+							]
+						}
+					}
+				`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: mocks_db.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest(t.Name())
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				DB:         mocks.mockDatabase,
+				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/asset-group-tags/certifications", resources.GetAssetGroupTagCertifications).Methods(request.Method)
+
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}

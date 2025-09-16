@@ -24,10 +24,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/vendormocks/io/fs"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/vendormocks/io/fs"
 )
 
 func TestBHCEStaticHandler(t *testing.T) {
@@ -124,6 +125,7 @@ func TestBHCEStaticHandler(t *testing.T) {
 	t.Run("fail - error retrieving file stats", func(t *testing.T) {
 		mockFS.EXPECT().Open(gomock.Eq("assets/index.html")).Return(assetsIndexMockFile, nil)
 		assetsIndexMockFile.EXPECT().Stat().Return(nil, fmt.Errorf("error retrieving file stats"))
+		assetsIndexMockFile.EXPECT().Close()
 
 		if req, err := http.NewRequest("GET", "", nil); err != nil {
 			t.Fatalf("Failed to create request: %v", err)

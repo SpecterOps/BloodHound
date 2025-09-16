@@ -31,6 +31,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/unrolled/secure"
+
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -38,7 +40,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/headers"
-	"github.com/unrolled/secure"
 )
 
 // Wrapper is an iterator for middleware function application that wraps around a http.Handler.
@@ -246,7 +247,7 @@ func SecureHandlerMiddleware(cfg config.Configuration, contentSecurityPolicy str
 		STSPreload:           true,
 		STSIncludeSubdomains: true,
 
-		//Referrer-Policy
+		// Referrer-Policy
 		ReferrerPolicy: referrerPolicy,
 
 		// Permissions Policy

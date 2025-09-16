@@ -21,7 +21,9 @@ import fileDownload from 'js-file-download';
 import { FC, useMemo } from 'react';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
-import { Field, FieldsContainer, useHeaderStyles, usePaneStyles } from '../../views/Explore';
+import useHeaderStyles from '../../views/Explore/InfoStyles/Header';
+import usePaneStyles from '../../views/Explore/InfoStyles/Pane';
+import { Field, FieldsContainer } from '../../views/Explore/fragments';
 import LabelWithCopy from '../LabelWithCopy';
 
 const SAMLProviderInfoPanel: FC<{

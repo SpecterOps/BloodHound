@@ -38,7 +38,7 @@ import {
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useCallback, useContext, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
@@ -60,6 +60,13 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const tagId = labelId === undefined ? tierId : labelId;
 
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const receivedData = location.state;
+
+    useEffect(() => {
+        if (receivedData) {
+            dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+        }
+    }, []);
 
     const tagQuery = useQuery({
         queryKey: ['zone-management', 'tags', tagId],
@@ -185,7 +192,9 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 )}
                             />
                             <div>
-                                <Label className='text-base font-bold'>Selector Type</Label>
+                                <Label className='text-base font-bold' htmlFor='selector-seed-type-select'>
+                                    Selector Type
+                                </Label>
                                 <Select
                                     data-testid='zone-management_save_selector-form_type-select'
                                     value={selectorType.toString()}
@@ -196,7 +205,9 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                             dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
                                         }
                                     }}>
-                                    <SelectTrigger aria-label='select selector seed type'>
+                                    <SelectTrigger
+                                        aria-label='select selector seed type'
+                                        id='selector-seed-type-select'>
                                         <SelectValue placeholder='Choose a Selector Type' />
                                     </SelectTrigger>
                                     <SelectPortal>

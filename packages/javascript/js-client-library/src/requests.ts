@@ -192,9 +192,32 @@ export type RiskDetailsRequest = {
     Accepted?: string;
 };
 
+export enum QueryScope {
+    ALL = 'all',
+    OWNED = 'owned',
+    PUBLIC = 'public',
+    SHARED = 'shared',
+}
+
 export interface CreateUserQueryRequest {
     name: string;
+    description?: string;
     query: string;
+}
+
+export interface UpdateUserQueryRequest {
+    id: number;
+    name: string;
+    description?: string;
+    query: string;
+}
+export interface UpdateUserQueryPermissionsRequest {
+    user_ids: string[];
+    public: boolean;
+}
+
+export interface DeleteUserQueryPermissionsRequest {
+    user_ids: string[];
 }
 
 export interface ClearDatabaseRequest {

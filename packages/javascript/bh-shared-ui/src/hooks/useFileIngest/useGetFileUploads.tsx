@@ -37,7 +37,7 @@ const FETCH_ERROR_KEY = 'file-upload-error';
 /** Makes a paginated request for File Upload Jobs, returned as a TanStack Query */
 export const useGetFileUploadsQuery = ({ page, rowsPerPage }: FileUploadParams) => {
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     const { addNotification, dismissNotification } = useNotifications();
 

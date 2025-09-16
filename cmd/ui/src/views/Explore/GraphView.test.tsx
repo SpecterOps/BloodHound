@@ -28,6 +28,9 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(ctx.status(200));
+    }),
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
     }),
@@ -35,6 +38,12 @@ const server = setupServer(
         return res(ctx.json({ data: { tags: [] } }));
     }),
     rest.get('/api/v2/file-upload/accepted-types', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/saved-queries', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/graphs/kinds', (req, res, ctx) => {
         return res(ctx.status(200));
     })
 );
@@ -54,7 +63,7 @@ afterAll(() => server.close());
 
 describe('GraphView', () => {
     it('renders a graph view', () => {
-        render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
+        render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
         const container = screen.getByTestId('explore');
         expect(container).toBeInTheDocument();
     });
@@ -74,8 +83,39 @@ describe('GraphView', () => {
         expect(errorAlert).toBeInTheDocument();
     });
 
+    it('a cypher search 404 does not render the GraphViewErrorAlert', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', async (req, res, ctx) => {
+                const body = await req.json();
+
+                if (body.query.includes('MigrationData')) return res(ctx.json({ data: { nodes: { 1: {} } } }));
+
+                return res(ctx.status(404));
+            })
+        );
+
+        console.error = vi.fn();
+        render(<GraphView />, {
+            route: '/explore?exploreSearchTab=cypher&cypherSearch=TUFUQ0gobikgd2hlcmUgbi5uYW1lID0gJ2Fyb29vb28nIHJldHVybiBu&searchType=cypher',
+        });
+
+        const throwErrorExpectation = async () => {
+            await waitFor(
+                async () =>
+                    await screen.findByText('An unexpected error has occurred. Please refresh the page and try again.'),
+                { timeout: 1000 }
+            );
+        };
+
+        await expect(throwErrorExpectation).rejects.toThrowError();
+
+        expect(
+            screen.queryByText('An unexpected error has occurred. Please refresh the page and try again.')
+        ).not.toBeInTheDocument();
+    });
+
     it('renders a table if the query has NO node edges', async () => {
-        render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
+        render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
 
         const table = await screen.findByRole('table');
 
@@ -114,7 +154,7 @@ describe('GraphView', () => {
             })
         );
 
-        render(<GraphView />, { route: `/graphview?searchType=cypher&cypherSearch=encodedquery` });
+        render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
 
         const sigma = await screen.findByTestId('sigma-container-wrapper');
         const table = screen.queryByRole('table');

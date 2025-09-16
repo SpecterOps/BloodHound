@@ -6,7 +6,6 @@
     "work_dir": "/tmp/work",
     "collectors_base_path": "/tmp/collectors",
     "log_level": "ERROR",
-    "log_path": "bhapi.log",
     "enable_startup_wait_period": false,
     "datapipe_interval": 1,
     "graph_driver": "pg",

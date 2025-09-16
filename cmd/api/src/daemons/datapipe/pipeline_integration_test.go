@@ -22,9 +22,9 @@ import (
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
@@ -50,7 +50,7 @@ func TestDeleteData_Sourceless(t *testing.T) {
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -99,7 +99,7 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -148,7 +148,7 @@ func TestDeleteData_All(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson}, time.Now())
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(graphify.NewIngestContext(ctx), model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0

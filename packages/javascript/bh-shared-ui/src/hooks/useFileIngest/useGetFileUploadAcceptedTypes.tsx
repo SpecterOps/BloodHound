@@ -24,12 +24,13 @@ const FETCH_ERROR_MESSAGE = 'Unable to fetch file upload accepted types. Please 
 const FETCH_ERROR_KEY = 'file-upload-accepted-types-error';
 
 /** Makes a request for File Upload Accepted Types, returned as a TanStack Query */
-export const useGetFileUploadAcceptedTypesQuery = () => {
+export const useGetFileUploadAcceptedTypesQuery = (options = { enabled: true }) => {
     const { addNotification } = useNotifications();
 
     return useQuery<ListFileTypesForIngestResponse>({
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
         queryFn: () => apiClient.listFileTypesForIngest().then((res) => res.data),
         queryKey: fileUploadKeys.listFileTypes(),
+        enabled: options.enabled,
     });
 };
