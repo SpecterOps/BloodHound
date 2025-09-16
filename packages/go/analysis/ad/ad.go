@@ -228,7 +228,7 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 	return errors.Combined()
 }
 
-func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain *graph.Node, allDomains []*graph.Node, newProperties *graph.Properties) error {
+func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain *graph.Node, _ []*graph.Node, newProperties *graph.Properties) error {
 	domainSid, domainName, err := nodeprops.ReadDomainIDandNameAsString(domain)
 	if err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", domain.ID, err))
@@ -249,7 +249,7 @@ func linkWellKnownNodesForDomain(ctx context.Context, db graph.Database, domain 
 			return err
 		}
 
-		return handleTrustRelationships(ctx, tx, domain, allDomains, wellKnownNodes.Everyone, wellKnownNodes.AuthUsers, newProperties)
+		return nil
 	})
 }
 
@@ -395,68 +395,6 @@ func handleGuestNodeSpecialCase(tx graph.Transaction, domainSid string, everyone
 	}
 
 	return nil
-}
-
-func handleTrustRelationships(ctx context.Context, tx graph.Transaction, domain *graph.Node, allDomains []*graph.Node, everyoneNode, authUsersNode *graph.Node, newProperties *graph.Properties) error {
-	trustingDomains, err := fetchFirstDegreeNodes(tx, domain, ad.SameForestTrust, ad.CrossForestTrust)
-	if err != nil {
-		return fmt.Errorf("error getting trusting domains for domain %d: %w", domain.ID, err)
-	}
-
-	for _, trustingDomain := range trustingDomains {
-		if !domainsContain(allDomains, trustingDomain) {
-			continue // Make sure it is collected
-		}
-
-		trustingDomainSid, trustingDomainName, err := nodeprops.ReadDomainIDandNameAsString(trustingDomain)
-		if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", trustingDomain.ID, err))
-			continue
-		}
-
-		// Get/create special identity nodes in trusting domain
-		everyoneNodeTrustingDomain, err := getOrCreateWellKnownGroup(
-			tx,
-			wellknown.EveryoneSIDSuffix,
-			trustingDomainSid,
-			trustingDomainName,
-			wellknown.DefineNodeName(wellknown.EveryoneNodeNamePrefix, trustingDomainName),
-		)
-		if err != nil {
-			return fmt.Errorf("error getting everyone for domain %d: %w", trustingDomain.ID, err)
-		}
-
-		authUsersNodeTrustingDomain, err := getOrCreateWellKnownGroup(
-			tx,
-			wellknown.AuthenticatedUsersSIDSuffix,
-			trustingDomainSid,
-			trustingDomainName,
-			wellknown.DefineNodeName(wellknown.AuthenticatedUsersNodeNamePrefix, trustingDomainName),
-		)
-		if err != nil {
-			return fmt.Errorf("error getting auth users node for domain %d: %w", trustingDomain.ID, err)
-		}
-
-		// Create cross-domain trust links
-		if err := createOrUpdateWellKnownLink(tx, authUsersNode, authUsersNodeTrustingDomain, newProperties, ad.MemberOf); err != nil {
-			return err
-		}
-
-		if err := createOrUpdateWellKnownLink(tx, everyoneNode, everyoneNodeTrustingDomain, newProperties, ad.MemberOf); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func domainsContain(domains []*graph.Node, target *graph.Node) bool {
-	for _, domain := range domains {
-		if domain.ID == target.ID {
-			return true
-		}
-	}
-	return false
 }
 
 func getOrCreateWellKnownGroup(

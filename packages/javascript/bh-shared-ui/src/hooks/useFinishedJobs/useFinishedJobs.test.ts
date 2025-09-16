@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { PERSIST_NOTIFICATION } from '../../providers';
 import { renderHook, waitFor } from '../../test-utils';
-import { FETCH_ERROR_KEY, FETCH_ERROR_MESSAGE, NO_PERMISSION_KEY, NO_PERMISSION_MESSAGE } from '../../utils';
+import { FETCH_ERROR_KEY, FETCH_ERROR_MESSAGE, NO_PERMISSION_KEY, NO_PERMISSION_MESSAGE, apiClient } from '../../utils';
 import { useFinishedJobs } from './useFinishedJobs';
 
 const addNotificationMock = vi.fn();
@@ -100,6 +100,26 @@ describe('useFinishedJobs', () => {
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(result.current.data.data.length).toBe(10);
+    });
+
+    it('applies the given filters', async () => {
+        vi.spyOn(apiClient, 'getFinishedJobs');
+        checkPermissionMock.mockImplementation(() => true);
+        const { result } = renderHook(() =>
+            useFinishedJobs({ filters: { client_id: 'abcd' }, page: 0, rowsPerPage: 10 })
+        );
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+        expect(apiClient.getFinishedJobs).toHaveBeenCalledWith(
+            expect.objectContaining({
+                client_id: 'abcd',
+                hydrate_domains: false,
+                hydrate_ous: false,
+                limit: 10,
+                skip: 0,
+            }),
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        );
     });
 
     it('shows "no permission" notification if lacking permission', async () => {

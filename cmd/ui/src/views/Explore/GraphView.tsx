@@ -132,18 +132,15 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    const isLoading = graphHasDataQuery.isLoading || graphQuery.isLoading || customIconsQuery.isLoading;
-    const isError = graphHasDataQuery.isError || graphQuery.isError || customIconsQuery.isError;
-
-    if (isLoading) {
+    if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
-                <GraphProgress loading={isLoading} />
+                <GraphProgress loading={graphHasDataQuery.isLoading} />
             </div>
         );
     }
 
-    if (isError) return <GraphViewErrorAlert />;
+    if (graphHasDataQuery.isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
@@ -226,7 +223,7 @@ const GraphView: FC = () => {
                 }
             />
 
-            <GraphProgress loading={isLoading} />
+            <GraphProgress loading={graphQuery.isLoading} />
             <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
                 <ExploreTable

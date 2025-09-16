@@ -39,6 +39,7 @@ const (
 	FeatureOIDCSupport                = "oidc_support"
 	FeatureNTLMPostProcessing         = "ntlm_post_processing"
 	FeatureTierManagement             = "tier_management_engine"
+	FeatureChangelog                  = "changelog"
 	FeatureEnvironmentAccessControl   = "targeted_access_control"
 )
 

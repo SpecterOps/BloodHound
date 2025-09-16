@@ -27,6 +27,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/specterops/dawgs/graph"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -34,12 +36,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/dawgs/graph"
 )
 
 const (
 	DefaultServerShutdownTimeout = time.Minute
-	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:;"
+	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' %s 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' %s data: blob:; font-src 'self' data:;"
 )
 
 func NewDaemonContext(parentCtx context.Context) context.Context {
