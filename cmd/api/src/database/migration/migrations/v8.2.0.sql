@@ -34,6 +34,6 @@ VALUES (
         'Is used to updated the logic used for if a job has become stale. With this enabled, rather than checking the last ingest time, the last checkin time of the client is checked to timeout the job.',
         '{"enabled": true}',
            current_timestamp,
-           current_timestamp,
+           current_timestamp
        )
   ON CONFLICT DO NOTHING;
