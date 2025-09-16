@@ -20,7 +20,6 @@ import {
     Checkbox,
     DialogActions,
     DialogClose,
-    DialogDescription,
     DialogTitle,
     Form,
     FormControl,
@@ -78,8 +77,8 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isLoading || getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) {
         return (
-            <>
-                <Skeleton />
+            <Card>
+                <Skeleton className='rounded-md w-10' />
                 <DialogActions>
                     <DialogClose asChild>
                         <Button
@@ -92,16 +91,15 @@ const UpdateUserForm: React.FC<{
                         </Button>
                     </DialogClose>
                 </DialogActions>
-            </>
+            </Card>
         );
     }
 
     if (getUserQuery.isError || getRolesQuery.isError || listSSOProvidersQuery.isError) {
         return (
-            <>
-                <DialogDescription>
-                    <div>User not found.</div>
-                </DialogDescription>
+            <Card>
+                <div>User not found.</div>
+
                 <DialogActions>
                     <DialogClose asChild>
                         <Button
@@ -114,7 +112,7 @@ const UpdateUserForm: React.FC<{
                         </Button>
                     </DialogClose>
                 </DialogActions>
-            </>
+            </Card>
         );
     }
 
@@ -245,7 +243,7 @@ const UpdateUserFormInner: React.FC<{
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
-                <div className='flex gap-x-4 justify-center max-h-[800px]'>
+                <div className='flex gap-x-4 justify-center'>
                     <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
@@ -615,7 +613,7 @@ const UpdateUserFormInner: React.FC<{
                                         data-testid='create-user-dialog_all-environments-checkbox'>
                                         <FormField
                                             name='allEnvironments'
-                                            control={form.control}
+                                            //control={form.control} // TODO: uncomment when form controls available via api
                                             defaultValue={false}
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
@@ -644,7 +642,7 @@ const UpdateUserFormInner: React.FC<{
                                                         data-testid='create-user-dialog_environments-checkbox'>
                                                         <FormField
                                                             name='environments'
-                                                            control={form.control}
+                                                            //control={form.control} // TODO: uncomment when form controls available via api
                                                             defaultValue={false}
                                                             render={() => (
                                                                 <FormItem className='flex flex-row items-center'>
@@ -654,8 +652,7 @@ const UpdateUserFormInner: React.FC<{
                                                                         id='environments'
                                                                         onCheckedChange={
                                                                             (checked) =>
-                                                                                handleItemChange(item.id, checked)
-                                                                            // environment_control_list.environments
+                                                                                handleItemChange(item.id, checked) // environment_control_list.environments
                                                                         }
                                                                     />
                                                                     <FormLabel
