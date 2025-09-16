@@ -26,6 +26,7 @@ import { UseQueryResult } from 'react-query';
 import DownArrow from '../../../components/AppIcon/Icons/DownArrow';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
+import { useTagFormUtils } from '../Save/TagForm/utils';
 import SummaryCard from './SummaryCard';
 
 type SummaryListProps = {
@@ -36,8 +37,9 @@ type SummaryListProps = {
 };
 
 const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, title }) => {
+    const { isZoneLocation } = useTagFormUtils();
     const targetTypes: AssetGroupTagType[] =
-        title === 'Zones' ? [AssetGroupTagTypeZone] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+        isZoneLocation ? [AssetGroupTagTypeZone] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
 
     return (
         <div className='flex flex-col w-full h-full space-y-4'>

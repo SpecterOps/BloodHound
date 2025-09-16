@@ -21,7 +21,7 @@ import { privilegeZonesPath, summaryPath, zonesPath } from '../../routes';
 
 const DetailsRoot: FC = () => {
     const { tagId } = useHighestPrivilegeTagId();
-    if (tagId !== undefined) {
+    if (tagId) {
         return <AppNavigate to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${summaryPath}`} replace />;
     } else {
         return <Skeleton className='h-24' />;

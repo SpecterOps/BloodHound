@@ -89,7 +89,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                     ) : listQuery.isSuccess ? (
                         listQuery.data
                             ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && title === 'Zones') {
+                                if (isTag(a) && isTag(b) && isZoneLocation) {
                                     // A tag can be a zone and also have position null it seems
                                     return (a.position || 0) - (b.position || 0);
                                 } else {

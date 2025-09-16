@@ -27,7 +27,7 @@ export const SelectedDetails: FC = () => {
     const tagId = labelId === undefined ? zoneId : labelId;
 
     const tagQuery = useQuery({
-        queryKey: ['privilege-zones', 'tag', tagId],
+        queryKey: ['privilege-zones', 'tags', tagId],
         queryFn: async () => {
             if (!tagId) return undefined;
             return apiClient.getAssetGroupTag(tagId).then((res) => {
