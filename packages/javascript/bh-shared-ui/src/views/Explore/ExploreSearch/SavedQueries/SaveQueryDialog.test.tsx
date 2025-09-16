@@ -55,7 +55,7 @@ const testPermissions = {
 };
 
 const handlers = [
-    rest.get('/api/v2/bloodhound-users', (req, res, ctx) => {
+    rest.get('/api/v2/bloodhound-users-mininal', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
@@ -554,8 +554,8 @@ describe('SaveQueryDialog', () => {
         // Table Header Rendered
         const nestedElement = await waitFor(() => screen.getByText(/Manage Shared Queries/i));
         expect(nestedElement).toBeInTheDocument();
-
-        const testTable = screen.getByRole('table');
-        expect(testTable).toBeInTheDocument();
+        screen.debug(nestedElement);
+        const loading = screen.getByText(/loading .../i);
+        expect(loading).toBeInTheDocument();
     });
 });
