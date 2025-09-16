@@ -100,7 +100,7 @@ const Details: FC = () => {
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
-        throw new Error('Details must be used within a ZoneManagementContext.Provider');
+        throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
     const { InfoHeader } = context;
 

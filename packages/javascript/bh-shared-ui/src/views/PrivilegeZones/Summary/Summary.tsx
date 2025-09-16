@@ -41,7 +41,7 @@ const Summary: FC = () => {
     const saveLink = getSavePath(zoneId, labelId, selectorId);
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
-        throw new Error('Details must be used within a ZoneManagementContext.Provider');
+        throw new Error('Details must be used within a PrivilegeZonesContext.Provider');
     }
     const { InfoHeader } = context;
 
