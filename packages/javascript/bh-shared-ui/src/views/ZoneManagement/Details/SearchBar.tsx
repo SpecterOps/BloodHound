@@ -26,7 +26,7 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { useDebouncedValue, useZonePathParams } from '../../../hooks';
-import { detailsPath, memberPath, privilegeZonesPath, selectorPath } from '../../../routes';
+import { detailsPath, membersPath, privilegeZonesPath, selectorsPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { isSelector, isTag } from './utils';
 
@@ -66,11 +66,11 @@ const SearchBar: React.FC = () => {
             navigate(`/${privilegeZonesPath}/${tagType}/${item.id}/${detailsPath}`);
         } else if (isSelector(item)) {
             navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorPath}/${item.id}/${detailsPath}`
+                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${selectorsPath}/${item.id}/${detailsPath}`
             );
         } else {
             navigate(
-                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${memberPath}/${item.id}/${detailsPath}`
+                `/${privilegeZonesPath}/${tagType}/${item.asset_group_tag_id}/${membersPath}/${item.id}/${detailsPath}`
             );
         }
     };

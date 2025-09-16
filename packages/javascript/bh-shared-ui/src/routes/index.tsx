@@ -13,41 +13,40 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export const zonePath = 'zones';
-export const labelPath = 'labels';
-export const DEFAULT_PRIVILEGE_ZONES_ROUTE = `/${zonePath}`;
+export const zonesPath = 'zones';
+export const labelsPath = 'labels';
+export const DEFAULT_PRIVILEGE_ZONES_ROUTE = `/${zonesPath}`;
 
 export const privilegeZonesPath = 'privilege-zones';
-export const ROUTE_PRIVILEGE_ZONES_ROOT = '/privilege-zones';
+export const ROUTE_PRIVILEGE_ZONES_ROOT = `/${privilegeZonesPath}`;
 
 export const summaryPath = 'summary';
-export const ROUTE_PRIVILEGE_ZONES_SUMMARY = '/summary';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SUMMARY = `/${zonePath}/:zoneId/${summaryPath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SUMMARY = `/${labelPath}/:labelId/${summaryPath}`;
+export const ROUTE_PZ_ZONE_SUMMARY = `/${zonesPath}/:zoneId/${summaryPath}`;
+export const ROUTE_PZ_LABEL_SUMMARY = `/${labelsPath}/:labelId/${summaryPath}`;
 
 export const detailsPath = 'details';
-export const ROUTE_PRIVILEGE_ZONES_DETAILS = '/details';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS = `/${zonePath}/:zoneId/${detailsPath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS = `/${labelPath}/:labelId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_DETAILS = `/${zonesPath}/:zoneId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_DETAILS = `/${labelsPath}/:labelId/${detailsPath}`;
 
-export const selectorPath = 'selectors';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${detailsPath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${detailsPath}`;
+export const selectorsPath = 'selectors';
+export const ROUTE_PZ_ZONE_SELECTOR_DETAILS = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_SELECTOR_DETAILS = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${detailsPath}`;
 
-export const memberPath = 'members';
-export const ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS = `/${zonePath}/:zoneId/${memberPath}/:memberId/${detailsPath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS = `/${labelPath}/:labelId/${memberPath}/:memberId/${detailsPath}`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${memberPath}/:memberId/${detailsPath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${memberPath}/:memberId/${detailsPath}`;
+export const membersPath = 'members';
+export const ROUTE_PZ_ZONE_OBJECT_DETAILS = `/${zonesPath}/:zoneId/${membersPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_OBJECT_DETAILS = `/${labelsPath}/:labelId/${membersPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${membersPath}/:memberId/${detailsPath}`;
+export const ROUTE_PZ_LABEL_SELECTOR_OBJECT_DETAILS = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${membersPath}/:memberId/${detailsPath}`;
 
 export const savePath = 'save';
-export const ROUTE_PRIVILEGE_ZONES_SAVE = '/save';
-export const ROUTE_PRIVILEGE_ZONES_UPDATE_ZONE = `/${zonePath}/:zoneId/${savePath}`;
-export const ROUTE_PRIVILEGE_ZONES_UPDATE_LABEL = `/${labelPath}/:labelId/${savePath}`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_UPDATE_SELECTOR = `/${zonePath}/:zoneId/${selectorPath}/:selectorId/${savePath}`;
-export const ROUTE_PRIVILEGE_ZONES_ZONE_CREATE_SELECTOR = `/${zonePath}/:zoneId/${selectorPath}/${savePath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_UPDATE_SELECTOR = `/${labelPath}/:labelId/${selectorPath}/:selectorId/${savePath}`;
-export const ROUTE_PRIVILEGE_ZONES_LABEL_CREATE_SELECTOR = `/${labelPath}/:labelId/${selectorPath}/${savePath}`;
+export const ROUTE_PZ_CREATE_ZONE = `/${zonesPath}/${savePath}`;
+export const ROUTE_PZ_UPDATE_ZONE = `/${zonesPath}/:zoneId/${savePath}`;
+export const ROUTE_PZ_CREATE_LABEL = `/${labelsPath}/${savePath}`;
+export const ROUTE_PZ_UPDATE_LABEL = `/${labelsPath}/:labelId/${savePath}`;
+export const ROUTE_PZ_ZONE_UPDATE_SELECTOR = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${savePath}`;
+export const ROUTE_PZ_ZONE_CREATE_SELECTOR = `/${zonesPath}/:zoneId/${selectorsPath}/${savePath}`;
+export const ROUTE_PZ_LABEL_UPDATE_SELECTOR = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${savePath}`;
+export const ROUTE_PZ_LABEL_CREATE_SELECTOR = `/${labelsPath}/:labelId/${selectorsPath}/${savePath}`;
 
 export type Routable = {
     path: string;

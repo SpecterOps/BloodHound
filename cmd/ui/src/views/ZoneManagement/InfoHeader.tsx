@@ -25,7 +25,7 @@ import {
     getTagUrlValue,
     privilegeZonesPath,
     savePath,
-    selectorPath,
+    selectorsPath,
     useEnvironmentParams,
     useHighestPrivilegeTagId,
     useInitialEnvironment,
@@ -82,7 +82,7 @@ const InfoHeader: FC = () => {
                 <Button variant='primary' disabled={!tagId} asChild>
                     <AppLink
                         data-testid='zone-management_create-selector-link'
-                        to={`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorPath}/${savePath}`}>
+                        to={`/${privilegeZonesPath}/${getTagUrlValue(labelId)}/${tagId}/${selectorsPath}/${savePath}`}>
                         Create Selector
                     </AppLink>
                 </Button>

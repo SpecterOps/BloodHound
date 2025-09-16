@@ -38,7 +38,7 @@ import {
     AssetGroupTagTypeZone,
 } from 'js-client-library';
 import { useTagsQuery } from '../../../../hooks';
-import { labelPath, privilegeZonesPath, savePath, selectorPath, zonePath } from '../../../../routes';
+import { labelsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../../routes';
 import { QueryLineItem } from '../../../../types';
 import { useAppNavigate } from '../../../../utils';
 
@@ -80,11 +80,11 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
     const onContinue = () => {
         if (isLabel) {
-            navigate(`/${privilegeZonesPath}/${labelPath}/${labelId}/${selectorPath}/${savePath}`, {
+            navigate(`/${privilegeZonesPath}/${labelsPath}/${labelId}/${selectorsPath}/${savePath}`, {
                 state: stateToPass,
             });
         } else {
-            navigate(`/${privilegeZonesPath}/${zonePath}/${zoneId}/${selectorPath}/${savePath}`, {
+            navigate(`/${privilegeZonesPath}/${zonesPath}/${zoneId}/${selectorsPath}/${savePath}`, {
                 state: stateToPass,
             });
         }

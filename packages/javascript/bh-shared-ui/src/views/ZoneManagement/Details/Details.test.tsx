@@ -20,14 +20,13 @@ import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import {
     ROUTE_PRIVILEGE_ZONES_ROOT,
-    ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS,
     detailsPath,
-    memberPath,
+    membersPath,
     privilegeZonesPath,
-    selectorPath,
-    zonePath,
+    selectorsPath,
+    zonesPath,
 } from '../../../routes';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
@@ -53,9 +52,9 @@ describe('Details', async () => {
     it('renders', async () => {
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/${detailsPath}`} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonePath}/1/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
 
         expect(await screen.findByText(/Zones/)).toBeInTheDocument();
@@ -68,9 +67,9 @@ describe('Details', async () => {
     it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/${detailsPath}`} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonePath}/1/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');
@@ -99,9 +98,9 @@ describe('Details', async () => {
     it('handles object selection when a zone is already selected', async () => {
         render(
             <Routes>
-                <Route path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/${detailsPath}`} element={<Details />} />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonePath}/1/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
 
         longWait(async () => {
@@ -134,11 +133,11 @@ describe('Details', async () => {
         render(
             <Routes>
                 <Route
-                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS}
+                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PZ_ZONE_OBJECT_DETAILS}
                     element={<Details />}
                 />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonePath}/1/${memberPath}/7/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${membersPath}/7/${detailsPath}` }
         );
 
         const selector7 = await screen.findByText('tier-0-selector-7');
@@ -171,11 +170,11 @@ describe('Details', async () => {
         render(
             <Routes>
                 <Route
-                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS}
+                    path={ROUTE_PRIVILEGE_ZONES_ROOT + ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS}
                     element={<Details />}
                 />
             </Routes>,
-            { route: `/${privilegeZonesPath}/${zonePath}/1/${selectorPath}/7/${memberPath}/7/${detailsPath}` }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${selectorsPath}/7/${membersPath}/7/${detailsPath}` }
         );
 
         const selectors = await screen.findByTestId('zone-management_details_selectors-list');

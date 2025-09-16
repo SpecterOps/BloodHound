@@ -22,7 +22,7 @@ import {
     usePrivilegeZoneAnalysis,
     useZonePathParams,
 } from '../../../../hooks';
-import { detailsPath, labelPath, privilegeZonesPath, savePath, selectorPath, zonePath } from '../../../../routes';
+import { detailsPath, labelsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../../routes';
 import { useAppNavigate } from '../../../../utils';
 
 export const useTagFormUtils = () => {
@@ -36,8 +36,8 @@ export const useTagFormUtils = () => {
 
     const privilegeZoneAnalysisEnabled = usePrivilegeZoneAnalysis();
 
-    const isLabelLocation = location.pathname.includes(`/${privilegeZonesPath}/${labelPath}`);
-    const isZoneLocation = location.pathname.includes(`/${privilegeZonesPath}/${zonePath}`);
+    const isLabelLocation = location.pathname.includes(`/${privilegeZonesPath}/${labelsPath}`);
+    const isZoneLocation = location.pathname.includes(`/${privilegeZonesPath}/${zonesPath}`);
 
     const tagType: 'label' | 'zone' = isLabelLocation ? 'label' : 'zone';
     const tagTypeDisplay: 'Label' | 'Zone' = capitalize(tagType) as 'Label' | 'Zone';
@@ -47,7 +47,7 @@ export const useTagFormUtils = () => {
 
     const handleCreateNavigate = (tagId: number) => {
         navigate(`${location.pathname}/${tagId}`, { replace: true });
-        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorPath}/${savePath}`);
+        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`);
     };
 
     const handleUpdateNavigate = () => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);

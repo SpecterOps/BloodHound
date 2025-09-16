@@ -20,7 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
 import TagForm from '.';
-import { labelPath, privilegeZonesPath, savePath, zonePath } from '../../../../routes';
+import { labelsPath, privilegeZonesPath, savePath, zonesPath } from '../../../../routes';
 import { act, fireEvent, longWait, render, screen, waitFor, within } from '../../../../test-utils';
 
 const testTierZero = {
@@ -151,11 +151,11 @@ vi.mock('../../../../providers', async () => {
 
 describe('Tag Form', () => {
     const user = userEvent.setup();
-    const createNewZonePath = `/${privilegeZonesPath}/${zonePath}/${savePath}/`;
-    const createNewLabelPath = `/${privilegeZonesPath}/${labelPath}/${savePath}/`;
-    const editExistingZonePath = `/${privilegeZonesPath}/${zonePath}/1/${savePath}`;
-    const editExistingLabelPath = `/${privilegeZonesPath}/${labelPath}/2/${savePath}`;
-    const deletionTestsPath = `/${privilegeZonesPath}/${labelPath}/3/${savePath}`;
+    const createNewZonePath = `/${privilegeZonesPath}/${zonesPath}/${savePath}/`;
+    const createNewLabelPath = `/${privilegeZonesPath}/${labelsPath}/${savePath}/`;
+    const editExistingZonePath = `/${privilegeZonesPath}/${zonesPath}/1/${savePath}`;
+    const editExistingLabelPath = `/${privilegeZonesPath}/${labelsPath}/2/${savePath}`;
+    const deletionTestsPath = `/${privilegeZonesPath}/${labelsPath}/3/${savePath}`;
 
     it('renders the form for creating a new zone', async () => {
         // Because there is no id path parameter in the url, the form is a create form

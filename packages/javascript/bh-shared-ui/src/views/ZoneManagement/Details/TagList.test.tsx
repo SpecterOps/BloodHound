@@ -21,7 +21,7 @@ import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { render, screen, within } from '../../../test-utils';
 import { TagList } from './TagList';
-import { detailsPath, privilegeZonesPath, zonePath } from '../../../routes';
+import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 
 const testQuery = {
     isLoading: false,
@@ -130,7 +130,7 @@ describe('List', async () => {
 
     it('renders a non sortable list for Zones', async () => {
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />, {
-            route: `/${privilegeZonesPath}/${zonePath}/1/${detailsPath}`,
+            route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
         });
 
         expect(await screen.findByTestId('zone-management_details_zones-list_static-order')).toBeInTheDocument();

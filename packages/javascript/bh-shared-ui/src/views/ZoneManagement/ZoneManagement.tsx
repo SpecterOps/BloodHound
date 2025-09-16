@@ -20,19 +20,23 @@ import React, { FC, Suspense, useContext } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useHighestPrivilegeTagId, useOwnedTagId } from '../../hooks';
 import {
-    ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_SUMMARY,
-    ROUTE_PRIVILEGE_ZONES_SUMMARY,
-    ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SUMMARY,
+    ROUTE_PZ_LABEL_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
+    ROUTE_PZ_LABEL_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_SUMMARY,
+    ROUTE_PZ_ZONE_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
+    ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_SUMMARY,
     Routable,
+    detailsPath,
+    labelsPath,
     privilegeZonesPath,
+    savePath,
+    summaryPath,
+    zonesPath,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DetailsRoot from './DetailsRoot';
@@ -42,20 +46,19 @@ const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
 
 const detailsPaths = [
-    ROUTE_PRIVILEGE_ZONES_ZONE_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SELECTOR_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_OBJECT_DETAILS,
-    ROUTE_PRIVILEGE_ZONES_LABEL_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_DETAILS,
+    ROUTE_PZ_LABEL_DETAILS,
+    ROUTE_PZ_ZONE_SELECTOR_DETAILS,
+    ROUTE_PZ_LABEL_SELECTOR_DETAILS,
+    ROUTE_PZ_ZONE_OBJECT_DETAILS,
+    ROUTE_PZ_ZONE_SELECTOR_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_OBJECT_DETAILS,
+    ROUTE_PZ_LABEL_SELECTOR_OBJECT_DETAILS,
 ];
 
 const summaryPaths = [
-    ROUTE_PRIVILEGE_ZONES_SUMMARY,
-    ROUTE_PRIVILEGE_ZONES_ZONE_SUMMARY,
-    ROUTE_PRIVILEGE_ZONES_LABEL_SUMMARY,
+    ROUTE_PZ_ZONE_SUMMARY,
+    ROUTE_PZ_LABEL_SUMMARY,
 ];
 
 const ZoneManagement: FC = () => {
@@ -93,20 +96,20 @@ const ZoneManagement: FC = () => {
                 </p>
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
-                        defaultValue='zone'
-                        className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
-                        value={location.pathname.includes('label') ? 'label' : 'zone'}
+                        defaultValue={zonesPath}
+                        className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
+                        value={location.pathname.includes(labelsPath) ? labelsPath : zonesPath}
                         onValueChange={(value) => {
-                            const isSummary = location.pathname.includes('summary');
-                            const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'zone' ? tagId : ownedId;
+                            const isSummary = location.pathname.includes(summaryPath);
+                            const path = isSummary ? summaryPath : detailsPath;
+                            const id = value === zonesPath ? tagId : ownedId;
                             navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value='zone' data-testid='zone-management_tab-list_zones-tab'>
+                            <TabsTrigger value={zonesPath} data-testid='zone-management_tab-list_zones-tab'>
                                 Zones
                             </TabsTrigger>
-                            <TabsTrigger value='label' data-testid='zone-management_tab-list_labels-tab'>
+                            <TabsTrigger value={labelsPath} data-testid='zone-management_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
                         </TabsList>

@@ -22,14 +22,14 @@ import {
     apiClient,
     detailsPath,
     isNode,
-    labelPath,
+    labelsPath,
     privilegeZonesPath,
     useExploreParams,
     useExploreSelectedItem,
     useNotifications,
     usePermissions,
     useTagsQuery,
-    zonePath,
+    zonesPath,
 } from 'bh-shared-ui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
@@ -40,7 +40,7 @@ import CopyMenuItem from './CopyMenuItem';
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => {} }) => {
+}> = ({ contextMenu, onClose = () => { } }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();
@@ -162,7 +162,7 @@ const ContextMenu: FC<{
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`/${privilegeZonesPath}/${zonePath}/${tierZeroAssetGroup!.id}/${detailsPath}`}
+                        removeNodePath={`/${privilegeZonesPath}/${zonesPath}/${tierZeroAssetGroup!.id}/${detailsPath}`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                         onShowConfirmation={() => {
                             setDialogOpen(true);
@@ -178,7 +178,7 @@ const ContextMenu: FC<{
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
-                        removeNodePath={`/${privilegeZonesPath}/${labelPath}/${ownedAssetGroup!.id}/${detailsPath}`}
+                        removeNodePath={`/${privilegeZonesPath}/${labelsPath}/${ownedAssetGroup!.id}/${detailsPath}`}
                         isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                     />,
                 ]}
