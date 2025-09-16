@@ -214,6 +214,13 @@ export interface User {
     eula_accepted: boolean;
 }
 
+export interface UserMinimal {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+}
+
 interface Permission {
     id: number;
     name: string;
@@ -236,6 +243,12 @@ export interface ListRolesResponse {
 export interface ListUsersResponse {
     data: {
         users: User[];
+    };
+}
+
+export interface ListUsersMinimalResponse {
+    data: {
+        users: UserMinimal[];
     };
 }
 

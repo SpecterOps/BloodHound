@@ -55,7 +55,7 @@ const testPermissions = {
 };
 
 const handlers = [
-    rest.get('/api/v2/bloodhound-users-mininal', (req, res, ctx) => {
+    rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
