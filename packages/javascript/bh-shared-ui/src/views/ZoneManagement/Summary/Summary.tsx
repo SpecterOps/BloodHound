@@ -52,11 +52,17 @@ const Summary: FC = () => {
             <div className='flex mt-6 gap-8'>
                 <InfoHeader />
                 <div className='basis-1/3'>
-                    <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
-                        <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
+                    {saveLink ? (
+                        <Button asChild variant={'secondary'}>
+                            <AppLink data-testid='privilege-zones_edit-button' to={saveLink}>
+                                Edit
+                            </AppLink>
+                        </Button>
+                    ) : (
+                        <Button variant={'secondary'} disabled>
                             Edit
-                        </AppLink>
-                    </Button>
+                        </Button>
+                    )}
                 </div>
             </div>
             <div className='flex gap-8 mt-4 w-full h-full'>
