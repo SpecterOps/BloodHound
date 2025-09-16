@@ -109,11 +109,15 @@ const Details: FC = () => {
     }
     const { InfoHeader } = context;
 
-    const zonesQuery = useTagsQuery({ select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone) });
+    const zonesQuery = useTagsQuery({
+        select: (tags) => tags.filter((tag) => tag.type === AssetGroupTagTypeZone),
+        enabled: !!tagId,
+    });
 
     const labelsQuery = useTagsQuery({
         select: (tags) =>
             tags.filter((tag) => tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned),
+        enabled: !!tagId,
     });
 
     const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);

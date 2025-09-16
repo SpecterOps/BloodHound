@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useParams } from 'react-router-dom';
 import { zoneHandlers } from '../../../mocks/handlers';
 import {
     ROUTE_PRIVILEGE_ZONES_ROOT,
@@ -35,21 +35,26 @@ vi.mock('../../../hooks/useMeasure', () => ({
     useMeasure: vi.fn().mockImplementation(() => [200, 200]),
 }));
 
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useParams: vi.fn(),
+        useNavigate: vi.fn,
+    };
+});
+
 const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-vi.mock('react-router-dom', async () => ({
-    ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
-    useNavigate: vi.fn,
-}));
-
 describe('Details', async () => {
     const user = userEvent.setup();
 
     it('renders', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(
             <Routes>
                 <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
@@ -65,6 +70,7 @@ describe('Details', async () => {
     });
 
     it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(
             <Routes>
                 <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
@@ -96,6 +102,7 @@ describe('Details', async () => {
     });
 
     it('handles object selection when a zone is already selected', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(
             <Routes>
                 <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />

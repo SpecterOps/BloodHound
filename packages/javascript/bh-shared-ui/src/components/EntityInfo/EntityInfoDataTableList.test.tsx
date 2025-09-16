@@ -16,6 +16,7 @@
 import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { useParams } from 'react-router-dom';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { zoneHandlers } from '../../mocks';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
@@ -79,6 +80,14 @@ const EntityInfoContentWithProvider = ({
     </ObjectInfoPanelContextProvider>
 );
 
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useParams: vi.fn(),
+    };
+});
+
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
@@ -87,6 +96,8 @@ describe('EntityInfoDataTableList', () => {
     it('Displays selector information if additionalSections is true', async () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
+
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '444' });
 
         render(
             <EntityInfoContentWithProvider
@@ -103,8 +114,14 @@ describe('EntityInfoDataTableList', () => {
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
-        const selectorsInfoSectionTitle = await screen.findByText(/selectors/i);
-        expect(selectorsInfoSectionTitle).toBeInTheDocument();
+        const list = screen.getByTestId('entity-info-data-table-list');
+        let listContainsSelectorsSection = false;
+
+        list.childNodes.forEach((child) => {
+            if (child.textContent?.includes('Selectors')) listContainsSelectorsSection = true;
+        });
+
+        expect(listContainsSelectorsSection).toBeTruthy();
     });
 
     it('Hides selector information if additionalSections is false', async () => {
