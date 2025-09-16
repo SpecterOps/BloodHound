@@ -54,7 +54,9 @@ func (s *GraphContext) End(t test.Context) {
 // NewGraphContext creates a new GraphContext
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/bloodhound-enterprise/commit/5437ea54ba5ba320cad2c32b021b626822506660
+// for implementation guidance. Additional detailed information can be found in Confluence.t the latest standards.
 func NewGraphContext(t *testing.T, ctx test.Context, schema graph.Schema) *GraphContext {
 	graphContext := &GraphContext{
 		schema:   schema,
