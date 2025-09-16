@@ -21,9 +21,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/specterops/dawgs/query"
-
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/dawgs/query"
 )
 
 var (

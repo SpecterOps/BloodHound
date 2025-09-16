@@ -26,9 +26,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -36,6 +33,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var (
@@ -239,12 +238,12 @@ func (s *BloodhoundDB) Wipe(ctx context.Context) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var tables []string
 
-		if result := tx.Raw("select table_name from information_schema.tables where table_schema = current_schema() and not table_name ilike '%pg_stat%'").Scan(&tables); result.Error != nil {
+		if result := tx.Raw("SELECT table_name FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND NOT table_name ILIKE '%pg_stat%'").Scan(&tables); result.Error != nil {
 			return result.Error
 		}
 
 		for _, table := range tables {
-			stmt := fmt.Sprintf(`drop table if exists "%s" cascade`, table)
+			stmt := fmt.Sprintf(`DROP TABLE IF EXISTS "%s" CASCADE`, table)
 
 			if err := tx.Exec(stmt).Error; err != nil {
 				return err
