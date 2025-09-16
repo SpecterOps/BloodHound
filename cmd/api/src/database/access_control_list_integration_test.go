@@ -51,10 +51,10 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 			},
 			EnvironmentAccessControl: []model.EnvironmentAccess{
 				{
-					Environment: "12345",
+					EnvironmentID: "12345",
 				},
 				{
-					Environment: "54321",
+					EnvironmentID: "54321",
 				},
 			},
 		})
@@ -63,8 +63,8 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, updatedUser.AllEnvironments)
 		require.Len(t, updatedUser.EnvironmentAccessControl, 2)
-		assert.Equal(t, "12345", updatedUser.EnvironmentAccessControl[0].Environment)
-		assert.Equal(t, "54321", updatedUser.EnvironmentAccessControl[1].Environment)
+		assert.Equal(t, "12345", updatedUser.EnvironmentAccessControl[0].EnvironmentID)
+		assert.Equal(t, "54321", updatedUser.EnvironmentAccessControl[1].EnvironmentID)
 	})
 
 	t.Run("GetEnvironmentAccessListForUser", func(t *testing.T) {
@@ -91,10 +91,10 @@ func TestBloodhoundDB_AccessControlList(t *testing.T) {
 			AllEnvironments: false,
 			EnvironmentAccessControl: []model.EnvironmentAccess{
 				{
-					Environment: "12345",
+					EnvironmentID: "12345",
 				},
 				{
-					Environment: "54321",
+					EnvironmentID: "54321",
 				},
 			},
 		})
