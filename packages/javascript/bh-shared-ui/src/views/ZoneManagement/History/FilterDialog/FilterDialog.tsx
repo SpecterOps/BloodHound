@@ -46,26 +46,32 @@ import { AppIcon, MaskedInput } from '../../../../components';
 import { useTagsQuery } from '../../../../hooks';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
 import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
+import { useHistoryTableContext } from '../HistoryTableContext';
 
-const actionOptions = [
-    '', // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
-    'Certified by user',
-    'Certified',
-    'Added to Selector',
-    'Modified',
-    'Created',
-    'Deleted',
+const actionMap: { label: string; value: string }[] = [
+    { label: '', value: '' }, // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
+    { label: 'Create Tag', value: 'CreateTag' },
+    { label: 'Update Tag', value: 'UpdateTag' },
+    { label: 'Delete Tag', value: 'DeleteTag' },
+    { label: 'Analysis Enable Tag', value: 'AnalysisEnableTag' },
+    { label: 'Analysis Disabled Tag', value: 'AnalysisDisabledTag' },
+    { label: 'Create Selector', value: 'CreateSelector' },
+    { label: 'Update Selector', value: 'UpdateSelector' },
+    { label: 'Delete Selector', value: 'DeleteSelector' },
+    { label: 'Automatic Certification', value: 'CertifyNodeAuto' },
+    { label: 'User Certification', value: 'CertifyNodeManual' },
+    { label: 'Certify Revoked', value: 'CertifyNodeRevoked' },
 ] as const;
 
 export interface AssetGroupTagHistoryFilters {
-    action: (typeof actionOptions)[number];
+    action: string;
     tag: string;
     madeBy: string;
     ['start-date']: string;
     ['end-date']: string;
 }
 
-export const DEFAULT_FILTER_VALUE = { action: actionOptions[0], tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
+export const DEFAULT_FILTER_VALUE = { action: '', tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
@@ -76,6 +82,7 @@ const FilterDialog: FC<{
 }> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
+    const { setShowNoteDetails, setCurrentNote } = useHistoryTableContext();
 
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
 
@@ -109,6 +116,8 @@ const FilterDialog: FC<{
     const handleConfirm = useCallback(() => {
         const start = form.getValues(START_DATE);
         const end = form.getValues(END_DATE);
+        setShowNoteDetails(false);
+        setCurrentNote({});
 
         // Allow partial filtering of records; Do not block if neither date is filled
         if (!start && !end) {
@@ -123,7 +132,7 @@ const FilterDialog: FC<{
         if (validateDateFields(startDate, endDate)) {
             setFilters({ ...form.getValues() });
         }
-    }, [form, setFilters, validateDateFields]);
+    }, [form, setFilters, validateDateFields, setShowNoteDetails, setCurrentNote]);
 
     useEffect(() => {
         form.reset(filters);
@@ -170,11 +179,13 @@ const FilterDialog: FC<{
                                             </FormControl>
                                             <SelectPortal>
                                                 <SelectContent>
-                                                    {actionOptions.map((action, index) => {
+                                                    {actionMap.map((action, index) => {
                                                         if (index === 0) return; // Do not render empty string item
                                                         return (
-                                                            <SelectItem key={action} value={action}>
-                                                                {action}
+                                                            <SelectItem
+                                                                key={actionMap[index].value}
+                                                                value={actionMap[index].value}>
+                                                                {actionMap[index].label}
                                                             </SelectItem>
                                                         );
                                                     })}
@@ -370,7 +381,7 @@ const FilterDialog: FC<{
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <DialogClose>
+                                <DialogClose asChild>
                                     <Button
                                         variant={'text'}
                                         className='text-primary dark:text-secondary-variant-2 p-2'

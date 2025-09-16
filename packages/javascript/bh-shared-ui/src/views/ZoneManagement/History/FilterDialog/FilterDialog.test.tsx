@@ -17,7 +17,8 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { bloodHoundUsersHandlers } from '../../../../mocks';
-import { render, screen, waitFor } from '../../../../test-utils';
+import { act, render, waitFor } from '../../../../test-utils';
+import { HistoryTableContext } from '../HistoryTableContext';
 import FilterDialog from './FilterDialog';
 
 const server = setupServer(
@@ -32,8 +33,31 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Privilege Zones History Filter Dialog', () => {
+    const setup = async (props?: Partial<React.ComponentProps<typeof FilterDialog>>) => {
+        return await act(() => {
+            const contextValue = {
+                currentNote: '',
+                setCurrentNote: () => {},
+                showNoteDetails: '',
+                setShowNoteDetails: () => {},
+            };
+
+            const defaultSetFilter = () => {};
+
+            const screen = render(
+                <HistoryTableContext.Provider value={contextValue}>
+                    <FilterDialog {...props} setFilters={props?.setFilters || defaultSetFilter} />;
+                </HistoryTableContext.Provider>
+            );
+            const user = userEvent.setup();
+            const openDialog = async () => await user.click(screen.getByTestId('History_log_filter_dialog'));
+            return { screen, user, openDialog };
+        });
+    };
+
     it('renders', async () => {
-        render(<FilterDialog open setFilters={() => {}} handleClose={() => {}} />);
+        const { screen, openDialog } = await setup();
+        await openDialog();
 
         expect(screen.getByText('Filter')).toBeInTheDocument();
 
@@ -49,24 +73,22 @@ describe('Privilege Zones History Filter Dialog', () => {
     });
 
     it('renders with applied filters', async () => {
-        render(
-            <FilterDialog
-                open
-                setFilters={() => {}}
-                handleClose={() => {}}
-                filters={{
-                    action: 'Certified',
-                    tag: 'foo',
-                    madeBy: 'test_admin@specterops.io',
-                    'start-date': '2025-07-12',
-                    'end-date': '2025-08-12',
-                }}
-            />
-        );
+        const { screen, openDialog } = await setup({
+            filters: {
+                action: 'CertifyNodeManual',
+                tag: 'foo',
+                madeBy: 'test_admin@specterops.io',
+                'start-date': '2025-07-12',
+                'end-date': '2025-08-12',
+            },
+        });
+        await openDialog();
 
         expect(screen.getByText('Filter')).toBeInTheDocument();
 
-        expect(screen.getByText('Certified', { ignore: 'option' })).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('User Certification', { ignore: 'option' })).toBeInTheDocument();
+        });
 
         await waitFor(() => {
             expect(screen.getByText('foo', { ignore: 'option' })).toBeInTheDocument();
@@ -82,24 +104,20 @@ describe('Privilege Zones History Filter Dialog', () => {
 
     it('clears applied filters when clicking the Clear button', async () => {
         const user = userEvent.setup();
-        render(
-            <FilterDialog
-                open
-                setFilters={() => {}}
-                handleClose={() => {}}
-                filters={{
-                    action: 'Certified',
-                    tag: '',
-                    madeBy: '',
-                    'start-date': '2025-07-12',
-                    'end-date': '2025-08-12',
-                }}
-            />
-        );
+        const { screen, openDialog } = await setup({
+            filters: {
+                action: 'CertifyNodeManual',
+                tag: 'foo',
+                madeBy: 'test_admin@specterops.io',
+                'start-date': '2025-07-12',
+                'end-date': '2025-08-12',
+            },
+        });
+        await openDialog();
 
         expect(screen.getByText('Filter')).toBeInTheDocument();
 
-        expect(screen.getByText('Certified', { ignore: 'option' })).toBeInTheDocument();
+        expect(screen.getByText('User Certification', { ignore: 'option' })).toBeInTheDocument();
         expect(screen.getByLabelText('Start Date')).toHaveValue('2025-07-12');
         expect(screen.getByLabelText('End Date')).toHaveValue('2025-08-12');
 
@@ -110,22 +128,24 @@ describe('Privilege Zones History Filter Dialog', () => {
         expect(screen.getByLabelText('End Date')).toHaveValue('');
     });
 
-    it('calls handleClose when the Cancel button is clicked', async () => {
+    it('should close the dialog when the Cancel button is clicked', async () => {
         const user = userEvent.setup();
-        const handleClose = vi.fn();
 
-        render(<FilterDialog open setFilters={() => {}} handleClose={handleClose} />);
-
+        const { screen, openDialog } = await setup({});
+        await openDialog();
+        expect(screen.getByText('Filter')).toBeInTheDocument();
         await user.click(screen.getByRole('button', { name: /Cancel/ }));
 
-        expect(handleClose).toHaveBeenCalled();
+        expect(screen.queryByText('Filter')).not.toBeInTheDocument();
     });
 
     it('calls setFilters when the Confirm button is clicked', async () => {
         const user = userEvent.setup();
         const setFilters = vi.fn();
-
-        render(<FilterDialog open setFilters={setFilters} handleClose={() => {}} />);
+        const { screen, openDialog } = await setup({
+            setFilters: setFilters,
+        });
+        await openDialog();
 
         await user.click(screen.getByRole('button', { name: /Confirm/ }));
 

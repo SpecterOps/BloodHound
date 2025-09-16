@@ -63,7 +63,7 @@ const LOADING_COLS = [
 ];
 
 const NoteComponent = ({ row }: any) => {
-    const { setCurrentNote, setShowNoteDetails } = useHistoryTableContext();
+    const { setCurrentNote, setShowNoteDetails, showNoteDetails } = useHistoryTableContext();
     const author = row.original.email;
 
     const handleOnClick = () => {
@@ -72,13 +72,16 @@ const NoteComponent = ({ row }: any) => {
             createdBy: row.original.email,
             timestamp: row.original.date,
         };
-        setShowNoteDetails(true);
+        setShowNoteDetails((prev: React.ChangeEvent) => !prev);
+
         setCurrentNote(selectedNote);
+
+        console.log('History Content', showNoteDetails);
     };
 
     return (
         <div className='text-center'>
-            {author === 'System' ? (
+            {showNoteDetails && author === 'System' ? (
                 <p className='pl-4'>-</p>
             ) : (
                 <button
@@ -101,7 +104,7 @@ const HISTORY_COLS = [
     ({ row }: any) => <NoteComponent row={row} />,
 ];
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 17;
 
 /** Generates an array of column data in the success or loading states */
 const getColumns = (isLoading: boolean) => {
@@ -121,13 +124,23 @@ const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilters, quer
         limit: number;
         skip: number;
     }>({
-        queryKey: ['asset-group-tag-history', queryKey],
+        queryKey: ['asset-group-tag-history', queryKey, filters],
         queryFn: async ({ pageParam = 1 }) => {
             const skip = (pageParam - 1) * PAGE_SIZE;
 
-            const result = doSearch
-                ? await apiClient.searchAssetGroupTagHistory(PAGE_SIZE, skip, query)
-                : await apiClient.getAssetGroupTagHistory(PAGE_SIZE, skip);
+            const args = {
+                action: filters.action,
+                created_at: { gte: filters['start-date'], lte: filters['end-date'] },
+                skip,
+                limit: PAGE_SIZE,
+            };
+
+            const result = await (doSearch
+                ? apiClient.searchAssetGroupTagHistory({
+                      ...args,
+                      query,
+                  })
+                : apiClient.getAssetGroupTagHistory(args));
 
             return result.data;
         },
@@ -164,19 +177,23 @@ const HistoryContent = () => {
     const { data: tags, isLoading: isTagsLoading, isSuccess: isTagsSuccess } = useTagsQuery();
 
     const scrollRef = useRef<HTMLDivElement>(null);
-
+    //console.log('logHistory', logHistory);
     const historyData = logHistory ?? { pages: [{ count: 0, data: { records: [] } }] };
     const totalDBRowCount = historyData.pages[0].count;
-    const historyItemsRaw = historyData.pages.flatMap((item) => item.data.records);
+    const historyItemsRaw = historyData.pages.flatMap((item) => item.data.records) || [];
+    console.log('rawHistory', historyItemsRaw);
     const totalFetched = historyItemsRaw.length;
 
     const fetchMoreOnBottomReached = React.useCallback(
         (containerRefElement?: HTMLDivElement | null) => {
             if (containerRefElement) {
+                // const lastItem = historyItemsRaw.length - 1;
+                // console.log('totalDBRowCount', totalDBRowCount);
+                // console.log('history data', historyData);
                 const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
                 //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
                 if (
-                    scrollHeight - scrollTop - clientHeight < 500 &&
+                    scrollHeight - scrollTop - clientHeight < 20 &&
                     !isHistoryFetching &&
                     totalFetched < totalDBRowCount
                 ) {
@@ -192,14 +209,16 @@ const HistoryContent = () => {
     }, [fetchMoreOnBottomReached]);
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
-        count: totalFetched,
+        count: totalFetched ?? 0,
         getScrollElement: () => scrollRef.current,
         estimateSize: () => 55,
+
         measureElement:
             typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
                 ? (element) => element?.getBoundingClientRect().height
                 : undefined,
-        overscan: 5,
+
+        overscan: 2,
     };
 
     const isLoading = isHistoryLoading || isTagsLoading;
@@ -248,7 +267,10 @@ const HistoryContent = () => {
                     </div>
                 </CardHeader>
 
-                <div ref={scrollRef} className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
+                <div
+                    onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+                    ref={scrollRef}
+                    className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
                     <DataTable
                         data={historyItems ?? []}
                         TableHeaderProps={tableHeaderProps}
