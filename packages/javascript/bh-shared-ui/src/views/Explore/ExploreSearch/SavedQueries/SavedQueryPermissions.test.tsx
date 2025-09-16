@@ -17,26 +17,25 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../../../test-utils';
 import SavedQueryPermissions from './SavedQueryPermissions';
+
 const testUsers = [
     {
-        principal_name: 'Ted Theodore Logan - user',
-        id: '8f98c54d-ac4b-464d-a391-d8d5d4b3fe8c',
+        id: 'e504b63c-83c2-4b51-bfa4-84be18f02757',
+        email_address: 'email1@email.com',
+        first_name: 'Bill S',
+        last_name: 'Preston',
     },
     {
-        principal_name: 'Socrates - read-only',
-        id: 'cd28625d-5a09-4312-b84a-72a95881387a',
+        id: '09fda5c4-f0dd-4e51-8ba9-77e65300cf01',
+        email_address: 'email2@email.com',
+        first_name: 'Ted Theodore',
+        last_name: 'Logan',
     },
     {
-        principal_name: 'Beethoven - upload-only',
-        id: '46cd933d-b556-4fd6-a7a5-c0c7a44ea11e',
-    },
-    {
-        principal_name: 'Joan of Arc - power-user',
-        id: 'b1ebcec3-97bd-4660-8a88-b1895cbf4859',
-    },
-    {
-        principal_name: 'Bill S Preston - admin',
-        id: '0bf8e936-c70b-4ddc-ad8a-98a3afbf6393',
+        id: '329a55d6-686e-4f39-afd4-8e5d528094e9',
+        email_address: 'spam@example.com',
+        first_name: 'BHE',
+        last_name: 'Dev',
     },
 ];
 
@@ -45,7 +44,7 @@ const testSelf = {
 };
 
 const handlers = [
-    rest.get('/api/v2/bloodhound-users', (req, res, ctx) => {
+    rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
