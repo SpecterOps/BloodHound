@@ -26,6 +26,7 @@ import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
 import { cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
+import ConfirmDeleteQueryDialog from './ConfirmDeleteQueryDialog';
 import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
@@ -50,6 +51,8 @@ const CommonSearches = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [source, setSource] = useState('');
+    const [open, setOpen] = useState(false);
+    const [queryId, setQueryId] = useState<number>();
 
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
@@ -83,6 +86,16 @@ const CommonSearches = ({
     };
 
     const handleDeleteQuery = (id: number) => {
+        setQueryId(id);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setQueryId(undefined);
+    };
+
+    const confirmDeleteQuery = (id: number) => {
         deleteQueryMutation.mutate(id, {
             onSuccess: () => {
                 addNotification(`Query deleted.`, 'userDeleteQuery');
@@ -197,6 +210,13 @@ const CommonSearches = ({
                     showCommonQueries={showCommonQueries}
                 />
             </div>
+
+            <ConfirmDeleteQueryDialog
+                open={open}
+                queryId={queryId}
+                deleteHandler={confirmDeleteQuery}
+                handleClose={handleClose}
+            />
         </div>
     );
 };
