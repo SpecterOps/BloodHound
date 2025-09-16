@@ -142,39 +142,47 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 }
 
 func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
-	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
+	if err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
-	} else {
-		operation := analysis.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
+	}
 
-		for _, domain := range domainNodes {
-			innerDomain := domain
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				if adminSDHolder, err := getAdminSDHolder(tx, innerDomain); err != nil {
-					if graph.IsErrNotFound(err) {
-						return nil // No AdminSDHolder found for this domain
-					}
-					return err
-				} else if adminSDHolderProtected, err := getAdminSDHolderProtected(tx, innerDomain); err != nil {
-					return err
-				} else if len(adminSDHolder) == 0 {
-					return nil // No AdminSDHolder found for this domain
-				} else {
-					for _, object := range adminSDHolderProtected {
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID: adminSDHolder[0],
-							ToID:   object,
-							Kind:   ad.ProtectAdminGroups,
-						})
-					}
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
 
+	for _, domain := range domainNodes {
+
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			adminSDHolderIDs, err := getAdminSDHolder(tx, domain)
+			if err != nil {
+				if graph.IsErrNotFound(err) {
+					// No AdminSDHolder found for this domain
 					return nil
 				}
-			})
-		}
+				return err
+			}
+			if len(adminSDHolderIDs) == 0 {
+				// No AdminSDHolder IDs found for this domain
+				return nil
+			}
 
-		return &operation.Stats, operation.Done()
+			protectedObjectIDs, err := getAdminSDHolderProtected(tx, domain)
+			if err != nil {
+				return err
+			}
+
+			fromID := adminSDHolderIDs[0] // AdminSDHolder should be unique per domain
+			for _, toID := range protectedObjectIDs {
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					FromID: fromID,
+					ToID:   toID,
+					Kind:   ad.ProtectAdminGroups,
+				})
+			}
+			return nil
+		})
 	}
+
+	return &operation.Stats, operation.Done()
 }
 
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
