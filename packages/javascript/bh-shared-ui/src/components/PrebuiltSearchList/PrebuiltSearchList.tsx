@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import groupBy from 'lodash/groupBy';
 import { FC, useEffect, useRef, useState } from 'react';
 import { QueryListSection } from '../../types';
+import ConfirmDeleteQueryDialog from '../../views/Explore/ExploreSearch/SavedQueries/ConfirmDeleteQueryDialog';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
@@ -158,27 +159,12 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                     </Button>
                 </Box>
             )}
-
-            <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
-                <DialogTitle>Delete Query</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button variant='tertiary' onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            if (deleteHandler) deleteHandler(queryId!);
-                            handleClose();
-                        }}
-                        color='primary'
-                        autoFocus>
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <ConfirmDeleteQueryDialog
+                open={open}
+                queryId={queryId}
+                deleteHandler={deleteHandler}
+                handleClose={handleClose}
+            />
         </>
     );
 };
