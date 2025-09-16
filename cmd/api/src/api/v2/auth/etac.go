@@ -60,11 +60,11 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 		user.AllEnvironments = allEnvironments
 	}
 
-	if updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) > 0 {
+	if updateUserRequest.EnvironmentAccessControl != nil {
 		var (
 			environments = make([]string, 0, len(updateUserRequest.EnvironmentAccessControl.Environments))
 		)
-		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0, len(updateUserRequest.EnvironmentAccessControl.Environments))
+		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
 		user.AllEnvironments = false
 
 		for _, environment := range updateUserRequest.EnvironmentAccessControl.Environments {
