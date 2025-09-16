@@ -79,7 +79,6 @@ export const getEditButtonState = (
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
-
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const {
         isLabelPage,
@@ -121,13 +120,9 @@ const Details: FC = () => {
     });
 
     const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
-
     const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
-
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
-
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
-
     const saveLink = getSavePath(zoneId, labelId, selectorId);
 
     return (
@@ -169,7 +164,6 @@ const Details: FC = () => {
                             }}
                         />
                     )}
-
                     <SelectorsList
                         listQuery={selectorsQuery}
                         onChangeSortOrder={setSelectorsListSortOrder}

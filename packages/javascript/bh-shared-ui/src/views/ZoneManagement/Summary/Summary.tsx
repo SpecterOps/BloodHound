@@ -37,15 +37,13 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 const Summary: FC = () => {
     const navigate = useAppNavigate();
     const { zoneId, labelId, selectorId, tagId, tagType, tagTypeDisplayPlural } = useZonePathParams();
-
+    const tagsQuery = useTagsQuery();
+    const saveLink = getSavePath(zoneId, labelId, selectorId);
     const context = useContext(ZoneManagementContext);
     if (!context) {
         throw new Error('Details must be used within a ZoneManagementContext.Provider');
     }
     const { InfoHeader } = context;
-
-    const tagsQuery = useTagsQuery();
-    const saveLink = getSavePath(zoneId, labelId, selectorId);
 
     return (
         <div className='h-full'>

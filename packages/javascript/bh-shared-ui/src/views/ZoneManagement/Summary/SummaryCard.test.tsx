@@ -18,9 +18,9 @@ import userEvent from '@testing-library/user-event';
 import { AssetGroupTagTypeZone, ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { longWait, render, screen, within } from '../../../test-utils';
 import SummaryCard from './SummaryCard';
-import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 
 // Mock icons
 vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({

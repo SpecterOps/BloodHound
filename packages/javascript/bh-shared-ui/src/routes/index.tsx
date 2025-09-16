@@ -24,7 +24,7 @@ export const detailsPath = 'details';
 export const savePath = 'save';
 export const summaryPath = 'summary';
 
-export const ROUTE_PRIVILEGE_ZONES_ROOT = `/${privilegeZonesPath}`;
+export const ROUTE_PRIVILEGE_ZONES = `/${privilegeZonesPath}`;
 
 export const ROUTE_PZ_ZONE_SUMMARY = `/${zonesPath}/:zoneId/${summaryPath}`;
 export const ROUTE_PZ_LABEL_SUMMARY = `/${labelsPath}/:labelId/${summaryPath}`;
