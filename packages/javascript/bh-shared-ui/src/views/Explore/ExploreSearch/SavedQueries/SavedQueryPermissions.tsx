@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 import { CheckedState } from '@radix-ui/react-checkbox';
-import { User } from 'js-client-library';
+import { UserMinimal } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../../components';
@@ -56,8 +56,8 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     function idMap() {
         return listUsersQuery.data
-            ?.filter((user: User) => user.id !== selfId)
-            .map((user: User) => {
+            ?.filter((user: UserMinimal) => user.id !== selfId)
+            .map((user: UserMinimal) => {
                 return {
                     id: user.id,
                     name: `${user.first_name} ${user.last_name}`,
@@ -67,7 +67,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     }
 
     const usersList = useMemo(() => idMap(), [listUsersQuery.data, selfId]);
-    const allUserIds = useMemo(() => usersList?.map((x: ListUser) => x.id) ?? [], [usersList]);
+    const allUserIds = useMemo(() => usersList?.map((x) => x.id) ?? [], [usersList]);
 
     useEffect(() => {
         if (!data) return;
@@ -148,9 +148,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const filteredUsers = useMemo(() => {
         if (!searchTerm) return usersList;
-        const filtered = usersList?.filter((user: ListUser) =>
-            user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const filtered = usersList?.filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
         return filtered;
     }, [searchTerm, usersList]);
 
