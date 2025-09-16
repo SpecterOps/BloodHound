@@ -22,7 +22,7 @@ import clsx from 'clsx';
 import React, { ComponentType } from 'react';
 
 export type DetailsAccordionProps<T extends Record<string, unknown>> = {
-    /** If `true`, applies an accent style to the selected item’s header  */
+    /** If `true`, applies an accent style to item headers  */
     accent?: boolean;
 
     /** Component to render the content area of each item */
@@ -122,7 +122,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                             <Header {...item} />
                         </AccordionHeader>
 
-                        <AccordionContent className='pr-6 text-base justify-between border-t dark:border-neutral-dark-4'>
+                        <AccordionContent className='pr-6 text-base border-t dark:border-neutral-dark-4'>
                             <Content {...item} />
                         </AccordionContent>
                     </AccordionItem>
