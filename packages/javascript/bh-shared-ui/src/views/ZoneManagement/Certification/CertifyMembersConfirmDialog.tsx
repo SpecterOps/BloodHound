@@ -31,7 +31,11 @@ const CertifyMembersConfirmDialog: FC<CertifyMembersConfirmDialogProps> = ({ onC
 
     return (
         <Dialog open={open} modal={true}>
-            <DialogContent className='' maxWidth='xs' DialogOverlayProps={{ blurBackground: true }}>
+            <DialogContent
+                className=''
+                aria-describedby='textNote'
+                maxWidth='xs'
+                DialogOverlayProps={{ blurBackground: true }}>
                 <DialogTitle className='flex'>Add note</DialogTitle>
                 <TextField
                     multiline

@@ -4,7 +4,7 @@ import {
     CertificationRevoked,
     UpdateCertificationRequest,
 } from 'js-client-library';
-import { FC, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
@@ -85,12 +85,22 @@ const Certification: FC = () => {
             return apiClient.updateAssetGroupTagCertification(requestBody);
         },
         onSuccess: () => {
-            const certificationType = certifyOrRevoke === CertificationManual ? 'Certification' : 'Revocation';
-            addNotification(`Selected ${certificationType} Successful`);
+            const certificationType = certifyAction === CertificationManual ? 'Certification' : 'Revocation';
+            addNotification(
+                `Selected ${certificationType} Successful`,
+                `zone-management_update-certification_success`,
+                {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
             // TODO soft-refresh the page, keeping the selected filters active
+            // should just be able to do a query.refetch();
         },
         onError: (error: any) => {
-            addNotification('There was an error updating certification.');
+            console.log(error);
+            addNotification('There was an error updating certification', `zone-management_update-certification_error`, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
         },
     });
 
@@ -109,7 +119,7 @@ const Certification: FC = () => {
 
     const getSelectedMemberIds = () => {
         //TODO unmock
-        return [1, 2, 3];
+        return [777, 290, 91];
     };
 
     const selectedNode = {
@@ -118,32 +128,39 @@ const Certification: FC = () => {
         type: memberQuery.data?.primary_kind as EntityKinds,
     };
 
-    const showDialog = (choice: typeof CertificationManual | typeof CertificationRevoked) => {
+    const showDialog = (action: typeof CertificationManual | typeof CertificationRevoked) => {
         setIsDialogOpen(true);
-        setCertifyOrRevoke(choice);
+        setCertifyAction(action);
     };
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    // TODO -- is there a way to do this without setting a default value??
-    const [certifyOrRevoke, setCertifyOrRevoke] = useState<typeof CertificationRevoked | typeof CertificationManual>(
+    const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
         CertificationManual
     );
 
-    const handleConfirm = (withNote: boolean, certifyNote?: string) => {
-        console.log('Confirmed! Note: ', certifyNote);
-        setIsDialogOpen(false);
+    const handleConfirm = useCallback(
+        (withNote: boolean, certifyNote?: string) => {
+            setIsDialogOpen(false);
 
-        const selectedMemberIds = getSelectedMemberIds();
+            // TODO -- this is hard-coded for now
+            const selectedMemberIds = getSelectedMemberIds();
 
-        if (selectedMemberIds.length === 0) {
-            addNotification('No objects selected');
-            return;
-        }
-        // TODO -- input sanitization for the note
-        const requestBody = createCertificationRequestBody(certifyOrRevoke, selectedMemberIds, withNote, certifyNote);
-        // TODO -- make API call
-        certifyMutation.mutate(requestBody);
-    };
+            if (selectedMemberIds.length === 0) {
+                addNotification(
+                    'Members must be selected for certification',
+                    `zone-management_update-certification_no-members`,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
+                return;
+            }
+            // TODO -- input sanitization for the note??
+            const requestBody = createCertificationRequestBody(certifyAction, selectedMemberIds, withNote, certifyNote);
+            certifyMutation.mutate(requestBody);
+        },
+        [certifyAction]
+    );
 
     return (
         <>
