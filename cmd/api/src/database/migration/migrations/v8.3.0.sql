@@ -13,7 +13,6 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
--- Add OpenGraph Phase 2 feature flag
 
 -- This migration changes the auto_certify column type from a boolean to an integer type
 -- Then it converts the previous boolean values into enum-like integer values of 0, 1, or 2
