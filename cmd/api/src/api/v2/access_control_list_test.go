@@ -59,16 +59,16 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 
@@ -92,16 +92,16 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 
@@ -124,16 +124,16 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 

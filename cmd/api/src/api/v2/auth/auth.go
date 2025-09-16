@@ -507,6 +507,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		// eTAC
 		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
 			api.HandleDatabaseError(request, response, err)
+			return
 		} else if etacFeatureFlag.Enabled {
 			// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
 			effectiveRoles := user.Roles

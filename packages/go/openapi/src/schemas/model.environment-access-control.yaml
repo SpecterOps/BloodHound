@@ -21,6 +21,6 @@ properties:
     format: uuid
     description: The user UUID that associates the access control to a specific user
     readOnly: true
-  environment:
+  environment_id:
     type: string
     description: The environment id which a user has been granted access to

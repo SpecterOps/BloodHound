@@ -18,7 +18,7 @@ package model
 // EnvironmentAccess defines the model for a row in the environment_access_control table
 type EnvironmentAccess struct {
 	UserID      string `json:"user_id"`
-	Environment string `json:"environment"`
+	EnvironmentID string `json:"environment"`
 	BigSerial
 }
 

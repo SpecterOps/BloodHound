@@ -84,8 +84,8 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 						return errors.New(fmt.Sprintf("domain or tenant not found: %s", environment))
 					} else {
 						user.EnvironmentAccessControl = append(user.EnvironmentAccessControl, model.EnvironmentAccess{
-							UserID:      user.ID.String(),
-							Environment: environment,
+							UserID:        user.ID.String(),
+							EnvironmentID: environment,
 						})
 					}
 				}

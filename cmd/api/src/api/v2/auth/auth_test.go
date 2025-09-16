@@ -1557,8 +1557,8 @@ func TestCreateUser_ETAC(t *testing.T) {
 			goodUser: model.User{
 				PrincipalName: "good user",
 				EnvironmentAccessControl: []model.EnvironmentAccess{
-					{Environment: "12345"},
-					{Environment: "54321"},
+					{EnvironmentID: "12345"},
+					{EnvironmentID: "54321"},
 				},
 			},
 			createReq: v2.CreateUserRequest{
@@ -1667,8 +1667,8 @@ func TestCreateUser_ETAC(t *testing.T) {
 			goodUser: model.User{
 				PrincipalName: "good user",
 				EnvironmentAccessControl: []model.EnvironmentAccess{
-					{Environment: "12345"},
-					{Environment: "54321"},
+					{EnvironmentID: "12345"},
+					{EnvironmentID: "54321"},
 				},
 			},
 			createReq: v2.CreateUserRequest{
@@ -1703,8 +1703,8 @@ func TestCreateUser_ETAC(t *testing.T) {
 			goodUser: model.User{
 				PrincipalName: "good user",
 				EnvironmentAccessControl: []model.EnvironmentAccess{
-					{Environment: "12345"},
-					{Environment: "54321"},
+					{EnvironmentID: "12345"},
+					{EnvironmentID: "54321"},
 				},
 			},
 			createReq: v2.CreateUserRequest{
