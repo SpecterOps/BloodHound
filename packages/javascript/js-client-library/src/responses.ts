@@ -177,7 +177,7 @@ export type NewAuthToken = AuthToken & {
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
-export type AssetGroupTagsCertification = PaginatedResponse<{ records: AssetGroupTagCertificationRecord[] }>;
+export type AssetGroupTagsCertification = PaginatedResponse<{ members: AssetGroupTagCertificationRecord[] }>;
 
 export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
     source: NodeSourceTypes;

@@ -255,9 +255,9 @@ class BHEAPIClient {
 
     /* asset group tags (AGT) */
 
-    getAssetGroupTagCertifications = (limit: number, skip: number, options?: RequestOptions) =>
+    getAssetGroupTagsCertifications = (limit: number, skip: number, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsCertification>(
-            `/api/v2/certification`,
+            `/api/v2/asset-group-tags/certifications`,
             Object.assign(
                 {
                     params: {
@@ -269,9 +269,9 @@ class BHEAPIClient {
             )
         );
 
-    searchAssetGroupTagCertifications = (limit: number, skip: number, query = '') =>
+    searchAssetGroupTagsCertifications = (limit: number, skip: number, query = '') =>
         this.baseClient.post<AssetGroupTagsCertification>(
-            `/api/v2/certification`,
+            `/api/v2/asset-group-tags/certifications`,
             { query },
             {
                 params: {
