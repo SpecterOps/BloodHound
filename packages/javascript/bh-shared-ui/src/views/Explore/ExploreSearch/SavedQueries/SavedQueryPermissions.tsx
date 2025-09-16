@@ -45,8 +45,11 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
 
-    const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
-        apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
+    const listUsersQuery = useQuery(['listUsersMinimal'], ({ signal }) =>
+        apiClient.listUsersMinimal({ signal }).then((res) => {
+            console.log(res);
+            return res.data?.data?.users;
+        })
     );
 
     const { data, isLoading } = useQueryPermissions(queryId as number);
