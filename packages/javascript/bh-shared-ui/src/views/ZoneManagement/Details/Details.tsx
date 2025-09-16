@@ -59,9 +59,9 @@ export const getSavePath = (
 
     if (tagPathId === '') return;
 
-    const selectorIdPath = selectorId ? `${selectorsPath}/${selectorId}/${savePath}` : savePath;
+    const dynamicSavePath = selectorId ? `${selectorsPath}/${selectorId}/${savePath}` : savePath;
 
-    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${selectorIdPath}`;
+    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${dynamicSavePath}`;
 };
 
 export const getEditButtonState = (
