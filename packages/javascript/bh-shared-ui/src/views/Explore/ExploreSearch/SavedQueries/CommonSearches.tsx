@@ -99,6 +99,8 @@ const CommonSearches = ({
         deleteQueryMutation.mutate(id, {
             onSuccess: () => {
                 addNotification(`Query deleted.`, 'userDeleteQuery');
+                setOpen(false);
+                setQueryId(undefined);
             },
         });
     };
