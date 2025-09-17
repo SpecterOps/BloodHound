@@ -5868,23 +5868,15 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
                   },
                   {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "seeds": {
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "name",
-                      "seeds"
-                    ]
+                    "type": "object"
                   }
+                ],
+                "required": [
+                  "name",
+                  "seeds"
                 ]
               }
             }
@@ -6018,19 +6010,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "disabled": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
               }
             }
           }
@@ -17659,6 +17639,21 @@
           }
         }
       },
+      "model.environment-access-control": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The user UUID that associates the access control to a specific user",
+            "readOnly": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The environment id which a user has been granted access to"
+          }
+        }
+      },
       "model.user": {
         "allOf": [
           {
@@ -17743,6 +17738,14 @@
               "all_environments": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "environment_access_control": {
+                "description": "A collection of environments that a user has been granted access to as part of ETAC",
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.environment-access-control"
+                }
               }
             }
           }
@@ -18418,8 +18421,54 @@
           },
           "is_disabled": {
             "type": "boolean"
+          },
+          "all_environments": {
+            "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
+            "type": "boolean"
+          },
+          "environment_access_control": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Sets an environment access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "properties": {
+              "environments": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "environment_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "all_environments"
+            ],
+            "not": {
+              "required": [
+                "environment_access_control"
+              ]
+            }
+          },
+          {
+            "required": [
+              "environment_access_control"
+            ],
+            "not": {
+              "required": [
+                "all_environments"
+              ]
+            }
+          }
+        ]
       },
       "api.requests.user.set-secret": {
         "type": "object",
@@ -19069,6 +19118,16 @@
           }
         }
       },
+      "null.time.response": {
+        "type": "string",
+        "nullable": true,
+        "format": "date-time",
+        "description": "An RFC-3339 formatted string"
+      },
+      "null.string.response": {
+        "type": "string",
+        "nullable": true
+      },
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
@@ -19080,9 +19139,35 @@
           }
         }
       },
-      "model.asset-group-tags-selector-create": {
+      "model.asset-group-tags-selector-response": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "asset_group_tag_id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "disabled_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "disabled_by": {
+            "$ref": "#/components/schemas/null.string.response"
+          },
           "name": {
             "type": "string"
           },
@@ -19090,6 +19175,18 @@
             "type": "string"
           },
           "auto_certify": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "allow_disable": {
             "type": "boolean"
           },
           "seeds": {
@@ -19099,60 +19196,6 @@
             }
           }
         }
-      },
-      "null.time.response": {
-        "type": "string",
-        "nullable": true,
-        "format": "date-time",
-        "description": "An RFC-3339 formatted string"
-      },
-      "null.string.response": {
-        "type": "string",
-        "nullable": true
-      },
-      "model.asset-group-tags-selector-response": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "asset_group_tag_id": {
-                "type": "integer"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_by": {
-                "type": "string"
-              },
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "is_default": {
-                "type": "boolean"
-              },
-              "allow_disable": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
       },
       "api.params.predicate.filter.integer-strict": {
         "type": "integer",
@@ -19272,15 +19315,26 @@
           "type": "string"
         }
       },
-      "model.asset-group-tags-selector-update": {
-        "type": "object",
+      "model.asset-group-tags-selector-request": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
           },
           {
             "type": "object",
             "properties": {
+              "auto_certify": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+              },
+              "description": {
+                "type": "string"
+              },
               "disabled": {
                 "type": "boolean"
               }

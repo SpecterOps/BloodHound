@@ -106,9 +106,9 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	const endpoint = "/api/v2/sso-providers"
 
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		reqCtx            = &ctx.Context{Host: &url.URL{}}
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		reqCtx               = &ctx.Context{Host: &url.URL{}}
 
 		oidcProvider = model.OIDCProvider{
 			SSOProviderID: 1,
@@ -225,9 +225,9 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	var (
-		ssoDeleteURL      = "/api/v2/sso-providers/%s"
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		ssoDeleteURL         = "/api/v2/sso-providers/%s"
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 
 	t.Run("successfully delete an SSOProvider", func(t *testing.T) {
@@ -317,9 +317,9 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 
 func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
 	var (
-		mockCtrl  = gomock.NewController(t)
-		_, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		testCtx   = context.Background()
+		mockCtrl     = gomock.NewController(t)
+		_, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		testCtx      = context.Background()
 
 		dbRoles = model.Roles{
 			{Name: "God Role", Serial: model.Serial{ID: 1}},
@@ -505,7 +505,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
@@ -641,7 +641,7 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil)
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()

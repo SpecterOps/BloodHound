@@ -14,15 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package api_test
+package v2_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
@@ -58,18 +57,18 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{
+				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 
@@ -91,18 +90,18 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{
+				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 
@@ -123,18 +122,18 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{
+				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 
@@ -156,7 +155,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{}
+				envs := []model.EnvironmentAccess{}
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
@@ -200,7 +199,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 			testCase.setupMocks(t, mocks)
 
-			actual, err := api.CheckUserAccessToEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
+			actual, err := v2.CheckUserAccessToEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
 
 			require.NoError(t, err)
 			assert.Equal(t, testCase.expected, actual)
