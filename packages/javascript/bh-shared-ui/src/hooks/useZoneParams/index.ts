@@ -15,5 +15,5 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useZoneQueryParams } from './useZoneQueryParams';
 
-export * from './useZonePathParams';
+export * from './usePZPathParams';
 export { useZoneQueryParams };
