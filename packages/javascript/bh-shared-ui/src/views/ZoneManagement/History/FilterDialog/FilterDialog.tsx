@@ -61,7 +61,7 @@ const actionMap: { label: string; value: string }[] = [
     { label: 'Automatic Certification', value: 'CertifyNodeAuto' },
     { label: 'User Certification', value: 'CertifyNodeManual' },
     { label: 'Certify Revoked', value: 'CertifyNodeRevoked' },
-] as const;
+];
 
 export interface AssetGroupTagHistoryFilters {
     action: string;
