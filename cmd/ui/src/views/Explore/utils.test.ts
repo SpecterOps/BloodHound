@@ -57,6 +57,13 @@ const testEdgesWithDuplicate = [
         lastSeen: '',
     },
     {
+        source: '2',
+        target: '1',
+        label: 'MemberOf',
+        kind: 'MemberOf',
+        lastSeen: '',
+    },
+    {
         source: '1',
         target: '2',
         label: 'GetChangesAll',
@@ -88,8 +95,9 @@ describe('Explore utils', () => {
                 { theme: mockTheme as Theme, hideNodes: false, customIcons: {}, darkMode: false, tagGlyphMap: {} }
             );
 
-            expect(graph.edges.length).toEqual(2);
+            expect(graph.edges().length).toEqual(3);
             expect(graph.hasEdge('1_MemberOf_2')).toBeTruthy();
+            expect(graph.hasEdge('2_MemberOf_1')).toBeTruthy();
             expect(graph.hasEdge('1_GetChangesAll_2')).toBeTruthy();
         });
     });
