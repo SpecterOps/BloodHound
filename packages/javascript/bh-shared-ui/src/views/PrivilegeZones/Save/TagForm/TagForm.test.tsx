@@ -37,6 +37,7 @@ const testTierZero = {
     updated_by: 'SYSTEM',
     deleted_at: null,
     deleted_by: null,
+    glyph: 'lightbulb',
     position: 1,
     require_certify: true,
     analysis_enabled: true,
@@ -54,6 +55,7 @@ const testOwned = {
     updated_by: 'SYSTEM',
     deleted_at: null,
     deleted_by: null,
+    glyph: 'user-edit',
     position: null,
     require_certify: false,
     analysis_enabled: false,
@@ -184,6 +186,10 @@ describe('Tag Form', () => {
         expect(requireCertifySwitch).toBeInTheDocument();
         expect(requireCertifySwitch).toHaveValue('false');
 
+        const glyphInput = await screen.findByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).toBeInTheDocument();
+        expect(glyphInput).toHaveValue('');
+
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
@@ -215,6 +221,9 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
+        const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).not.toBeInTheDocument();
+
         // The Require Certification switch should not render when creating a label
         expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
@@ -223,6 +232,93 @@ describe('Tag Form', () => {
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
+    });
+
+    it('renders the form for editing an existing zone', async () => {
+        // This url has the zone id of 1 in the path
+        // and so this zone's data is filled into the form for the user to edit
+
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+
+        render(
+            <Routes>
+                <Route path={editExistingZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingZonePath }
+        );
+
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+
+        const nameInput = await screen.findByLabelText('Name');
+        expect(nameInput).toBeInTheDocument();
+        longWait(() => {
+            expect(nameInput).toHaveValue('Tier Zero');
+        });
+
+        const descriptionInput = screen.getByLabelText('Description');
+        expect(descriptionInput).toBeInTheDocument();
+        longWait(() => {
+            expect(descriptionInput).toHaveValue('Tier Zero Description');
+        });
+
+        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
+        expect(requireCertifySwitch).toBeInTheDocument();
+        await waitFor(() => {
+            expect(requireCertifySwitch).toHaveValue('true');
+        });
+
+        const glyphInput = await screen.findByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).toBeInTheDocument();
+        expect(glyphInput).toHaveValue('lightbulb');
+
+        // The delete button should not render when editing T0
+        expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+    });
+
+    it('renders the form for editing an existing label', async () => {
+        // This url has the label id of 2 in the path
+        // and so this label's data is filled into the form for the user to edit
+
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
+
+        render(
+            <Routes>
+                <Route path={editExistingLabelPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingLabelPath }
+        );
+
+        longWait(() => {
+            expect(screen.getByText('Edit Label Details')).toBeInTheDocument();
+        });
+
+        const nameInput = await screen.findByLabelText('Name');
+        expect(nameInput).toBeInTheDocument();
+        longWait(() => {
+            expect(nameInput).toHaveValue('Owned');
+        });
+
+        const descriptionInput = screen.getByLabelText('Description');
+        expect(descriptionInput).toBeInTheDocument();
+        longWait(() => {
+            expect(descriptionInput).toHaveValue('Owned Description');
+        });
+
+        // The Require Certification switch should not render when editing a label
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
+
+        const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).not.toBeInTheDocument();
+
+        // The delete button should not render when editing Owned
+        longWait(() => {
+            expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        });
+        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.queryByTestId('privilege-zones_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();
     });
 
     it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
