@@ -99,7 +99,7 @@ const SearchBar: React.FC = () => {
         : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
 
     return (
-        <div {...getComboboxProps()} className='relative w-4/6'>
+        <div {...getComboboxProps()} className='relative w-1/4 self-end'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverTrigger asChild>
                     <div className='flex items-center'>
