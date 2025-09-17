@@ -19,7 +19,7 @@ import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } fro
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
-import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
+import { GraphData, GraphEdge, GraphEdges, GraphNodes } from 'js-client-library';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
@@ -154,14 +154,20 @@ const initGraphNodes = (
 
 const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOptions: ThemedOptions) => {
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
+    const lookupSet = new Set<string>();
     const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
-        const identifiers = [edge.source, edge.target].sort();
-        const id = `${identifiers[0]}_${identifiers[1]}`;
+        const groupKey = getEdgeGroupKey(edge);
+        const edgeKey = getEdgeKey(edge);
 
-        if (!groups[id]) {
-            groups[id] = [];
+        if (!groups[groupKey]) {
+            groups[groupKey] = [];
         }
-        groups[id].push(edge);
+
+        // Dedupe edges before they are added to groups so that curved edges get counted and rendered correctly
+        if (!lookupSet.has(edgeKey)) {
+            lookupSet.add(edgeKey);
+            groups[groupKey].push(edge);
+        }
 
         return groups;
     }, {});
@@ -171,7 +177,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
         const groupSize = groupedEdges[group].length;
 
         for (const [i, edge] of groupedEdges[group].entries()) {
-            const key = `${edge.source}_${edge.kind}_${edge.target}`;
+            const key = getEdgeKey(edge);
 
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
@@ -209,4 +215,13 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
             graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
         }
     }
+};
+
+const getEdgeKey = (edge: GraphEdge) => {
+    return `${edge.source}_${edge.kind}_${edge.target}`;
+};
+
+const getEdgeGroupKey = (edge: GraphEdge) => {
+    const identifiers = [edge.source, edge.target].sort();
+    return `${identifiers[0]}_${identifiers[1]}`;
 };
