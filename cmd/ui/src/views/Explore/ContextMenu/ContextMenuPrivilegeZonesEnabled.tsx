@@ -40,7 +40,7 @@ import CopyMenuItem from './CopyMenuItem';
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     onClose?: () => void;
-}> = ({ contextMenu, onClose = () => { } }) => {
+}> = ({ contextMenu, onClose = () => {} }) => {
     const { addNotification } = useNotifications();
 
     const { checkPermission } = usePermissions();

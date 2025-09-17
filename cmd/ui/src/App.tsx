@@ -37,7 +37,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Helmet } from 'react-helmet';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
-import { ROUTES, PRIVILEGE_ZONES_ROUTE } from 'src/routes';
+import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
 import Content from 'src/views/Content';

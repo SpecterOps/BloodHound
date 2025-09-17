@@ -179,9 +179,7 @@ const SelectorForm: FC = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });
 
-            navigate(
-                `/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`
-            );
+            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`);
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
         }

@@ -141,8 +141,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                         </div>
                     )}
                     <p className='font-bold'>
-                        {tagTypeDisplay}:{' '}
-                        <span className='font-normal'>{tagQuery.data?.name}</span>
+                        {tagTypeDisplay}: <span className='font-normal'>{tagQuery.data?.name}</span>
                     </p>
                     <div className='flex flex-col gap-6 mt-6'>
                         <div className='flex flex-col gap-6'>

@@ -16,7 +16,7 @@
 
 import PrivilegeZones from './PrivilegeZones';
 
-export * from './ZoneAnalysisIcon';
 export * from './PrivilegeZonesContext';
+export * from './ZoneAnalysisIcon';
 export * from './utils';
 export default PrivilegeZones;

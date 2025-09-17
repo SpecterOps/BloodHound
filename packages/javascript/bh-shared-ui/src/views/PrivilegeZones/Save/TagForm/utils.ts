@@ -14,12 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    useHighestPrivilegeTagId,
-    useOwnedTagId,
-    usePrivilegeZoneAnalysis,
-    usePZPathParams,
-} from '../../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePrivilegeZoneAnalysis, usePZPathParams } from '../../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../../routes';
 import { useAppNavigate } from '../../../../utils';
 

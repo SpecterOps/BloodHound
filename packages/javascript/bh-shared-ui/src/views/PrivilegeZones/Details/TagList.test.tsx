@@ -108,7 +108,7 @@ describe('List', async () => {
             AssetGroupTag[]
         >;
 
-        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         expect(screen.getAllByTestId('privilege-zones_labels-list_loading-skeleton')).toHaveLength(3);
     });
@@ -116,14 +116,14 @@ describe('List', async () => {
     it('handles data fetching errors', async () => {
         const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<TagList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
 
     it('renders a sortable list for Labels', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
-        render(<TagList title='Labels' listQuery={testQuery} selected={'3'} onSelect={() => { }} />, {
+        render(<TagList title='Labels' listQuery={testQuery} selected={'3'} onSelect={() => {}} />, {
             route: '/privilege-zones/labels/details',
         });
 
@@ -132,7 +132,7 @@ describe('List', async () => {
     });
 
     it('renders a non sortable list for Zones', async () => {
-        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => { }} />, {
+        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />, {
             route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
         });
 
@@ -156,7 +156,7 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => { }} />, {
+        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />, {
             route: '/privilege-zones/zones/details',
         });
 
@@ -175,7 +175,7 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => { }} />);
+        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />);
 
         const listItem = screen.getByTestId('privilege-zones_details_zones-list_item-2');
         expect(listItem).toBeInTheDocument();
@@ -191,7 +191,7 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => { }} />);
+        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />);
 
         const listItem1 = screen.getByTestId('privilege-zones_details_zones-list_item-1');
         expect(listItem1).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe('List', async () => {
     });
 
     it('handles rendering a selected item', async () => {
-        render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
+        render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
         expect(await screen.findByTestId('privilege-zones_details_zones-list_active-zones-item-1')).toBeInTheDocument();
     });

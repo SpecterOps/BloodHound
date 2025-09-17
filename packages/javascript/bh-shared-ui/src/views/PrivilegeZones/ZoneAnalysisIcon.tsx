@@ -23,7 +23,7 @@ import {
 import clsx from 'clsx';
 import { FC } from 'react';
 import { AppIcon } from '../../components';
-import { usePrivilegeZoneAnalysis, usePZPathParams } from '../../hooks';
+import { usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';
 
 type ZoneAnalysisIconProps = {
     iconClasses?: string | null;

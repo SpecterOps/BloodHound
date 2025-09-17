@@ -173,10 +173,7 @@ describe('Details', async () => {
     it('will deselect both the selected selector and selected object when a different zone is selected', async () => {
         render(
             <Routes>
-                <Route
-                    path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS}
-                    element={<Details />}
-                />
+                <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS} element={<Details />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${selectorsPath}/7/${membersPath}/7/${detailsPath}` }
         );

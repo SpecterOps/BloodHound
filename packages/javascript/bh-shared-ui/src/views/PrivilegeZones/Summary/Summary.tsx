@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { AppLink } from '../../../components';
-import { useTagsQuery, usePZPathParams } from '../../../hooks';
+import { usePZPathParams, useTagsQuery } from '../../../hooks';
 import { privilegeZonesPath, summaryPath } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';

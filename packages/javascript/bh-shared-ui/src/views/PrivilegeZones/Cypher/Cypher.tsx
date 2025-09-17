@@ -25,7 +25,7 @@ import { encodeCypherQuery, usePZPathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
 import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
 
-const emptyFunction = () => { };
+const emptyFunction = () => {};
 
 export const Cypher: FC<{
     preview?: boolean;
