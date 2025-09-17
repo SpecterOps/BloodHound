@@ -18,7 +18,7 @@ import { AxiosRequestConfig } from 'axios';
 import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorSeed,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
     SeedExpansionMethod,
     SSOProviderConfiguration,
 } from './types';
@@ -36,7 +36,7 @@ export interface LoginRequest {
 export type CreateAssetGroupTagRequest = {
     name: string;
     description: string;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position?: number | null;
     requireCertify?: boolean | null;
 };

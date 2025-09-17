@@ -20,8 +20,8 @@ export { default as UserProfile } from './UserProfile';
 
 export { default as SSOConfiguration } from './SSOConfiguration';
 
-export * from './ZoneManagement';
-export { default as ZoneManagement } from './ZoneManagement';
+export * from './PrivilegeZones';
+export { default as PrivilegeZones } from './PrivilegeZones';
 
 export { default as Users } from './Users';
 
