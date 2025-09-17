@@ -28,7 +28,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
 
     const { selectedQuery } = useSavedQueriesContext();
 
-    const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4';
+    const listItemStyles = 'px-2 py-3 cursor-pointer hover:bg-neutral-4';
 
     const [tagToZoneOpen, setTagToZoneOpen] = useState(false);
     //Tag to Zone or Label

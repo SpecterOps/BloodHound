@@ -19,6 +19,7 @@ import {
     AppIcon,
     MainNavData,
     Permission,
+    ROUTE_PRIVILEGE_ZONES,
     useFeatureFlags,
     useFileUploadDialogContext,
     usePermissions,
@@ -70,8 +71,8 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
         {
             label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
-            testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
+            route: tierFlag?.enabled ? ROUTE_PRIVILEGE_ZONES : routes.ROUTE_GROUP_MANAGEMENT,
+            testId: tierFlag?.enabled ? 'global_nav-privilege-zones' : 'global_nav-group-management',
         },
     ];
 
