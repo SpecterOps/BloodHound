@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useLocation } from 'react-router-dom';
 import {
     useHighestPrivilegeTagId,
     useOwnedTagId,
@@ -26,8 +25,6 @@ import { useAppNavigate } from '../../../../utils';
 
 export const useTagFormUtils = () => {
     const navigate = useAppNavigate();
-    const location = useLocation();
-
     const { tagId, zoneId, labelId, tagType, tagTypeDisplay, isZonePage, isLabelPage } = usePZPathParams();
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
@@ -39,7 +36,7 @@ export const useTagFormUtils = () => {
     const isUpdateLabelLocation = isLabelPage && labelId;
 
     const handleCreateNavigate = (tagId: number) => {
-        navigate(`${location.pathname}/${tagId}`, { replace: true });
+        navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${savePath}`, { replace: true });
         navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`);
     };
 

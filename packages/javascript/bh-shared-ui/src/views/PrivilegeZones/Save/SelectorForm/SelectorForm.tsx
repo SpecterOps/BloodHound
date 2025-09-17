@@ -122,7 +122,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 
 const SelectorForm: FC = () => {
     const location = useLocation();
-    const { tagId, selectorId = '', isLabelPage } = usePZPathParams();
+    const { tagId, selectorId = '', tagType } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
     const [{ selectorType, seeds, selectedObjects }, dispatch] = useReducer(reducer, initialState);
@@ -180,7 +180,7 @@ const SelectorForm: FC = () => {
             });
 
             navigate(
-                `/${privilegeZonesPath}/${isLabelPage ? 'label' : 'zone'}/${tagId}/${detailsPath}`
+                `/${privilegeZonesPath}/${tagType}/${tagId}/${detailsPath}`
             );
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
