@@ -101,7 +101,6 @@ export const TagForm: FC = () => {
 
         if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
         if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
-        if (data.type !== workingCopy.type) diffed.type = workingCopy.type;
         if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
         if (data.require_certify != workingCopy.require_certify) diffed.require_certify = workingCopy.require_certify;
         if (data.analysis_enabled !== workingCopy.analysis_enabled)
