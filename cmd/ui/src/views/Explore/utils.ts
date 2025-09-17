@@ -19,7 +19,7 @@ import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } fro
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
-import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
+import { GraphData, GraphEdge, GraphEdges, GraphNodes } from 'js-client-library';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
