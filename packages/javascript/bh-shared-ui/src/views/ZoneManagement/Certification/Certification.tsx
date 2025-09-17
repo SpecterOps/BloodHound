@@ -1,3 +1,4 @@
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTagCertificationRecord,
     CertificationManual,
@@ -19,6 +20,11 @@ const Certification: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
     const [search, setSearch] = useState('');
     const [filters, setFilters] = useState();
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
+        CertificationManual
+    );
 
     const mockMemberId = 1;
     const PAGE_SIZE = 15;
@@ -73,13 +79,6 @@ const Certification: FC = () => {
         enabled: tagId !== undefined && mockMemberId !== undefined,
     });
 
-    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(
-        filters,
-        search
-    );
-
-    const { addNotification } = useNotifications();
-
     const certifyMutation = useMutation({
         mutationFn: async (requestBody: UpdateCertificationRequest) => {
             return apiClient.updateAssetGroupTagCertification(requestBody);
@@ -93,8 +92,7 @@ const Certification: FC = () => {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
             );
-            // TODO soft-refresh the page, keeping the selected filters active
-            // should just be able to do a query.refetch();
+            refetch();
         },
         onError: (error: any) => {
             console.log(error);
@@ -103,6 +101,13 @@ const Certification: FC = () => {
             });
         },
     });
+
+    const { data, isLoading, isFetching, isSuccess, fetchNextPage, refetch } = useAssetGroupTagsCertificationsQuery(
+        filters,
+        search
+    );
+
+    const { addNotification } = useNotifications();
 
     const createCertificationRequestBody = (
         action: typeof CertificationManual | typeof CertificationRevoked,
@@ -117,11 +122,6 @@ const Certification: FC = () => {
         };
     };
 
-    const getSelectedMemberIds = () => {
-        //TODO unmock
-        return [777, 290, 91];
-    };
-
     const selectedNode = {
         id: memberQuery.data?.object_id,
         name: memberQuery.data?.name,
@@ -133,18 +133,13 @@ const Certification: FC = () => {
         setCertifyAction(action);
     };
 
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
-        CertificationManual
-    );
+    console.log('selected rows PARENT in not handler', selectedRows);
 
     const handleConfirm = useCallback(
         (withNote: boolean, certifyNote?: string) => {
             setIsDialogOpen(false);
-
-            // TODO -- this is hard-coded for now
-            const selectedMemberIds = getSelectedMemberIds();
-
+            console.log('selected rows~ PARENT!', selectedRows);
+            const selectedMemberIds = selectedRows;
             if (selectedMemberIds.length === 0) {
                 addNotification(
                     'Members must be selected for certification',
@@ -179,6 +174,8 @@ const Certification: FC = () => {
                         isFetching={isFetching}
                         isSuccess={isSuccess}
                         fetchNextPage={fetchNextPage}
+                        selectedRows={selectedRows}
+                        setSelectedRows={setSelectedRows}
                     />
                 </div>
                 <div className='basis-1/3'>

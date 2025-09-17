@@ -7,14 +7,31 @@ import {
     CertificationTypeMap,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
 
-const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchNextPage }) => {
+type CertificationTableProps = {
+    data: any;
+    isLoading: boolean;
+    isFetching: boolean;
+    isSuccess: boolean;
+    fetchNextPage: any;
+    selectedRows: number[];
+    setSelectedRows: any;
+};
+
+const CertificationTable: FC<CertificationTableProps> = ({
+    data,
+    isLoading,
+    isFetching,
+    isSuccess,
+    fetchNextPage,
+    selectedRows,
+    setSelectedRows,
+}) => {
     const mockPending = '9';
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
@@ -163,6 +180,8 @@ const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchN
               };
           })
         : [];
+
+    console.log('selected rows in child!!', selectedRows);
 
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
