@@ -16,4 +16,4 @@
 
 export * from './explore';
 export * from './initial';
-export * as tierMocks from './zoneManagement';
+export * as zoneMocks from './privilegeZones';
