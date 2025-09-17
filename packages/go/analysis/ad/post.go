@@ -38,6 +38,7 @@ import (
 func PostProcessedRelationships() []graph.Kind {
 	return []graph.Kind{
 		ad.DCSync,
+		ad.ProtectAdminGroups,
 		ad.SyncLAPSPassword,
 		ad.CanRDP,
 		ad.AdminTo,
@@ -154,24 +155,24 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if adminSDHolderIDs, err := getAdminSDHolder(tx, domain); graph.IsErrNotFound(err) {
 				// No AdminSDHolder IDs found for this domain
-			    return nil
+				return nil
 			} else if err != nil {
-			   return err
+				return err
 			} else if len(adminSDHolderIDs) == 0 {
 				// No AdminSDHolder IDs found for this domain
 				return nil
 			} else if protectedObjectIDs, err := getAdminSDHolderProtected(tx, domain); err != nil {
 				return err
 			} else {
-			    fromID := adminSDHolderIDs[0] // AdminSDHolder should be unique per domain
-			    for _, toID := range protectedObjectIDs {
-				    channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-					    FromID: fromID,
-					    ToID:   toID,
-					    Kind:   ad.ProtectAdminGroups,
-				    })
-			    }
-			    return nil
+				fromID := adminSDHolderIDs[0] // AdminSDHolder should be unique per domain
+				for _, toID := range protectedObjectIDs {
+					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						FromID: fromID,
+						ToID:   toID,
+						Kind:   ad.ProtectAdminGroups,
+					})
+				}
+				return nil
 			}
 		})
 	}

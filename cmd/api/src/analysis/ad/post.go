@@ -49,11 +49,11 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 	} else if ntlmStats, err := adAnalysis.PostNTLM(ctx, db, groupExpansions, adcsCache, ntlmEnabled, compositionCounter); err != nil {
 		return &aggregateStats, err
 	} else {
-		aggregateStats.Merge(stats)
+		aggregateStats.Merge(stats)       // DeleteTransitEdges
+		aggregateStats.Merge(dcSyncStats) // PostDCSync
+		aggregateStats.Merge(protectAdminGroupsStats)
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(hasTrustKeyStats)
-		aggregateStats.Merge(dcSyncStats)
-		aggregateStats.Merge(protectAdminGroupsStats)
 		aggregateStats.Merge(localGroupStats)
 		aggregateStats.Merge(adcsStats)
 		aggregateStats.Merge(ownsStats)
