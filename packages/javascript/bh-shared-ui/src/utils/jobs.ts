@@ -31,13 +31,17 @@ type JobCollectionKey = (typeof jobCollectionKeys)[number];
 
 export type EnabledCollections = Partial<Record<JobCollectionKey, boolean>>;
 
-type JobsParamsKey = 'client_id' | 'end_time' | 'start_time' | 'status';
-
-type JobsFilterParams = Partial<Record<JobsParamsKey, string>>;
+type JobsFilterParams = {
+    client_id?: string;
+    end_time?: string;
+    start_time?: string;
+    status?: JobStatusCode;
+};
 
 export type FinishedJobsFilter = EnabledCollections & JobsFilterParams;
 
 export interface FinishedJobParams {
+    filters?: FinishedJobsFilter;
     page: number;
     rowsPerPage: number;
 }

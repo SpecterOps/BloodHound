@@ -29,6 +29,7 @@ import FileStatusListItem from '../../../../components/FileStatusListItem';
 import { FileForIngest, FileStatus, FileUploadStep } from '../../../../components/FileUploadDialog/types';
 import { useImportSavedQuery } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
+import { QuickUploadExclusionIds } from '../../../../utils';
 
 const allowedFileTypes = ['application/json', 'application/zip'];
 
@@ -193,7 +194,7 @@ const ImportQueryDialog: React.FC<{
                         blurBackground: false,
                     }}
                     maxWidth='sm'
-                    id='import-query-dialog'>
+                    id={QuickUploadExclusionIds.ImportQueryDialog}>
                     <DialogTitle>Upload Files</DialogTitle>
 
                     {fileUploadStep === FileUploadStep.ADD_FILES && (
