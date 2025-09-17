@@ -119,3 +119,7 @@ func (s *Changelog) Submit(ctx context.Context, change Change) bool {
 func (s *Changelog) ClearCache(ctx context.Context) {
 	s.flagManager.clearCache(ctx)
 }
+
+func (s *Changelog) GetCache() *cache {
+	return s.flagManager.getCache()
+}
