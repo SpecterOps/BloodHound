@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS asset_group_history
     CONSTRAINT fk_asset_group_history_asset_group_tags FOREIGN KEY (asset_group_tag_id) REFERENCES asset_group_tags(id)
 );
 
-
+-- As of v8.2.0, the auto_certify column type has been changed from a boolean to an integer type
 -- Add asset_group_tag_selectors table
 CREATE TABLE IF NOT EXISTS asset_group_tag_selectors
 (

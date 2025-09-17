@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 package integration
 
 import (
@@ -39,7 +41,9 @@ import (
 // OpenDatabase opens a new database connection and returns a BHCE database interface
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func OpenDatabase(t *testing.T) database.Database {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		t.Fatalf("Failed loading integration test config: %v", err)
@@ -66,7 +70,9 @@ func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, error) {
 // config file and creates a pgtestdb configuration object.
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func GetPostgresConfig(cfg config.Configuration) pgtestdb.Config {
 	environmentMap := make(map[string]string)
 	for _, entry := range strings.Fields(cfg.Database.Connection) {
@@ -114,7 +120,9 @@ func OpenCache(t *testing.T) cache.Cache {
 // SetupDB sets up a new database connection and prepares the DB with migrations
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func SetupDB(t *testing.T) database.Database {
 	dbInst := OpenDatabase(t)
 	if err := Prepare(context.Background(), dbInst); err != nil {
@@ -136,7 +144,9 @@ func Prepare(ctx context.Context, db database.Database) error {
 // SetupTestMigrator opens a database connection and returns a migrator for testing
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		return nil, nil, fmt.Errorf("failed to load integration test config: %w", err)

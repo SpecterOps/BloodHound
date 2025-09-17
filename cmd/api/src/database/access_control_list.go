@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"gorm.io/gorm"
@@ -28,76 +29,32 @@ const (
 )
 
 type EnvironmentAccessControlData interface {
-	GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]EnvironmentAccess, error)
-	UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error
-}
-
-// EnvironmentAccess defines the model for a row in the environment_access_control table
-type EnvironmentAccess struct {
-	UserID      string `json:"user_id"`
-	Environment string `json:"environment"`
-	model.BigSerial
-}
-
-func (EnvironmentAccess) TableName() string {
-	return EnvironmentAccessControlTable
+	GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]model.EnvironmentAccess, error)
+	DeleteEnvironmentListForUser(ctx context.Context, user model.User) error
 }
 
 // GetEnvironmentAccessListForUser given a user's id, this will return all access control list rows for the user
-func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]EnvironmentAccess, error) {
-	var accessControlList []EnvironmentAccess
+func (s *BloodhoundDB) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]model.EnvironmentAccess, error) {
+	var accessControlList []model.EnvironmentAccess
 
 	result := s.db.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", user.ID.String()).Find(&accessControlList)
 	return accessControlList, CheckError(result)
 }
 
-// UpdateEnvironmentListForUser will remove all entries in the access control list for a user and add a new entry for each environment provided
-func (s *BloodhoundDB) UpdateEnvironmentListForUser(ctx context.Context, user model.User, environments ...string) error {
+// DeleteEnvironmentListForUser will remove all rows associated with a user in the environment_access_control table
+func (s *BloodhoundDB) DeleteEnvironmentListForUser(ctx context.Context, user model.User) error {
 	var (
 		auditData = model.AuditData{
-			"userUuid":     user.ID.String(),
-			"environments": environments,
+			"userUuid": user.ID.String(),
 		}
-		auditEntry, err = model.NewAuditEntry(model.AuditLogActionUpdateEnvironmentAccessList, model.AuditLogStatusIntent, auditData)
+		auditEntry, err = model.NewAuditEntry(model.AuditLogActionDeleteEnvironmentAccessList, model.AuditLogStatusIntent, auditData)
 	)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating AuditLogActionDeleteEnvironmentAccessList audit entry: %w", err)
 	}
 
 	return s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-
-		err := CheckError(tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Where("user_id = ?", user.ID.String()).Delete(&EnvironmentAccess{}))
-
-		if err != nil {
-			return err
-		}
-
-		availableEnvironments := make([]EnvironmentAccess, 0, len(environments))
-
-		for _, environment := range environments {
-			newAccessControl := EnvironmentAccess{
-				UserID:      user.ID.String(),
-				Environment: environment,
-			}
-
-			availableEnvironments = append(availableEnvironments, newAccessControl)
-		}
-
-		result := tx.WithContext(ctx).Table(EnvironmentAccessControlTable).Create(&availableEnvironments)
-
-		if err := CheckError(result); err != nil {
-			return err
-		}
-
-		user.AllEnvironments = false
-
-		err = s.UpdateUser(ctx, user)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		result := tx.WithContext(ctx).Exec("DELETE FROM environment_access_control WHERE user_id = ?", user.ID.String())
+		return CheckError(result)
 	})
 }

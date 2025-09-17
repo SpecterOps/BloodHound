@@ -15,9 +15,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: object
-allOf:
-  - $ref: './model.asset-group-tags-selector-create.yaml'
-  - type: object
-    properties:
-      disabled:
-        type: boolean
+properties:
+  user_id:
+    type: string
+    format: uuid
+    description: The user UUID that associates the access control to a specific user
+    readOnly: true
+  environment_id:
+    type: string
+    description: The environment id which a user has been granted access to

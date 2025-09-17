@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package v2
 
 import (
 	"context"
@@ -22,6 +22,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
+
+type UpdateEnvironmentRequest struct {
+	EnvironmentID string `json:"environment_id"`
+}
+
+type UpdateUserEnvironmentAccessControlRequest struct {
+	Environments []UpdateEnvironmentRequest `json:"environments"`
+}
 
 func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, user model.User, environments ...string) (bool, error) {
 	if user.AllEnvironments {
@@ -36,7 +44,7 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 
 	allowedMap := make(map[string]struct{}, len(allowedList))
 	for _, envAccess := range allowedList {
-		allowedMap[envAccess.Environment] = struct{}{}
+		allowedMap[envAccess.EnvironmentID] = struct{}{}
 	}
 
 	for _, env := range environments {

@@ -55,11 +55,7 @@ type changelogHarness struct {
 func setupChangelogTest(t *testing.T, config testChangelogConfig) *changelogHarness {
 	suite := setupIntegrationTest(t)
 
-	changelog := NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options{
-		BatchSize:     config.BatchSize,
-		FlushInterval: config.FlushInterval,
-		PollInterval:  config.PollInterval,
-	})
+	changelog := NewChangelog(suite.GraphDB, suite.BloodhoundDB, Options(config))
 
 	return &changelogHarness{
 		suite:     &suite,
