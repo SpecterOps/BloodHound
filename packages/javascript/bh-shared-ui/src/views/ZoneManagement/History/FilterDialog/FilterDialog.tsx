@@ -200,7 +200,7 @@ const FilterDialog: FC<{
                                 name='tag'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel aria-labelledby='tag'>Tier/Label</FormLabel>
+                                        <FormLabel aria-labelledby='tag'>Zone/Label</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value}

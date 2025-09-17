@@ -271,8 +271,8 @@ class BHEAPIClient {
     ) =>
         this.baseClient.get<AssetGroupTagsHistory>(`/api/v2/asset-group-tags-history`, {
             params: omitUndefined({
-                skip,
                 limit,
+                skip,
                 created_at: created_at
                     ? Object.entries(created_at).map(([key, value]) => prefixValue(key, value))
                     : undefined,
