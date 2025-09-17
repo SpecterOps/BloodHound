@@ -297,6 +297,14 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 			return err
 		}
 
+		// Clear a user's etac list before applying their new one when saving the user model
+		if user.AllEnvironments || user.EnvironmentAccessControl != nil {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
+			if err := bhdb.DeleteEnvironmentListForUser(ctx, user); err != nil {
+				return fmt.Errorf("error deleting user's environment list: %w", err)
+			}
+		}
+
 		// AuthSecret must be manually retrieved and deleted
 		if user.AuthSecret == nil {
 			var authSecret model.AuthSecret
@@ -520,7 +528,7 @@ func (s *BloodhoundDB) CreateUserSession(ctx context.Context, userSession model.
 // EndUserSession terminates the provided session
 // UPDATE user_sessions SET expires_at = <now> WHERE user_id = ...
 func (s *BloodhoundDB) EndUserSession(ctx context.Context, userSession model.UserSession) {
-	s.db.Model(&userSession).WithContext(ctx).Update("expires_at", gorm.Expr("NOW()"))
+	s.db.WithContext(ctx).Exec(`UPDATE user_sessions SET expires_at = NOW(), updated_at = NOW() WHERE user_id = ?`, userSession.UserID)
 }
 
 // corresponding retrival function is model.UserSession.GetFlag()

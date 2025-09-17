@@ -57,10 +57,46 @@ export type CommonSearchType = {
     subheader: string;
     category: string;
     queries: {
+        name: string;
         description: string;
-        cypher: string;
+        query: string;
+        id?: number;
     }[];
 };
+
+export type QueryLineItem = {
+    id?: number;
+    name: string;
+    description: string;
+    query: string;
+    canEdit?: boolean;
+    user_id?: string;
+};
+
+export type QuerySearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        name: string;
+        description: string;
+        query: string;
+        id?: number;
+        user_id?: string;
+    }[];
+};
+
+export type QueryListSection = {
+    category?: string;
+    subheader: string;
+    queries: QueryLineItem[];
+};
+
+export type SelectedQuery = {
+    query: string;
+    id?: number;
+};
+
+export type SaveQueryAction = 'edit' | 'save-as' | undefined;
 
 export type SelectedNode = {
     id: string;
@@ -72,3 +108,5 @@ export type SelectedNode = {
 export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
+
+export type IndicatorType = 'good' | 'bad' | 'pending';

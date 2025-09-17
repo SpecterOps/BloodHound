@@ -22,7 +22,7 @@ const References: FC = () => {
         <Typography variant='body2'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#set-azureuserpassword'>
                 https://powerzure.readthedocs.io/en/latest/Functions/operational.html#set-azureuserpassword
             </Link>

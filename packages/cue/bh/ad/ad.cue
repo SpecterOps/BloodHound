@@ -397,6 +397,20 @@ StrongCertificateBindingEnforcement: types.#StringEnum & {
 	representation: "strongcertificatebindingenforcement"
 }
 
+VulnerableNetlogonSecurityDescriptor: types.#StringEnum & {
+	symbol:         "VulnerableNetlogonSecurityDescriptor"
+	schema:         "ad"
+	name:           "Vulnerable Netlogon Security Descriptor"
+	representation: "vulnerablenetlogonsecuritydescriptor"
+}
+
+VulnerableNetlogonSecurityDescriptorCollected: types.#StringEnum & {
+	symbol:         "VulnerableNetlogonSecurityDescriptorCollected"
+	schema:         "ad"
+	name:           "Vulnerable Netlogon Security Descriptor Collected"
+	representation: "vulnerablenetlogonsecuritydescriptorcollected"
+}
+
 CrossCertificatePair: types.#StringEnum & {
 	symbol:         "CrossCertificatePair"
 	schema:         "ad"
@@ -1057,6 +1071,8 @@ Properties: [
 	CertificateMappingMethods,
 	StrongCertificateBindingEnforcementRaw,
 	StrongCertificateBindingEnforcement,
+	VulnerableNetlogonSecurityDescriptor,
+	VulnerableNetlogonSecurityDescriptorCollected,
 	EKUs,
 	SubjectAltRequireUPN,
 	SubjectAltRequireDNS,

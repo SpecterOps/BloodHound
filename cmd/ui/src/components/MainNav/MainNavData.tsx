@@ -15,7 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, MainNavData, useFeatureFlags } from 'bh-shared-ui';
+import {
+    AppIcon,
+    MainNavData,
+    Permission,
+    useFeatureFlags,
+    useFileUploadDialogContext,
+    usePermissions,
+} from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -24,25 +31,17 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 export const useMainNavLogoData = (): MainNavData['logo'] => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
-    const bhceImageUrlDarkMode = '/img/banner-ce-dark-mode.png';
-    const bhceImageUrlLightMode = '/img/banner-ce-light-mode.png';
     const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
     const soImageUrlLightMode = '/img/banner-so-light-mode.png';
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogo size={24} className='scale-150 text-[#e61616]' />, // Note: size 24 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
-            image: {
-                imageUrl: `${import.meta.env.BASE_URL}${darkMode ? bhceImageUrlDarkMode : bhceImageUrlLightMode}`,
-                dimensions: { height: '40px', width: '165px' },
-                classes: 'ml-4 mt-2',
-                altText: 'BHCE Text Logo',
-            },
+            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded' />,
         },
         specterOps: {
             image: {
                 imageUrl: `${import.meta.env.BASE_URL}${darkMode ? soImageUrlDarkMode : soImageUrlLightMode}`,
-                dimensions: { height: '25px', width: '110px' },
+                dimensions: { height: 25, width: 110 },
                 altText: 'SpecterOps Text Logo',
             },
         },
@@ -51,14 +50,17 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
 
 export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
+    const { checkPermission } = usePermissions();
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
     const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
     const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
     const tierFlag = featureFlags?.data?.find((flag) => {
         return flag.key === 'tier_management_engine';
     });
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
-    const primaryList = [
+    const primaryList: MainNavData['primaryList'] = [
         {
             label: 'Explore',
             icon: <AppIcon.LineChart size={24} />,
@@ -72,6 +74,15 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',
         },
     ];
+
+    if (hasPermissionToUpload) {
+        primaryList.push({
+            label: 'Quick Upload',
+            icon: <AppIcon.Upload size={24} />,
+            onClick: () => setShowFileIngestDialog(true),
+            testId: 'quick-file-ingest',
+        });
+    }
 
     return primaryList;
 };

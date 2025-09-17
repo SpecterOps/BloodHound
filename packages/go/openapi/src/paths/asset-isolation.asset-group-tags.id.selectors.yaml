@@ -35,6 +35,13 @@ get:
   parameters:
   - $ref: './../parameters/query.skip.yaml'
   - $ref: './../parameters/query.limit.yaml'
+  - $ref: './../parameters/query.environments.yaml'
+  - name: sort_by
+    in: query
+    description: >
+      Sortable columns are `id`, `name`, and `created_at`.
+    schema:
+      $ref: './../schemas/api.params.query.sort-by.yaml'
   - name: auto_certify
     in: query
     required: false
@@ -135,7 +142,6 @@ get:
     500:
       $ref: './../responses/internal-server-error.yaml'
 
-
 post:
   operationId: CreateAssetGroupTagSelector
   summary: Create Asset Group Tag Selector
@@ -151,16 +157,11 @@ post:
       application/json:
         schema:
           allOf:
-            - $ref: './../schemas/model.asset-group-tags-selector-create.yaml'
+            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
             - type: object
-              properties:
-                name:
-                  type: "string"
-                seeds:
-                  type: "array"
-              required:
-                - name
-                - seeds
+          required: 
+            - name
+            - seeds
 
   responses:
     201:
@@ -172,7 +173,6 @@ post:
             properties:
               data:
                 $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
-
     400:
       $ref: './../responses/bad-request.yaml'
     401:

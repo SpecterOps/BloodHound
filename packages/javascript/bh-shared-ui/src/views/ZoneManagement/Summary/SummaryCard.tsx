@@ -24,7 +24,7 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { useHighestPrivilegeTagId } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
-import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
+import { abbreviatedNumber } from '../../../utils/numberFormatting';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 
 type SummaryCardProps = {
@@ -50,12 +50,12 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                 )}
                 <span className='text-2xl font-bold truncate min-w-0'>{title}</span>
             </div>
-            <LargeRightArrow className='w-8 h-16' />
+            <LargeRightArrow width={32} height={64} />
             <div className='flex-1 flex flex-col items-center justify-center'>
                 <p className='text-lg font-semibold'>Selectors</p>
                 <p className='text-2xl font-thin'>{abbreviatedNumber(selectorCount ?? 0)}</p>
             </div>
-            <LargeRightArrow className='w-8 h-16' />
+            <LargeRightArrow width={32} height={64} />
             <div className='flex-1 flex flex-col items-center justify-center'>
                 <p className='text-lg font-semibold'>Members</p>
                 <p className='text-2xl font-thin'>{abbreviatedNumber(memberCount ?? 0)}</p>

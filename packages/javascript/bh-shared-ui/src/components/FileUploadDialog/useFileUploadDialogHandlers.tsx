@@ -18,7 +18,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     useEndFileIngestJob,
     useGetFileUploadAcceptedTypesQuery,
-    useOnClickOutside,
     useStartFileIngestJob,
     useUploadFileToIngestJob,
 } from '../../hooks';
@@ -29,13 +28,14 @@ export const makeProgressCacheKey = (jobId: string, fileName: string) => `job-${
 
 export const useFileUploadDialogHandlers = ({
     onCloseProp,
-    dialogRef,
+    hasPermissionToUpload,
 }: {
     onCloseProp: () => void;
-    dialogRef: React.RefObject<HTMLDivElement>;
+    hasPermissionToUpload: boolean;
 }) => {
     const [filesForIngest, setFilesForIngest] = useState<FileForIngest[]>([]);
     const [fileUploadStep, setFileUploadStep] = useState<FileUploadStep>(FileUploadStep.ADD_FILES);
+
     const [submitDialogDisabled, setSubmitDialogDisabled] = useState<boolean>(false);
     const [uploadDialogDisabled, setUploadDialogDisabled] = useState<boolean>(false);
     const [uploadMessage, setUploadMessage] = useState<string>('');
@@ -43,7 +43,7 @@ export const useFileUploadDialogHandlers = ({
     const [progressCache, setProgressCache] = useState<Record<string, number>>({});
 
     const { addNotification } = useNotifications();
-    const getFileUploadAcceptedTypes = useGetFileUploadAcceptedTypesQuery();
+    const getFileUploadAcceptedTypes = useGetFileUploadAcceptedTypesQuery({ enabled: hasPermissionToUpload });
     const startFileIngestJob = useStartFileIngestJob();
     const uploadFileToIngestJob = useUploadFileToIngestJob();
     const endFileIngestJob = useEndFileIngestJob();
@@ -60,8 +60,6 @@ export const useFileUploadDialogHandlers = ({
 
         onCloseProp();
     }, [onCloseProp]);
-
-    useOnClickOutside(dialogRef, onClose);
 
     useEffect(() => {
         const filesHaveErrors = filesForIngest.filter((file) => file.errors).length > 0;
@@ -156,12 +154,14 @@ export const useFileUploadDialogHandlers = ({
     };
 
     const startUpload = async () => {
-        return startFileIngestJob.mutateAsync(undefined, {
-            onError: () => {
-                addNotification('Failed to start ingest process', 'StartFileIngestFail');
-                setFilesForIngest((prevFiles) => prevFiles.map((file) => ({ ...file, status: FileStatus.READY })));
-            },
-        });
+        if (hasPermissionToUpload) {
+            return startFileIngestJob.mutateAsync(undefined, {
+                onError: () => {
+                    addNotification('Failed to start ingest process', 'StartFileIngestFail');
+                    setFilesForIngest((prevFiles) => prevFiles.map((file) => ({ ...file, status: FileStatus.READY })));
+                },
+            });
+        }
     };
 
     const retryUploadSingleFile = async (file: FileForIngest) => {
@@ -174,52 +174,56 @@ export const useFileUploadDialogHandlers = ({
     };
 
     const uploadFile = async (jobId: string, ingestFile: FileForIngest) => {
-        return uploadFileToIngestJob.mutateAsync(
-            {
-                jobId,
-                fileContents: ingestFile.file,
-                contentType: ingestFile.file.type,
-                options: {
-                    onUploadProgress: (progressEvent) => {
-                        const { loaded, total } = progressEvent;
-                        const rawPercent = typeof total === 'number' && total > 0 ? (loaded * 100) / total : 0;
-                        const percentCompleted = Math.max(0, Math.min(100, Math.floor(rawPercent)));
-                        setProgressCache((prevProgressCache) => ({
-                            ...prevProgressCache,
-                            [makeProgressCacheKey(jobId, ingestFile?.file?.name)]: percentCompleted,
-                        }));
+        if (hasPermissionToUpload) {
+            return uploadFileToIngestJob.mutateAsync(
+                {
+                    jobId,
+                    fileContents: ingestFile.file,
+                    contentType: ingestFile.file.type,
+                    options: {
+                        onUploadProgress: (progressEvent) => {
+                            const { loaded, total } = progressEvent;
+                            const rawPercent = typeof total === 'number' && total > 0 ? (loaded * 100) / total : 0;
+                            const percentCompleted = Math.max(0, Math.min(100, Math.floor(rawPercent)));
+                            setProgressCache((prevProgressCache) => ({
+                                ...prevProgressCache,
+                                [makeProgressCacheKey(jobId, ingestFile?.file?.name)]: percentCompleted,
+                            }));
+                        },
                     },
                 },
-            },
-            {
-                onError: (error: any) => {
-                    const apiError = error?.response?.data as ErrorResponse;
+                {
+                    onError: (error: any) => {
+                        const apiError = error?.response?.data as ErrorResponse;
 
-                    if (apiError?.errors?.length && apiError.errors[0].message?.length) {
-                        const { message } = apiError.errors[0];
-                        addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
-                        setUploadFailureError(ingestFile.file.name, message);
-                    } else {
-                        addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
-                        setUploadFailureError(ingestFile.file.name, 'Upload Failed');
-                    }
-                },
-            }
-        );
+                        if (apiError?.errors?.length && apiError.errors[0].message?.length) {
+                            const { message } = apiError.errors[0];
+                            addNotification(`Upload failed: ${message}`, 'IngestFileUploadFail');
+                            setUploadFailureError(ingestFile.file.name, message);
+                        } else {
+                            addNotification(`File upload failed for ${ingestFile.file.name}`, 'IngestFileUploadFail');
+                            setUploadFailureError(ingestFile.file.name, 'Upload Failed');
+                        }
+                    },
+                }
+            );
+        }
     };
 
     const finishUpload = async (jobId: string) => {
-        return endFileIngestJob.mutateAsync(
-            { jobId },
-            {
-                onError: () => {
-                    addNotification('Failed to close out ingest job', 'EndFileIngestFail');
-                },
-                onSettled: () => {
-                    setFileUploadStep(FileUploadStep.ADD_FILES);
-                },
-            }
-        );
+        if (hasPermissionToUpload) {
+            return endFileIngestJob.mutateAsync(
+                { jobId },
+                {
+                    onError: () => {
+                        addNotification('Failed to close out ingest job', 'EndFileIngestFail');
+                    },
+                    onSettled: () => {
+                        setFileUploadStep(FileUploadStep.ADD_FILES);
+                    },
+                }
+            );
+        }
     };
 
     const logFinishedIngestJob = (errorCount: number) => {

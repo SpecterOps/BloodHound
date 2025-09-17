@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FileUploadDialog } from 'bh-shared-ui';
+import { FileUploadDialog, QuickUploadExclusionIds } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -35,7 +35,8 @@ export const NoDataFileUploadDialogWithLinks: React.FC<NoDataFileUploadDialogWit
             onClose={() => setShowDialog(false)}
             headerText='Upload Data to Start Mapping Your Environment'
             description={
-                <div>
+                // This id prevents the drag event from triggering a second quick upload dialog (see getExcludedIds function)
+                <div className='font-normal' id={QuickUploadExclusionIds.DefaultNoDataDialog}>
                     <p className='pb-3'>
                         Easily upload data by dragging and dropping files anywhere in the interface, or use the upload
                         button in the main navigation.
