@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Button, Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 import { CheckedState } from '@radix-ui/react-checkbox';
-import { User } from 'js-client-library';
+import { UserMinimal } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../../components';
@@ -33,6 +33,7 @@ type SavedQueryPermissionsProps = {
 type ListUser = {
     name: string;
     id: string;
+    email: string;
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
@@ -45,19 +46,22 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
 
-    const listUsersQuery = useQuery(['listUsers'], ({ signal }) =>
-        apiClient.listUsers({ signal }).then((res) => res.data?.data?.users)
+    const listUsersQuery = useQuery(['listUsersMinimal'], ({ signal }) =>
+        apiClient.listUsersMinimal({ signal }).then((res) => {
+            return res.data?.data?.users;
+        })
     );
 
     const { data, isLoading } = useQueryPermissions(queryId as number);
 
     function idMap() {
         return listUsersQuery.data
-            ?.filter((user: User) => user.id !== selfId)
-            .map((user: User) => {
+            ?.filter((user: UserMinimal) => user.id !== selfId)
+            .map((user: UserMinimal) => {
                 return {
-                    name: user.principal_name,
                     id: user.id,
+                    name: `${user.first_name} ${user.last_name}`,
+                    email: user.email_address,
                 };
             });
     }
@@ -124,9 +128,12 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     return <span className='dark:text-neutral-light-1'>Name</span>;
                 },
                 cell: ({ row }) => {
+                    const name = row.original.name;
+                    const email = row.original.email;
                     return (
                         <div className='dark:text-neutral-light-1 text-nowrap text-black w-full'>
-                            {row.getValue('name')}
+                            <p className='underline mb-0.5'>{name}</p>
+                            <p className='text-neutral-600 dark:!text-neutral-300'>{email}</p>
                         </div>
                     );
                 },
@@ -172,9 +179,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                                 TableHeadProps={{
                                     className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
                                 }}
-                                TableBodyProps={{ className: 'text-s font-roboto underline' }}
+                                TableBodyProps={{ className: 'text-s font-roboto' }}
                                 TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
-                                columns={getColumns()}
+                                columns={getColumns() as ListUser[]}
                                 data={filteredUsers}
                             />
                         ) : (
