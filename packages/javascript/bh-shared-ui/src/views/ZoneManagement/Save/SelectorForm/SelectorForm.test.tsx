@@ -21,7 +21,7 @@ import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
 import SelectorForm from '.';
 import { zoneHandlers } from '../../../../mocks';
-import { act, render, screen, waitFor } from '../../../../test-utils';
+import { act, longWait, render, screen, waitFor } from '../../../../test-utils';
 import { apiClient, mockCodemirrorLayoutMethods } from '../../../../utils';
 import * as utils from '../utils';
 

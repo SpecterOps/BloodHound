@@ -15,7 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Form, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelector, GraphNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyType,
+    GraphNode,
+    SeedTypeObjectId,
+    SeedTypes,
+} from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
@@ -46,7 +52,7 @@ const diffValues = (
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
-    if (data.auto_certify != workingCopy.auto_certify) diffed.auto_certify = workingCopy.auto_certify;
+    if (data.auto_certify.toString() != workingCopy.auto_certify) diffed.auto_certify = workingCopy.auto_certify;
     if (workingCopy.disabled !== disabled) diffed.disabled = workingCopy.disabled;
     if (!isEqual(workingCopy.seeds, data.seeds)) diffed.seeds = workingCopy.seeds;
 
@@ -157,7 +163,13 @@ const SelectorForm: FC = () => {
             await patchSelectorMutation.mutateAsync({
                 tagId,
                 selectorId,
-                updatedValues: { ...diffedValues, id: parseInt(selectorId) },
+                updatedValues: {
+                    ...diffedValues,
+                    id: parseInt(selectorId),
+                    auto_certify: diffedValues.auto_certify
+                        ? (parseInt(diffedValues.auto_certify) as AssetGroupTagSelectorAutoCertifyType)
+                        : undefined,
+                },
             });
 
             addNotification(
@@ -178,7 +190,13 @@ const SelectorForm: FC = () => {
         try {
             if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
-            await createSelectorMutation.mutateAsync({ tagId, values: { ...form.getValues(), seeds } });
+            const values = {
+                ...form.getValues(),
+                auto_certify: parseInt(form.getValues().auto_certify) as AssetGroupTagSelectorAutoCertifyType,
+                seeds,
+            };
+
+            await createSelectorMutation.mutateAsync({ tagId, values });
 
             addNotification('Selector was created successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -206,7 +224,7 @@ const SelectorForm: FC = () => {
             form.reset({
                 name,
                 description,
-                auto_certify,
+                auto_certify: auto_certify.toString(),
                 seeds,
                 disabled: !selectorStatus(selectorId, selectorQuery.data),
             });

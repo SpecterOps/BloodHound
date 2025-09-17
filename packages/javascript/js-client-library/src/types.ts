@@ -107,8 +107,8 @@ export const SeedTypesMap = {
 } as const;
 
 export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
-export const AssetGroupTagSelectorAutoCertifySeedsOnly = 1 as const;
-export const AssetGroupTagSelectorAutoCertifyAllMembers = 2 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
 
 export type AssetGroupTagSelectorAutoCertifyType =
     | typeof AssetGroupTagSelectorAutoCertifyDisabled
@@ -116,9 +116,9 @@ export type AssetGroupTagSelectorAutoCertifyType =
     | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
 
 export const AssetGroupTagSelectorAutoCertifyMap = {
-    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off –  Automatic certification is disabled',
-    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members – Only the first members are certified',
-    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members – Every member is certified automatically',
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
 } as const;
 
 export interface AssetGroupTagSelectorCounts {

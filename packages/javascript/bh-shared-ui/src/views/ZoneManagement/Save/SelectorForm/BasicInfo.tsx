@@ -191,7 +191,6 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </FormItem>
                                 )}
                             />
-
                             <div>
                                 <Label className='text-base font-bold' htmlFor='selector-seed-type-select'>
                                     Selector Type
@@ -248,9 +247,9 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                         </p>
                                         <Select
                                             data-testid='zone-management_save_selector-form_auto_certify-input'
-                                            value={field.value?.toString()}
+                                            value={field.value}
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value?.toString()}>
+                                            defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder='Off' {...field} />
