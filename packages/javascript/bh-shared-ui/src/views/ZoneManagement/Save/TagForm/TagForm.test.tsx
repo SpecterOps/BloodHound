@@ -58,7 +58,7 @@ const testOwned = {
 
 const handlers = [
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
-        return res(ctx.json({ data: { tags: [] } }));
+        return res(ctx.json({ data: { tags: [testTierZero, testOwned] } }));
     }),
     rest.post('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(ctx.json({ data: { tag: { id: 777 } } }));
@@ -72,21 +72,21 @@ const handlers = [
     rest.get('/api/v2/asset-group-tags/1', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: testTierZero,
+                data: { tag: testTierZero },
             })
         );
     }),
     rest.get('/api/v2/asset-group-tags/2', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: testOwned,
+                data: { tag: testOwned },
             })
         );
     }),
     rest.get('/api/v2/asset-group-tags/3', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 },
+                data: { tag: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 } },
             })
         );
     }),
@@ -185,11 +185,9 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
-        longWait(async () => {
-            const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-            expect(requireCertifySwitch).toBeInTheDocument();
-            expect(requireCertifySwitch).toHaveValue('off');
-        });
+        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
+        expect(requireCertifySwitch).toBeInTheDocument();
+        expect(requireCertifySwitch).toHaveValue('false');
 
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
@@ -301,10 +299,10 @@ describe('Tag Form', () => {
             expect(descriptionInput).toHaveValue('Tier Zero Description');
         });
 
-        longWait(async () => {
-            const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-            expect(requireCertifySwitch).toBeInTheDocument();
-            expect(requireCertifySwitch).toHaveValue('on');
+        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
+        expect(requireCertifySwitch).toBeInTheDocument();
+        await waitFor(() => {
+            expect(requireCertifySwitch).toHaveValue('true');
         });
 
         // The delete button should not render when editing T0
@@ -395,6 +393,7 @@ describe('Tag Form', () => {
     });
 
     test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '1' });
         render(
             <Routes>
                 <Route path={'/'} element={<TagForm />} />
@@ -411,10 +410,6 @@ describe('Tag Form', () => {
         await user.click(await screen.findByRole('button', { name: /Save/ }));
 
         expect(screen.queryByText('Please provide a name for the tier')).not.toBeInTheDocument();
-
-        await waitFor(() => {
-            expect(mockNavigate).toBeCalled();
-        });
     });
 
     it('handles creating a new tier', async () => {

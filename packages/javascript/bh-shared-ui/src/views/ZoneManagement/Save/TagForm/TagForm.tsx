@@ -257,6 +257,12 @@ export const TagForm: FC = () => {
                                     <Label>Description</Label>
                                     <Skeleton className='h-16 w-full' />
                                 </div>
+                                {isTierLocation && (
+                                    <div className='grid gap-2'>
+                                        <Label>Require Certification</Label>
+                                        <Skeleton className='h-3 w-6' />
+                                    </div>
+                                )}
                                 {showAnalysisToggle && (
                                     <div className='grid gap-2'>
                                         <Label>Enable Analysis</Label>
@@ -366,16 +372,24 @@ export const TagForm: FC = () => {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Require Certification</FormLabel>
-                                                <FormControl>
-                                                    <Switch
-                                                        {...field}
-                                                        value={field.value?.toString()}
-                                                        data-testid='zone-management_save_tag-form_require_certify-toggle'
-                                                        checked={field.value || false}
-                                                        onCheckedChange={field.onChange}
-                                                        label='Enable this to mandate certification for all members within this zone'
-                                                    />
-                                                </FormControl>
+                                                <div className='flex gap-2'>
+                                                    <FormControl>
+                                                        <Switch
+                                                            {...field}
+                                                            value={field.value?.toString()}
+                                                            data-testid='zone-management_save_tag-form_require_certify-toggle'
+                                                            checked={field.value || false}
+                                                            onCheckedChange={field.onChange}>
+                                                            {' '}
+                                                        </Switch>
+                                                    </FormControl>
+                                                    <p className='text-sm text-muted-foreground'>
+                                                        {' '}
+                                                        Enable this to mandate certification for all members within this
+                                                        zone
+                                                    </p>
+                                                </div>
+
                                                 <FormMessage />
                                             </FormItem>
                                         )}
