@@ -32,7 +32,7 @@ const testSelector = {
     allow_disable: true,
     description: 'bar',
     is_default: false,
-    auto_certify: 2,
+    auto_certify: 1,
     created_at: '2024-10-05T17:54:32.245Z',
     created_by: 'Stephen64@gmail.com',
     updated_at: '2024-07-20T11:22:18.219Z',
