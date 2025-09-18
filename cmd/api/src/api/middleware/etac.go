@@ -9,6 +9,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // SupportsETACMiddleware will check a user's environment access control to determine if they have access to the environment provided in the url
@@ -16,7 +17,11 @@ import (
 func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			if etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
+				api.HandleDatabaseError(request, response, err)
+ 			} else if !etacFlag.Enabled{
+				next.ServeHTTP(response, request)
+			} else if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if currentUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found with request", request), response)
