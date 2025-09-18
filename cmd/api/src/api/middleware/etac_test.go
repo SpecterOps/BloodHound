@@ -96,7 +96,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
 					Return(appcfg.FeatureFlag{}, errors.New("db failure"))
 			},
-			expectedCode:  http.StatusInternalServerError, // whatever HandleDatabaseError writes
+			expectedCode:  http.StatusInternalServerError,
 			expectNextHit: false,
 		},
 		{
