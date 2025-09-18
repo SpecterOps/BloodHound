@@ -365,7 +365,7 @@ export const TagForm: FC = () => {
                                         name='require_certify'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Required Certification</FormLabel>
+                                                <FormLabel>Require Certification</FormLabel>
                                                 <FormControl>
                                                     <Switch
                                                         {...field}
