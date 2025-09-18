@@ -39,7 +39,7 @@ import {
     zonesPath,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
-import DetailsRoot from './DetailsRoot';
+import DefaultRoot from './DefaultRoot';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
@@ -121,7 +121,7 @@ const PrivilegeZones: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<DetailsRoot />} />
+                            <Route path='*' element={<DefaultRoot defaultPath={context.defaultPath} />} />
                         </Routes>
                     </Suspense>
                 </div>
