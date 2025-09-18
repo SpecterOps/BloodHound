@@ -88,7 +88,7 @@ describe('SavedQueryPermissions', () => {
         expect(screen.getByText(/loading/i)).toBeInTheDocument();
 
         // Table Header Rendered
-        const nestedElement = await waitFor(() => screen.getByText(/name/i));
+        const nestedElement = await waitFor(() => screen.getByText(/set to public/i));
         expect(nestedElement).toBeInTheDocument();
 
         expect(screen.getByRole('checkbox')).toBeInTheDocument();
@@ -107,7 +107,7 @@ describe('SavedQueryPermissions', () => {
                 setIsPublic={testSetIsPublic}
             />
         );
-        const nestedElement = await waitFor(() => screen.getByText(/name/i));
+        const nestedElement = await waitFor(() => screen.getByText(/set to public/i));
         expect(nestedElement).toBeInTheDocument();
         const setPublicCheckbox = screen.getByTestId('public-query');
         expect(setPublicCheckbox).toBeInTheDocument();
@@ -127,7 +127,7 @@ describe('SavedQueryPermissions', () => {
                 setIsPublic={testSetIsPublic}
             />
         );
-        const nestedElement = await waitFor(() => screen.getByText(/name/i));
+        const nestedElement = await waitFor(() => screen.getByText(/set to public/i));
         expect(nestedElement).toBeInTheDocument();
         const setPublicCheckbox = screen.getByTestId('public-query');
         expect(setPublicCheckbox).toBeInTheDocument();
