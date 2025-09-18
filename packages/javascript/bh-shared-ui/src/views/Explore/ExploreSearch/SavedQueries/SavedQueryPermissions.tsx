@@ -125,7 +125,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             {
                 accessorKey: 'name',
                 header: () => {
-                    return <span className='dark:text-neutral-light-1'>Name</span>;
+                    return <span className='dark:text-neutral-light-1 font-normal'>Set to Public</span>;
                 },
                 cell: ({ row }) => {
                     const name = row.original.name;
@@ -177,7 +177,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         {filteredUsers?.length ? (
                             <DataTable
                                 TableHeadProps={{
-                                    className: 'text-s font-bold first:!w-8 pl-3 first:pl-0 first:text-center',
+                                    className: 'text-s first:!w-8 pl-3 first:pl-0 first:text-center',
                                 }}
                                 TableBodyProps={{ className: 'text-s font-roboto' }}
                                 TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
