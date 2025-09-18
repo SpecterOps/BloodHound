@@ -90,6 +90,12 @@ func (s *Route) RequireUserId() *Route {
 	return s
 }
 
+// SupportsETAC wraps the ETAC middleware which allows or denies a user access to an environment (domainid, tenantid), when it is used in a route's path parameter
+func (s *Route) SupportsETAC(db database.Database) *Route {
+	s.handler.Use(middleware.SupportsETACMiddleware(db))
+	return s
+}
+
 func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
 	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
 	return s
