@@ -22,13 +22,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFeatureFlagManager(t *testing.T) {
 	t.Run("enable creates cache", func(t *testing.T) {
 		var (
-			manager = newFeatureFlagManager(nil, time.Second, newDummyHA())
+			manager = newFeatureFlagManager(nil, time.Second, ha.NewDummyHA())
 			ctx     = context.Background()
 		)
 
@@ -42,7 +43,7 @@ func TestFeatureFlagManager(t *testing.T) {
 
 	t.Run("disable clears cache", func(t *testing.T) {
 		var (
-			manager = newFeatureFlagManager(nil, time.Second, newDummyHA())
+			manager = newFeatureFlagManager(nil, time.Second, ha.NewDummyHA())
 			ctx     = context.Background()
 		)
 
@@ -57,7 +58,7 @@ func TestFeatureFlagManager(t *testing.T) {
 
 	t.Run("getCache is thread-safe", func(t *testing.T) {
 		var (
-			manager       = newFeatureFlagManager(nil, time.Second, newDummyHA())
+			manager       = newFeatureFlagManager(nil, time.Second, ha.NewDummyHA())
 			ctx           = context.Background()
 			wg            sync.WaitGroup
 			numGoroutines = 10
@@ -99,7 +100,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			flagGetter  = func(ctx context.Context) (bool, int, error) {
 				return enabled, 10, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, newDummyHA())
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -129,7 +130,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			flagGetter  = func(ctx context.Context) (bool, int, error) {
 				return enabled, 1500, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, newDummyHA())
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -161,7 +162,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 				}
 				return true, 3000, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, newDummyHA())
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -183,7 +184,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			flagGetter  = func(ctx context.Context) (bool, int, error) {
 				return enabled, 1000, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, newDummyHA())
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -209,11 +210,11 @@ type mockHA struct {
 	lockError error
 }
 
-func (m *mockHA) TryLock() (LockResult, error) {
+func (m *mockHA) TryLock() (ha.LockResult, error) {
 	if m.lockError != nil {
-		return LockResult{}, m.lockError
+		return ha.LockResult{}, m.lockError
 	}
-	return LockResult{
+	return ha.LockResult{
 		Context:   context.Background(),
 		IsPrimary: m.isPrimary,
 	}, nil
@@ -354,7 +355,7 @@ func TestClearCache_HA(t *testing.T) {
 }
 
 func TestDummyHA(t *testing.T) {
-	dummy := newDummyHA()
+	dummy := ha.NewDummyHA()
 
 	lockResult, err := dummy.TryLock()
 	require.NoError(t, err)

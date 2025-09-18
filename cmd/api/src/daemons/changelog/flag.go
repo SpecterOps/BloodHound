@@ -22,32 +22,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 )
-
-type LockResult struct {
-	Context   context.Context
-	IsPrimary bool
-}
-
-type HAMutex interface {
-	TryLock() (LockResult, error)
-}
-
-// dummyHA is a no-op implementation for BHCE that always reports as primary
-type dummyHA struct{}
-
-func (d *dummyHA) TryLock() (LockResult, error) {
-	return LockResult{
-		Context:   context.Background(),
-		IsPrimary: true,
-	}, nil
-}
-
-func newDummyHA() HAMutex {
-	return &dummyHA{}
-}
 
 // featureFlagManager handles feature flag polling and cache lifecycle management.
 type featureFlagManager struct {
@@ -57,7 +35,7 @@ type featureFlagManager struct {
 	mu    sync.RWMutex
 	cache *cache
 
-	haMutex HAMutex
+	haMutex ha.HAMutex
 }
 
 // isPrimary checks if this instance is the primary API instance using the HA mutex.
@@ -81,7 +59,7 @@ func (s *featureFlagManager) isPrimary(ctx context.Context) (bool, context.Conte
 	}
 }
 
-func newFeatureFlagManager(flagGetter func(context.Context) (bool, int, error), pollInterval time.Duration, haMutex HAMutex) *featureFlagManager {
+func newFeatureFlagManager(flagGetter func(context.Context) (bool, int, error), pollInterval time.Duration, haMutex ha.HAMutex) *featureFlagManager {
 	return &featureFlagManager{
 		flagGetter:   flagGetter,
 		pollInterval: pollInterval,
