@@ -53,7 +53,7 @@ export type SelectorSeedRequest = Pick<AssetGroupTagSelectorSeed, 'type' | 'valu
 export type CreateSelectorRequest = {
     name: string;
     description?: string;
-    auto_certify?: AssetGroupTagSelectorAutoCertifyType | undefined;
+    auto_certify?: AssetGroupTagSelectorAutoCertifyType | null;
 } & { seeds: SelectorSeedRequest[] };
 
 export type UpdateSelectorRequest = Partial<CreateSelectorRequest & { disabled: boolean }> &

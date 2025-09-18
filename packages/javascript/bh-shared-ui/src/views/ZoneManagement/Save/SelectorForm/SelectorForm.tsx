@@ -17,13 +17,15 @@
 import { Form, Skeleton } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyAllMembers,
     AssetGroupTagSelectorAutoCertifyDisabled,
+    AssetGroupTagSelectorAutoCertifySeedsOnly,
     AssetGroupTagSelectorAutoCertifyType,
     GraphNode,
     SeedTypeObjectId,
     SeedTypes,
 } from 'js-client-library';
-import { SelectorSeedRequest } from 'js-client-library/dist/requests';
+import { SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
@@ -71,6 +73,19 @@ const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => 
     if (data.disabled_at === null) return true;
 
     return true;
+};
+
+const parseAutoCertifyValue = (stringValue: string | undefined): AssetGroupTagSelectorAutoCertifyType | null => {
+    switch (stringValue) {
+        case AssetGroupTagSelectorAutoCertifyDisabled.toString():
+            return AssetGroupTagSelectorAutoCertifyDisabled;
+        case AssetGroupTagSelectorAutoCertifySeedsOnly.toString():
+            return AssetGroupTagSelectorAutoCertifySeedsOnly;
+        case AssetGroupTagSelectorAutoCertifyAllMembers.toString():
+            return AssetGroupTagSelectorAutoCertifyAllMembers;
+        default:
+            return null;
+    }
 };
 
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
@@ -163,15 +178,19 @@ const SelectorForm: FC = () => {
                 return;
             }
 
+            const { auto_certify, ...updatedValues } = diffedValues;
+
+            const updateSelectorRequest: UpdateSelectorRequest = { ...updatedValues, id: parseInt(selectorId) };
+
+            if (auto_certify) {
+                updateSelectorRequest.auto_certify = parseAutoCertifyValue(auto_certify);
+            }
+
             await patchSelectorMutation.mutateAsync({
                 tagId,
                 selectorId,
                 updatedValues: {
-                    ...diffedValues,
-                    id: parseInt(selectorId),
-                    auto_certify: diffedValues.auto_certify
-                        ? (parseInt(diffedValues.auto_certify) as AssetGroupTagSelectorAutoCertifyType)
-                        : undefined,
+                    ...updateSelectorRequest,
                 },
             });
 
@@ -195,7 +214,7 @@ const SelectorForm: FC = () => {
 
             const values = {
                 ...form.getValues(),
-                auto_certify: parseInt(form.getValues().auto_certify) as AssetGroupTagSelectorAutoCertifyType,
+                auto_certify: parseAutoCertifyValue(form.getValues().auto_certify),
                 seeds,
             };
 
