@@ -257,21 +257,21 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// Domain Entity API
 		routerInst.PATCH(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.PatchDomain).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.GetDomainEntityInfo).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/users", api.URIPathVariableObjectID), resources.ListADDomainContainedUsers).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/groups", api.URIPathVariableObjectID), resources.ListADDomainContainedGroups).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/computers", api.URIPathVariableObjectID), resources.ListADDomainContainedComputers).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/ous", api.URIPathVariableObjectID), resources.ListADDomainContainedOUs).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/gpos", api.URIPathVariableObjectID), resources.ListADDomainContainedGPOs).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-users", api.URIPathVariableObjectID), resources.ListADDomainForeignUsers).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-groups", api.URIPathVariableObjectID), resources.ListADDomainForeignGroups).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-admins", api.URIPathVariableObjectID), resources.ListADDomainForeignAdmins).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-gpo-controllers", api.URIPathVariableObjectID), resources.ListADDomainForeignGPOControllers).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/inbound-trusts", api.URIPathVariableObjectID), resources.ListADDomainInboundTrusts).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/outbound-trusts", api.URIPathVariableObjectID), resources.ListADDomainOutboundTrusts).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/dc-syncers", api.URIPathVariableObjectID), resources.ListADDomainDCSyncers).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/linked-gpos", api.URIPathVariableObjectID), resources.ListADEntityLinkedGPOs).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/adcs-escalations", api.URIPathVariableObjectID), resources.ListADCSEscalations).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/users", api.URIPathVariableObjectID), resources.ListADDomainContainedUsers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/groups", api.URIPathVariableObjectID), resources.ListADDomainContainedGroups).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/computers", api.URIPathVariableObjectID), resources.ListADDomainContainedComputers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/ous", api.URIPathVariableObjectID), resources.ListADDomainContainedOUs).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/gpos", api.URIPathVariableObjectID), resources.ListADDomainContainedGPOs).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-users", api.URIPathVariableObjectID), resources.ListADDomainForeignUsers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-groups", api.URIPathVariableObjectID), resources.ListADDomainForeignGroups).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-admins", api.URIPathVariableObjectID), resources.ListADDomainForeignAdmins).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/foreign-gpo-controllers", api.URIPathVariableObjectID), resources.ListADDomainForeignGPOControllers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/inbound-trusts", api.URIPathVariableObjectID), resources.ListADDomainInboundTrusts).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/outbound-trusts", api.URIPathVariableObjectID), resources.ListADDomainOutboundTrusts).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/dc-syncers", api.URIPathVariableObjectID), resources.ListADDomainDCSyncers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/linked-gpos", api.URIPathVariableObjectID), resources.ListADEntityLinkedGPOs).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/adcs-escalations", api.URIPathVariableObjectID), resources.ListADCSEscalations).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
 
 		// GPO Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}", api.URIPathVariableObjectID), resources.GetGPOEntityInfo).RequirePermissions(permissions.GraphDBRead),
@@ -345,8 +345,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).RequirePermissions(permissions.GraphDBRead),
 
 		// Data Quality Stats API
-		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead),
-		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
+		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
 
 		// Datapipe API
