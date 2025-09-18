@@ -14,11 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { useMountEffect, usePermissions } from '../../hooks';
-import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
 import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
@@ -29,8 +27,6 @@ import LoadingOverlay from '../LoadingOverlay';
 import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
-    const { setShowFileIngestDialog } = useFileUploadDialogContext();
-
     const { checkPermission } = usePermissions();
     const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
@@ -54,8 +50,6 @@ const FileIngest: FC = () => {
 
     useMountEffect(effect);
 
-    const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
-
     return (
         <>
             <PageWithTitle
@@ -67,15 +61,6 @@ const FileIngest: FC = () => {
                         {DocumentationLinks.fileIngestLink} documentation for more information.
                     </Typography>
                 }></PageWithTitle>
-
-            <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' my={2}>
-                <Button
-                    onClick={() => toggleFileUploadDialog()}
-                    data-testid='file-ingest_button-upload-files'
-                    disabled={!hasPermission}>
-                    Upload File(s)
-                </Button>
-            </Box>
             <FeatureFlag
                 flagKey='open_graph_phase_2'
                 loadingFallback={<LoadingOverlay loading />}

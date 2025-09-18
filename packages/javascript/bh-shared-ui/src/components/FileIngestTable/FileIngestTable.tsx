@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card } from '@bloodhoundenterprise/doodleui';
+import { Button, Card } from '@bloodhoundenterprise/doodleui';
 import { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useGetFileUploadsQuery } from '../../hooks';
-import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
+import { useFileUploadDialogContext, useGetFileUploadsQuery, usePermissions } from '../../hooks';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, Permission, getSimpleDuration, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
 import { StatusIndicator } from '../StatusIndicator';
+import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 
 const HEADERS = ['ID / User / Status', 'Status Message', 'Start Time', 'Duration', 'File Information'];
 
@@ -58,27 +59,47 @@ const getRow = (job: FileIngestJob) => {
 export const FileIngestTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [_filters, setFilters] = useState({});
 
     const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage });
+
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     const fileUploadJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
+    const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
+
     return (
-        <Card>
-            <DataTable
-                data={fileUploadJobs.map(getRow)}
-                headers={getHeaders(HEADERS)}
-                isLoading={isLoading}
-                paginationProps={{
-                    page,
-                    rowsPerPage,
-                    count,
-                    onPageChange: (_event, page) => setPage(page),
-                    onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
-                }}
-                showPaginationControls
-            />
-        </Card>
+        <>
+            <div className='w-full flex justify-end gap-2 my-4'>
+                <FileIngestFilterDialog onConfirm={setFilters} />
+                <Button
+                    onClick={() => toggleFileUploadDialog()}
+                    data-testid='file-ingest_button-upload-files'
+                    disabled={!hasPermission}>
+                    Upload File(s)
+                </Button>
+            </div>
+
+            <Card>
+                <DataTable
+                    data={fileUploadJobs.map(getRow)}
+                    headers={getHeaders(HEADERS)}
+                    isLoading={isLoading}
+                    paginationProps={{
+                        page,
+                        rowsPerPage,
+                        count,
+                        onPageChange: (_event, page) => setPage(page),
+                        onRowsPerPageChange: (event) => setRowsPerPage(parseInt(event.target.value)),
+                    }}
+                    showPaginationControls
+                />
+            </Card>
+        </>
     );
 };

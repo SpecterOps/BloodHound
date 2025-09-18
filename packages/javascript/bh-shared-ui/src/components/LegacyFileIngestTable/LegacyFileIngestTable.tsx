@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Paper } from '@mui/material';
+import { Button, Card } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
-import { useGetFileUploadsQuery } from '../../hooks';
+import { useFileUploadDialogContext, useGetFileUploadsQuery, usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
 import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
@@ -38,6 +39,10 @@ const LegacyFileIngestTable: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
 
     const { data: listFileIngestJobsData } = useGetFileUploadsQuery({ page, rowsPerPage });
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
+
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     useEffect(() => setTotalCount(listFileIngestJobsData?.count || 0), [listFileIngestJobsData]);
 
@@ -67,21 +72,34 @@ const LegacyFileIngestTable: React.FC = () => {
                 job.status_message,
             ]) || [];
 
+    const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
+
     return (
-        <Paper>
-            <DataTable
-                headers={ingestTableHeaders}
-                data={ingestRows}
-                showPaginationControls={true}
-                paginationProps={{
-                    page,
-                    rowsPerPage,
-                    count: totalCount,
-                    onPageChange: handlePageChange,
-                    onRowsPerPageChange: handleRowsPerPageChange,
-                }}
-            />
-        </Paper>
+        <>
+            <div className='w-full flex justify-end gap-2 my-4'>
+                <Button
+                    onClick={() => toggleFileUploadDialog()}
+                    data-testid='file-ingest_button-upload-files'
+                    disabled={!hasPermission}>
+                    Upload File(s)
+                </Button>
+            </div>
+
+            <Card>
+                <DataTable
+                    headers={ingestTableHeaders}
+                    data={ingestRows}
+                    showPaginationControls={true}
+                    paginationProps={{
+                        page,
+                        rowsPerPage,
+                        count: totalCount,
+                        onPageChange: handlePageChange,
+                        onRowsPerPageChange: handleRowsPerPageChange,
+                    }}
+                />
+            </Card>
+        </>
     );
 };
 
