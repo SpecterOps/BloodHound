@@ -14,7 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagSelectorAutoCertifyAllMembers, AssetGroupTagSelectorAutoCertifyType, SeedTypeCypher } from 'js-client-library';
+import {
+    AssetGroupTagSelectorAutoCertifyAllMembers,
+    AssetGroupTagSelectorAutoCertifyType,
+    SeedTypeCypher,
+} from 'js-client-library';
 import DeleteSelectorButton from '.';
 import { render, screen } from '../../../../../test-utils';
 
