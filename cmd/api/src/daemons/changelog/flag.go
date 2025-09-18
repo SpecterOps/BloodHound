@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 )
@@ -33,12 +34,36 @@ type featureFlagManager struct {
 
 	mu    sync.RWMutex
 	cache *cache
+
+	haMutex ha.HAMutex
 }
 
-func newFeatureFlagManager(flagGetter func(context.Context) (bool, int, error), pollInterval time.Duration) *featureFlagManager {
+// isPrimary checks if this instance is the primary API instance using the HA mutex.
+// Returns true and the primary context if this instance is primary, false otherwise.
+func (s *featureFlagManager) isPrimary(ctx context.Context) (bool, context.Context) {
+	// Safety check: if no HA mutex is configured, assume we're always primary (single instance)
+	if s.haMutex == nil {
+		return true, ctx
+	}
+
+	// Try to get the HA lock to determine if we're primary
+	if lockResult, err := s.haMutex.TryLock(); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to validate HA election status: %v", err))
+		return false, ctx
+	} else if lockResult.IsPrimary {
+		// If we are primary, return the primary context
+		return true, lockResult.Context
+	} else {
+		// If we're not primary, we don't perform cache operations
+		return false, ctx
+	}
+}
+
+func newFeatureFlagManager(flagGetter func(context.Context) (bool, int, error), pollInterval time.Duration, haMutex ha.HAMutex) *featureFlagManager {
 	return &featureFlagManager{
 		flagGetter:   flagGetter,
 		pollInterval: pollInterval,
+		haMutex:      haMutex,
 	}
 }
 
@@ -59,6 +84,12 @@ func (s *featureFlagManager) runPoller(ctx context.Context) {
 			return
 
 		case <-ticker.C:
+			// don't perform the following actions if we aren't the primary instance
+			active, primaryCtx := s.isPrimary(ctx)
+			if !active {
+				continue
+			}
+
 			flagEnabled, size, err := s.flagGetter(ctx)
 			if err != nil {
 				slog.WarnContext(ctx, "feature flag check failed", "err", err)
@@ -67,10 +98,10 @@ func (s *featureFlagManager) runPoller(ctx context.Context) {
 
 			switch {
 			case flagEnabled && !isEnabled:
-				s.enable(ctx, size)
+				s.enable(primaryCtx, size)
 				isEnabled = true
 			case !flagEnabled && isEnabled:
-				s.disable(ctx)
+				s.disable(primaryCtx)
 				isEnabled = false
 			}
 		}
@@ -97,15 +128,23 @@ func (s *featureFlagManager) disable(ctx context.Context) {
 
 // clearCache forcibly clears the cache regardless of feature flag state.
 // This is used during graph data deletion to ensure cache consistency.
+// Only the primary instance should clear the cache in HA deployments.
 func (s *featureFlagManager) clearCache(ctx context.Context) {
+	// Check if we're the primary instance before clearing cache
+	isPrimary, primaryCtx := s.isPrimary(ctx)
+	if !isPrimary {
+		slog.InfoContext(ctx, "skipping cache clear - not primary instance")
+		return
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.cache != nil {
-		slog.InfoContext(ctx, "forcibly clearing changelog cache due to graph data deletion")
+		slog.InfoContext(primaryCtx, "forcibly clearing changelog cache due to graph data deletion")
 		s.cache.clear()
 	} else {
-		slog.InfoContext(ctx, "changelog cache already cleared (feature disabled)")
+		slog.InfoContext(primaryCtx, "changelog cache already cleared (feature disabled)")
 	}
 }
 
