@@ -221,7 +221,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
-                            {location.pathname.includes('zone-management/save/tier') && (
+                            {tierId && (
                                 <FormField
                                     control={control}
                                     name='auto_certify'

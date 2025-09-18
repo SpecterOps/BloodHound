@@ -17,6 +17,7 @@
 import { Form, Skeleton } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyDisabled,
     AssetGroupTagSelectorAutoCertifyType,
     GraphNode,
     SeedTypeObjectId,
@@ -79,12 +80,14 @@ type SelectorFormState = {
     selectorType: SeedTypes;
     seeds: SelectorSeedRequest[];
     selectedObjects: AssetGroupSelectedNodes;
+    autoCertify: AssetGroupTagSelectorAutoCertifyType;
 };
 
 const initialState: SelectorFormState = {
     selectorType: SeedTypeObjectId,
     seeds: [],
     selectedObjects: [],
+    autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
 };
 
 export type Action =
@@ -133,7 +136,7 @@ const SelectorForm: FC = () => {
 
     const { addNotification } = useNotifications();
 
-    const [{ selectorType, seeds, selectedObjects }, dispatch] = useReducer(reducer, initialState);
+    const [{ selectorType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
 
     const selectorQuery = useSelectorInfo(tagId, selectorId);
 
@@ -275,7 +278,8 @@ const SelectorForm: FC = () => {
     if (selectorQuery.isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
-        <SelectorFormContext.Provider value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery }}>
+        <SelectorFormContext.Provider
+            value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
