@@ -105,14 +105,11 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
 
                     {/* Multiple Descriptions ensures that Dialog gaps still apply */}
                     <DialogDescription asChild>
-                        <div className='flex gap-10'>
-                            <StatusSelect
-                                status={filters.state.status}
-                                statusOptions={['Complete', 'Running', 'Failed']}
-                                onSelect={selectStatus}
-                            />
-                            <UserSelect client={filters.state.client_id} onSelect={selectUser} />
-                        </div>
+                        <StatusSelect
+                            status={filters.state.status}
+                            statusOptions={['Complete', 'Running', 'Failed']}
+                            onSelect={selectStatus}
+                        />
                     </DialogDescription>
 
                     <DialogDescription asChild>
@@ -122,6 +119,10 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                             onValidation={setAreDatesValid}
                             start={filters.state.start_time}
                         />
+                    </DialogDescription>
+
+                    <DialogDescription asChild>
+                        <UserSelect client={filters.state.client_id} onSelect={selectUser} />
                     </DialogDescription>
 
                     <DialogActions>
