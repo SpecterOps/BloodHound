@@ -17,7 +17,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, waitFor } from '../../test-utils';
 import { apiClient } from '../../utils';
-import DetailsRoot from './DetailsRoot';
+import DefaultRoot from './DefaultRoot';
 
 const handlers = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
@@ -44,7 +44,7 @@ const assetGroupSpy = vi.spyOn(apiClient, 'getAssetGroupTags');
 
 describe('DetailsRoot', () => {
     it('calls getAssetGroupTags for topTagId', () => {
-        render(<DetailsRoot />);
+        render(<DefaultRoot defaultPath='' />);
         waitFor(() => {
             expect(assetGroupSpy).toHaveBeenCalled();
         });
