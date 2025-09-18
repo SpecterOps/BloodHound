@@ -35,16 +35,6 @@ func TestSupportsETACMiddleware(t *testing.T) {
 		expectNextHit bool
 	}{
 		{
-			name: "Error getting feature flag",
-			setupMocks: func() {
-				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
-					Return(appcfg.FeatureFlag{}, errors.New("db failure"))
-			},
-			expectedCode:  http.StatusInternalServerError, // whatever HandleDatabaseError writes
-			expectNextHit: false,
-		},
-		{
 			name: "Success feature flag disabled",
 			setupMocks: func() {
 				mockDB.EXPECT().
@@ -98,6 +88,37 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
+		},
+		{
+			name: "Error getting feature flag",
+			setupMocks: func() {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					Return(appcfg.FeatureFlag{}, errors.New("db failure"))
+			},
+			expectedCode:  http.StatusInternalServerError, // whatever HandleDatabaseError writes
+			expectNextHit: false,
+		},
+		{
+			name: "Error checking for environments on a user",
+			setupMocks: func() {
+				mockDB.EXPECT().
+					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentAccess{{}}, errors.New("an error"))
+			},
+			bhCtx: ctx.Context{
+				AuthCtx: auth.Context{
+					PermissionOverrides: auth.PermissionOverrides{},
+					Owner: model.User{
+						AllEnvironments:          false,
+						EnvironmentAccessControl: nil,
+					},
+					Session: model.UserSession{},
+				},
+			},
+			expectedCode:  http.StatusInternalServerError,
+			expectNextHit: false,
 		},
 		{
 			name: "Error All Environments disabled and user does not have domain in etac list",

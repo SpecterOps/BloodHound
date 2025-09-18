@@ -30,7 +30,7 @@ func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 			} else if domainsid, hasDomainID := mux.Vars(request)[api.URIPathVariableObjectID]; !hasDomainID {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorNoDomainId, request), response)
 			} else if hasAccess, err := v2.CheckUserAccessToEnvironments(request.Context(), db, currentUser, domainsid); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error checking user's environment access control", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking user's environment access control", request), response)
 			} else if !hasAccess {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to access this domain", request), response)
 			} else {
