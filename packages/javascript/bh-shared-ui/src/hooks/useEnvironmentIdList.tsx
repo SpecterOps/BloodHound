@@ -14,10 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Environment } from 'js-client-library';
-import { PathPattern } from 'react-router-dom';
 import { useAvailableEnvironments, useSelectedEnvironment } from './useAvailableEnvironments';
 import { EnvironmentAggregation } from './useEnvironmentParams';
-import { useMatchingPaths } from './useMatchingPaths';
 
 export const getEnvironmentAggregationIds = (
     environmentAggregation: EnvironmentAggregation,
@@ -38,14 +36,11 @@ export const getEnvironmentAggregationIds = (
     return aggregationIds.sort((a, b) => String(a).localeCompare(String(b)));
 };
 
-export const useEnvironmentIdList = (
-    ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES: (string | PathPattern)[]
-): Environment['id'][] => {
+export const useEnvironmentIdList = (): Environment['id'][] => {
     const { data: availableEnvironments } = useAvailableEnvironments();
     const { environment, environmentAggregation } = useSelectedEnvironment();
-    const isEnvironmentAggregationSupportedPage = useMatchingPaths(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES);
 
-    if (isEnvironmentAggregationSupportedPage && environmentAggregation && availableEnvironments) {
+    if (environmentAggregation && availableEnvironments) {
         const aggregatedEnvironmentIds = getEnvironmentAggregationIds(environmentAggregation, availableEnvironments);
         return aggregatedEnvironmentIds;
     }

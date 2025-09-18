@@ -90,13 +90,7 @@ const Details: FC = () => {
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
 
-    const environments = useEnvironmentIdList([
-        {
-            path: `/${privilegeZonesPath}/${zonesPath}/${tagType}/${detailsPath}`,
-            caseSensitive: false,
-            end: false,
-        },
-    ]);
+    const environments = useEnvironmentIdList();
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
