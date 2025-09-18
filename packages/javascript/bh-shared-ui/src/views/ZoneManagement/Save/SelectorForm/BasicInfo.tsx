@@ -226,25 +226,21 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                 name='auto_certify'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <span className='flex'>
-                                            <FormLabel aria-labelledby='auto_certify'>
-                                                Automatic Certification
-                                            </FormLabel>
-                                        </span>
-                                        <p className='text-xs [&>p]:mt-2'>
+                                        <FormLabel aria-labelledby='auto_certify'>Automatic Certification</FormLabel>
+                                        <div className='text-sm [&>p]:mt-2'>
                                             Choose how new objects are certified.
                                             <p>
-                                                <em>Initial members</em> - only the first set of objects in this
+                                                <strong>Initial members</strong> - Only the first set of objects in this
                                                 selector are certified automatically.
                                             </p>
                                             <p>
-                                                <em>All members</em> - every object, including those tied to initial
-                                                members, is certified automatically.
+                                                <strong>All members</strong> - Every object, including those tied to
+                                                initial members, is certified automatically.
                                             </p>
                                             <p>
-                                                <em>Off</em> - all certification is manual.
+                                                <strong>Off</strong> - All certification is manual.
                                             </p>
-                                        </p>
+                                        </div>
                                         <Select
                                             data-testid='zone-management_save_selector-form_auto_certify-input'
                                             value={field.value}
