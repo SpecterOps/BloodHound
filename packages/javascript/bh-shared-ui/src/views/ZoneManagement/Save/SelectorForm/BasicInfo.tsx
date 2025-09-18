@@ -221,53 +221,60 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
-                            <FormField
-                                control={control}
-                                name='auto_certify'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel aria-labelledby='auto_certify'>Automatic Certification</FormLabel>
-                                        <div className='text-sm [&>p]:mt-2'>
-                                            Choose how new objects are certified.
-                                            <p>
-                                                <strong>Initial members</strong> - Only the first set of objects in this
-                                                selector are certified automatically.
-                                            </p>
-                                            <p>
-                                                <strong>All members</strong> - Every object, including those tied to
-                                                initial members, is certified automatically.
-                                            </p>
-                                            <p>
-                                                <strong>Off</strong> - All certification is manual.
-                                            </p>
-                                        </div>
-                                        <Select
-                                            data-testid='zone-management_save_selector-form_auto_certify-input'
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder='Off' {...field} />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectPortal>
-                                                <SelectContent>
-                                                    {Object.entries(AssetGroupTagSelectorAutoCertifyMap).map(
-                                                        ([autoCertifyOption, displayValue]) => (
-                                                            <SelectItem
-                                                                key={autoCertifyOption}
-                                                                value={autoCertifyOption}>
-                                                                {displayValue}
-                                                            </SelectItem>
-                                                        )
-                                                    )}
-                                                </SelectContent>
-                                            </SelectPortal>
-                                        </Select>
-                                    </FormItem>
-                                )}
-                            />
+                            {location.pathname.includes('zone-management/save/tier') && (
+                                <FormField
+                                    control={control}
+                                    name='auto_certify'
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel aria-labelledby='auto_certify'>
+                                                Automatic Certification
+                                            </FormLabel>
+                                            <div className='text-sm [&>p]:mt-2'>
+                                                Choose how new objects are certified.
+                                                <p>
+                                                    <strong>Initial members</strong> - Only the first set of objects in
+                                                    this selector are certified automatically.
+                                                </p>
+                                                <p>
+                                                    <strong>All members</strong> - Every object, including those tied to
+                                                    initial members, is certified automatically.
+                                                </p>
+                                                <p>
+                                                    <strong>Off</strong> - All certification is manual.
+                                                </p>
+                                            </div>
+                                            <Select
+                                                value={field.value}
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue
+                                                            data-testid='zone-management_save_selector-form_default-certify'
+                                                            placeholder='Off'
+                                                            {...field}
+                                                        />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectPortal>
+                                                    <SelectContent>
+                                                        {Object.entries(AssetGroupTagSelectorAutoCertifyMap).map(
+                                                            ([autoCertifyOption, displayValue]) => (
+                                                                <SelectItem
+                                                                    key={autoCertifyOption}
+                                                                    value={autoCertifyOption}>
+                                                                    {displayValue}
+                                                                </SelectItem>
+                                                            )
+                                                        )}
+                                                    </SelectContent>
+                                                </SelectPortal>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
                         </div>
                     </div>
                 </CardContent>
