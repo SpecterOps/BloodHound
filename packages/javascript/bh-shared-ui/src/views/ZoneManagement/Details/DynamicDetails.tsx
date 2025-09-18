@@ -119,7 +119,7 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                 <div className='mt-4'>
                     <DetailField
                         label='Automatic Certification'
-                        value={AssetGroupTagSelectorAutoCertifyMap[data.auto_certify] ?? 'Disabled'}
+                        value={AssetGroupTagSelectorAutoCertifyMap[data.auto_certify] ?? 'Off'}
                     />
                 </div>
                 <div className='mt-4'>
