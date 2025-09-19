@@ -30,7 +30,6 @@ import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
 import { usePZPathParams } from '../../../../hooks';
 import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
@@ -146,7 +145,6 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const location = useLocation();
     const { tagId, selectorId = '', tagType } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
@@ -222,7 +220,7 @@ const SelectorForm: FC = () => {
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
         }
-    }, [tagId, navigate, createSelectorMutation, addNotification, location, form, seeds]);
+    }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagType]);
 
     const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(() => {
         if (selectorId !== '') {

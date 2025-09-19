@@ -148,7 +148,7 @@ export const TagForm: FC = () => {
                 handleError(error, 'creating', tagType, addNotification);
             }
         },
-        [createTagMutation, addNotification, handleCreateNavigate, tagType, tagTypeDisplay, isLabelPage]
+        [isZonePage, isLabelPage, createTagMutation, addNotification, tagTypeDisplay, handleCreateNavigate, tagType]
     );
 
     const handleUpdateTag = useCallback(async () => {
@@ -184,13 +184,16 @@ export const TagForm: FC = () => {
             handleError(error, 'updating', tagType, addNotification);
         }
     }, [
-        tagId,
-        handleUpdateNavigate,
-        addNotification,
-        updateTagMutation,
-        tagType,
-        tagTypeDisplay,
+        tagQuery.data,
+        form,
         privilegeZoneAnalysisEnabled,
+        isLabelPage,
+        updateTagMutation,
+        tagId,
+        addNotification,
+        tagTypeDisplay,
+        tagType,
+        handleUpdateNavigate,
     ]);
 
     const handleDeleteTag = useCallback(async () => {

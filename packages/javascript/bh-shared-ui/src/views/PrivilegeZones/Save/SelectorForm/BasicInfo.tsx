@@ -64,7 +64,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
         if (receivedData) {
             dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
         }
-    }, []);
+    }, [dispatch, receivedData]);
 
     const tagQuery = useQuery({
         queryKey: ['privilege-zones', 'tags', tagId],
