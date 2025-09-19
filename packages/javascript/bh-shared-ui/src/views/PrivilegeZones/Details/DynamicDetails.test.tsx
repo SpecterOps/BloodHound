@@ -135,7 +135,6 @@ describe('DynamicDetails', () => {
                 updated_by: 'Demario_Corwin88@yahoo.com',
             },
         } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
-
         render(<DynamicDetails queryResult={testSelector} />);
 
         expect(screen.getByText('tier-0-selector-9')).toBeInTheDocument();

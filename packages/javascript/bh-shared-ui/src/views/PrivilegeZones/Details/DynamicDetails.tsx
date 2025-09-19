@@ -26,7 +26,7 @@ import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
@@ -62,7 +62,6 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const tagId = labelId === undefined ? zoneId : labelId;
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
-    const { isZonePage } = usePZPathParams();
 
     return (
         <div
@@ -87,7 +86,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {isZonePage && (
+                {data.require_certify !== null && (
                     <div className='mt-4'>
                         <DetailField label='Certification' value={data.require_certify ? 'Required' : 'Not Required'} />
                     </div>
@@ -102,7 +101,6 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
 const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
     const seedType = getSelectorSeedType(data);
-    const { isZonePage } = usePZPathParams();
 
     return (
         <div
@@ -122,7 +120,7 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {isZonePage && (
+                {data.auto_certify !== null && (
                     <div className='mt-4'>
                         <DetailField
                             label='Automatic Certification'
