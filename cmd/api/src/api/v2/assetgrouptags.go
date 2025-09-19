@@ -30,6 +30,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -972,7 +973,7 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySQL := "(actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
+			querySQL := "(actor ILIKE ANY(?) OR email ILIKE ANY(?) OR action ILIKE ANY(?) OR target ILIKE ANY(?))"
 
 			if sqlFilter.SQLString != "" {
 				querySQL = " AND" + querySQL
@@ -981,7 +982,7 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 			sqlFilter.SQLString += querySQL
 
 			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
+				sqlFilter.Params = append(sqlFilter.Params, pq.StringArray{"%" + query + "%", strings.ReplaceAll("%"+query+"%", " ", "")})
 			}
 		}
 
