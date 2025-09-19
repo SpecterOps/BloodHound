@@ -53,17 +53,17 @@ interface Disabled {
     disabled_by: string | null;
 }
 
-export const AssetGroupTagTypeTier = 1 as const;
+export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
 
-export type AssetGroupTagTypes =
-    | typeof AssetGroupTagTypeTier
+export type AssetGroupTagType =
+    | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 
-export const AssetGroupTagTypesMap = {
-    1: 'tier',
+export const AssetGroupTagTypeMap = {
+    1: 'zone',
     2: 'label',
     3: 'owned',
 } as const;
@@ -77,7 +77,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position: number | null;
     require_certify: boolean | null;
     description: string;

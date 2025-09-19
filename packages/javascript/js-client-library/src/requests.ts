@@ -19,7 +19,7 @@ import {
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
     SeedExpansionMethod,
     SSOProviderConfiguration,
 } from './types';
@@ -37,7 +37,7 @@ export interface LoginRequest {
 export type CreateAssetGroupTagRequest = {
     name: string;
     description: string;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position?: number | null;
     require_certify?: boolean | null;
 };
