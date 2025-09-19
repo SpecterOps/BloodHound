@@ -27,16 +27,17 @@ import {
     DialogTrigger,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { useMemo, useState } from 'react';
+import { isEqual } from 'lodash';
+import { useRef, useState } from 'react';
 import { useObjectState } from '../../hooks';
-import { typedEntries } from '../../utils';
+import { FileIngestFilterParams, typedEntries } from '../../utils';
 import { AppIcon } from '../AppIcon';
 import { DateRangeChange, DateRangeInputs } from '../DateRangeInputs';
 import { StatusSelect } from '../StatusSelect';
 import { UserSelect } from './UserSelect';
 
 type Props = {
-    onConfirm: (filters: any) => void;
+    onConfirm: (filters: FileIngestFilterParams) => void;
 };
 
 export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
@@ -44,7 +45,10 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
 
     // Manages filter state while selecting option in dialog
     // Sent to table via onConfirm
-    const filters = useObjectState<any>({});
+    const filters = useObjectState<FileIngestFilterParams>({});
+
+    // For dirty checking
+    const prevState = useRef(filters.state);
 
     const clearFilters = () => filters.setState({});
 
@@ -68,17 +72,21 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
         }
     };
 
-    const selectUser = (client_id: string) => {
-        if (client_id === '-none-') {
-            filters.deleteKeys('client_id');
+    const selectUser = (user_id: string) => {
+        if (user_id === '-none-') {
+            filters.deleteKeys('user_id');
         } else {
-            filters.applyState({ client_id });
+            filters.applyState({ user_id });
         }
     };
 
-    const isConfirmDisabled = useMemo(() => {
-        return Object.keys(filters.state).length === 0 || !areDatesValid;
-    }, [areDatesValid, filters.state]);
+    const isConfirmDisabled = !areDatesValid || isEqual(filters.state, prevState.current);
+
+    // Ensures dirty checking runs on next filter use
+    const updateAndConfirm = () => {
+        prevState.current = filters.state;
+        onConfirm(filters.state);
+    };
 
     return (
         <Dialog>
@@ -122,7 +130,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     </DialogDescription>
 
                     <DialogDescription asChild>
-                        <UserSelect client={filters.state.client_id} onSelect={selectUser} />
+                        <UserSelect user={filters.state.user_id} onSelect={selectUser} />
                     </DialogDescription>
 
                     <DialogActions>
@@ -140,7 +148,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                                 className='text-primary'
                                 data-testid='finished_jobs_log-filter_dialog_confirm'
                                 disabled={isConfirmDisabled}
-                                onClick={() => onConfirm(filters.state)}
+                                onClick={updateAndConfirm}
                                 type='submit'
                                 variant='text'>
                                 Confirm
