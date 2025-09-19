@@ -245,7 +245,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue
-                                                            data-testid='zone-management_save_selector-form_default-certify'
+                                                            data-testid='privilege-zones_save_selector-form_default-certify'
                                                             placeholder='Off'
                                                             {...field}
                                                         />

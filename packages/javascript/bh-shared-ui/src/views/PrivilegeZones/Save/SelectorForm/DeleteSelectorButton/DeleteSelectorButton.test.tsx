@@ -14,11 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    AssetGroupTagSelectorAutoCertifyAllMembers,
-    AssetGroupTagSelectorAutoCertifyType,
-    SeedTypeCypher,
-} from 'js-client-library';
+import { AssetGroupTagSelectorAutoCertifyAllMembers, SeedTypeCypher } from 'js-client-library';
 import DeleteSelectorButton from '.';
 import { render, screen } from '../../../../../test-utils';
 
@@ -29,7 +25,7 @@ const testSelector = {
     allow_disable: true,
     description: 'bar',
     is_default: true,
-    auto_certify: AssetGroupTagSelectorAutoCertifyAllMembers as AssetGroupTagSelectorAutoCertifyType,
+    auto_certify: AssetGroupTagSelectorAutoCertifyAllMembers,
     created_at: '2024-10-05T17:54:32.245Z',
     created_by: 'Stephen64@gmail.com',
     updated_at: '2024-07-20T11:22:18.219Z',

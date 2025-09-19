@@ -155,7 +155,7 @@ export const TagForm: FC = () => {
         try {
             const diffedValues = diffValues(tagQuery.data, { ...form.getValues() });
             if (isEmpty(diffedValues)) {
-                addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
                 return;
@@ -173,7 +173,7 @@ export const TagForm: FC = () => {
 
             addNotification(
                 `${tagTypeDisplay} was updated successfully!`,
-                `zone-management_update-${tagType}_success_${tagId}`,
+                `privilege-zones_update-${tagType}_success_${tagId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -382,11 +382,11 @@ export const TagForm: FC = () => {
                                                         <Switch
                                                             {...field}
                                                             value={field.value?.toString()}
-                                                            data-testid='zone-management_save_tag-form_require_certify-toggle'
+                                                            data-testid='privilege-zones_save_tag-form_require-certify-toggle'
                                                             checked={field.value || false}
                                                             onCheckedChange={field.onChange}></Switch>
                                                     </FormControl>
-                                                    <p className='text-sm text-muted-foreground'>
+                                                    <p className='text-sm'>
                                                         Enable this to mandate certification for all members within this
                                                         zone
                                                     </p>

@@ -115,7 +115,7 @@ describe('Selector Form', () => {
         expect(descriptionInput).toHaveValue('');
 
         const autoCertifyDropdownDefault = await screen.findByTestId(
-            'zone-management_save_selector-form_default-certify'
+            'privilege-zones_save_selector-form_default-certify'
         );
         expect(autoCertifyDropdownDefault).toBeInTheDocument();
 
@@ -184,7 +184,7 @@ describe('Selector Form', () => {
         });
 
         const autoCertifyDropdownDefault = await screen.findByTestId(
-            'zone-management_save_selector-form_default-certify'
+            'privilege-zones_save_selector-form_default-certify'
         );
         expect(autoCertifyDropdownDefault).toBeInTheDocument();
 
