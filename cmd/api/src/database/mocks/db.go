@@ -595,6 +595,21 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroup(ctx, assetGroup any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroup", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroup), ctx, assetGroup)
 }
 
+// DeleteAssetGroupHistoryRecordsByCreatedDate mocks base method.
+func (m *MockDatabase) DeleteAssetGroupHistoryRecordsByCreatedDate(ctx context.Context, createdAt time.Time) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupHistoryRecordsByCreatedDate", ctx, createdAt)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAssetGroupHistoryRecordsByCreatedDate indicates an expected call of DeleteAssetGroupHistoryRecordsByCreatedDate.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupHistoryRecordsByCreatedDate(ctx, createdAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupHistoryRecordsByCreatedDate", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupHistoryRecordsByCreatedDate), ctx, createdAt)
+}
+
 // DeleteAssetGroupSelector mocks base method.
 func (m *MockDatabase) DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
 	m.ctrl.T.Helper()
