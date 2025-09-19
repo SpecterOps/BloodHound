@@ -85,6 +85,10 @@ func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
 	)
 }
 
+func FilterOAuth2PermissionGrants() graph.Criteria {
+	return query.KindIn(query.Relationship(), azure.AbusablePermissionGrantRelationshipKinds()...)
+}
+
 func FilterContains() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.Contains)
 }

@@ -146,6 +146,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureRoleManagementPolicyAssignment
 	case enums.KindAZRoleEligibilityScheduleInstance:
 		return convertAzureRoleEligibilityScheduleInstance
+	case "AZOAuth2PermissionGrant": // case enums.KindAZOAuth2PermissionGrant:
+		return convertAzureOAuth2PermissionGrant
 	default:
 		// TODO: we should probably have a hook or something to log the unknown type
 		return func(rm json.RawMessage, cd *ConvertedAzureData, now time.Time) {}
@@ -738,5 +740,23 @@ func convertAzureRoleEligibilityScheduleInstance(raw json.RawMessage, converted 
 	} else {
 		relProps := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(data)
 		converted.RelProps = append(converted.RelProps, relProps...)
+	}
+}
+
+func convertAzureOAuth2PermissionGrant(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	// Since this implementation is not yet part of the current AzureHound model, here's the definition
+	// of the OAuth2PermissionGrant struct as per the Azure Graph API documentation.
+	// This can be replaced with the actual model definition once it is available in AzureHound.
+	// Replace:
+
+	var data ein.OAuth2PermissionGrant
+
+	// With:
+	//var data models.OAuth2PermissionGrant
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure OAuth2 permission grant", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureOAuth2PermissionGrantToRels(data)...)
 	}
 }

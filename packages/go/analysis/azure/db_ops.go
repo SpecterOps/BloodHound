@@ -337,6 +337,18 @@ func ListEntityObjectControl(ctx context.Context, db graph.Database, objectID st
 	})
 }
 
+func ListEntityOAuth2PermissionGrants(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+    var nodes graph.NodeSet
+    return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+        node, err := FetchEntityByObjectID(tx, objectID)
+        if err != nil {
+            return err
+        }
+        nodes, err = FetchEntityOAuth2PermissionGrants(tx, node, skip, limit)
+        return err
+    })
+}
+
 func ListEntityGroupMembershipPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
 	var paths graph.PathSet
 

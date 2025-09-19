@@ -62,6 +62,7 @@ const (
 	RelatedEntityTypeDescendentContainerRegistries      RelatedEntityType = "descendent-container-registries"
 	RelatedEntityTypeDescendentFunctionApps             RelatedEntityType = "descendent-function-apps"
 	RelatedEntityTypeRoleApprovers                      RelatedEntityType = "role-approvers"
+	RelatedEntityTypeOAuth2PermissionGrants             RelatedEntityType = "oauth2-permission-grants"
 )
 
 // FromGraphNodes takes a slice of *graph.Node and converts them to serializable node structs.
