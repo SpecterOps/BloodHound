@@ -17,12 +17,13 @@
 import type { ListFileIngestJobsResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
+import { FileIngestFilterParams } from '../../components/FileIngestTable/FileIngestFilterDialog';
 import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import { usePermissions } from '../usePermissions';
-import { fileUploadKeys } from './useFileIngest';
 
 interface FileUploadParams {
+    filters?: FileIngestFilterParams;
     page: number;
     rowsPerPage: number;
 }
@@ -35,9 +36,9 @@ const FETCH_ERROR_MESSAGE = 'Unable to fetch file upload jobs. Please try again.
 const FETCH_ERROR_KEY = 'file-upload-error';
 
 /** Makes a paginated request for File Upload Jobs, returned as a TanStack Query */
-export const useGetFileUploadsQuery = ({ page, rowsPerPage }: FileUploadParams) => {
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
+export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploadParams) => {
+    const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
+    const hasPermission = permissionsLoaded && checkPermission(Permission.GRAPH_DB_INGEST);
 
     const { addNotification, dismissNotification } = useNotifications();
 
@@ -50,10 +51,11 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage }: FileUploadParams) 
     }, [addNotification, dismissNotification, hasPermission]);
 
     return useQuery<ListFileIngestJobsResponse>({
+        enabled: Boolean(permissionsLoaded && hasPermission),
+        keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
-        queryFn: () => apiClient.listFileIngestJobs(rowsPerPage * page, rowsPerPage, '-id').then((res) => res.data),
-        queryKey: fileUploadKeys.listJobsPaginated(page, rowsPerPage),
-        refetchInterval: 5000,
-        enabled: hasPermission,
+        queryFn: () =>
+            apiClient.listFileIngestJobs(rowsPerPage * page, rowsPerPage, '-id', filters).then((res) => res.data),
+        queryKey: ['file-uploads', { ...filters, page, rowsPerPage }],
     });
 };
