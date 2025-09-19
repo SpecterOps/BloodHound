@@ -20,7 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
 import SelectorForm from '.';
-import { zoneManagementKeys } from '../../../../hooks';
+import { privilegeZonesKeys } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
 import { act, render, screen, waitFor } from '../../../../test-utils';
 import { apiClient, mockCodemirrorLayoutMethods, setUpQueryClient } from '../../../../utils';
@@ -98,7 +98,7 @@ describe('Selector Form', () => {
         // This means that none of the input fields should have any value aside from default values
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
 
-        const mockState = [{ key: [zoneManagementKeys.selectorDetail('1', '')], data: null }];
+        const mockState = [{ key: [privilegeZonesKeys.selectorDetail('1', '')], data: null }];
 
         const queryClient = setUpQueryClient(mockState);
 
@@ -150,7 +150,7 @@ describe('Selector Form', () => {
         // and so this selector's data is filled into the form for the user to edit
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
 
-        const mockState = [{ key: [zoneManagementKeys.selectorDetail('1', '777')], data: testSelector }];
+        const mockState = [{ key: [privilegeZonesKeys.selectorDetail('1', '777')], data: testSelector }];
 
         const queryClient = setUpQueryClient(mockState);
 

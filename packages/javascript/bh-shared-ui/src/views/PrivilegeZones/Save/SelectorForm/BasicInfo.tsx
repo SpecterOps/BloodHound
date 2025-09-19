@@ -215,7 +215,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
-                            {tierId && (
+                            {tagType === 'zones' && (
                                 <FormField
                                     control={control}
                                     name='auto_certify'
