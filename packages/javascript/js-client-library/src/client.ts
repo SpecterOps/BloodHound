@@ -844,15 +844,19 @@ class BHEAPIClient {
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
-    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
+    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string, filters?: any) =>
         this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
             Object.assign({
-                params: {
+                params: omitUndefined({
                     skip,
                     limit,
                     sort_by: sortBy,
-                },
+                    status: prefixValue('eq', filters.status),
+                    user_id: prefixValue('eq', filters.user_id),
+                    start_time: prefixValue('gte', filters.start_time),
+                    end_time: prefixValue('lte', filters.end_time),
+                }),
             })
         );
 
@@ -1010,6 +1014,9 @@ class BHEAPIClient {
 
     listUsers = (options?: RequestOptions) =>
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
+
+    listUsersMinimal = (options?: RequestOptions) =>
+        this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users-minimal', options);
 
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
