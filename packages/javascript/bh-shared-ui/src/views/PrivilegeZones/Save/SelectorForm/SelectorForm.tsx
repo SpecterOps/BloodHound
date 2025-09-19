@@ -181,7 +181,10 @@ const SelectorForm: FC = () => {
                 updatedValues: {
                     ...diffedValues,
                     id: parseInt(selectorId),
-                    auto_certify: parseAutoCertifyValue(diffedValues.auto_certify),
+                    auto_certify:
+                        diffedValues.auto_certify !== undefined
+                            ? parseAutoCertifyValue(diffedValues.auto_certify) ?? undefined
+                            : undefined,
                 },
             });
 
