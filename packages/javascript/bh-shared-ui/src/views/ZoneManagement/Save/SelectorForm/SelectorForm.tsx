@@ -25,7 +25,7 @@ import {
     SeedTypeObjectId,
     SeedTypes,
 } from 'js-client-library';
-import { SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
@@ -178,19 +178,21 @@ const SelectorForm: FC = () => {
                 return;
             }
 
-            const { auto_certify, ...updatedValues } = diffedValues;
+            // const { auto_certify, ...updatedValues } = diffedValues;
 
-            const updateSelectorRequest: UpdateSelectorRequest = { ...updatedValues, id: parseInt(selectorId) };
+            // const updatedValuesWithId: UpdateSelectorRequest = { ...updatedValues, id: parseInt(selectorId) };
 
-            if (auto_certify) {
-                updateSelectorRequest.auto_certify = parseAutoCertifyValue(auto_certify);
-            }
+            // if (auto_certify) {
+            //     updatedValuesWithId.auto_certify = parseAutoCertifyValue(auto_certify);
+            // }
 
             await patchSelectorMutation.mutateAsync({
                 tagId,
                 selectorId,
                 updatedValues: {
-                    ...updateSelectorRequest,
+                    ...diffedValues,
+                    id: parseInt(selectorId),
+                    auto_certify: parseAutoCertifyValue(diffedValues.auto_certify),
                 },
             });
 
