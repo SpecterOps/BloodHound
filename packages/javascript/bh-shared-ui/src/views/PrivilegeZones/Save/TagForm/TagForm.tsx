@@ -384,12 +384,9 @@ export const TagForm: FC = () => {
                                                             value={field.value?.toString()}
                                                             data-testid='zone-management_save_tag-form_require_certify-toggle'
                                                             checked={field.value || false}
-                                                            onCheckedChange={field.onChange}>
-                                                            {' '}
-                                                        </Switch>
+                                                            onCheckedChange={field.onChange}></Switch>
                                                     </FormControl>
                                                     <p className='text-sm text-muted-foreground'>
-                                                        {' '}
                                                         Enable this to mandate certification for all members within this
                                                         zone
                                                     </p>
