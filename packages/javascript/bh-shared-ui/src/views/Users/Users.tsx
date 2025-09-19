@@ -121,12 +121,10 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
-                /*
-                environment_control_list: {
-                    environments: user.environment_control_list.environments || [],
-                    all_environments: user.environment_control_list.all_environments,
+                all_environments: user.all_environments,
+                environment_access_control: {
+                    environments: user.environment_access_control.environments || [],
                 },
-                */
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);
