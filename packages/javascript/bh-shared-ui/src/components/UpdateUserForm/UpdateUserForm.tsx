@@ -116,6 +116,8 @@ const UpdateUserForm: React.FC<{
         );
     }
 
+    console.log(getUserQuery.data);
+
     return (
         <UpdateUserFormInner
             initialData={{
@@ -125,12 +127,11 @@ const UpdateUserForm: React.FC<{
                 lastName: getUserQuery.data.last_name || '',
                 SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
                 roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
-                /*
-                environment_control_list: {
-                    environments: getUserQuery.data.environment_control_list.environments || [],
-                    all_environments: getUserQuery.data.environment_control_list.all_environments,
+                all_environments: getUserQuery.data.all_environments,
+                environment_access_control: {
+                    environments:
+                        getUserQuery.data.environment_access_control?.map((environment: any) => environment.id) || [],
                 },
-                */
             }}
             error={error}
             hasSelectedSelf={hasSelectedSelf}
@@ -189,16 +190,24 @@ const UpdateUserFormInner: React.FC<{
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
-    const handleSelectAllChange = (checked: any) => {
-        if (checked) {
-            const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map((item) => item.id);
-            setSelectedEnvironments(returnMappedEnvironments || []);
+    const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
+        if (allEnvironmentsChecked) {
+            const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
+
+            const formatReturnedEnvironments = returnMappedEnvironments?.map((item: string) => ({
+                environment_id: item,
+            }));
+
+            setSelectedEnvironments(returnMappedEnvironments);
+            form.setValue('all_environments', true);
+            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         } else {
             setSelectedEnvironments([]);
+            form.setValue('all_environments', false);
         }
     };
 
-    const handleItemChange = (itemId: any, checked: any) => {
+    const handleEnvironmentSelectChange = (itemId: any, checked: any) => {
         if (checked) {
             setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
         } else {
@@ -206,13 +215,15 @@ const UpdateUserFormInner: React.FC<{
         }
     };
 
-    const isAllSelected =
+    const allEnvironmentsSelected =
         selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
         }
+
+        console.log('Current form values:', form.watch());
 
         if (error) {
             const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
@@ -590,7 +601,7 @@ const UpdateUserFormInner: React.FC<{
                     </Card>
                     {showEnvironmentAccessControls && selectedRole && (
                         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
-                            <DialogTitle>Environmental Access Control</DialogTitle>
+                            <DialogTitle>Environment Access Control</DialogTitle>
                             <div
                                 className='flex flex-col h-full pb-6'
                                 data-testid='create-user-dialog_environments-checkboxes-dialog'>
@@ -612,15 +623,14 @@ const UpdateUserFormInner: React.FC<{
                                         className='flex flex-row ml-4 mt-6 mb-2 items-center'
                                         data-testid='create-user-dialog_all-environments-checkbox'>
                                         <FormField
-                                            name='allEnvironments'
-                                            //control={form.control} // TODO: uncomment when form controls available via api
-                                            defaultValue={false}
+                                            name='all_environments'
+                                            control={form.control}
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
-                                                        checked={isAllSelected}
+                                                        checked={allEnvironmentsSelected}
                                                         id='allEnvironments'
-                                                        onCheckedChange={handleSelectAllChange} // environment_control_list.all_environments
+                                                        onCheckedChange={handleSelectAllEnvironmentsChange}
                                                     />
                                                     <FormLabel
                                                         className='ml-3 w-full cursor-pointer font-medium !text-sm'
@@ -641,19 +651,21 @@ const UpdateUserFormInner: React.FC<{
                                                         className='flex justify-start items-center ml-5'
                                                         data-testid='create-user-dialog_environments-checkbox'>
                                                         <FormField
-                                                            name='environments'
-                                                            //control={form.control} // TODO: uncomment when form controls available via api
-                                                            defaultValue={false}
+                                                            name='environment_access_control.environments'
+                                                            control={form.control}
                                                             render={() => (
                                                                 <FormItem className='flex flex-row items-center'>
                                                                     <Checkbox
                                                                         checked={selectedEnvironments.includes(item.id)}
                                                                         className='m-2'
                                                                         id='environments'
-                                                                        onCheckedChange={
-                                                                            (checked) =>
-                                                                                handleItemChange(item.id, checked) // environment_control_list.environments
+                                                                        onCheckedChange={(checked) =>
+                                                                            handleEnvironmentSelectChange(
+                                                                                item.id,
+                                                                                checked
+                                                                            )
                                                                         }
+                                                                        value={item.name}
                                                                     />
                                                                     <FormLabel
                                                                         className=' w-full cursor-pointer ml-3 w-full cursor-pointer font-medium !text-sm'
