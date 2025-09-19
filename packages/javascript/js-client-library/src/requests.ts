@@ -234,6 +234,10 @@ export interface ClearDatabaseRequest {
     deleteSourceKinds: number[];
 }
 
+export interface EnvironmentRequest {
+    environment_id: string;
+}
+
 export interface UpdateUserRequest {
     firstName: string;
     lastName: string;
@@ -242,9 +246,9 @@ export interface UpdateUserRequest {
     roles: number[];
     SSOProviderId?: number;
     is_disabled?: boolean;
-    environment_control_list?: {
-        environments?: string[];
-        all_environments?: boolean;
+    all_environments?: boolean;
+    environment_access_control?: {
+        environments?: EnvironmentRequest[];
     };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
