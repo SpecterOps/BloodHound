@@ -59,9 +59,9 @@ const getRow = (job: FileIngestJob) => {
 export const FileIngestTable: FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [_filters, setFilters] = useState({});
+    const [filters, setFilters] = useState({});
 
-    const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage });
+    const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage, filters });
 
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
@@ -73,10 +73,15 @@ export const FileIngestTable: FC = () => {
 
     const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
 
+    const handleOnConfirm = (filters: any) => {
+        setFilters(filters);
+        setPage(0);
+    };
+
     return (
         <>
             <div className='w-full flex justify-end gap-2 my-4'>
-                <FileIngestFilterDialog onConfirm={setFilters} />
+                <FileIngestFilterDialog onConfirm={handleOnConfirm} />
                 <Button
                     onClick={() => toggleFileUploadDialog()}
                     data-testid='file-ingest_button-upload-files'
