@@ -24,6 +24,7 @@ import {
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
+import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { act, render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
@@ -87,7 +88,7 @@ describe('DynamicDetails', () => {
             isError: false,
             isSuccess: true,
             data: {
-                requireCertify: true,
+                require_certify: true,
                 created_at: '2024-09-08T03:38:22.791Z',
                 created_by: 'Franz.Smitham@yahoo.com',
                 deleted_at: '2025-02-03T18:32:36.669Z',
@@ -121,7 +122,7 @@ describe('DynamicDetails', () => {
             data: {
                 asset_group_tag_id: 9,
                 allow_disable: false,
-                auto_certify: true,
+                auto_certify: 1,
                 created_at: '2025-02-12T16:24:18.633Z',
                 created_by: 'Emery_Swift86@gmail.com',
                 description: 'North',
@@ -134,15 +135,18 @@ describe('DynamicDetails', () => {
                 updated_at: '2024-11-25T11:34:45.894Z',
                 updated_by: 'Demario_Corwin88@yahoo.com',
             },
-        } as unknown as UseQueryResult<AssetGroupTag | undefined>;
+        } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
-        render(<DynamicDetails queryResult={testSelector} />);
+        render(<DynamicDetails queryResult={testSelector} />, {
+            route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
+        });
 
         expect(screen.getByText('tier-0-selector-9')).toBeInTheDocument();
         expect(screen.getByText('North')).toBeInTheDocument();
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
         expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Cypher')).toBeInTheDocument();
+        expect(screen.getByText('Automatic Certification:')).toBeInTheDocument();
     });
 
     it('renders details for a selected selector and is of type "Object"', () => {
@@ -154,7 +158,7 @@ describe('DynamicDetails', () => {
                 asset_group_tag_id: 9,
                 allow_disable: false,
                 id: 1,
-                auto_certify: true,
+                auto_certify: 2,
                 seeds: [{ type: SeedTypeObjectId, value: '1', selector_id: 1 }],
                 created_at: '2025-02-12T16:24:18.633Z',
                 created_by: 'Emery_Swift86@gmail.com',
@@ -168,12 +172,15 @@ describe('DynamicDetails', () => {
             },
         } as unknown as UseQueryResult<AssetGroupTagSelector | undefined>;
 
-        render(<DynamicDetails queryResult={testSelectorSeedTypeObjectID} />);
+        render(<DynamicDetails queryResult={testSelectorSeedTypeObjectID} />, {
+            route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`,
+        });
 
         expect(screen.getByText('tier-0-selector-9')).toBeInTheDocument();
         expect(screen.getByText('North')).toBeInTheDocument();
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
         expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Object ID')).toBeInTheDocument();
+        expect(screen.getByText('Automatic Certification:')).toBeInTheDocument();
     });
 });

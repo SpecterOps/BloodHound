@@ -15,13 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Form, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelector, GraphNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyAllMembers,
+    AssetGroupTagSelectorAutoCertifyDisabled,
+    AssetGroupTagSelectorAutoCertifySeedsOnly,
+    AssetGroupTagSelectorAutoCertifyType,
+    GraphNode,
+    SeedTypeObjectId,
+    SeedTypes,
+} from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
 import { usePZPathParams } from '../../../../hooks';
 import { useCreateSelector, usePatchSelector, useSelectorInfo } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
@@ -47,6 +55,7 @@ const diffValues = (
 
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+    if (data.auto_certify.toString() != workingCopy.auto_certify) diffed.auto_certify = workingCopy.auto_certify;
     if (workingCopy.disabled !== disabled) diffed.disabled = workingCopy.disabled;
     if (!isEqual(workingCopy.seeds, data.seeds)) diffed.seeds = workingCopy.seeds;
 
@@ -66,6 +75,19 @@ const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => 
     return true;
 };
 
+const parseAutoCertifyValue = (stringValue: string | undefined): AssetGroupTagSelectorAutoCertifyType | null => {
+    switch (stringValue) {
+        case AssetGroupTagSelectorAutoCertifyDisabled.toString():
+            return AssetGroupTagSelectorAutoCertifyDisabled;
+        case AssetGroupTagSelectorAutoCertifySeedsOnly.toString():
+            return AssetGroupTagSelectorAutoCertifySeedsOnly;
+        case AssetGroupTagSelectorAutoCertifyAllMembers.toString():
+            return AssetGroupTagSelectorAutoCertifyAllMembers;
+        default:
+            return null;
+    }
+};
+
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
@@ -73,12 +95,14 @@ type SelectorFormState = {
     selectorType: SeedTypes;
     seeds: SelectorSeedRequest[];
     selectedObjects: AssetGroupSelectedNodes;
+    autoCertify: AssetGroupTagSelectorAutoCertifyType;
 };
 
 const initialState: SelectorFormState = {
     selectorType: SeedTypeObjectId,
     seeds: [],
     selectedObjects: [],
+    autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
 };
 
 export type Action =
@@ -121,11 +145,12 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
-    const location = useLocation();
     const { tagId, selectorId = '', tagType } = usePZPathParams();
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
-    const [{ selectorType, seeds, selectedObjects }, dispatch] = useReducer(reducer, initialState);
+
+    const [{ selectorType, seeds, selectedObjects, autoCertify }, dispatch] = useReducer(reducer, initialState);
+
     const selectorQuery = useSelectorInfo(tagId, selectorId);
     const form = useForm<SelectorFormInputs>();
     const patchSelectorMutation = usePatchSelector(tagId);
@@ -148,11 +173,17 @@ const SelectorForm: FC = () => {
                 );
                 return;
             }
-
             await patchSelectorMutation.mutateAsync({
                 tagId,
                 selectorId,
-                updatedValues: { ...diffedValues, id: parseInt(selectorId) },
+                updatedValues: {
+                    ...diffedValues,
+                    id: parseInt(selectorId),
+                    auto_certify:
+                        diffedValues.auto_certify !== undefined
+                            ? parseAutoCertifyValue(diffedValues.auto_certify) ?? undefined
+                            : undefined,
+                },
             });
 
             addNotification(
@@ -173,7 +204,13 @@ const SelectorForm: FC = () => {
         try {
             if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
-            await createSelectorMutation.mutateAsync({ tagId, values: { ...form.getValues(), seeds } });
+            const values = {
+                ...form.getValues(),
+                auto_certify: parseAutoCertifyValue(form.getValues().auto_certify),
+                seeds,
+            };
+
+            await createSelectorMutation.mutateAsync({ tagId, values });
 
             addNotification('Selector was created successfully!', undefined, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -183,7 +220,7 @@ const SelectorForm: FC = () => {
         } catch (error) {
             handleError(error, 'creating', 'selector', addNotification);
         }
-    }, [tagId, navigate, createSelectorMutation, addNotification, location, form, seeds]);
+    }, [tagId, form, seeds, createSelectorMutation, addNotification, navigate, tagType]);
 
     const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(() => {
         if (selectorId !== '') {
@@ -197,8 +234,14 @@ const SelectorForm: FC = () => {
         const abortController = new AbortController();
 
         if (selectorQuery.data) {
-            const { name, description, seeds } = selectorQuery.data;
-            form.reset({ name, description, seeds, disabled: !selectorStatus(selectorId, selectorQuery.data) });
+            const { name, description, auto_certify, seeds } = selectorQuery.data;
+            form.reset({
+                name,
+                description,
+                auto_certify: auto_certify.toString(),
+                seeds,
+                disabled: !selectorStatus(selectorId, selectorQuery.data),
+            });
 
             const seedsToSelectedObjects = async () => {
                 const nodesByObjectId = new Map<string, GraphNode>();
@@ -246,7 +289,8 @@ const SelectorForm: FC = () => {
     if (selectorQuery.isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
-        <SelectorFormContext.Provider value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery }}>
+        <SelectorFormContext.Provider
+            value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery, autoCertify }}>
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
