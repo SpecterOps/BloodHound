@@ -26,7 +26,7 @@ import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
@@ -62,6 +62,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const tagId = labelId === undefined ? zoneId : labelId;
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
+    const { isZonePage } = usePZPathParams();
 
     return (
         <div
@@ -86,9 +87,11 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                <div className='mt-4'>
-                    <DetailField label='Certification' value={data.require_certify ? 'Required' : 'Not Required'} />
-                </div>
+                {isZonePage && (
+                    <div className='mt-4'>
+                        <DetailField label='Certification' value={data.require_certify ? 'Required' : 'Not Required'} />
+                    </div>
+                )}
             </Card>
             {tagId !== topTagId?.toString() && tagId !== ownedId?.toString() && SalesMessage && <SalesMessage />}
             <ObjectCountPanel tagId={data.id.toString()} />
@@ -99,6 +102,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
 const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
     const seedType = getSelectorSeedType(data);
+    const { isZonePage } = usePZPathParams();
 
     return (
         <div
@@ -118,12 +122,15 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                <div className='mt-4'>
-                    <DetailField
-                        label='Automatic Certification'
-                        value={AssetGroupTagSelectorAutoCertifyMap[data.auto_certify] ?? 'Off'}
-                    />
-                </div>
+                {isZonePage && (
+                    <div className='mt-4'>
+                        <DetailField
+                            label='Automatic Certification'
+                            value={AssetGroupTagSelectorAutoCertifyMap[data.auto_certify] ?? 'Off'}
+                        />
+                    </div>
+                )}
+
                 <div className='mt-4'>
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
                     <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />

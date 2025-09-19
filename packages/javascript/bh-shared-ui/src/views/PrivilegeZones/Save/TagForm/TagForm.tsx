@@ -130,7 +130,7 @@ export const TagForm: FC = () => {
                 const requestValues = {
                     name: formData.name,
                     description: formData.description,
-                    require_certify: formData.require_certify,
+                    require_certify: isZonePage ? formData.require_certify : null,
                     position: null,
                     type: isLabelPage ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
                 };
