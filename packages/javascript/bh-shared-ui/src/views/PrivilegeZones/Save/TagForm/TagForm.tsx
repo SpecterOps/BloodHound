@@ -164,6 +164,7 @@ export const TagForm: FC = () => {
             const updatedValues = { ...diffedValues };
 
             if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+            if (isLabelPage) delete updatedValues.require_certify;
 
             await updateTagMutation.mutateAsync({
                 updatedValues,
