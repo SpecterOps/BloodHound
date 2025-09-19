@@ -17,23 +17,17 @@
 import type { ListFileIngestJobsResponse } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { FileIngestFilterParams } from '../../components/FileIngestTable/FileIngestFilterDialog';
 import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
-import { Permission, apiClient } from '../../utils';
+import {
+    FILE_INGEST_FETCH_ERROR_KEY,
+    FILE_INGEST_FETCH_ERROR_MESSAGE,
+    FILE_INGEST_NO_PERMISSION_KEY,
+    FILE_INGEST_NO_PERMISSION_MESSAGE,
+    FileUploadParams,
+    Permission,
+    apiClient,
+} from '../../utils';
 import { usePermissions } from '../usePermissions';
-
-interface FileUploadParams {
-    filters?: FileIngestFilterParams;
-    page: number;
-    rowsPerPage: number;
-}
-
-const NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the file ingest jobs details. Please
-    contact your administrator for details.`;
-const NO_PERMISSION_KEY = 'file-upload-permission';
-
-const FETCH_ERROR_MESSAGE = 'Unable to fetch file upload jobs. Please try again.';
-const FETCH_ERROR_KEY = 'file-upload-error';
 
 /** Makes a paginated request for File Upload Jobs, returned as a TanStack Query */
 export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploadParams) => {
@@ -44,16 +38,16 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploa
 
     useEffect(() => {
         if (!hasPermission) {
-            addNotification(NO_PERMISSION_MESSAGE, NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
+            addNotification(FILE_INGEST_NO_PERMISSION_MESSAGE, FILE_INGEST_NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
         }
 
-        return () => dismissNotification(NO_PERMISSION_KEY);
+        return () => dismissNotification(FILE_INGEST_NO_PERMISSION_KEY);
     }, [addNotification, dismissNotification, hasPermission]);
 
     return useQuery<ListFileIngestJobsResponse>({
         enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
-        onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
+        onError: () => addNotification(FILE_INGEST_FETCH_ERROR_MESSAGE, FILE_INGEST_FETCH_ERROR_KEY),
         queryFn: () =>
             apiClient.listFileIngestJobs(rowsPerPage * page, rowsPerPage, '-id', filters).then((res) => res.data),
         queryKey: ['file-uploads', { ...filters, page, rowsPerPage }],
