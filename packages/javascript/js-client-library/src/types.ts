@@ -273,6 +273,10 @@ export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
 
+export interface EnvironmentId {
+    environment_id: string;
+}
+
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -287,12 +291,10 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
-    /*
-    environment_control_list?: {
-        environments?: string[];
-        all_environments?: boolean;
+    all_environments?: boolean;
+    environment_access_control: {
+        environments?: EnvironmentId[];
     };
-    */
 }
 
 export interface UserMinimal {
