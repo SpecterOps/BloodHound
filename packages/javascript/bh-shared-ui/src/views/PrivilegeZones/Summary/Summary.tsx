@@ -48,23 +48,8 @@ const Summary: FC = () => {
     return (
         <div className='h-full'>
             <div className='flex mt-6 gap-8'>
-                <InfoHeader />
-                <div className='basis-1/3'>
-                    {saveLink ? (
-                        <Button asChild variant={'secondary'}>
-                            <AppLink data-testid='privilege-zones_edit-button' to={saveLink}>
-                                Edit
-                            </AppLink>
-                        </Button>
-                    ) : (
-                        <Button variant={'secondary'} disabled>
-                            Edit
-                        </Button>
-                    )}
-                </div>
-            </div>
-            <div className='flex gap-8 mt-4 w-full h-full'>
-                <div className='basis-2/3'>
+                <div className='flex flex-col gap-4 basis-2/3'>
+                    <InfoHeader />
                     <SummaryList
                         title={tagTypeDisplayPlural}
                         listQuery={tagsQuery}
@@ -72,7 +57,18 @@ const Summary: FC = () => {
                         onSelect={(tagId) => navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${summaryPath}`)}
                     />
                 </div>
-                <div className='basis-1/3'>
+                <div className='flex flex-col gap-4 basis-1/3'>
+                    {saveLink ? (
+                        <Button asChild variant={'secondary'}>
+                            <AppLink className='w-[4.5rem]' data-testid='privilege-zones_edit-button' to={saveLink}>
+                                Edit
+                            </AppLink>
+                        </Button>
+                    ) : (
+                        <Button variant={'secondary'} className='w-[4.5rem]' disabled>
+                            Edit
+                        </Button>
+                    )}
                     <SelectedDetails />
                 </div>
             </div>

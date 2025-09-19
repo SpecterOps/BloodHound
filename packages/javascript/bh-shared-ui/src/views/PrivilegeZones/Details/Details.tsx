@@ -122,7 +122,6 @@ const Details: FC = () => {
                     {InfoHeader && <InfoHeader />}
                     <SearchBar />
                 </div>
-
                 <div className='basis-1/3 ml-8'>
                     {showEditButton && (
                         <Button
