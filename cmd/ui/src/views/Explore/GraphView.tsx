@@ -50,7 +50,7 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
-import ContextMenuZoneManagementEnabled from './ContextMenu/ContextMenuZoneManagementEnabled';
+import ContextMenuPrivilegeZonesEnabled from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
@@ -210,7 +210,7 @@ const GraphView: FC = () => {
             <FeatureFlag
                 flagKey='tier_management_engine'
                 enabled={
-                    <ContextMenuZoneManagementEnabled
+                    <ContextMenuPrivilegeZonesEnabled
                         contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
                         onClose={handleCloseContextMenu}
                     />
