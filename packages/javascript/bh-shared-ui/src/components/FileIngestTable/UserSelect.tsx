@@ -7,31 +7,39 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@bloodhoundenterprise/doodleui';
+import { User } from 'js-client-library';
 import type { FC } from 'react';
+import { useQuery } from 'react-query';
+import { apiClient } from '../../utils';
 
 type Props = {
-    client?: string;
+    user?: string;
     onSelect: (value: string) => void;
 };
 
-export const UserSelect: FC<Props> = ({ client = '', onSelect }) => {
-    const clients = { data: [{ id: 'test', name: 'test' }] };
+export const UserSelect: FC<Props> = ({ user = '', onSelect }) => {
+    const { data: users } = useQuery({
+        queryKey: ['users-minimal'],
+        queryFn: ({ signal }) => apiClient.listUsersMinimal({ signal }).then((res) => res.data),
+        select: (data) => data.data.users,
+    });
+
     return (
         <div className='flex flex-col gap-2'>
             <Label>Users</Label>
 
-            <Select onValueChange={onSelect} value={client}>
+            <Select onValueChange={onSelect} value={user}>
                 <SelectTrigger className='w-32' aria-label='Client Select'>
                     <SelectValue placeholder='Select' />
                 </SelectTrigger>
                 <SelectPortal>
                     <SelectContent>
-                        <SelectItem className='italic' key='client-unselect' value='-none-'>
+                        <SelectItem className='italic' key='user-unselect' value='-none-'>
                             None
                         </SelectItem>
-                        {clients?.data.map((item) => (
-                            <SelectItem key={`client-${item.id}`} value={item.id}>
-                                {item.name}
+                        {users?.map((item: User) => (
+                            <SelectItem key={`user-${item.id}`} value={item.id}>
+                                {item.email_address}
                             </SelectItem>
                         ))}
                     </SelectContent>
