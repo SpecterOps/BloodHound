@@ -62,7 +62,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('usePZQueryParams', () => {
-    it('returns an object with values for assetGroupTagId, params, and setZoneQueryParams', () => {
+    it('returns an object with values for assetGroupTagId, params, and setPZQueryParams', () => {
         const urlSearchParams = new URLSearchParams();
         urlSearchParams.append('assetGroupTagId', '1');
         vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
@@ -71,7 +71,7 @@ describe('usePZQueryParams', () => {
 
         expect(result.current).toHaveProperty('assetGroupTagId');
         expect(result.current).toHaveProperty('params');
-        expect(result.current).toHaveProperty('setZoneQueryParams');
+        expect(result.current).toHaveProperty('setPZQueryParams');
     });
 
     test('the ID value reflects the URL when it is available', () => {
