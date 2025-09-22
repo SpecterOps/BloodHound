@@ -19,11 +19,10 @@ import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { itemSkeletons } from '../../../views';
-
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, usePZPathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
+import { itemSkeletons } from '../utils';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
