@@ -20,6 +20,7 @@ import {
     DialogActions,
     DialogContent,
     DialogDescription,
+    DialogOverlay,
     DialogPortal,
     DialogTitle,
     Input,
@@ -65,8 +66,8 @@ const ConfirmationDialog: React.FC<{
                  *   should have priority over all other modals seems like a reasonable solution.
                  *   When we remove all MUI dialogs down the road, we may want a prettier solution.
                  */}
-
-                <DialogContent allowNav>
+                <DialogOverlay className='z-[1300]' />
+                <DialogContent className='z-[1400]'>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
