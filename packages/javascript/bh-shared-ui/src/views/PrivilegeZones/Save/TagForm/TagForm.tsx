@@ -119,9 +119,9 @@ export const TagForm: FC = () => {
         defaultValues: {
             name: '',
             description: '',
+            position: -1,
             require_certify: false,
             analysis_enabled: false,
-            position: -1,
             glyph: '',
         },
     });
@@ -235,11 +235,12 @@ export const TagForm: FC = () => {
     );
 
     const handleDeleteCancel = useCallback(() => setDeleteDialogOpen(false), []);
+
     const handleGlyphCancel = useCallback(() => setGlyphDialogOpen(false), []);
     const handleGlyphSelect = useCallback(
         (iconName?: IconName) => {
             if (iconName) form.setValue('glyph', iconName, { shouldDirty: true });
-            else form.setValue('glyph', undefined, { shouldDirty: true });
+            else form.setValue('glyph', '', { shouldDirty: true });
 
             setGlyphDialogOpen(false);
         },
@@ -254,7 +255,7 @@ export const TagForm: FC = () => {
                 position: tagQuery.data.position,
                 require_certify: tagQuery.data.require_certify || false,
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
-                glyph: tagQuery.data.glyph || undefined,
+                glyph: tagQuery.data.glyph === null ? '' : tagQuery.data.glyph,
             });
         }
     }, [tagQuery.data, reset]);
@@ -474,22 +475,29 @@ export const TagForm: FC = () => {
                                                         {...field}
                                                     />
                                                 </FormControl>
-                                                <div className='w-full flex justify-between'>
-                                                    <div className='flex flex-col items-start'>
-                                                        <span>
-                                                            <span className='font-medium'>Selected Glyph Icon: </span>
-                                                            {glyph ? (
-                                                                <FontAwesomeIcon icon={glyph as IconName} />
-                                                            ) : (
-                                                                'None Selected'
-                                                            )}
-                                                        </span>
-                                                        <span>
-                                                            <span className='font-medium'>Selected Glyph Name: </span>
-                                                            <span className={clsx(glyph && 'italic')}>
+                                                <div className='w-full flex items-end justify-between'>
+                                                    <div className='flex gap-4 text-sm'>
+                                                        <div>
+                                                            <p className='font-medium'>Selected Glyph:</p>
+                                                            <p className={clsx(glyph && 'italic')}>
                                                                 {glyph || 'None Selected'}
-                                                            </span>
-                                                        </span>
+                                                            </p>
+                                                        </div>
+
+                                                        <Card
+                                                            className={clsx([
+                                                                'flex items-center justify-center size-12',
+                                                                !glyph && 'invisible',
+                                                            ])}>
+                                                            <CardContent className='dark:bg-neutral-4 rounded-sm'>
+                                                                {glyph && (
+                                                                    <FontAwesomeIcon
+                                                                        icon={glyph as IconName}
+                                                                        size='lg'
+                                                                    />
+                                                                )}
+                                                            </CardContent>
+                                                        </Card>
                                                     </div>
                                                     <Button
                                                         onClick={() => {

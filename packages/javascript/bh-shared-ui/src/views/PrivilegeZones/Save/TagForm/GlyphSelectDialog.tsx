@@ -25,11 +25,12 @@ import {
     DialogPortal,
     DialogTitle,
     Input,
+    Tooltip,
 } from '@bloodhoundenterprise/doodleui';
 import { IconName, faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { AppIcon } from '../../../../components';
 import { freeIconsList } from '../../../../utils';
@@ -38,23 +39,21 @@ const InnerElement = ({ style, ...rest }: any) => (
     <ul style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest}></ul>
 );
 
-const IconCard: FC<{ iconName: IconName; onClick: (iconName: IconName) => void }> = ({ iconName, onClick }) => {
-    return (
-        <Button
-            variant={'text'}
-            className={clsx(['relative', !iconName && 'invisible'])}
-            onClick={() => {
-                onClick(iconName);
-            }}>
-            <Card className='flex items-center justify-center h-24 w-24'>
-                <CardContent className='first:pt-0'>
-                    {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
-                </CardContent>
-            </Card>
-            <p className='absolute -bottom-16'>{iconName}</p>
-        </Button>
-    );
-};
+const IconCard: FC<{ iconName: IconName; onClick: (iconName: IconName) => void }> = ({ iconName, onClick }) => (
+    <Button
+        variant={'text'}
+        className={clsx(['relative', !iconName && 'invisible'])}
+        onClick={() => {
+            onClick(iconName);
+        }}>
+        <Card className='flex items-center justify-center h-24 w-24'>
+            <CardContent className='first:pt-0'>
+                {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
+            </CardContent>
+        </Card>
+        <p className='absolute -bottom-16'>{iconName}</p>
+    </Button>
+);
 
 const Row = ({
     data,
@@ -99,22 +98,31 @@ const GlyphSelectDialog: React.FC<{
     selected: IconName | undefined;
     onCancel: () => void;
     onSelect: (selectedGlyph?: IconName) => void;
-    tagName?: string;
 }> = ({ open, onCancel, onSelect, selected }) => {
-    const [query, setQuery] = useState('');
     const [selectedIcon, setSelectedIcon] = useState<IconName | undefined>(selected);
+    const [query, setQuery] = useState('');
 
-    const handleConfirm = () => onSelect(selectedIcon);
+    const handleChange: React.ChangeEventHandler<HTMLInputElement> | undefined = (e) =>
+        setQuery(e.target.value.toLowerCase());
+    const handleConfirm = () => {
+        onSelect(selectedIcon);
+        setQuery('');
+    };
     const handleClear = () => setSelectedIcon(undefined);
     const handleCancel = () => {
         setSelectedIcon(selected);
+        setQuery('');
         onCancel();
     };
+
+    useEffect(() => {
+        setSelectedIcon(selected);
+    }, [selected]);
 
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                <DialogContent className='z-[1400]' maxWidth='lg'>
+                <DialogContent maxWidth='lg'>
                     <DialogTitle className='text-lg'>Select a Glyph</DialogTitle>
                     <DialogDescription className='text-lg'>
                         The selected glyph will apply to all nodes tagged in this Zone for displaying in the Explore
@@ -128,24 +136,29 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
-                                    <Button variant={'text'} onClick={handleClear}>
-                                        <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
-                                            <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
-                                            <CardContent className='first:pt-0 p-0'>
-                                                <FontAwesomeIcon icon={selectedIcon} size='2xl' />
-                                            </CardContent>
-                                        </Card>
-                                    </Button>
+                                    <Tooltip
+                                        tooltip={'Clear selection'}
+                                        contentProps={{
+                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                        }}>
+                                        <Button
+                                            variant={'text'}
+                                            onClick={handleClear}
+                                            aria-describedby='Clear selection'>
+                                            <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
+                                                <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
+                                                <CardContent className='first:pt-0 p-0'>
+                                                    <FontAwesomeIcon icon={selectedIcon} size='2xl' />
+                                                </CardContent>
+                                            </Card>
+                                        </Button>
+                                    </Tooltip>
                                 )}
                             </div>
 
                             <span className='flex items-center w-64 self-end'>
                                 <AppIcon.MagnifyingGlass className='-mr-4' />
-                                <Input
-                                    placeholder='Search'
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    className='pl-8'
-                                />
+                                <Input placeholder='Search' onChange={handleChange} autoFocus className='pl-8' />
                             </span>
                         </div>
 
