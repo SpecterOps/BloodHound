@@ -16,7 +16,7 @@
 
 import { ConfigurationKey } from 'js-client-library';
 import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
-import * as tierMocks from '../factories/zoneManagement';
+import * as tierMocks from '../factories/privilegeZones';
 
 const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
