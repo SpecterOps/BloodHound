@@ -54,6 +54,20 @@ const mockCertificationData: AssetGroupTagsCertification = {
     skip: 0,
 };
 
+//@ts-ignore
+useInfiniteQuerySpy.mockReturnValue({
+    data: {
+        pages: [mockCertificationData],
+        pageParams: [],
+    },
+    fetchNextPage: vi.fn(),
+    isLoading: false,
+    isFetching: false,
+    isSuccess: true,
+    isError: false,
+    refetch: vi.fn(),
+});
+
 const addNotificationMock = vi.fn();
 
 vi.mock('../../../providers', async () => {
@@ -75,26 +89,11 @@ const server = setupServer(
 const user = userEvent.setup();
 
 beforeAll(() => server.listen());
-afterEach(() => {
-    server.resetHandlers();
-});
+afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Certification', () => {
     it('submits the selected items for certification with a note', async () => {
-        //@ts-ignore
-        useInfiniteQuerySpy.mockReturnValue({
-            data: {
-                pages: [mockCertificationData],
-                pageParams: [],
-            },
-            fetchNextPage: vi.fn(),
-            isLoading: false,
-            isFetching: false,
-            isSuccess: true,
-            isError: false,
-            refetch: vi.fn(),
-        });
         const { container } = render(<Certification></Certification>);
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
@@ -130,19 +129,6 @@ describe('Certification', () => {
         );
     });
     it('submits the selected items for certification without a note', async () => {
-        //@ts-ignore
-        useInfiniteQuerySpy.mockReturnValue({
-            data: {
-                pages: [mockCertificationData],
-                pageParams: [],
-            },
-            fetchNextPage: vi.fn(),
-            isLoading: false,
-            isFetching: false,
-            isSuccess: true,
-            isError: false,
-            refetch: vi.fn(),
-        });
         render(<Certification></Certification>);
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
@@ -173,20 +159,6 @@ describe('Certification', () => {
         );
     });
     it('submits the selected items for revocation', async () => {
-        //@ts-ignore
-        useInfiniteQuerySpy.mockReturnValue({
-            data: {
-                pages: [mockCertificationData],
-                pageParams: [],
-            },
-            fetchNextPage: vi.fn(),
-            isLoading: false,
-            isFetching: false,
-            isSuccess: true,
-            isError: false,
-            refetch: vi.fn(),
-        });
-
         render(<Certification></Certification>);
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
@@ -217,19 +189,6 @@ describe('Certification', () => {
         );
     });
     it('does not call the API if no items are selected', async () => {
-        //@ts-ignore
-        useInfiniteQuerySpy.mockReturnValue({
-            data: {
-                pages: [mockCertificationData],
-                pageParams: [],
-            },
-            fetchNextPage: vi.fn(),
-            isLoading: false,
-            isFetching: false,
-            isSuccess: true,
-            isError: false,
-            refetch: vi.fn(),
-        });
         const { container } = render(<Certification></Certification>);
 
         const certifyButton = await screen.findByText('Certify');
@@ -262,20 +221,6 @@ describe('Certification', () => {
                 return res(ctx.status(500));
             })
         );
-
-        //@ts-ignore
-        useInfiniteQuerySpy.mockReturnValue({
-            data: {
-                pages: [mockCertificationData],
-                pageParams: [],
-            },
-            fetchNextPage: vi.fn(),
-            isLoading: false,
-            isFetching: false,
-            isSuccess: true,
-            isError: false,
-            refetch: vi.fn(),
-        });
 
         render(<Certification></Certification>);
 
