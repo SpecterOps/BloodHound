@@ -55,16 +55,6 @@ const ConfirmationDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                {/*
-                 *   Sometimes we have a confirmation modal launching over a primary modal
-                 *   (As in UpdateAzurehoundClientDialog -> delete schedule)
-                 *   However, the outer modal is MUI, whose z-index is 1300,
-                 *   While the second ConfirmationModal is Doodle, which uses tailwind z-50.
-                 *   Therefore, the second, more urgent modal, is hidden behind the primary modal.
-                 *   For now, overriding the styles on the confirmation modal and assuming it
-                 *   should have priority over all other modals seems like a reasonable solution.
-                 *   When we remove all MUI dialogs down the road, we may want a prettier solution.
-                 */}
                 <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
