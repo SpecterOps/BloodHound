@@ -112,6 +112,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
             header: () => (
                 <div className='pl-8'>
                     <input
+                        data-testid='certification-table-select-all'
                         type='checkbox'
                         checked={allSelected}
                         ref={(el) => {
@@ -125,6 +126,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                 <div className='pl-8'>
                     <input
                         type='checkbox'
+                        data-testid={`certification-table-row-${info.row.original.id}`}
                         checked={selectedRows.includes(info.row.original.id)}
                         onChange={(event) => toggleRow(event.target.checked, info.row.original.id)}
                     />

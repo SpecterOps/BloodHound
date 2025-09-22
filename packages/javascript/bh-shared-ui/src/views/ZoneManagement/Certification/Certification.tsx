@@ -154,6 +154,8 @@ const Certification: FC = () => {
         [addNotification, certifyAction, certifyMutation, selectedRows]
     );
 
+    console.log('DATA!', data);
+
     return (
         <>
             <div className='flex gap-8 mt-4'>
