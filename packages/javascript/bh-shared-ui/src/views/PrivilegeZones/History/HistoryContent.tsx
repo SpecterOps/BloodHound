@@ -22,10 +22,10 @@ import { useInfiniteQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
-import { apiClient } from '../../../utils';
 import { DEFAULT_FILTER_VALUE, FilterDialog, type AssetGroupTagHistoryFilters } from './FilterDialog';
 import HistoryNotes from './HistoryNotes';
 import { useHistoryTableContext } from './HistoryTableContext';
+import { apiClient } from '../../../utils';
 
 const BASE_COLUMNS = [
     {
@@ -137,9 +137,9 @@ const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilters, quer
 
             const result = await (doSearch
                 ? apiClient.searchAssetGroupTagHistory({
-                      ...args,
-                      query,
-                  })
+                    ...args,
+                    query,
+                })
                 : apiClient.getAssetGroupTagHistory(args));
 
             return result.data;
@@ -221,14 +221,14 @@ const HistoryContent = () => {
 
     const historyItems = isSuccess
         ? historyItemsRaw.map((item) => {
-              const tagName = tags?.find((tag) => tag.id === item.asset_group_tag_id)?.name;
+            const tagName = tags?.find((tag) => tag.id === item.asset_group_tag_id)?.name;
 
-              return {
-                  ...item,
-                  tagName,
-                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
-              };
-          })
+            return {
+                ...item,
+                tagName,
+                date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+            };
+        })
         : [];
 
     type DataTableProps = React.ComponentProps<typeof DataTable>;
