@@ -461,6 +461,8 @@ export const TagForm: FC = () => {
                                                         }
                                                         contentProps={{
                                                             className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                            side: 'right',
+                                                            align: 'end',
                                                         }}>
                                                         <span>
                                                             <AppIcon.Info />
