@@ -91,7 +91,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button data-testid='finished_jobs_log-open_filter_dialog' variant='icon'>
+                <Button data-testid='file_ingest_log-open_filter_dialog' variant='icon'>
                     <AppIcon.FilterOutline size={22} />
                 </Button>
             </DialogTrigger>
@@ -137,7 +137,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <DialogClose asChild>
                             <Button
                                 className='pr-0'
-                                data-testid='finished_jobs_log-filter_dialog_close'
+                                data-testid='file_ingest_log-filter_dialog_close'
                                 type='button'
                                 variant='text'>
                                 Cancel
@@ -146,7 +146,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <DialogClose asChild>
                             <Button
                                 className='text-primary'
-                                data-testid='finished_jobs_log-filter_dialog_confirm'
+                                data-testid='file_ingest_log-filter_dialog_confirm'
                                 disabled={isConfirmDisabled}
                                 onClick={updateAndConfirm}
                                 type='submit'
