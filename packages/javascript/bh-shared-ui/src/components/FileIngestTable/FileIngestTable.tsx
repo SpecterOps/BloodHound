@@ -81,13 +81,13 @@ export const FileIngestTable: FC = () => {
     return (
         <>
             <div className='w-full flex justify-end gap-2 my-4'>
-                <FileIngestFilterDialog onConfirm={handleOnConfirm} />
                 <Button
                     onClick={() => toggleFileUploadDialog()}
                     data-testid='file-ingest_button-upload-files'
                     disabled={!hasPermission}>
                     Upload File(s)
                 </Button>
+                <FileIngestFilterDialog onConfirm={handleOnConfirm} />
             </div>
 
             <Card>
