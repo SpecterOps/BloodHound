@@ -52,7 +52,7 @@ import {
     useDeleteAssetGroupTag,
     usePatchAssetGroupTag,
 } from '../../../../hooks/useAssetGroupTags';
-import { usePZPathParams } from '../../../../hooks/useZoneParams';
+import { usePZPathParams } from '../../../../hooks/usePZParams';
 import { useNotifications } from '../../../../providers';
 import { useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';

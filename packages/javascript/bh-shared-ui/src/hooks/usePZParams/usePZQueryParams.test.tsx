@@ -18,7 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useSearchParams } from 'react-router-dom';
 import { renderHook, waitFor } from '../../test-utils';
-import { useZoneQueryParams } from './useZoneQueryParams';
+import { usePZQueryParams } from './usePZQueryParams';
 
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
@@ -61,13 +61,13 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('useZoneQueryParams', () => {
+describe('usePZQueryParams', () => {
     it('returns an object with values for assetGroupTagId, params, and setZoneQueryParams', () => {
         const urlSearchParams = new URLSearchParams();
         urlSearchParams.append('assetGroupTagId', '1');
         vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
 
-        const { result } = renderHook(() => useZoneQueryParams());
+        const { result } = renderHook(() => usePZQueryParams());
 
         expect(result.current).toHaveProperty('assetGroupTagId');
         expect(result.current).toHaveProperty('params');
@@ -79,7 +79,7 @@ describe('useZoneQueryParams', () => {
         urlSearchParams.append('assetGroupTagId', '777');
         vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
 
-        const { result } = renderHook(() => useZoneQueryParams());
+        const { result } = renderHook(() => usePZQueryParams());
 
         waitFor(() => {
             expect(result.current.assetGroupTagId).toBe(777);
@@ -90,7 +90,7 @@ describe('useZoneQueryParams', () => {
         const urlSearchParams = new URLSearchParams();
         vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
 
-        const { result } = renderHook(() => useZoneQueryParams());
+        const { result } = renderHook(() => usePZQueryParams());
 
         await waitFor(() => {
             expect(result.current.assetGroupTagId).toBe(42);
@@ -113,7 +113,7 @@ describe('useZoneQueryParams', () => {
             })
         );
 
-        const { result } = renderHook(() => useZoneQueryParams());
+        const { result } = renderHook(() => usePZQueryParams());
 
         expect(result.current.assetGroupTagId).toBe(undefined);
     });
@@ -123,7 +123,7 @@ describe('useZoneQueryParams', () => {
         urlSearchParams.append('assetGroupTagId', '0');
         vi.mocked(useSearchParams).mockReturnValue([urlSearchParams, vi.fn()]);
 
-        const { result } = renderHook(() => useZoneQueryParams());
+        const { result } = renderHook(() => usePZQueryParams());
 
         await waitFor(() => {
             expect(result.current.assetGroupTagId).toBe(0);
