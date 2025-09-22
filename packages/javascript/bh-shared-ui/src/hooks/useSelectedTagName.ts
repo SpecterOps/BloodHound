@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useAssetGroupTags } from './useAssetGroupTags';
-import { usePZQueryParams } from './usePZParams'
+import { usePZQueryParams } from './usePZParams';
 
 export const HYGIENE_AGT_ID = 0;
 export const HYGIENE_TAG_NAME = 'Hygiene';
