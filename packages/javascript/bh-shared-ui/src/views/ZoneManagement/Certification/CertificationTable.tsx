@@ -54,7 +54,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     const certificationsData = data ?? { pages: [{ count: 0, data: { members: [] } }] };
     const totalDBRowCount = certificationsData.pages[0].count;
-    const certificationsItemsRaw = certificationsData.pages.flatMap((item) => item.data.members);
+    const certificationsItemsRaw = certificationsData.pages.flatMap((item: any) => item.data.members);
     const totalFetched = certificationsItemsRaw.length;
 
     const fetchMoreOnBottomReached = useCallback(
@@ -74,20 +74,35 @@ const CertificationTable: FC<CertificationTableProps> = ({
         fetchMoreOnBottomReached(scrollRef.current);
     }, [fetchMoreOnBottomReached]);
 
-    const toggleRow = (id: number) => {
-        setSelectedRows((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-    };
+    const certificationsItems = isSuccess
+        ? certificationsItemsRaw.map((item: any) => {
+              return {
+                  ...item,
+                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
+                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
+              };
+          })
+        : [];
 
-    const toggleAll = () => {
-        if (selectedRows.length === data.length) {
-            setSelectedRows([]);
+    const allSelected = selectedRows.length === certificationsItems?.length;
+    const someSelected = selectedRows.length > 0 && !allSelected;
+
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedRows(certificationsItems.map((row: any) => row.id));
         } else {
-            setSelectedRows(data.map((row) => row.id));
+            setSelectedRows([]);
         }
     };
 
-    const allSelected = selectedRows.length === data?.length;
-    const someSelected = selectedRows.length > 0 && !allSelected;
+    const toggleRow = (checked: boolean, selectedId: number) => {
+        if (checked) {
+            setSelectedRows([...selectedRows, selectedId]);
+        } else {
+            setSelectedRows(selectedRows.filter((rowId: number) => rowId !== selectedId));
+        }
+    };
 
     const columnHelper = createColumnHelper<any>();
 
@@ -102,7 +117,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                         ref={(el) => {
                             if (el) el.indeterminate = someSelected;
                         }}
-                        onChange={toggleAll}
+                        onChange={(event) => toggleAll(event.target.checked)}
                     />
                 </div>
             ),
@@ -111,7 +126,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     <input
                         type='checkbox'
                         checked={selectedRows.includes(info.row.original.id)}
-                        onChange={() => toggleRow(info.row.original.id)}
+                        onChange={(event) => toggleRow(event.target.checked, info.row.original.id)}
                     />
                 </div>
             ),
@@ -169,19 +184,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
     ].map((certType) => {
         return { key: certType, value: CertificationTypeMap[certType] };
     });
-
-    const certificationsItems = isSuccess
-        ? certificationsItemsRaw.map((item) => {
-              return {
-                  ...item,
-                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
-                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
-                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
-              };
-          })
-        : [];
-
-    console.log('selected rows in child!!', selectedRows);
 
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>

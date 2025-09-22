@@ -133,12 +133,9 @@ const Certification: FC = () => {
         setCertifyAction(action);
     };
 
-    console.log('selected rows PARENT in not handler', selectedRows);
-
     const handleConfirm = useCallback(
         (withNote: boolean, certifyNote?: string) => {
             setIsDialogOpen(false);
-            console.log('selected rows~ PARENT!', selectedRows);
             const selectedMemberIds = selectedRows;
             if (selectedMemberIds.length === 0) {
                 addNotification(
@@ -154,7 +151,7 @@ const Certification: FC = () => {
             const requestBody = createCertificationRequestBody(certifyAction, selectedMemberIds, withNote, certifyNote);
             certifyMutation.mutate(requestBody);
         },
-        [certifyAction]
+        [addNotification, certifyAction, certifyMutation, selectedRows]
     );
 
     return (
