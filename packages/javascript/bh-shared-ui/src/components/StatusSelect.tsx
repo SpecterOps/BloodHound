@@ -10,10 +10,6 @@ import {
 import type { FC } from 'react';
 import { JOB_STATUS_MAP } from '../utils';
 
-// 2 = Complete, 5 = Failed
-// const FILTERABLE_STATUSES = ['Complete', 'Failed'];
-// const STATUS_FILTERS = Object.entries(JOB_STATUS_MAP).filter(([, value]) => FILTERABLE_STATUSES.includes(value));
-
 type Props = {
     statusOptions: string[];
     status?: number;
