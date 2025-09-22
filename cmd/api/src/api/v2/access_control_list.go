@@ -58,7 +58,8 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 	return true, nil
 }
 
-func GetUserEnvironmentAccessList(ctx context.Context, user model.User) []string {
+// Helper function to extract a user's environments from their model as a list of strings
+func UserEnvironments(user *model.User) []string {
 	list := make([]string, 0, len(user.EnvironmentAccessControl))
 
 	for _, envAccess := range user.EnvironmentAccessControl {
