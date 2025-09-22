@@ -56,6 +56,11 @@ export const CommonSearches: CommonSearchType[] = [
                 description: '',
                 query: `MATCH p = (:Domain)-[:Contains*1..]->(:OU)\nRETURN p\nLIMIT 1000`,
             },
+            {
+                name: 'Location of AdminSDHolder Protected objects',
+                description: '',
+                query: `MATCH p = (n:Base)<-[:Contains*1..]-(:Domain)\nWHERE n.adminsdholderprotected = True\nRETURN p\nLIMIT 1000`,
+            },
         ],
     },
     {
@@ -340,6 +345,11 @@ RETURN p\nLIMIT 1000`,
                 name: 'Tier Zero principals without AdminSDHolder protection',
                 description: '',
                 query: `MATCH (n:Base)\nWHERE COALESCE(n.system_tags, '') CONTAINS '${TIER_ZERO_TAG}'\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+            },
+            {
+                name: 'AdminSDHolder to protected objects relationship',
+                description: '',
+                query: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
