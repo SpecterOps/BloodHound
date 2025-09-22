@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/alluregen"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/audit"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
@@ -99,6 +100,7 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 			license.Create(env),
 			tag.Create(env),
 			audit.Create(env),
+			alluregen.Create(env),
 		}
 	)
 
