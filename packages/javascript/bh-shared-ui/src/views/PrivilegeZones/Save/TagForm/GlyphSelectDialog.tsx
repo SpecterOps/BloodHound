@@ -33,18 +33,21 @@ import clsx from 'clsx';
 import React, { FC, useEffect, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { AppIcon } from '../../../../components';
-import { freeIconsList } from '../../../../utils';
+import { IconList, freeIconsList } from '../../../../utils';
 
 const InnerElement = ({ style, ...rest }: any) => (
     <ul style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest}></ul>
 );
 
-const IconCard: FC<{ iconName: IconName; onClick: (iconName: IconName) => void }> = ({ iconName, onClick }) => (
+const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconName) => void }> = ({
+    iconName,
+    onClick,
+}) => (
     <Button
         variant={'text'}
         className={clsx(['relative', !iconName && 'invisible'])}
         onClick={() => {
-            onClick(iconName);
+            iconName && onClick(iconName);
         }}>
         <Card className='flex items-center justify-center h-24 w-24'>
             <CardContent className='first:pt-0'>
@@ -59,13 +62,14 @@ const Row = ({
     data,
     index: row,
     style,
-}: ListChildComponentProps<{ filteredList: IconName[]; onClick: (iconName: IconName) => void }>) => {
+}: ListChildComponentProps<{ filteredList: IconList; onClick: (iconName: IconName) => void }>) => {
     const { filteredList, onClick } = data;
 
     return (
         <li className={'flex justify-evenly items-center'} style={{ ...style }}>
             {Array.from({ length: 5 }, (_, index) => {
-                return <IconCard key={row * 5 + index} iconName={filteredList[row * 5 + index]} onClick={onClick} />;
+                const icon = filteredList[row * 5 + index];
+                return <IconCard key={row * 5 + index} iconName={icon ? icon.id : undefined} onClick={onClick} />;
             })}
         </li>
     );
@@ -75,7 +79,7 @@ export const VirtualizedIconList = ({
     filteredList,
     onClick,
 }: {
-    filteredList: IconName[];
+    filteredList: IconList;
     onClick: (iconName: IconName) => void;
 }) => {
     return (
@@ -83,7 +87,7 @@ export const VirtualizedIconList = ({
             height={64 * 9}
             itemCount={Math.ceil(filteredList.length / 5)}
             itemData={{ filteredList, onClick }}
-            itemSize={128 + 64}
+            itemSize={64 * 3}
             innerElementType={InnerElement}
             width={'100%'}
             className='rounded-md bg-neutral-3'
@@ -164,7 +168,9 @@ const GlyphSelectDialog: React.FC<{
 
                         <div className='p-2 size-full bg-neutral-3 rounded-md'>
                             <VirtualizedIconList
-                                filteredList={freeIconsList.filter((iconName) => iconName.includes(query))}
+                                filteredList={freeIconsList.filter(
+                                    (icon) => icon.id.includes(query) || icon.label.toLowerCase().includes(query)
+                                )}
                                 onClick={(iconName) => {
                                     setSelectedIcon(iconName);
                                 }}

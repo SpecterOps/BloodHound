@@ -447,7 +447,7 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 )}
-                                {isZonePage && (
+                                {isZonePage && form.getValues('position') !== 1 && (
                                     <FormField
                                         control={form.control}
                                         name='glyph'

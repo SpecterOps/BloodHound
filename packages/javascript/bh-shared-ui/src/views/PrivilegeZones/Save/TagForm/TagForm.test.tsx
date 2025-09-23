@@ -55,7 +55,7 @@ const testOwned = {
     updated_by: 'SYSTEM',
     deleted_at: null,
     deleted_by: null,
-    glyph: 'user-edit',
+    glyph: null,
     position: null,
     require_certify: false,
     analysis_enabled: false,
@@ -92,6 +92,13 @@ const handlers = [
         return res(
             ctx.json({
                 data: { tag: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 } },
+            })
+        );
+    }),
+    rest.get('/api/v2/asset-group-tags/4', async (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { tag: { ...testTierZero, name: 'other zone', id: 4, type: 1, position: 2 } },
             })
         );
     }),
@@ -149,7 +156,8 @@ describe('Tag Form', () => {
     const user = userEvent.setup();
     const createNewZonePath = `/${privilegeZonesPath}/${zonesPath}/${savePath}/`;
     const createNewLabelPath = `/${privilegeZonesPath}/${labelsPath}/${savePath}/`;
-    const editExistingZonePath = `/${privilegeZonesPath}/${zonesPath}/1/${savePath}`;
+    const editHighestPrivilegeZonePath = `/${privilegeZonesPath}/${zonesPath}/1/${savePath}`;
+    const editOtherZonePath = `/${privilegeZonesPath}/${zonesPath}/4/${savePath}`;
     const editExistingLabelPath = `/${privilegeZonesPath}/${labelsPath}/2/${savePath}`;
     const deletionTestsPath = `/${privilegeZonesPath}/${labelsPath}/3/${savePath}`;
 
@@ -242,9 +250,9 @@ describe('Tag Form', () => {
 
         render(
             <Routes>
-                <Route path={editExistingZonePath} element={<TagForm />} />
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingZonePath }
+            { route: editHighestPrivilegeZonePath }
         );
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
@@ -267,9 +275,8 @@ describe('Tag Form', () => {
             expect(requireCertifySwitch).toHaveValue('true');
         });
 
-        const glyphInput = await screen.findByLabelText(/Apply Custom Glyph/);
-        expect(glyphInput).toBeInTheDocument();
-        expect(glyphInput).toHaveValue('lightbulb');
+        // This form input is not available for the most privileged zone, aka Tier Zero
+        expect(screen.queryByLabelText(/Apply Custom Glyph/)).not.toBeInTheDocument();
 
         // The delete button should not render when editing T0
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
@@ -321,6 +328,22 @@ describe('Tag Form', () => {
         expect(screen.queryByTestId('privilege-zones_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();
     });
 
+    it('renders the glyph form input when the editing a zone that is not the highest privileged', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '4', labelId: undefined });
+
+        render(
+            <Routes>
+                <Route path={editOtherZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: editOtherZonePath }
+        );
+
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+
+        expect(await screen.findByLabelText(/Apply Custom Glyph/)).toBeInTheDocument();
+        expect(await screen.findAllByText('lightbulb')).toHaveLength(2);
+    });
+
     it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
         vi.mocked(useLocation).mockReturnValue({ pathname: editExistingZonePath } as Location);
@@ -342,9 +365,9 @@ describe('Tag Form', () => {
 
         render(
             <Routes>
-                <Route path={editExistingZonePath} element={<TagForm />} />
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingZonePath }
+            { route: editHighestPrivilegeZonePath }
         );
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
@@ -357,9 +380,9 @@ describe('Tag Form', () => {
 
         render(
             <Routes>
-                <Route path={editExistingZonePath} element={<TagForm />} />
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingZonePath }
+            { route: editHighestPrivilegeZonePath }
         );
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
