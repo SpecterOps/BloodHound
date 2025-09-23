@@ -105,7 +105,7 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 name: 'Dangerous privileges for Domain Users groups',
                 description: '',
-                query: `MATCH p=(s:Group)-[:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=(s:Group)-[r:${adTransitEdgeTypes}]->(:Base)\nWHERE s.objectid ENDS WITH '-513'\nAND NOT r:MemberOf\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Domain Admins logons to non-Domain Controllers',
