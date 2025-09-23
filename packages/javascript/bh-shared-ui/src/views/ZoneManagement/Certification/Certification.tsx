@@ -1,17 +1,30 @@
-import { AssetGroupTagCertificationRecord } from 'js-client-library';
-import { FC, useState } from 'react';
-import { useInfiniteQuery, useQuery } from 'react-query';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import {
+    AssetGroupTagCertificationRecord,
+    CertificationManual,
+    CertificationRevoked,
+    UpdateCertificationRequest,
+} from 'js-client-library';
+import { FC, useCallback, useState } from 'react';
+import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
+import { useNotifications } from '../../../providers';
 import { EntityKinds, apiClient } from '../../../utils';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
+import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
 
 const Certification: FC = () => {
     const { tierId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const [search, setSearch] = useState('');
     const [filters, setFilters] = useState();
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
+        CertificationManual
+    );
 
     const mockMemberId = 1;
     const PAGE_SIZE = 15;
@@ -66,10 +79,48 @@ const Certification: FC = () => {
         enabled: tagId !== undefined && mockMemberId !== undefined,
     });
 
-    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(
+    const certifyMutation = useMutation({
+        mutationFn: async (requestBody: UpdateCertificationRequest) => {
+            return apiClient.updateAssetGroupTagCertification(requestBody);
+        },
+        onSuccess: () => {
+            const certificationType = certifyAction === CertificationManual ? 'Certification' : 'Revocation';
+            addNotification(
+                `Selected ${certificationType} Successful`,
+                `zone-management_update-certification_success`,
+                {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+            refetch();
+        },
+        onError: (error: any) => {
+            console.log(error);
+            addNotification('There was an error updating certification', `zone-management_update-certification_error`, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
+        },
+    });
+
+    const { data, isLoading, isFetching, isSuccess, fetchNextPage, refetch } = useAssetGroupTagsCertificationsQuery(
         filters,
         search
     );
+
+    const { addNotification } = useNotifications();
+
+    const createCertificationRequestBody = (
+        action: typeof CertificationManual | typeof CertificationRevoked,
+        objectIds: number[],
+        withNote: boolean,
+        note?: string
+    ): UpdateCertificationRequest => {
+        return {
+            member_ids: objectIds,
+            action: action,
+            note: withNote ? note : undefined,
+        };
+    };
 
     const selectedNode = {
         id: memberQuery.data?.object_id,
@@ -77,32 +128,70 @@ const Certification: FC = () => {
         type: memberQuery.data?.primary_kind as EntityKinds,
     };
 
+    const showDialog = (action: typeof CertificationManual | typeof CertificationRevoked) => {
+        setIsDialogOpen(true);
+        setCertifyAction(action);
+    };
+
+    const handleConfirm = useCallback(
+        (withNote: boolean, certifyNote?: string) => {
+            setIsDialogOpen(false);
+            const selectedMemberIds = selectedRows;
+            if (selectedMemberIds.length === 0) {
+                addNotification(
+                    'Members must be selected for certification',
+                    `zone-management_update-certification_no-members`,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
+                return;
+            }
+            // TODO -- input sanitization for the note??
+            const requestBody = createCertificationRequestBody(certifyAction, selectedMemberIds, withNote, certifyNote);
+            certifyMutation.mutate(requestBody);
+        },
+        [addNotification, certifyAction, certifyMutation, selectedRows]
+    );
+
     return (
-        <div className='flex gap-8 mt-4'>
-            <div className='basis-2/3'>
-                <CertificationTable
-                    data={data}
-                    isLoading={isLoading}
-                    isFetching={isFetching}
-                    isSuccess={isSuccess}
-                    fetchNextPage={fetchNextPage}
-                />
-            </div>
-            <div className='basis-1/3'>
-                <div className='w-[400px] max-w-[400px]'>
-                    <EntityInfoPanel
-                        DataTable={EntityInfoDataTable}
-                        selectedNode={selectedNode}
-                        additionalTables={[
-                            {
-                                sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
-                                TableComponent: EntitySelectorsInformation,
-                            },
-                        ]}
+        <>
+            <div className='flex gap-8 mt-4'>
+                <div className='basis-2/3'>
+                    <div className='flex gap-4 mb-4'>
+                        <Button onClick={() => showDialog(CertificationManual)}>Certify</Button>
+                        <Button variant='secondary' onClick={() => showDialog(CertificationRevoked)}>
+                            Revoke
+                        </Button>
+                    </div>
+
+                    <CertificationTable
+                        data={data}
+                        isLoading={isLoading}
+                        isFetching={isFetching}
+                        isSuccess={isSuccess}
+                        fetchNextPage={fetchNextPage}
+                        selectedRows={selectedRows}
+                        setSelectedRows={setSelectedRows}
                     />
                 </div>
+                <div className='basis-1/3'>
+                    <div className='w-[400px] max-w-[400px]'>
+                        <EntityInfoPanel
+                            DataTable={EntityInfoDataTable}
+                            selectedNode={selectedNode}
+                            additionalTables={[
+                                {
+                                    sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
+                                    TableComponent: EntitySelectorsInformation,
+                                },
+                            ]}
+                        />
+                    </div>
+                </div>
             </div>
-        </div>
+            {isDialogOpen && <CertifyMembersConfirmDialog open={isDialogOpen} onConfirm={handleConfirm} />}
+        </>
     );
 };
 

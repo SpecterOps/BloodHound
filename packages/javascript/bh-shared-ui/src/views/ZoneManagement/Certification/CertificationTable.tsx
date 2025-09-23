@@ -7,14 +7,31 @@ import {
     CertificationTypeMap,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
 
-const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchNextPage }) => {
+type CertificationTableProps = {
+    data: any;
+    isLoading: boolean;
+    isFetching: boolean;
+    isSuccess: boolean;
+    fetchNextPage: any;
+    selectedRows: number[];
+    setSelectedRows: any;
+};
+
+const CertificationTable: FC<CertificationTableProps> = ({
+    data,
+    isLoading,
+    isFetching,
+    isSuccess,
+    fetchNextPage,
+    selectedRows,
+    setSelectedRows,
+}) => {
     const mockPending = '9';
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
@@ -37,7 +54,7 @@ const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchN
 
     const certificationsData = data ?? { pages: [{ count: 0, data: { members: [] } }] };
     const totalDBRowCount = certificationsData.pages[0].count;
-    const certificationsItemsRaw = certificationsData.pages.flatMap((item) => item.data.members);
+    const certificationsItemsRaw = certificationsData.pages.flatMap((item: any) => item.data.members);
     const totalFetched = certificationsItemsRaw.length;
 
     const fetchMoreOnBottomReached = useCallback(
@@ -57,20 +74,35 @@ const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchN
         fetchMoreOnBottomReached(scrollRef.current);
     }, [fetchMoreOnBottomReached]);
 
-    const toggleRow = (id: number) => {
-        setSelectedRows((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-    };
+    const certificationsItems = isSuccess
+        ? certificationsItemsRaw.map((item: any) => {
+              return {
+                  ...item,
+                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
+                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
+              };
+          })
+        : [];
 
-    const toggleAll = () => {
-        if (selectedRows.length === data.length) {
-            setSelectedRows([]);
+    const allSelected = selectedRows.length === certificationsItems?.length;
+    const someSelected = selectedRows.length > 0 && !allSelected;
+
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedRows(certificationsItems.map((row: any) => row.id));
         } else {
-            setSelectedRows(data.map((row) => row.id));
+            setSelectedRows([]);
         }
     };
 
-    const allSelected = selectedRows.length === data?.length;
-    const someSelected = selectedRows.length > 0 && !allSelected;
+    const toggleRow = (checked: boolean, selectedId: number) => {
+        if (checked) {
+            setSelectedRows([...selectedRows, selectedId]);
+        } else {
+            setSelectedRows(selectedRows.filter((rowId: number) => rowId !== selectedId));
+        }
+    };
 
     const columnHelper = createColumnHelper<any>();
 
@@ -80,12 +112,13 @@ const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchN
             header: () => (
                 <div className='pl-8'>
                     <input
+                        data-testid='certification-table-select-all'
                         type='checkbox'
                         checked={allSelected}
                         ref={(el) => {
                             if (el) el.indeterminate = someSelected;
                         }}
-                        onChange={toggleAll}
+                        onChange={(event) => toggleAll(event.target.checked)}
                     />
                 </div>
             ),
@@ -93,8 +126,9 @@ const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchN
                 <div className='pl-8'>
                     <input
                         type='checkbox'
+                        data-testid={`certification-table-row-${info.row.original.id}`}
                         checked={selectedRows.includes(info.row.original.id)}
-                        onChange={() => toggleRow(info.row.original.id)}
+                        onChange={(event) => toggleRow(event.target.checked, info.row.original.id)}
                     />
                 </div>
             ),
@@ -152,17 +186,6 @@ const CertificationTable: FC = ({ data, isLoading, isFetching, isSuccess, fetchN
     ].map((certType) => {
         return { key: certType, value: CertificationTypeMap[certType] };
     });
-
-    const certificationsItems = isSuccess
-        ? certificationsItemsRaw.map((item) => {
-              return {
-                  ...item,
-                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
-                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
-                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
-              };
-          })
-        : [];
 
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
