@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
+import { Card } from '@bloodhoundenterprise/doodleui';
 import { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useFileUploadDialogContext, useGetFileUploadsQuery, usePermissions } from '../../hooks';
-import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, Permission, getSimpleDuration, toFormatted } from '../../utils';
+import { useGetFileUploadsQuery } from '../../hooks';
+import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
+import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
 import { StatusIndicator } from '../StatusIndicator';
 import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 
@@ -63,15 +64,8 @@ export const FileIngestTable: FC = () => {
 
     const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage, filters });
 
-    const { setShowFileIngestDialog } = useFileUploadDialogContext();
-
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
-
     const fileUploadJobs = data?.data ?? [];
     const count = data?.count ?? 0;
-
-    const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
 
     const handleOnConfirm = (filters: any) => {
         setFilters(filters);
@@ -81,13 +75,8 @@ export const FileIngestTable: FC = () => {
     return (
         <>
             <div className='w-full flex justify-end gap-2 my-4'>
-                <Button
-                    onClick={() => toggleFileUploadDialog()}
-                    data-testid='file-ingest_button-upload-files'
-                    disabled={!hasPermission}>
-                    Upload File(s)
-                </Button>
                 <FileIngestFilterDialog onConfirm={handleOnConfirm} />
+                <FileIngestUploadButton />
             </div>
 
             <Card>

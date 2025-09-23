@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
+import { Card } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
-import { useFileUploadDialogContext, useGetFileUploadsQuery, usePermissions } from '../../hooks';
-import { Permission } from '../../utils';
+import { useGetFileUploadsQuery } from '../../hooks';
 import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
+import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
 
 const ingestTableHeaders = [
@@ -39,10 +39,6 @@ const LegacyFileIngestTable: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
 
     const { data: listFileIngestJobsData } = useGetFileUploadsQuery({ page, rowsPerPage });
-    const { setShowFileIngestDialog } = useFileUploadDialogContext();
-
-    const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     useEffect(() => setTotalCount(listFileIngestJobsData?.count || 0), [listFileIngestJobsData]);
 
@@ -72,17 +68,10 @@ const LegacyFileIngestTable: React.FC = () => {
                 job.status_message,
             ]) || [];
 
-    const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
-
     return (
         <>
             <div className='w-full flex justify-end gap-2 my-4'>
-                <Button
-                    onClick={() => toggleFileUploadDialog()}
-                    data-testid='file-ingest_button-upload-files'
-                    disabled={!hasPermission}>
-                    Upload File(s)
-                </Button>
+                <FileIngestUploadButton />
             </div>
 
             <Card>
