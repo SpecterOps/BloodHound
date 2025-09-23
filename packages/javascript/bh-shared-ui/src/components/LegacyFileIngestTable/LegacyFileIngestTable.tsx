@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card } from '@bloodhoundenterprise/doodleui';
+import { Paper } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
@@ -74,7 +74,7 @@ const LegacyFileIngestTable: React.FC = () => {
                 <FileIngestUploadButton />
             </div>
 
-            <Card>
+            <Paper>
                 <DataTable
                     headers={ingestTableHeaders}
                     data={ingestRows}
@@ -87,7 +87,7 @@ const LegacyFileIngestTable: React.FC = () => {
                         onRowsPerPageChange: handleRowsPerPageChange,
                     }}
                 />
-            </Card>
+            </Paper>
         </>
     );
 };
