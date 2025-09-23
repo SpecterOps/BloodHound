@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import { ZERO_VALUE_API_DATE } from '../../constants';
 import { useGetFileUploadsQuery } from '../../hooks';
 import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
+import { UploadFilesDialog } from '../FileIngest/UploadFilesDialog';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
 
 const ingestTableHeaders = [
@@ -68,20 +69,26 @@ const LegacyFileIngestTable: React.FC = () => {
             ]) || [];
 
     return (
-        <Paper>
-            <DataTable
-                headers={ingestTableHeaders}
-                data={ingestRows}
-                showPaginationControls={true}
-                paginationProps={{
-                    page,
-                    rowsPerPage,
-                    count: totalCount,
-                    onPageChange: handlePageChange,
-                    onRowsPerPageChange: handleRowsPerPageChange,
-                }}
-            />
-        </Paper>
+        <>
+            <div className='my-4 text-right'>
+                <UploadFilesDialog />
+            </div>
+
+            <Paper>
+                <DataTable
+                    headers={ingestTableHeaders}
+                    data={ingestRows}
+                    showPaginationControls={true}
+                    paginationProps={{
+                        page,
+                        rowsPerPage,
+                        count: totalCount,
+                        onPageChange: handlePageChange,
+                        onRowsPerPageChange: handleRowsPerPageChange,
+                    }}
+                />
+            </Paper>
+        </>
     );
 };
 
