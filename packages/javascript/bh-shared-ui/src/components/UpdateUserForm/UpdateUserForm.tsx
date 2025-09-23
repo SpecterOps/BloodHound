@@ -259,6 +259,74 @@ const UpdateUserFormInner: React.FC<{
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
                         <div className='flex flex-col mt-4 w-full' data-testid='update-user-dialog_dialog-content'>
+                            {!hasSelectedSelf && (
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='roles.0'
+                                        control={form.control}
+                                        defaultValue={1}
+                                        rules={{
+                                            required: 'Role is required',
+                                        }}
+                                        render={({ field }) => (
+                                            <>
+                                                <FormItem>
+                                                    <div className='flex row'>
+                                                        <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
+                                                            Role
+                                                        </FormLabel>
+                                                        <Tooltip
+                                                            tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                            contentProps={{
+                                                                className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <FormControl>
+                                                        <Select
+                                                            onValueChange={(field) => {
+                                                                form.setValue('roles', [Number(field)]);
+                                                                setSelectedRoleValue([Number(field)]);
+                                                            }}
+                                                            value={String(selectedRoleValue)}>
+                                                            <FormControl className='pointer-events-auto'>
+                                                                <SelectTrigger
+                                                                    variant='underlined'
+                                                                    className='bg-transparent'
+                                                                    id='role'
+                                                                    disabled={
+                                                                        selectedSSOProviderHasRoleProvisionEnabled
+                                                                    }>
+                                                                    <SelectValue placeholder={field.value} />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectPortal>
+                                                                <SelectContent>
+                                                                    {roles?.map((role: Role) => (
+                                                                        <SelectItem
+                                                                            className='hover:cursor-pointer'
+                                                                            key={role.id}
+                                                                            role='option'
+                                                                            value={role.id.toString()}>
+                                                                            {role.name}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </SelectPortal>
+                                                        </Select>
+                                                    </FormControl>
+                                                    {selectedSSOProviderHasRoleProvisionEnabled && (
+                                                        <FormMessage id='role-helper-text'>
+                                                            SSO Provider has enabled role provision.
+                                                        </FormMessage>
+                                                    )}
+                                                </FormItem>
+                                            </>
+                                        )}
+                                    />
+                                </div>
+                            )}
+
                             <div className='mb-4'>
                                 <FormField
                                     control={form.control}
@@ -397,9 +465,8 @@ const UpdateUserFormInner: React.FC<{
                             </div>
 
                             <>
-                                {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for authentication method if use selected self */}
                                 {!hasSelectedSelf && (
-                                    <div className='mb-4'>
+                                    <div className=''>
                                         <FormField
                                             name='authenticationMethod'
                                             control={form.control}
@@ -454,9 +521,8 @@ const UpdateUserFormInner: React.FC<{
                                     </div>
                                 )}
 
-                                {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for sso select if use selected self */}
                                 {authenticationMethod === 'sso' && !hasSelectedSelf && (
-                                    <div className='mb-4'>
+                                    <div className=''>
                                         <FormField
                                             name='SSOProviderId'
                                             control={form.control}
@@ -505,74 +571,6 @@ const UpdateUserFormInner: React.FC<{
                                 )}
                             </>
 
-                            {/* TODO: ADDRESS COMMENT: MUI had label and select hidden for role select if use selected self */}
-                            {!hasSelectedSelf && (
-                                <div className='mb-4'>
-                                    <FormField
-                                        name='roles.0'
-                                        control={form.control}
-                                        defaultValue={1}
-                                        rules={{
-                                            required: 'Role is required',
-                                        }}
-                                        render={({ field }) => (
-                                            <>
-                                                <FormItem>
-                                                    <div className='flex row'>
-                                                        <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
-                                                            Role
-                                                        </FormLabel>
-                                                        <Tooltip
-                                                            tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
-                                                            contentProps={{
-                                                                className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <FormControl>
-                                                        <Select
-                                                            onValueChange={(field) => {
-                                                                form.setValue('roles', [Number(field)]);
-                                                                setSelectedRoleValue([Number(field)]);
-                                                            }}
-                                                            value={String(selectedRoleValue)}>
-                                                            <FormControl className='pointer-events-auto'>
-                                                                <SelectTrigger
-                                                                    variant='underlined'
-                                                                    className='bg-transparent'
-                                                                    id='role'
-                                                                    disabled={
-                                                                        selectedSSOProviderHasRoleProvisionEnabled
-                                                                    }>
-                                                                    <SelectValue placeholder={field.value} />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectPortal>
-                                                                <SelectContent>
-                                                                    {roles?.map((role: Role) => (
-                                                                        <SelectItem
-                                                                            className='hover:cursor-pointer'
-                                                                            key={role.id}
-                                                                            role='option'
-                                                                            value={role.id.toString()}>
-                                                                            {role.name}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </SelectPortal>
-                                                        </Select>
-                                                    </FormControl>
-                                                    {selectedSSOProviderHasRoleProvisionEnabled && (
-                                                        <FormMessage id='role-helper-text'>
-                                                            SSO Provider has enabled role provision.
-                                                        </FormMessage>
-                                                    )}
-                                                </FormItem>
-                                            </>
-                                        )}
-                                    />
-                                </div>
-                            )}
                             {!!form.formState.errors.root?.generic && (
                                 <div>
                                     <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
