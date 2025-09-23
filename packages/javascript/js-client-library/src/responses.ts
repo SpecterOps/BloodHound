@@ -17,7 +17,6 @@
 import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
-    AssetGroupTagMember,
     AssetGroupTagHistoryRecord,
     AssetGroupTagMember,
     AssetGroupTagSelector,
