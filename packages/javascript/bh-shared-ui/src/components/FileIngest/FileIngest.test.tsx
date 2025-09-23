@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../test-utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import FileIngest from './FileIngest';
 
 const checkPermissionMock = vi.fn();
@@ -78,8 +78,16 @@ afterAll(() => {
 });
 
 describe('FileIngest', () => {
-    it.todo('displays a Upload Files button', () => {});
-    it.todo('displays a Filters button', () => {});
+    it('displays a Upload Files button', async () => {
+        await act(async () => render(<FileIngest />));
+        const uploadButton = screen.getByRole('button', { name: 'Upload File(s)' });
+        expect(uploadButton).toBeInTheDocument();
+    });
+    it('displays a Filters button', async () => {
+        await act(async () => render(<FileIngest />));
+        const filterButton = screen.getByRole('button', { name: /app-icon-filter-outline/i });
+        expect(filterButton).toBeInTheDocument();
+    });
     it('displays a table of completed ingest logs', async () => {
         checkPermissionMock.mockImplementation(() => true);
         render(<FileIngest />);
