@@ -33,8 +33,7 @@ import { useObjectState } from '../../hooks';
 import { FileIngestFilterParams, typedEntries } from '../../utils';
 import { AppIcon } from '../AppIcon';
 import { DateRangeChange, DateRangeInputs } from '../DateRangeInputs';
-import { StatusSelect } from '../StatusSelect';
-import { UserSelect } from './UserSelect';
+import { StatusSelect, UserMinimalSelect } from '../SelectMenus';
 
 type Props = {
     onConfirm: (filters: FileIngestFilterParams) => void;
@@ -130,7 +129,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     </DialogDescription>
 
                     <DialogDescription asChild>
-                        <UserSelect user={filters.state.user_id} onSelect={selectUser} />
+                        <UserMinimalSelect user={filters.state.user_id} onSelect={selectUser} />
                     </DialogDescription>
 
                     <DialogActions>
