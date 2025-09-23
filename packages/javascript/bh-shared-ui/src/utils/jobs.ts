@@ -107,12 +107,12 @@ export const getCollectionState = (state: FinishedJobsFilter): EnabledCollection
 export const isCollectionKey = (key: string): key is JobCollectionKey =>
     (jobCollectionKeys as readonly string[]).includes(key);
 
-export const NO_PERMISSION_MESSAGE =
+export const FINISHED_JOBS_NO_PERMISSION_MESSAGE =
     'Your role does not permit viewing finished job details. Please contact your administrator for assistance.';
-export const NO_PERMISSION_KEY = 'finished-jobs-permission';
+export const FINISHED_JOBS_NO_PERMISSION_KEY = 'finished-jobs-permission';
 
-export const FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
-export const FETCH_ERROR_KEY = 'finished-jobs-error';
+export const FINISHED_JOBS_FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
+export const FINISHED_JOBS_FETCH_ERROR_KEY = 'finished-jobs-error';
 
 export const FILE_INGEST_NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the file ingest jobs details. Please
     contact your administrator for details.`;
