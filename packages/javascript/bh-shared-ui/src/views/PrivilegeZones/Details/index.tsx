@@ -14,11 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrivilegeZones from './PrivilegeZones';
+import { getSavePath } from './Details';
+import { SelectedDetails } from './SelectedDetails';
 
-export { SelectedDetails, getSavePath } from './Details/index';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export * from './utils';
-
-export default PrivilegeZones;
+export { SelectedDetails, getSavePath };
