@@ -17,6 +17,7 @@
 import { useQuery } from 'react-query';
 import { apiClient } from '../utils';
 
+// Named using the Minimal keyword as it uses a specific endpoint /bloodhound-users-minimal that gets active users
 export const useGetUsersMinimal = () => {
     return useQuery({
         queryKey: ['users-minimal'],
