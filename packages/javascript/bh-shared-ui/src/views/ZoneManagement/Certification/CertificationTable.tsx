@@ -10,9 +10,12 @@ import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
+import FilterDialog from './FilterDialog/FilterDialog';
 
 type CertificationTableProps = {
     data: any;
+    filters: string;
+    setFilters: () => void;
     isLoading: boolean;
     isFetching: boolean;
     isSuccess: boolean;
@@ -23,6 +26,8 @@ type CertificationTableProps = {
 
 const CertificationTable: FC<CertificationTableProps> = ({
     data,
+    filters,
+    setFilters,
     isLoading,
     isFetching,
     isSuccess,
@@ -30,7 +35,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
     selectedRows,
     setSelectedRows,
 }) => {
-    const mockPending = '9';
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
@@ -53,29 +57,12 @@ const CertificationTable: FC<CertificationTableProps> = ({
     }, [assetGroupTags]);
 
     const certificationsData = data ?? { pages: [{ count: 0, data: { members: [] } }] };
-    const totalDBRowCount = certificationsData.pages[0].count;
-    const certificationsItemsRaw = certificationsData.pages.flatMap((item: any) => item.data.members);
+    const count = certificationsData.pages[0].count;
+    const certificationsItemsRaw = certificationsData.pages.flatMap((item) => item.data.members);
     const totalFetched = certificationsItemsRaw.length;
 
-    const fetchMoreOnBottomReached = useCallback(
-        (containerRefElement?: HTMLDivElement | null) => {
-            if (containerRefElement) {
-                const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-                //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
-                if (scrollHeight - scrollTop - clientHeight < 500 && !isFetching && totalFetched < totalDBRowCount) {
-                    fetchNextPage();
-                }
-            }
-        },
-        [fetchNextPage, isFetching, totalFetched, totalDBRowCount]
-    );
-
-    useEffect(() => {
-        fetchMoreOnBottomReached(scrollRef.current);
-    }, [fetchMoreOnBottomReached]);
-
     const certificationsItems = isSuccess
-        ? certificationsItemsRaw.map((item: any) => {
+        ? certificationsItemsRaw.map((item) => {
               return {
                   ...item,
                   date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
@@ -84,6 +71,23 @@ const CertificationTable: FC<CertificationTableProps> = ({
               };
           })
         : [];
+
+    const fetchMoreOnBottomReached = useCallback(
+        (containerRefElement?: HTMLDivElement | null) => {
+            if (containerRefElement) {
+                const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+                //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+                if (scrollHeight - scrollTop - clientHeight < 500 && !isFetching && totalFetched < count) {
+                    fetchNextPage();
+                }
+            }
+        },
+        [fetchNextPage, isFetching, totalFetched, count]
+    );
+
+    useEffect(() => {
+        fetchMoreOnBottomReached(scrollRef.current);
+    }, [fetchMoreOnBottomReached]);
 
     const allSelected = selectedRows.length === certificationsItems?.length;
     const someSelected = selectedRows.length > 0 && !allSelected;
@@ -132,26 +136,29 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     />
                 </div>
             ),
+            size: 65,
         }),
         columnHelper.accessor('primary_kind', {
-            header: () => <div className='pl-8 text-left'>Type</div>,
+            header: 'Type',
             cell: (info) => <div className='text-primary dark:text-secondary-variant-2'>{info.getValue()}</div>,
+            size: 100,
         }),
         columnHelper.accessor('name', {
-            header: () => <div className='pl-8 text-left'>Member Name</div>,
-            cell: (info) => <div>{info.getValue()}</div>,
+            header: 'Member Name',
+            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
+            size: 150,
         }),
         columnHelper.accessor('domainName', {
-            header: () => <div className='pl-8 text-left'>Domain</div>,
-            cell: (info) => <div>{info.getValue()}</div>,
+            header: 'Domain',
+            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
         }),
         columnHelper.accessor('zoneName', {
-            header: () => <div className='pl-8 text-left'>Zone</div>,
-            cell: (info) => <div>{info.getValue()}</div>,
+            header: 'Zone',
+            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
         }),
         columnHelper.accessor('date', {
-            header: () => <div className='pl-8 text-center'>First Seen</div>,
-            cell: (info) => <div className='text-center'>{info.getValue()}</div>,
+            header: 'First Seen',
+            cell: (info) => <div className='text-left'>{info.getValue()}</div>,
         }),
     ];
 
@@ -167,11 +174,11 @@ const CertificationTable: FC<CertificationTableProps> = ({
     };
 
     const tableHeadProps: DataTableProps['TableHeadProps'] = {
-        className: 'pr-2 text-center',
+        className: 'pl-8 text-left',
     };
 
     const tableCellProps: DataTableProps['TableCellProps'] = {
-        className: 'truncate group relative pl-8',
+        className: 'pl-8 text-left truncate group relative',
     };
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
@@ -189,11 +196,11 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
-            <div className='flex items-center'>
-                <h1 className='text-xl font-bold'>Certifications</h1>
-                <p>{`${mockPending} pending`}</p>
+            <div className='flex items-center px-8 py-4'>
+                <h1 className='text-xl font-bold pr-4'>Certifications</h1>
+                {count && <p>{`${count} pending`}</p>}
             </div>
-            <div>
+            <div className='pl-8'>
                 <DropdownSelector
                     variant='transparent'
                     options={certOptions}
@@ -204,15 +211,21 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     }
                     onChange={(_selectedCertificationType: DropdownOption) => {}}></DropdownSelector>
             </div>
-            <DataTable
-                data={certificationsItems ?? []}
-                TableHeaderProps={tableHeaderProps}
-                TableHeadProps={tableHeadProps}
-                TableProps={tableProps}
-                TableCellProps={tableCellProps}
-                columns={columns}
-                virtualizationOptions={virtualizationOptions}
-            />
+            <FilterDialog setFilters={setFilters} filters={filters} open={false} handleClose={() => {}} />
+            <div
+                onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+                ref={scrollRef}
+                className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
+                <DataTable
+                    data={certificationsItems ?? []}
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
+                    columns={columns}
+                    virtualizationOptions={virtualizationOptions}
+                />
+            </div>
         </div>
     );
 };

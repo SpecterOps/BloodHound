@@ -167,6 +167,8 @@ const Certification: FC = () => {
 
                     <CertificationTable
                         data={data}
+                        filters={filters}
+                        setFilters={setFilters}
                         isLoading={isLoading}
                         isFetching={isFetching}
                         isSuccess={isSuccess}
