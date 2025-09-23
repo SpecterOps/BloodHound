@@ -1,14 +1,16 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
+    AssetGroupTagCertificationParams,
     AssetGroupTagCertificationRecord,
     CertificationManual,
     CertificationRevoked,
+    CertificationType,
     UpdateCertificationRequest,
 } from 'js-client-library';
 import { FC, useCallback, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
+import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useNotifications } from '../../../providers';
 import { EntityKinds, apiClient } from '../../../utils';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
@@ -19,7 +21,7 @@ const Certification: FC = () => {
     const { tierId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState();
+    const [filters, setFilters] = useState<AssetGroupTagCertificationParams>({});
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
@@ -29,10 +31,9 @@ const Certification: FC = () => {
     const mockMemberId = 1;
     const PAGE_SIZE = 15;
 
-    const useAssetGroupTagsCertificationsQuery = (filters, query?: string) => {
+    const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
         const queryKey = doSearch ? query : 'static';
-
         return useInfiniteQuery<{
             count: number;
             data: { records: AssetGroupTagCertificationRecord[] };
@@ -45,7 +46,7 @@ const Certification: FC = () => {
 
                 const result = doSearch
                     ? await apiClient.searchAssetGroupTagsCertifications(PAGE_SIZE, skip, query)
-                    : await apiClient.getAssetGroupTagsCertifications(PAGE_SIZE, skip);
+                    : await apiClient.getAssetGroupTagsCertifications(PAGE_SIZE, skip, filters);
 
                 return result.data;
             },
@@ -133,6 +134,16 @@ const Certification: FC = () => {
         setCertifyAction(action);
     };
 
+    const filterByCertification = useCallback(
+        (dropdownSelection: DropdownOption) => {
+            const certificationStatus = dropdownSelection.key as CertificationType;
+            filters.certificationStatus = certificationStatus;
+            setFilters(filters);
+            refetch();
+        },
+        [filters, refetch]
+    );
+
     const handleConfirm = useCallback(
         (withNote: boolean, certifyNote?: string) => {
             setIsDialogOpen(false);
@@ -147,7 +158,6 @@ const Certification: FC = () => {
                 );
                 return;
             }
-            // TODO -- input sanitization for the note??
             const requestBody = createCertificationRequestBody(certifyAction, selectedMemberIds, withNote, certifyNote);
             certifyMutation.mutate(requestBody);
         },
@@ -171,6 +181,7 @@ const Certification: FC = () => {
                         isFetching={isFetching}
                         isSuccess={isSuccess}
                         fetchNextPage={fetchNextPage}
+                        filterRows={filterByCertification}
                         selectedRows={selectedRows}
                         setSelectedRows={setSelectedRows}
                     />
