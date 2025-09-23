@@ -48,8 +48,19 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploa
         enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
         onError: () => addNotification(FILE_INGEST_FETCH_ERROR_MESSAGE, FILE_INGEST_FETCH_ERROR_KEY),
-        queryFn: () =>
-            apiClient.listFileIngestJobs(rowsPerPage * page, rowsPerPage, '-id', filters).then((res) => res.data),
+        queryFn: ({ signal }) =>
+            apiClient
+                .listFileIngestJobs(
+                    {
+                        skip: rowsPerPage * page,
+                        limit: rowsPerPage,
+                        sortBy: '-id',
+                        ...filters,
+                    },
+                    { signal }
+                )
+                .then((res) => res.data),
+
         queryKey: ['file-uploads', { ...filters, page, rowsPerPage }],
     });
 };
