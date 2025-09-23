@@ -1,8 +1,14 @@
 import { IconName } from '@fortawesome/free-solid-svg-icons';
 
-type IconListItem = { id: IconName; label: string };
+interface IconListItem {
+    id: IconName;
+    label: string;
+}
 export type IconList = IconListItem[];
 
+// This array seems too big for type checking this
+// TS2590: Expression produces a union type that is too complex to represent.
+//@ts-ignore
 export const freeIconsList: IconList = [
     {
         id: '0',
