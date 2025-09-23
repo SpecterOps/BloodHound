@@ -24,7 +24,7 @@ import {
 import { CommonSearchType } from './types';
 
 describe('common search list', () => {
-    const kindPattern = /:([^ )\]*]+)/gm;
+    const kindPattern = /:([^ )\n\]*]+)/gm;
 
     test('the queries in the list only include nodes and edges that are defined in our schema', () => {
         CommonSearches.forEach((commonSearchType: CommonSearchType) => {
