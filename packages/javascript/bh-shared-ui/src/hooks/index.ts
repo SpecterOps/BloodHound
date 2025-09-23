@@ -110,4 +110,4 @@ export * from './useSelectedTagName';
 
 export * from './useShowNavBar';
 
-export * from './useZoneParams';
+export * from './usePZParams';
