@@ -116,7 +116,7 @@ const CreateUserForm: React.FC<{
         selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
-        if (allEnvironmentsChecked) {
+        if (allEnvironmentsChecked || allEnvironmentsIndeterminate) {
             const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
 
             setSelectedEnvironments(returnMappedEnvironments);
@@ -142,12 +142,24 @@ const CreateUserForm: React.FC<{
         }
     };
 
+    const parentCheckboxRef = React.useRef<HTMLButtonElement>(null);
+    const allEnvironmentsIndeterminate =
+        selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
+
     useEffect(() => {
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
         }
 
         form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+
+        if (parentCheckboxRef.current) {
+            parentCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
+                ? 'indeterminate'
+                : allEnvironmentsSelected
+                  ? 'checked'
+                  : 'unchecked';
+        }
 
         //console.log('Current form :', form.watch()); // TODO: REMOVE
 
@@ -167,17 +179,89 @@ const CreateUserForm: React.FC<{
                 });
             }
         }
-    }, [authenticationMethod, form, form.setValue, error, form.setError, form.watch]);
+    }, [
+        authenticationMethod,
+        form,
+        form.setValue,
+        error,
+        form.setError,
+        form.watch,
+        allEnvironmentsIndeterminate,
+        allEnvironmentsSelected,
+    ]);
 
     return (
         <Form {...form}>
-            <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
+            <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(onSubmit)}>
                 {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                     <div className='flex gap-x-4 justify-center'>
                         <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                             <DialogTitle>{'Create User'}</DialogTitle>
 
                             <div className='flex flex-col mt-4 w-full' data-testid='create-user-dialog_content'>
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='roles.0'
+                                        control={form.control}
+                                        defaultValue={1}
+                                        rules={{
+                                            required: 'Role is required',
+                                        }}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className='flex row'>
+                                                    <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
+                                                        Role
+                                                    </FormLabel>
+                                                    <div
+                                                        className='flex'
+                                                        data-testid='create-user-dialog_select_role-tooltip'>
+                                                        <Tooltip
+                                                            tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                            contentProps={{
+                                                                className: 'dark:bg-neutral-dark-5 border-0',
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <Select
+                                                    {...form.register('roles')}
+                                                    onValueChange={(field) => {
+                                                        form.setValue('roles', [Number(field)]);
+                                                        setSelectedRoleValue([Number([field])]);
+                                                    }}
+                                                    //open
+                                                    value={String(selectedRoleValue)}>
+                                                    <FormControl>
+                                                        <SelectTrigger
+                                                            className='bg-transparent'
+                                                            data-testid='create-user-dialog_select_role'
+                                                            id='role'
+                                                            variant='underlined'>
+                                                            <SelectValue placeholder={field.value} />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectPortal>
+                                                        <SelectContent>
+                                                            {getRolesQuery.isLoading ? (
+                                                                <SelectItem value={'loading'}>Loading...</SelectItem>
+                                                            ) : (
+                                                                getRolesQuery.data?.map((role: Role) => (
+                                                                    <SelectItem
+                                                                        className='hover:cursor-pointer'
+                                                                        key={role.id}
+                                                                        value={role.id.toString()}>
+                                                                        {role.name}
+                                                                    </SelectItem>
+                                                                ))
+                                                            )}
+                                                        </SelectContent>
+                                                    </SelectPortal>
+                                                </Select>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                                 <div className='mb-4'>
                                     <FormField
                                         name='emailAddress'
@@ -333,9 +417,10 @@ const CreateUserForm: React.FC<{
                                                 value={authenticationMethod}>
                                                 <FormControl className='mt-2'>
                                                     <SelectTrigger
-                                                        variant='underlined'
                                                         className='bg-transparent'
-                                                        id='authenticationMethod'>
+                                                        data-testid='create-user-dialog_select_authentication-method'
+                                                        id='authenticationMethod'
+                                                        variant='underlined'>
                                                         <SelectValue placeholder={authenticationMethod} />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -397,7 +482,7 @@ const CreateUserForm: React.FC<{
                                                     )}
                                                 />
                                             </div>
-                                            <div className='mb-4'>
+                                            <div className=''>
                                                 <FormField
                                                     name='needsPasswordReset'
                                                     control={form.control}
@@ -432,9 +517,10 @@ const CreateUserForm: React.FC<{
                                                     value={authenticationMethod}>
                                                     <FormControl>
                                                         <SelectTrigger
-                                                            variant='underlined'
+                                                            data-testid='create-user-dialog_select_sso-provider'
+                                                            id='sso'
                                                             className='bg-transparent'
-                                                            id='sso'>
+                                                            variant='underlined'>
                                                             <SelectValue placeholder='SSO Provider' />
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -457,64 +543,6 @@ const CreateUserForm: React.FC<{
                                     )}
                                 </>
 
-                                <div className=''>
-                                    <FormField
-                                        name='roles.0'
-                                        control={form.control}
-                                        defaultValue={1}
-                                        rules={{
-                                            required: 'Role is required',
-                                        }}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <div className='flex row'>
-                                                    <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
-                                                        Role
-                                                    </FormLabel>
-                                                    <Tooltip
-                                                        tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
-                                                        contentProps={{
-                                                            className: 'dark:bg-neutral-dark-5 border-0',
-                                                        }}
-                                                    />
-                                                </div>
-                                                <Select
-                                                    {...form.register('roles')}
-                                                    data-testid='create-user-dialog_role'
-                                                    onValueChange={(field) => {
-                                                        form.setValue('roles', [Number(field)]);
-                                                        setSelectedRoleValue([Number([field])]);
-                                                    }}
-                                                    value={String(selectedRoleValue)}>
-                                                    <FormControl>
-                                                        <SelectTrigger
-                                                            variant='underlined'
-                                                            className='bg-transparent'
-                                                            id='role'>
-                                                            <SelectValue placeholder={field.value} />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectPortal>
-                                                        <SelectContent>
-                                                            {getRolesQuery.isLoading ? (
-                                                                <SelectItem value={'loading'}>Loading...</SelectItem>
-                                                            ) : (
-                                                                getRolesQuery.data?.map((role: Role) => (
-                                                                    <SelectItem
-                                                                        className='hover:cursor-pointer'
-                                                                        key={role.id}
-                                                                        value={role.id.toString()}>
-                                                                        {role.name}
-                                                                    </SelectItem>
-                                                                ))
-                                                            )}
-                                                        </SelectContent>
-                                                    </SelectPortal>
-                                                </Select>
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
                                 {form.formState.errors.root?.generic && (
                                     <div>
                                         <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
@@ -558,16 +586,23 @@ const CreateUserForm: React.FC<{
                                         </div>
                                         <div
                                             className='flex flex-row ml-4 mt-6 mb-2 items-center'
-                                            data-testid='create-user-dialog_environments-checkboxes-select-all'>
+                                            data-testid='create-user-dialog_select-all-environments-checkbox-div'>
                                             <FormField
                                                 name='all_environments'
                                                 control={form.control}
                                                 render={() => (
                                                     <FormItem className='flex flex-row items-center'>
                                                         <Checkbox
+                                                            ref={parentCheckboxRef}
                                                             checked={allEnvironmentsSelected}
                                                             id='allEnvironments'
                                                             onCheckedChange={handleSelectAllEnvironmentsChange}
+                                                            className={
+                                                                allEnvironmentsIndeterminate
+                                                                    ? 'data-[state=indeterminate]'
+                                                                    : ''
+                                                            }
+                                                            data-testid='create-user-dialog_select-all-environments-checkbox'
                                                         />
                                                         <FormLabel
                                                             htmlFor='allEnvironments'
