@@ -251,4 +251,5 @@ describe('Certification', () => {
             }
         );
     });
+    it('re-fetches the data if a certification status dropdown choice is selected', async () => {});
 });

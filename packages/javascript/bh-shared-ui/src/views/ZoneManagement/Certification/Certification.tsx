@@ -29,11 +29,11 @@ const Certification: FC = () => {
     );
 
     const mockMemberId = 1;
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 150;
 
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
-        const queryKey = doSearch ? query : 'static';
+        const queryKey = doSearch ? query : filters;
         return useInfiniteQuery<{
             count: number;
             data: { records: AssetGroupTagCertificationRecord[] };
@@ -137,11 +137,9 @@ const Certification: FC = () => {
     const filterByCertification = useCallback(
         (dropdownSelection: DropdownOption) => {
             const certificationStatus = dropdownSelection.key as CertificationType;
-            filters.certificationStatus = certificationStatus;
-            setFilters(filters);
-            refetch();
+            setFilters((prev) => ({ ...prev, certificationStatus }));
         },
-        [filters, refetch]
+        [setFilters]
     );
 
     const handleConfirm = useCallback(
