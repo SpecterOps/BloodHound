@@ -30,14 +30,16 @@ import {
 import { IconName, faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, forwardRef, useEffect, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { AppIcon } from '../../../../components';
 import { IconList, freeIconsList } from '../../../../utils';
 
-const InnerElement = ({ style, ...rest }: any) => (
-    <ul style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest}></ul>
-);
+const InnerElement = forwardRef<HTMLUListElement, any>(({ style, ...rest }, ref) => (
+    <ul ref={ref} style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest} />
+));
+
+InnerElement.displayName = 'IconListUnorderedList';
 
 const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconName) => void }> = ({
     iconName,
@@ -64,12 +66,13 @@ const Row = ({
     style,
 }: ListChildComponentProps<{ filteredList: IconList; onClick: (iconName: IconName) => void }>) => {
     const { filteredList, onClick } = data;
+    const length = 5;
 
     return (
         <li className={'flex justify-evenly items-center'} style={{ ...style }}>
-            {Array.from({ length: 5 }, (_, index) => {
-                const icon = filteredList[row * 5 + index];
-                return <IconCard key={row * 5 + index} iconName={icon ? icon.id : undefined} onClick={onClick} />;
+            {Array.from({ length }, (_, index) => {
+                const icon = filteredList[row * length + index];
+                return <IconCard key={row * length + index} iconName={icon ? icon.id : undefined} onClick={onClick} />;
             })}
         </li>
     );

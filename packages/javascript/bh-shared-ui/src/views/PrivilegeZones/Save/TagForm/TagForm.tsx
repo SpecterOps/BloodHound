@@ -98,7 +98,8 @@ export const TagForm: FC = () => {
 
     const diffValues = (
         data: AssetGroupTag | undefined,
-        formValues: UpdateAssetGroupTagRequest
+        formValues: UpdateAssetGroupTagRequest,
+        isLabelPage: boolean
     ): Partial<UpdateAssetGroupTagRequest> => {
         if (data === undefined) return formValues;
         const workingCopy = { ...formValues };
@@ -106,11 +107,15 @@ export const TagForm: FC = () => {
 
         if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
         if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+
+        // return early so as not to set values specific to zones
+        if (isLabelPage) return diffed;
+
         if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
-        if (data.glyph != workingCopy.glyph) diffed.glyph = workingCopy.glyph;
         if (data.require_certify != workingCopy.require_certify) diffed.require_certify = workingCopy.require_certify;
         if (data.analysis_enabled !== workingCopy.analysis_enabled)
             diffed.analysis_enabled = workingCopy.analysis_enabled;
+        if (data.glyph != workingCopy.glyph) diffed.glyph = workingCopy.glyph;
 
         return diffed;
     };
@@ -160,49 +165,51 @@ export const TagForm: FC = () => {
         [isZonePage, isLabelPage, createTagMutation, addNotification, tagTypeDisplay, handleCreateNavigate, tagType]
     );
 
-    const handleUpdateTag = useCallback(async () => {
-        try {
-            const diffedValues = diffValues(tagQuery.data, { ...getValues() });
-            if (isEmpty(diffedValues)) {
-                addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                });
-                return;
-            }
-
-            const updatedValues = { ...diffedValues };
-
-            if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
-            if (isLabelPage) delete updatedValues.require_certify;
-
-            await updateTagMutation.mutateAsync({
-                updatedValues,
-                tagId,
-            });
-
-            addNotification(
-                `${tagTypeDisplay} was updated successfully!`,
-                `privilege-zones_update-${tagType}_success_${tagId}`,
-                {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+    const handleUpdateTag = useCallback(
+        async (formData: UpdateAssetGroupTagRequest) => {
+            try {
+                const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
+                if (isEmpty(diffedValues)) {
+                    addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    });
+                    return;
                 }
 
-            handleUpdateNavigate();
-        } catch (error) {
-            handleError(error, 'updating', tagType, addNotification);
-        }
-    }, [
-        tagQuery.data,
-        getValues,
-        privilegeZoneAnalysisEnabled,
-        isLabelPage,
-        updateTagMutation,
-        tagId,
-        addNotification,
-        tagTypeDisplay,
-        tagType,
-        handleUpdateNavigate,
-    ]);
+                const updatedValues = { ...diffedValues };
+
+                if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+
+                await updateTagMutation.mutateAsync({
+                    updatedValues,
+                    tagId,
+                });
+
+                addNotification(
+                    `${tagTypeDisplay} was updated successfully!`,
+                    `privilege-zones_update-${tagType}_success_${tagId}`,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
+
+                handleUpdateNavigate();
+            } catch (error) {
+                handleError(error, 'updating', tagType, addNotification);
+            }
+        },
+        [
+            tagQuery.data,
+            privilegeZoneAnalysisEnabled,
+            isLabelPage,
+            updateTagMutation,
+            tagId,
+            addNotification,
+            tagTypeDisplay,
+            tagType,
+            handleUpdateNavigate,
+        ]
+    );
 
     const handleDeleteTag = useCallback(async () => {
         try {
@@ -228,7 +235,7 @@ export const TagForm: FC = () => {
             if (tagId === '') {
                 handleCreateTag(formData as CreateAssetGroupTagRequest);
             } else {
-                handleUpdateTag();
+                handleUpdateTag(formData);
             }
         },
         [tagId, handleCreateTag, handleUpdateTag]
