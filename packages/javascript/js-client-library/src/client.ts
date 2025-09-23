@@ -1,3 +1,4 @@
+import { FileIngestFilterParams } from './../../bh-shared-ui/src/utils/jobs';
 // Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
@@ -844,7 +845,7 @@ class BHEAPIClient {
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
-    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string, filters?: any) =>
+    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string, filters?: FileIngestFilterParams) =>
         this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
             Object.assign({
@@ -852,10 +853,10 @@ class BHEAPIClient {
                     skip,
                     limit,
                     sort_by: sortBy,
-                    status: prefixValue('eq', filters.status),
-                    user_id: prefixValue('eq', filters.user_id),
-                    start_time: prefixValue('gte', filters.start_time),
-                    end_time: prefixValue('lte', filters.end_time),
+                    status: prefixValue('eq', filters?.status),
+                    user_id: prefixValue('eq', filters?.user_id),
+                    start_time: prefixValue('gte', filters?.start_time),
+                    end_time: prefixValue('lte', filters?.end_time),
                 }),
             })
         );
