@@ -35,9 +35,10 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import { useTagsQuery } from '../../../../hooks';
+import { labelsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../../routes';
 import { QueryLineItem } from '../../../../types';
 import { useAppNavigate } from '../../../../utils';
 
@@ -52,44 +53,42 @@ type TagToZoneLabelDialogProps = {
 const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const { dialogOpen, selectedQuery, isLabel, cypherQuery, setDialogOpen } = props;
     const navigate = useAppNavigate();
-
-    const tiersQuery = useTagsQuery();
-
+    const tagsQuery = useTagsQuery();
     const isLabelTagType = (tag: AssetGroupTag) =>
         tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
-    const isTierTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeTier;
+    const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
 
-    const typeMatcher = isLabel ? isLabelTagType : isTierTagType;
-    const zoneLabelList = tiersQuery.data?.filter(typeMatcher);
+    const typeMatcher = isLabel ? isLabelTagType : isZoneTagType;
+    const zoneLabelList = tagsQuery.data?.filter(typeMatcher);
 
-    const [zone, setZone] = useState('');
-    const [label, setLabel] = useState('');
-
+    const [zoneId, setZoneId] = useState('');
+    const [labelId, setLabelId] = useState('');
+    const continueDisabled = (isLabel && !labelId) || (!isLabel && !zoneId);
     const handleValueChange = (val: string) => {
         if (isLabel) {
-            setLabel(val);
-            setZone('');
+            setLabelId(val);
+            setZoneId('');
         } else {
-            setZone(val);
-            setLabel('');
+            setZoneId(val);
+            setLabelId('');
         }
     };
-
+    const title = isLabel ? 'Label' : 'Zone';
     const stateToPass = cypherQuery ? { query: cypherQuery } : selectedQuery;
 
     const onContinue = () => {
         if (isLabel) {
-            navigate(`/zone-management/save/label/${label}/selector`, { state: stateToPass });
+            navigate(`/${privilegeZonesPath}/${labelsPath}/${labelId}/${selectorsPath}/${savePath}`, {
+                state: stateToPass,
+            });
         } else {
-            navigate(`/zone-management/save/tier/${zone}/selector`, { state: stateToPass });
+            navigate(`/${privilegeZonesPath}/${zonesPath}/${zoneId}/${selectorsPath}/${savePath}`, {
+                state: stateToPass,
+            });
         }
     };
 
-    const title = isLabel ? 'Label' : 'Zone';
-
     const description = `Pick a ${title} to create a new selector. All assets returned by the query will be added to your selector.`;
-
-    const continueDisabled = (isLabel && !label) || (!isLabel && !zone);
 
     return (
         <Dialog

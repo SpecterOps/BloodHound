@@ -84,6 +84,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.GenericAll,
                     ActiveDirectoryRelationshipKind.Owns,
                     ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+                    ActiveDirectoryRelationshipKind.ProtectAdminGroups,
                     ActiveDirectoryRelationshipKind.GenericWrite,
                     ActiveDirectoryRelationshipKind.WriteDACL,
                     ActiveDirectoryRelationshipKind.WriteOwner,

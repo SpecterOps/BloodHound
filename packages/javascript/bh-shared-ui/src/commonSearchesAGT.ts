@@ -56,6 +56,11 @@ export const CommonSearches: CommonSearchType[] = [
                 description: '',
                 query: `MATCH p = (:Domain)-[:Contains*1..]->(:OU)\nRETURN p\nLIMIT 1000`,
             },
+            {
+                name: 'Location of AdminSDHolder Protected objects',
+                description: '',
+                query: `MATCH p = (n:Base)<-[:Contains*1..]-(:Domain)\nWHERE n.adminsdholderprotected = True\nRETURN p\nLIMIT 1000`,
+            },
         ],
     },
     {
@@ -203,7 +208,7 @@ export const CommonSearches: CommonSearchType[] = [
             {
                 name: 'Enrollment rights on published ESC2 certificate templates',
                 description: '',
-                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE c.requiresmanagerapproval = false\nAND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus)\nAND (c.authorizedsignatures = 0 OR c.schemaversion = 1)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA)\nWHERE c.requiresmanagerapproval = false\nAND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus OR c.effectiveekus IS NULL)\nAND (c.authorizedsignatures = 0 OR c.schemaversion = 1)\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Enrollment rights on published enrollment agent certificate templates',
@@ -340,6 +345,11 @@ RETURN p\nLIMIT 1000`,
                 name: 'Tier Zero principals without AdminSDHolder protection',
                 description: '',
                 query: `MATCH (n:Base)\nWHERE (n:${TAG_TIER_ZERO_AGT})\nAND n.adminsdholderprotected = false\nRETURN n\nLIMIT 500`,
+            },
+            {
+                name: 'AdminSDHolder to protected objects relationship',
+                description: '',
+                query: `MATCH p=(n)-[:ProtectAdminGroups]->(m)\nRETURN p\nLIMIT 1000`,
             },
         ],
     },
