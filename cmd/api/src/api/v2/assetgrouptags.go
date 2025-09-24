@@ -973,16 +973,20 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySQL := "(actor ILIKE ANY(?) OR email ILIKE ANY(?) OR action ILIKE ANY(?) OR target ILIKE ANY(?))"
+			var (
+				queryableColumns  = []string{"actor", "email", "action", "target"}
+				querySQL          = fmt.Sprintf("(%s ILIKE ANY(?))", strings.Join(queryableColumns, " ILIKE ANY(?) OR "))
+				fuzzyQueryPattern = "%" + query + "%"
+				fuzzyQueryParams  = pq.StringArray{fuzzyQueryPattern, strings.ReplaceAll(fuzzyQueryPattern, " ", "")}
+			)
 
 			if sqlFilter.SQLString != "" {
-				querySQL = " AND" + querySQL
+				querySQL = " AND " + querySQL
 			}
 
 			sqlFilter.SQLString += querySQL
-
-			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, pq.StringArray{"%" + query + "%", strings.ReplaceAll("%"+query+"%", " ", "")})
+			for range len(queryableColumns) {
+				sqlFilter.Params = append(sqlFilter.Params, fuzzyQueryParams)
 			}
 		}
 
