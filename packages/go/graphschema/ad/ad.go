@@ -270,8 +270,8 @@ const (
 	NetBIOS                                       Property = "netbios"
 	AdminSDHolderProtected                        Property = "adminsdholderprotected"
 	ServicePrincipalNames                         Property = "serviceprincipalnames"
-	GPOStatusRaw	                              Property = "gpostatusraw"
-	GPOStatus	                                  Property = "gpostatus"
+	GPOStatusRaw                                  Property = "gpostatusraw"
+	GPOStatus                                     Property = "gpostatus"
 )
 
 func AllProperties() []Property {
