@@ -41,7 +41,7 @@ export type DetailsAccordionProps<T extends Record<string, unknown>> = {
     Header: ComponentType<T>;
 
     /** A single item or array of items to render */
-    items?: T | T[];
+    items?: null | T | T[];
 
     /** Index of the item that should start open (`undefined` = none) */
     openIndex?: number;
@@ -94,7 +94,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
     return (
         <Accordion collapsible defaultValue={defaultValue} type='single'>
             {itemArray.map((item, idx) => {
-                if (item === undefined) {
+                if (item === undefined || item === null) {
                     return null;
                 }
 
@@ -112,6 +112,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                                 'h-16',
                                 !isDisabled && 'cursor-pointer',
                                 isDisabled && 'hover:no-underline',
+                                !accent && 'ml-2',
                                 accent && 'bg-[#e0e0e0] dark:bg-[#202020] border-l-8 border-primary'
                             )}>
                             <FontAwesomeIcon
@@ -122,7 +123,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                             <Header {...item} />
                         </AccordionHeader>
 
-                        <AccordionContent className='pr-6 text-base border-t dark:border-neutral-dark-4'>
+                        <AccordionContent className='p-0 text-base border-t dark:border-neutral-dark-4'>
                             <Content {...item} />
                         </AccordionContent>
                     </AccordionItem>

@@ -107,7 +107,9 @@ beforeAll(() => {
     }
     vi.stubGlobal('XMLHttpRequest', MockXMLHttpRequest);
 });
+
 afterEach(() => server.resetHandlers());
+
 afterAll(() => {
     server.close();
     vi.stubGlobal('XMLHttpRequest', OriginalXMLHttpRequest);
@@ -136,6 +138,7 @@ const Wrapper = () => {
 describe('File Upload', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
+
     it('accepts a valid file and allows the user to continue through the upload process', async () => {
         checkPermissionMock.mockImplementation(() => true);
         render(<Wrapper />);
@@ -157,6 +160,7 @@ describe('File Upload', () => {
         await waitFor(() => screen.getByText('All files have successfully been uploaded for ingest.'));
         expect(screen.getByText('All files have successfully been uploaded for ingest.')).toBeInTheDocument();
     });
+
     it('prevents a user from proceeding if the file is not valid', async () => {
         checkPermissionMock.mockImplementation(() => true);
         render(<Wrapper />);
@@ -174,6 +178,7 @@ describe('File Upload', () => {
         const submitButton = screen.getByTestId('confirmation-dialog_button-yes');
         expect(submitButton).toBeDisabled();
     });
+
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
         checkPermissionMock.mockImplementation(() => false);
         render(<Wrapper />);

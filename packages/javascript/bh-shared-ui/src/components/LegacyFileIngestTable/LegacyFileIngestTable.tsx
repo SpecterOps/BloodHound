@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ const LegacyFileIngestTable: React.FC = () => {
 
     return (
         <>
-            <div className='w-full flex justify-end gap-2 my-4'>
+            <div className='my-4 text-right'>
                 <FileIngestUploadButton />
             </div>
 
