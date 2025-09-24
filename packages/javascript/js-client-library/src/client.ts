@@ -1096,7 +1096,7 @@ class BHEAPIClient {
                 needs_password_reset: user.needsPasswordReset,
                 all_environments: user.all_environments,
                 environment_access_control: {
-                    environments: [user.environment_access_control?.environments],
+                    environments: user.environment_access_control?.environments,
                 },
             },
             options
@@ -1115,7 +1115,7 @@ class BHEAPIClient {
                 is_disabled: user.is_disabled,
                 all_environments: user.all_environments,
                 environment_access_control: {
-                    environments: [user.environment_access_control?.environments],
+                    environments: user.environment_access_control?.environments,
                 },
             },
             options
