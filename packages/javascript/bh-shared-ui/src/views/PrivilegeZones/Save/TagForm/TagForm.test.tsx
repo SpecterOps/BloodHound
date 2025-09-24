@@ -404,7 +404,7 @@ describe('Tag Form', () => {
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Save/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
 
         expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
     });
