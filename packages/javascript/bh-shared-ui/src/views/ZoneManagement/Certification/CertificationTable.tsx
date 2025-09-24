@@ -203,7 +203,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     options={certOptions}
                     selectedText={
                         <span className='flex items-center gap-3'>
-                            <AppIcon.CertStatus size={24} /> {`${dropdownSelection}`}
+                            <AppIcon.CertStatus size={24} /> <p>{`${dropdownSelection}`}</p>
                         </span>
                     }
                     onChange={(selectedCertificationType: DropdownOption) => {
