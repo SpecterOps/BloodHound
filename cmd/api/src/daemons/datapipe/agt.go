@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -751,6 +753,15 @@ func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, asse
 	}
 
 	return nil
+}
+
+// ClearAssetGroupHistoryRecords Truncate the asset group history table to the rolling window
+func ClearAssetGroupHistoryRecords(ctx context.Context, db database.Database) {
+	if recordsDeletedCount, err := db.DeleteAssetGroupHistoryRecordsByCreatedDate(ctx, time.Now().UTC().AddDate(0, 0, -1*model.AssetGroupHistoryRecordRollingWindow)); err != nil {
+		slog.WarnContext(ctx, "AGT: ClearAssetGroupHistoryRecords error", slog.String("countDeleted", strconv.FormatInt(recordsDeletedCount, 10)), slog.String("err", err.Error()))
+	} else {
+		slog.InfoContext(ctx, "AGT: ClearAssetGroupHistoryRecords", slog.String("countDeleted", strconv.FormatInt(recordsDeletedCount, 10)))
+	}
 }
 
 func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Database, graphDb graph.Database) error {

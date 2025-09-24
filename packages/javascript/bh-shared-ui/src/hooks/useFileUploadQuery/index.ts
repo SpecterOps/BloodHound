@@ -13,17 +13,5 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useAssetGroupTags } from './useAssetGroupTags';
-import { usePZQueryParams } from './usePZParams';
 
-export const HYGIENE_AGT_ID = 0;
-export const HYGIENE_TAG_NAME = 'Hygiene';
-
-export const useSelectedTagName = () => {
-    const tags = useAssetGroupTags().data ?? [];
-    const { assetGroupTagId } = usePZQueryParams();
-    if (assetGroupTagId === HYGIENE_AGT_ID) return HYGIENE_TAG_NAME;
-
-    const selectedTag = tags.find((tag) => tag.id === assetGroupTagId);
-    return selectedTag ? selectedTag.name : 'Tier Zero';
-};
+export * from './useFileUploadQuery';

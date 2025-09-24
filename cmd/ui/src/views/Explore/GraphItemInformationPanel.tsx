@@ -34,8 +34,8 @@ const GraphItemInformationPanel = () => {
     const infoPaneStyles: SxProps = {
         bottom: 0,
         top: 0,
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(2),
+        paddingBottom: theme.spacing(2),
+        paddingTop: theme.spacing(2),
         maxWidth: theme.spacing(50),
         position: 'absolute',
         right: theme.spacing(2),

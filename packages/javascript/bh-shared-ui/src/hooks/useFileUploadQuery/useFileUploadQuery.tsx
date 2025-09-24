@@ -13,17 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useAssetGroupTags } from './useAssetGroupTags';
-import { usePZQueryParams } from './usePZParams';
 
-export const HYGIENE_AGT_ID = 0;
-export const HYGIENE_TAG_NAME = 'Hygiene';
+import type { FileIngestCompletedTasksResponse } from 'js-client-library';
+import { useQuery } from 'react-query';
+import { apiClient } from '../../utils/api';
 
-export const useSelectedTagName = () => {
-    const tags = useAssetGroupTags().data ?? [];
-    const { assetGroupTagId } = usePZQueryParams();
-    if (assetGroupTagId === HYGIENE_AGT_ID) return HYGIENE_TAG_NAME;
-
-    const selectedTag = tags.find((tag) => tag.id === assetGroupTagId);
-    return selectedTag ? selectedTag.name : 'Tier Zero';
+export const useFileUploadQuery = (id?: number) => {
+    return useQuery<FileIngestCompletedTasksResponse>({
+        enabled: id !== undefined,
+        queryFn: ({ signal }) => apiClient.getFileUpload(String(id), { signal }).then((res) => res.data),
+        queryKey: ['file-upload', id, 'completed-tasks'],
+    });
 };
