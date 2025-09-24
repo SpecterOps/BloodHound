@@ -38,7 +38,7 @@ const LoadingRow = (index: number, style: React.CSSProperties) => (
     <div
         data-testid={`privilege-zones_members-list_loading-skeleton`}
         style={style}
-        className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        className='border-y border-neutral-3 relative w-full p-2'>
         <Skeleton className={`h-full`} />
     </div>
 );
@@ -62,8 +62,8 @@ export const MembersList: React.FC<MembersListProps> = ({
             <div
                 key={index}
                 role='listitem'
-                className={cn('border-y border-neutral-light-3 dark:border-neutral-dark-3 relative', {
-                    'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === item.id.toString(),
+                className={cn('border-y border-neutral-3 relative', {
+                    'bg-neutral-4': selected === item.id.toString(),
                 })}
                 style={style}>
                 <SelectedHighlight selected={selected} itemId={item.id} title={'Members'} />
@@ -90,12 +90,12 @@ export const MembersList: React.FC<MembersListProps> = ({
                 }}
                 sortOrder={sortOrder}
                 classes={{
-                    container: 'border-b-2 border-neutral-light-5 dark:border-neutral-dark-5',
+                    container: 'border-b-2 border-neutral-5',
                     button: 'pl-6 font-bold text-xl',
                 }}
             />
             <div
-                className={cn(`overflow-y-auto border-neutral-light-5 dark:border-neutral-dark-5`, {
+                className={cn(`border-neutral-5`, {
                     'h-[762px]': getListHeight(window.innerHeight) === 762,
                     'h-[642px]': getListHeight(window.innerHeight) === 642,
                     'h-[438px]': getListHeight(window.innerHeight) === 438,
