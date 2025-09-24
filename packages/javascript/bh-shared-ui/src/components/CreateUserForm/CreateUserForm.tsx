@@ -36,10 +36,10 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faMinus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
-import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
+import { CreateUserRequest, Environment, EnvironmentRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -128,7 +128,7 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const formatReturnedEnvironments = selectedEnvironments?.map((itemId: string) => ({
+    const formatReturnedEnvironments: EnvironmentRequest[] = selectedEnvironments?.map((itemId: string) => ({
         environment_id: itemId,
     }));
 
@@ -142,7 +142,7 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const parentCheckboxRef = React.useRef<HTMLButtonElement>(null);
+    const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
     const allEnvironmentsIndeterminate =
         selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
 
@@ -153,15 +153,15 @@ const CreateUserForm: React.FC<{
 
         form.setValue('environment_access_control.environments', formatReturnedEnvironments);
 
-        if (parentCheckboxRef.current) {
-            parentCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
+        if (allEnvironmentsCheckboxRef.current) {
+            allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
                 ? 'indeterminate'
                 : allEnvironmentsSelected
                   ? 'checked'
                   : 'unchecked';
         }
 
-        //console.log('Current form :', form.watch()); // TODO: REMOVE
+        console.log('Current form :', form.watch()); // TODO: REMOVE
 
         if (error) {
             if (error?.response?.status === 409) {
@@ -559,7 +559,11 @@ const CreateUserForm: React.FC<{
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button type='submit' disabled={isLoading} data-testid='create-user-dialog_button-save'>
+                                <Button
+                                    data-testid='update-user-dialog_button-save'
+                                    disabled={isLoading}
+                                    role='button'
+                                    type='submit'>
                                     Save
                                 </Button>
                             </DialogActions>
@@ -593,7 +597,7 @@ const CreateUserForm: React.FC<{
                                                 render={() => (
                                                     <FormItem className='flex flex-row items-center'>
                                                         <Checkbox
-                                                            ref={parentCheckboxRef}
+                                                            ref={allEnvironmentsCheckboxRef}
                                                             checked={allEnvironmentsSelected}
                                                             id='allEnvironments'
                                                             onCheckedChange={handleSelectAllEnvironmentsChange}
@@ -602,6 +606,7 @@ const CreateUserForm: React.FC<{
                                                                     ? 'data-[state=indeterminate]'
                                                                     : ''
                                                             }
+                                                            icon={faMinus}
                                                             data-testid='create-user-dialog_select-all-environments-checkbox'
                                                         />
                                                         <FormLabel

@@ -121,7 +121,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
-                all_environments: user.all_environments,
+                all_environments: user.all_environments || undefined,
                 environment_access_control: {
                     environments: user.environment_access_control.environments || [],
                 },
