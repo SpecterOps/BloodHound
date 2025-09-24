@@ -68,6 +68,6 @@ jobs:
         if: always()
         with:
           gh_pages: gh-pages
-          allure_history: houndstrike/allure-history
-          allure_results: houndstrike/allure-results
-          allure_report: houndstrike/allure-report
+          allure_history: allure-history
+          allure_results: allure-results
+          allure_report: allure-report
