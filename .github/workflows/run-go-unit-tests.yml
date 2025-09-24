@@ -53,6 +53,7 @@ jobs:
           go install github.com/robotomize/go-allure/cmd/golurectl@latest
       
       - name: Building Allure JSON 
+        if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           cat test_results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
 
@@ -79,3 +80,11 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+
+      - name: Deploy report to Github Pages
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
