@@ -450,6 +450,48 @@ func TestParseGPOData(t *testing.T) {
 				Labels:      []graph.Kind{ad.GPO},
 			},
 		},
+		{
+			name: "ParseGPOData with numeric status (int)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): 2},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (float64)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): float64(3)},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with whitespace-padded string",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): " 1 "},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
 	}
 
 	for _, testCase := range tt {
