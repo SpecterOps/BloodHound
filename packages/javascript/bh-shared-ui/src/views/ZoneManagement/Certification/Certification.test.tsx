@@ -65,7 +65,6 @@ useInfiniteQuerySpy.mockReturnValue({
     isFetching: false,
     isSuccess: true,
     isError: false,
-    refetch: vi.fn(),
 });
 
 const addNotificationMock = vi.fn();
@@ -120,6 +119,7 @@ describe('Certification', () => {
             action: CertificationManual,
             note: textNote,
         });
+
         expect(addNotificationMock).toBeCalledWith(
             'Selected Certification Successful',
             'zone-management_update-certification_success',
@@ -251,5 +251,22 @@ describe('Certification', () => {
             }
         );
     });
-    it('re-fetches the data if a certification status dropdown choice is selected', async () => {});
+    it('re-fetches the data if a certification status dropdown choice is selected', async () => {
+        render(<Certification></Certification>);
+        const certificationDropdown = await screen.findByText('Status');
+        expect(certificationDropdown).toBeInTheDocument();
+        await user.click(certificationDropdown);
+        const selection = await screen.findByText('Certified');
+        await user.click(selection);
+        expect(useInfiniteQuerySpy).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                queryKey: [
+                    'certifications',
+                    {
+                        certificationStatus: CertificationManual,
+                    },
+                ],
+            })
+        );
+    });
 });
