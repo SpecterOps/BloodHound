@@ -48,6 +48,7 @@ jobs:
           go test -json -cover ./... > test_results.json
 
       - name: Install AllureCtl
+        if: ${{ github.ref == 'refs/heads/main' }}
         run: | 
           go install github.com/robotomize/go-allure/cmd/golurectl@latest
       
@@ -57,7 +58,7 @@ jobs:
 
       - name: Get Allure history
         uses: actions/checkout@v2
-        if: always()
+        if: ${{ github.ref == 'refs/heads/main' }}
         continue-on-error: true
         with:
           ref: gh-pages
@@ -65,7 +66,7 @@ jobs:
 
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.12
-        if: always()
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           gh_pages: gh-pages
           allure_history: allure-history
@@ -74,6 +75,7 @@ jobs:
       
       - name: Upload Test Report 
         uses: actions/upload-artifact@v4
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           name: allure-report
           path: allure-report
