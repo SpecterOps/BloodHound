@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ROUTE_PRIVILEGE_ZONES } from 'bh-shared-ui';
+
 export const ROUTE_HOME = '/';
 export const ROUTE_EXPLORE = '/explore';
 export const ROUTE_GROUP_MANAGEMENT = '/group-management';
-export const ROUTE_ZONE_MANAGEMENT = '/zone-management/';
-export const ROUTE_ZONE_MANAGEMENT_ROOT = ROUTE_ZONE_MANAGEMENT + '*';
+export const ROUTE_PZ_SPLAT = ROUTE_PRIVILEGE_ZONES + '/*';
 export const ROUTE_LOGIN = '/login';
 export const ROUTE_CHANGE_PASSWORD = '/changepassword';
 export const ROUTE_USER_DISABLED = '/user-disabled';

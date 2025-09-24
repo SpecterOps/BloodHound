@@ -28,7 +28,7 @@ describe('ImportQueryDialog', () => {
         expect(screen.getByText('Upload Files')).toBeInTheDocument();
     });
 
-    it('hanldes close event', () => {
+    it('handles close event', () => {
         render(<ImportQueryDialog open={true} onClose={testHandleClose} />);
         const cancelButton = screen.getByText('Cancel');
         expect(cancelButton).toBeInTheDocument();
