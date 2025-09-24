@@ -86,7 +86,7 @@ jobs:
           DOCKER_CONTENT_TRUST: 1
           DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.docker_content_trust_repository_passphrase }}
         shell: bash
-        run: docker trust sign ${{ inputs.dockerhub_image_reference }}
+        run: docker trust sign --local ${{ inputs.dockerhub_image_reference }}
 
       - name: Inspect Signed Image
         run: docker trust inspect --pretty ${{ inputs.dockerhub_image_reference }}
@@ -100,6 +100,8 @@ jobs:
     name: Validate Signed Image
     needs: sign-image
     runs-on: ubuntu-latest
+    # continue-on-error until validate signed image can be fully validated post-merge
+    continue-on-error: true
     env:
       DOCKER_CONTENT_TRUST: 1
       DOCKER_CONTENT_TRUST_SERVER: ${{ inputs.docker_content_trust_server }}
