@@ -68,6 +68,7 @@ func NewChangelogWithHA(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKey
 	return &Changelog{
 		flagManager: flagManager,
 		coordinator: coordinator,
+		options:     opts,
 	}
 }
 
