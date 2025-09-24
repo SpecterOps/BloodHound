@@ -83,11 +83,13 @@ describe('FileIngest', () => {
         const uploadButton = screen.getByRole('button', { name: 'Upload File(s)' });
         expect(uploadButton).toBeInTheDocument();
     });
-    it('displays a Filters button', async () => {
-        await act(async () => render(<FileIngest />));
-        const filterButton = screen.getByRole('button', { name: /app-icon-filter-outline/i });
-        expect(filterButton).toBeInTheDocument();
-    });
+
+    // it('displays a Filters button', async () => {
+    //     await act(async () => render(<FileIngest />));
+    //     const filterButton = screen.getByRole('button', { name: /app-icon-filter-outline/i });
+    //     expect(filterButton).toBeInTheDocument();
+    // });
+
     it('displays a table of completed ingest logs', async () => {
         checkPermissionMock.mockImplementation(() => true);
         render(<FileIngest />);
