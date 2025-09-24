@@ -885,7 +885,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		}
 
 		parsedData.ExtraNodeProps = append(parsedData.ExtraNodeProps, IngestibleNode{
-			PropertyMap: map[string]any{"name": trust.TargetDomainName},
+			PropertyMap: map[string]any{"name": trust.TargetDomainName, ad.DomainSID.String(): trust.TargetDomainSid},
 			ObjectID:    trust.TargetDomainSid,
 			Labels:      []graph.Kind{ad.Domain},
 		})
