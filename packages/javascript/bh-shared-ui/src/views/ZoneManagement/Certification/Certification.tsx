@@ -29,7 +29,7 @@ const Certification: FC = () => {
     );
 
     const mockMemberId = 1;
-    const PAGE_SIZE = 150;
+    const PAGE_SIZE = 15;
 
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
@@ -146,6 +146,7 @@ const Certification: FC = () => {
         (withNote: boolean, certifyNote?: string) => {
             setIsDialogOpen(false);
             const selectedMemberIds = selectedRows;
+            console.log('SELECTED MEMBERS', selectedMemberIds);
             if (selectedMemberIds.length === 0) {
                 addNotification(
                     'Members must be selected for certification',
