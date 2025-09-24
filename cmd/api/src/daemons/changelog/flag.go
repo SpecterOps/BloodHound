@@ -48,7 +48,7 @@ func (s *featureFlagManager) isPrimary(ctx context.Context) (bool, context.Conte
 
 	// Try to get the HA lock to determine if we're primary
 	if lockResult, err := s.haMutex.TryLock(); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to validate HA election status: %v", err))
+		slog.ErrorContext(ctx, "Failed to validate HA election status", slog.Any("err", err))
 		return false, ctx
 	} else if lockResult.IsPrimary {
 		// If we are primary, return the primary context
@@ -112,7 +112,7 @@ func (s *featureFlagManager) enable(ctx context.Context, size int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	slog.InfoContext(ctx, "enabling changelog", "cache size", size)
+	slog.InfoContext(ctx, "enabling changelog", slog.Int("cache size", size))
 	cache := newCache(size)
 	s.cache = cache
 }
@@ -180,7 +180,7 @@ func flagGetter(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer) func
 				return nil
 			}
 		}); err != nil {
-			return false, 0, fmt.Errorf("counting nodes and relationships in graph: %w ", err)
+			return false, 0, fmt.Errorf("counting nodes and relationships in graph: %w", err)
 		}
 
 		return true, int(graphSize), nil

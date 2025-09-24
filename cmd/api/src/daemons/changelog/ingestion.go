@@ -55,8 +55,13 @@ func (s *ingestionCoordinator) start(ctx context.Context, batchSize int, flushIn
 	s.done = make(chan struct{})
 
 	s.batchSize = batchSize
-	s.flushInterval = flushInterval
 	s.buffer = make([]Change, 0, batchSize)
+
+	if flushInterval <= 0 {
+		slog.WarnContext(cctx, "invalid flush interval; defaulting to 5s", slog.Duration("requested_interval", flushInterval))
+		flushInterval = 5 * time.Second
+	}
+	s.flushInterval = flushInterval
 
 	s.writerC, s.readerC = channels.BufferedPipe[Change](cctx)
 
@@ -76,8 +81,8 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 			// final flush on shutdown
 			flushCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			s.flushBuffer(flushCtx, true)
-			cancel()
 			slog.InfoContext(flushCtx, "ending changelog loop")
+			cancel()
 			return
 
 		case change, ok := <-s.readerC:
@@ -89,15 +94,15 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 
 			if len(s.buffer) >= s.batchSize {
 				if err := s.flushBuffer(ctx, false); err != nil {
-					slog.WarnContext(ctx, "size-based flush failed", "err", err)
+					slog.WarnContext(ctx, "size-based flush failed", slog.Any("err", err))
 				}
 			}
 
 		case <-ticker.C:
 			if len(s.buffer) > 0 {
-				slog.InfoContext(ctx, "periodic flush", "timestamp", time.Now())
+				slog.InfoContext(ctx, "periodic flush")
 				if err := s.flushBuffer(ctx, true); err != nil {
-					slog.WarnContext(ctx, "periodic flush failed", "err", err)
+					slog.WarnContext(ctx, "periodic flush failed", slog.Any("err", err))
 				}
 			}
 		}
