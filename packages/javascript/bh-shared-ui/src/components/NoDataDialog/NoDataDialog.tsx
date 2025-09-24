@@ -21,14 +21,9 @@ type NoDataDialogProps = PropsWithChildren<{ open: boolean }>;
 
 export const NoDataDialog: React.FC<NoDataDialogProps> = ({ open, children }) => {
     return (
-        <Dialog
-            open={open}
-            onOpenChange={() => {
-                // unblocks the body from being clickable so the user can go to another tab
-                document.body.style.pointerEvents = '';
-            }}>
+        <Dialog open={open}>
             <DialogPortal>
-                <DialogContent className='outline-none focus:outline-none'>
+                <DialogContent className='outline-none focus:outline-none' allowNav>
                     <DialogTitle>No Data Available</DialogTitle>
                     <DialogDescription>{children}</DialogDescription>
                 </DialogContent>
