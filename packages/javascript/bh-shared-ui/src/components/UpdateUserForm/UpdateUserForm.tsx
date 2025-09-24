@@ -67,6 +67,8 @@ const UpdateUserForm: React.FC<{
         }
     );
 
+    console.log(getUserQuery.data);
+
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
     );
@@ -116,8 +118,6 @@ const UpdateUserForm: React.FC<{
         );
     }
 
-    console.log(getUserQuery.data);
-
     return (
         <UpdateUserFormInner
             initialData={{
@@ -129,8 +129,9 @@ const UpdateUserForm: React.FC<{
                 roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
                 all_environments: getUserQuery.data.all_environments,
                 environment_access_control: {
-                    environments:
+                    environments: [
                         getUserQuery.data.environment_access_control?.map((environment: any) => environment.id) || [],
+                    ],
                 },
             }}
             error={error}
@@ -190,26 +191,30 @@ const UpdateUserFormInner: React.FC<{
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
+    const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
+
+    const formatReturnedEnvironments = returnMappedEnvironments?.map((item: string) => ({
+        environment_id: item,
+    }));
+
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
-            const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
-
-            const formatReturnedEnvironments = returnMappedEnvironments?.map((item: string) => ({
-                environment_id: item,
-            }));
+            //console.log(formatReturnedEnvironments);
 
             setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('all_environments', true);
+            //form.setValue('all_environments', true);
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         } else {
             setSelectedEnvironments([]);
-            form.setValue('all_environments', false);
+            //form.setValue('all_environments', false);
         }
     };
 
     const handleEnvironmentSelectChange = (itemId: any, checked: any) => {
         if (checked) {
+            //console.log(formatReturnedEnvironments);
             setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
+            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         } else {
             setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
         }
@@ -218,12 +223,26 @@ const UpdateUserFormInner: React.FC<{
     const allEnvironmentsSelected =
         selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
 
+    const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
+    const allEnvironmentsIndeterminate =
+        selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
+
     useEffect(() => {
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
         }
 
-        console.log('Current form values:', form.watch());
+        form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+
+        if (allEnvironmentsCheckboxRef.current) {
+            allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
+                ? 'indeterminate'
+                : allEnvironmentsSelected
+                  ? 'checked'
+                  : 'unchecked';
+        }
+
+        //console.log('Current form :', form.watch()); // TODO: REMOVE
 
         if (error) {
             const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
@@ -602,7 +621,7 @@ const UpdateUserFormInner: React.FC<{
                             <DialogTitle>Environment Access Control</DialogTitle>
                             <div
                                 className='flex flex-col h-full pb-6'
-                                data-testid='create-user-dialog_environments-checkboxes-dialog'>
+                                data-testid='update-user-dialog_environments-checkboxes-dialog'>
                                 <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
                                     <div className='border border-solid border-color-[#CACFD3] flex'>
                                         <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
@@ -619,16 +638,23 @@ const UpdateUserFormInner: React.FC<{
                                     </div>
                                     <div
                                         className='flex flex-row ml-4 mt-6 mb-2 items-center'
-                                        data-testid='create-user-dialog_all-environments-checkbox'>
+                                        data-testid='create-user-dialog_select-all-environments-checkbox-div'>
                                         <FormField
                                             name='all_environments'
                                             control={form.control}
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
+                                                        ref={allEnvironmentsCheckboxRef}
                                                         checked={allEnvironmentsSelected}
                                                         id='allEnvironments'
                                                         onCheckedChange={handleSelectAllEnvironmentsChange}
+                                                        className={
+                                                            allEnvironmentsIndeterminate
+                                                                ? 'data-[state=indeterminate]'
+                                                                : ''
+                                                        }
+                                                        data-testid='update-user-dialog_select-all-environments-checkbox'
                                                     />
                                                     <FormLabel
                                                         className='ml-3 w-full cursor-pointer font-medium !text-sm'
@@ -647,7 +673,7 @@ const UpdateUserFormInner: React.FC<{
                                                 return (
                                                     <div
                                                         className='flex justify-start items-center ml-5'
-                                                        data-testid='create-user-dialog_environments-checkbox'>
+                                                        data-testid='update-user-dialog_environments-checkbox'>
                                                         <FormField
                                                             name='environment_access_control.environments'
                                                             control={form.control}
