@@ -498,15 +498,9 @@ export type FileIngestJob = TimestampFields & {
     user_id: string;
 };
 
-export type FileIngestCompletedTask = {
-    created_at: string;
-    deleted_at: {
-        time: string;
-        valid: boolean;
-    };
+export type FileIngestCompletedTask = TimestampFields & {
     errors: string[];
     file_name: string;
     id: number;
     parent_file_name: string;
-    updated_at: string;
 };

@@ -16,19 +16,23 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { createAuthStateWithPermissions } from '../../mocks';
-import { render, screen, waitFor } from '../../test-utils';
-import { Permission } from '../../utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import FileIngest from './FileIngest';
 
+const checkPermissionMock = vi.fn();
+
+vi.mock('../../hooks/usePermissions', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        usePermissions: () => ({
+            checkPermission: checkPermissionMock,
+            isSuccess: true,
+        }),
+    };
+});
+
 const server = setupServer(
-    rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: createAuthStateWithPermissions([Permission.GRAPH_DB_INGEST]).user,
-            })
-        );
-    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -69,12 +73,23 @@ beforeAll(() => {
 afterEach(() => server.resetHandlers());
 afterAll(() => {
     server.close();
-    server.resetHandlers();
     vi.clearAllMocks();
+    server.resetHandlers();
 });
 
 describe('FileIngest', () => {
+    it('displays a Upload Files button', async () => {
+        await act(async () => render(<FileIngest />));
+        const uploadButton = screen.getByRole('button', { name: 'Upload File(s)' });
+        expect(uploadButton).toBeInTheDocument();
+    });
+    it('displays a Filters button', async () => {
+        await act(async () => render(<FileIngest />));
+        const filterButton = screen.getByRole('button', { name: /app-icon-filter-outline/i });
+        expect(filterButton).toBeInTheDocument();
+    });
     it('displays a table of completed ingest logs', async () => {
+        checkPermissionMock.mockImplementation(() => true);
         render(<FileIngest />);
         await waitFor(() => screen.getByText('test_email@specterops.io'));
 

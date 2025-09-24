@@ -33,15 +33,15 @@ const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors }) =>
 
 /** Only displays content if ingest had errors  */
 const FileContent: React.FC<FileIngestCompletedTask> = (ingest) =>
-    ingest.errors.length > 0 ? <FileErrors {...ingest} /> : undefined;
+    ingest.errors.length > 0 ? <FileErrors {...ingest} /> : null;
 
 /** Displays file ingest errors */
 const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors }) => (
     <div className='p-3'>
         <div className='p-3 bg-neutral-3'>
             <div className='font-bold mb-2'>Error Message(s):</div>
-            {errors.map((error) => (
-                <div className='[&:not(:last-child)]:mb-2' key={error}>
+            {errors.map((error, index) => (
+                <div className='[&:not(:last-child)]:mb-2' key={index}>
                     {error}
                 </div>
             ))}
@@ -49,20 +49,20 @@ const FileErrors: React.FC<FileIngestCompletedTask> = ({ errors }) => (
     </div>
 );
 
-const fileHasError = (ingest: FileIngestCompletedTask) => ingest.errors.length === 0;
+const isErrorFree = (ingest: FileIngestCompletedTask | null) => ingest?.errors.length === 0;
 
 /** Displays the ingest ID */
 const IngestHeader: React.FC<FileIngestJob> = ({ id }) => <div className='ml-4'>ID {id}</div>;
 
 /** Displays a list of all files in the ingest */
 const IngestContent: React.FC<FileIngestJob> = (ingest) => {
-    const { data, isSuccess } = useFileUploadQuery(ingest?.id);
+    const { data, isSuccess } = useFileUploadQuery(ingest.id);
 
     const items = isSuccess ? data.data : [];
 
     return (
         <div className='max-h-[calc(100vh-16rem)] overflow-y-auto'>
-            <DetailsAccordion Content={FileContent} Header={FileHeader} itemDisabled={fileHasError} items={items} />
+            <DetailsAccordion Content={FileContent} Header={FileHeader} itemDisabled={isErrorFree} items={items} />
         </div>
     );
 };

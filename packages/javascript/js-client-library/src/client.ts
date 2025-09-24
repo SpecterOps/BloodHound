@@ -881,9 +881,11 @@ class BHEAPIClient {
         return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, mergedOptions);
     };
 
-    getFileUpload = (uploadId: string) => {
-        return this.baseClient.get<FileIngestCompletedTasksResponse>(`/api/v2/file-upload/${uploadId}/completed-tasks`);
-    };
+    getFileUpload = (uploadId: string, options?: RequestOptions) =>
+        this.baseClient.get<FileIngestCompletedTasksResponse>(
+            `/api/v2/file-upload/${uploadId}/completed-tasks`,
+            options
+        );
 
     endFileIngest = (ingestId: string) =>
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);

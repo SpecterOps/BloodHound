@@ -21,7 +21,7 @@ import { apiClient } from '../../utils/api';
 export const useFileUploadQuery = (id?: number) => {
     return useQuery<FileIngestCompletedTasksResponse>({
         enabled: id !== undefined,
-        queryFn: () => apiClient.getFileUpload(String(id)).then((res) => res.data),
+        queryFn: ({ signal }) => apiClient.getFileUpload(String(id), { signal }).then((res) => res.data),
         queryKey: ['file-upload', id, 'completed-tasks'],
     });
 };

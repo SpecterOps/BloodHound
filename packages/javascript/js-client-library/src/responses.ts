@@ -256,7 +256,7 @@ export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
 
 export type UploadFileToIngestResponse = null;
 
-export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[]>;
+export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[] | null>;
 
 export type EndFileIngestResponse = null;
 

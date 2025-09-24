@@ -41,7 +41,7 @@ export type DetailsAccordionProps<T extends Record<string, unknown>> = {
     Header: ComponentType<T>;
 
     /** A single item or array of items to render */
-    items?: T | T[];
+    items?: null | T | T[];
 
     /** Index of the item that should start open (`undefined` = none) */
     openIndex?: number;
@@ -94,7 +94,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
     return (
         <Accordion collapsible defaultValue={defaultValue} type='single'>
             {itemArray.map((item, idx) => {
-                if (item === undefined) {
+                if (item === undefined || item === null) {
                     return null;
                 }
 

@@ -21,7 +21,7 @@ import { ZERO_VALUE_API_DATE } from '../../constants';
 import { useGetFileUploadsQuery } from '../../hooks';
 import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
-import { UploadFilesDialog } from '../FileIngest/UploadFilesDialog';
+import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
 
 const ingestTableHeaders = [
@@ -71,7 +71,7 @@ const LegacyFileIngestTable: React.FC = () => {
     return (
         <>
             <div className='my-4 text-right'>
-                <UploadFilesDialog />
+                <FileIngestUploadButton />
             </div>
 
             <Paper>

@@ -12,40 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0d
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { useMountEffect, usePermissions } from '../../hooks';
-import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
-import { useNotifications } from '../../providers';
+import { useFileUploadDialogContext, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
 
-export const UploadFilesDialog = () => {
+export const FileIngestUploadButton = () => {
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
-
     const { checkPermission } = usePermissions();
     const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
-
-    const { addNotification, dismissNotification } = useNotifications();
-    const notificationKey = 'file-upload-permission';
-
-    const effect: React.EffectCallback = () => {
-        if (!hasPermission) {
-            addNotification(
-                `Your user role does not grant permission to upload data. Please contact your administrator for details.`,
-                notificationKey,
-                {
-                    persist: true,
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                }
-            );
-        }
-
-        return () => dismissNotification(notificationKey);
-    };
-
-    useMountEffect(effect);
-
     const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
 
     return (

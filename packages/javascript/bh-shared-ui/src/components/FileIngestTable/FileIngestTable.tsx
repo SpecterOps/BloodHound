@@ -20,7 +20,7 @@ import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
 import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
-import { UploadFilesDialog } from '../FileIngest/UploadFilesDialog';
+import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
 import { StatusIndicator } from '../StatusIndicator';
 import { FileIngestDetailsPanel } from './FileIngestDetailsPanel';
 
@@ -36,9 +36,13 @@ const getRow =
 
         return [
             <div className='min-w-32 space-y-1' key={`status-${job.id}`}>
-                <a className='text-secondary dark:text-secondary-variant-2' href='#' onClick={() => onSelectJob(job)}>
+                <button
+                    type='button'
+                    className='text-secondary dark:text-secondary-variant-2 hover:underline'
+                    onClick={() => onSelectJob(job)}
+                    aria-label={`View ingest ${job.id} details`}>
                     ID {job.id}
-                </a>
+                </button>
                 <div>{job.user_email_address}</div>
                 <div className='flex items-center'>
                     <StatusIndicator {...indicator} label={label} />
@@ -75,7 +79,7 @@ export const FileIngestTable: FC = () => {
     return (
         <div className='grid h-full grid-cols-[1fr_27rem] grid-rows-[auto_minmax(0,1fr)] pt-4 gap-4'>
             <div className='col-[1] row-[1] flex items-center justify-end gap-2'>
-                <UploadFilesDialog />
+                <FileIngestUploadButton />
             </div>
 
             <div className='col-[1] row-[2] min-h-0'>

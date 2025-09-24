@@ -18,20 +18,24 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
 import { FileUploadDialogContext } from '../../hooks';
-import { createAuthStateWithPermissions } from '../../mocks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
-import { Permission } from '../../utils';
 import FileUploadDialog from '../FileUploadDialog';
-import { UploadFilesDialog } from './UploadFilesDialog';
+import { FileIngestUploadButton } from './FileIngestUploadButton';
+
+const checkPermissionMock = vi.fn();
+
+vi.mock('../../hooks/usePermissions', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        usePermissions: () => ({
+            checkPermission: checkPermissionMock,
+            isSuccess: true,
+        }),
+    };
+});
 
 const server = setupServer(
-    rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: createAuthStateWithPermissions([Permission.GRAPH_DB_INGEST]).user,
-            })
-        );
-    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -71,25 +75,6 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/file-upload', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [
-                    {
-                        status: 2,
-                        status_message: 'Complete',
-                        id: 1,
-                        start_time: '2023-08-01T22:03:20.245299Z',
-                        end_time: '2023-08-01T22:04:23.097927Z',
-                        user_email_address: 'test_email@specterops.io',
-                    },
-                ],
-
-                status: 200,
-                statusText: 'OK',
-            })
-        );
-    }),
     rest.get('/api/v2/file-upload/accepted-types', (req, res, ctx) => {
         return res(
             ctx.json({
@@ -124,6 +109,7 @@ beforeAll(() => {
 });
 
 afterEach(() => server.resetHandlers());
+
 afterAll(() => {
     server.close();
     vi.stubGlobal('XMLHttpRequest', OriginalXMLHttpRequest);
@@ -142,18 +128,19 @@ const Wrapper = () => {
     return (
         <>
             <FileUploadDialogContext.Provider value={value}>
-                <UploadFilesDialog />
+                <FileIngestUploadButton />
             </FileUploadDialogContext.Provider>
             <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
         </>
     );
 };
 
-describe('FileIngest', () => {
+describe('File Upload', () => {
     const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
     const errorFile = new File(['test text'], 'test.txt', { type: 'text/plain' });
 
     it('accepts a valid file and allows the user to continue through the upload process', async () => {
+        checkPermissionMock.mockImplementation(() => true);
         render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
@@ -175,6 +162,7 @@ describe('FileIngest', () => {
     });
 
     it('prevents a user from proceeding if the file is not valid', async () => {
+        checkPermissionMock.mockImplementation(() => true);
         render(<Wrapper />);
 
         const openButton = screen.getByText('Upload File(s)');
@@ -192,15 +180,7 @@ describe('FileIngest', () => {
     });
 
     it('disables the upload button and does not populate a table if the user lacks the permission', async () => {
-        server.use(
-            rest.get('/api/v2/self', (req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: createAuthStateWithPermissions([]).user,
-                    })
-                );
-            })
-        );
+        checkPermissionMock.mockImplementation(() => false);
         render(<Wrapper />);
 
         expect(screen.queryByText('test_email@specterops.io')).toBeNull();

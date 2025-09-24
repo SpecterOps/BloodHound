@@ -16,7 +16,9 @@
 
 import { Typography } from '@mui/material';
 import { FC } from 'react';
-
+import { useMountEffect, usePermissions } from '../../hooks';
+import { useNotifications } from '../../providers';
+import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
 import FeatureFlag from '../FeatureFlag';
 import { FileIngestTable } from '../FileIngestTable';
@@ -25,6 +27,29 @@ import LoadingOverlay from '../LoadingOverlay';
 import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
+    const { checkPermission } = usePermissions();
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
+
+    const { addNotification, dismissNotification } = useNotifications();
+    const notificationKey = 'file-upload-permission';
+
+    const effect: React.EffectCallback = () => {
+        if (!hasPermission) {
+            addNotification(
+                `Your user role does not grant permission to upload data. Please contact your administrator for details.`,
+                notificationKey,
+                {
+                    persist: true,
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
+        }
+
+        return () => dismissNotification(notificationKey);
+    };
+
+    useMountEffect(effect);
+
     return (
         <PageWithTitle
             title='File Ingest'
