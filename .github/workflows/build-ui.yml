@@ -42,9 +42,13 @@ jobs:
         run: |
           npm install --global yarn
 
+      - name: Install Deps
+        run: |
+          cd cmd/ui && yarn
+
       - name: Format js-client-library with Prettier
         run: |
-          cd packages/javascript/js-client-library && yarn && yarn format && yarn build && cd ../bh-shared-ui/ && yarn && yarn format && yarn build && cd ../../../cmd/ui/ && yarn
+          cd packages/javascript/js-client-library && yarn format && cd ../bh-shared-ui/ && yarn format && cd ../../../cmd/ui/ && yarn format
 
       - name: Run Build
         run: |
