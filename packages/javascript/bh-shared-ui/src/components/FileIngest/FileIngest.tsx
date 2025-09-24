@@ -17,7 +17,7 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 import { useMountEffect, usePermissions } from '../../hooks';
-import { useNotifications } from '../../providers';
+import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
 import { Permission } from '../../utils';
 import DocumentationLinks from '../DocumentationLinks';
 import FeatureFlag from '../FeatureFlag';
@@ -38,10 +38,7 @@ const FileIngest: FC = () => {
             addNotification(
                 `Your user role does not grant permission to upload data. Please contact your administrator for details.`,
                 notificationKey,
-                {
-                    persist: true,
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                }
+                PERSIST_NOTIFICATION
             );
         }
 
