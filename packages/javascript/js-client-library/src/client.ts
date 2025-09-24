@@ -266,13 +266,14 @@ class BHEAPIClient {
         params.append('skip', skip.toString());
         params.append('limit', limit.toString());
         if (filter) {
-            if (filter.certificationStatus != undefined) params.append('certified', `eq:${filter.certificationStatus}`);
+            if (filter.certificationStatus !== undefined)
+                params.append('certified', `eq:${filter.certificationStatus}`);
         }
         return this.baseClient.get<AssetGroupTagsCertification>(
             `/api/v2/asset-group-tags/certifications`,
             Object.assign(
                 {
-                    params: params,
+                    params,
                 },
                 options
             )
