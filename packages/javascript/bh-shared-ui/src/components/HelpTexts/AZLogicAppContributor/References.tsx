@@ -20,11 +20,11 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://github.com/BloodHoundAD/BARK'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/BloodHoundAD/BARK'>
                 Andy Robbins - BARK.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://medium.com/p/52b29354fc54'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://medium.com/p/52b29354fc54'>
                 Managed Identity Attack Paths, Part 2: Logic Apps
             </Link>
         </Box>

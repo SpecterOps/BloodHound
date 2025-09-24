@@ -23,6 +23,7 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -47,9 +48,10 @@ type BHCEPipeline struct {
 	ingestSchema        upload.IngestSchema
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
+	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,
@@ -58,7 +60,8 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		ingestSchema:        ingestSchema,
 		jobService:          job.NewJobService(ctx, db),
-		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
+		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
+		changelog:           cl,
 	}
 }
 
@@ -86,6 +89,11 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 		return fmt.Errorf("deleting ingest tasks during data deletion: %v", err)
 	} else if err := PurgeGraphData(ctx, deleteRequest, s.graphdb, s.db); err != nil {
 		return fmt.Errorf("purging graph data failed: %w", err)
+	}
+
+	// Clear changelog cache to ensure consistency after graph data deletion
+	if s.changelog != nil {
+		s.changelog.ClearCache(ctx)
 	}
 
 	return nil
@@ -146,7 +154,7 @@ func (s *BHCEPipeline) PruneData(ctx context.Context) error {
 		expectedFiles := make([]string, len(ingestTasks))
 
 		for idx, ingestTask := range ingestTasks {
-			expectedFiles[idx] = ingestTask.FileName
+			expectedFiles[idx] = ingestTask.StoredFileName
 		}
 
 		go s.orphanedFileSweeper.Clear(ctx, expectedFiles)
@@ -171,12 +179,28 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 // updateJobFunc generates a valid graphify.UpdateJobFunc by injecting the parent context and database interface
 // Only used as a callback, so not exposed
 func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJobFunc {
-	return func(jobID int64, totalFiles int, totalFailed int) {
+	return func(jobID int64, fileData []graphify.IngestFileData) {
 		if job, err := db.GetIngestJob(ctx, jobID); err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobID, err))
 		} else {
-			job.TotalFiles += totalFiles
-			job.FailedFiles += totalFailed
+			for _, file := range fileData {
+				job.TotalFiles += 1
+				completedTask := model.CompletedTask{
+					IngestJobId:    job.ID,
+					FileName:       file.Name,
+					ParentFileName: file.ParentFile,
+					Errors:         []string{},
+				}
+
+				if len(file.Errors) > 0 {
+					job.FailedFiles += 1
+					completedTask.Errors = file.Errors
+				}
+
+				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Failed to create completed task for ingest task %d: %v", job.ID, err))
+				}
+			}
 
 			if err = db.UpdateIngestJob(ctx, job); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))

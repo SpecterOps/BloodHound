@@ -17,7 +17,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypeTier,
+    AssetGroupTagTypeZone,
 } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -32,11 +32,11 @@ const handlers = [
             ctx.json({
                 data: {
                     tags: [
-                        { position: 1, id: 42, type: AssetGroupTagTypeTier },
-                        { position: 2, id: 23, type: AssetGroupTagTypeTier },
-                        { position: 7, id: 1, type: AssetGroupTagTypeTier },
-                        { position: 3, id: 2, type: AssetGroupTagTypeTier },
-                        { position: 777, id: 3, type: AssetGroupTagTypeTier },
+                        { position: 1, id: 42, type: AssetGroupTagTypeZone },
+                        { position: 2, id: 23, type: AssetGroupTagTypeZone },
+                        { position: 7, id: 1, type: AssetGroupTagTypeZone },
+                        { position: 3, id: 2, type: AssetGroupTagTypeZone },
+                        { position: 777, id: 3, type: AssetGroupTagTypeZone },
                     ],
                 },
             })
@@ -105,11 +105,11 @@ describe('the useAssetGroupTags utilities', () => {
                     ctx.json({
                         data: {
                             tags: [
-                                { position: 2, id: 23, type: AssetGroupTagTypeTier },
-                                { position: 7, id: 1, type: AssetGroupTagTypeTier },
-                                { position: 3, id: 2, type: AssetGroupTagTypeTier },
-                                { position: 777, id: 3, type: AssetGroupTagTypeTier },
-                                { position: 1, id: 42, type: AssetGroupTagTypeTier },
+                                { position: 2, id: 23, type: AssetGroupTagTypeZone },
+                                { position: 7, id: 1, type: AssetGroupTagTypeZone },
+                                { position: 3, id: 2, type: AssetGroupTagTypeZone },
+                                { position: 777, id: 3, type: AssetGroupTagTypeZone },
+                                { position: 1, id: 42, type: AssetGroupTagTypeZone },
                             ],
                         },
                     })
@@ -130,7 +130,7 @@ describe('the useAssetGroupTags utilities', () => {
                     ctx.json({
                         data: {
                             tags: [
-                                { position: 1, id: 42, type: AssetGroupTagTypeTier },
+                                { position: 1, id: 42, type: AssetGroupTagTypeZone },
                                 { position: null, id: 2, type: AssetGroupTagTypeLabel },
                                 { position: null, id: 3, type: AssetGroupTagTypeLabel },
                                 { position: null, id: 4, type: AssetGroupTagTypeOwned },

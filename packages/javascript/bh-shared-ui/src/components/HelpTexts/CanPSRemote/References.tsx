@@ -22,14 +22,14 @@ const References: FC = () => {
         <Box sx={{ overflowX: 'auto' }}>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-pssession?view=powershell-7'>
                 https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-pssession?view=powershell-7/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/invoke-command?view=powershell-7'>
                 https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/invoke-command?view=powershell-7
             </Link>

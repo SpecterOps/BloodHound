@@ -17,7 +17,8 @@ import { Box, Paper, SxProps, Typography } from '@mui/material';
 import React from 'react';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
-import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views/Explore';
+import usePaneStyles from '../../views/Explore/InfoStyles/Pane';
+import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 

@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -413,17 +415,8 @@ func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId
 func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
 	var (
 		countInserted int
-
-		certified   = model.AssetGroupCertificationNone
-		certifiedBy null.String
-
 		nodesToUpdate []model.AssetGroupSelectorNode
 	)
-
-	if selector.AutoCertify.ValueOrZero() {
-		certified = model.AssetGroupCertificationAuto
-		certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
-	}
 
 	// 1. Grab the graph nodes
 	nodesWithSrcSet := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod, -1)
@@ -433,7 +426,17 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
-			primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(node.Node)
+			var (
+				certified                                 = model.AssetGroupCertificationPending
+				certifiedBy                               null.String
+				primaryKind, displayName, objectId, envId = model.GetAssetGroupMemberProperties(node.Node)
+			)
+
+			if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && node.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
+				certified = model.AssetGroupCertificationAuto
+				certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
+			}
+
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
 				if err = db.InsertSelectorNode(ctx, selector.AssetGroupTagId, selector.ID, id, certified, certifiedBy, node.Source, primaryKind, envId, objectId, displayName); err != nil {
@@ -441,7 +444,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-			} else if (selector.AutoCertify.ValueOrZero() && oldNode.Certified == model.AssetGroupCertificationNone) ||
+			} else if (certified != 0 && oldNode.Certified == model.AssetGroupCertificationPending) ||
 				oldNode.NodeName != displayName ||
 				oldNode.NodePrimaryKind != primaryKind ||
 				oldNode.NodeEnvironmentId != envId ||
@@ -456,10 +459,18 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		// Update the selected nodes that need updating
 		if len(nodesToUpdate) > 0 {
 			for _, oldSelectorNode := range nodesToUpdate {
+				var (
+					certified   = model.AssetGroupCertificationPending
+					certifiedBy null.String
+				)
+
 				// Protect property updates from overwriting existing certification
-				if oldSelectorNode.Certified != model.AssetGroupCertificationNone {
+				if oldSelectorNode.Certified != model.AssetGroupCertificationPending {
 					certified = oldSelectorNode.Certified
 					certifiedBy = oldSelectorNode.CertifiedBy
+				} else if (selector.AutoCertify == model.SelectorAutoCertifyMethodSeedsOnly && oldSelectorNode.Source == model.AssetGroupSelectorNodeSourceSeed) || selector.AutoCertify == model.SelectorAutoCertifyMethodAllMembers {
+					certified = model.AssetGroupCertificationAuto
+					certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 				}
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
@@ -495,7 +506,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 		return err
 	} else {
 		for _, tag := range tags {
-			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
+			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 				return err
 			} else {
 				var (
@@ -533,7 +544,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
 func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, nodesSeen cardinality.Duplex[uint64], additionalFilters ...graph.Criteria) error {
-	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}, 0, 0); err != nil {
+	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 		return err
 	} else {
 		var (
@@ -571,7 +582,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 				for _, nodeDb := range selectedNodes {
 					if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
 						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
-						if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
+						if tag.RequireCertify.Bool && nodeDb.Certified <= model.AssetGroupCertificationRevoked {
 							continue
 						}
 
@@ -742,6 +753,15 @@ func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, asse
 	}
 
 	return nil
+}
+
+// ClearAssetGroupHistoryRecords Truncate the asset group history table to the rolling window
+func ClearAssetGroupHistoryRecords(ctx context.Context, db database.Database) {
+	if recordsDeletedCount, err := db.DeleteAssetGroupHistoryRecordsByCreatedDate(ctx, time.Now().UTC().AddDate(0, 0, -1*model.AssetGroupHistoryRecordRollingWindow)); err != nil {
+		slog.WarnContext(ctx, "AGT: ClearAssetGroupHistoryRecords error", slog.String("countDeleted", strconv.FormatInt(recordsDeletedCount, 10)), slog.String("err", err.Error()))
+	} else {
+		slog.InfoContext(ctx, "AGT: ClearAssetGroupHistoryRecords", slog.String("countDeleted", strconv.FormatInt(recordsDeletedCount, 10)))
+	}
 }
 
 func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Database, graphDb graph.Database) error {

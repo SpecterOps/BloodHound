@@ -39,6 +39,8 @@ const (
 	FeatureOIDCSupport                = "oidc_support"
 	FeatureNTLMPostProcessing         = "ntlm_post_processing"
 	FeatureTierManagement             = "tier_management_engine"
+	FeatureChangelog                  = "changelog"
+	FeatureEnvironmentAccessControl   = "targeted_access_control"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be

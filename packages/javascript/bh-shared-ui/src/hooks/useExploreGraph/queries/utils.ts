@@ -70,6 +70,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
             result.nodes[key] = {
                 label: node.label.text || '',
                 kind: node.data.nodetype || '',
+                kinds: node.data.kinds || [],
                 objectId: node.data.objectid || '',
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
                 isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
@@ -89,54 +90,6 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 data: { ...(edge.data || {}), lastseen: lastSeen },
             });
         }
-    }
-
-    return result;
-};
-
-// Converts the same data types in the opposite direction. We have some typing issues here due to the "lastSeen" property we are adding that should be addressed
-export const transformToFlatGraphResponse = (graph: GraphResponse) => {
-    const result: any = {};
-    for (const [key, value] of Object.entries(graph.data.nodes)) {
-        const lastSeen = getLastSeenValue(value);
-        // Check and add needed system_tags to node
-        const tags = [];
-        {
-            value.isTierZero ? tags.push('admin_tier_0') : null;
-        }
-        {
-            value.isOwnedObject ? tags.push('owned') : null;
-        }
-        result[key] = {
-            label: {
-                text: value.label,
-            },
-            data: {
-                nodetype: value.kind,
-                name: value.label,
-                objectid: value.objectId,
-                system_tags: tags.join(' '),
-                lastseen: lastSeen,
-                isTierZero: value.isTierZero,
-                ...(value?.properties || {}),
-            },
-        };
-    }
-    for (const edge of graph.data.edges) {
-        const lastSeen = getLastSeenValue(edge);
-        result[`${edge.source}_${edge.kind}_${edge.target}`] = {
-            id1: edge.source,
-            id2: edge.target,
-            label: {
-                text: edge.label,
-            },
-            lastSeen: lastSeen,
-            data: {
-                ...(edge.data || {}),
-                lastseen: lastSeen,
-                ...(edge.data?.properties || {}),
-            },
-        };
     }
 
     return result;

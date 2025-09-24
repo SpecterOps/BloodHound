@@ -17,6 +17,7 @@ type: object
 properties:
   name:
     type: string
+    description: "Only alphanumeric characters, underscores, and spaces are allowed."
   description:
     type: string
   require_certify:

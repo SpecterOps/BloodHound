@@ -38,7 +38,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                 The encrypted attributes can also be retrieved and decrypted using{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
                     lapsv2decrypt
                 </Link>{' '}

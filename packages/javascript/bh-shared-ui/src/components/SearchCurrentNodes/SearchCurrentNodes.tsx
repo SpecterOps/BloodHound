@@ -16,20 +16,21 @@
 
 import { Box, List, ListItem, Paper, SxProps, TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
+import { FlatGraphResponse } from 'js-client-library';
 import { FC, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
 import { useOnClickOutside } from '../../hooks';
 import SearchResultItem from '../SearchResultItem';
 import { FlatNode, GraphNodes } from './types';
 
-export const PLACEHOLDER_TEXT = 'Search Current Results';
+export const PLACEHOLDER_TEXT = 'Search node in results';
 export const NO_RESULTS_TEXT = 'No result found in current results';
 
 const LIST_ITEM_HEIGHT = 38;
 const MAX_CONTAINER_HEIGHT = 350;
 
 const SearchCurrentNodes: FC<{
-    currentNodes: GraphNodes;
+    currentNodes: GraphNodes | FlatGraphResponse;
     onSelect: (node: FlatNode) => void;
     onClose: () => void;
     sx?: SxProps;
@@ -40,7 +41,15 @@ const SearchCurrentNodes: FC<{
 
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
     const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
-        return { id: key, ...value };
+        if ('objectId' in value) return { id: key, ...value };
+        if ('data' in value)
+            return {
+                id: key,
+                objectId: value.data.objectid,
+                label: value.label.text,
+                kind: value.data.nodetype || value.data.kind || value.data.primaryKind,
+            };
+        return { id: key, objectId: '', label: 'unknown', kind: 'unknown' };
     });
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
@@ -52,12 +61,12 @@ const SearchCurrentNodes: FC<{
 
     useOnClickOutside(containerRef, onClose);
 
-    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue } = useCombobox({
+    const { getInputProps, getMenuProps, getComboboxProps, getItemProps, inputValue, highlightedIndex } = useCombobox({
         items,
         onInputValueChange: ({ inputValue }) => {
             const filteredNodes = flatNodeList.filter((node) => {
-                const label = node.label.toLowerCase();
-                const objectId = node.objectId.toLowerCase();
+                const label = node.label?.toLowerCase() || '';
+                const objectId = node.objectId?.toLowerCase() || '';
                 const lowercaseInputValue = inputValue?.toLowerCase() || '';
 
                 if (inputValue === '') return false;
@@ -65,31 +74,23 @@ const SearchCurrentNodes: FC<{
             });
             setItems(filteredNodes);
         },
-        stateReducer: (_state, actionAndChanges) => {
-            const { changes, type } = actionAndChanges;
-            switch (type) {
-                case useCombobox.stateChangeTypes.ItemClick:
-                    if (changes.selectedItem) {
-                        onSelect(changes.selectedItem);
-                    }
-                    return { ...changes, inputValue: '' };
-                default:
-                    return changes;
-            }
+        itemToString: (item) => item?.label ?? '',
+        onSelectedItemChange: ({ selectedItem }) => {
+            selectedItem && onSelect(selectedItem);
         },
     });
 
     const Row = ({ index, style }: any) => {
         return (
-            <Box style={style} overflow={'hidden'}>
-                <SearchResultItem
-                    item={items[index]}
-                    index={index}
-                    key={index}
-                    keyword={inputValue}
-                    getItemProps={getItemProps}
-                />
-            </Box>
+            <SearchResultItem
+                style={style}
+                item={items[index]}
+                index={index}
+                highlightedIndex={highlightedIndex}
+                key={items[index].id}
+                keyword={inputValue}
+                getItemProps={getItemProps}
+            />
         );
     };
 

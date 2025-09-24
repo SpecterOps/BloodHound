@@ -36,7 +36,7 @@ import (
 func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissions auth.PermissionSet) {
 	var (
 		loginResource      = authapi.NewLoginResource(resources.Config, resources.Authenticator, resources.DB)
-		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
+		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator, resources.GraphQuery)
 	)
 
 	router.With(func() mux.MiddlewareFunc {
@@ -127,6 +127,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
 	routerInst.POST("/api/v2/file-upload/start", resources.StartIngestJob).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessIngestTask).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.GET(fmt.Sprintf("/api/v2/file-upload/{%s}/completed-tasks", v2.FileUploadJobIdPathParameterName), resources.GetCompletedTasks).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndIngestJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(func() mux.MiddlewareFunc {
@@ -175,6 +176,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// tags
 		routerInst.GET("/api/v2/asset-group-tags", resources.GetAssetGroupTags).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.POST("/api/v2/asset-group-tags/search", resources.SearchAssetGroupTags).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
+		routerInst.POST("/api/v2/asset-group-tags/certifications", resources.CertifyMembers).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.GET("/api/v2/asset-group-tags/certifications", resources.GetAssetGroupTagCertifications).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}", api.URIPathVariableAssetGroupTagID), resources.GetAssetGroupTag).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/members", api.URIPathVariableAssetGroupTagID), resources.GetAssetGroupMembersByTag).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/members/counts", api.URIPathVariableAssetGroupTagID), resources.GetAssetGroupTagMemberCountsByKind).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
@@ -186,7 +189,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID), resources.GetAssetGroupTagSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PATCH(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID), resources.UpdateAssetGroupTagSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID), resources.DeleteAssetGroupTagSelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
-		routerInst.POST("/api/v2/asset-group-tags/preview-selectors", resources.PreviewSelectors).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.POST("/api/v2/asset-group-tags/preview-selectors", resources.PreviewSelectors).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}/members", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID), resources.GetAssetGroupMembersBySelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 
 		// history

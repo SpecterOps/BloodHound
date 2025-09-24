@@ -20,13 +20,13 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://github.com/BloodHoundAD/BARK'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/BloodHoundAD/BARK'>
                 Andy Robbins - BARK.ps1
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://posts.specterops.io/managed-identity-attack-paths-part-1-automation-accounts-82667d17187a'>
                 Andy Robbins - Managed Identity Attack Paths, Part 1: Automation Accounts
             </Link>

@@ -20,46 +20,55 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://eladshamir.com/2019/01/28/Wagging-the-Dog.html'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://eladshamir.com/2019/01/28/Wagging-the-Dog.html'>
                 https://eladshamir.com/2019/01/28/Wagging-the-Dog.html
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus#s4u'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus#s4u'>
                 https://github.com/GhostPack/Rubeus#s4u
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff'>
                 https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://blog.harmj0y.net/redteaming/another-word-on-delegation/'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://blog.harmj0y.net/redteaming/another-word-on-delegation/'>
                 https://blog.harmj0y.net/redteaming/another-word-on-delegation/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
                 https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/Kevin-Robertson/Powermad#new-machineaccount'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://github.com/Kevin-Robertson/Powermad#new-machineaccount'>
                 https://github.com/Kevin-Robertson/Powermad#new-machineaccount
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd'>
                 https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.thehacker.recipes/ad/movement/domain-settings/machineaccountquota'>
                 https://www.thehacker.recipes/ad/movement/domain-settings/machineaccountquota
             </Link>

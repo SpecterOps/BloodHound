@@ -26,6 +26,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
@@ -47,10 +48,19 @@ func TestDeleteAllData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	// DELETE ALL
@@ -86,10 +96,19 @@ func TestDeleteAllData_Alternative(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	// DELETE ALL
@@ -122,10 +141,19 @@ func TestDeleteSourcelessData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	var (
@@ -157,10 +185,19 @@ func TestDeleteSourceKindsData(t *testing.T) {
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	var (

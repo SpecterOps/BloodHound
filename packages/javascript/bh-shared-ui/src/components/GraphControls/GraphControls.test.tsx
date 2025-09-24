@@ -47,6 +47,7 @@ describe('GraphControls', () => {
         '1': {
             label: 'computer_node',
             kind: 'Computer',
+            kinds: [],
             objectId: '001',
             isTierZero: false,
             isOwnedObject: false,
@@ -201,7 +202,7 @@ describe('GraphControls', () => {
     describe('Searching current results', () => {
         it('renders GraphButton with correct text', async () => {
             setup();
-            const searchResultsMenu = await screen.findByText('Search Current Results');
+            const searchResultsMenu = await screen.findByText('Search');
 
             expect(searchResultsMenu).toBeInTheDocument();
         });
@@ -209,7 +210,7 @@ describe('GraphControls', () => {
         it('disables GraphButton when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search Current Results');
+            const searchResultsMenu = screen.getByText('Search');
             await user.click(searchResultsMenu);
 
             expect(searchResultsMenu).toBeDisabled();
@@ -220,7 +221,7 @@ describe('GraphControls', () => {
 
             expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
 
-            const searchResultsMenu = screen.getByText('Search Current Results');
+            const searchResultsMenu = screen.getByText('Search');
             await user.click(searchResultsMenu);
 
             expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
@@ -229,11 +230,11 @@ describe('GraphControls', () => {
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search Current Results');
+            const searchResultsMenu = screen.getByText('Search');
 
             await user.click(searchResultsMenu);
 
-            const searchInput = await screen.findByPlaceholderText('Search Current Results');
+            const searchInput = await screen.findByPlaceholderText('Search node in results');
 
             await user.type(searchInput, currentNodes[1].label);
 

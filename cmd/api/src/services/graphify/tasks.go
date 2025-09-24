@@ -28,17 +28,18 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 )
 
 // UpdateJobFunc is passed to the graphify service to let it tell us about the tasks as they are processed
 //
 // The datapipe doesn't know or care about tasks, and the graphify service doesn't know or care about jobs.
 // Instead, this func is provided as an abstraction for graphify.
-type UpdateJobFunc func(jobId int64, totalFiles int, totalFailed int)
+type UpdateJobFunc func(jobId int64, fileData []IngestFileData)
 
 // clearFileTask removes a generic ingest task for ingested data.
 func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
@@ -47,19 +48,31 @@ func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	}
 }
 
+type IngestFileData struct {
+	Name       string
+	ParentFile string
+	Path       string
+	Errors     []string
+}
+
 // extractIngestFiles will take a path and extract zips if necessary, returning the paths for files to process
 // along with any errors and the number of failed files (in the case of a zip archive)
-func (s *GraphifyService) extractIngestFiles(path string, fileType model.FileType) ([]string, int, error) {
+func (s *GraphifyService) extractIngestFiles(path string, providedFileName string, fileType model.FileType) ([]IngestFileData, error) {
 	if fileType == model.FileTypeJson {
 		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
-		return []string{path}, 0, nil
+		return []IngestFileData{
+			{
+				Name:   providedFileName,
+				Path:   path,
+				Errors: []string{},
+			},
+		}, nil
 	} else if archive, err := zip.OpenReader(path); err != nil {
-		return []string{}, 0, err
+		return []IngestFileData{}, err
 	} else {
 		var (
-			errs      = util.NewErrorCollector()
-			failed    = 0
-			filePaths = make([]string, 0, len(archive.File))
+			errs     = errorlist.NewBuilder()
+			fileData = make([]IngestFileData, 0)
 		)
 
 		defer func() {
@@ -79,14 +92,23 @@ func (s *GraphifyService) extractIngestFiles(path string, fileType model.FileTyp
 
 			fileName, err := s.extractToTempFile(f)
 			if err != nil {
-				failed++
+				fileData = append(fileData, IngestFileData{
+					Name:       f.Name,
+					ParentFile: providedFileName,
+					Errors:     []string{err.Error()},
+				})
+
 				errs.Add(err)
 			} else {
-				filePaths = append(filePaths, fileName)
+				fileData = append(fileData, IngestFileData{
+					Name:       f.Name,
+					ParentFile: providedFileName,
+					Path:       fileName,
+				})
 			}
 		}
 
-		return filePaths, failed, errs.Combined()
+		return fileData, errs.Build()
 	}
 }
 
@@ -128,55 +150,69 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
+func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if paths, failedExtracting, err := s.extractIngestFiles(task.FileName, task.FileType); err != nil {
-		return 0, failedExtracting, err
+	if fileData, err := s.extractIngestFiles(task.StoredFileName, task.OriginalFileName, task.FileType); err != nil {
+		return []IngestFileData{}, err
 	} else {
+		errs := errorlist.NewBuilder()
 
-		failedIngestion := 0
-
-		errs := util.NewErrorCollector()
-		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
-
-			for _, filePath := range paths {
+		return fileData, s.graphdb.BatchOperation(ic.Ctx, func(batch graph.Batch) error {
+			// bind batch to ingest context now that its in scope.
+			ic.BindBatchUpdater(batch)
+			for i, data := range fileData {
 				readOpts := ReadOptions{
 					IngestSchema:       s.schema,
 					FileType:           task.FileType,
-					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx)}
+					RegisterSourceKind: s.db.RegisterSourceKind(s.ctx),
+				}
 
-				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
-					failedIngestion++
-					errs.Add(err) // util.NewErrorCollector at fn scope
+				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
+					var graphifyError errorlist.Error
+					if ok := errors.As(err, &graphifyError); ok {
+						fileData[i].Errors = append(fileData[i].Errors, graphifyError.AsStrings()...)
+					} else {
+						fileData[i].Errors = append(fileData[i].Errors, err.Error())
+					}
+					errs.Add(err) // graphifyErrorBuilder at fn scope
 					continue      // keep ingesting the rest
 				}
 			}
 
-			return errs.Combined()
+			return errs.Build()
 		})
 	}
 }
 
-func processSingleFile(ctx context.Context, filePath string, batch *TimestampedBatch, readOpts ReadOptions) error {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", filePath))()
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool) *IngestContext {
+	opts := []IngestOption{WithIngestTime(ingestTime)}
 
-	file, err := os.Open(filePath)
+	if useChangelog {
+		opts = append(opts, WithChangeManager(s.changeManager))
+	}
+
+	return NewIngestContext(ctx, opts...)
+}
+
+func processSingleFile(ctx context.Context, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
+
+	file, err := os.Open(fileData.Path)
 	if err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", filePath, err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", fileData.Path, err))
 		return err
 	}
 
 	defer func() {
 		file.Close()
 		// Always remove the file after attempting to ingest it. Even if it failed
-		if err := os.Remove(filePath); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
+		if err := os.Remove(fileData.Path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", fileData.Path, err))
 		}
 	}()
 
-	if err := ReadFileForIngest(batch, file, readOpts); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
+	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", fileData.Path, err))
 		return err
 	}
 
@@ -193,27 +229,73 @@ func (s *GraphifyService) getAllTasks() model.IngestTasks {
 }
 
 func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
+	tasks := s.getAllTasks()
+	if len(tasks) == 0 {
+		// nothing to do
+		return
+	}
 
-	for _, task := range s.getAllTasks() {
-		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
-		// handling assumes that all failures should be logged and not returned.
-		if s.ctx.Err() != nil {
-			return
+	start := time.Now()
+	slog.InfoContext(s.ctx,
+		"ingest run starting",
+		"task_count", len(tasks),
+	)
+
+	if s.ctx.Err() != nil {
+		return
+	}
+
+	if s.cfg.DisableIngest {
+		slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
+		return
+	}
+
+	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
+	flagEnabled := false
+	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
+		slog.WarnContext(s.ctx, "get changelog feature flag failed", "err", err)
+	} else {
+		flagEnabled = changelogFF.Enabled
+	}
+
+	for _, task := range tasks {
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagEnabled)
+		fileData, err := s.ProcessIngestFile(ingestCtx, task)
+
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			slog.WarnContext(s.ctx,
+				"ingest file missing",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+				"err", err,
+			)
+		case err != nil:
+			slog.ErrorContext(s.ctx,
+				"ingest task failed",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+				"err", err,
+			)
+		default:
+			slog.InfoContext(s.ctx,
+				"ingest task processed",
+				"task_id", task.ID,
+				"file", task.OriginalFileName,
+			)
 		}
 
-		if s.cfg.DisableIngest {
-			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
-			return
-		}
-		total, failed, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
-
-		if errors.Is(err, fs.ErrNotExist) {
-			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))
-		} else if err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.FileName, err))
-		}
-
-		updateJob(task.JobId.ValueOrZero(), total, failed)
+		updateJob(task.JobId.ValueOrZero(), fileData)
 		s.clearFileTask(task)
+	}
+
+	slog.InfoContext(s.ctx,
+		"ingest run finished",
+		"duration", time.Since(start),
+		"task_count", len(tasks),
+	)
+
+	if flagEnabled {
+		s.changeManager.FlushStats()
 	}
 }

@@ -24,7 +24,6 @@ import {
 import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Popper } from '@mui/material';
-import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef, useState } from 'react';
@@ -46,7 +45,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
-    currentNodes: GraphNodes;
+    currentNodes: Record<string, any> | undefined;
 }
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
@@ -62,7 +61,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         showNodeLabels,
         showEdgeLabels,
         jsonData,
-        currentNodes,
+        currentNodes = {},
     } = props;
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
@@ -155,9 +154,9 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphButton
-                    aria-label='Search Current Results'
+                    aria-label='Search node in results'
                     onClick={() => setIsCurrentSearchOpen(true)}
-                    displayText={'Search Current Results'}
+                    displayText={'Search'}
                     disabled={isCurrentSearchOpen}
                     data-testid='explore_graph-controls_search-current-results'
                 />

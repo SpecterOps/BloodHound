@@ -53,17 +53,17 @@ interface Disabled {
     disabled_by: string | null;
 }
 
-export const AssetGroupTagTypeTier = 1 as const;
+export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
 
-export type AssetGroupTagTypes =
-    | typeof AssetGroupTagTypeTier
+export type AssetGroupTagType =
+    | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 
-export const AssetGroupTagTypesMap = {
-    1: 'tier',
+export const AssetGroupTagTypeMap = {
+    1: 'zone',
     2: 'label',
     3: 'owned',
 } as const;
@@ -77,12 +77,13 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
-    counts?: AssetGroupTagCounts;
     analysis_enabled: boolean | null;
+    glyph: string | null;
+    counts?: AssetGroupTagCounts;
 }
 
 export const SeedTypeObjectId = 1 as const;
@@ -105,6 +106,21 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+} as const;
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
@@ -115,7 +131,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
@@ -140,7 +156,8 @@ export const NodeSourceChild = 2 as const;
 export const NodeSourceParent = 3 as const;
 
 export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
-export interface AssetGroupTagNode {
+export interface AssetGroupTagMember {
+    asset_group_tag_id: number;
     id: number; // uint64 graphID
     primary_kind: string;
     object_id: string;
@@ -286,6 +303,7 @@ export interface GraphNodeProperties {
 export type GraphNode = {
     label: string;
     kind: string;
+    kinds: string[];
     objectId: string;
     lastSeen: string;
     isTierZero: boolean;
@@ -358,4 +376,102 @@ export type CustomNodeKindType = {
             color: string;
         };
     };
+};
+
+export type OuDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    distinguishedname: string;
+    type: string;
+};
+
+export type DomainDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    type: string;
+};
+
+export type DomainResult = {
+    job_id: number;
+    domain_name: string;
+    success: boolean;
+    message: string;
+    user_count: number;
+    group_count: number;
+    computer_count: number;
+    gpo_count: number;
+    ou_count: number;
+    container_count: number;
+    aiaca_count: number;
+    rootca_count: number;
+    enterpriseca_count: number;
+    ntauthstore_count: number;
+    certtemplate_count: number;
+    deleted_count: number;
+    id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
+
+export type ScheduledJobDisplay = {
+    id: number;
+    client_id: string;
+    client_name: string;
+    event_id: number;
+    execution_time: string;
+    start_time: string;
+    end_time: string;
+    status: number;
+    status_message: string;
+    session_collection: boolean;
+    local_group_collection: boolean;
+    ad_structure_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
+    all_trusted_domains: boolean;
+    domain_controller: string;
+    ous: OuDetails[];
+    domains: DomainDetails[];
+    domain_results: DomainResult[];
+};
+
+export type Client = {
+    configured_user: string;
+    events: {
+        id: number;
+        client_id: string;
+        session_collection: boolean;
+        local_group_collection: boolean;
+        ad_structure_collection: boolean;
+        cert_services_collection: boolean;
+        ca_registry_collection: boolean;
+        dc_registry_collection: boolean;
+        all_trusted_domains: boolean;
+        ous: OuDetails[];
+        domains: DomainDetails[];
+        rrule: string;
+    }[];
+    hostname: string;
+    id: string;
+    ip_address: string;
+    last_checkin: string;
+    name: string;
+    token: unknown;
+    current_job_id: number | null;
+    current_task_id: number | null;
+    current_job: ScheduledJobDisplay;
+    current_task: ScheduledJobDisplay;
+    completed_job_count: number;
+    completed_task_count: number;
+    domain_controller: unknown;
+    version: string;
+    user_sid: string;
+    type: string;
 };
