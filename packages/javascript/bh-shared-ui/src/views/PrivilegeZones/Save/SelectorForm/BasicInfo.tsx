@@ -37,7 +37,7 @@ import {
     Switch,
     Textarea,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { AssetGroupTagSelectorAutoCertifyMap, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { Control } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -64,7 +64,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
         if (receivedData) {
             dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
         }
-    }, []);
+    }, [dispatch, receivedData]);
 
     const tagQuery = useQuery({
         queryKey: ['privilege-zones', 'tags', tagId],
@@ -215,6 +215,60 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
+                            {tagType === 'zones' && (
+                                <FormField
+                                    control={control}
+                                    name='auto_certify'
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel aria-labelledby='auto_certify'>
+                                                Automatic Certification
+                                            </FormLabel>
+                                            <div className='text-sm [&>p]:mt-2'>
+                                                Choose how new objects are certified.
+                                                <p>
+                                                    <strong>Initial members</strong> - Only the first set of objects in
+                                                    this selector are certified automatically.
+                                                </p>
+                                                <p>
+                                                    <strong>All members</strong> - Every object, including those tied to
+                                                    initial members, is certified automatically.
+                                                </p>
+                                                <p>
+                                                    <strong>Off</strong> - All certification is manual.
+                                                </p>
+                                            </div>
+                                            <Select
+                                                value={field.value}
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue
+                                                            data-testid='privilege-zones_save_selector-form_default-certify'
+                                                            placeholder='Off'
+                                                            {...field}
+                                                        />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectPortal>
+                                                    <SelectContent>
+                                                        {Object.entries(AssetGroupTagSelectorAutoCertifyMap).map(
+                                                            ([autoCertifyOption, displayValue]) => (
+                                                                <SelectItem
+                                                                    key={autoCertifyOption}
+                                                                    value={autoCertifyOption}>
+                                                                    {displayValue}
+                                                                </SelectItem>
+                                                            )
+                                                        )}
+                                                    </SelectContent>
+                                                </SelectPortal>
+                                            </Select>
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
                         </div>
                     </div>
                 </CardContent>

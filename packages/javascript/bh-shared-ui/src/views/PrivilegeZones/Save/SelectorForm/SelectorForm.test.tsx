@@ -15,31 +15,34 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { SeedTypeCypher } from 'js-client-library';
+import { AssetGroupTagSelector, AssetGroupTagSelectorAutoCertifyAllMembers, SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
 import SelectorForm from '.';
+import { privilegeZonesKeys } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
 import { act, render, screen, waitFor } from '../../../../test-utils';
-import { apiClient, mockCodemirrorLayoutMethods } from '../../../../utils';
+import { apiClient, mockCodemirrorLayoutMethods, setUpQueryClient } from '../../../../utils';
 import * as utils from '../utils';
 
-const testSelector = {
+const testSelector: AssetGroupTagSelector = {
     id: 777,
     asset_group_tag_id: 1,
     name: 'foo',
     allow_disable: true,
     description: 'bar',
     is_default: false,
-    auto_certify: true,
+    auto_certify: AssetGroupTagSelectorAutoCertifyAllMembers,
     created_at: '2024-10-05T17:54:32.245Z',
     created_by: 'Stephen64@gmail.com',
     updated_at: '2024-07-20T11:22:18.219Z',
     updated_by: 'Donna13@yahoo.com',
     disabled_at: '2024-09-15T09:55:04.177Z',
     disabled_by: 'Roberta_Morar72@hotmail.com',
-    count: 3821,
+    counts: {
+        members: 3821,
+    },
     seeds: [{ selector_id: 777, type: SeedTypeCypher, value: 'match(n) return n limit 5' }],
 };
 
@@ -95,7 +98,11 @@ describe('Selector Form', () => {
         // This means that none of the input fields should have any value aside from default values
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
 
-        render(<SelectorForm />);
+        const mockState = [{ key: [privilegeZonesKeys.selectorDetail('1', '')], data: null }];
+
+        const queryClient = setUpQueryClient(mockState);
+
+        render(<SelectorForm />, { queryClient });
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
@@ -107,6 +114,14 @@ describe('Selector Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
+        const autoCertifyDropdownDefault = await screen.findByTestId(
+            'privilege-zones_save_selector-form_default-certify'
+        );
+        expect(autoCertifyDropdownDefault).toBeInTheDocument();
+
+        await waitFor(() => {
+            expect(autoCertifyDropdownDefault).toHaveTextContent('Off');
+        });
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Object Selector component renders by default
@@ -135,7 +150,11 @@ describe('Selector Form', () => {
         // and so this selector's data is filled into the form for the user to edit
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
 
-        render(<SelectorForm />);
+        const mockState = [{ key: [privilegeZonesKeys.selectorDetail('1', '777')], data: testSelector }];
+
+        const queryClient = setUpQueryClient(mockState);
+
+        render(<SelectorForm />, { queryClient });
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
@@ -164,6 +183,12 @@ describe('Selector Form', () => {
             expect(descriptionInput).toHaveValue('bar');
         });
 
+        const autoCertifyDropdownDefault = await screen.findByTestId(
+            'privilege-zones_save_selector-form_default-certify'
+        );
+        expect(autoCertifyDropdownDefault).toBeInTheDocument();
+
+        expect(autoCertifyDropdownDefault).toHaveTextContent('All members');
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Cypher Search renders because that is the seed type of the first seed of this selector
