@@ -19,7 +19,7 @@ import { AppNavigate } from '../../components';
 import { useHighestPrivilegeTagId } from '../../hooks';
 import { privilegeZonesPath, zonesPath } from '../../routes';
 
-const DefaultRoot: FC<{defaultPath: string}> = ({defaultPath}) => {
+const DefaultRoot: FC<{ defaultPath: string }> = ({ defaultPath }) => {
     const { tagId } = useHighestPrivilegeTagId();
     if (tagId) {
         //return <AppNavigate to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${summaryPath}`} replace />;

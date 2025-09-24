@@ -171,13 +171,13 @@ export const TagForm: FC = () => {
                 tagId,
             });
 
-                addNotification(
-                    `${tagTypeDisplay} was updated successfully!`,
-                    `privilege-zones_update-${tagType}_success_${tagId}`,
-                    {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    }
-                );
+            addNotification(
+                `${tagTypeDisplay} was updated successfully!`,
+                `privilege-zones_update-${tagType}_success_${tagId}`,
+                {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                }
+            );
 
             handleUpdateNavigate();
         } catch (error) {
