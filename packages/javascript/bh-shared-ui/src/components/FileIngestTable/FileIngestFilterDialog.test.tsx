@@ -202,7 +202,7 @@ describe('FileIngestFilterDialog', () => {
             await inputDate(user, 'End Date', '2025-01-01');
             await user.click(screen.getByRole('button', { name: 'Confirm' }));
 
-            expect(onConfirmMock).not.toBeCalledWith();
+            expect(onConfirmMock).not.toHaveBeenCalled();
         });
     });
 
