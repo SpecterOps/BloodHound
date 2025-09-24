@@ -62,5 +62,6 @@ export const useGetFileUploadsQuery = ({ page, rowsPerPage, filters }: FileUploa
                 .then((res) => res.data),
 
         queryKey: ['file-uploads', { ...filters, page, rowsPerPage }],
+        refetchInterval: 5000,
     });
 };
