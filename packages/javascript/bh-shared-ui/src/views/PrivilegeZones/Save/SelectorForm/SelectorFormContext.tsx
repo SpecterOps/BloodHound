@@ -14,7 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagSelector, SeedTypeObjectId, SeedTypes, SelectorSeedRequest } from 'js-client-library';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyDisabled,
+    AssetGroupTagSelectorAutoCertifyType,
+    SeedTypeObjectId,
+    SeedTypes,
+    SelectorSeedRequest,
+} from 'js-client-library';
 import { createContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { Action, AssetGroupSelectedNodes } from './SelectorForm';
@@ -25,6 +32,7 @@ interface SelectorFormContext {
     selectedObjects: AssetGroupSelectedNodes;
     selectorType: SeedTypes;
     selectorQuery: UseQueryResult<AssetGroupTagSelector>;
+    autoCertify: AssetGroupTagSelectorAutoCertifyType;
 }
 
 export const initialValue: SelectorFormContext = {
@@ -32,6 +40,7 @@ export const initialValue: SelectorFormContext = {
     seeds: [],
     selectedObjects: [],
     selectorType: SeedTypeObjectId,
+    autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
     selectorQuery: {
         data: undefined,
         isLoading: true,

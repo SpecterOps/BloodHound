@@ -17,6 +17,7 @@
 import { AxiosRequestConfig } from 'axios';
 import {
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
     SeedExpansionMethod,
@@ -38,7 +39,7 @@ export type CreateAssetGroupTagRequest = {
     description: string;
     type: AssetGroupTagType;
     position?: number | null;
-    requireCertify?: boolean | null;
+    require_certify?: boolean | null;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<
@@ -49,7 +50,11 @@ export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[]; expansion:
 
 export type SelectorSeedRequest = Pick<AssetGroupTagSelectorSeed, 'type' | 'value'>;
 
-export type CreateSelectorRequest = { name: string; description?: string } & { seeds: SelectorSeedRequest[] };
+export type CreateSelectorRequest = {
+    name: string;
+    description?: string;
+    auto_certify?: AssetGroupTagSelectorAutoCertifyType | null;
+} & { seeds: SelectorSeedRequest[] };
 
 export type UpdateSelectorRequest = Partial<CreateSelectorRequest & { disabled: boolean }> &
     Pick<AssetGroupTagSelector, 'id'>;

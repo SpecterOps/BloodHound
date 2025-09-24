@@ -38,7 +38,7 @@ const testTierZero = {
     deleted_at: null,
     deleted_by: null,
     position: 1,
-    require_certify: false,
+    require_certify: true,
     analysis_enabled: true,
 };
 
@@ -75,21 +75,21 @@ const handlers = [
     rest.get('/api/v2/asset-group-tags/1', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: testTierZero,
+                data: { tag: testTierZero },
             })
         );
     }),
     rest.get('/api/v2/asset-group-tags/2', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: testOwned,
+                data: { tag: testOwned },
             })
         );
     }),
     rest.get('/api/v2/asset-group-tags/3', async (_, res, ctx) => {
         return res(
             ctx.json({
-                data: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 },
+                data: { tag: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 } },
             })
         );
     }),
@@ -180,6 +180,10 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
+        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
+        expect(requireCertifySwitch).toBeInTheDocument();
+        expect(requireCertifySwitch).toHaveValue('false');
+
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
@@ -210,6 +214,9 @@ describe('Tag Form', () => {
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
+
+        // The Require Certification switch should not render when creating a label
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
@@ -288,6 +295,12 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('Tier Zero Description');
 
+        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
+        expect(requireCertifySwitch).toBeInTheDocument();
+        await waitFor(() => {
+            expect(requireCertifySwitch).toHaveValue('true');
+        });
+
         // The delete button should not render when editing T0
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
@@ -317,6 +330,9 @@ describe('Tag Form', () => {
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('Owned Description');
+
+        // The Require Certification switch should not render when editing a label
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         // The delete button should not render when editing Owned
         await waitFor(() => {
@@ -375,6 +391,27 @@ describe('Tag Form', () => {
     test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
         vi.mocked(useLocation).mockReturnValue({ pathname: createNewZonePath } as Location);
+        render(
+            <Routes>
+                <Route path={'/'} element={<TagForm />} />
+                <Route path={createNewZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: createNewZonePath }
+        );
+
+        const nameInput = await screen.findByLabelText('Name');
+
+        await user.click(nameInput);
+        await user.paste('foo');
+
+        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+
+        expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
+    });
+
+    it('handles creating a new zone', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+
         render(
             <Routes>
                 <Route path={'/'} element={<TagForm />} />

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,15 @@ export interface AssetGroupMemberParams {
 type System = 'SYSTEM';
 
 type ISO_DATE_STRING = string;
+
+export type TimestampFields = {
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
 
 interface Created {
     created_at: ISO_DATE_STRING;
@@ -79,7 +88,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     kind_id: number;
     type: AssetGroupTagType;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
     analysis_enabled: boolean | null;
     glyph: string | null;
@@ -106,6 +115,21 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+} as const;
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
@@ -116,7 +140,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
@@ -472,4 +496,24 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+};
+
+export type FileIngestJob = TimestampFields & {
+    end_time: string;
+    failed_files: number;
+    id: number;
+    last_ingest: string;
+    start_time: string;
+    status_message: string;
+    status: number;
+    total_files: number;
+    user_email_address: string;
+    user_id: string;
+};
+
+export type FileIngestCompletedTask = TimestampFields & {
+    errors: string[];
+    file_name: string;
+    id: number;
+    parent_file_name: string;
 };

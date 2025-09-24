@@ -19,7 +19,7 @@ import { setParamsFactory } from '../../utils';
 import { useHighestPrivilegeTagId } from '../useAssetGroupTags/useAssetGroupTags';
 import { useFeatureFlag } from '../useFeatureFlags';
 
-export type ZoneQueryParams = {
+export type PZQueryParams = {
     assetGroupTagId: number | undefined;
 };
 
@@ -31,14 +31,14 @@ const parseAssetGroupTagId = (assetGroupTagId: string | null, topTagId: number |
     return topTagId;
 };
 
-export const useZoneQueryParams = () => {
+export const usePZQueryParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const pzFlagQuery = useFeatureFlag('tier_management_engine');
 
     const { tagId, isLoading, isError } = useHighestPrivilegeTagId();
 
-    const setZoneQueryParams = useCallback(
-        (updatedParams: Partial<ZoneQueryParams>) =>
+    const setPZQueryParams = useCallback(
+        (updatedParams: Partial<PZQueryParams>) =>
             setParamsFactory(setSearchParams, ['assetGroupTagId'])(updatedParams),
         [setSearchParams]
     );
@@ -49,7 +49,7 @@ export const useZoneQueryParams = () => {
         return {
             assetGroupTagId: undefined,
             params,
-            setZoneQueryParams,
+            setPZQueryParams,
         };
     }
 
@@ -59,6 +59,6 @@ export const useZoneQueryParams = () => {
     return {
         assetGroupTagId,
         params,
-        setZoneQueryParams,
+        setPZQueryParams,
     };
 };

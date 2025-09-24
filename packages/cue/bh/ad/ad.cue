@@ -397,6 +397,20 @@ StrongCertificateBindingEnforcement: types.#StringEnum & {
 	representation: "strongcertificatebindingenforcement"
 }
 
+VulnerableNetlogonSecurityDescriptor: types.#StringEnum & {
+	symbol:         "VulnerableNetlogonSecurityDescriptor"
+	schema:         "ad"
+	name:           "Vulnerable Netlogon Security Descriptor"
+	representation: "vulnerablenetlogonsecuritydescriptor"
+}
+
+VulnerableNetlogonSecurityDescriptorCollected: types.#StringEnum & {
+	symbol:         "VulnerableNetlogonSecurityDescriptorCollected"
+	schema:         "ad"
+	name:           "Vulnerable Netlogon Security Descriptor Collected"
+	representation: "vulnerablenetlogonsecuritydescriptorcollected"
+}
+
 CrossCertificatePair: types.#StringEnum & {
 	symbol:         "CrossCertificatePair"
 	schema:         "ad"
@@ -1005,6 +1019,20 @@ ServicePrincipalNames: types.#StringEnum & {
 	representation: "serviceprincipalnames"
 }
 
+GPOStatusRaw: types.#StringEnum & {
+	symbol:         "GPOStatusRaw"
+	schema:         "ad"
+	name:           "GPO Status (Raw)"
+	representation: "gpostatusraw"
+}
+
+GPOStatus: types.#StringEnum & {
+	symbol:         "GPOStatus"
+	schema:         "ad"
+	name:           "GPO Status"
+	representation: "gpostatus"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1057,6 +1085,8 @@ Properties: [
 	CertificateMappingMethods,
 	StrongCertificateBindingEnforcementRaw,
 	StrongCertificateBindingEnforcement,
+	VulnerableNetlogonSecurityDescriptor,
+	VulnerableNetlogonSecurityDescriptorCollected,
 	EKUs,
 	SubjectAltRequireUPN,
 	SubjectAltRequireDNS,
@@ -1142,6 +1172,8 @@ Properties: [
 	NetBIOS,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
+	GPOStatusRaw,
+	GPOStatus,
 ]
 
 // Kinds
@@ -1648,6 +1680,10 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+ProtectAdminGroups: types.#Kind & {
+	symbol:         "ProtectAdminGroups"
+	schema:         "active_directory"
+}
 
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
@@ -1766,6 +1802,7 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	ProtectAdminGroups,
 ]
 
 // ACL Relationships

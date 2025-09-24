@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 )
 
@@ -45,6 +46,7 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockGraphDB  *mocks_graph.MockGraph
 	}
 
 	type expected struct {
@@ -249,12 +251,12 @@ func TestResources_ListUsersMinimal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			mockCtrl := gomock.NewController(t)
-			resource, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+			resource, mockDB, mockGraphDB := apitest.NewAuthManagementResource(mockCtrl)
 
 			defer mockCtrl.Finish()
 
 			if tt.fields.setupMocks != nil {
-				tt.fields.setupMocks(t, &mock{mockDB})
+				tt.fields.setupMocks(t, &mock{mockDB, mockGraphDB})
 			}
 			response := httptest.NewRecorder()
 			request := tt.args.buildRequest()
