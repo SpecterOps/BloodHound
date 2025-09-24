@@ -51,6 +51,7 @@ const CreateUserDialog: React.FC<{
         })
             .then(() => {
                 onClose();
+                setIsOpen(false);
             })
             .catch((err) => console.error(err));
     };
