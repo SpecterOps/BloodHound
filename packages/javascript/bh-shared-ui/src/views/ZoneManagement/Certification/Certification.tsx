@@ -36,7 +36,6 @@ const Certification: FC = () => {
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
         const queryKey = doSearch ? query : filters;
-        //@ts-ignore
         return useInfiniteQuery<{
             count: number;
             data: { records: AssetGroupTagCertificationRecord[] };
