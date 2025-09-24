@@ -8,7 +8,7 @@ import {
     UpdateCertificationRequest,
 } from 'js-client-library';
 import { FC, useCallback, useState } from 'react';
-import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useNotifications } from '../../../providers';
@@ -28,12 +28,15 @@ const Certification: FC = () => {
         CertificationManual
     );
 
+    const queryClient = useQueryClient();
+
     const mockMemberId = 1;
     const PAGE_SIZE = 15;
 
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
         const queryKey = doSearch ? query : filters;
+        //@ts-ignore
         return useInfiniteQuery<{
             count: number;
             data: { records: AssetGroupTagCertificationRecord[] };
@@ -93,7 +96,8 @@ const Certification: FC = () => {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
             );
-            refetch();
+            setSelectedRows([]);
+            queryClient.invalidateQueries({ queryKey: ['certifications', filters] });
         },
         onError: (error: any) => {
             console.log(error);
@@ -103,7 +107,7 @@ const Certification: FC = () => {
         },
     });
 
-    const { data, isLoading, isFetching, isSuccess, fetchNextPage, refetch } = useAssetGroupTagsCertificationsQuery(
+    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(
         filters,
         search
     );
@@ -146,7 +150,6 @@ const Certification: FC = () => {
         (withNote: boolean, certifyNote?: string) => {
             setIsDialogOpen(false);
             const selectedMemberIds = selectedRows;
-            console.log('SELECTED MEMBERS', selectedMemberIds);
             if (selectedMemberIds.length === 0) {
                 addNotification(
                     'Members must be selected for certification',

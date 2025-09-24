@@ -24,7 +24,7 @@ type CertificationTableProps = {
 
 const CertificationTable: FC<CertificationTableProps> = ({
     data,
-    isLoading,
+    //isLoading,
     isFetching,
     isSuccess,
     fetchNextPage,
@@ -89,7 +89,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
           })
         : [];
 
-    const allSelected = selectedRows.length === certificationsItems?.length;
+    const allSelected = certificationsItems?.length > 0 && selectedRows.length === certificationsItems?.length;
     const someSelected = selectedRows.length > 0 && !allSelected;
 
     const toggleAll = (checked: boolean) => {
