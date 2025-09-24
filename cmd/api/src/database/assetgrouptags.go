@@ -49,7 +49,7 @@ type AssetGroupTagData interface {
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
-	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
 	UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
@@ -71,6 +71,7 @@ type AssetGroupTagSelectorNodeData interface {
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
 	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error)
+	GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -82,7 +83,7 @@ func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed
 	return seeds, nil
 }
 
-func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
+func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	var (
 		userIdStr = user.ID.String()
 		selector  = model.AssetGroupTagSelector{
@@ -101,10 +102,6 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
-
-	if !autoCertify.Valid {
-		return model.AssetGroupTagSelector{}, fmt.Errorf("auto_certify must be set to true or false")
-	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
@@ -825,6 +822,102 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx con
 	}
 
 	return nodes, count, nil
+}
+
+func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupSelectorNodeExpanded, int, error) {
+	var (
+		nodes           []model.AssetGroupSelectorNodeExpanded
+		skipLimitString string
+		count           int
+	)
+
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = "WHERE " + sqlFilter.SQLString
+	}
+
+	if limit > 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip > 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
+	}
+
+	// Fetch a paginated list of nodes matching the filter and unique per node - selectorID combo. Any potential dupes are eliminated by first selecting the rows
+	// with the lowest position zone, then finding the row with highest value of certified and grabbing the earliest created_at date seen across rows.
+	baseQuery := fmt.Sprintf(`
+		WITH nodes_associated_with_min_pos AS (
+			SELECT 
+				n.*, 
+				t.position,
+				s.asset_group_tag_id,
+				MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
+			FROM %s n
+			JOIN %s s ON n.selector_id = s.id
+			JOIN %s t ON s.asset_group_tag_id = t.id
+			WHERE t.type = %d
+		),
+		sort_on_created_at AS (
+			SELECT DISTINCT ON (sort.node_id)
+				sort.node_id,
+				sort.selector_id,
+				sort.certified,
+				sort.certified_by,
+				sort.source,
+				sort.node_primary_kind,
+				sort.node_environment_id,
+				sort.node_object_id,
+				sort.node_name,
+				sort.position,
+				sort.updated_at,
+				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,    -- make a column that tracks the earliest created_at for a given node_id
+				sort.asset_group_tag_id
+			FROM nodes_associated_with_min_pos sort
+			WHERE sort.position = sort.min_position_for_node
+			ORDER BY sort.node_id, sort.certified DESC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
+		)`,
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+		model.AssetGroupTag{}.TableName(),
+		model.AssetGroupTagTypeTier)
+
+	selectQuery := fmt.Sprintf(`
+		SELECT
+			hybrid.node_id,
+			hybrid.selector_id,
+			hybrid.certified,
+			hybrid.certified_by,  
+			hybrid.source,
+			hybrid.node_primary_kind,
+			hybrid.node_environment_id,
+			hybrid.node_object_id,
+			hybrid.node_name,
+			hybrid.position,
+			hybrid.updated_at,
+			hybrid.created_at,
+			hybrid.asset_group_tag_id
+		FROM sort_on_created_at hybrid
+		%s 
+		ORDER BY hybrid.node_id ASC
+		%s;`,
+		sqlFilter.SQLString,
+		skipLimitString)
+
+	if result := s.db.WithContext(ctx).Raw(baseQuery + selectQuery).Find(&nodes); result.Error != nil {
+		return nil, 0, result.Error
+	} else {
+		// get a total count on the above query without pagination
+		countQuery := fmt.Sprintf(`
+			SELECT COUNT(*) 
+			FROM sort_on_created_at %s;`,
+			sqlFilter.SQLString)
+
+		if result := s.db.WithContext(ctx).Raw(baseQuery + countQuery).Scan(&count); result.Error != nil {
+			return nil, 0, result.Error
+		} else {
+			return nodes, count, nil
+		}
+	}
 }
 
 func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {

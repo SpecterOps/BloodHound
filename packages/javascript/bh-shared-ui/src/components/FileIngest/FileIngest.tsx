@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Typography } from '@mui/material';
 import { FC } from 'react';
-import { useExecuteOnFileDrag, useMountEffect, usePermissions } from '../../hooks';
+import { useMountEffect, usePermissions } from '../../hooks';
 import { useFileUploadDialogContext } from '../../hooks/useFileUploadDialogContext';
 import { useNotifications } from '../../providers';
 import { Permission } from '../../utils';
@@ -32,7 +32,7 @@ const FileIngest: FC = () => {
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
 
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_WRITE);
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'file-upload-permission';
@@ -53,11 +53,6 @@ const FileIngest: FC = () => {
     };
 
     useMountEffect(effect);
-
-    // Open the file upload dialog when a processable file is dragged into the browser client
-    useExecuteOnFileDrag(() => setShowFileIngestDialog(true), {
-        acceptedTypes: ['application/json', 'application/zip'],
-    });
 
     const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
 

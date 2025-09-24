@@ -50,7 +50,7 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
-import ContextMenuZoneManagementEnabled from './ContextMenu/ContextMenuZoneManagementEnabled';
+import ContextMenuPrivilegeZonesEnabled from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
@@ -132,18 +132,15 @@ const GraphView: FC = () => {
         [handleContextMenu]
     );
 
-    const isLoading = graphHasDataQuery.isLoading || graphQuery.isLoading || customIconsQuery.isLoading;
-    const isError = graphHasDataQuery.isError || graphQuery.isError || customIconsQuery.isError;
-
-    if (isLoading) {
+    if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
-                <GraphProgress loading={isLoading} />
+                <GraphProgress loading={graphHasDataQuery.isLoading} />
             </div>
         );
     }
 
-    if (isError) return <GraphViewErrorAlert />;
+    if (graphHasDataQuery.isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
 
@@ -213,7 +210,7 @@ const GraphView: FC = () => {
             <FeatureFlag
                 flagKey='tier_management_engine'
                 enabled={
-                    <ContextMenuZoneManagementEnabled
+                    <ContextMenuPrivilegeZonesEnabled
                         contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
                         onClose={handleCloseContextMenu}
                     />
@@ -226,7 +223,7 @@ const GraphView: FC = () => {
                 }
             />
 
-            <GraphProgress loading={isLoading} />
+            <GraphProgress loading={graphQuery.isLoading} />
             <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
                 <ExploreTable
