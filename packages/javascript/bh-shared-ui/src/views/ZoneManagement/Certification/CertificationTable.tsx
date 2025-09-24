@@ -24,7 +24,7 @@ type CertificationTableProps = {
 
 const CertificationTable: FC<CertificationTableProps> = ({
     data,
-    //isLoading,
+    isLoading,
     isFetching,
     isSuccess,
     fetchNextPage,
