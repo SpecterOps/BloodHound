@@ -120,6 +120,8 @@ export const TagForm: FC = () => {
         },
     });
 
+    const { control, getValues, handleSubmit, reset, setValue } = form;
+
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
@@ -153,7 +155,7 @@ export const TagForm: FC = () => {
 
     const handleUpdateTag = useCallback(async () => {
         try {
-            const diffedValues = diffValues(tagQuery.data, { ...form.getValues() });
+            const diffedValues = diffValues(tagQuery.data, { ...getValues() });
             if (isEmpty(diffedValues)) {
                 addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
@@ -185,7 +187,7 @@ export const TagForm: FC = () => {
         }
     }, [
         tagQuery.data,
-        form,
+        getValues,
         privilegeZoneAnalysisEnabled,
         isLabelPage,
         updateTagMutation,
@@ -230,7 +232,7 @@ export const TagForm: FC = () => {
 
     useEffect(() => {
         if (tagQuery.data) {
-            form.reset({
+            reset({
                 name: tagQuery.data.name,
                 description: tagQuery.data.description,
                 position: tagQuery.data.position,
@@ -238,7 +240,7 @@ export const TagForm: FC = () => {
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
             });
         }
-    }, [tagQuery.data, form]);
+    }, [tagQuery.data, reset]);
 
     if (tagQuery.isLoading)
         return (
@@ -326,7 +328,7 @@ export const TagForm: FC = () => {
                             </div>
                             <div className='flex flex-col gap-6 mt-6'>
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name='name'
                                     rules={{
                                         required: `Please provide a name for the ${tagTypeDisplay}`,
@@ -352,7 +354,7 @@ export const TagForm: FC = () => {
                                     )}
                                 />
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name='description'
                                     render={({ field }) => (
                                         <FormItem>
@@ -372,7 +374,7 @@ export const TagForm: FC = () => {
                                 />
                                 {isZonePage && (
                                     <FormField
-                                        control={form.control}
+                                        control={control}
                                         name='require_certify'
                                         render={({ field }) => (
                                             <FormItem>
@@ -400,7 +402,7 @@ export const TagForm: FC = () => {
 
                                 {showAnalysisToggle && (
                                     <FormField
-                                        control={form.control}
+                                        control={control}
                                         name='analysis_enabled'
                                         render={({ field }) => (
                                             <FormItem>
@@ -421,7 +423,7 @@ export const TagForm: FC = () => {
                                 )}
                                 <div className='hidden'>
                                     <FormField
-                                        control={form.control}
+                                        control={control}
                                         name='position'
                                         render={({ field }) => (
                                             <FormItem>
@@ -468,7 +470,7 @@ export const TagForm: FC = () => {
                         <Button
                             data-testid='privilege-zones_save_tag-form_save-button'
                             variant={'primary'}
-                            onClick={form.handleSubmit(onSubmit)}>
+                            onClick={handleSubmit(onSubmit)}>
                             {tagId === '' ? 'Define Selector' : 'Save Edits'}
                         </Button>
                     </div>
@@ -478,7 +480,7 @@ export const TagForm: FC = () => {
                     <ZoneList
                         zones={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeZone) || []}
                         setPosition={(position: number | undefined) => {
-                            form.setValue('position', position, { shouldDirty: true });
+                            setValue('position', position, { shouldDirty: true });
                         }}
                         name={tagQuery.data?.name || 'New Zone'}
                     />
