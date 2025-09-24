@@ -54,7 +54,7 @@ const SelectorsListWrapper = ({
     sortOrder: SortOrder;
 }) => {
     return (
-        <div data-testid={`privilege-zones_details_selectors-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_selectors-list`}>
             <SortableHeader
                 title={'Selectors'}
                 onSort={() => {
@@ -68,9 +68,9 @@ const SelectorsListWrapper = ({
             />
             <div
                 className={cn(`border-x-2 border-neutral-5`, {
-                    'h-[762px]': getListHeight(window.innerHeight) === 762,
-                    'h-[642px]': getListHeight(window.innerHeight) === 642,
-                    'h-[438px]': getListHeight(window.innerHeight) === 438,
+                    'h-[760px]': getListHeight(window.innerHeight) === 760,
+                    'h-[640px]': getListHeight(window.innerHeight) === 640,
+                    'h-[436px]': getListHeight(window.innerHeight) === 436,
                 })}>
                 {children}
             </div>

@@ -34,7 +34,7 @@ interface MembersListProps {
     onChangeSortOrder: (sort: SortOrder) => void;
 }
 
-const LoadingRow = (index: number, style: React.CSSProperties) => (
+const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
         data-testid={`privilege-zones_members-list_loading-skeleton`}
         style={style}
@@ -82,7 +82,7 @@ export const MembersList: React.FC<MembersListProps> = ({
     };
 
     return (
-        <div data-testid={`privilege-zones_details_members-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_members-list`}>
             <SortableHeader
                 title={'Members'}
                 onSort={() => {
@@ -96,9 +96,9 @@ export const MembersList: React.FC<MembersListProps> = ({
             />
             <div
                 className={cn(`border-neutral-5`, {
-                    'h-[762px]': getListHeight(window.innerHeight) === 762,
-                    'h-[642px]': getListHeight(window.innerHeight) === 642,
-                    'h-[438px]': getListHeight(window.innerHeight) === 438,
+                    'h-[760px]': getListHeight(window.innerHeight) === 760,
+                    'h-[640px]': getListHeight(window.innerHeight) === 640,
+                    'h-[436px]': getListHeight(window.innerHeight) === 436,
                 })}>
                 <InfiniteQueryFixedList<AssetGroupTagMemberListItem>
                     itemSize={40}

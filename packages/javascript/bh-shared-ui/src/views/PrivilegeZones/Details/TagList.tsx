@@ -24,7 +24,7 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
-import { SelectedHighlight, getListHeight, isTag } from './utils';
+import { SelectedHighlight, isTag } from './utils';
 
 type TagListProps = {
     title: 'Zones' | 'Labels';
@@ -47,7 +47,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
     const { isLabelPage, isZonePage } = usePZPathParams();
 
     return (
-        <div data-testid={`privilege-zones_details_${title.toLowerCase()}-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_${title.toLowerCase()}-list`}>
             {isLabelPage ? (
                 <SortableHeader
                     title={title}
@@ -64,83 +64,76 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                 <div
                     data-testid={`privilege-zones_details_${title.toLowerCase()}-list_static-order`}
                     className='p-0 relative w-full border-b-2 border-neutral-5'>
-                    <div className='inline-flex items-center justify-center h-10 transition-colors text-neutral-dark-5 dark:text-neutral-light-5 pl-6 font-bold text-xl'>
+                    <div className='inline-flex items-center justify-center h-10 transition-colors pl-6 font-bold text-xl'>
                         {title}
                     </div>
                 </div>
             )}
-            <div
-                className={cn({
-                    'h-[762px]': getListHeight(window.innerHeight) === 762,
-                    'h-[642px]': getListHeight(window.innerHeight) === 642,
-                    'h-[438px]': getListHeight(window.innerHeight) === 438,
-                })}>
-                <ul>
-                    {listQuery.isLoading ? (
-                        itemSkeletons.map((skeleton, index) => {
-                            return skeleton(title, index);
-                        })
-                    ) : listQuery.isError ? (
-                        <li className='border-y border-neutral-3 relative h-10 pl-2'>
-                            <span className='text-base'>There was an error fetching this data</span>
-                        </li>
-                    ) : listQuery.isSuccess ? (
-                        listQuery.data
-                            ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && isZonePage) {
-                                    return (a.position || 0) - (b.position || 0);
-                                } else {
-                                    switch (sortOrder) {
-                                        case 'asc':
-                                            return a.name.localeCompare(b.name);
-                                        case 'desc':
-                                            return b.name.localeCompare(a.name);
-                                        default:
-                                            return b.name.localeCompare(a.name);
-                                    }
+            <ul>
+                {listQuery.isLoading ? (
+                    itemSkeletons.map((skeleton, index) => {
+                        return skeleton(title, index);
+                    })
+                ) : listQuery.isError ? (
+                    <li className='border-y border-neutral-3 relative h-10 pl-2'>
+                        <span className='text-base'>There was an error fetching this data</span>
+                    </li>
+                ) : listQuery.isSuccess ? (
+                    listQuery.data
+                        ?.sort((a, b) => {
+                            if (isTag(a) && isTag(b) && isZonePage) {
+                                return (a.position || 0) - (b.position || 0);
+                            } else {
+                                switch (sortOrder) {
+                                    case 'asc':
+                                        return a.name.localeCompare(b.name);
+                                    case 'desc':
+                                        return b.name.localeCompare(a.name);
+                                    default:
+                                        return b.name.localeCompare(a.name);
                                 }
-                            })
-                            .map((listItem) => {
-                                return (
-                                    <li
-                                        data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
-                                        key={listItem.id}
-                                        className={cn('border-y border-neutral-3 relative h-10', {
-                                            'bg-neutral-4': selected === listItem.id.toString(),
-                                        })}>
-                                        <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
-                                        <Button
-                                            variant={'text'}
-                                            className='flex justify-between w-full overflow-hidden'
-                                            onClick={() => {
-                                                onSelect(listItem.id);
-                                            }}>
-                                            <div className='flex items-center'>
-                                                {isZonePage && listItem.id !== topTagId && (
-                                                    <ZoneAnalysisIcon
-                                                        size={18}
-                                                        tooltip
-                                                        analysisEnabled={listItem?.analysis_enabled}
-                                                    />
-                                                )}
-                                                <span
-                                                    className={cn('text-base dark:text-white truncate')}
-                                                    title={listItem.name}>
-                                                    {listItem.name}
-                                                </span>
-                                            </div>
-                                            {listItem.counts && (
-                                                <span className='text-base ml-4'>
-                                                    {listItem.counts.selectors.toLocaleString()}
-                                                </span>
+                            }
+                        })
+                        .map((listItem) => {
+                            return (
+                                <li
+                                    data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
+                                    key={listItem.id}
+                                    className={cn('border-y border-neutral-3 relative h-10', {
+                                        'bg-neutral-4': selected === listItem.id.toString(),
+                                    })}>
+                                    <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
+                                    <Button
+                                        variant={'text'}
+                                        className='flex justify-between w-full'
+                                        onClick={() => {
+                                            onSelect(listItem.id);
+                                        }}>
+                                        <div className='flex items-center overflow-hidden'>
+                                            {isZonePage && listItem.id !== topTagId && (
+                                                <ZoneAnalysisIcon
+                                                    size={18}
+                                                    tooltip
+                                                    analysisEnabled={listItem?.analysis_enabled}
+                                                />
                                             )}
-                                        </Button>
-                                    </li>
-                                );
-                            })
-                    ) : null}
-                </ul>
-            </div>
+                                            <span
+                                                className={cn('text-base dark:text-white truncate')}
+                                                title={listItem.name}>
+                                                {listItem.name}
+                                            </span>
+                                        </div>
+                                        {listItem.counts && (
+                                            <span className='text-base ml-4'>
+                                                {listItem.counts.selectors.toLocaleString()}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </li>
+                            );
+                        })
+                ) : null}
+            </ul>
         </div>
     );
 };
