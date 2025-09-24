@@ -50,7 +50,7 @@ const CypherSearchMessage = (props: CypherSearchMessageProps) => {
     }, [clearMessage, showMessage, startTimer]);
 
     return (
-        <div className='w-full'>
+        <div className='w-full pr-1'>
             <div
                 role='status'
                 aria-live='polite'

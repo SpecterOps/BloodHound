@@ -21,7 +21,7 @@ import { useEnvironmentIdList } from '../../../hooks';
 import { apiClient } from '../../../utils';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
-    const environments = useEnvironmentIdList();
+    const environments = useEnvironmentIdList(['privilege-zones']);
     const objectsCountQuery = useQuery({
         queryKey: ['asset-group-tags-count', tagId, ...environments],
         queryFn: ({ signal }) =>

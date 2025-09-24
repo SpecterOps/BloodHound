@@ -17,14 +17,17 @@
 package api_test
 
 import (
+	"fmt"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/query"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_ParseGraphSortParameters_InvalidSortColumn(t *testing.T) {
@@ -81,4 +84,75 @@ func Test_ParseSortParameters(t *testing.T) {
 		require.Equal(t, sortItems[0].Direction, model.DescendingSortDirection)
 		require.Equal(t, sortItems[0].Column, "objectid")
 	})
+}
+
+func TestBuildSQLSort(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		sort             model.Sort
+		identifierColumn model.SortItem
+	}
+	type want struct {
+		sortByItems []string
+		err         error
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "success - append identifier column",
+			args: args{
+				sort: []model.SortItem{{Column: "column1", Direction: model.AscendingSortDirection}, {Column: "column2", Direction: model.DescendingSortDirection}},
+				identifierColumn: model.SortItem{
+					Column:    "id",
+					Direction: model.DescendingSortDirection,
+				},
+			},
+			want: want{[]string{"column1", "column2 desc", "id desc"}, nil},
+		},
+		{
+			name: "success - no identifier column",
+			args: args{
+				sort: []model.SortItem{{Column: "column1", Direction: model.AscendingSortDirection}, {Column: "column2", Direction: model.DescendingSortDirection}},
+			},
+			want: want{[]string{"column1", "column2 desc"}, nil},
+		},
+		{
+			name: "success - empty sort with identifier column",
+			args: args{
+				sort: []model.SortItem{},
+				identifierColumn: model.SortItem{
+					Column:    "id",
+					Direction: model.DescendingSortDirection,
+				},
+			},
+			want: want{[]string{"id desc"}, nil},
+		},
+		{
+			name: "success - empty sort with empty identifier column",
+			args: args{},
+			want: want{[]string{}, nil},
+		},
+		{
+			name: "fail - empty sort item",
+			args: args{
+				sort:             []model.SortItem{{Column: ""}},
+				identifierColumn: model.SortItem{},
+			},
+			want: want{[]string{}, fmt.Errorf("the specified column cannot be sorted because it is empty: column index: 0")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := api.BuildSQLSort(tt.args.sort, tt.args.identifierColumn)
+			if tt.want.err != nil {
+				assert.EqualError(t, err, tt.want.err.Error())
+			} else {
+				assert.Equal(t, tt.want.sortByItems, got)
+			}
+		})
+	}
 }

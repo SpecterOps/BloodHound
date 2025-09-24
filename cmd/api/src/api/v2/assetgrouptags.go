@@ -30,6 +30,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -972,16 +973,20 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySQL := "(actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
+			var (
+				queryableColumns  = []string{"actor", "email", "action", "target"}
+				querySQL          = fmt.Sprintf("(%s ILIKE ANY(?))", strings.Join(queryableColumns, " ILIKE ANY(?) OR "))
+				fuzzyQueryPattern = "%" + query + "%"
+				fuzzyQueryParams  = pq.StringArray{fuzzyQueryPattern, strings.ReplaceAll(fuzzyQueryPattern, " ", "")}
+			)
 
 			if sqlFilter.SQLString != "" {
-				querySQL = " AND" + querySQL
+				querySQL = " AND " + querySQL
 			}
 
 			sqlFilter.SQLString += querySQL
-
-			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
+			for range len(queryableColumns) {
+				sqlFilter.Params = append(sqlFilter.Params, fuzzyQueryParams)
 			}
 		}
 

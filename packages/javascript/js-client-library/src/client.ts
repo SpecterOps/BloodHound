@@ -1018,6 +1018,9 @@ class BHEAPIClient {
     listUsers = (options?: RequestOptions) =>
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
 
+    listUsersMinimal = (options?: RequestOptions) =>
+        this.baseClient.get<types.ListUsersMinimalResponse>('/api/v2/bloodhound-users-minimal', options);
+
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
