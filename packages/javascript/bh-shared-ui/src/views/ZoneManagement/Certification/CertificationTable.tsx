@@ -5,16 +5,17 @@ import {
     CertificationPending,
     CertificationRevoked,
     CertificationTypeMap,
+    AssetGroupTagCertificationRecord,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
-import FilterDialog from './FilterDialog/FilterDialog';
+import { FilterDialog } from './FilterDialog';
 
 type CertificationTableProps = {
     data: any;
-    filters: string;
+    filters: any;
     setFilters: () => void;
     isLoading: boolean;
     isFetching: boolean;
@@ -62,7 +63,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
     const totalFetched = certificationsItemsRaw.length;
 
     const certificationsItems = isSuccess
-        ? certificationsItemsRaw.map((item) => {
+        ? certificationsItemsRaw.map((item: AssetGroupTagCertificationRecord) => {
               return {
                   ...item,
                   date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
@@ -200,7 +201,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                 <h1 className='text-xl font-bold pr-4'>Certifications</h1>
                 {count && <p>{`${count} pending`}</p>}
             </div>
-            <div className='pl-8'>
+            <div className='pl-8 flex justify-between'>
                 <DropdownSelector
                     variant='transparent'
                     options={certOptions}
@@ -210,8 +211,8 @@ const CertificationTable: FC<CertificationTableProps> = ({
                         </span>
                     }
                     onChange={(_selectedCertificationType: DropdownOption) => {}}></DropdownSelector>
+                <FilterDialog setFilters={setFilters} filters={filters} />
             </div>
-            <FilterDialog setFilters={setFilters} filters={filters} open={false} handleClose={() => {}} />
             <div
                 onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
                 ref={scrollRef}
