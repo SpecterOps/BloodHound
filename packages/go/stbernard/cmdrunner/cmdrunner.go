@@ -140,7 +140,7 @@ func run(cmd *exec.Cmd, result *ExecutionResult) error {
 
 	var (
 		ctx           = context.TODO()
-		quietDisabled = slog.Default().Enabled(ctx, slog.LevelInfo)
+		quietDisabled = slog.Default().Enabled(ctx, slog.LevelDebug)
 	)
 
 	if quietDisabled {
