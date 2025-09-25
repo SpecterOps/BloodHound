@@ -24,11 +24,11 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, getListHeight } from './utils';
 
-const LoadingRow = (index: number, style: React.CSSProperties) => (
+const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
         data-testid={`privilege-zones_selectors-list_loading-skeleton`}
         style={style}
-        className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full p-2'>
+        className='border-y border-neutral-3 relative w-full p-2'>
         <Skeleton className={`h-full`} />
     </div>
 );
@@ -54,7 +54,7 @@ const SelectorsListWrapper = ({
     sortOrder: SortOrder;
 }) => {
     return (
-        <div data-testid={`privilege-zones_details_selectors-list`}>
+        <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_selectors-list`}>
             <SortableHeader
                 title={'Selectors'}
                 onSort={() => {
@@ -62,15 +62,15 @@ const SelectorsListWrapper = ({
                 }}
                 sortOrder={sortOrder}
                 classes={{
-                    container: 'border-b-2 border-neutral-light-5 dark:border-neutral-dark-5',
+                    container: 'border-b-2 border-neutral-5',
                     button: 'pl-6 font-bold text-xl',
                 }}
             />
             <div
-                className={cn(`overflow-y-auto border-x-2 border-neutral-light-5 dark:border-neutral-dark-5`, {
-                    'h-[762px]': getListHeight(window.innerHeight) === 762,
-                    'h-[642px]': getListHeight(window.innerHeight) === 642,
-                    'h-[438px]': getListHeight(window.innerHeight) === 438,
+                className={cn(`border-x-2 border-neutral-5`, {
+                    'h-[760px]': getListHeight(window.innerHeight) === 760,
+                    'h-[640px]': getListHeight(window.innerHeight) === 640,
+                    'h-[436px]': getListHeight(window.innerHeight) === 436,
                 })}>
                 {children}
             </div>
@@ -97,7 +97,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({
         return (
             <SelectorsListWrapper sortOrder={sortOrder} onChangeSortOrder={onChangeSortOrder}>
                 <ul>
-                    <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
+                    <li className='border-y border-neutral-3 relative h-10 pl-2'>
                         <span className='text-base'>There was an error fetching this data</span>
                     </li>
                 </ul>
@@ -113,8 +113,8 @@ export const SelectorsList: FC<SelectorsListProps> = ({
                 style={style}
                 role='listitem'
                 key={item.id}
-                className={cn('border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10', {
-                    'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === item.id.toString(),
+                className={cn('border-y border-neutral-3 relative h-10', {
+                    'bg-neutral-4': selected === item.id.toString(),
                 })}>
                 <SelectedHighlight selected={selected} itemId={item.id} title={'Selectors'} />
                 <Button
@@ -123,19 +123,14 @@ export const SelectorsList: FC<SelectorsListProps> = ({
                     onClick={() => {
                         onSelect(item.id);
                     }}>
-                    <div className='flex items-center'>
-                        <span
-                            className={cn(
-                                'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
-                                {
-                                    'text-[#8E8C95] dark:text-[#919191]': isDisabled,
-                                }
-                            )}
-                            title={isDisabled ? `Disabled: ${item.name}` : item.name}>
-                            {item.name}
-                        </span>
-                    </div>
-                    {item.counts && <span className='text-base'>{item.counts.members.toLocaleString()}</span>}
+                    <span
+                        className={cn('text-base dark:text-white truncate', {
+                            'text-[#8E8C95] dark:text-[#919191]': isDisabled,
+                        })}
+                        title={isDisabled ? `Disabled: ${item.name}` : item.name}>
+                        {item.name}
+                    </span>
+                    {item.counts && <span className='text-base pl-2'>{item.counts.members.toLocaleString()}</span>}
                 </Button>
             </div>
         );

@@ -84,7 +84,7 @@ describe('CommonSearches', () => {
             </QueryClientProvider>
         );
 
-        const header = screen.getByText(/Pre-built Queries/i);
+        const header = screen.getByText(/Saved Queries/i);
         expect(header).toBeInTheDocument();
     });
 

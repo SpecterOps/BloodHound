@@ -178,6 +178,8 @@ public static readonly string GroupScope = "groupscope";
 public static readonly string NetBIOS = "netbios";
 public static readonly string AdminSDHolderProtected = "adminsdholderprotected";
 public static readonly string ServicePrincipalNames = "serviceprincipalnames";
+public static readonly string GPOStatusRaw = "gpostatusraw";
+public static readonly string GPOStatus = "gpostatus";
 
 }
 }

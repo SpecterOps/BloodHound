@@ -90,7 +90,7 @@ const Details: FC = () => {
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
 
-    const environments = useEnvironmentIdList();
+    const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
@@ -118,11 +118,11 @@ const Details: FC = () => {
     return (
         <div className='h-full'>
             <div className='flex mt-6'>
-                <div className='w-1/3'>{InfoHeader && <InfoHeader />}</div>
-                <div className='w-1/3 flex justify-end'>
+                <div className='flex flex-wrap basis-2/3 justify-between'>
+                    {InfoHeader && <InfoHeader />}
                     <SearchBar />
                 </div>
-                <div className='w-1/3 ml-8'>
+                <div className='basis-1/3 ml-8'>
                     {showEditButton && (
                         <Button
                             asChild={showEditButton || !saveLink}
@@ -134,7 +134,7 @@ const Details: FC = () => {
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
+                <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
                     {isLabelPage ? (
                         <TagList
                             title={'Labels'}

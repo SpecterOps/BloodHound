@@ -18,10 +18,12 @@ import userEvent from '@testing-library/user-event';
 import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { Route, Routes, useParams } from 'react-router-dom';
+import { Location, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import TagForm from '.';
+import { privilegeZonesKeys } from '../../../../hooks';
 import { labelsPath, privilegeZonesPath, savePath, zonesPath } from '../../../../routes';
-import { act, fireEvent, longWait, render, screen, waitFor, within } from '../../../../test-utils';
+import { act, fireEvent, render, screen, waitFor, within } from '../../../../test-utils';
+import { apiClient, setUpQueryClient } from '../../../../utils';
 
 const testTierZero = {
     id: 1,
@@ -35,6 +37,7 @@ const testTierZero = {
     updated_by: 'SYSTEM',
     deleted_at: null,
     deleted_by: null,
+    glyph: 'lightbulb',
     position: 1,
     require_certify: true,
     analysis_enabled: true,
@@ -52,6 +55,7 @@ const testOwned = {
     updated_by: 'SYSTEM',
     deleted_at: null,
     deleted_by: null,
+    glyph: null,
     position: null,
     require_certify: false,
     analysis_enabled: false,
@@ -88,6 +92,13 @@ const handlers = [
         return res(
             ctx.json({
                 data: { tag: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 } },
+            })
+        );
+    }),
+    rest.get('/api/v2/asset-group-tags/4', async (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { tag: { ...testTierZero, name: 'other zone', id: 4, type: 1, position: 2 } },
             })
         );
     }),
@@ -128,6 +139,7 @@ vi.mock('react-router-dom', async () => {
     return {
         ...actual,
         useParams: vi.fn(),
+        useLocation: vi.fn(),
     };
 });
 
@@ -140,28 +152,20 @@ vi.mock('../../../../utils', async () => {
     };
 });
 
-const mockAddNotification = vi.fn();
-vi.mock('../../../../providers', async () => {
-    const actual = await vi.importActual('../../../../providers');
-    return {
-        ...actual,
-        addNotification: () => mockAddNotification,
-    };
-});
-
 describe('Tag Form', () => {
     const user = userEvent.setup();
     const createNewZonePath = `/${privilegeZonesPath}/${zonesPath}/${savePath}/`;
     const createNewLabelPath = `/${privilegeZonesPath}/${labelsPath}/${savePath}/`;
-    const editExistingZonePath = `/${privilegeZonesPath}/${zonesPath}/1/${savePath}`;
+    const editHighestPrivilegeZonePath = `/${privilegeZonesPath}/${zonesPath}/1/${savePath}`;
+    const editOtherZonePath = `/${privilegeZonesPath}/${zonesPath}/4/${savePath}`;
     const editExistingLabelPath = `/${privilegeZonesPath}/${labelsPath}/2/${savePath}`;
     const deletionTestsPath = `/${privilegeZonesPath}/${labelsPath}/3/${savePath}`;
 
     it('renders the form for creating a new zone', async () => {
         // Because there is no id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewZonePath } as Location);
 
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
@@ -190,6 +194,10 @@ describe('Tag Form', () => {
         expect(requireCertifySwitch).toBeInTheDocument();
         expect(requireCertifySwitch).toHaveValue('false');
 
+        const glyphInput = await screen.findByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).toBeInTheDocument();
+        expect(glyphInput).toHaveValue('');
+
         // The delete button should not render when creating a new selector because it doesn't exist yet
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
@@ -202,6 +210,7 @@ describe('Tag Form', () => {
         // This means that none of the input fields should have any value aside from default values
 
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
 
         render(
             <Routes>
@@ -220,6 +229,9 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
+        const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).not.toBeInTheDocument();
+
         // The Require Certification switch should not render when creating a label
         expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
@@ -230,8 +242,114 @@ describe('Tag Form', () => {
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
+    it('renders the form for editing an existing zone', async () => {
+        // This url has the zone id of 1 in the path
+        // and so this zone's data is filled into the form for the user to edit
+
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editHighestPrivilegeZonePath } as Location);
+
+        render(
+            <Routes>
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: editHighestPrivilegeZonePath }
+        );
+
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+
+        const nameInput = await screen.findByLabelText('Name');
+        expect(nameInput).toBeInTheDocument();
+        await waitFor(() => {
+            expect(nameInput).toHaveValue('Tier Zero');
+        });
+
+        const descriptionInput = screen.getByLabelText('Description');
+        expect(descriptionInput).toBeInTheDocument();
+        await waitFor(() => {
+            expect(descriptionInput).toHaveValue('Tier Zero Description');
+        });
+
+        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
+        expect(requireCertifySwitch).toBeInTheDocument();
+        await waitFor(() => {
+            expect(requireCertifySwitch).toHaveValue('true');
+        });
+
+        // This form input is not available for the most privileged zone, aka Tier Zero
+        expect(screen.queryByLabelText(/Apply Custom Glyph/)).not.toBeInTheDocument();
+
+        // The delete button should not render when editing T0
+        expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+    });
+
+    it('renders the form for editing an existing label', async () => {
+        // This url has the label id of 2 in the path
+        // and so this label's data is filled into the form for the user to edit
+
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editExistingLabelPath } as Location);
+
+        render(
+            <Routes>
+                <Route path={editExistingLabelPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingLabelPath }
+        );
+
+        await waitFor(() => {
+            expect(screen.getByText('Edit Label Details')).toBeInTheDocument();
+        });
+
+        const nameInput = await screen.findByLabelText('Name');
+        expect(nameInput).toBeInTheDocument();
+        await waitFor(() => {
+            expect(nameInput).toHaveValue('Owned');
+        });
+
+        const descriptionInput = screen.getByLabelText('Description');
+        expect(descriptionInput).toBeInTheDocument();
+        await waitFor(() => {
+            expect(descriptionInput).toHaveValue('Owned Description');
+        });
+
+        // The Require Certification switch should not render when editing a label
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
+
+        const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
+        expect(glyphInput).not.toBeInTheDocument();
+
+        // The delete button should not render when editing Owned
+        await waitFor(() => {
+            expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        });
+        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.queryByTestId('privilege-zones_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();
+    });
+
+    it('renders the glyph form input when the editing a zone that is not the highest privileged', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '4', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editOtherZonePath } as Location);
+
+        render(
+            <Routes>
+                <Route path={editOtherZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: editOtherZonePath }
+        );
+
+        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
+
+        expect(await screen.findByLabelText(/Apply Custom Glyph/)).toBeInTheDocument();
+        expect(await screen.findAllByText('lightbulb')).toHaveLength(2);
+    });
+
     it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editHighestPrivilegeZonePath } as Location);
 
         const configResponse = {
             data: [
@@ -250,9 +368,9 @@ describe('Tag Form', () => {
 
         render(
             <Routes>
-                <Route path={editExistingZonePath} element={<TagForm />} />
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingZonePath }
+            { route: editHighestPrivilegeZonePath }
         );
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
@@ -261,100 +379,22 @@ describe('Tag Form', () => {
 
     it('renders the analysis toggle when multi tier analysis enabled is true and when editing an existing zone', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editHighestPrivilegeZonePath } as Location);
 
         render(
             <Routes>
-                <Route path={editExistingZonePath} element={<TagForm />} />
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
             </Routes>,
-            { route: editExistingZonePath }
+            { route: editHighestPrivilegeZonePath }
         );
 
         expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
         expect(await screen.findByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
-    it('renders the form for editing an existing zone', async () => {
-        // This url has the zone id of 1 in the path
-        // and so this zone's data is filled into the form for the user to edit
-
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
-
-        render(
-            <Routes>
-                <Route path={editExistingZonePath} element={<TagForm />} />
-            </Routes>,
-            { route: editExistingZonePath }
-        );
-
-        expect(await screen.findByText('Edit Zone Details')).toBeInTheDocument();
-
-        const nameInput = await screen.findByLabelText('Name');
-        expect(nameInput).toBeInTheDocument();
-        longWait(() => {
-            expect(nameInput).toHaveValue('Tier Zero');
-        });
-
-        const descriptionInput = screen.getByLabelText('Description');
-        expect(descriptionInput).toBeInTheDocument();
-        longWait(() => {
-            expect(descriptionInput).toHaveValue('Tier Zero Description');
-        });
-
-        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-        expect(requireCertifySwitch).toBeInTheDocument();
-        await waitFor(() => {
-            expect(requireCertifySwitch).toHaveValue('true');
-        });
-
-        // The delete button should not render when editing T0
-        expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-    });
-
-    it('renders the form for editing an existing label', async () => {
-        // This url has the label id of 2 in the path
-        // and so this label's data is filled into the form for the user to edit
-
-        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
-
-        render(
-            <Routes>
-                <Route path={editExistingLabelPath} element={<TagForm />} />
-            </Routes>,
-            { route: editExistingLabelPath }
-        );
-
-        longWait(() => {
-            expect(screen.getByText('Edit Label Details')).toBeInTheDocument();
-        });
-
-        const nameInput = await screen.findByLabelText('Name');
-        expect(nameInput).toBeInTheDocument();
-        longWait(() => {
-            expect(nameInput).toHaveValue('Owned');
-        });
-
-        const descriptionInput = screen.getByLabelText('Description');
-        expect(descriptionInput).toBeInTheDocument();
-        longWait(() => {
-            expect(descriptionInput).toHaveValue('Owned Description');
-        });
-
-        // The Require Certification switch should not render when editing a label
-        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
-
-        // The delete button should not render when editing Owned
-        longWait(() => {
-            expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
-        });
-        expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-        expect(screen.queryByTestId('privilege-zones_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();
-    });
-
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '2' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
         await act(async () => {
@@ -367,16 +407,20 @@ describe('Tag Form', () => {
     });
 
     test('a name value is required to submit the form', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
-        await user.click(await screen.findByRole('button', { name: /Save/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
 
-        longWait(() => {
-            expect(screen.getByText('Please provide a name for the label')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Please provide a name for the Label')).toBeInTheDocument();
         });
     });
 
     it('validates that the name input is under the max length', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewLabelPath } as Location);
         render(<TagForm />, { route: createNewLabelPath });
 
         const nameInput = await screen.findByLabelText('Name');
@@ -384,9 +428,9 @@ describe('Tag Form', () => {
         await user.click(nameInput);
         await user.paste('f'.repeat(251));
 
-        await user.click(await screen.findByRole('button', { name: /Save/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
 
-        longWait(() => {
+        await waitFor(() => {
             expect(
                 screen.getByText(`Name cannot exceed 250 characters. Please provide a shorter name`)
             ).toBeInTheDocument();
@@ -394,7 +438,8 @@ describe('Tag Form', () => {
     });
 
     test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '1' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewZonePath } as Location);
         render(
             <Routes>
                 <Route path={'/'} element={<TagForm />} />
@@ -408,7 +453,7 @@ describe('Tag Form', () => {
         await user.click(nameInput);
         await user.paste('foo');
 
-        await user.click(await screen.findByRole('button', { name: /Save/ }));
+        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
 
         expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
     });
@@ -431,9 +476,34 @@ describe('Tag Form', () => {
 
         await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
 
-        longWait(() => {
+        expect(screen.queryByText('Please provide a name for the zone')).not.toBeInTheDocument();
+
+        await waitFor(() => {
             expect(mockNavigate).toBeCalled();
-            expect(mockAddNotification).toBeCalled();
+        });
+    });
+
+    it('handles creating a new zone', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: undefined });
+        vi.mocked(useLocation).mockReturnValue({ pathname: createNewZonePath } as Location);
+
+        render(
+            <Routes>
+                <Route path={'/'} element={<TagForm />} />
+                <Route path={createNewZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: createNewZonePath }
+        );
+
+        const nameInput = await screen.findByLabelText('Name');
+
+        await user.click(nameInput);
+        await user.paste('foo');
+
+        await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
+
+        await waitFor(() => {
+            expect(mockNavigate).toBeCalled();
         });
     });
 
@@ -455,9 +525,39 @@ describe('Tag Form', () => {
 
         await user.click(await screen.findByRole('button', { name: /Define Selector/ }));
 
-        longWait(() => {
+        await waitFor(() => {
             expect(mockNavigate).toBeCalled();
-            expect(mockAddNotification).toBeCalled();
+        });
+    });
+
+    it('only sends dirty fields in the request when updating', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        const updateAGTSpy = vi.spyOn(apiClient, 'updateAssetGroupTag');
+
+        const queryClient = setUpQueryClient([{ key: privilegeZonesKeys.tagDetail('1'), data: testTierZero }]);
+
+        render(
+            <Routes>
+                <Route path={'/'} element={<TagForm />} />
+                <Route path={editHighestPrivilegeZonePath} element={<TagForm />} />
+            </Routes>,
+            { route: editHighestPrivilegeZonePath, queryClient }
+        );
+
+        const nameInput = await screen.findByLabelText('Name');
+        expect(nameInput).toBeInTheDocument();
+        expect(nameInput).toHaveValue('Tier Zero');
+
+        const descriptionInput = await screen.findByLabelText('Description');
+
+        await user.click(descriptionInput);
+        await user.clear(descriptionInput);
+        await user.paste('updated field');
+
+        await user.click(await screen.findByRole('button', { name: /Save Edits/ }));
+
+        await waitFor(() => {
+            expect(updateAGTSpy).toBeCalledWith('1', { description: 'updated field' }, undefined);
         });
     });
 
@@ -518,7 +618,7 @@ describe('Tag Form', () => {
 
     it('open and closes dialog with confirm button after user inputs required text', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '3' });
-
+        vi.mocked(useLocation).mockReturnValue({ pathname: editExistingLabelPath } as Location);
         server.use(
             rest.delete('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
                 return res(ctx.status(200));
