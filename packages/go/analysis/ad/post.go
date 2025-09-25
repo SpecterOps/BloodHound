@@ -665,7 +665,7 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 		} else if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
 			return nil, err
 		} else {
-			return CalculateCrossProductNodeSets(tx, localGroupExpansions, baseRilEntities.Slice(), []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}), nil
+			return CalculateCrossProductNodeSets(tx, localGroupExpansions, []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}, baseRilEntities.Slice()), nil
 		}
 	} else {
 		return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
