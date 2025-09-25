@@ -246,8 +246,8 @@ export const TagForm: FC = () => {
     const handleGlyphCancel = useCallback(() => setGlyphDialogOpen(false), []);
     const handleGlyphSelect = useCallback(
         (iconName?: IconName) => {
-            if (iconName) form.setValue('glyph', iconName, { shouldDirty: true });
-            else form.setValue('glyph', '', { shouldDirty: true });
+            if (iconName) setValue('glyph', iconName, { shouldDirty: true });
+            else setValue('glyph', '', { shouldDirty: true });
 
             setGlyphDialogOpen(false);
         },
@@ -345,7 +345,7 @@ export const TagForm: FC = () => {
 
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
 
-    const glyph = form.getValues('glyph');
+    const glyph = getValues('glyph');
 
     return (
         <Form {...form}>
@@ -454,9 +454,9 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 )}
-                                {isZonePage && form.getValues('position') !== 1 && (
+                                {isZonePage && getValues('position') !== 1 && (
                                     <FormField
-                                        control={form.control}
+                                        control={control}
                                         name='glyph'
                                         render={({ field }) => (
                                             <FormItem>
