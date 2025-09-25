@@ -569,8 +569,8 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 
 func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (cardinality.Duplex[uint64], error) {
 	var (
-		uraEnabled         = enforceURA || ComputerHasURACollection(tx, computer)
-		rdpLocalGroup, err = FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
+		uraEnabled    = enforceURA || ComputerHasURACollection(tx, computer)
+		rdpGroup, err = FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
 	)
 
 	if err != nil {
@@ -581,24 +581,28 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 	}
 
 	// Shortcut opportunity when citrix is disabled: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
-	canSkipURAProcessing := !uraEnabled || HasRemoteInteractiveLogonRight(tx, rdpLocalGroup.ID, computer)
+	canSkipURAProcessing := !uraEnabled || HasRemoteInteractiveLogonRight(tx, rdpGroup.ID, computer)
 
 	if !citrixEnabled && canSkipURAProcessing {
 		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
 	}
 
 	if citrixEnabled {
-		if directAccessUsersGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
+		if dauGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
 			// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
 			if graph.IsErrNotFound(err) {
-				return ProcessRDPWithUra(tx, rdpLocalGroup, computer, localGroupExpansions)
+				return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
 			}
 			return nil, err
+		} else if !uraEnabled {
+			return CalculateCrossProductNodeSets(tx, localGroupExpansions, []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}), nil
+		} else if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
+			return nil, err
 		} else {
-			return ProcessCitrixRDPWithUra(tx, rdpLocalGroup, directAccessUsersGroup, computer, localGroupExpansions)
+			return CalculateCrossProductNodeSets(tx, localGroupExpansions, baseRilEntities.Slice(), []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}), nil
 		}
 	} else {
-		return ProcessRDPWithUra(tx, rdpLocalGroup, computer, localGroupExpansions)
+		return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
 	}
 }
 
@@ -646,18 +650,5 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 		}
 
 		return rdpEntities, nil
-	}
-}
-
-func ProcessCitrixRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, dauLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
-	if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
-		return nil, err
-	} else {
-		var (
-			rdpNodeSet = []*graph.Node{rdpLocalGroup}
-			dauNodeSet = []*graph.Node{dauLocalGroup}
-		)
-
-		return CalculateCrossProductNodeSets(tx, localGroupExpansions, rdpNodeSet, dauNodeSet, baseRilEntities.Slice()), nil
 	}
 }
