@@ -17,6 +17,7 @@
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
 import {
+    AssetGroupMenuItem,
     NodeResponse,
     Permission,
     apiClient,
@@ -34,7 +35,6 @@ import {
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
-import AssetGroupMenuItem from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
@@ -99,17 +99,19 @@ const ContextMenu: FC<{
     };
 
     const handleAddNode = (assetGroupId: string | number) => {
-        createAssetGroupTagSelectorMutation.mutate(
-            {
-                assetGroupId,
-                node: selectedItemQuery.data as NodeResponse,
-            },
-            {
-                onSettled: () => {
-                    setDialogOpen(false);
+        if (!createAssetGroupTagSelectorMutation.isLoading) {
+            createAssetGroupTagSelectorMutation.mutate(
+                {
+                    assetGroupId,
+                    node: selectedItemQuery.data as NodeResponse,
                 },
-            }
-        );
+                {
+                    onSettled: () => {
+                        setDialogOpen(false);
+                    },
+                }
+            );
+        }
     };
 
     const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
@@ -159,6 +161,7 @@ const ContextMenu: FC<{
                 {checkPermission(Permission.GRAPH_DB_WRITE) && [
                     <AssetGroupMenuItem
                         key={tierZeroAssetGroup!.id}
+                        disableSubmit={createAssetGroupTagSelectorMutation.isLoading}
                         assetGroupId={tierZeroAssetGroup!.id}
                         assetGroupName={tierZeroAssetGroup!.name}
                         onAddNode={handleAddNode}
@@ -175,6 +178,7 @@ const ContextMenu: FC<{
                     />,
                     <AssetGroupMenuItem
                         key={ownedAssetGroup!.id}
+                        disableSubmit={createAssetGroupTagSelectorMutation.isLoading}
                         assetGroupId={ownedAssetGroup!.id}
                         assetGroupName={ownedAssetGroup!.name}
                         onAddNode={handleAddNode}
