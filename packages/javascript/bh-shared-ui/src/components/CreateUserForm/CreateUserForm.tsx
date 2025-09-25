@@ -40,6 +40,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
 import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
+import { Minus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -121,7 +122,7 @@ const CreateUserForm: React.FC<{
 
             setSelectedEnvironments(returnMappedEnvironments);
             form.setValue('all_environments', true);
-            //form.setValue('environment_access_control.environments', formatReturnedEnvironments); // TODO: okay to remove?
+            form.setValue('environment_access_control.environments', null);
         } else {
             setSelectedEnvironments([]);
             form.setValue('all_environments', false);
@@ -146,14 +147,18 @@ const CreateUserForm: React.FC<{
     const allEnvironmentsIndeterminate =
         selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
 
+    console.log(allEnvironmentsIndeterminate);
+
     useEffect(() => {
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
         }
 
-        console.log(formatReturnedEnvironments);
-
-        form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+        if (allEnvironmentsSelected) {
+            form.setValue('environment_access_control.environments', null);
+        } else {
+            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+        }
 
         if (allEnvironmentsCheckboxRef.current) {
             allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
@@ -163,7 +168,7 @@ const CreateUserForm: React.FC<{
                   : 'unchecked';
         }
 
-        console.log('Current form :', form.watch()); // TODO: REMOVE
+        //('Current form :', form.watch()); // TODO: REMOVE
 
         if (error) {
             if (error?.response?.status === 409) {
@@ -193,7 +198,7 @@ const CreateUserForm: React.FC<{
     ]);
 
     const handleSave = () => {
-        console.log(form.watch());
+        console.log(form.watch() + ' these are the values onSave');
     };
 
     return (
@@ -606,15 +611,25 @@ const CreateUserForm: React.FC<{
                                                     <FormItem className='flex flex-row items-center'>
                                                         <Checkbox
                                                             ref={allEnvironmentsCheckboxRef}
-                                                            checked={allEnvironmentsSelected}
+                                                            checked={
+                                                                allEnvironmentsSelected || allEnvironmentsIndeterminate
+                                                            }
                                                             id='allEnvironments'
                                                             onCheckedChange={handleSelectAllEnvironmentsChange}
                                                             className={
                                                                 allEnvironmentsIndeterminate
                                                                     ? 'data-[state=indeterminate]'
-                                                                    : ''
+                                                                    : 'data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
                                                             }
-                                                            //icon={faMinus}
+                                                            icon={
+                                                                allEnvironmentsIndeterminate && (
+                                                                    <Minus
+                                                                        className='h-full w-full'
+                                                                        absoluteStrokeWidth={true}
+                                                                        strokeWidth={3}
+                                                                    />
+                                                                )
+                                                            }
                                                             data-testid='create-user-dialog_select-all-environments-checkbox'
                                                         />
                                                         <FormLabel
@@ -645,7 +660,7 @@ const CreateUserForm: React.FC<{
                                                                             checked={selectedEnvironments.includes(
                                                                                 item.id
                                                                             )}
-                                                                            className='m-3'
+                                                                            className='m-3 data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
                                                                             id='environments'
                                                                             onCheckedChange={(checked) =>
                                                                                 handleEnvironmentSelectChange(
