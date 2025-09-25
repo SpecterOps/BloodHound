@@ -36,10 +36,10 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { faMinus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
-import { CreateUserRequest, Environment, EnvironmentRequest, Role, SSOProvider } from 'js-client-library';
+import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -128,7 +128,7 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const formatReturnedEnvironments: EnvironmentRequest[] = selectedEnvironments?.map((itemId: string) => ({
+    const formatReturnedEnvironments: any[] = selectedEnvironments?.map((itemId: string) => ({
         environment_id: itemId,
     }));
 
@@ -150,6 +150,8 @@ const CreateUserForm: React.FC<{
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
         }
+
+        console.log(formatReturnedEnvironments);
 
         form.setValue('environment_access_control.environments', formatReturnedEnvironments);
 
@@ -189,6 +191,10 @@ const CreateUserForm: React.FC<{
         allEnvironmentsIndeterminate,
         allEnvironmentsSelected,
     ]);
+
+    const handleSave = () => {
+        console.log(form.watch());
+    };
 
     return (
         <Form {...form}>
@@ -563,7 +569,9 @@ const CreateUserForm: React.FC<{
                                     data-testid='update-user-dialog_button-save'
                                     disabled={isLoading}
                                     role='button'
-                                    type='submit'>
+                                    type='submit'
+                                    onClick={handleSave} // TODO REMOVE
+                                >
                                     Save
                                 </Button>
                             </DialogActions>
@@ -606,7 +614,7 @@ const CreateUserForm: React.FC<{
                                                                     ? 'data-[state=indeterminate]'
                                                                     : ''
                                                             }
-                                                            icon={faMinus}
+                                                            //icon={faMinus}
                                                             data-testid='create-user-dialog_select-all-environments-checkbox'
                                                         />
                                                         <FormLabel
