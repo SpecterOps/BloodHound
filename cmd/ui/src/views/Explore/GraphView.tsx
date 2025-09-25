@@ -16,7 +16,9 @@
 
 import { useTheme } from '@mui/material';
 import {
+    AssetGroupMenuItem,
     BaseExploreLayoutOptions,
+    ContextMenuPrivilegeZonesEnabled,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -24,24 +26,34 @@ import {
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     NodeClickInfo,
+    NodeResponse,
     WebGLDisabledAlert,
+    apiClient,
     baseGraphLayouts,
     defaultGraphLayout,
+    detailsPath,
     glyphUtils,
     isNode,
     isWebGLEnabled,
+    labelsPath,
     makeStoreMapFromColumnOptions,
+    privilegeZonesPath,
     useCustomNodeKinds,
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useGraphHasData,
+    useNotifications,
     useTagGlyphs,
+    useTagsQuery,
     useToggle,
+    zonesPath,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
+import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation } from 'react-query';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -50,7 +62,6 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
-import ContextMenuPrivilegeZonesEnabled from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
@@ -60,11 +71,13 @@ const GraphView: FC = () => {
     const dispatch = useAppDispatch();
 
     const theme = useTheme();
+    const { addNotification } = useNotifications();
 
     const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
 
     const { searchType } = useExploreParams();
+    const getAssetGroupTagsQuery = useTagsQuery();
     const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
@@ -100,6 +113,93 @@ const GraphView: FC = () => {
         };
     }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphMap]);
 
+    const [showContextMenu, setShowContextMenu] = useState(false);
+
+    const createAssetGroupTagSelectorMutation = useMutation({
+        mutationFn: ({ assetGroupId, node }: { assetGroupId: string | number; node: NodeResponse }) => {
+            return apiClient.createAssetGroupTagSelector(assetGroupId, {
+                name: node.label ?? node.objectId,
+                seeds: [
+                    {
+                        type: SeedTypeObjectId,
+                        value: node.objectId,
+                    },
+                ],
+            });
+        },
+        onSuccess: () => {
+            addNotification('Node successfully added.', 'AssetGroupUpdateSuccess');
+        },
+        onError: (error: any) => {
+            console.error(error);
+            addNotification('An error occurred when adding node', 'AssetGroupUpdateError');
+        },
+    });
+
+    const handleAddNode = useCallback(
+        (assetGroupId: string | number) => {
+            if (!createAssetGroupTagSelectorMutation.isLoading) {
+                createAssetGroupTagSelectorMutation.mutate(
+                    {
+                        assetGroupId,
+                        node: selectedItemQuery.data as NodeResponse,
+                    },
+                    {
+                        onSettled: () => {
+                            setShowContextMenu(false);
+                        },
+                    }
+                );
+            }
+        },
+        [createAssetGroupTagSelectorMutation, selectedItemQuery.data]
+    );
+
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
+        return value.position === 1;
+    });
+
+    const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
+        return value.type === 3;
+    });
+
+    const assetGroupMenuItems = useMemo(() => {
+        if (!tierZeroAssetGroup || !ownedAssetGroup) return [];
+        return [
+            <AssetGroupMenuItem
+                key={tierZeroAssetGroup!.id}
+                disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
+                assetGroupId={tierZeroAssetGroup!.id}
+                assetGroupName={tierZeroAssetGroup!.name}
+                onAddNode={handleAddNode}
+                removeNodePath={`/${privilegeZonesPath}/${zonesPath}/${tierZeroAssetGroup!.id}/${detailsPath}`}
+                isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
+                onShowConfirmation={() => {
+                    setShowContextMenu(true);
+                }}
+                onCancelConfirmation={() => {
+                    setShowContextMenu(false);
+                }}
+                showConfirmationOnAdd
+                confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
+            />,
+            <AssetGroupMenuItem
+                key={ownedAssetGroup!.id}
+                disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
+                assetGroupId={ownedAssetGroup!.id}
+                assetGroupName={ownedAssetGroup!.name}
+                onAddNode={handleAddNode}
+                removeNodePath={`/${privilegeZonesPath}/${labelsPath}/${ownedAssetGroup!.id}/${detailsPath}`}
+                isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
+            />,
+        ];
+    }, [
+        createAssetGroupTagSelectorMutation.isLoading,
+        handleAddNode,
+        ownedAssetGroup,
+        selectedItemQuery.data,
+        tierZeroAssetGroup,
+    ]);
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {
         if (!graphQuery.data) return;
@@ -211,8 +311,10 @@ const GraphView: FC = () => {
                 flagKey='tier_management_engine'
                 enabled={
                     <ContextMenuPrivilegeZonesEnabled
+                        open={showContextMenu}
                         contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
                         onClose={handleCloseContextMenu}
+                        assetGroupMenuItems={assetGroupMenuItems}
                     />
                 }
                 disabled={
