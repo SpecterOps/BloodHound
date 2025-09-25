@@ -19,7 +19,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
-import { act, render, screen } from '../../test-utils';
+import { act, render, screen } from '../../../test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItemPrivilegeZonesEnabled';
 
 const tierZeroAssetGroup = { id: 1, name: 'high value' };
