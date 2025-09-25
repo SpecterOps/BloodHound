@@ -40,7 +40,7 @@ import {
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
-import { Environment, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
+import { Environment, EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -66,8 +66,6 @@ const UpdateUserForm: React.FC<{
             cacheTime: 0,
         }
     );
-
-    console.log(getUserQuery.data);
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data.data.roles)
@@ -130,7 +128,10 @@ const UpdateUserForm: React.FC<{
                 all_environments: getUserQuery.data.all_environments,
                 environment_access_control: {
                     environments: [
-                        getUserQuery.data.environment_access_control?.map((environment: any) => environment.id) || [],
+                        getUserQuery.data.environment_access_control?.map(
+                            (environment: EnvironmentRequest) => environment
+                        ) || [],
+                        //getUserQuery.data.environment_access_control.environments || [],
                     ],
                 },
             }}
@@ -173,6 +174,8 @@ const UpdateUserFormInner: React.FC<{
         },
     });
 
+    console.log(initialData);
+
     const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
     const roleInputValue = form.watch('roles');
     const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
@@ -183,6 +186,14 @@ const UpdateUserFormInner: React.FC<{
     )?.config?.auto_provision?.role_provision;
 
     const { data: availableEnvironments } = useAvailableEnvironments();
+
+    console.log(availableEnvironments);
+
+    const initialEnvironmentsSelected = initialData.environment_access_control?.environments?.map((enviroment) => {
+        return enviroment.environment_id;
+    });
+
+    console.log(initialEnvironmentsSelected);
 
     const [searchInput, setSearchInput] = useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
@@ -269,6 +280,8 @@ const UpdateUserFormInner: React.FC<{
             }
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError]);
+
+    //console.log(form.watch());
 
     return (
         <Form {...form}>
