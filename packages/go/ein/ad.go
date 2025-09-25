@@ -1522,9 +1522,50 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		}
 	}
 
+	propMap[ad.VulnerableNetlogonSecurityDescriptorCollected.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected
+	if computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Collected {
+		propMap[ad.VulnerableNetlogonSecurityDescriptor.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Value
+	}
+
 	return IngestibleNode{
 		ObjectID:    computer.ObjectIdentifier,
 		PropertyMap: propMap,
 		Labels:      []graph.Kind{ad.Computer},
+	}
+}
+
+// Prettified definitions for GPOStatus
+const (
+	PrettyGPOStatusNotExisting                   = "GPO Status does not exist"
+	PrettyGPOStatusEnabled                       = "Enabled"
+	PrettyGPOStatusUserConfigurationDisabled     = "User Configuration Disabled"
+	PrettyGPOStatusComputerConfigurationDisabled = "Computer Configuration Disabled"
+	PrettyGPOStatusDisabled                      = "Disabled"
+)
+
+func ParseGPOData(gpo GPO) IngestibleNode {
+	propMap := make(map[string]any)
+
+	if status, ok := gpo.Properties[ad.GPOStatus.String()]; ok {
+		propMap[ad.GPOStatusRaw.String()] = strings.TrimSpace(fmt.Sprint(status))
+
+		switch propMap[ad.GPOStatusRaw.String()] {
+		case "0":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusEnabled
+		case "1":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusUserConfigurationDisabled
+		case "2":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusComputerConfigurationDisabled
+		case "3":
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusDisabled
+		default:
+			propMap[ad.GPOStatus.String()] = PrettyGPOStatusNotExisting
+		}
+	}
+
+	return IngestibleNode{
+		ObjectID:    gpo.ObjectIdentifier,
+		PropertyMap: propMap,
+		Labels:      []graph.Kind{ad.GPO},
 	}
 }

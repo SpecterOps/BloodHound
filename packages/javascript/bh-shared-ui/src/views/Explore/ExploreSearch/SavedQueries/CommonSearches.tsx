@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import fileDownload from 'js-file-download';
@@ -25,6 +26,7 @@ import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
 import { cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
+import ConfirmDeleteQueryDialog from './ConfirmDeleteQueryDialog';
 import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
@@ -45,9 +47,12 @@ const CommonSearches = ({
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [source, setSource] = useState('');
+    const [open, setOpen] = useState(false);
+    const [queryId, setQueryId] = useState<number>();
 
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
@@ -64,6 +69,7 @@ const CommonSearches = ({
 
     useEffect(() => {
         setFilteredList(queryList);
+        handleFilter(searchTerm, platform, categoryFilter, source);
     }, [userQueries.data]);
 
     const handleClick = (query: string, id: number | undefined) => {
@@ -80,9 +86,21 @@ const CommonSearches = ({
     };
 
     const handleDeleteQuery = (id: number) => {
+        setQueryId(id);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setQueryId(undefined);
+    };
+
+    const confirmDeleteQuery = (id: number) => {
         deleteQueryMutation.mutate(id, {
             onSuccess: () => {
                 addNotification(`Query deleted.`, 'userDeleteQuery');
+                setOpen(false);
+                setQueryId(undefined);
             },
         });
     };
@@ -121,7 +139,7 @@ const CommonSearches = ({
                     queries: obj.queries.filter((item: QueryLineItem) => !item.id),
                 }))
                 .filter((x) => x.queries.length);
-        } else if (source && source === 'owned') {
+        } else if (source && source === 'personal') {
             if (!hasSelf) {
                 filteredData = [];
             } else {
@@ -159,13 +177,18 @@ const CommonSearches = ({
             fileDownload(res.data, filename);
         });
     };
+
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
-                <button onClick={onToggleCommonQueries} data-testid='common-queries-toggle'>
+                <Button
+                    onClick={onToggleCommonQueries}
+                    className='flex justify-start items-center w-full pl-0'
+                    data-testid='common-queries-toggle'
+                    variant={'text'}>
                     <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                </button>
-                <h5 className='my-4 font-bold text-lg'>Pre-built Queries</h5>
+                    <span className='my-4 font-semibold text-lg'>Saved Queries</span>
+                </Button>
             </div>
 
             <div className={cn({ hidden: !showCommonQueries })}>
@@ -189,6 +212,13 @@ const CommonSearches = ({
                     showCommonQueries={showCommonQueries}
                 />
             </div>
+
+            <ConfirmDeleteQueryDialog
+                open={open}
+                queryId={queryId}
+                deleteHandler={confirmDeleteQuery}
+                handleClose={handleClose}
+            />
         </div>
     );
 };

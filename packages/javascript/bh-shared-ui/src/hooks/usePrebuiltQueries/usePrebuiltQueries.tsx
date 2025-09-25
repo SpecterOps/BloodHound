@@ -24,7 +24,6 @@ import { useSelf } from '../useSelf';
 
 export const usePrebuiltQueries = () => {
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
-
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
 
@@ -44,19 +43,22 @@ export const usePrebuiltQueries = () => {
     const userQueries = useSavedQueries(QueryScope.ALL, {
         select: queryDataMapper,
     });
+
     const savedQueries = {
         category: 'Saved Queries',
         subheader: '',
         queries: userQueries.data || [],
     };
+
     const queryList = tierFlag?.enabled
         ? [...prebuiltSearchListAGT, savedQueries]
         : [...prebuiltSearchListAGI, savedQueries];
+
     return queryList;
 };
 
 export const useGetSelectedQuery = (cypherQuery: string, id?: number) => {
-    const groups = usePrebuiltQueries(); // [{ queries: Query[] }, ...]
+    const groups = usePrebuiltQueries();
 
     const selected = useMemo<QueryLineItem | undefined>(() => {
         const queryList: QueryLineItem[] = groups.flatMap((g) => g.queries ?? []);

@@ -30,6 +30,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -71,10 +72,11 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
-type patchAssetGroupTagSelectorRequest struct {
+type assetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
-	Description *string `json:"description"`
-	Disabled    *bool   `json:"disabled"`
+	AutoCertify *model.SelectorAutoCertifyMethod `json:"auto_certify"`
+	Description *string                          `json:"description"`
+	Disabled    *bool                            `json:"disabled"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -168,48 +170,78 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 	return nil
 }
 
+func validateAutoCertifyInput(assetGroupTag model.AssetGroupTag, autoCertify *model.SelectorAutoCertifyMethod) error {
+	if autoCertify == nil {
+		return nil
+	}
+
+	if assetGroupTag.Type != model.AssetGroupTagTypeTier && *autoCertify != 0 {
+		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones)
+	}
+
+	switch *autoCertify {
+	case model.SelectorAutoCertifyMethodDisabled, model.SelectorAutoCertifyMethodAllMembers, model.SelectorAutoCertifyMethodSeedsOnly:
+		return nil
+	default:
+		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyInvalid)
+	}
+}
+
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		sel = model.AssetGroupTagSelector{
-			AutoCertify: null.BoolFrom(false), // default if unset
-		}
-		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		createSelectorRequest assetGroupTagSelectorRequest
+		assetTagIdStr         = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
+	} else if err := json.NewDecoder(request.Body).Decode(&createSelectorRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if errs := validation.Validate(sel); len(errs) > 0 {
+	} else if errs := validation.Validate(createSelectorRequest.AssetGroupTagSelector); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if err := validateSelectorSeeds(s.GraphQuery, sel.Seeds); err != nil {
+	} else if err := validateSelectorSeeds(s.GraphQuery, createSelectorRequest.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Request analysis if scheduled analysis isn't enabled
-		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if !config.Enabled {
-			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
-				api.HandleDatabaseError(request, response, err)
+		// defaults for optional pointer field request values
+		autoCertify := model.SelectorAutoCertifyMethodDisabled
+		if createSelectorRequest.AutoCertify != nil {
+			if err := validateAutoCertifyInput(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
+			autoCertify = *createSelectorRequest.AutoCertify
 		}
-		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+
+		description := ""
+		if createSelectorRequest.Description != nil {
+			description = *createSelectorRequest.Description
+		}
+
+		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, description, false, true, autoCertify, createSelectorRequest.Seeds); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			if !config.Enabled {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
+			api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+		}
 	}
 }
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  patchAssetGroupTagSelectorRequest
+		selUpdateReq  assetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -220,7 +252,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -247,9 +279,13 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			}
 		}
 
-		// we can update AutoCertify on a default selector
-		if selUpdateReq.AutoCertify.Valid {
-			selector.AutoCertify = selUpdateReq.AutoCertify
+		// we can update AutoCertify on a default selector (as long as the selector is not tied to label)
+		if selUpdateReq.AutoCertify != nil {
+			if err := validateAutoCertifyInput(assetGroupTag, selUpdateReq.AutoCertify); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			selector.AutoCertify = *selUpdateReq.AutoCertify
 		}
 
 		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != nil || len(selUpdateReq.Seeds) > 0) {
@@ -937,16 +973,20 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySQL := "(actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
+			var (
+				queryableColumns  = []string{"actor", "email", "action", "target"}
+				querySQL          = fmt.Sprintf("(%s ILIKE ANY(?))", strings.Join(queryableColumns, " ILIKE ANY(?) OR "))
+				fuzzyQueryPattern = "%" + query + "%"
+				fuzzyQueryParams  = pq.StringArray{fuzzyQueryPattern, strings.ReplaceAll(fuzzyQueryPattern, " ", "")}
+			)
 
 			if sqlFilter.SQLString != "" {
-				querySQL = " AND" + querySQL
+				querySQL = " AND " + querySQL
 			}
 
 			sqlFilter.SQLString += querySQL
-
-			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
+			for range len(queryableColumns) {
+				sqlFilter.Params = append(sqlFilter.Params, fuzzyQueryParams)
 			}
 		}
 

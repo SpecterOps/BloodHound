@@ -74,6 +74,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const exportEnabled = selectedQuery?.id ? true : false;
+    const deleteEnabled = selectedQuery?.id && selectedQuery?.canEdit ? true : false;
 
     const importHandler = () => {
         setShowImportDialog(true);
@@ -108,7 +109,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         </Button>
                         <Button
                             aria-label='delete'
-                            disabled={!exportEnabled}
+                            disabled={!deleteEnabled}
                             className='ml-2'
                             variant='icon'
                             onClick={() => deleteHandler(selectedQuery?.id as number)}>
@@ -117,11 +118,12 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                     </div>
                 </div>
                 <div className='flex w-full items-center justify-between flex-row'>
-                    <FormControl size='small' className='w-full'>
+                    <FormControl size='small' className='w-full z-10'>
                         <InputLabel id='platforms-label'>Platforms</InputLabel>
                         <Select
                             labelId='platforms-label'
                             id='demo-simple-select-helper'
+                            className='z-10'
                             value={platform}
                             label='Platforms'
                             onChange={(e) => handlePlatformFilter(e.target.value)}>
@@ -131,11 +133,12 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             <MenuItem value='Saved Queries'>Saved Queries</MenuItem>
                         </Select>
                     </FormControl>
-                    <FormControl size='small' className='w-full ml-2'>
+                    <FormControl size='small' className='w-full ml-2 z-10'>
                         <InputLabel id='category-filter-label'>Categories</InputLabel>
                         <Select
                             labelId='category-filter-label'
                             id='category-filter'
+                            className='z-10'
                             value={categoryFilter}
                             label='categories'
                             open={categoriesOpen}
@@ -151,11 +154,12 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             ))}
                         </Select>
                     </FormControl>
-                    <FormControl size='small' className='w-full ml-2'>
+                    <FormControl size='small' className='w-full ml-2 z-10'>
                         <InputLabel id='source-filter-label'>Source</InputLabel>
                         <Select
                             labelId='source-filter-label'
                             id='source-filter'
+                            className='z-10'
                             value={source || ''}
                             label='source'
                             open={sourcesOpen}
@@ -164,7 +168,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             onChange={(e) => handleSourceFilter(e.target.value)}>
                             <MenuItem value=''>All Sources</MenuItem>
                             <MenuItem value='prebuilt'>Prebuilt</MenuItem>
-                            <MenuItem value='owned'>Owned</MenuItem>
+                            <MenuItem value='personal'>Personal</MenuItem>
                             <MenuItem value='shared'>Shared</MenuItem>
                         </Select>
                     </FormControl>
