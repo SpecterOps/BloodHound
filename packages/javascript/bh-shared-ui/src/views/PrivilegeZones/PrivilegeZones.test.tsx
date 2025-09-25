@@ -32,6 +32,18 @@ vi.mock('react-router-dom', async () => ({
 }));
 
 const server = setupServer(
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
     rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
         return res(
             ctx.json({
@@ -62,17 +74,92 @@ const server = setupServer(
             })
         );
     }),
-    rest.get('/api/v2/features', async (_req, res, ctx) => {
+    rest.get(`/api/v2/asset-group-tags/:tagId`, async (req, res, ctx) => {
         return res(
             ctx.json({
-                data: [
-                    {
-                        key: 'tier_management_engine',
-                        enabled: true,
+                data: {
+                    tag: {
+                        id: 1,
+                        type: 2,
+                        kind_id: 179,
+                        name: 'Owned',
+                        description: 'Owned',
+                        position: null,
+                        require_certify: null,
+                        analysis_enabled: null,
                     },
-                ],
+                },
             })
         );
+    }),
+    rest.get(`/api/v2/asset-group-tags/:tagId/selectors`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                count: 2,
+                limit: 50,
+                skip: 0,
+                data: {
+                    selectors: [
+                        {
+                            id: 1,
+                            asset_group_tag_id: 2,
+                            created_by: 'some user',
+                            updated_by: 'some user',
+                            disabled_at: null,
+                            disabled_by: null,
+                            name: 'selector 1',
+                            description: 'some description',
+                            auto_certify: 0,
+                            is_default: null,
+                            allow_disable: null,
+                        },
+                        {
+                            id: 2,
+                            asset_group_tag_id: 3,
+                            created_by: 'that same user',
+                            updated_by: 'that same user',
+                            disabled_at: null,
+                            disabled_by: null,
+                            name: 'selector 2',
+                            description: 'some description',
+                            auto_certify: 0,
+                            is_default: true,
+                            allow_disable: true,
+                        },
+                    ],
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/asset-group-tags/:tagId/members`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    members: [
+                        {
+                            NodeId: 1,
+                            ObjectID: 'OID-1',
+                            PrimaryKind: 'User',
+                            Name: 'node1',
+                            AssetGroupTagId: 1,
+                        },
+                        {
+                            NodeId: 2,
+                            ObjectID: 'OID-2',
+                            PrimaryKind: 'Group',
+                            Name: 'node2',
+                            AssetGroupTagId: 1,
+                        },
+                    ],
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/asset-group-tags/:tagId/members/counts`, async (req, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
+        return res(ctx.status(200));
     })
 );
 
@@ -86,11 +173,7 @@ describe('Zone Management', async () => {
     it('allows switching between the Zones and Labels tabs', async () => {
         render(
             <Routes>
-                <Route
-                    path={`/${privilegeZonesPath}/${zonesPath}/:zoneId/${detailsPath}/*`}
-                    element={<PrivilegeZones />}
-                />
-                <Route path='/' element={<PrivilegeZones />} />
+                <Route path={`/${privilegeZonesPath}/*`} element={<PrivilegeZones />} />
             </Routes>,
             { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
