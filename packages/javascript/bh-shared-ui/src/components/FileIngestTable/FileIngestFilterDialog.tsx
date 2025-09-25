@@ -21,7 +21,6 @@ import {
     DialogClose,
     DialogContent,
     DialogDescription,
-    DialogOverlay,
     DialogPortal,
     DialogTitle,
     DialogTrigger,
@@ -96,9 +95,10 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
             </DialogTrigger>
 
             <DialogPortal>
-                <DialogOverlay blurBackground />
-
-                <DialogContent>
+                <DialogContent
+                    DialogOverlayProps={{
+                        blurBackground: true,
+                    }}>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
                         <Button variant='text' className='font-normal p-0 h-fit' onClick={clearFilters}>
