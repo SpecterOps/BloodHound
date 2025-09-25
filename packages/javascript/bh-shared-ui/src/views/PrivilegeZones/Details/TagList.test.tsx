@@ -217,7 +217,9 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />);
+        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />, {
+            route: '/privilege-zones/zones/2/details',
+        });
 
         const listItem = screen.getByTestId('privilege-zones_details_zones-list_item-2');
         expect(listItem).toBeInTheDocument();
@@ -233,7 +235,9 @@ describe('List', async () => {
             })
         );
 
-        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />);
+        render(<TagList title='Zones' listQuery={testQuery} selected={'2'} onSelect={() => {}} />, {
+            route: '/privilege-zones/zones/2/details',
+        });
 
         const listItem1 = screen.getByTestId('privilege-zones_details_zones-list_item-1');
         expect(listItem1).toBeInTheDocument();
