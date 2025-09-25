@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,12 @@ import {
     CommunityCollectorType,
     CustomNodeKindType,
     EnterpriseCollectorType,
+    FileIngestCompletedTask,
+    FileIngestJob,
     GraphData,
     NodeSourceTypes,
     ScheduledJobDisplay,
+    TimestampFields,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -45,15 +48,6 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         limit: number;
         skip: number;
     };
-
-type TimestampFields = {
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
-};
 
 export type Environment = {
     type: 'active-directory' | 'azure';
@@ -254,19 +248,6 @@ export type SavedQueryPermissionsResponse = {
     public: boolean;
 };
 
-export type FileIngestJob = TimestampFields & {
-    user_id: string;
-    user_email_address: string;
-    status: number;
-    status_message: string;
-    start_time: string;
-    end_time: string;
-    last_ingest: string;
-    id: number;
-    total_files: number;
-    failed_files: number;
-};
-
 export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
 
 export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
@@ -274,6 +255,8 @@ export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
 export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
 
 export type UploadFileToIngestResponse = null;
+
+export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[] | null>;
 
 export type EndFileIngestResponse = null;
 

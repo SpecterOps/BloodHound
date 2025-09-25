@@ -52,18 +52,7 @@ export function useFeatureFlags<T = Flag[]>(options?: QueryOptions<T>) {
     return useQuery({
         ...rest,
         queryKey: featureFlagKeys.getKey(options?.queryKey),
-        queryFn: async ({ signal }) => {
-            try {
-                return await getFeatureFlags({ signal });
-            } catch (error) {
-                const status = (error as AxiosError).response?.status;
-                // Ignore 403s as any retries will still be 403
-                if (status === FORBIDDEN) {
-                    return [] as Flag[];
-                }
-                throw error;
-            }
-        },
+        queryFn: ({ signal }) => getFeatureFlags({ signal }),
     });
 }
 

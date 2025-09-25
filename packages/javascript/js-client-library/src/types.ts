@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,15 @@ export interface AssetGroupMemberParams {
 type System = 'SYSTEM';
 
 type ISO_DATE_STRING = string;
+
+export type TimestampFields = {
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
 
 interface Created {
     created_at: ISO_DATE_STRING;
@@ -229,6 +238,13 @@ export interface User {
     eula_accepted: boolean;
 }
 
+export interface UserMinimal {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+}
+
 interface Permission {
     id: number;
     name: string;
@@ -251,6 +267,12 @@ export interface ListRolesResponse {
 export interface ListUsersResponse {
     data: {
         users: User[];
+    };
+}
+
+export interface ListUsersMinimalResponse {
+    data: {
+        users: UserMinimal[];
     };
 }
 
@@ -474,4 +496,24 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+};
+
+export type FileIngestJob = TimestampFields & {
+    end_time: string;
+    failed_files: number;
+    id: number;
+    last_ingest: string;
+    start_time: string;
+    status_message: string;
+    status: number;
+    total_files: number;
+    user_email_address: string;
+    user_id: string;
+};
+
+export type FileIngestCompletedTask = TimestampFields & {
+    errors: string[];
+    file_name: string;
+    id: number;
+    parent_file_name: string;
 };
