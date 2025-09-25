@@ -41,6 +41,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
 import { Environment, EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
+import { Minus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
@@ -127,12 +128,11 @@ const UpdateUserForm: React.FC<{
                 roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
                 all_environments: getUserQuery.data.all_environments,
                 environment_access_control: {
-                    environments: [
+                    environments:
                         getUserQuery.data.environment_access_control?.map(
                             (environment: EnvironmentRequest) => environment
                         ) || [],
-                        //getUserQuery.data.environment_access_control.environments || [],
-                    ],
+                    //getUserQuery.data.environment_access_control.environments || [],
                 },
             }}
             error={error}
@@ -180,6 +180,7 @@ const UpdateUserFormInner: React.FC<{
     const roleInputValue = form.watch('roles');
     const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
     const authenticationMethod = form.watch('authenticationMethod');
+    const [searchInput, setSearchInput] = useState<string>('');
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('SSOProviderId'))
@@ -187,16 +188,11 @@ const UpdateUserFormInner: React.FC<{
 
     const { data: availableEnvironments } = useAvailableEnvironments();
 
-    console.log(availableEnvironments);
+    const initialEnvironmentsSelected = initialData.environment_access_control?.environments?.map(
+        (item) => item.environment_id
+    );
 
-    const initialEnvironmentsSelected = initialData.environment_access_control?.environments?.map((enviroment) => {
-        return enviroment.environment_id;
-    });
-
-    console.log(initialEnvironmentsSelected);
-
-    const [searchInput, setSearchInput] = useState<string>('');
-    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
+    //console.log(initialEnvironmentsSelected);
 
     const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
@@ -207,6 +203,14 @@ const UpdateUserFormInner: React.FC<{
     const formatReturnedEnvironments = returnMappedEnvironments?.map((item: string) => ({
         environment_id: item,
     }));
+
+    //console.log(returnMappedEnvironments);
+
+    const matchingValues = initialEnvironmentsSelected?.filter((value: any) =>
+        returnMappedEnvironments.includes(value)
+    );
+
+    const [selectedEnvironments, setSelectedEnvironments] = useState<string[] | undefined>(matchingValues);
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
@@ -243,7 +247,15 @@ const UpdateUserFormInner: React.FC<{
             form.setValue('SSOProviderId', undefined);
         }
 
-        form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+        if (initialData.all_environments === true) {
+            setSelectedEnvironments(returnMappedEnvironments);
+        }
+
+        if (allEnvironmentsSelected) {
+            form.setValue('environment_access_control.environments', null);
+        } else {
+            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+        }
 
         if (allEnvironmentsCheckboxRef.current) {
             allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
@@ -659,13 +671,24 @@ const UpdateUserFormInner: React.FC<{
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
                                                         ref={allEnvironmentsCheckboxRef}
-                                                        checked={allEnvironmentsSelected}
+                                                        checked={
+                                                            allEnvironmentsSelected || allEnvironmentsIndeterminate
+                                                        }
                                                         id='allEnvironments'
                                                         onCheckedChange={handleSelectAllEnvironmentsChange}
                                                         className={
                                                             allEnvironmentsIndeterminate
                                                                 ? 'data-[state=indeterminate]'
-                                                                : ''
+                                                                : 'data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
+                                                        }
+                                                        icon={
+                                                            allEnvironmentsIndeterminate && (
+                                                                <Minus
+                                                                    className='h-full w-full'
+                                                                    absoluteStrokeWidth={true}
+                                                                    strokeWidth={3}
+                                                                />
+                                                            )
                                                         }
                                                         data-testid='update-user-dialog_select-all-environments-checkbox'
                                                     />
@@ -693,8 +716,10 @@ const UpdateUserFormInner: React.FC<{
                                                             render={() => (
                                                                 <FormItem className='flex flex-row items-center'>
                                                                     <Checkbox
-                                                                        checked={selectedEnvironments.includes(item.id)}
-                                                                        className='m-2'
+                                                                        checked={selectedEnvironments?.includes(
+                                                                            item.id
+                                                                        )}
+                                                                        className='m-2 data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
                                                                         id='environments'
                                                                         onCheckedChange={(checked) =>
                                                                             handleEnvironmentSelectChange(

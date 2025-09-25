@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EnvironmentRequest } from './requests';
+
 export interface Serial {
     id: number;
     created_at: string;
@@ -235,11 +237,6 @@ export interface SSOProvider extends Serial, SSOProviderConfiguration {
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
-
-export interface EnvironmentId {
-    environment_id: string;
-}
-
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -256,7 +253,7 @@ export interface User {
     eula_accepted: boolean;
     all_environments?: boolean;
     environment_access_control: {
-        environments?: EnvironmentId[];
+        environments?: EnvironmentRequest[] | null;
     };
 }
 
