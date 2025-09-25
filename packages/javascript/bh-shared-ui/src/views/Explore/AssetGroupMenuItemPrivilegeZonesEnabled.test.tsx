@@ -19,8 +19,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
-import { act } from 'react-dom/test-utils';
-import { render, screen } from 'src/test-utils';
+import { act, render, screen } from '../../test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItemPrivilegeZonesEnabled';
 
 const tierZeroAssetGroup = { id: 1, name: 'high value' };
@@ -37,14 +36,6 @@ const getEntityInfoTestProps = () => ({
 });
 
 const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.id}&searchType=node&primarySearch=${getEntityInfoTestProps().entityinfo.selectedNode.id}`;
-
-const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
-    assetgroups: {
-        assetGroups: isTierZero
-            ? [{ tag: 'admin_tier_0', id: tierZeroAssetGroup.id }]
-            : [{ tag: 'owned', id: ownedAssetGroup.id }],
-    },
-});
 
 const AssetGroupMenuItemWithDialog = (props: any) => {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -125,6 +116,7 @@ describe('AssetGroupMenuItem', () => {
                 <AssetGroupMenuItem
                     assetGroupId={ownedAssetGroup.id}
                     assetGroupName={ownedAssetGroup.name}
+                    disableAddNode={false}
                     isCurrentMember={false}
                     onAddNode={testOnAddNode}
                     removeNodePath={testRemoveNodePath}
@@ -170,19 +162,15 @@ describe('AssetGroupMenuItem', () => {
         it('handles removing from a tier zero asset group', async () => {
             const testRemoveNodePath = '/meow';
             await act(async () => {
-                await render(
+                render(
                     <AssetGroupMenuItem
                         assetGroupId={tierZeroAssetGroup.id}
                         assetGroupName={tierZeroAssetGroup.name}
+                        disableAddNode={false}
                         isCurrentMember={true}
                         removeNodePath={testRemoveNodePath}
                     />,
-                    {
-                        initialState: {
-                            ...getAssetGroupTestProps({ isTierZero: true }),
-                        },
-                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-                    }
+                    { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
                 );
             });
 
@@ -199,19 +187,15 @@ describe('AssetGroupMenuItem', () => {
         it('handles removing from a non-tier-zero asset group', async () => {
             const testRemoveNodePath = '/meow';
             await act(async () => {
-                await render(
+                render(
                     <AssetGroupMenuItem
                         assetGroupId={ownedAssetGroup.id}
                         assetGroupName={ownedAssetGroup.name}
+                        disableAddNode={false}
                         isCurrentMember={true}
                         removeNodePath={testRemoveNodePath}
                     />,
-                    {
-                        initialState: {
-                            ...getAssetGroupTestProps({ isTierZero: false }),
-                        },
-                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-                    }
+                    { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
                 );
             });
 
