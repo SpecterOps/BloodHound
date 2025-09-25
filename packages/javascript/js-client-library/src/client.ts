@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,12 @@ import {
     CreateSharpHoundEventRequest,
     CreateUserQueryRequest,
     CreateUserRequest,
+    DeleteUserQueryPermissionsRequest,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
     PutUserAuthSecretRequest,
+    QueryScope,
     RequestOptions,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
@@ -43,6 +45,8 @@ import {
     UpdateSelectorRequest,
     UpdateSharpHoundClientRequest,
     UpdateSharpHoundEventRequest,
+    UpdateUserQueryPermissionsRequest,
+    UpdateUserQueryRequest,
     UpdateUserRequest,
 } from './requests';
 import {
@@ -63,11 +67,14 @@ import {
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
+    FileIngestCompletedTasksResponse,
+    GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
     GetCustomNodeKindsResponse,
     GetEnterpriseCollectorsResponse,
+    GetExportQueryResponse,
     GetScheduledJobDisplayResponse,
     GraphResponse,
     ListAuthTokensResponse,
@@ -79,11 +86,19 @@ import {
     PostureResponse,
     PreviewSelectorsResponse,
     SavedQuery,
+    SavedQueryPermissionsResponse,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
 } from './responses';
 import * as types from './types';
+
+/** Return the value as a string with the given prefix */
+const prefixValue = (prefix: string, value: any) => (value !== undefined ? `${prefix}:${value.toString()}` : undefined);
+
+/** Return a copy of the object with all keys having undefined values have been stripped out  */
+const omitUndefined = (obj: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined));
 
 class BHEAPIClient {
     baseClient: AxiosInstance;
@@ -129,13 +144,14 @@ class BHEAPIClient {
         );
     };
 
-    getUserSavedQueries = (options?: RequestOptions) => {
+    getUserSavedQueries = (scope: QueryScope, options?: RequestOptions) => {
         return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
             '/api/v2/saved-queries',
             Object.assign(
                 {
                     params: {
                         sort_by: 'name',
+                        scope: scope,
                     },
                 },
                 options
@@ -147,9 +163,76 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
+    updateUserQuery = (payload: UpdateUserQueryRequest) => {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
+            headers,
+        });
+    };
+
     deleteUserQuery = (queryId: number, options?: RequestOptions) => {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
+
+    getExportCypherQueries = (): Promise<any> =>
+        this.baseClient.get(
+            `/api/v2/saved-queries/export?scope=all`,
+            Object.assign({
+                responseType: 'blob',
+            })
+        );
+
+    getExportCypherQuery = (id: number, options?: RequestOptions): Promise<GetExportQueryResponse> =>
+        this.baseClient.get(
+            `/api/v2/saved-queries/${id}/export`,
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
+
+    importUserQuery = (payload: FormData | Blob | object, options?: RequestOptions) => {
+        const cfg: AxiosRequestConfig = { ...(options ?? {}) };
+        if (payload instanceof FormData) {
+            // Let the browser set multipart/form-data with boundary
+        } else if (payload instanceof Blob) {
+            cfg.headers = { ...(options?.headers ?? {}), 'Content-Type': payload.type || 'application/octet-stream' };
+        } else {
+            cfg.headers = { ...(options?.headers ?? {}), 'Content-Type': 'application/json' };
+        }
+        return this.baseClient.post<BasicResponse<any>>('/api/v2/saved-queries/import', payload as any, cfg);
+    };
+
+    getUserQueryPermissions = (queryId: number, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<SavedQueryPermissionsResponse>>(
+            `/api/v2/saved-queries/${queryId}/permissions`,
+            options
+        );
+
+    updateUserQueryPermissions = (
+        queryId: number,
+        queryPermissionsPayload: UpdateUserQueryPermissionsRequest,
+        options?: RequestOptions
+    ) => this.baseClient.put(`/api/v2/saved-queries/${queryId}/permissions`, queryPermissionsPayload, options);
+
+    deleteUserQueryPermissions = (
+        queryId: number,
+        queryPermissionsPayload: DeleteUserQueryPermissionsRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.delete(
+            `/api/v2/saved-queries/${queryId}/permissions`,
+            Object.assign(
+                {
+                    data: queryPermissionsPayload,
+                },
+                options
+            )
+        );
 
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
@@ -617,7 +700,7 @@ class BHEAPIClient {
         hydrateOUs?: boolean,
         options?: RequestOptions
     ) =>
-        this.baseClient.get(
+        this.baseClient.get<GetClientResponse>(
             '/api/v2/clients',
             Object.assign(
                 {
@@ -668,22 +751,59 @@ class BHEAPIClient {
         this.baseClient.post(`/api/v2/clients/${clientId}/jobs`, scheduledJob, options);
 
     getFinishedJobs = (
-        skip: number,
-        limit: number,
-        hydrateDomains?: boolean,
-        hydrateOUs?: boolean,
+        {
+            limit,
+            skip,
+            status,
+            start_time,
+            end_time,
+            client_id,
+            ad_structure_collection,
+            ca_registry_collection,
+            cert_services_collection,
+            dc_registry_collection,
+            hydrate_domains = false,
+            hydrate_ous = false,
+            local_group_collection,
+            session_collection,
+        }: {
+            limit: number;
+            skip: number;
+            status?: number;
+            start_time?: string;
+            end_time?: string;
+            client_id?: string;
+            ad_structure_collection?: boolean;
+            ca_registry_collection?: boolean;
+            cert_services_collection?: boolean;
+            dc_registry_collection?: boolean;
+            hydrate_domains?: boolean;
+            hydrate_ous?: boolean;
+            local_group_collection?: boolean;
+            session_collection?: boolean;
+        },
         options?: RequestOptions
     ) =>
         this.baseClient.get<GetScheduledJobDisplayResponse>(
             '/api/v2/jobs/finished',
             Object.assign(
                 {
-                    params: {
+                    params: omitUndefined({
                         skip,
                         limit,
-                        hydrate_domains: hydrateDomains,
-                        hydrate_ous: hydrateOUs,
-                    },
+                        hydrate_domains,
+                        hydrate_ous,
+                        status: prefixValue('eq', status),
+                        start_time: prefixValue('gte', start_time),
+                        end_time: prefixValue('lte', end_time),
+                        client_id: prefixValue('eq', client_id),
+                        ad_structure_collection: prefixValue('eq', ad_structure_collection),
+                        ca_registry_collection: prefixValue('eq', ca_registry_collection),
+                        cert_services_collection: prefixValue('eq', cert_services_collection),
+                        dc_registry_collection: prefixValue('eq', dc_registry_collection),
+                        local_group_collection: prefixValue('eq', local_group_collection),
+                        session_collection: prefixValue('eq', session_collection),
+                    }),
                 },
                 options
             )
@@ -760,6 +880,12 @@ class BHEAPIClient {
 
         return this.baseClient.post<UploadFileToIngestResponse>(`/api/v2/file-upload/${ingestId}`, json, mergedOptions);
     };
+
+    getFileUpload = (uploadId: string, options?: RequestOptions) =>
+        this.baseClient.get<FileIngestCompletedTasksResponse>(
+            `/api/v2/file-upload/${uploadId}/completed-tasks`,
+            options
+        );
 
     endFileIngest = (ingestId: string) =>
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
@@ -891,6 +1017,9 @@ class BHEAPIClient {
 
     listUsers = (options?: RequestOptions) =>
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
+
+    listUsersMinimal = (options?: RequestOptions) =>
+        this.baseClient.get<types.ListUsersMinimalResponse>('/api/v2/bloodhound-users-minimal', options);
 
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);

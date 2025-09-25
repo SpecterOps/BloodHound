@@ -28,11 +28,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
+
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"gorm.io/gorm"
 )
 
 // NewClientAuthToken creates a new Client AuthToken row using the details provided
@@ -295,6 +296,14 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		// Update roles first
 		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Replace(&user.Roles); err != nil {
 			return err
+		}
+
+		// Clear a user's etac list before applying their new one when saving the user model
+		if user.AllEnvironments || user.EnvironmentAccessControl != nil {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
+			if err := bhdb.DeleteEnvironmentListForUser(ctx, user); err != nil {
+				return fmt.Errorf("error deleting user's environment list: %w", err)
+			}
 		}
 
 		// AuthSecret must be manually retrieved and deleted

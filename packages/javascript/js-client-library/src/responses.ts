@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
     AssetGroupTagMember,
     AssetGroupTagSelector,
+    Client,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
     EnterpriseCollectorType,
+    FileIngestCompletedTask,
+    FileIngestJob,
     GraphData,
     NodeSourceTypes,
+    ScheduledJobDisplay,
+    TimestampFields,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -42,15 +48,6 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         limit: number;
         skip: number;
     };
-
-type TimestampFields = {
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
-};
 
 export type Environment = {
     type: 'active-directory' | 'azure';
@@ -240,21 +237,15 @@ export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCount
 export type SavedQuery = {
     id: number;
     name: string;
+    description: string;
     query: string;
     user_id: string;
 };
 
-export type FileIngestJob = TimestampFields & {
-    user_id: string;
-    user_email_address: string;
-    status: number;
-    status_message: string;
-    start_time: string;
-    end_time: string;
-    last_ingest: string;
-    id: number;
-    total_files: number;
-    failed_files: number;
+export type SavedQueryPermissionsResponse = {
+    shared_to_user_ids: string[];
+    query_id: number | undefined;
+    public: boolean;
 };
 
 export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
@@ -264,6 +255,8 @@ export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
 export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
 
 export type UploadFileToIngestResponse = null;
+
+export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[] | null>;
 
 export type EndFileIngestResponse = null;
 
@@ -293,68 +286,8 @@ export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCol
 
 export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;
 
-export type OuDetails = {
-    objectid: string;
-    name: string;
-    exists: boolean;
-    distinguishedname: string;
-    type: string;
-};
-
-export type DomainDetails = {
-    objectid: string;
-    name: string;
-    exists: boolean;
-    type: string;
-};
-
-export type DomainResult = {
-    job_id: number;
-    domain_name: string;
-    success: boolean;
-    message: string;
-    user_count: number;
-    group_count: number;
-    computer_count: number;
-    gpo_count: number;
-    ou_count: number;
-    container_count: number;
-    aiaca_count: number;
-    rootca_count: number;
-    enterpriseca_count: number;
-    ntauthstore_count: number;
-    certtemplate_count: number;
-    deleted_count: number;
-    id: number;
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
-};
-
-export type ScheduledJobDisplay = {
-    id: number;
-    client_id: string;
-    client_name: string;
-    event_id: number;
-    execution_time: string;
-    start_time: string;
-    end_time: string;
-    status: number;
-    status_message: string;
-    session_collection: boolean;
-    local_group_collection: boolean;
-    ad_structure_collection: boolean;
-    cert_services_collection: boolean;
-    ca_registry_collection: boolean;
-    dc_registry_collection: boolean;
-    all_trusted_domains: boolean;
-    domain_controller: string;
-    ous: OuDetails[];
-    domains: DomainDetails[];
-    domain_results: DomainResult[];
-};
-
 export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
+
+export type GetExportQueryResponse = AxiosResponse<Blob>;
+
+export type GetClientResponse = PaginatedResponse<Client[]>;

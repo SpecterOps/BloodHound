@@ -354,3 +354,152 @@ func TestParseGroupMiscData(t *testing.T) {
 		})
 	}
 }
+
+func TestParseGPOData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		gpo ein.GPO
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected ein.IngestibleNode
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGPOData without Properties",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Enabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "0"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "0", ad.GPOStatus.String(): ein.PrettyGPOStatusEnabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO UserConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "1"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO ComputerConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "2"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Disabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "3"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with Invalid GPO Status",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "4"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "4", ad.GPOStatus.String(): ein.PrettyGPOStatusNotExisting},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (int)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): 2},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (float64)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): float64(3)},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with whitespace-padded string",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): " 1 "},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGPOData(testCase.args.gpo)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
+}

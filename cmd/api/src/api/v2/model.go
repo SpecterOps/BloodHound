@@ -70,6 +70,9 @@ type UpdateUserRequest struct {
 	SAMLProviderID string     `json:"saml_provider_id"`
 	SSOProviderID  null.Int32 `json:"sso_provider_id"`
 	IsDisabled     *bool      `json:"is_disabled,omitempty"`
+
+	AllEnvironments          null.Bool                                  `json:"all_environments"`
+	EnvironmentAccessControl *UpdateUserEnvironmentAccessControlRequest `json:"environment_access_control,omitempty"`
 }
 
 type CreateUserRequest struct {

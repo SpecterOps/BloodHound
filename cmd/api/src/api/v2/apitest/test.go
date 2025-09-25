@@ -26,10 +26,11 @@ import (
 	authPkg "github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"go.uber.org/mock/gomock"
 )
 
-func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase) {
+func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase, *mocks_graph.MockGraph) {
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
 		slog.Error(fmt.Sprintf("Failed to create default configuration: %v", err))
@@ -40,7 +41,8 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 	cfg.Crypto.Argon2.NumThreads = 1
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, mocks.NewMockAuthContextInitializer(mockCtrl)))
+	mockGraphDB := mocks_graph.NewMockGraph(mockCtrl)
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, mocks.NewMockAuthContextInitializer(mockCtrl)), mockGraphDB)
 
-	return resources, mockDB
+	return resources, mockDB, mockGraphDB
 }

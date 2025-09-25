@@ -251,6 +251,8 @@ paths:
   # user management
   /api/v2/bloodhound-users:
     $ref: './paths/bh-users.bloodhound-users.yaml'
+  /api/v2/bloodhound-users-minimal:
+    $ref: './paths/bh-users.bloodhound-users-minimal.yaml'
   /api/v2/bloodhound-users/{user_id}:
     $ref: './paths/bh-users.bloodhound-users.id.yaml'
   /api/v2/bloodhound-users/{user_id}/secret:
@@ -384,13 +386,12 @@ paths:
     $ref: './paths/cypher.saved-queries.id.yaml'
   /api/v2/saved-queries/{saved_query_id}/permissions:
     $ref: './paths/cypher.saved-queries.id.permissions.yaml'
-  # Below endpoints will be uncommented once saved queries is fully ready for release
-  #/api/v2/saved-queries/{saved_query_id}/export:
-  #  $ref: './paths/cypher.saved-queries.export.yaml'
-  #/api/v2/saved-queries/import:
-  #  $ref: './paths/cypher.saved-queries.import.yaml'
-  #/api/v2/saved-queries/export:
-  #  $ref: './paths/cypher.saved-queries.export.multiple.yaml'
+  /api/v2/saved-queries/{saved_query_id}/export:
+    $ref: './paths/cypher.saved-queries.export.yaml'
+  /api/v2/saved-queries/import:
+    $ref: './paths/cypher.saved-queries.import.yaml'
+  /api/v2/saved-queries/export:
+    $ref: './paths/cypher.saved-queries.export.multiple.yaml'
   /api/v2/graphs/cypher:
     $ref: './paths/cypher.graphs.cypher.yaml'
 
