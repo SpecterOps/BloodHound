@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export { default as AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 export * from './BasicObjectInfoFields';
 export * from './EdgeInfo';
 export * from './ExploreSearch';
