@@ -98,3 +98,38 @@ func ParseGraphSortParameters(s Sortable, params url.Values) (query.SortItems, e
 
 	return sortItems, nil
 }
+
+// BuildSQLSort takes our sort models and converts them into proper SQL form before sending them to the database.
+// The identifierColumn should be used if query results need consistent ordering.
+func BuildSQLSort(sort model.Sort, identifierColumn model.SortItem) ([]string, error) {
+	var (
+		sqlSort                  = make([]string, 0, len(sort))
+		containsIdentifierColumn = false
+	)
+	for index, sortItem := range sort {
+		if sortItem.Column == identifierColumn.Column {
+			containsIdentifierColumn = true
+		}
+		if sortItem.Column != "" {
+			sqlSort = append(sqlSort, buildSortString(sortItem))
+		} else {
+			return nil, fmt.Errorf("%w: column index: %d", ErrResponseDetailsColumnEmpty, index)
+		}
+	}
+
+	if !containsIdentifierColumn && identifierColumn.Column != "" {
+		sqlSort = append(sqlSort, buildSortString(identifierColumn))
+	}
+
+	return sqlSort, nil
+}
+
+func buildSortString(sortItem model.SortItem) string {
+	var column string
+	if sortItem.Direction == model.DescendingSortDirection {
+		column = sortItem.Column + " desc"
+	} else {
+		column = sortItem.Column
+	}
+	return column
+}

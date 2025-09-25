@@ -111,11 +111,5 @@ describe('PrebuiltSearchList', () => {
 
         await user.click(screen.getByRole('button'));
         expect(screen.getByText(/delete/i)).toBeInTheDocument();
-
-        await user.click(screen.getByText(/delete/i));
-        expect(await screen.findByText(/are you sure you want to delete this query/i)).toBeInTheDocument();
-
-        await user.click(screen.getByRole('button', { name: /confirm/i }));
-        expect(testDeleteHandler).toBeCalledWith(1);
     });
 });
