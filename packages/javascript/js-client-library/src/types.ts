@@ -65,6 +65,10 @@ export interface AssetGroupTagCertificationRecord {
     certified: number;
 }
 
+export interface AssetGroupTagCertificationParams {
+    certificationStatus?: CertificationType;
+}
+
 export const AssetGroupTagTypeTier = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;

@@ -8,7 +8,7 @@ import {
     AssetGroupTagCertificationRecord,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
 import { FilterDialog } from './FilterDialog';
@@ -21,6 +21,7 @@ type CertificationTableProps = {
     isFetching: boolean;
     isSuccess: boolean;
     fetchNextPage: any;
+    filterRows: (dropdownSelection: DropdownOption) => void;
     selectedRows: number[];
     setSelectedRows: any;
 };
@@ -33,10 +34,13 @@ const CertificationTable: FC<CertificationTableProps> = ({
     isFetching,
     isSuccess,
     fetchNextPage,
+    filterRows,
     selectedRows,
     setSelectedRows,
 }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    const [dropdownSelection, setDropdownSelection] = useState('Status');
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
@@ -90,7 +94,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
         fetchMoreOnBottomReached(scrollRef.current);
     }, [fetchMoreOnBottomReached]);
 
-    const allSelected = selectedRows.length === certificationsItems?.length;
+    const allSelected = certificationsItems?.length > 0 && selectedRows.length === certificationsItems?.length;
     const someSelected = selectedRows.length > 0 && !allSelected;
 
     const toggleAll = (checked: boolean) => {
@@ -207,10 +211,13 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     options={certOptions}
                     selectedText={
                         <span className='flex items-center gap-3'>
-                            <AppIcon.CertStatus size={24} /> Status
+                            <AppIcon.CertStatus size={24} /> <p>{`${dropdownSelection}`}</p>
                         </span>
                     }
-                    onChange={(_selectedCertificationType: DropdownOption) => {}}></DropdownSelector>
+                    onChange={(selectedCertificationType: DropdownOption) => {
+                        setDropdownSelection(selectedCertificationType.value);
+                        filterRows(selectedCertificationType);
+                    }}></DropdownSelector>
                 <FilterDialog setFilters={setFilters} filters={filters} />
             </div>
             <div
