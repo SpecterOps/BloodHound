@@ -661,13 +661,16 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 			}
 			return nil, err
 		} else if !uraEnabled {
+			// In cases where we do not need to check for the existence of the RIL privilege, return the cross product of both groups
 			return CalculateCrossProductNodeSets(tx, localGroupExpansions, []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}), nil
 		} else if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
 			return nil, err
 		} else {
+			// Otherwise, return the cross product of all three criteria
 			return CalculateCrossProductNodeSets(tx, localGroupExpansions, []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}, baseRilEntities.Slice()), nil
 		}
 	} else {
+		// When the citrix flag is disabled, fall back to our original implementation
 		return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
 	}
 }
