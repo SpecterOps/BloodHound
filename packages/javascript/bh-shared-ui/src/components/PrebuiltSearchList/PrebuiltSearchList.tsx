@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import groupBy from 'lodash/groupBy';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { QueryListSection } from '../../types';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import ListItemActionMenu from './ListItemActionMenu';
@@ -53,23 +53,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     clearFiltersHandler,
 }) => {
     const { selectedQuery } = useSavedQueriesContext();
-
-    const [open, setOpen] = useState(false);
-    const [queryId, setQueryId] = useState<number>();
-
     const styles = useStyles();
     const itemRef = useRef<HTMLLIElement>(null);
-
-    const handleClose = () => {
-        setOpen(false);
-        setQueryId(undefined);
-    };
-
     const groupedQueries = groupBy(listSections, 'category');
-    const handleDelete = (id: number) => {
-        setQueryId(id);
-        setOpen(true);
-    };
 
     const testMatch = (name: string, id?: number) => {
         if (!selectedQuery) return false;
@@ -135,7 +121,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         <ListItemActionMenu
                                                             id={id}
                                                             query={query}
-                                                            deleteQuery={() => handleDelete(id)}
+                                                            deleteQuery={() => {
+                                                                if (deleteHandler) deleteHandler(id);
+                                                            }}
                                                         />
                                                     )}
                                                 </li>
@@ -158,27 +146,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                     </Button>
                 </Box>
             )}
-
-            <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
-                <DialogTitle>Delete Query</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button variant='tertiary' onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            if (deleteHandler) deleteHandler(queryId!);
-                            handleClose();
-                        }}
-                        color='primary'
-                        autoFocus>
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </>
     );
 };

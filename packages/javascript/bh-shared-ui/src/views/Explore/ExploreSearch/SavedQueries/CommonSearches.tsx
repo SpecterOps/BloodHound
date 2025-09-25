@@ -26,6 +26,7 @@ import { useNotifications } from '../../../../providers';
 import { QueryLineItem, QueryListSection } from '../../../../types';
 import { cn } from '../../../../utils';
 import { useSavedQueriesContext } from '../../providers';
+import ConfirmDeleteQueryDialog from './ConfirmDeleteQueryDialog';
 import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
@@ -50,6 +51,8 @@ const CommonSearches = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [source, setSource] = useState('');
+    const [open, setOpen] = useState(false);
+    const [queryId, setQueryId] = useState<number>();
 
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
@@ -66,6 +69,7 @@ const CommonSearches = ({
 
     useEffect(() => {
         setFilteredList(queryList);
+        handleFilter(searchTerm, platform, categoryFilter, source);
     }, [userQueries.data]);
 
     const handleClick = (query: string, id: number | undefined) => {
@@ -82,9 +86,21 @@ const CommonSearches = ({
     };
 
     const handleDeleteQuery = (id: number) => {
+        setQueryId(id);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setQueryId(undefined);
+    };
+
+    const confirmDeleteQuery = (id: number) => {
         deleteQueryMutation.mutate(id, {
             onSuccess: () => {
                 addNotification(`Query deleted.`, 'userDeleteQuery');
+                setOpen(false);
+                setQueryId(undefined);
             },
         });
     };
@@ -123,7 +139,7 @@ const CommonSearches = ({
                     queries: obj.queries.filter((item: QueryLineItem) => !item.id),
                 }))
                 .filter((x) => x.queries.length);
-        } else if (source && source === 'owned') {
+        } else if (source && source === 'personal') {
             if (!hasSelf) {
                 filteredData = [];
             } else {
@@ -161,6 +177,7 @@ const CommonSearches = ({
             fileDownload(res.data, filename);
         });
     };
+
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
@@ -170,7 +187,7 @@ const CommonSearches = ({
                     data-testid='common-queries-toggle'
                     variant={'text'}>
                     <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                    <span className='my-4 font-semibold text-lg'>Pre-built Queries</span>
+                    <span className='my-4 font-semibold text-lg'>Saved Queries</span>
                 </Button>
             </div>
 
@@ -195,6 +212,13 @@ const CommonSearches = ({
                     showCommonQueries={showCommonQueries}
                 />
             </div>
+
+            <ConfirmDeleteQueryDialog
+                open={open}
+                queryId={queryId}
+                deleteHandler={confirmDeleteQuery}
+                handleClose={handleClose}
+            />
         </div>
     );
 };

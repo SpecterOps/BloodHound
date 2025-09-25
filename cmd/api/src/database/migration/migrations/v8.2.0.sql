@@ -26,6 +26,23 @@ VALUES (
        )
 ON CONFLICT DO NOTHING;
 
+INSERT INTO permissions(created_at, updated_at, authority, name)
+VALUES (
+        current_timestamp,
+        current_timestamp,
+        'auth',
+        'ReadUsers'
+       )
+ON CONFLICT DO NOTHING;
+
+INSERT INTO roles_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p
+ON (p.authority, p.name) = ('auth', 'ReadUsers')
+WHERE r.name IN ('Administrator', 'User', 'Read-Only', 'Power User')
+ON CONFLICT DO NOTHING;
+
 INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
 VALUES (
            current_timestamp,
@@ -37,3 +54,15 @@ VALUES (
            false
        )
 ON CONFLICT DO NOTHING;
+
+-- Add Stale Client Updated Logic rework parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at)
+VALUES (
+         'pipeline.updated_stale_client',
+        'Stale Client Updated Logic',
+        'Is used to updated the logic used for if a job has become stale. With this enabled, rather than checking the last ingest time, the last checkin time of the client is checked to timeout the job.',
+        '{"enabled": true}',
+           current_timestamp,
+           current_timestamp
+       )
+  ON CONFLICT DO NOTHING;
