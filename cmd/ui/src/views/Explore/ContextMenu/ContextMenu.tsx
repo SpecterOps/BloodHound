@@ -17,6 +17,7 @@
 import { Menu, MenuItem } from '@mui/material';
 
 import {
+    CopyMenuItem,
     Permission,
     isNode,
     useExploreParams,
@@ -24,7 +25,6 @@ import {
     useFeatureFlag,
     usePermissions,
 } from 'bh-shared-ui';
-import CopyMenuItem from 'bh-shared-ui/src/views/Explore/ContextMenu/CopyMenuItem';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';

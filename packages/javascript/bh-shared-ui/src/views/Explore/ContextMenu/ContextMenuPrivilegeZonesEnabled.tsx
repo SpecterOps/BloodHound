@@ -16,24 +16,21 @@
 
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
-import { FC } from 'react';
-import { isNode, useExploreParams, useExploreSelectedItem, usePermissions, useTagsQuery } from '../../../hooks';
-import { Permission } from '../../../utils';
+import { FC, useState } from 'react';
+import { isNode, useExploreParams, useExploreSelectedItem, useTagsQuery } from '../../../hooks';
+import useAssetGroupMenuItems from '../../../hooks/useAssetGroupMenuItems';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
-    open: boolean;
     contextMenu: { mouseX: number; mouseY: number } | null;
-    assetGroupMenuItems?: JSX.Element[];
     onClose?: () => void;
-}> = ({ open, contextMenu, onClose = () => {}, assetGroupMenuItems = [] }) => {
-    const { checkPermission } = usePermissions();
+}> = ({ contextMenu, onClose = () => {} }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const { selectedItemQuery } = useExploreSelectedItem();
-
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
-
     const getAssetGroupTagsQuery = useTagsQuery();
+    const assetGroupMenuItems = useAssetGroupMenuItems(setDialogOpen);
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -86,7 +83,7 @@ const ContextMenu: FC<{
     }
 
     return (
-        <Dialog open={open}>
+        <Dialog open={dialogOpen}>
             <Menu
                 open={contextMenu !== null}
                 anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
@@ -95,9 +92,7 @@ const ContextMenu: FC<{
                 keepMounted>
                 <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
                 <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-                {checkPermission(Permission.GRAPH_DB_WRITE) && assetGroupMenuItems
-                    ? assetGroupMenuItems.map((MenuItem) => MenuItem)
-                    : null}
+                {assetGroupMenuItems.length ? assetGroupMenuItems.map((MenuItem) => MenuItem) : null}
                 <CopyMenuItem />
             </Menu>
         </Dialog>
