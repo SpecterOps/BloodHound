@@ -41,7 +41,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
 
     return (
         <>
-            <Box paddingY={'64px'}>
+            <Box className='flex justify-center items-center h-full'>
                 <Container maxWidth='sm'>
                     <Paper sx={{ px: 8, pb: 8, pt: 4 }}>
                         <Box height='100%' width='auto' textAlign='center' boxSizing='content-box' padding='64px'>
