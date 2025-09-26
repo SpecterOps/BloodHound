@@ -17,6 +17,7 @@
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogOverlay,
     DialogPortal,
     DialogTitle,
@@ -62,7 +63,10 @@ const UpdateUserDialog: React.FC<{
                         className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen'
                         data-testid='update-user-dialog'>
                         <VisuallyHidden asChild>
-                            <DialogTitle>Edit User</DialogTitle>
+                            <>
+                                <DialogTitle>Edit User</DialogTitle>
+                                <DialogDescription></DialogDescription>
+                            </>
                         </VisuallyHidden>
                         <UpdateUserForm
                             error={error}
