@@ -17,6 +17,7 @@
 package golang
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -61,7 +62,13 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 }
 
 func moduleListPackages(modPath string, env environment.Environment) ([]GoPackage, error) {
-	if result, err := cmdrunner.Run("go", []string{"list", "-json", "./..."}, modPath, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "go",
+		Args:    []string{"list", "-json", "./..."},
+		Path:    modPath,
+		Env:     env.Slice(),
+	}
+	if result, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return nil, fmt.Errorf("running go mod list: %w", err)
 	} else {
 		var (

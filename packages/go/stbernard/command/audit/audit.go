@@ -16,6 +16,7 @@
 package audit
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -149,7 +150,14 @@ func getTicketAudit(env environment.Environment, cwd, startTimestamp, endTimesta
 		slog.Any("args", args),
 	)
 
-	result, err := cmdrunner.Run("gh", args, cwd, env)
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "gh",
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+
+	result, err := cmdrunner.Run(context.TODO(), executionPlan)
 	if err != nil {
 		return TicketAudit{}, fmt.Errorf("github cli PR listing: %w", err)
 	}
