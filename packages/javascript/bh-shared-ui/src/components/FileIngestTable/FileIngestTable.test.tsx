@@ -28,6 +28,7 @@ vi.mock('../../hooks/usePermissions', async () => {
         ...actual,
         usePermissions: () => ({
             checkPermission: checkPermissionMock,
+            isSuccess: true,
         }),
     };
 });
@@ -63,12 +64,30 @@ const MOCK_INGEST_JOBS_RESPONSE = {
 };
 
 const server = setupServer(
-    rest.get('/api/v2/file-upload', (req, res, ctx) => res(ctx.json(MOCK_INGEST_JOBS_RESPONSE)))
+    rest.get('/api/v2/file-upload', (req, res, ctx) => res(ctx.json(MOCK_INGEST_JOBS_RESPONSE))),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'open_graph_phase_2',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    })
 );
 
-beforeAll(() => server.listen());
+beforeAll(() => {
+    server.listen();
+});
 afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+afterAll(() => {
+    server.close();
+    vi.clearAllMocks();
+    server.resetHandlers();
+});
 
 describe('FileIngestTable', () => {
     it('shows a loading state', () => {
