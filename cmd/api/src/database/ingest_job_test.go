@@ -90,7 +90,7 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 				}
 			}
 
-			// if the job has a userID, ensure the user_email_address matches the association to the user
+			// if the job has a userID, ensure the user_email_address matches the association to the user and overrides user_email_address on the IngestJob model
 			if jobUserId := job.UserID; jobUserId.Valid {
 				matchingUserIdx := slices.IndexFunc(createdUsers, func(u model.User) bool {
 					return uuid.NullUUID{UUID: u.ID, Valid: true} == jobUserId
@@ -103,7 +103,7 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 				if userEmail := createdUsers[matchingUserIdx].EmailAddress; userEmail.Valid == false {
 					t.Fatalf("Failed to retrieve user email_address: %v", createdUsers[matchingUserIdx])
 				} else if jobUserEmailAddress := job.UserEmailAddress; jobUserEmailAddress != userEmail {
-					t.Fatalf("Failed to associate user email_address to job user_email_address: %s", jobUserEmailAddress)
+					t.Fatalf("Failed to associate user email_address: %s to job user_email_address: %s", userEmail.ValueOrZero(), jobUserEmailAddress.ValueOrZero())
 				}
 			}
 
