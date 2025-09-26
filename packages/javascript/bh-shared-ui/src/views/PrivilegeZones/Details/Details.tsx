@@ -134,7 +134,7 @@ const Details: FC = () => {
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-fit'>
+                <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
                     {isLabelPage ? (
                         <TagList
                             title={'Labels'}

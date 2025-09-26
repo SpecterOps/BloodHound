@@ -24,6 +24,7 @@ export * from './datePicker';
 export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './exportGraphData';
+export * from './freeIconsList';
 export * from './icons';
 export * from './jobs';
 export * from './luxon';
