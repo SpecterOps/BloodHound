@@ -16,7 +16,7 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "/Users/dpcairns/coding/doodle_temp_dir_17767/package.tgz",
+        "@bloodhoundenterprise/doodleui": "/Users/dpcairns/coding/temp_doodle_dir_19989/package.tgz",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
