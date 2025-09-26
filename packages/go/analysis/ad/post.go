@@ -649,16 +649,13 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 	// Shortcut opportunity when citrix is disabled: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
 	canSkipURAProcessing := !uraEnabled || HasRemoteInteractiveLogonRight(tx, rdpGroup.ID, computer)
 
-	if !citrixEnabled && canSkipURAProcessing {
-		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
-	}
-
 	if citrixEnabled {
 		if dauGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
 			// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
 			if graph.IsErrNotFound(err) {
-				return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
+				return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, rdpGroup, canSkipURAProcessing)
 			}
+
 			return nil, err
 		} else if !uraEnabled {
 			// In cases where we do not need to check for the existence of the RIL privilege, return the cross product of both groups
@@ -671,7 +668,7 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 		}
 	} else {
 		// When the citrix flag is disabled, fall back to our original implementation
-		return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
+		return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, rdpGroup, canSkipURAProcessing)
 	}
 }
 
@@ -686,6 +683,14 @@ func ComputerHasURACollection(tx graph.Transaction, computerID graph.ID) bool {
 		} else {
 			return ura
 		}
+	}
+}
+
+func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, rdpGroup *graph.Node, skipURA bool) (cardinality.Duplex[uint64], error) {
+	if skipURA {
+		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
+	} else {
+		return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
 	}
 }
 
