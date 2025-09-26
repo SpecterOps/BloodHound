@@ -17,6 +17,7 @@
 package golang
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -82,7 +83,13 @@ func TestWorkspace(cwd string, modPath string, profileDir string, env environmen
 	manifest[modName] = coverFile
 	testArgs := slicesext.Concat(args, []string{"-coverprofile", coverFile, "./..."})
 
-	if _, err := cmdrunner.Run(command, testArgs, modPath, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    testArgs,
+		Path:    modPath,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("go test at %v: %w", modPath, err)
 	}
 
@@ -111,7 +118,13 @@ func GetCombinedCoverage(coverFile string, env environment.Environment) (string,
 		args = []string{"tool", "cover", "-func", filepath.Base(coverFile)}
 	)
 
-	if result, err := cmdrunner.Run("go", args, filepath.Dir(coverFile), env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "go",
+		Args:    args,
+		Path:    filepath.Dir(coverFile),
+		Env:     env.Slice(),
+	}
+	if result, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return "", fmt.Errorf("combined coverage: %w", err)
 	} else {
 		matches := combinedCoverageRegex.FindStringSubmatch(result.StandardOutput.String())

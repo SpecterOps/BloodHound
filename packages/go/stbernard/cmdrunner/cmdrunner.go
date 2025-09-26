@@ -27,12 +27,22 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-
-	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-// maxShortArgs is the limit for how many command arguments to print when printing the shorthand of the command
-const maxShortArgs = 2
+const (
+	maxShortArgs = 2
+)
+
+var ErrCmdExecutionFailed = errors.New("command execution failed")
+
+// ExecutionPlan is a configuration struct for Run
+type ExecutionPlan struct {
+	Command        string
+	Args           []string
+	Path           string
+	Env            []string
+	SuppressErrors bool
+}
 
 // ExecutionResult data structure that represents the result of running a command and captures information about
 // an executed command's output.
@@ -49,11 +59,11 @@ type ExecutionResult struct {
 	ReturnCode     int
 }
 
-func newExecutionResult(command string, args []string, path string) *ExecutionResult {
+func newExecutionResult(ep ExecutionPlan) *ExecutionResult {
 	return &ExecutionResult{
-		Command:        command,
-		Arguments:      args,
-		Path:           path,
+		Command:        ep.Command,
+		Arguments:      ep.Args,
+		Path:           ep.Path,
 		StandardOutput: &bytes.Buffer{},
 		ErrorOutput:    &bytes.Buffer{},
 		CombinedOutput: &bytes.Buffer{},
@@ -61,36 +71,36 @@ func newExecutionResult(command string, args []string, path string) *ExecutionRe
 	}
 }
 
-// ExecutionError is a wrapper for an ExecutionResult that satisfies the error interface.
-type ExecutionError struct {
-	ExecutionResult
-}
-
-func newExecutionError(result *ExecutionResult, exitErr *exec.ExitError) error {
-	// Update the return code and wrap the result to return it as an error
-	result.ReturnCode = exitErr.ExitCode()
-
-	return &ExecutionError{
-		ExecutionResult: *result,
-	}
-}
-
-func (s *ExecutionError) Error() string {
-	return "command execution failed"
-}
-
-func prepareCommand(command string, args []string, path string, env environment.Environment) (*exec.Cmd, *ExecutionResult) {
-	var (
-		cmd    = exec.Command(command, args...)
-		result = newExecutionResult(command, args, path)
-	)
-
-	cmd.Dir = path
-	cmd.Env = env.Slice()
+// Run a command with args and environment variables set at a specified path.
+func Run(ctx context.Context, ep ExecutionPlan) (*ExecutionResult, error) {
+	result := newExecutionResult(ep)
+	cmd := exec.Command(ep.Command, ep.Args...)
+	cmd.Dir = ep.Path
+	cmd.Env = ep.Env
 	cmd.Stdout = io.MultiWriter(result.StandardOutput, result.CombinedOutput)
 	cmd.Stderr = io.MultiWriter(result.ErrorOutput, result.CombinedOutput)
 
-	return cmd, result
+	defer logCommand(result, ep.SuppressErrors)()
+
+	debugEnabled := slog.Default().Enabled(ctx, slog.LevelDebug)
+
+	if debugEnabled {
+		cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stderr)
+		cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
+	}
+
+	if err := cmd.Run(); err != nil {
+		if exitErr := new(exec.ExitError); errors.As(err, &exitErr) {
+			result.ReturnCode = exitErr.ExitCode()
+			if !debugEnabled && !ep.SuppressErrors {
+				fmt.Fprint(os.Stderr, result.CombinedOutput)
+			}
+			return result, fmt.Errorf("%w: %w", ErrCmdExecutionFailed, err)
+		}
+		return result, fmt.Errorf("command failed to run: %w", err)
+	}
+
+	return result, nil
 }
 
 func shortCommandString(command string, args []string, limit int) string {
@@ -111,70 +121,27 @@ func shortCommandString(command string, args []string, limit int) string {
 // logCommand outputs command execution intent into the log with a short version of the command and its arguments. The
 // returned closure will emit the result of the executed command along with more detailed information including
 // elapsed run time to debug output.
-func logCommand(result *ExecutionResult) func() {
-	var (
-		commandStr = shortCommandString(result.Command, result.Arguments, maxShortArgs)
-		started    = time.Now()
-	)
+func logCommand(result *ExecutionResult, suppressErrors bool) func() {
+	commandStr := shortCommandString(result.Command, result.Arguments, maxShortArgs)
+	started := time.Now()
 
 	slog.Info("exec", slog.String("command", commandStr))
 
 	return func() {
-		var (
-			formattedArgs = strings.Join(result.Arguments, " ")
-			elapsed       = time.Since(started)
-		)
+		elapsed := time.Since(started)
+		logLevel := slog.LevelDebug
+		timeUnit := elapsed.Milliseconds()
 
-		slog.Debug("exec result",
-			slog.String("command", commandStr),
-			slog.String("args", formattedArgs),
-			slog.String("path", result.Path),
-			slog.Int("return_code", result.ReturnCode),
-			slog.Int64("elapsed_ms", elapsed.Milliseconds()),
-		)
-	}
-}
-
-func run(cmd *exec.Cmd, result *ExecutionResult) error {
-	defer logCommand(result)()
-
-	var (
-		ctx           = context.TODO()
-		quietDisabled = slog.Default().Enabled(ctx, slog.LevelInfo)
-	)
-
-	if quietDisabled {
-		cmd.Stdout = io.MultiWriter(cmd.Stdout, os.Stdout)
-		cmd.Stderr = io.MultiWriter(cmd.Stderr, os.Stderr)
-	}
-
-	// Pull the return code from the error, if possible
-	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-
-		if errors.As(err, &exitErr) {
-			// Avoid double logging
-			if !quietDisabled {
-				// Send the command's logs to stderr for the user to know what happened
-				fmt.Fprint(os.Stderr, result.ErrorOutput)
-				// NOTE: it may be better to use context and a custom slog handler to gather this information and allow the caller to
-				// determine how to log. This would also mean that moving these attributes out of this if statement would make sense.
-				// The goal here is to give better context about what the exact command that failed was, but without context and
-				// an slog handler to help write the fields higher up, this is best effort.
-				slog.Error("Command run failed", slog.String("cwd", cmd.Dir), slog.String("command", cmd.String()))
-			}
-			return newExecutionError(result, exitErr)
+		if result.ReturnCode != 0 && !suppressErrors {
+			logLevel = slog.LevelError
 		}
 
-		// Likely a system fault that prevented the command from ever running
-		return err
+		slog.Log(context.TODO(), logLevel, "exec result",
+			slog.String("command", result.Command),
+			slog.String("args", strings.Join(result.Arguments, " ")),
+			slog.String("path", result.Path),
+			slog.Int("return_code", result.ReturnCode),
+			slog.Int64("elapsed_ms", timeUnit),
+		)
 	}
-
-	return nil
-}
-
-// Run a command with args and environment variables set at a specified path.
-func Run(command string, args []string, path string, env environment.Environment) (*ExecutionResult, error) {
-	cmd, result := prepareCommand(command, args, path, env)
-	return result, run(cmd, result)
 }

@@ -19,6 +19,7 @@ package analyzers
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
@@ -29,6 +30,7 @@ import (
 
 var (
 	ErrSeverityExit = errors.New("high severity linter result")
+	ErrWarnExit     = errors.New("warning severity linter result")
 )
 
 func outputSeverityMap(results codeclimate.SeverityMap, outputAllSeverity bool) {
@@ -39,7 +41,7 @@ func outputSeverityMap(results codeclimate.SeverityMap, outputAllSeverity bool) 
 			// Issues of this severity should be output directly
 			for _, entries := range fileEntries {
 				for _, entry := range entries {
-					fmt.Printf("%s:%d - %s\n", entry.Location.Path, entry.Location.Lines.Begin, entry.Description)
+					fmt.Fprintf(os.Stdout, "%s:%d - %s\n", entry.Location.Path, entry.Location.Lines.Begin, entry.Description)
 				}
 			}
 		}
@@ -65,8 +67,10 @@ func Run(paths workspace.WorkspacePaths, env environment.Environment, outputAllS
 		// Any finding with a priority greater than Minor is considered a high severity finding
 		if combinedResults.HasGreaterSeverity(codeclimate.SeverityMinor) {
 			return ErrSeverityExit
+		} else if len(combinedResults) > 0 {
+			return ErrWarnExit
+		} else {
+			return nil
 		}
 	}
-
-	return nil
 }

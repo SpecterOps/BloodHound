@@ -17,6 +17,7 @@
 package golang
 
 import (
+	"context"
 	"os"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
@@ -29,10 +30,14 @@ func RunGoImports(env environment.Environment) error {
 	if err != nil {
 		return err
 	}
-	cmd := "go"
-	args := []string{"tool", "goimports", "-w", rootDir}
 
-	if _, err := cmdrunner.Run(cmd, args, rootDir, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "go",
+		Args:    []string{"tool", "goimports", "-w", rootDir},
+		Path:    rootDir,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return err
 	}
 

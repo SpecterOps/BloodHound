@@ -17,6 +17,7 @@
 package redoc
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
@@ -43,7 +44,13 @@ func GenerateOpenAPIDoc(projectPath string, submodules []string, env environment
 		args       = []string{"@redocly/cli@1.18.1", "bundle", inputPath, "--output", outputPath}
 	)
 
-	if _, err := cmdrunner.Run(command, args, srcPath, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    srcPath,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("generate openapi docs: %w", err)
 	}
 

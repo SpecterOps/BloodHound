@@ -17,6 +17,7 @@
 package golang
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -84,8 +85,13 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 				wg.Add(1)
 				go func(p GoPackage) {
 					defer wg.Done()
-
-					if _, err := cmdrunner.Run(command, args, p.Dir, env); err != nil {
+					executionPlan := cmdrunner.ExecutionPlan{
+						Command: command,
+						Args:    args,
+						Path:    p.Dir,
+						Env:     env.Slice(),
+					}
+					if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 						mu.Lock()
 						errs = append(errs, fmt.Errorf("go build for package %s: %w", p.Import, err))
 						mu.Unlock()

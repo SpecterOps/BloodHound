@@ -18,6 +18,7 @@ package git
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -46,25 +47,35 @@ func ListSubmodulePaths(cwd string, env environment.Environment) ([]string, erro
 		subPaths = make([]string, 0, 4)
 	)
 
-	if _, err := os.Stat(filepath.Join(cwd, ".gitmodules")); errors.Is(err, os.ErrNotExist) {
+	_, err := os.Stat(filepath.Join(cwd, ".gitmodules"))
+	if errors.Is(err, os.ErrNotExist) {
 		return subPaths, nil
 	} else if err != nil {
 		return subPaths, fmt.Errorf("stat .gitmodules: %w", err)
-	} else if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
-		return subPaths, fmt.Errorf("git submodule names: %w", err)
-	} else {
-		for _, keyValueStr := range strings.Split(strings.TrimSpace(result.StandardOutput.String()), "\n") {
-			keyValue := strings.Split(keyValueStr, " ")
+	}
 
-			if len(keyValue) != 2 {
-				return subPaths, fmt.Errorf("%w: %s", ErrInvalidConfigValue, keyValueStr)
-			} else {
-				subPaths = append(subPaths, filepath.Join(cwd, keyValue[1]))
-			}
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	result, err := cmdrunner.Run(context.TODO(), executionPlan)
+	if err != nil {
+		return subPaths, fmt.Errorf("git submodule names: %w", err)
+	}
+
+	for _, keyValueStr := range strings.Split(strings.TrimSpace(result.StandardOutput.String()), "\n") {
+		keyValue := strings.Split(keyValueStr, " ")
+
+		if len(keyValue) != 2 {
+			return subPaths, fmt.Errorf("%w: %s", ErrInvalidConfigValue, keyValueStr)
 		}
 
-		return subPaths, nil
+		subPaths = append(subPaths, filepath.Join(cwd, keyValue[1]))
 	}
+
+	return subPaths, nil
 }
 
 // CheckClean checks if the git repository is clean and returns status as a bool. Codes other than exit 1 are returned as an error
@@ -72,18 +83,31 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 	slog.Info(fmt.Sprintf("Checking repository clean for %s", cwd))
 
 	// We need to run git status first to ensure we don't hit a cache issue
-	if _, err := cmdrunner.Run("git", []string{"status"}, cwd, env); err != nil {
+	gitStatusPlan := cmdrunner.ExecutionPlan{
+		Command: "git",
+		Args:    []string{"status"},
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), gitStatusPlan); err != nil {
 		return false, fmt.Errorf("git status: %w", err)
 	}
 
-	if _, err := cmdrunner.Run("git", []string{"diff-index", "--quiet", "HEAD", "--"}, cwd, env); err != nil {
-		var errResult *cmdrunner.ExecutionError
-
-		if errors.As(err, &errResult) && errResult.ReturnCode == 1 {
+	diffIndexPlan := cmdrunner.ExecutionPlan{
+		Command:        "git",
+		Args:           []string{"diff-index", "--quiet", "HEAD", "--"},
+		Path:           cwd,
+		Env:            env.Slice(),
+		SuppressErrors: true,
+	}
+	result, err := cmdrunner.Run(context.TODO(), diffIndexPlan)
+	if err != nil {
+		// Failure was due to dirty workspace
+		if errors.Is(err, cmdrunner.ErrCmdExecutionFailed) && result.ReturnCode == 1 {
 			return false, nil
+		} else {
+			return false, fmt.Errorf("git diff-index: %w", err)
 		}
-
-		return false, fmt.Errorf("git diff-index: %w", err)
 	}
 
 	slog.Info(fmt.Sprintf("Finished checking repository clean for %s", cwd))
@@ -98,7 +122,13 @@ func FetchCurrentCommitSHA(cwd string, env environment.Environment) (string, err
 		args    = []string{"rev-parse", "HEAD"}
 	)
 
-	if result, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if result, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return "", fmt.Errorf("git rev-parse: %w", err)
 	} else {
 		return strings.TrimSpace(result.StandardOutput.String()), nil
@@ -120,7 +150,13 @@ func ParseLatestVersionFromTags(cwd string, env environment.Environment) (semver
 
 // ParseTimestampFromSHA gets the timestamp for a given commit SHA
 func ParseTimestampFromSHA(env environment.Environment, cwd, sha string) (string, error) {
-	result, err := cmdrunner.Run("git", []string{"--no-pager", "log", "-n", "1", "--format=%cI", sha}, cwd, env)
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "git",
+		Args:    []string{"--no-pager", "log", "-n", "1", "--format=%cI", sha},
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	result, err := cmdrunner.Run(context.TODO(), executionPlan)
 	if err != nil {
 		return "", fmt.Errorf("getting timestamp via git log: %w", err)
 	}

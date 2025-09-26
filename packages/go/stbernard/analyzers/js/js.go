@@ -17,7 +17,7 @@
 package js
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -67,26 +67,26 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 	var (
 		lintEntries   []codeclimate.Entry
 		esLintEntries []esLintEntry
-		output        *bytes.Buffer
 
 		command = env[environment.YarnCmdVarName]
-		args    = []string{"run", "lint", "--quiet", "--format", "json"}
+		args    = []string{"run", "lint", "--format", "json"}
 	)
 
-	if result, err := cmdrunner.Run(command, args, path, env); err != nil {
-		var errResult *cmdrunner.ExecutionError
-
-		if !errors.As(err, &errResult) {
-			return lintEntries, fmt.Errorf("yarn run lint: %w", err)
-		}
-
-		output = errResult.StandardOutput
-	} else {
-		output = result.StandardOutput
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command:        command,
+		Args:           args,
+		Path:           path,
+		Env:            env.Slice(),
+		SuppressErrors: true,
 	}
 
-	if err := json.NewDecoder(output).Decode(&esLintEntries); err != nil {
-		return lintEntries, fmt.Errorf("yarn run lint: decoding output: %w", err)
+	result, err := cmdrunner.Run(context.TODO(), executionPlan)
+	if err != nil && !errors.Is(err, cmdrunner.ErrCmdExecutionFailed) {
+		return lintEntries, fmt.Errorf("yarn run lint: %w", err)
+	}
+
+	if err := json.NewDecoder(result.StandardOutput).Decode(&esLintEntries); err != nil {
+		return lintEntries, fmt.Errorf("decoding output from eslint: %w", err)
 	}
 
 	for _, entry := range esLintEntries {
