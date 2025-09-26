@@ -199,7 +199,7 @@ func TestResources_StartIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().CreateIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User: model.User{
 						PrincipalName: "name",
@@ -318,7 +318,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusComplete,
@@ -350,7 +350,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusRunning,
@@ -410,7 +410,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), gomock.Any()).Return(model.IngestJob{
-					UserID:           uuid.FromStringOrNil("id"),
+					UserID:           uuid.NullUUID{UUID: uuid.FromStringOrNil("id"), Valid: true},
 					UserEmailAddress: null.NewString("email@notreal.com", true),
 					User:             model.User{PrincipalName: "name"},
 					Status:           model.JobStatusRunning,

@@ -22,8 +22,8 @@ import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted }
 import DataTable from '../DataTable';
 import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
 import { StatusIndicator } from '../StatusIndicator';
-import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 import { FileIngestDetailsPanel } from './FileIngestDetailsPanel';
+import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 
 const HEADERS = ['ID / User / Status', 'Message', 'Start Time', 'Duration', 'File Information'];
 
