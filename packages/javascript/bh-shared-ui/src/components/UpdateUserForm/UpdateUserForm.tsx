@@ -129,9 +129,11 @@ const UpdateUserForm: React.FC<{
                 all_environments: getUserQuery.data.all_environments,
                 environment_access_control: {
                     environments:
-                        getUserQuery.data.environment_access_control?.map(
-                            (environment: EnvironmentRequest) => environment
-                        ) || [],
+                        getUserQuery.data.all_environments !== true
+                            ? getUserQuery.data.environment_access_control?.map(
+                                  (environment: EnvironmentRequest) => environment
+                              )
+                            : null,
                     //getUserQuery.data.environment_access_control.environments || [],
                 },
             }}
@@ -206,11 +208,13 @@ const UpdateUserFormInner: React.FC<{
 
     //console.log(returnMappedEnvironments);
 
-    const matchingValues = initialEnvironmentsSelected?.filter((value: any) =>
-        returnMappedEnvironments.includes(value)
+    const matchingValues = initialEnvironmentsSelected?.filter(
+        (value: any) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
     );
 
-    const [selectedEnvironments, setSelectedEnvironments] = useState<string[] | undefined>(matchingValues);
+    const checkAllEnvironment = initialData.all_environments === true ? null : matchingValues;
+
+    const [selectedEnvironments, setSelectedEnvironments] = useState<any>(checkAllEnvironment);
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
@@ -228,19 +232,23 @@ const UpdateUserFormInner: React.FC<{
     const handleEnvironmentSelectChange = (itemId: any, checked: any) => {
         if (checked) {
             //console.log(formatReturnedEnvironments);
-            setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
+            setSelectedEnvironments((prevSelected: string[]) => [...prevSelected, itemId]);
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         } else {
-            setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
+            setSelectedEnvironments((prevSelected: string[]) => prevSelected?.filter((id: string) => id !== itemId));
         }
     };
 
     const allEnvironmentsSelected =
-        selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
+        selectedEnvironments &&
+        selectedEnvironments.length === availableEnvironments?.length &&
+        availableEnvironments!.length > 0;
 
     const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
     const allEnvironmentsIndeterminate =
-        selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
+        selectedEnvironments &&
+        selectedEnvironments.length > 0 &&
+        selectedEnvironments.length < availableEnvironments!.length;
 
     useEffect(() => {
         if (authenticationMethod === 'password') {
