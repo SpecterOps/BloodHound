@@ -23,8 +23,11 @@ export const privilegeZonesPath = 'privilege-zones';
 export const detailsPath = 'details';
 export const savePath = 'save';
 export const summaryPath = 'summary';
+export const historyPath = 'history';
 
 export const ROUTE_PRIVILEGE_ZONES = `/${privilegeZonesPath}`;
+
+export const ROUTE_PZ_HISTORY = `/${privilegeZonesPath}/${historyPath}`;
 
 export const ROUTE_PZ_ZONE_SUMMARY = `/${zonesPath}/:zoneId/${summaryPath}`;
 export const ROUTE_PZ_LABEL_SUMMARY = `/${labelsPath}/:labelId/${summaryPath}`;
@@ -49,8 +52,6 @@ export const ROUTE_PZ_LABEL_CREATE_SELECTOR = `/${labelsPath}/:labelId/${selecto
 
 export const ROUTE_PZ_ZONE_UPDATE_SELECTOR = `/${zonesPath}/:zoneId/${selectorsPath}/:selectorId/${savePath}`;
 export const ROUTE_PZ_LABEL_UPDATE_SELECTOR = `/${labelsPath}/:labelId/${selectorsPath}/:selectorId/${savePath}`;
-
-export const ROUTE_PZ_HISTORY = '/history';
 
 export type Routable = {
     path: string;

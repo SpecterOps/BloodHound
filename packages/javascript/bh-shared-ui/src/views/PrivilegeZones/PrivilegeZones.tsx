@@ -33,6 +33,7 @@ import {
     ROUTE_PZ_ZONE_SUMMARY,
     Routable,
     detailsPath,
+    historyPath,
     labelsPath,
     privilegeZonesPath,
     savePath,
@@ -109,6 +110,7 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         value={tagType}
                         onValueChange={(value) => {
+                            if (value === historyPath) return navigate(`/${privilegeZonesPath}/${historyPath}`);
                             const path = isSummaryPage ? summaryPath : detailsPath;
                             const id = value === zonesPath ? tagId : ownedId;
                             navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
@@ -120,7 +122,7 @@ const PrivilegeZones: FC = () => {
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
-                            <TabsTrigger value='history' data-testid='zone-management_tab-list_history-tab'>
+                            <TabsTrigger value={historyPath} data-testid='zone-management_tab-list_history-tab'>
                                 History
                             </TabsTrigger>
                         </TabsList>
