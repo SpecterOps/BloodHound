@@ -123,7 +123,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 is_disabled: disable,
                 all_environments: user.all_environments || undefined,
                 environment_access_control: {
-                    environments: user.environment_access_control.environments || [],
+                    environments: user.environment_access_control.environments || null,
                 },
             };
 
