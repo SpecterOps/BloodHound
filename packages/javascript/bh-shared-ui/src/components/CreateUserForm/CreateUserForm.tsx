@@ -39,7 +39,7 @@ import {
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
-import { CreateUserRequest, Environment, Role, SSOProvider } from 'js-client-library';
+import { CreateUserRequest, Environment, EnvironmentRequest, Role, SSOProvider } from 'js-client-library';
 import { Minus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -97,7 +97,7 @@ const CreateUserForm: React.FC<{
     const { data: availableEnvironments } = useAvailableEnvironments();
 
     const [searchInput, setSearchInput] = useState<string>('');
-    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
+    const [selectedEnvironments, setSelectedEnvironments] = useState<any[]>([]);
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
 
     const handleCheckedChange = (checked: boolean | 'indeterminate') => {
@@ -129,15 +129,17 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const formatReturnedEnvironments: any[] = selectedEnvironments?.map((itemId: string) => ({
+    const formatReturnedEnvironments: EnvironmentRequest[] = selectedEnvironments?.map((itemId: string) => ({
         environment_id: itemId,
     }));
+
+    console.log(formatReturnedEnvironments);
 
     const handleEnvironmentSelectChange = (itemId: any, checked: any) => {
         if (checked) {
             setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
 
-            form.setValue('all_environments', false);
+            //form.setValue('all_environments', false);
         } else {
             setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
         }
@@ -147,8 +149,6 @@ const CreateUserForm: React.FC<{
     const allEnvironmentsIndeterminate =
         selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
 
-    console.log(allEnvironmentsIndeterminate);
-
     useEffect(() => {
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
@@ -157,6 +157,7 @@ const CreateUserForm: React.FC<{
         if (allEnvironmentsSelected) {
             form.setValue('environment_access_control.environments', null);
         } else {
+            //setSelectedEnvironments(formatReturnedEnvironments);
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         }
 
@@ -197,8 +198,10 @@ const CreateUserForm: React.FC<{
         allEnvironmentsSelected,
     ]);
 
+    console.log(selectedEnvironments);
+
     const handleSave = () => {
-        console.log(form.watch() + ' these are the values onSave');
+        console.log(form.watch('environment_access_control.environments'));
     };
 
     return (
