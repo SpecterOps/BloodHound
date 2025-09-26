@@ -57,3 +57,15 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 
 	return true, nil
 }
+
+// ExtractEnvironmentIDsFromUser is a helper function
+// to extract a user's environments from their model as a list of strings
+func ExtractEnvironmentIDsFromUser(user *model.User) []string {
+	list := make([]string, 0, len(user.EnvironmentAccessControl))
+
+	for _, envAccess := range user.EnvironmentAccessControl {
+		list = append(list, envAccess.EnvironmentID)
+	}
+
+	return list
+}
