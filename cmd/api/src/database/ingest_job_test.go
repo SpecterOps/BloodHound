@@ -71,7 +71,7 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 
 	for _, seed := range seedJobs {
 		if _, err := dbInst.CreateIngestJob(testCtx, seed); err != nil {
-			t.Fatalf("Error seeding ingest jobs")
+			t.Fatalf("Error seeding ingest jobs: %v", err)
 		}
 	}
 
@@ -103,7 +103,7 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 				if userEmail := createdUsers[matchingUserIdx].EmailAddress; userEmail.Valid == false {
 					t.Fatalf("Failed to retrieve user email_address: %v", createdUsers[matchingUserIdx])
 				} else if jobUserEmailAddress := job.UserEmailAddress; jobUserEmailAddress != userEmail {
-					t.Fatalf("Failed to associate user email_address to job user_email_address")
+					t.Fatalf("Failed to associate user email_address to job user_email_address: %s", jobUserEmailAddress)
 				}
 			}
 
@@ -120,7 +120,7 @@ func TestUpdateIngestJob(t *testing.T) {
 	)
 
 	if createdJob, err := dbInst.CreateIngestJob(testCtx, seedJob); err != nil {
-		t.Fatalf("Error seeding ingest jobs")
+		t.Fatalf("Error seeding ingest jobs: %v", err)
 	} else {
 
 		createdJob.Status = model.JobStatusComplete
@@ -128,7 +128,10 @@ func TestUpdateIngestJob(t *testing.T) {
 			t.Fatalf("Error updating ingest job: %v", err)
 		}
 
-		foundJob, _ := dbInst.GetIngestJob(testCtx, createdJob.ID)
+		foundJob, err := dbInst.GetIngestJob(testCtx, createdJob.ID)
+		if err != nil {
+			t.Fatalf("Failed to fetch ingest job %d: %v", createdJob.ID, err)
+		}
 
 		// ensure the job updates successfully
 		if foundJob.UserID.Valid {
