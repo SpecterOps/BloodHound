@@ -22,6 +22,7 @@ import { useParams } from 'react-router-dom';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { render, screen, within } from '../../../test-utils';
 import { TagList } from './TagList';
+import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 
 const testQuery = {
     isLoading: false,
@@ -82,53 +83,7 @@ const configTrueResponse = {
     ],
 };
 
-const server = setupServer(
-    rest.get('/api/v2/config', async (_, res, ctx) => {
-        return res(ctx.json(configTrueResponse));
-    }),
-    rest.get('/api/v2/features', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [
-                    {
-                        key: 'tier_management_engine',
-                        enabled: true,
-                    },
-                ],
-            })
-        );
-    }),
-    rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    tags: [
-                        {
-                            id: 2,
-                            type: 3,
-                            kind_id: 179,
-                            name: 'Owned',
-                            description: 'Owned',
-                            position: null,
-                            require_certify: null,
-                            analysis_enabled: null,
-                        },
-                        {
-                            id: 1,
-                            type: 1,
-                            kind_id: 173,
-                            name: 'Tier Zero',
-                            description: 'Tier Zero description',
-                            position: 1,
-                            require_certify: false,
-                            analysis_enabled: true,
-                        },
-                    ],
-                },
-            })
-        );
-    }),
-);
+const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());

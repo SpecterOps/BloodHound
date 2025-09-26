@@ -15,153 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import PrivilegeZones from '.';
+import zoneHandlers from '../../mocks/handlers/zoneHandlers';
 import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../routes';
 import { render, screen, waitFor } from '../../test-utils';
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 vi.mock('react-router-dom', async () => ({
     ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
     useNavigate: vi.fn,
 }));
 
-const server = setupServer(
-    rest.get('/api/v2/features', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [
-                    {
-                        key: 'tier_management_engine',
-                        enabled: true,
-                    },
-                ],
-            })
-        );
-    }),
-    rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    tags: [
-                        {
-                            id: 2,
-                            type: 3,
-                            kind_id: 179,
-                            name: 'Owned',
-                            description: 'Owned',
-                            position: null,
-                            require_certify: null,
-                            analysis_enabled: null,
-                        },
-                        {
-                            id: 1,
-                            type: 1,
-                            kind_id: 173,
-                            name: 'Tier Zero',
-                            description: 'Tier Zero description',
-                            position: 1,
-                            require_certify: false,
-                            analysis_enabled: true,
-                        },
-                    ],
-                },
-            })
-        );
-    }),
-    rest.get(`/api/v2/asset-group-tags/:tagId`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    tag: {
-                        id: 1,
-                        type: 2,
-                        kind_id: 179,
-                        name: 'Owned',
-                        description: 'Owned',
-                        position: null,
-                        require_certify: null,
-                        analysis_enabled: null,
-                    },
-                },
-            })
-        );
-    }),
-    rest.get(`/api/v2/asset-group-tags/:tagId/selectors`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                count: 2,
-                limit: 50,
-                skip: 0,
-                data: {
-                    selectors: [
-                        {
-                            id: 1,
-                            asset_group_tag_id: 2,
-                            created_by: 'some user',
-                            updated_by: 'some user',
-                            disabled_at: null,
-                            disabled_by: null,
-                            name: 'selector 1',
-                            description: 'some description',
-                            auto_certify: 0,
-                            is_default: null,
-                            allow_disable: null,
-                        },
-                        {
-                            id: 2,
-                            asset_group_tag_id: 3,
-                            created_by: 'that same user',
-                            updated_by: 'that same user',
-                            disabled_at: null,
-                            disabled_by: null,
-                            name: 'selector 2',
-                            description: 'some description',
-                            auto_certify: 0,
-                            is_default: true,
-                            allow_disable: true,
-                        },
-                    ],
-                },
-            })
-        );
-    }),
-    rest.get(`/api/v2/asset-group-tags/:tagId/members`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    members: [
-                        {
-                            NodeId: 1,
-                            ObjectID: 'OID-1',
-                            PrimaryKind: 'User',
-                            Name: 'node1',
-                            AssetGroupTagId: 1,
-                        },
-                        {
-                            NodeId: 2,
-                            ObjectID: 'OID-2',
-                            PrimaryKind: 'Group',
-                            Name: 'node2',
-                            AssetGroupTagId: 1,
-                        },
-                    ],
-                },
-            })
-        );
-    }),
-    rest.get(`/api/v2/asset-group-tags/:tagId/members/counts`, async (req, res, ctx) => {
-        return res(ctx.status(200));
-    }),
-    rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
-        return res(ctx.status(200));
-    })
-);
+const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
