@@ -36,15 +36,6 @@ const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
 
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
-const tableProps: DataTableProps['TableProps'] = {
-    className: 'w-[calc(100% + 250px)] table-fixed',
-    disableDefaultOverflowAuto: true,
-};
-
-const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10 shadow-sm',
-};
-
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
     className: 'pr-2 text-center',
 };
@@ -169,9 +160,7 @@ const ExploreTable = ({
                 />
                 <MemoDataTable
                     className='overflow-auto'
-                    TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
-                    TableProps={tableProps}
                     TableCellProps={tableCellProps}
                     columnPinning={columnPinning}
                     onColumnPinningChange={setColumnPinning}

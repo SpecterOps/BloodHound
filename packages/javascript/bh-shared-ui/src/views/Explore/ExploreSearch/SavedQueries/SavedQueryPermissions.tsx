@@ -104,7 +104,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 accessorKey: 'id',
                 header: () => {
                     return (
-                        <div>
+                        <div className='w-full h-full flex items-center'>
                             <Checkbox
                                 checked={isPublic}
                                 onCheckedChange={handleCheckAllChange}
@@ -125,7 +125,11 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             {
                 accessorKey: 'name',
                 header: () => {
-                    return <span className='dark:text-neutral-light-1 font-normal'>Set to Public</span>;
+                    return (
+                        <span className='full h-full flex items-center dark:text-neutral-light-1 font-normal'>
+                            Set to Public
+                        </span>
+                    );
                 },
                 cell: ({ row }) => {
                     const name = row.original.name;
@@ -174,6 +178,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         />
                     </div>
                     <div className='h-[335px] overflow-auto'>
+                        {/* TODO: First row checkbox is a bit off */}
                         {filteredUsers?.length ? (
                             <DataTable
                                 TableHeadProps={{
