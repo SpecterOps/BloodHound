@@ -27,6 +27,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 )
 
 func TestCreateAndGetAllIngestJobs(t *testing.T) {
@@ -110,4 +111,20 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 	}
 }
 
-// ensure that updating a given IngestJob doesnt insert an empty uuid
+func TestUpdateIngestJob(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+		// insert a job with a null user_id
+		seedJob = model.IngestJob{UserID: uuid.NullUUID{}}
+	)
+
+	// ensure the user_id stays null when we update the job
+	if createdJob, err := dbInst.CreateIngestJob(testCtx, seedJob); err != nil {
+		t.Fatalf("Error seeding ingest jobs")
+	} else if err := dbInst.UpdateIngestJob(testCtx, seedJob); err != nil {
+		t.Fatalf("Error updating ingest job: %v", err)
+	} else if foundJob, _ := dbInst.GetIngestJob(testCtx, createdJob.ID); foundJob.UserID.Valid {
+		t.Fatalf("Error updating ingest job with a null uuid: %v", foundJob)
+	}
+}
