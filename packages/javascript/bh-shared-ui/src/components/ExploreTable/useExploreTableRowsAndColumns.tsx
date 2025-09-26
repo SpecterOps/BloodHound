@@ -125,7 +125,7 @@ const useExploreTableRowsAndColumns = ({
                         <Tooltip
                             title={<p>{info.getValue()}</p>}
                             disableHoverListener={key === 'kind' || isEmpty(value)}>
-                            <div data-testid={`table-cell-${key}`} className='truncate'>
+                            <div data-testid={`table-cell-${key}`} className='truncate w-full'>
                                 <ExploreTableDataCell value={value} columnKey={key?.toString()} />
                             </div>
                         </Tooltip>
