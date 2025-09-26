@@ -845,16 +845,42 @@ class BHEAPIClient {
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
-    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
+    listFileIngestJobs = (
+        {
+            skip,
+            limit,
+            sortBy,
+            status,
+            user_id,
+            start_time,
+            end_time,
+        }: {
+            skip?: number;
+            limit?: number;
+            sortBy?: string;
+            status?: number;
+            user_id?: string;
+            start_time?: string;
+            end_time?: string;
+        },
+        options?: RequestOptions
+    ) =>
         this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
-            Object.assign({
-                params: {
-                    skip,
-                    limit,
-                    sort_by: sortBy,
+            Object.assign(
+                {
+                    params: omitUndefined({
+                        skip,
+                        limit,
+                        sort_by: sortBy,
+                        status: prefixValue('eq', status),
+                        user_id: prefixValue('eq', user_id),
+                        start_time: prefixValue('gte', start_time),
+                        end_time: prefixValue('lte', end_time),
+                    }),
                 },
-            })
+                options
+            )
         );
 
     listFileTypesForIngest = () =>
@@ -1019,7 +1045,7 @@ class BHEAPIClient {
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
 
     listUsersMinimal = (options?: RequestOptions) =>
-        this.baseClient.get<types.ListUsersMinimalResponse>('/api/v2/bloodhound-users-minimal', options);
+        this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users-minimal', options);
 
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
