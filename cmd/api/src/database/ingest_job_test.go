@@ -119,12 +119,24 @@ func TestUpdateIngestJob(t *testing.T) {
 		seedJob = model.IngestJob{UserID: uuid.NullUUID{}}
 	)
 
-	// ensure the user_id stays null when we update the job
 	if createdJob, err := dbInst.CreateIngestJob(testCtx, seedJob); err != nil {
 		t.Fatalf("Error seeding ingest jobs")
-	} else if err := dbInst.UpdateIngestJob(testCtx, seedJob); err != nil {
-		t.Fatalf("Error updating ingest job: %v", err)
-	} else if foundJob, _ := dbInst.GetIngestJob(testCtx, createdJob.ID); foundJob.UserID.Valid {
-		t.Fatalf("Error updating ingest job with a null uuid: %v", foundJob)
+	} else {
+
+		createdJob.Status = model.JobStatusComplete
+		if err := dbInst.UpdateIngestJob(testCtx, createdJob); err != nil {
+			t.Fatalf("Error updating ingest job: %v", err)
+		}
+
+		foundJob, _ := dbInst.GetIngestJob(testCtx, createdJob.ID)
+
+		// ensure the job updates successfully
+		if foundJob.UserID.Valid {
+			t.Fatalf("Error updating ingest job with a null uuid: %v", foundJob)
+		}
+		// ensure the user_id stays null when we update the job
+		if foundJob.Status != model.JobStatusComplete {
+			t.Fatalf("Error updating ingest job status: %v", foundJob)
+		}
 	}
 }
