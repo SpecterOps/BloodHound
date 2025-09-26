@@ -77,6 +77,10 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 	if jobs, _, err := dbInst.GetAllIngestJobs(testCtx, 0, 3, "start_time", model.SQLFilter{}); err != nil {
 		t.Fatalf("Failed to get users ingest jobs: %v", err)
 	} else {
+		if len(jobs) != len(seedJobs) {
+			t.Fatalf("expected to retrieve %d ingest jobs, got %d", len(seedJobs), len(jobs))
+		}
+
 		for _, job := range jobs {
 			// if the job is missing a userID, ensure the user_email_address is intact
 			if isValidUuid := job.UserID.Valid; isValidUuid == false {
@@ -90,6 +94,10 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 				matchingUserIdx := slices.IndexFunc(createdUsers, func(u model.User) bool {
 					return uuid.NullUUID{UUID: u.ID, Valid: true} == jobUserId
 				})
+
+				if matchingUserIdx == -1 {
+					t.Fatalf("ingest job references unexpected user_id: %v", jobUserId.UUID)
+				}
 
 				if userEmail := createdUsers[matchingUserIdx].EmailAddress; userEmail.Valid == false {
 					t.Fatalf("Failed to retrieve user email_address: %v", createdUsers[matchingUserIdx])

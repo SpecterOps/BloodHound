@@ -238,7 +238,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		for _, job := range jobs {
 			if isValidUuid := job.UserID.Valid; isValidUuid {
 				t.Fatalf("Failed to clear ingest job association")
-			} else if jobEmail := jobs[0].UserEmailAddress; jobEmail.Valid == false {
+			} else if jobEmail := job.UserEmailAddress; jobEmail.Valid == false {
 				t.Fatalf("Failed to add user email to ingest job")
 			}
 		}

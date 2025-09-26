@@ -378,8 +378,9 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 			return err
 		} else if err := tx.Model(&model.IngestJob{}).
 			Where("user_id = ?", user.ID).
-			Update("user_email_address", user.EmailAddress).
-			Update("user_id", uuid.NullUUID{Valid: false}).
+			Updates(map[string]any{
+				"user_email_address": user.EmailAddress,
+				"user_id":            uuid.NullUUID{}}).
 			Error; err != nil {
 			return err
 		}
