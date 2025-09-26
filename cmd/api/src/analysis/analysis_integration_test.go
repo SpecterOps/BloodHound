@@ -57,7 +57,7 @@ func TestFetchRDPEnsureNoDescent(t *testing.T) {
 	})
 }
 
-func TestFetchRemoteDesktopUsersBitmapForComputer(t *testing.T) {
+func TestFetchCanRDPEntityBitmapForComputer(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.RDP.Setup(testContext)
@@ -146,7 +146,7 @@ func TestFetchRemoteDesktopUsersBitmapForComputer(t *testing.T) {
 	})
 }
 
-func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
+func TestFetchCanRDPEntityBitmapForComputerWithCitrix(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.RDPHarnessWithCitrix.Setup(testContext)
@@ -171,6 +171,23 @@ func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
 			return nil
 		}))
 
+		// When citrix is enabled but URA is not enforced, we should expect the cross product of Remote Desktop Users and Direct Access Users
+		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(tx, harness.RDPHarnessWithCitrix.Computer.ID, groupExpansions, false, true)
+			require.Nil(t, err)
+
+			require.Equal(t, 5, int(rdpEnabledEntityIDBitmap.Cardinality()))
+
+			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.IrshadUser.ID.Uint64()))
+			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.UliUser.ID.Uint64()))
+			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.DomainGroupC.ID.Uint64()))
+			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.RohanUser.ID.Uint64()))
+
+			// This group does not have the RIL privilege, but should get a CanRDP edge
+			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.DomainGroupG.ID.Uint64()))
+			return nil
+		}))
+
 		// Create a RemoteInteractiveLogonRight relationship from the RDP local group to the computer to test our most common case
 		require.Nil(t, db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 			_, err := tx.CreateRelationshipByIDs(harness.RDPHarnessWithCitrix.RDPLocalGroup.ID, harness.RDPHarnessWithCitrix.Computer.ID, ad.RemoteInteractiveLogonRight, graph.NewProperties())
@@ -187,13 +204,13 @@ func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
 
 			// We should expect the cross product of members of `Direct Access Users,` `Remote Desktop Users`, and entities with RIL privileges to
 			// the computer
-			require.Equal(t, 4, int(rdpEnabledEntityIDBitmap.Cardinality()))
+			require.Equal(t, 5, int(rdpEnabledEntityIDBitmap.Cardinality()))
 
 			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.DomainGroupC.ID.Uint64()))
 			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.IrshadUser.ID.Uint64()))
 			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.UliUser.ID.Uint64()))
 			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.RohanUser.ID.Uint64()))
-
+			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDPHarnessWithCitrix.DomainGroupG.ID.Uint64()))
 			return nil
 		}))
 	})

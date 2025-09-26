@@ -297,6 +297,20 @@
       "labels": [],
       "properties": {},
       "style": {}
+    },
+    {
+      "id": "n20",
+      "position": {
+        "x": 445.3574537238186,
+        "y": 595.727972376168
+      },
+      "caption": "Group G",
+      "style": {
+        "node-color": "#ffffff",
+        "border-color": "#a4dd00"
+      },
+      "labels": [],
+      "properties": {}
     }
   ],
   "relationships": [
@@ -619,6 +633,22 @@
       "properties": {},
       "fromId": "n6",
       "toId": "n19"
+    },
+    {
+      "id": "n34",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n20",
+      "toId": "n19"
+    },
+    {
+      "id": "n35",
+      "type": "MemberOfLocalGroup",
+      "style": {},
+      "properties": {},
+      "fromId": "n20",
+      "toId": "n2"
     }
   ]
 }
