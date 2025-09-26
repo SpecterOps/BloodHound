@@ -39,11 +39,11 @@ import {
     zonesPath,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
-import DetailsRoot from './DetailsRoot';
+import DefaultRoot from './DefaultRoot';
 import { PrivilegeZonesContext } from './PrivilegeZonesContext';
+
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
-const Summary = React.lazy(() => import('./Summary/Summary'));
 
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
@@ -69,7 +69,7 @@ const PrivilegeZones: FC = () => {
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
     }
-    const { savePaths, SupportLink } = context;
+    const { savePaths, SupportLink, Summary } = context;
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -78,10 +78,15 @@ const PrivilegeZones: FC = () => {
         ...savePaths.map((path) => {
             return { path, component: Save, authenticationRequired: true, navigation: true };
         }),
-        ...summaryPaths.map((path) => {
-            return { path, component: Summary, authenticationRequired: true, navigation: true };
-        }),
     ];
+
+    if (Summary !== undefined) {
+        childRoutes.push(
+            ...summaryPaths.map((path) => {
+                return { path, component: Summary, authenticationRequired: true, navigation: true };
+            })
+        );
+    }
 
     return (
         <main>
@@ -121,7 +126,7 @@ const PrivilegeZones: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<DetailsRoot />} />
+                            <Route path='*' element={<DefaultRoot defaultPath={context.defaultPath} />} />
                         </Routes>
                     </Suspense>
                 </div>
