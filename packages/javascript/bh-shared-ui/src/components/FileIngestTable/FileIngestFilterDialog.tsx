@@ -107,7 +107,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     </DialogTitle>
 
                     <VisuallyHidden asChild>
-                        <DialogDescription>Finished Jobs Log filters</DialogDescription>
+                        <DialogDescription>File Ingest filters</DialogDescription>
                     </VisuallyHidden>
 
                     {/* Multiple Descriptions ensures that Dialog gaps still apply */}
