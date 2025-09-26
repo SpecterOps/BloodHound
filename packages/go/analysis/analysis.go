@@ -117,7 +117,7 @@ func FetchEdgeByStartAndEnd(ctx context.Context, graphDB graph.Database, start, 
 	})
 }
 
-func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, etacEnabled bool, etacList []string) (graph.PathSet, error) {
+func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, etacEnabled bool, allEnv bool, etacList []string) (graph.PathSet, error) {
 	groupMemberPaths := graph.NewPathSet()
 
 	for _, candidate := range candidates {
@@ -130,7 +130,7 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, 
 				},
 				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 					// eTAC feature flag
-					if !etacEnabled {
+					if !etacEnabled || allEnv {
 						return true
 					}
 					if domainSid, err := segment.Node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
