@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/fs"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -101,6 +102,9 @@ type CreateOIDCProviderRequest struct {
 	ClientId string `json:"client_id"`
 }
 
+// DogtagsService alias for the interface from dogtags package
+type DogtagsService = dogtags.Provider
+
 // Resources holds the database and configuration dependencies to be passed around the API functions
 type Resources struct {
 	Decoder                    *schema.Decoder
@@ -115,6 +119,7 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
+	DogtagsService             DogtagsService
 }
 
 func NewResources(
