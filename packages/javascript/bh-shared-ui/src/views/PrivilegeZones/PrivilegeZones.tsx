@@ -30,7 +30,6 @@ import {
     ROUTE_PZ_ZONE_SELECTOR_DETAILS,
     ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS,
     ROUTE_PZ_ZONE_SUMMARY,
-    ROUTE_PZ_HISTORY,
     Routable,
     detailsPath,
     labelsPath,
@@ -38,6 +37,7 @@ import {
     savePath,
     summaryPath,
     zonesPath,
+    historyPath,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DetailsRoot from './DetailsRoot';
@@ -59,7 +59,6 @@ const detailsPaths = [
 ];
 
 const summaryPaths = [ROUTE_PZ_ZONE_SUMMARY, ROUTE_PZ_LABEL_SUMMARY];
-const historyPaths = [ROUTE_PZ_HISTORY];
 
 const PrivilegeZones: FC = () => {
     const navigate = useAppNavigate();
@@ -84,9 +83,7 @@ const PrivilegeZones: FC = () => {
         ...summaryPaths.map((path) => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
         }),
-        ...historyPaths.map((path) => {
-            return { path, component: History, authenticationRequired: true, navigation: true };
-        }),
+        { path: historyPath, component: History, authenticationRequired: true, navigation: true }
     ];
 
     return (
@@ -104,6 +101,7 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         value={tagType}
                         onValueChange={(value) => {
+                            if (value === historyPath) return navigate(`/${privilegeZonesPath}/${historyPath}`)
                             const path = isSummaryPage ? summaryPath : detailsPath;
                             const id = value === zonesPath ? tagId : ownedId;
                             navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
@@ -115,7 +113,7 @@ const PrivilegeZones: FC = () => {
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
-                            <TabsTrigger value='history' data-testid='zone-management_tab-list_history-tab'>
+                            <TabsTrigger value={historyPath} data-testid='zone-management_tab-list_history-tab'>
                                 History
                             </TabsTrigger>
                         </TabsList>
