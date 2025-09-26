@@ -22,7 +22,6 @@ import { privilegeZonesPath, zonesPath } from '../../routes';
 const DefaultRoot: FC<{ defaultPath: string }> = ({ defaultPath }) => {
     const { tagId } = useHighestPrivilegeTagId();
     if (tagId) {
-        //return <AppNavigate to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${summaryPath}`} replace />;
         return <AppNavigate to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${defaultPath}`} replace />;
     } else {
         return <Skeleton className='h-24' />;
