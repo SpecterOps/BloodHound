@@ -37,6 +37,7 @@ import {
     savePath,
     summaryPath,
     zonesPath,
+    historyPath,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import DetailsRoot from './DetailsRoot';
@@ -44,6 +45,7 @@ import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
+const History = React.lazy(() => import('./History/History'));
 
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
@@ -81,6 +83,7 @@ const PrivilegeZones: FC = () => {
         ...summaryPaths.map((path) => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
         }),
+        { path: historyPath, component: History, authenticationRequired: true, navigation: true }
     ];
 
     return (
@@ -98,6 +101,7 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         value={tagType}
                         onValueChange={(value) => {
+                            if (value === historyPath) return navigate(`/${privilegeZonesPath}/${historyPath}`)
                             const path = isSummaryPage ? summaryPath : detailsPath;
                             const id = value === zonesPath ? tagId : ownedId;
                             navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
@@ -108,6 +112,9 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
+                            </TabsTrigger>
+                            <TabsTrigger value={historyPath} data-testid='zone-management_tab-list_history-tab'>
+                                History
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
