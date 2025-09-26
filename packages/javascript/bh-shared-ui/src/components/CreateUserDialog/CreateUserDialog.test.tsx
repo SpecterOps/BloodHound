@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogDescription, DialogOverlay, DialogPortal, VisuallyHidden } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
@@ -117,7 +116,7 @@ describe('CreateUserDialog', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-        const handleOpenChange = vi.fn();
+        //const handleOpenChange = vi.fn();
         const testUser = {
             emailAddress: 'testuser@example.com',
             principalName: 'testuser',
@@ -129,23 +128,14 @@ describe('CreateUserDialog', () => {
         };
 
         render(
-            <Dialog open={true} onOpenChange={handleOpenChange}>
-                <DialogPortal>
-                    <DialogOverlay>
-                        <CreateUserDialog
-                            open={true}
-                            showEnvironmentAccessControls={false}
-                            onClose={testOnClose}
-                            onSave={testOnSave}
-                            isLoading={options?.renderLoading || false}
-                            error={options?.renderErrors}
-                        />
-                        <VisuallyHidden>
-                            <DialogDescription />
-                        </VisuallyHidden>
-                    </DialogOverlay>
-                </DialogPortal>
-            </Dialog>
+            <CreateUserDialog
+                open={true}
+                showEnvironmentAccessControls={true}
+                onClose={testOnClose}
+                onSave={testOnSave}
+                isLoading={options?.renderLoading || false}
+                error={options?.renderErrors}
+            />
         );
 
         return {
