@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 )
@@ -48,7 +49,20 @@ func DefaultOptions() Options {
 }
 
 func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options) *Changelog {
-	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval)
+	// Use dummy HA implementation for BHCE (always primary)
+	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval, ha.NewDummyHA())
+	coordinator := newIngestionCoordinator(dawgsDB)
+
+	return &Changelog{
+		flagManager: flagManager,
+		coordinator: coordinator,
+		options:     opts,
+	}
+}
+
+// NewChangelogWithHA creates a changelog with a real HA implementation for high-availability deployments.
+func NewChangelogWithHA(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options, haMutex ha.HAMutex) *Changelog {
+	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval, haMutex)
 	coordinator := newIngestionCoordinator(dawgsDB)
 
 	return &Changelog{

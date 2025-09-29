@@ -22,6 +22,7 @@ import { useParams } from 'react-router-dom';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { render, screen, within } from '../../../test-utils';
 import { TagList } from './TagList';
+import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 
 const testQuery = {
     isLoading: false,
@@ -82,11 +83,7 @@ const configTrueResponse = {
     ],
 };
 
-const server = setupServer(
-    rest.get('/api/v2/config', async (_, res, ctx) => {
-        return res(ctx.json(configTrueResponse));
-    })
-);
+const server = setupServer(...zoneHandlers);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());

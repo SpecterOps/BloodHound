@@ -22,13 +22,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFeatureFlagManager(t *testing.T) {
 	t.Run("enable creates cache", func(t *testing.T) {
 		var (
-			manager = newFeatureFlagManager(nil, time.Second)
+			manager = newFeatureFlagManager(nil, time.Second, ha.NewDummyHA())
 			ctx     = context.Background()
 		)
 
@@ -42,7 +43,7 @@ func TestFeatureFlagManager(t *testing.T) {
 
 	t.Run("disable clears cache", func(t *testing.T) {
 		var (
-			manager = newFeatureFlagManager(nil, time.Second)
+			manager = newFeatureFlagManager(nil, time.Second, ha.NewDummyHA())
 			ctx     = context.Background()
 		)
 
@@ -57,7 +58,7 @@ func TestFeatureFlagManager(t *testing.T) {
 
 	t.Run("getCache is thread-safe", func(t *testing.T) {
 		var (
-			manager       = newFeatureFlagManager(nil, time.Second)
+			manager       = newFeatureFlagManager(nil, time.Second, ha.NewDummyHA())
 			ctx           = context.Background()
 			wg            sync.WaitGroup
 			numGoroutines = 10
@@ -99,7 +100,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			flagGetter  = func(ctx context.Context) (bool, int, error) {
 				return enabled, 10, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond)
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -129,7 +130,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			flagGetter  = func(ctx context.Context) (bool, int, error) {
 				return enabled, 1500, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond)
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -161,7 +162,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 				}
 				return true, 3000, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond)
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -183,7 +184,7 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			flagGetter  = func(ctx context.Context) (bool, int, error) {
 				return enabled, 1000, nil
 			}
-			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond)
+			manager = newFeatureFlagManager(flagGetter, 10*time.Millisecond, ha.NewDummyHA())
 		)
 		defer cancel()
 
@@ -201,4 +202,163 @@ func TestFeatureFlagManagerPoller(t *testing.T) {
 			return manager.getCache() != nil
 		}, 100*time.Millisecond, 5*time.Millisecond)
 	})
+}
+
+// mockHA implements the HA interface for testing
+type mockHA struct {
+	isPrimary bool
+	lockError error
+}
+
+func (m *mockHA) TryLock() (ha.LockResult, error) {
+	if m.lockError != nil {
+		return ha.LockResult{}, m.lockError
+	}
+	return ha.LockResult{
+		Context:   context.Background(),
+		IsPrimary: m.isPrimary,
+	}, nil
+}
+
+func TestFeatureFlag_HA(t *testing.T) {
+	t.Run("Primary instance enables cache", func(t *testing.T) {
+		var (
+			flagEnabled = false
+			mockHAMutex = &mockHA{isPrimary: true}
+			flagGetter  = func(ctx context.Context) (bool, int, error) {
+				return flagEnabled, 1000, nil
+			}
+			manager     = newFeatureFlagManager(flagGetter, 50*time.Millisecond, mockHAMutex)
+			ctx, cancel = context.WithCancel(context.Background())
+		)
+		defer cancel()
+
+		// Start the manager
+		manager.start(ctx)
+
+		// Initially cache should be nil
+		require.Nil(t, manager.getCache())
+
+		// Enable the flag
+		flagEnabled = true
+
+		// Wait for polling cycle
+		time.Sleep(100 * time.Millisecond)
+
+		// Cache should now be enabled
+		cache := manager.getCache()
+		require.NotNil(t, cache)
+		require.Equal(t, 1000, cache.getCapacity())
+	})
+
+	t.Run("Non-primary instance skips cache operations", func(t *testing.T) {
+		var (
+			flagEnabled = true
+			mockHAMutex = &mockHA{isPrimary: false}
+			flagGetter  = func(ctx context.Context) (bool, int, error) {
+				return flagEnabled, 1000, nil
+			}
+			manager     = newFeatureFlagManager(flagGetter, 50*time.Millisecond, mockHAMutex)
+			ctx, cancel = context.WithCancel(context.Background())
+		)
+		defer cancel()
+
+		// Start the manager
+		manager.start(ctx)
+
+		// Wait for polling cycle
+		time.Sleep(100 * time.Millisecond)
+
+		// Cache should remain nil since we're not primary
+		require.Nil(t, manager.getCache())
+	})
+
+	t.Run("Nil HA mutex defaults to primary", func(t *testing.T) {
+		var (
+			flagEnabled = false
+			flagGetter  = func(ctx context.Context) (bool, int, error) {
+				return flagEnabled, 1000, nil
+			}
+			manager     = newFeatureFlagManager(flagGetter, 50*time.Millisecond, nil)
+			ctx, cancel = context.WithCancel(context.Background())
+		)
+		defer cancel()
+
+		// Start the manager
+		manager.start(ctx)
+
+		// Initially cache should be nil
+		require.Nil(t, manager.getCache())
+
+		// Enable the flag
+		flagEnabled = true
+
+		// Wait for polling cycle
+		time.Sleep(100 * time.Millisecond)
+
+		// Cache should be enabled since nil HA mutex defaults to primary
+		cache := manager.getCache()
+		require.NotNil(t, cache)
+		require.Equal(t, 1000, cache.getCapacity())
+	})
+}
+
+func TestClearCache_HA(t *testing.T) {
+	t.Run("Primary instance clears cache", func(t *testing.T) {
+		var (
+			mockHAMutex = &mockHA{isPrimary: true}
+			flagGetter  = func(ctx context.Context) (bool, int, error) {
+				return true, 1000, nil
+			}
+			manager = newFeatureFlagManager(flagGetter, time.Hour, mockHAMutex)
+			ctx     = context.Background()
+		)
+
+		// Enable cache first
+		manager.enable(ctx, 1000)
+		require.NotNil(t, manager.getCache())
+
+		// Clear cache - should work since we're primary
+		manager.clearCache(ctx)
+
+		// Cache should still exist but be empty (clear() doesn't nil the cache)
+		cache := manager.getCache()
+		require.NotNil(t, cache)
+		require.Equal(t, 0, len(cache.data))
+	})
+
+	t.Run("Non-primary instance skips cache clear", func(t *testing.T) {
+		var (
+			mockHAMutex = &mockHA{isPrimary: false}
+			flagGetter  = func(ctx context.Context) (bool, int, error) {
+				return true, 1000, nil
+			}
+			manager = newFeatureFlagManager(flagGetter, time.Hour, mockHAMutex)
+			ctx     = context.Background()
+		)
+
+		// Enable cache first (simulate primary enabling it)
+		manager.enable(ctx, 1000)
+		cache := manager.getCache()
+		require.NotNil(t, cache)
+
+		// Add some data to cache
+		cache.data[23] = 45
+		require.Equal(t, 1, len(cache.data))
+
+		// Clear cache - should be skipped since we're not primary
+		manager.clearCache(ctx)
+
+		// Cache should still have data since clear was skipped
+		require.Equal(t, 1, len(cache.data))
+	})
+}
+
+func TestDummyHA(t *testing.T) {
+	dummy := ha.NewDummyHA()
+
+	lockResult, err := dummy.TryLock()
+	require.NoError(t, err)
+	require.True(t, lockResult.IsPrimary)
+	require.NotNil(t, lockResult.Context)
 }

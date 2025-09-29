@@ -14,11 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import PrivilegeZones from './PrivilegeZones';
+import { useQuery } from 'react-query';
+import { apiClient } from '../utils';
 
-export { SelectedDetails, getSavePath } from './Details/index';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export * from './utils';
-
-export default PrivilegeZones;
+// Named using the Minimal keyword as it uses a specific endpoint /bloodhound-users-minimal that gets active users
+export const useGetUsersMinimal = () => {
+    return useQuery({
+        queryKey: ['users-minimal'],
+        queryFn: ({ signal }) => apiClient.listUsersMinimal({ signal }).then((res) => res.data),
+        select: (data) => data.data.users,
+    });
+};

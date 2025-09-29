@@ -13,12 +13,29 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+package ha
 
-import PrivilegeZones from './PrivilegeZones';
+import "context"
 
-export { SelectedDetails, getSavePath } from './Details/index';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export * from './utils';
+type LockResult struct {
+	Context   context.Context
+	IsPrimary bool
+}
 
-export default PrivilegeZones;
+type HAMutex interface {
+	TryLock() (LockResult, error)
+}
+
+// dummyHA is a no-op implementation for BHCE that always reports as primary
+type dummyHA struct{}
+
+func (d *dummyHA) TryLock() (LockResult, error) {
+	return LockResult{
+		Context:   context.Background(),
+		IsPrimary: true,
+	}, nil
+}
+
+func NewDummyHA() HAMutex {
+	return &dummyHA{}
+}
