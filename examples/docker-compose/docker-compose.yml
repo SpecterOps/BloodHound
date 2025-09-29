@@ -17,6 +17,8 @@
 services:
   app-db:
     image: docker.io/library/postgres:16
+    command: -c config_file=/etc/postgresql.conf
+    shm_size: ${POSTGRES_SHM_SIZE:-128mb}
     environment:
       - PGUSER=${POSTGRES_USER:-bloodhound}
       - POSTGRES_USER=${POSTGRES_USER:-bloodhound}
@@ -27,6 +29,7 @@ services:
     #   - 127.0.0.1:${POSTGRES_PORT:-5432}:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ${POSTGRES_CONFIG:-./postgresql.conf}:/etc/postgresql.conf
     healthcheck:
       test:
         [
