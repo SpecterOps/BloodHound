@@ -16,7 +16,7 @@
 
 import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
-import { AdcsEsc14ScenarioAWindows } from '../AdcsEsc14ScenarioA';
+import { AdcsEsc14ScenarioAWindows, AltSecIdenitiesBlurb } from '../AdcsEsc14ScenarioA';
 import { EdgeInfoProps } from '../index';
 
 const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, targetType }) => {
@@ -74,10 +74,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                         on the object and authenticate as the principal using kerberos PKINIT. This is equivalent to the
                         "AddKeyCredentialLink" edge.
                     </Typography>
-                    <Typography variant='body2'>
-                        The permission also grants write access to the "altSecurityIdentities" attribute, which enables
-                        an ADCS ESC14 Scenario A attack.
-                    </Typography>
+                    <AltSecIdenitiesBlurb />
                     <Typography variant='body2'>
                         Alternatively, GenericWrite enables {sourceName} to set a ServicePrincipalName (SPN) on the
                         targeted user, which may be abused in a Targeted Kerberoast attack.
@@ -186,10 +183,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                         Constrained Delegation attack.
                     </Typography>
 
-                    <Typography variant='body2'>
-                        The permission also grants write access to the "altSecurityIdentities" attribute, which enables
-                        an ADCS ESC14 Scenario A attack.
-                    </Typography>
+                    <AltSecIdenitiesBlurb />
 
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
 

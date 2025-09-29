@@ -18,6 +18,13 @@ import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
 import CodeController from '../CodeController/CodeController';
 
+export const AltSecIdenitiesBlurb = () => (
+    <Typography variant='body2'>
+        The permission also grants write access to the "altSecurityIdentities" attribute, which enables an ADCS ESC14
+        Scenario A attack.
+    </Typography>
+);
+
 export const AdcsEsc14ScenarioALinux: FC = () => (
     <>
         <Typography variant='body1'> ADCS ESC14 Scenario A </Typography>

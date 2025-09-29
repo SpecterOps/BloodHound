@@ -16,7 +16,7 @@
 
 import { Link, Typography } from '@mui/material';
 import { FC } from 'react';
-import { AdcsEsc14ScenarioAWindows } from '../AdcsEsc14ScenarioA';
+import { AdcsEsc14ScenarioAWindows, AltSecIdenitiesBlurb } from '../AdcsEsc14ScenarioA';
 import CodeController from '../CodeController/CodeController';
 import { EdgeInfoProps } from '../index';
 
@@ -141,10 +141,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         equivalent to the "AddKeyCredentialLink" edge.
                     </Typography>
 
-                    <Typography variant='body2'>
-                        The permission also grants write access to the "altSecurityIdentities" attribute, which enables
-                        an ADCS ESC14 Scenario A attack.
-                    </Typography>
+                    <AltSecIdenitiesBlurb />
 
                     <Typography variant='body2'>
                         Alternatively, GenericAll enables {sourceName} to set a ServicePrincipalName (SPN) on the
@@ -306,10 +303,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             Constrained Delegation attack.
                         </Typography>
 
-                        <Typography variant='body2'>
-                            The permission also grants write access to the "altSecurityIdentities" attribute, which
-                            enables an ADCS ESC14 Scenario A attack.
-                        </Typography>
+                        <AltSecIdenitiesBlurb />
 
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
@@ -486,10 +480,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             Constrained Delegation attack.
                         </Typography>
 
-                        <Typography variant='body2'>
-                            The permission also grants write access to the "altSecurityIdentities" attribute, which
-                            enables an ADCS ESC14 Scenario A attack.
-                        </Typography>
+                        <AltSecIdenitiesBlurb />
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
 
