@@ -82,7 +82,7 @@ func FilterUserEnvironments(ctx context.Context, db database.Database, user mode
 
 	allowedMap := make(map[string]struct{}, len(allowedList))
 	for _, envAccess := range allowedList {
-		allowedMap[envAccess.Environment] = struct{}{}
+		allowedMap[envAccess.EnvironmentID] = struct{}{}
 	}
 
 	filtered := make([]string, 0, len(environments))

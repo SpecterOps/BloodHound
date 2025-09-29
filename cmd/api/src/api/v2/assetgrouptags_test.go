@@ -1658,9 +1658,9 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 					apitest.AddQueryParam(input, "environments", "testenv")
 				},
 				Setup: func() {
-					envs := []database.EnvironmentAccess{
+					envs := []model.EnvironmentAccess{
 						{
-							Environment: "testenv",
+							EnvironmentID: "testenv",
 						},
 					}
 					mockDB.EXPECT().

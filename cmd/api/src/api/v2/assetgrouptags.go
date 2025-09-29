@@ -132,7 +132,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
-				envs, err := api.FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
+				envs, err := FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
 				if err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 					return
@@ -595,7 +595,7 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		filteredEnvs, err := api.FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
+		filteredEnvs, err := FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
 		if err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 			return
@@ -1027,17 +1027,6 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 			api.WriteResponseWrapperWithPagination(rCtx, AssetGroupHistoryResp{Records: historyRecs}, limit, skip, count, http.StatusOK, response)
 		}
 	}
-}
-
-func checkUserAccessToEnvironments(ctx context.Context, db database.Database, user model.User, environmentIds ...string) (bool, error) {
-	// eTAC feature flag
-	if flag, err := db.GetFlagByKey(ctx, appcfg.FeatureEnvironmentAccessControl); err != nil {
-		return false, fmt.Errorf("unable to get feature flag: %w", err)
-	} else if !flag.Enabled {
-		return true, nil
-	}
-
-	return api.CheckUserAccessToEnvironments(ctx, db, user, environmentIds...)
 }
 
 type SearchAssetGroupTagHistoryRequest struct {

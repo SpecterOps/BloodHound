@@ -254,18 +254,18 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{
+				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -287,18 +287,18 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{
+				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -320,18 +320,18 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{
+				envs := []model.EnvironmentAccess{
 					{
-						UserID:      userUuid.String(),
-						Environment: "1",
+						UserID:        userUuid.String(),
+						EnvironmentID: "1",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "2",
+						UserID:        userUuid.String(),
+						EnvironmentID: "2",
 					},
 					{
-						UserID:      userUuid.String(),
-						Environment: "3",
+						UserID:        userUuid.String(),
+						EnvironmentID: "3",
 					},
 				}
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -354,7 +354,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []database.EnvironmentAccess{}
+				envs := []model.EnvironmentAccess{}
 				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
@@ -402,7 +402,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 
 			testCase.setupMocks(t, mocks)
 
-			actual, err := api.FilterUserEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
+			actual, err := v2.FilterUserEnvironments(context.Background(), mocks.mockDatabase, testCase.input.user, testCase.input.environments...)
 
 			require.NoError(t, err)
 			assert.Equal(t, testCase.expected, actual)
