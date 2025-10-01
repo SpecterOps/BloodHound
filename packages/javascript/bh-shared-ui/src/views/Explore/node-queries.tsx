@@ -1,20 +1,39 @@
 import { apiClient } from 'bh-shared-ui';
 import { useMutation } from 'react-query';
 
-type Node = any;
+type Node = {
+    object_id: string;
+    label?: string[];
+    properties?: Record<string, any>;
+};
 
-export const useAddNodeMutation = () => {
+type Edge = {
+    source_object_id: string;
+    target_object_id: string;
+    edge_kind: string;
+    properties?: Record<string, any>;
+};
+
+export const useCreateNodeMutation = () => {
     return useMutation({
         mutationFn: (node: Node) => {
-            return apiClient.baseClient.post(`/api/v2/nodes/`, node);
+            return apiClient.baseClient.post(`/api/v2/graph/nodes/`, node);
+        },
+    });
+};
+
+export const useCreateEdgeMutation = () => {
+    return useMutation({
+        mutationFn: (edge: Edge) => {
+            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, edge);
         },
     });
 };
 
 export const useEditNodeMutation = () => {
     return useMutation({
-        mutationFn: ({ nodeId, node }: { nodeId: string; node: Node }) => {
-            return apiClient.baseClient.put(`/api/v2/nodes/${nodeId}`, node);
+        mutationFn: ({ nodeId, node }: { nodeId: string; node: Record<string, any> }) => {
+            return apiClient.baseClient.put(`/api/v2/graph/nodes/${nodeId}`, node);
         },
     });
 };
@@ -22,7 +41,15 @@ export const useEditNodeMutation = () => {
 export const useDeleteNodeMutation = () => {
     return useMutation({
         mutationFn: ({ nodeId }: { nodeId: string }) => {
-            return apiClient.baseClient.delete(`/api/v2/nodes/${nodeId}`);
+            return apiClient.baseClient.delete(`/api/v2/graph/nodes/${nodeId}`);
+        },
+    });
+};
+
+export const useDeleteEdgeMutation = () => {
+    return useMutation({
+        mutationFn: (edge: Edge) => {
+            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, edge);
         },
     });
 };
