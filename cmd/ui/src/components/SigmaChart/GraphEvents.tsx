@@ -40,7 +40,6 @@ interface SigmaChartRef {
     zoomTo: (id: string) => void;
     runSequentialLayout: () => void;
     runStandardLayout: () => void;
-    graph: any;
 }
 
 interface GraphEventProps {
@@ -108,7 +107,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaChartRef,
         () => {
             return {
-                graph: graph,
                 zoomTo: (id: string) => {
                     const node = sigma.getNodeDisplayData(id);
 

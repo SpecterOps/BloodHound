@@ -19,7 +19,6 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     Permission,
     isNode,
-    // useDeleteEdgeMutation,
     useDeleteNodeMutation,
     useExploreParams,
     useExploreSelectedItem,
@@ -39,7 +38,6 @@ const ContextMenu: FC<{
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
     const { selectedItemQuery } = useExploreSelectedItem();
     const { mutateAsync: deleteNode } = useDeleteNodeMutation();
-    // const { mutateAsync: deleteEdge } = useDeleteEdgeMutation();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
@@ -71,12 +69,26 @@ const ContextMenu: FC<{
         }
     };
 
+    console.log({ selectedItemQuery });
     const handleDeleteNode = async () => {
         if (selectedItemQuery?.data?.id) {
-            await deleteNode(selectedItemQuery.data.id);
-        }
+            // const edgesToDelete = graphData.edges.filter((edge) =>
+            //     [edge.source, edge.target].includes(selectedItemQuery?.data?.id || '')
+            // );
 
-        console.log(selectedItemQuery.data);
+            // await Promise.all(
+            //     edgesToDelete.map((edge) => {
+            //         const edgeToDelete = {
+            //             source_object_id: edge.source,
+            //             target_object_id: edge.target,
+            //             edge_kind: edge.kind,
+            //         };
+            //         return deleteEdge(edgeToDelete);
+            //     })
+            // );
+
+            await deleteNode(selectedItemQuery?.data?.id);
+        }
     };
 
     return (
