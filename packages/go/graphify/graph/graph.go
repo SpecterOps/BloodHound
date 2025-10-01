@@ -234,7 +234,7 @@ func writeGraphToFile(graph *generic.Graph, root, folder, fileName string) error
 	}
 	outputFile := filepath.Join(outputDir, fileName)
 
-	if jsonBytes, err := json.MarshalIndent(generateGenericGraphFile(graph), "", "  "); err != nil {
+	if jsonBytes, err := json.MarshalIndent(GenerateGenericGraphFile(graph), "", "  "); err != nil {
 		return fmt.Errorf("error occurred while marshalling ingest file into bytes: %w", err)
 	} else if err := os.MkdirAll(root, 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
@@ -243,7 +243,7 @@ func writeGraphToFile(graph *generic.Graph, root, folder, fileName string) error
 	}
 }
 
-func generateGenericGraphFile(graph *generic.Graph) generic.GenericObject {
+func GenerateGenericGraphFile(graph *generic.Graph) generic.GenericObject {
 	return generic.GenericObject{
 		Graph: *graph,
 	}

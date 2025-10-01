@@ -57,7 +57,7 @@ type Graph struct {
 }
 
 type Metadata struct {
-	SourceKind string `json:"source_kind"`
+	SourceKind string `json:"source_kind,omitempty"`
 }
 type GenericObject struct {
 	Graph    Graph    `json:"graph"`

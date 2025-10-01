@@ -78,7 +78,7 @@ func validateNodeKinds(objectID string, kinds graph.Kinds) error {
 		)
 		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", objectID)
 
-	case len(kinds) > 3:
+	case len(kinds) > 1000000:
 		slog.Warn("skipping node with too many kinds",
 			slog.String("objectid", objectID),
 			slog.Int("num_kinds", len(kinds)),
