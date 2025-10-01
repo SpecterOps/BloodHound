@@ -33,6 +33,7 @@ interface BasicObjectInfoFieldsProps {
     nodeType?: string;
     objectid: string;
     service_principal_id?: string;
+    handleContentChange: FormEventHandler<HTMLDivElement>;
 }
 
 const RelatedKindField = (
@@ -72,11 +73,6 @@ const basicObjectFields = [
 ] satisfies (KnownNodeProperties | CommonKindProperties)[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
-    const handleContentChange: FormEventHandler<HTMLDivElement> = (e) => {
-        const divEl = e.target as HTMLDivElement;
-        console.log({ key: divEl.getAttribute('data-keyProp'), value: divEl.innerText, objectId: props.objectid });
-    };
-
     return (
         <>
             {basicObjectFields.map((field) => {
@@ -85,7 +81,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
 
                 return (
                     <Field
-                        handleContentChange={handleContentChange}
+                        handleContentChange={props.handleContentChange}
                         key={field}
                         label={`${formatPotentiallyUnknownLabel(field) ?? field}:`}
                         value={value}

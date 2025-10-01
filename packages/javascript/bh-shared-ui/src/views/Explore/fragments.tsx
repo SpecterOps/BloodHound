@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import React, { PropsWithChildren } from 'react';
+import React, { FormEventHandler, PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, format } from '../../utils';
 import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
@@ -168,7 +168,10 @@ export const Field: React.FC<EntityField> = (entityField) => {
     return <>{content}</>;
 };
 
-export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
+export const ObjectInfoFields: React.FC<{
+    fields: EntityField[];
+    handleContentChange?: FormEventHandler<HTMLDivElement>;
+}> = ({ fields, handleContentChange = () => {} }): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
 
     return (
@@ -179,7 +182,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         kind={field.kind}
                         label={field.label}
                         value={field.value}
-                        handleContentChange={field.handleContentChange}
+                        handleContentChange={handleContentChange}
                         keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
                     />
