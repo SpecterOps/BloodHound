@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphopsreplaylog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
@@ -80,6 +81,14 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema)
+	// Initialize the graph operations replay log service
+	// Type assert the database interface to the concrete BloodhoundDB type
+	bhDB, ok := rdms.(*database.BloodhoundDB)
+	if !ok {
+		panic("rdms is not a *BloodhoundDB")
+	}
+	graphOpsLog := graphopsreplaylog.NewService(bhDB, graphDB)
+
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, graphOpsLog)
 	NewV2API(resources, routerInst)
 }
