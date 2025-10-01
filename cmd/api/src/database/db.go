@@ -211,6 +211,10 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 	return s.db.Scopes(scopes...)
 }
 
+func (s *BloodhoundDB) WithContext(ctx context.Context) *gorm.DB {
+	return s.db.WithContext(ctx)
+}
+
 func NewBloodhoundDB(db *gorm.DB, idResolver auth.IdentityResolver) *BloodhoundDB {
 	return &BloodhoundDB{db: db, idResolver: idResolver}
 }
