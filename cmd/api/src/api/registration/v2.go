@@ -211,6 +211,12 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// TODO discuss if this should be a post endpoint
 		routerInst.GET("/api/v2/graph-search", resources.GetSearchResult).RequirePermissions(permissions.GraphDBRead),
 
+		// Graph Operations API
+		routerInst.POST("/api/v2/graph/nodes", resources.CreateNode).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.POST("/api/v2/graph/edges", resources.CreateEdge).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.DELETE("/api/v2/graph/nodes/{object_id}", resources.DeleteNode).RequirePermissions(permissions.GraphDBWrite),
+		routerInst.DELETE("/api/v2/graph/edges", resources.DeleteEdge).RequirePermissions(permissions.GraphDBWrite),
+
 		// Cypher Queries API
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherQuery).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/saved-queries", resources.ListSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
