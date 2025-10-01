@@ -21,11 +21,7 @@ import EntityObjectInformation from './EntityObjectInformation';
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (
-        <Box
-            contentEditable
-            onInput={(e) => {
-                console.log(e);
-            }}>
+        <Box>
             <EntityObjectInformation {...props} />
             <EntityInfoDataTableList {...props} />
         </Box>

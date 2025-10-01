@@ -102,7 +102,7 @@ export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
 };
 
 export const Field: React.FC<EntityField> = (entityField) => {
-    const { label, value, keyprop } = entityField;
+    const { label, value, keyprop, handleContentChange = () => {} } = entityField;
 
     try {
         if (
@@ -125,7 +125,13 @@ export const Field: React.FC<EntityField> = (entityField) => {
                 <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1}>
                     {label}
                 </Box>
-                <Box overflow='hidden' textOverflow='ellipsis' title={formattedValue}>
+                <Box
+                    contentEditable
+                    onInput={handleContentChange}
+                    overflow='hidden'
+                    data-keyProp={keyprop}
+                    textOverflow='ellipsis'
+                    title={formattedValue}>
                     {formattedValue}
                 </Box>
             </Box>
@@ -145,7 +151,13 @@ export const Field: React.FC<EntityField> = (entityField) => {
                             {label}
                         </Box>
                     )}
-                    <Box overflow='hidden' textOverflow='ellipsis' title={value}>
+                    <Box
+                        overflow='hidden'
+                        contentEditable
+                        data-keyProp={keyprop}
+                        onInput={handleContentChange}
+                        textOverflow='ellipsis'
+                        title={value}>
                         {value}
                     </Box>
                 </Box>
@@ -167,6 +179,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         kind={field.kind}
                         label={field.label}
                         value={field.value}
+                        handleContentChange={field.handleContentChange}
                         keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
                     />

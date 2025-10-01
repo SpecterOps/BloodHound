@@ -18,7 +18,7 @@ import { GraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import startCase from 'lodash/startCase';
 import { DateTime } from 'luxon';
-import { isValidElement } from 'react';
+import { FormEventHandler, isValidElement } from 'react';
 import { ZERO_VALUE_API_DATE } from '../constants';
 import {
     ActiveDirectoryKindProperties,
@@ -172,6 +172,7 @@ export type EntityField = {
     value: string | number | boolean | any[];
     kind?: EntityPropertyKind;
     keyprop?: string;
+    handleContentChange?: FormEventHandler<HTMLDivElement>;
 };
 
 export enum ADSpecificTimeProperties {

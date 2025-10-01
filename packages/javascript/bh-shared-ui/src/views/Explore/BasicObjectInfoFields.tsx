@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
+import { FormEventHandler } from 'react';
 import NodeIcon from '../../components/NodeIcon';
 import { ActiveDirectoryNodeKind, AzureNodeKind, CommonKindProperties } from '../../graphSchema';
 import { EntityKinds, KnownNodeProperties, formatPotentiallyUnknownLabel } from '../../utils';
@@ -71,13 +72,25 @@ const basicObjectFields = [
 ] satisfies (KnownNodeProperties | CommonKindProperties)[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
+    const handleContentChange: FormEventHandler<HTMLDivElement> = (e) => {
+        const divEl = e.target as HTMLDivElement;
+        console.log({ key: divEl.getAttribute('data-keyProp'), value: divEl.innerText, objectId: props.objectid });
+    };
+
     return (
         <>
             {basicObjectFields.map((field) => {
                 const value = props[field];
                 if (value === undefined) return null; // <Field /> doesnt support undefined values
 
-                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
+                return (
+                    <Field
+                        handleContentChange={handleContentChange}
+                        key={field}
+                        label={`${formatPotentiallyUnknownLabel(field) ?? field}:`}
+                        value={value}
+                    />
+                );
             })}
             {props.handleSourceNodeSelected && (
                 <>
