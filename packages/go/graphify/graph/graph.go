@@ -208,17 +208,17 @@ func (s *Command) Run() error {
 		return fmt.Errorf("error getting ingest file paths from directory: %w", err)
 	} else if err = ingestData(ctx, s.service, ingestFilePaths, graphDB); err != nil {
 		return fmt.Errorf("error ingesting data: %w", err)
-	} else if nodes, edges, err := getNodesAndEdges(ctx, graphDB); err != nil {
+	} else if nodes, edges, err := GetNodesAndEdges(ctx, graphDB); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database: %w", err)
-	} else if graph, err := transformGraph(nodes, edges); err != nil {
+	} else if graph, err := TransformGraph(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
 	} else if err := writeGraphToFile(&graph, s.path, "ingest", "ingested.json"); err != nil {
 		return fmt.Errorf("error writing graph to file: %w", err)
 	} else if err := s.service.RunAnalysis(ctx, graphDB); err != nil {
 		return fmt.Errorf("error running analysis: %w", err)
-	} else if nodes, edges, err := getNodesAndEdges(ctx, graphDB); err != nil {
+	} else if nodes, edges, err := GetNodesAndEdges(ctx, graphDB); err != nil {
 		return fmt.Errorf("error getting nodes and edges: %w", err)
-	} else if graph, err := transformGraph(nodes, edges); err != nil {
+	} else if graph, err := TransformGraph(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to graph: %w", err)
 	} else if err := writeGraphToFile(&graph, s.path, "analysis", "analyzed.json"); err != nil {
 		return fmt.Errorf("error writing graph to file: %w", err)
@@ -249,7 +249,7 @@ func generateGenericGraphFile(graph *generic.Graph) generic.GenericObject {
 	}
 }
 
-func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (generic.Graph, error) {
+func TransformGraph(nodes []*graph.Node, edges []*graph.Relationship) (generic.Graph, error) {
 	var (
 		isAZBase bool
 		isBase   bool
@@ -354,7 +354,7 @@ func removeNullSliceValues(l []any) []any {
 	return newSlice
 }
 
-func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
+func GetNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
 	var (
 		nodes   []*graph.Node
 		edges   []*graph.Relationship
