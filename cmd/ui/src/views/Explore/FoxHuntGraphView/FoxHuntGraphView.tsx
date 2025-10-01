@@ -18,7 +18,6 @@ import { useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
     ExploreTable,
-    FeatureFlag,
     GraphControls,
     GraphProgress,
     GraphViewErrorAlert,
@@ -28,7 +27,6 @@ import {
     baseGraphLayouts,
     defaultGraphLayout,
     glyphUtils,
-    isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
     useCustomNodeKinds,
@@ -42,7 +40,7 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
+import { SigmaEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
@@ -50,7 +48,6 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from '../ContextMenu/ContextMenu';
-import ContextMenuPrivilegeZonesEnabled from '../ContextMenu/ContextMenuPrivilegeZonesEnabled';
 import ExploreSearch from '../ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from '../GraphItemInformationPanel';
 import { transformIconDictionary } from '../svgIcons';
@@ -116,9 +113,15 @@ const GraphView: FC = () => {
 
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
-        (event: SigmaNodeEventPayload) => {
-            setSelectedItem(event.node);
-            setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+        (event: SigmaNodeEventPayload | SigmaEventPayload) => {
+            // Demonstrates that stage right clicks are no longer swallowed
+            // TODO: Remove me
+            console.log({ event });
+
+            if ('node' in event) {
+                setSelectedItem(event.node);
+                setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+            }
         },
         [contextMenu, setContextMenu, setSelectedItem]
     );
@@ -206,21 +209,7 @@ const GraphView: FC = () => {
                 />
             </div>
             <GraphItemInformationPanel />
-            <FeatureFlag
-                flagKey='tier_management_engine'
-                enabled={
-                    <ContextMenuPrivilegeZonesEnabled
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
-                        onClose={handleCloseContextMenu}
-                    />
-                }
-                disabled={
-                    <ContextMenu
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
-                        handleClose={handleCloseContextMenu}
-                    />
-                }
-            />
+            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
