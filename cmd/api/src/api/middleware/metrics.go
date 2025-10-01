@@ -1,4 +1,4 @@
-package api
+package middleware
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -41,7 +41,7 @@ var (
 	)
 )
 
-func RegisterApiMetrics(registry *prometheus.Registry) error {
+func RegisterApiMiddlewareMetrics(registry *prometheus.Registry) error {
 	if err := registry.Register(ApiInFlightGauge); err != nil {
 		return err
 	} else if err = registry.Register(ApiTotalRequests); err != nil {

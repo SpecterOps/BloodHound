@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/dawgs/graph"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -111,7 +112,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
-	} else if err = api.RegisterApiMetrics(promRegistry); err != nil {
+	} else if err = middleware.RegisterApiMiddlewareMetrics(promRegistry); err != nil {
 		return nil, fmt.Errorf("failed to register API metrics: %w", err)
 	} else {
 		startDelay := 0 * time.Second
@@ -127,7 +128,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
 		)
 
-		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, )
+		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema)
 
 		// Set neo4j batch and flush sizes

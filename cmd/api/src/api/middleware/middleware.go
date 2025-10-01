@@ -306,10 +306,10 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 
 func MetricsMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
-		return promhttp.InstrumentHandlerInFlight(api.ApiInFlightGauge,
-			promhttp.InstrumentHandlerDuration(api.ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": "need-to-figure-out-how-to-extract-endpoint"}),
-				promhttp.InstrumentHandlerCounter(api.ApiTotalRequests,
-					promhttp.InstrumentHandlerResponseSize(api.ApiResponseSize, next),
+		return promhttp.InstrumentHandlerInFlight(ApiInFlightGauge,
+			promhttp.InstrumentHandlerDuration(ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": "need-to-figure-out-how-to-extract-endpoint"}),
+				promhttp.InstrumentHandlerCounter(ApiTotalRequests,
+					promhttp.InstrumentHandlerResponseSize(ApiResponseSize, next),
 				),
 			),
 		)
