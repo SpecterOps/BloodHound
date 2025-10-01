@@ -31,6 +31,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/unrolled/secure"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -299,5 +301,17 @@ func EnsureRequestBodyClosed() mux.MiddlewareFunc {
 				}
 			}
 		})
+	}
+}
+
+func MetricsMiddleware() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return promhttp.InstrumentHandlerInFlight(api.ApiInFlightGauge,
+			promhttp.InstrumentHandlerDuration(api.ApiRequestDuration.MustCurryWith(prometheus.Labels{"handler": "need-to-figure-out-how-to-extract-endpoint"}),
+				promhttp.InstrumentHandlerCounter(api.ApiTotalRequests,
+					promhttp.InstrumentHandlerResponseSize(api.ApiResponseSize, next),
+				),
+			),
+		)
 	}
 }
