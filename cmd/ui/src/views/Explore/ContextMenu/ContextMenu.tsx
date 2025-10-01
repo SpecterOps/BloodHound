@@ -37,15 +37,20 @@ const ContextMenu: FC<{
     handleClose: () => void;
 }> = ({ contextMenu, handleClose }) => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { selectedItemQuery } = useExploreSelectedItem();
     const { mutateAsync: deleteNode } = useDeleteNodeMutation();
     // const { mutateAsync: deleteEdge } = useDeleteEdgeMutation();
+    const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const { checkPermission } = usePermissions();
+
+    const handleAddNode = () => {
+        // TODO: Implement me
+        console.log('Add node');
+    };
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -79,30 +84,39 @@ const ContextMenu: FC<{
         console.log(selectedItemQuery.data);
     };
 
+    const isStageClick = selectedItemType === undefined;
+
+    const isNodeClick = selectedItemType === 'node';
+
     return (
         <Menu
             open={contextMenu !== null}
             anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
             anchorReference='anchorPosition'
             onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-            <MenuItem onClick={handleDeleteNode}>Delete node</MenuItem>
+            {isStageClick && <MenuItem onClick={handleAddNode}>Add a node</MenuItem>}
+            {isNodeClick && (
+                <>
+                    <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
+                    <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+                    <MenuItem onClick={handleDeleteNode}>Delete node</MenuItem>
 
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
-                        assetGroupId={tierZeroAssetGroupId}
-                        assetGroupName='High Value'
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
-                ]}
-            <CopyMenuItem />
+                    {!tierFlag?.enabled &&
+                        checkPermission(Permission.GRAPH_DB_WRITE) && [
+                            <AssetGroupMenuItem
+                                key={tierZeroAssetGroupId}
+                                assetGroupId={tierZeroAssetGroupId}
+                                assetGroupName='High Value'
+                            />,
+                            <AssetGroupMenuItem
+                                key={ownedAssetGroupId}
+                                assetGroupId={ownedAssetGroupId}
+                                assetGroupName='Owned'
+                            />,
+                        ]}
+                    <CopyMenuItem />
+                </>
+            )}
         </Menu>
     );
 };
