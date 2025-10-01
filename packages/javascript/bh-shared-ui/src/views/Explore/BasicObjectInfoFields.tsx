@@ -73,8 +73,6 @@ const basicObjectFields = [
 ] satisfies (KnownNodeProperties | CommonKindProperties)[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
-    // const { mutateAsync: updateNode } = useAddNodeMutation();
-
     return (
         <>
             {basicObjectFields.map((field) => {
