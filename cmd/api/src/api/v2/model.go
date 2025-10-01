@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/fs"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphopsreplaylog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
@@ -115,6 +116,7 @@ type Resources struct {
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
 	FileService                fs.Service
+	GraphOpsLog                graphopsreplaylog.Service
 }
 
 func NewResources(
@@ -127,6 +129,7 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
+	graphOpsLog graphopsreplaylog.Service,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -141,5 +144,6 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
+		GraphOpsLog:                graphOpsLog,
 	}
 }
