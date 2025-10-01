@@ -17,6 +17,12 @@
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
     FileUploadDialog,
     GenericErrorBoundaryFallback,
     Permission,
@@ -68,6 +74,20 @@ const Content: React.FC = () => {
         acceptedTypes: ['application/json', 'application/zip'],
     });
 
+    const [commandPaletteOpen, setCommandPaletteOpen] = React.useState(false);
+
+    useEffect(() => {
+        const down = (e: KeyboardEvent) => {
+            if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                setCommandPaletteOpen((open) => !open);
+            }
+        };
+
+        document.addEventListener('keydown', down);
+        return () => document.removeEventListener('keydown', down);
+    }, []);
+
     return (
         <Box className={classes.content}>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
@@ -110,6 +130,17 @@ const Content: React.FC = () => {
                         <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
                     )}
                 </Suspense>
+                <CommandDialog open={commandPaletteOpen}>
+                    <CommandInput placeholder='Type a command or search...' />
+                    <CommandList>
+                        <CommandEmpty>No results found.</CommandEmpty>
+                        <CommandGroup heading='Suggestions'>
+                            <CommandItem>Calendar</CommandItem>
+                            <CommandItem>Search Emoji</CommandItem>
+                            <CommandItem>Calculator</CommandItem>
+                        </CommandGroup>
+                    </CommandList>
+                </CommandDialog>
             </ErrorBoundary>
         </Box>
     );
