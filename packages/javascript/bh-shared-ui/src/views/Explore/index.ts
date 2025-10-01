@@ -19,4 +19,5 @@ export * from './EdgeInfo';
 export * from './ExploreSearch';
 export * from './InfoStyles';
 export * from './fragments';
+export * from './node-queries';
 export * from './providers';

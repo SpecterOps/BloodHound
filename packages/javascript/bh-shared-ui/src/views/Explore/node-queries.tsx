@@ -1,5 +1,5 @@
-import { apiClient } from 'bh-shared-ui';
 import { useMutation } from 'react-query';
+import { apiClient } from '../../utils';
 
 type Node = {
     object_id: string;
@@ -25,7 +25,7 @@ export const useCreateNodeMutation = () => {
 export const useCreateEdgeMutation = () => {
     return useMutation({
         mutationFn: (edge: Edge) => {
-            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, edge);
+            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, { data: edge });
         },
     });
 };
@@ -40,7 +40,7 @@ export const useEditNodeMutation = () => {
 
 export const useDeleteNodeMutation = () => {
     return useMutation({
-        mutationFn: ({ nodeId }: { nodeId: string }) => {
+        mutationFn: (nodeId: string) => {
             return apiClient.baseClient.delete(`/api/v2/graph/nodes/${nodeId}`);
         },
     });
@@ -49,7 +49,7 @@ export const useDeleteNodeMutation = () => {
 export const useDeleteEdgeMutation = () => {
     return useMutation({
         mutationFn: (edge: Edge) => {
-            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, edge);
+            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, { data: edge });
         },
     });
 };

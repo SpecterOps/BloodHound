@@ -19,6 +19,8 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     Permission,
     isNode,
+    // useDeleteEdgeMutation,
+    useDeleteNodeMutation,
     useExploreParams,
     useExploreSelectedItem,
     useFeatureFlag,
@@ -36,6 +38,8 @@ const ContextMenu: FC<{
 }> = ({ contextMenu, handleClose }) => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
     const { selectedItemQuery } = useExploreSelectedItem();
+    const { mutateAsync: deleteNode } = useDeleteNodeMutation();
+    // const { mutateAsync: deleteEdge } = useDeleteEdgeMutation();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
@@ -67,6 +71,14 @@ const ContextMenu: FC<{
         }
     };
 
+    const handleDeleteNode = async () => {
+        if (selectedItemQuery?.data?.id) {
+            await deleteNode(selectedItemQuery.data.id);
+        }
+
+        console.log(selectedItemQuery.data);
+    };
+
     return (
         <Menu
             open={contextMenu !== null}
@@ -75,6 +87,7 @@ const ContextMenu: FC<{
             onClick={handleClose}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+            <MenuItem onClick={handleDeleteNode}>Delete node</MenuItem>
 
             {!tierFlag?.enabled &&
                 checkPermission(Permission.GRAPH_DB_WRITE) && [
