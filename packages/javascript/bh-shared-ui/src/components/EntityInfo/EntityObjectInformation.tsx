@@ -14,17 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Alert, Skeleton } from '@mui/material';
-import React, { useEffect } from 'react';
+import { debounce } from 'lodash';
+import React, { FormEventHandler, useEffect } from 'react';
 import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../hooks';
 import { EntityField, EntityInfoContentProps, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
 import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
+import { useEditNodeMutation } from '../../views/Explore/node-queries';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { setExploreParams } = useExploreParams();
+    const { mutateAsync: editNode } = useEditNodeMutation();
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
         objectId: id,
@@ -66,15 +69,24 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
         setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });
     };
 
+    const handleContentChange: FormEventHandler<HTMLDivElement> = debounce(async (e) => {
+        const divEl = e.target as HTMLDivElement;
+        const key = divEl.getAttribute('data-keyProp') || '';
+        const value = divEl.innerText;
+
+        await editNode({ nodeId: id, node: { [key]: value } });
+    }, 500);
+
     return (
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields
                     nodeType={nodeType}
+                    handleContentChange={handleContentChange}
                     handleSourceNodeSelected={handleSourceNodeSelected}
                     {...entityProperties}
                 />
-                <ObjectInfoFields fields={formattedObjectFields} />
+                <ObjectInfoFields fields={formattedObjectFields} handleContentChange={handleContentChange} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>
     );
