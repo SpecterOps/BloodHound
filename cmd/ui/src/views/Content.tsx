@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box, Card, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
+    AppIcon,
     CommandDialog,
     CommandEmpty,
     CommandGroup,
@@ -27,13 +28,16 @@ import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
     Permission,
+    ROUTE_PRIVILEGE_ZONES,
     getExcludedIds,
     useAppNavigate,
     useExecuteOnFileDrag,
+    useFeatureFlags,
     useFileUploadDialogContext,
     usePermissions,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
+
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
@@ -41,6 +45,20 @@ import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
+import {
+    ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
+    ROUTE_ADMINISTRATION_DATA_QUALITY,
+    ROUTE_ADMINISTRATION_DB_MANAGEMENT,
+    ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
+    ROUTE_ADMINISTRATION_FILE_INGEST,
+    ROUTE_ADMINISTRATION_MANAGE_USERS,
+    ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
+    ROUTE_API_EXPLORER,
+    ROUTE_DOWNLOAD_COLLECTORS,
+    ROUTE_EXPLORE,
+    ROUTE_GROUP_MANAGEMENT,
+    ROUTE_MY_PROFILE,
+} from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { endpoints } from 'src/utils';
 
@@ -56,13 +74,19 @@ const useStyles = makeStyles({
 const Content: React.FC = () => {
     const classes = useStyles();
     const dispatch = useAppDispatch();
+    const navigate = useAppNavigate();
     const authState = useAppSelector((state) => state.auth);
     const isAuthExpired = useAppSelector(authExpiredSelector);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const { checkPermission } = usePermissions();
     const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
-    const navigate = useAppNavigate();
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
+    const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
+    const tierFlag = featureFlags?.data?.find((flag) => {
+        return flag.key === 'tier_management_engine';
+    });
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -80,9 +104,14 @@ const Content: React.FC = () => {
     });
 
     const [commandPaletteOpen, setCommandPaletteOpen] = React.useState(false);
+    const [bloodhoundOpen, setBloodhoundOpen] = React.useState(false);
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setCommandPaletteOpen(false);
+            }
             if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 setCommandPaletteOpen((open) => !open);
@@ -92,6 +121,21 @@ const Content: React.FC = () => {
         document.addEventListener('keydown', down);
         return () => document.removeEventListener('keydown', down);
     }, []);
+
+    const navigateHandler = (path: string) => {
+        navigate(path);
+        setCommandPaletteOpen(false);
+    };
+
+    const showFileInjestDialog = () => {
+        setShowFileIngestDialog(true);
+        setCommandPaletteOpen(false);
+    };
+
+    const showBloodhound = () => {
+        setBloodhoundOpen(true);
+        setCommandPaletteOpen(false);
+    };
 
     return (
         <Box className={classes.content}>
@@ -142,12 +186,68 @@ const Content: React.FC = () => {
                     }}
                     className='overflow-visible'>
                     <CommandInput placeholder='Type a command or search...' />
+                    <CommandGroup heading='Tools'>
+                        <CommandItem>
+                            <ExploreHistoryDialog />
+                        </CommandItem>
+                    </CommandGroup>
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
-                        <CommandGroup heading='Tools'>
-                            <CommandItem>
-                                <ExploreHistoryDialog />
-                            </CommandItem>
+                        <CommandGroup>
+                            <div onClick={() => navigateHandler(ROUTE_EXPLORE)}>
+                                <CommandItem>Explore</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(`${ROUTE_EXPLORE}?exploreSearchTab=pathfinding`)}>
+                                <CommandItem> Explore Pathfinding</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(`${ROUTE_EXPLORE}?exploreSearchTab=cypher`)}>
+                                <CommandItem> Explore Cypher</CommandItem>
+                            </div>
+                            {tierFlag?.enabled ? (
+                                <div onClick={() => navigateHandler(ROUTE_PRIVILEGE_ZONES)}>
+                                    <CommandItem>Privilege Zones</CommandItem>
+                                </div>
+                            ) : (
+                                <div onClick={() => navigateHandler(ROUTE_GROUP_MANAGEMENT)}>
+                                    <CommandItem>Group Management</CommandItem>
+                                </div>
+                            )}
+                            <div onClick={() => navigateHandler(ROUTE_MY_PROFILE)}>
+                                <CommandItem>Profile</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_DOWNLOAD_COLLECTORS)}>
+                                <CommandItem>Download Collectors</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_API_EXPLORER)}>
+                                <CommandItem>API Explorer</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION)}>
+                                <CommandItem>Bloodhound Configuration</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_DATA_QUALITY)}>
+                                <CommandItem>Data Quality</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_DB_MANAGEMENT)}>
+                                <CommandItem>Database Management</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES)}>
+                                <CommandItem>Early Access Features</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_FILE_INGEST)}>
+                                <CommandItem>File Injest</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_MANAGE_USERS)}>
+                                <CommandItem>Manage Users</CommandItem>
+                            </div>
+                            <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_SSO_CONFIGURATION)}>
+                                <CommandItem>SSO Configuration</CommandItem>
+                            </div>
+                            <div onClick={showFileInjestDialog}>
+                                <CommandItem>Quick Upload</CommandItem>
+                            </div>
+                            {/* <div onClick={showBloodhound}>
+                                <CommandItem>Bloodhound!</CommandItem>
+                            </div> */}
                         </CommandGroup>
                         <CommandGroup heading='API Explorer'>
                             {endpoints.map((endpoint) => {
@@ -167,6 +267,13 @@ const Content: React.FC = () => {
                         </CommandGroup>
                     </CommandList>
                 </CommandDialog>
+                {bloodhoundOpen && (
+                    <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+                        <Card>
+                            <AppIcon.Bloodhound />
+                        </Card>
+                    </div>
+                )}
             </ErrorBoundary>
         </Box>
     );
