@@ -25,9 +25,11 @@ import {
     useFeatureFlag,
     usePermissions,
 } from 'bh-shared-ui';
+import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
+import { isDialogOpenAtom } from '../FoxHuntGraphView/foxhunt';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -35,8 +37,9 @@ const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     handleClose: () => void;
 }> = ({ contextMenu, handleClose }) => {
+    const setIsDialogOpen = useSetAtom(isDialogOpenAtom);
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { mutateAsync: deleteNode } = useDeleteNodeMutation();
+    const { mutate: deleteNode } = useDeleteNodeMutation();
     // const { mutateAsync: deleteEdge } = useDeleteEdgeMutation();
     const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
@@ -46,10 +49,7 @@ const ContextMenu: FC<{
 
     const { checkPermission } = usePermissions();
 
-    const handleAddNode = () => {
-        // TODO: Implement me
-        console.log('Add node');
-    };
+    const handleAddNode = () => setIsDialogOpen(true);
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -75,26 +75,10 @@ const ContextMenu: FC<{
         }
     };
 
-    console.log({ selectedItemQuery });
     const handleDeleteNode = async () => {
         const selectedItemData = selectedItemQuery.data;
 
         if (selectedItemData && isNode(selectedItemData)) {
-            // const edgesToDelete = graphData.edges.filter((edge) =>
-            //     [edge.source, edge.target].includes(selectedItemQuery?.data?.id || '')
-            // );
-
-            // await Promise.all(
-            //     edgesToDelete.map((edge) => {
-            //         const edgeToDelete = {
-            //             source_object_id: edge.source,
-            //             target_object_id: edge.target,
-            //             edge_kind: edge.kind,
-            //         };
-            //         return deleteEdge(edgeToDelete);
-            //     })
-            // );
-            const selectedItemData = selectedItemQuery.data;
             await deleteNode(selectedItemData?.objectId);
         }
     };

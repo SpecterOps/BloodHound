@@ -42,7 +42,7 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
+import { SigmaEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
@@ -116,8 +116,10 @@ const GraphView: FC = () => {
 
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
-        (event: SigmaNodeEventPayload) => {
-            setSelectedItem(event.node);
+        (event: SigmaNodeEventPayload | SigmaEventPayload) => {
+            if ('node' in event) {
+                setSelectedItem(event.node);
+            }
             setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
         },
         [contextMenu, setContextMenu, setSelectedItem]

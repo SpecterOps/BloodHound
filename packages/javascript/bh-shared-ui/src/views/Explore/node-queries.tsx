@@ -1,9 +1,10 @@
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { apiClient } from '../../utils';
 
 type Node = {
-    object_id: string;
+    id: string;
     label?: string[];
+    kinds?: string[];
     properties?: Record<string, any>;
 };
 
@@ -14,19 +15,29 @@ type Edge = {
     properties?: Record<string, any>;
 };
 
+const clearGraphCache = (queryClient: any) => () => {
+    queryClient.invalidateQueries({ queryKey: ['explore-graph-query', 'cypher'] });
+};
+
 export const useCreateNodeMutation = () => {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: (node: Node) => {
-            return apiClient.baseClient.post(`/api/v2/graph/nodes/`, node);
+            return apiClient.baseClient.post(`/api/v2/graph/nodes`, node);
         },
+        onSuccess: clearGraphCache(queryClient),
     });
 };
 
 export const useCreateEdgeMutation = () => {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: (edge: Edge) => {
-            return apiClient.baseClient.delete(`/api/v2/graph/edges/`, { data: edge });
+            return apiClient.baseClient.post(`/api/v2/graph/edges`, edge);
         },
+        onSuccess: clearGraphCache(queryClient),
     });
 };
 

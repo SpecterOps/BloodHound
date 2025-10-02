@@ -26,9 +26,11 @@ import {
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
+    edgeKindAtom,
     glyphUtils,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    useCreateEdgeMutation,
     useCustomNodeKinds,
     useExploreParams,
     useExploreSelectedItem,
@@ -39,6 +41,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
+import { useAtom, useAtomValue } from 'jotai';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SigmaEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
@@ -51,6 +54,8 @@ import ContextMenu from '../ContextMenu/ContextMenu';
 import ExploreSearch from '../ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from '../GraphItemInformationPanel';
 import { transformIconDictionary } from '../svgIcons';
+import { AddNodeDialog } from './AddNodeDialog';
+import { getEdgePayload, isShiftDownAtom } from './foxhunt';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -60,6 +65,10 @@ const GraphView: FC = () => {
 
     const graphHasDataQuery = useGraphHasData();
     const graphQuery = useSigmaExploreGraph();
+
+    const [graphEdgeKind] = useAtom(edgeKindAtom);
+    const isShiftDown = useAtomValue(isShiftDownAtom);
+    const { mutate: createEdge } = useCreateEdgeMutation();
 
     const { searchType } = useExploreParams();
     const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
@@ -119,7 +128,7 @@ const GraphView: FC = () => {
             }
             setContextMenu({ mouseX: event.event.x, mouseY: event.event.y });
         },
-        [setContextMenu, setSelectedItem]
+        [setSelectedItem]
     );
 
     /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
@@ -177,7 +186,14 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
                 onClickEdge={setSelectedItem}
-                onClickNode={setSelectedItem}
+                onClickNode={(node) => {
+                    if (isShiftDown && graphQuery?.data && graphEdgeKind) {
+                        const edge = getEdgePayload(graphQuery?.data, node, selectedItem || '', graphEdgeKind);
+                        createEdge(edge);
+                    } else {
+                        setSelectedItem(node);
+                    }
+                }}
                 onClickStage={clearSelectedItem}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
@@ -219,6 +235,7 @@ const GraphView: FC = () => {
                     }}
                 />
             )}
+            <AddNodeDialog />
         </div>
     );
 };
