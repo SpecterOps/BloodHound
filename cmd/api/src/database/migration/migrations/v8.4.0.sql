@@ -14,11 +14,14 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- Drop and recreate the graph operations replay log table (deletes existing data)
+DROP TABLE IF EXISTS graph_operations_replay_log;
+
 -- Graph Operations Replay Log
 -- This table stores a linear history of all graph modification operations (node/edge creates, updates, deletes)
 -- for replay and audit purposes. The timestamp is authoritative and operations are treated as sequential
 -- with no branching.
-CREATE TABLE IF NOT EXISTS graph_operations_replay_log (
+CREATE TABLE graph_operations_replay_log (
     id SERIAL PRIMARY KEY,
 
     -- Type of change operation
