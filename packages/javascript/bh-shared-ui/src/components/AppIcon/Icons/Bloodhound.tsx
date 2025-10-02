@@ -19,7 +19,7 @@ import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 
 export const Bloodhound: React.FC<BaseSVGProps> = (props) => {
     return (
-        <BaseSVG name='bloodhound' version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 768 768' {...props}>
+        <BaseSVG name='bloodhound' version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 550 500' {...props}>
             <BasePath
                 d='m 410.993,292.379 c 0,0 0.222,0.032 0.35,0.032 0,0 0.031,0 0.063,0 l 13.67,56.301 -21.363,-26.641 c 0.699,-1.112 1.113,-2.416 1.113,-3.846 0,-2.162 -0.954,-4.07 -2.417,-5.405 z'
                 id='head'

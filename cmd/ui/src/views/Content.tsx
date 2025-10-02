@@ -115,6 +115,7 @@ const Content: React.FC = () => {
             if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 setCommandPaletteOpen((open) => !open);
+                setBloodhoundOpen(false);
             }
         };
 
@@ -240,10 +241,10 @@ const Content: React.FC = () => {
                             <div onClick={showFileInjestDialog}>
                                 <CommandItem>Quick Upload</CommandItem>
                             </div>
-                            {/* <div onClick={showBloodhound}>
+                            <div onClick={showBloodhound}>
                                 <CommandItem>Bloodhound!</CommandItem>
-                            </div> */}
-                            </CommandGroup>
+                            </div>
+                        </CommandGroup>
                         <CommandItem>
                             <ExploreHistoryDialog />
                         </CommandItem>
@@ -267,8 +268,8 @@ const Content: React.FC = () => {
                 </CommandDialog>
                 {bloodhoundOpen && (
                     <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-                        <Card>
-                            <AppIcon.Bloodhound />
+                        <Card className='flex justify-center'>
+                            <AppIcon.Bloodhound size={500} />
                         </Card>
                     </div>
                 )}
