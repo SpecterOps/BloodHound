@@ -57,6 +57,13 @@ func (s Resources) RequestAnalysis(response http.ResponseWriter, request *http.R
 	} else if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
+	} else {
+		// Log the analysis start to the replay log
+		if err := s.GraphOpsLog.LogAnalysisStart(request.Context(), userId); err != nil {
+			slog.WarnContext(request.Context(), "failed to log analysis start to replay log", "error", err)
+		}
+
+		// Note: Analysis end will be logged automatically when the analysis daemon completes
 	}
 
 	response.WriteHeader(http.StatusAccepted)

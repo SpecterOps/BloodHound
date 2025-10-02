@@ -24,17 +24,20 @@ import (
 type ChangeType string
 
 const (
-	ChangeTypeCreate ChangeType = "create"
-	ChangeTypeUpdate ChangeType = "update" // Reserved for future use
-	ChangeTypeDelete ChangeType = "delete"
+	ChangeTypeCreate        ChangeType = "create"
+	ChangeTypeUpdate        ChangeType = "update" // Reserved for future use
+	ChangeTypeDelete        ChangeType = "delete"
+	ChangeTypeAnalysisStart ChangeType = "analysis_start"
+	ChangeTypeAnalysisEnd   ChangeType = "analysis_end"
 )
 
 // ObjectType represents the type of graph object being modified
 type ObjectType string
 
 const (
-	ObjectTypeNode ObjectType = "node"
-	ObjectTypeEdge ObjectType = "edge"
+	ObjectTypeNode     ObjectType = "node"
+	ObjectTypeEdge     ObjectType = "edge"
+	ObjectTypeAnalysis ObjectType = "analysis"
 )
 
 // GraphOperationReplayLogEntry represents a single entry in the graph operations replay log.
@@ -49,6 +52,7 @@ type GraphOperationReplayLogEntry struct {
 	SourceObjectID null.String `json:"source_object_id,omitempty" gorm:"column:source_object_id"`
 	TargetObjectID null.String `json:"target_object_id,omitempty" gorm:"column:target_object_id"`
 	Properties     []byte      `json:"properties" gorm:"type:jsonb;column:properties"`
+	RolledBackAt   null.Time   `json:"rolled_back_at,omitempty" gorm:"column:rolled_back_at"`
 }
 
 func (GraphOperationReplayLogEntry) TableName() string {

@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphopsreplaylog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -110,7 +111,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		var (
 			cl             = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
-			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl)
+			graphOpsLog    = graphopsreplaylog.NewService(connections.RDMS, connections.Graph)
+			pipeline       = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, cl, graphOpsLog)
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer     = auth.NewAuthorizer(connections.RDMS)
 			datapipeDaemon = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
