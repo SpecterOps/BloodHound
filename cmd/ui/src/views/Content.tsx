@@ -14,10 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Card, CircularProgress } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
-    AppIcon,
     CommandDialog,
     CommandEmpty,
     CommandGroup,
@@ -104,7 +103,7 @@ const Content: React.FC = () => {
     });
 
     const [commandPaletteOpen, setCommandPaletteOpen] = React.useState(false);
-    const [bloodhoundOpen, setBloodhoundOpen] = React.useState(false);
+    // const [bloodhoundOpen, setBloodhoundOpen] = React.useState(false);
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
@@ -132,10 +131,10 @@ const Content: React.FC = () => {
         setCommandPaletteOpen(false);
     };
 
-    const showBloodhound = () => {
-        setBloodhoundOpen(true);
-        setCommandPaletteOpen(false);
-    };
+    // const showBloodhound = () => {
+    //     setBloodhoundOpen(true);
+    //     setCommandPaletteOpen(false);
+    // };
 
     return (
         <Box className={classes.content}>
@@ -267,13 +266,13 @@ const Content: React.FC = () => {
                         </CommandGroup>
                     </CommandList>
                 </CommandDialog>
-                {bloodhoundOpen && (
+                {/* {bloodhoundOpen && (
                     <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
                         <Card>
                             <AppIcon.Bloodhound />
                         </Card>
                     </div>
-                )}
+                )} */}
             </ErrorBoundary>
         </Box>
     );
