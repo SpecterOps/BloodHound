@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
 	"github.com/specterops/bloodhound/packages/go/analysis"
@@ -108,7 +109,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansion
 	}
 }
 
-func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -122,15 +123,51 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 				} else if dcSyncers.Cardinality() == 0 {
 					return nil
 				} else {
+					// Get domain objectid for changelog
+					domainObjectID, err := innerDomain.Properties.Get("objectid").String()
+					if err != nil {
+						return fmt.Errorf("failed to get domain objectid: %w", err)
+					}
+
 					dcSyncers.Each(func(value uint64) bool {
+						nodeID := graph.ID(value)
+
+						// Fetch the node to get its objectid
+						if node, err := tx.Nodes().Filterf(func() graph.Criteria {
+							return query.Equals(query.NodeID(), nodeID)
+						}).First(); err != nil {
+							slog.WarnContext(ctx, "failed to fetch node for changelog check", "node_id", nodeID, "err", err)
+							// Fall through to submit the job anyway
+						} else if nodeObjectID, err := node.Properties.Get("objectid").String(); err != nil {
+							slog.WarnContext(ctx, "node missing objectid property", "node_id", nodeID, "err", err)
+							// Fall through to submit the job anyway
+						} else if changeManager != nil {
+							// Create changelog edge change
+							relProps := graph.NewProperties().Set("lastseen", time.Now().UTC())
+							change := analysis.NewEdgeChange(nodeObjectID, domainObjectID, ad.DCSync, relProps)
+
+							// Check if this relationship needs to be created
+							if shouldSubmit, err := changeManager.ResolveChange(change); err != nil {
+								slog.WarnContext(ctx, "changelog resolve failed", "err", err)
+								// Fall through to submit the job anyway
+							} else if !shouldSubmit {
+								// Unchanged: submit to changelog for lastseen tracking
+								changeManager.Submit(ctx, change)
+								return true // Continue to next dcSyncer
+							}
+						}
+
+						// New or modified: submit the job for creation
 						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID: graph.ID(value),
+							FromID: nodeID,
 							ToID:   innerDomain.ID,
 							Kind:   ad.DCSync,
 						})
 						return true
 					})
 
+					slog.InfoContext(ctx, "PostDCSync changelog stats")
+					changeManager.FlushStats()
 					return nil
 				}
 			})

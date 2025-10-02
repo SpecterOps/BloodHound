@@ -188,7 +188,8 @@ func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.Inge
 }
 
 func (s *CommunityGraphService) RunAnalysis(ctx context.Context, graphDB graph.Database) error {
-	return datapipe.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{})
+	// Pass nil for changelog since community edition doesn't have changelog support
+	return datapipe.RunAnalysisOperations(ctx, s.db, graphDB, config.Configuration{}, nil)
 }
 
 // Run generate command
