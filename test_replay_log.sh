@@ -46,7 +46,7 @@ echo "✓ Authenticated successfully"
 echo "Token: ${TOKEN:0:20}..."
 echo ""
 
-# Capture current replay log state (before we make changes)
+# Capture current replay log state (before we make changes)”
 echo -e "${YELLOW}Getting current replay log state...${NC}"
 INITIAL_ENTRY_ID=$(curl -s -X GET "$HOST/api/v2/graph/replay-log" \
   -H "Authorization: Bearer $TOKEN" \

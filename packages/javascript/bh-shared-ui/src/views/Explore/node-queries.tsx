@@ -1,4 +1,4 @@
-import { useMutation } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import { apiClient } from '../../utils';
 
 type Node = {
@@ -50,6 +50,24 @@ export const useDeleteEdgeMutation = () => {
     return useMutation({
         mutationFn: (edge: Edge) => {
             return apiClient.baseClient.delete(`/api/v2/graph/edges/`, { data: edge });
+        },
+    });
+};
+
+export const useRollbackQuery = (enabled: boolean) => {
+    console.log({ enabled: Boolean(enabled) });
+    return useQuery({
+        enabled: Boolean(enabled),
+        queryFn: () => {
+            return apiClient.baseClient.get('/api/v2/graph/replay-log').then((res) => res.data);
+        },
+    });
+};
+
+export const useRollbackMutation = () => {
+    return useMutation({
+        mutationFn: (rollbackId: string) => {
+            return apiClient.baseClient.post(`/api/v2/graph/replay-logroll?to=${rollbackId}`);
         },
     });
 };

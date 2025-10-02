@@ -14,7 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, IconButton, SvgIcon, useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
     ExploreTable,
@@ -34,6 +36,7 @@ import {
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
     useGraphHasData,
+    useRollbackQuery,
     useTagGlyphs,
     useToggle,
 } from 'bh-shared-ui';
@@ -52,6 +55,23 @@ import ExploreSearch from '../ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from '../GraphItemInformationPanel';
 import { transformIconDictionary } from '../svgIcons';
 
+type Entry = {
+    id: number;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: {
+        Time: string;
+        Valid: boolean;
+    };
+    change_type: string;
+    object_type: string;
+    object_id: string;
+    source_object_id: string;
+    target_object_id: string;
+    properties: string;
+    rolled_back_at?: string;
+};
+
 const GraphView: FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
@@ -62,10 +82,12 @@ const GraphView: FC = () => {
     const graphQuery = useSigmaExploreGraph();
 
     const { searchType } = useExploreParams();
+    // const { refetch } = useExploreGraph();
     const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [currentRollbackIndex, setCurrentRollbackIndex] = useState<number>();
 
     const sigmaChartRef = useRef<any>(null);
 
@@ -76,7 +98,12 @@ const GraphView: FC = () => {
 
     const customIconsQuery = useCustomNodeKinds({ select: transformIconDictionary });
     const tagGlyphMap = useTagGlyphs(glyphUtils, darkMode);
+    const rollbackEnabled = graphQuery.data;
+    const { data: _rollbacks } = useRollbackQuery(rollbackEnabled);
+    const rollbacks: { count?: number; entries?: Entry[] } = _rollbacks;
+    // const { mutateAsync: setRollback } = useRollbackMutation();
 
+    // console.log(rollbacks);
     const autoDisplayTableEnabled = !exploreLayout && !isExploreTableSelected;
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
     // TODO: incorporate into larger hook with auto display table logic
@@ -96,6 +123,15 @@ const GraphView: FC = () => {
             tagGlyphMap,
         };
     }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphMap]);
+
+    console.log({ rollbacks });
+    // useEffect(() => {
+    //     if (currentRollbackIndex) {
+    //         const rollback = rollbacks[currentRollbackIndex];
+
+    //         setRollback(rollback.id).then(refetch);
+    //     }
+    // }, [currentRollbackIndex, refetch, rollbacks, setRollback]);
 
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {
@@ -148,6 +184,18 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
+    const handleBackRollback = () => {
+        if (typeof currentRollbackIndex === 'number' && currentRollbackIndex > 0) {
+            setCurrentRollbackIndex(currentRollbackIndex - 1);
+        }
+    };
+
+    const handleForwardRollback = () => {
+        if (typeof currentRollbackIndex === 'number' && currentRollbackIndex > 0) {
+            setCurrentRollbackIndex(currentRollbackIndex + 1);
+        }
+    };
+
     const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
         const newItems = makeStoreMapFromColumnOptions(columnOptions);
 
@@ -168,7 +216,6 @@ const GraphView: FC = () => {
         if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
     };
 
-    console.log(sigmaChartRef?.current?.graph);
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -186,6 +233,39 @@ const GraphView: FC = () => {
                 ref={sigmaChartRef}
             />
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
+                <div className='border-neutral-500 bg-neutral-100 p-2 w-fit'>
+                    <div>
+                        <div className='flex justify-center items-center'>
+                            <p className='font-bold'>Time travel</p>
+                            <div className='flex'>
+                                <IconButton
+                                    title={'Tick back'}
+                                    onClick={handleBackRollback}
+                                    disabled={!currentRollbackIndex}>
+                                    <SvgIcon>
+                                        <FontAwesomeIcon icon={faChevronLeft} />
+                                    </SvgIcon>
+                                </IconButton>
+                                <IconButton
+                                    title={'Tick forward'}
+                                    onClick={handleForwardRollback}
+                                    disabled={typeof currentRollbackIndex !== 'number'}>
+                                    <SvgIcon>
+                                        <FontAwesomeIcon icon={faChevronRight} />
+                                    </SvgIcon>
+                                </IconButton>
+                            </div>
+                        </div>
+                        <div className='flex'>
+                            {rollbacks?.entries?.map((entry) => (
+                                <Button className='flex flex-col' key={entry.id + entry.object_id}>
+                                    <p> {entry.change_type}</p>
+                                    <p>{entry.object_id.slice(0, 10)}</p>
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
                 <ExploreSearch />
                 <GraphControls
                     isExploreTableSelected={isExploreTableSelected}
