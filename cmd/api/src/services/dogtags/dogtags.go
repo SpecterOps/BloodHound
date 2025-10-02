@@ -17,9 +17,10 @@ type FlagKey string
 
 // All valid dogtag keys - finite list controlled by the system
 const (
-	CanAppStartup  FlagKey = "can_app_startup"
-	MaxConnections FlagKey = "max_connections"
-	ApiBaseURL     FlagKey = "api_base_url"
+	BypassCypherQueryLimits FlagKey = "bypass_cypher_query_limits"
+	CypherMutability        FlagKey = "cypher_mutability"
+	ZoneAllocation          FlagKey = "zone_allocation"
+	LabelAllocation         FlagKey = "label_allocation"
 )
 
 // FlagSpec defines the specification for a dogtag
@@ -30,9 +31,10 @@ type FlagSpec struct {
 
 // ValidFlags defines all supported flags with their types
 var ValidFlags = map[FlagKey]FlagSpec{
-	CanAppStartup:  {Type: "bool", Description: "Controls whether the application can start up"},
-	MaxConnections: {Type: "int", Description: "Maximum number of concurrent connections"},
-	ApiBaseURL:     {Type: "string", Description: "Base URL for API endpoints"},
+	BypassCypherQueryLimits: {Type: "bool", Description: "Bypass cypher query limits"},
+	CypherMutability:        {Type: "bool", Description: "Enable cypher mutability"},
+	ZoneAllocation:          {Type: "int", Description: "Maximum zone allocation"},
+	LabelAllocation:         {Type: "int", Description: "Maximum label allocation"},
 }
 
 // ValidateFlag ensures only known flags are used
