@@ -23,10 +23,12 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+
 	"github.com/specterops/dawgs/graph"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/metrics"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -113,6 +115,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
 	} else if err = middleware.RegisterApiMiddlewareMetrics(promRegistry); err != nil {
+		return nil, fmt.Errorf("failed to register API middleware metrics: %w", err)
+	} else if err = metrics.RegisterApiMetrics(promRegistry); err != nil {
 		return nil, fmt.Errorf("failed to register API metrics: %w", err)
 	} else {
 		startDelay := 0 * time.Second

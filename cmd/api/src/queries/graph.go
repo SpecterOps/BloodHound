@@ -397,7 +397,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 
 	queryModel, err := frontend.ParseCypher(parseCtx, rawCypher)
 	if err != nil {
-		return graphQuery, err
+		return graphQuery, fmt.Errorf("failed to parse cypher: %w", err)
 	}
 
 	// Query rewriter targets certain AST elements like relationship types and may rewrite them to add additional

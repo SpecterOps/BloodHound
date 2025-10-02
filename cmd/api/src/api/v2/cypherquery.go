@@ -25,6 +25,7 @@ import (
 	"slices"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/metrics"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -78,6 +79,12 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		graphResponse model.UnifiedGraph
 		err           error
 	)
+
+	defer func() {
+		if err != nil {
+			metrics.RecordCypherQueryTimeout(err)
+		}
+	}()
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
