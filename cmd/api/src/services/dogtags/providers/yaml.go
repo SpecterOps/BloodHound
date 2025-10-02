@@ -1,4 +1,4 @@
-//go:build !noop
+//go:build !noop && !replicated
 
 package providers
 

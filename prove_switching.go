@@ -12,8 +12,8 @@ func main() {
 	fmt.Println("🧪 Proving Compile-Time Provider Switching")
 	fmt.Println("==========================================")
 
-	// Create service with temp file
-	config := dogtags.Config{FilePath: "local-harnesses/dogtags.yaml"}
+	// Create service with temp file (empty path uses provider defaults)
+	config := dogtags.Config{FilePath: ""}
 	service, err := dogtags.NewService(config)
 	if err != nil {
 		fmt.Printf("❌ Failed to create service: %v\n", err)
