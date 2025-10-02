@@ -29,7 +29,7 @@ export const ExploreHistoryDialog = () => {
 
     return (
         <Dialog>
-            <DialogTrigger>Explore Query Debug</DialogTrigger>
+            <DialogTrigger className='w-full text-left'>Explore Query Debug</DialogTrigger>
             <DialogContent className='bg-neutral-1'>
                 <DialogTitle>Explore Query Debug</DialogTitle>
                 <FieldsContainer>{formattedParams}</FieldsContainer>
