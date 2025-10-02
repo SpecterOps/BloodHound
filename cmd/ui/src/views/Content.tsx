@@ -187,16 +187,16 @@ const Content: React.FC = () => {
                     }}
                     className='overflow-visible'>
                     <CommandInput placeholder='Type a command or search...' />
-                    <CommandGroup heading='Tools'>
-                        <CommandItem>
-                            <ExploreHistoryDialog />
-                        </CommandItem>
-                        <div onClick={showBloodhound}>
-                            <CommandItem>Bloodhound!</CommandItem>
-                        </div>
-                    </CommandGroup>
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
+                        <CommandGroup heading='Tools'>
+                            <CommandItem>
+                                <ExploreHistoryDialog />
+                            </CommandItem>
+                            <div onClick={showBloodhound}>
+                                <CommandItem>Bloodhound!</CommandItem>
+                            </div>
+                        </CommandGroup>
                         <CommandGroup heading='Pages'>
                             <div onClick={() => navigateHandler(ROUTE_EXPLORE)}>
                                 <CommandItem>Explore</CommandItem>

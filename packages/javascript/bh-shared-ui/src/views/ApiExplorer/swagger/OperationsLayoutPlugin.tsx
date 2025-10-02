@@ -50,7 +50,8 @@ function CustomLayout(props: Props) {
 
     const location = useLocation();
 
-    if (location.state.scrollTo && isReady) {
+    console.log(location.state);
+    if (location.state && location.state.scrollTo && isReady) {
         const element = document.querySelector<HTMLButtonElement>(`[aria-label="${location.state.scrollTo}"]`);
         if (element) {
             element.scrollIntoView({ behavior: 'smooth' });
