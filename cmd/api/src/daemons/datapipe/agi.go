@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/specterops/bloodhound-enterprise/lib/go/daemons/datapipe/metrics"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -89,7 +90,7 @@ func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDb 
 }
 
 func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ...graph.Criteria) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "clearSystemTags")()
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, "clearSystemTags", metrics.AnalysisStepDuration)()
 
 	var (
 		props   = graph.NewProperties()
@@ -114,7 +115,7 @@ func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ..
 }
 
 func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Azure Tier Zero")()
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, "Finished tagging Azure Tier Zero", metrics.AnalysisStepDuration)()
 
 	var tenants graph.NodeSet
 
@@ -223,7 +224,7 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 }
 
 func tagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Active Directory Tier Zero")()
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, "Finished tagging Active Directory Tier Zero", metrics.AnalysisStepDuration)()
 
 	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
 		return err

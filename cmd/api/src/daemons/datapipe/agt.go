@@ -25,6 +25,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/specterops/bloodhound-enterprise/lib/go/daemons/datapipe/metrics"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -500,7 +501,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
 func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting asset group nodes via new selectors")()
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, "Finished selecting asset group nodes via new selectors", metrics.AnalysisStepDuration)()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		return err
@@ -656,7 +657,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 // tagAssetGroupNodes - concurrently tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging asset group nodes")()
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, "Finished tagging asset group nodes", metrics.AnalysisStepDuration)()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		return err

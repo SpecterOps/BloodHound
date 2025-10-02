@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"sort"
 
+	"github.com/specterops/bloodhound-enterprise/lib/go/daemons/datapipe/metrics"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -162,7 +163,7 @@ type DeleteRelationshipJob struct {
 }
 
 func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.Kinds, targetRelationships ...graph.Kind) (*AtomicPostProcessingStats, error) {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished deleting transit edges")()
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, "Finished deleting transit edges", metrics.AnalysisStepDuration)()
 
 	var (
 		relationshipIDs []graph.ID

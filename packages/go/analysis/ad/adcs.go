@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/specterops/bloodhound-enterprise/lib/go/daemons/datapipe/metrics"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 )
@@ -97,7 +99,11 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
 func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSCache) (*analysis.AtomicPostProcessingStats, error) {
-	operation := analysis.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
+	var msg = "ADCS Post Processing Step 2"
+
+	defer measure.LogAndMeasureWithMetric(slog.LevelInfo, msg, metrics.AnalysisStepDuration)()
+
+	operation := analysis.NewPostRelationshipOperation(ctx, db, msg)
 
 	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
 		operation.Done()
