@@ -62,7 +62,7 @@ const GraphView: FC = () => {
     const graphQuery = useSigmaExploreGraph();
 
     const { searchType } = useExploreParams();
-    const { selectedItem, setSelectedItem, selectedItemQuery, clearSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem, clearSelectedItem } = useExploreSelectedItem();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -114,16 +114,12 @@ const GraphView: FC = () => {
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload | SigmaEventPayload) => {
-            // Demonstrates that stage right clicks are no longer swallowed
-            // TODO: Remove me
-            console.log({ event });
-
             if ('node' in event) {
                 setSelectedItem(event.node);
-                setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
             }
+            setContextMenu({ mouseX: event.event.x, mouseY: event.event.y });
         },
-        [contextMenu, setContextMenu, setSelectedItem]
+        [setContextMenu, setSelectedItem]
     );
 
     /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
