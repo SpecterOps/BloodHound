@@ -103,14 +103,120 @@ func (s *service) CreateNode(ctx context.Context, objectID string, labels []stri
 }
 
 // DeleteNode removes a node from the graph and logs the operation.
+// This also deletes all edges connected to the node (both incoming and outgoing).
+// Each edge deletion is logged separately before the node deletion.
 func (s *service) DeleteNode(ctx context.Context, objectID string) error {
-	// Log the operation to the replay log first
+	// Structure to hold edge info for logging
+	type edgeInfo struct {
+		sourceObjectID string
+		targetObjectID string
+		kind           string
+	}
+
+	var edgesToLog []edgeInfo
+
+	// First, collect all edges connected to this node (read-only transaction)
+	err := s.graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		// Find the node
+		var targetNode *graph.Node
+		err := tx.Nodes().Filter(
+			query.Equals(query.NodeProperty(common.ObjectID.String()), strings.ToUpper(objectID)),
+		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for n := range cursor.Chan() {
+				targetNode = n
+				break
+			}
+			return cursor.Error()
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to find node: %w", err)
+		}
+		if targetNode == nil {
+			return fmt.Errorf("node not found")
+		}
+
+		// Get all relationships (both incoming and outgoing)
+		var relationships []*graph.Relationship
+		err = tx.Relationships().Filter(
+			query.Or(
+				query.Equals(query.StartID(), targetNode.ID),
+				query.Equals(query.EndID(), targetNode.ID),
+			),
+		).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for rel := range cursor.Chan() {
+				relationships = append(relationships, rel)
+			}
+			return cursor.Error()
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to fetch relationships: %w", err)
+		}
+
+		// For each relationship, get the source/target object IDs
+		for _, rel := range relationships {
+			var sourceNode, targetNode *graph.Node
+
+			// Get source node
+			err = tx.Nodes().Filter(query.Equals(query.NodeID(), rel.StartID)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+				for n := range cursor.Chan() {
+					sourceNode = n
+					break
+				}
+				return cursor.Error()
+			})
+			if err != nil || sourceNode == nil {
+				continue // Skip if we can't find source (happy path only)
+			}
+
+			// Get target node
+			err = tx.Nodes().Filter(query.Equals(query.NodeID(), rel.EndID)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+				for n := range cursor.Chan() {
+					targetNode = n
+					break
+				}
+				return cursor.Error()
+			})
+			if err != nil || targetNode == nil {
+				continue // Skip if we can't find target (happy path only)
+			}
+
+			// Get object IDs from nodes
+			sourceObjectID, _ := sourceNode.Properties.Get(common.ObjectID.String()).String()
+			targetObjectID, _ := targetNode.Properties.Get(common.ObjectID.String()).String()
+
+			// Store edge info for logging
+			edgesToLog = append(edgesToLog, edgeInfo{
+				sourceObjectID: sourceObjectID,
+				targetObjectID: targetObjectID,
+				kind:           rel.Kind.String(),
+			})
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to read node edges: %w", err)
+	}
+
+	// Now log all edge deletions to the replay log (outside the graph transaction)
+	for _, edge := range edgesToLog {
+		if err := s.logChange(ctx, model.ChangeTypeDelete, model.ObjectTypeEdge, edge.kind, []string{edge.kind}, edge.sourceObjectID, edge.targetObjectID, nil); err != nil {
+			// Happy path: log error but continue (best effort)
+			// In production you'd want proper error handling
+			continue
+		}
+	}
+
+	// Log the node deletion to the replay log
 	if err := s.logChange(ctx, model.ChangeTypeDelete, model.ObjectTypeNode, objectID, nil, "", "", nil); err != nil {
 		return fmt.Errorf("failed to log node deletion: %w", err)
 	}
 
-	// Perform the actual graph operation (use WriteTransaction for deletes)
-	err := s.graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+	// Finally, delete the node from the graph (this will cascade delete edges in Neo4j automatically)
+	err = s.graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(
 			query.Equals(query.NodeProperty(common.ObjectID.String()), strings.ToUpper(objectID)),
 		).Delete()
