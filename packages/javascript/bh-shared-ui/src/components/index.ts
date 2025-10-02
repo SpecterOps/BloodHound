@@ -219,3 +219,5 @@ export * from './SelectMenus';
 export * from './DateRangeInputs';
 
 export * from './CommandPalette';
+
+export * from './ExploreHistoryDialog';

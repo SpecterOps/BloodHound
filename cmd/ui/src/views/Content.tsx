@@ -23,6 +23,7 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
+    ExploreHistoryDialog,
     FileUploadDialog,
     GenericErrorBoundaryFallback,
     Permission,
@@ -130,14 +131,14 @@ const Content: React.FC = () => {
                         <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
                     )}
                 </Suspense>
-                <CommandDialog open={commandPaletteOpen}>
+                <CommandDialog open={commandPaletteOpen} className='overflow-visible'>
                     <CommandInput placeholder='Type a command or search...' />
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
                         <CommandGroup heading='Suggestions'>
-                            <CommandItem>Calendar</CommandItem>
-                            <CommandItem>Search Emoji</CommandItem>
-                            <CommandItem>Calculator</CommandItem>
+                            <CommandItem>
+                                <ExploreHistoryDialog />
+                            </CommandItem>
                         </CommandGroup>
                     </CommandList>
                 </CommandDialog>
