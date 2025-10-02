@@ -144,9 +144,11 @@ const Content: React.FC = () => {
                     <CommandInput placeholder='Type a command or search...' />
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
-                        <CommandItem>
-                            <ExploreHistoryDialog />
-                        </CommandItem>
+                        <CommandGroup heading='Tools'>
+                            <CommandItem>
+                                <ExploreHistoryDialog />
+                            </CommandItem>
+                        </CommandGroup>
                         <CommandGroup heading='API Explorer'>
                             {endpoints.map((endpoint) => {
                                 const splitString = endpoint.split(' ');
