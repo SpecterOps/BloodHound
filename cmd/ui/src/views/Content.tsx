@@ -38,13 +38,12 @@ import {
     usePermissions,
 } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
-
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { fetchAssetGroups } from 'src/ducks/global/actions';
+import { fetchAssetGroups, setDarkMode } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import {
     ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,
@@ -129,7 +128,7 @@ const Content: React.FC = () => {
         setCommandPaletteOpen(false);
     };
 
-    const showFileInjestDialog = () => {
+    const openFileIngestDialog = () => {
         setShowFileIngestDialog(true);
         setCommandPaletteOpen(false);
     };
@@ -192,10 +191,13 @@ const Content: React.FC = () => {
                         <CommandItem>
                             <ExploreHistoryDialog />
                         </CommandItem>
+                        <div onClick={showBloodhound}>
+                            <CommandItem>Bloodhound!</CommandItem>
+                        </div>
                     </CommandGroup>
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
-                        <CommandGroup>
+                        <CommandGroup heading='Pages'>
                             <div onClick={() => navigateHandler(ROUTE_EXPLORE)}>
                                 <CommandItem>Explore</CommandItem>
                             </div>
@@ -236,7 +238,7 @@ const Content: React.FC = () => {
                                 <CommandItem>Early Access Features</CommandItem>
                             </div>
                             <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_FILE_INGEST)}>
-                                <CommandItem>File Injest</CommandItem>
+                                <CommandItem>File Ingest</CommandItem>
                             </div>
                             <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_MANAGE_USERS)}>
                                 <CommandItem>Manage Users</CommandItem>
@@ -244,14 +246,10 @@ const Content: React.FC = () => {
                             <div onClick={() => navigateHandler(ROUTE_ADMINISTRATION_SSO_CONFIGURATION)}>
                                 <CommandItem>SSO Configuration</CommandItem>
                             </div>
-                            <div onClick={showFileInjestDialog}>
+                            <div onClick={openFileIngestDialog}>
                                 <CommandItem>Quick Upload</CommandItem>
                             </div>
-                            <div onClick={showBloodhound}>
-                                <CommandItem>Bloodhound!</CommandItem>
-                            </div>
                         </CommandGroup>
-
                         <CommandGroup heading='API Explorer'>
                             {endpoints.map((endpoint) => {
                                 const splitString = endpoint.split(' ');
@@ -267,6 +265,26 @@ const Content: React.FC = () => {
                                     </CommandItem>
                                 );
                             })}
+                            /
+                        </CommandGroup>
+                        <CommandGroup heading='Theme'>
+                            <CommandItem
+                                key={'light'}
+                                onSelect={() => {
+                                    setCommandPaletteOpen(false);
+                                    dispatch(setDarkMode(false));
+                                }}>
+                                Set Light Theme
+                            </CommandItem>
+
+                            <CommandItem
+                                key={'dark'}
+                                onSelect={() => {
+                                    setCommandPaletteOpen(false);
+                                    dispatch(setDarkMode(true));
+                                }}>
+                                Set Dark Theme
+                            </CommandItem>
                         </CommandGroup>
                     </CommandList>
                 </CommandDialog>
