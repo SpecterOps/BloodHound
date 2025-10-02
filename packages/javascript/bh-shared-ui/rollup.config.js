@@ -52,6 +52,7 @@ export default {
         '@mui/styles/withStyles',
         '@reduxjs/toolkit',
         'clsx',
+        'cmdk',
         'downshift',
         'history',
         'immer',

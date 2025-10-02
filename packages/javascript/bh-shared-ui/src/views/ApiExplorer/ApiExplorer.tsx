@@ -41,6 +41,14 @@ const authInterceptor = (req: any) => {
 };
 
 const ApiExplorer: React.FC = () => {
+    // const location = useLocation();
+    // const endpointRef = useRef(null);
+
+    // if (location.state.scrollTo) {
+    //     console.log(`[aria-label="${location.state.scrollTo}"]`);
+    //     document.querySelector(`[aria-label="${location.state.scrollTo}"]`)?.scrollIntoView({ behavior: 'smooth' });
+    // }
+
     return (
         <Suspense fallback={<GraphProgress loading={true} />}>
             <SwaggerUI
