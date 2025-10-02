@@ -178,6 +178,8 @@ type Database interface {
 
 	// Access Control List
 	EnvironmentAccessControlData
+
+	GraphMetrics
 }
 
 type BloodhoundDB struct {
