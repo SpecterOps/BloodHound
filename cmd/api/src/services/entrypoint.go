@@ -114,10 +114,8 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
-	} else if err = middleware.RegisterApiMiddlewareMetrics(promRegistry); err != nil {
-		return nil, fmt.Errorf("failed to register API middleware metrics: %w", err)
-	} else if err = metrics.RegisterApiMetrics(promRegistry); err != nil {
-		return nil, fmt.Errorf("failed to register API metrics: %w", err)
+	} else if err = RegisterBHCEMetrics(promRegistry); err != nil {
+		return nil, err
 	} else {
 		startDelay := 0 * time.Second
 
@@ -152,4 +150,16 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			datapipeDaemon,
 		}, nil
 	}
+}
+
+// RegisterBHCEMetrics - Registers metrics from across BHCE
+func RegisterBHCEMetrics(prometheusRegistry *prometheus.Registry) error {
+	if err := middleware.RegisterApiMiddlewareMetrics(prometheusRegistry); err != nil {
+		return fmt.Errorf("failed to register API middleware metrics: %w", err)
+	} else if err = metrics.RegisterApiMetrics(prometheusRegistry); err != nil {
+		return fmt.Errorf("failed to register custom API metrics: %w", err)
+	} else if err = changelog.RegisterChangeLogMetrics(prometheusRegistry); err != nil {
+		return fmt.Errorf("failed to register changelog metrics: %w", err)
+	}
+	return nil
 }
