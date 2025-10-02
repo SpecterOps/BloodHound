@@ -1,4 +1,4 @@
-//go:build !noop && !replicated
+//go:build yaml
 
 package providers
 

@@ -85,6 +85,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 				ExpireNow:     true,
 			},
 			EnableUserAnalytics: false,
+			DogTagsFilePath:     "", // Empty uses provider defaults
 		}, nil
 	}
 }
