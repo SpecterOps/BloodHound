@@ -16,6 +16,7 @@
 
 import { useSigma } from '@react-sigma/core';
 import { useCreateDisableZoomRef } from 'bh-shared-ui';
+import { useSetAtom } from 'jotai';
 import { FC, useCallback } from 'react';
 import type { SigmaEventPayload } from 'sigma/sigma';
 import {
@@ -27,6 +28,7 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
+import { isShiftDownAtom } from 'src/views/Explore/FoxHuntGraphView/foxhunt';
 import handleWheelFromSigma from './sigma-functions';
 
 interface GraphEdgeEventProps {
@@ -37,6 +39,7 @@ interface GraphEdgeEventProps {
 const EDGE_EVENTS = ['contextmenu', 'click', 'mousemove'];
 
 export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge, onContextMenu }) => {
+    const setIsShiftDown = useSetAtom(isShiftDownAtom);
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
     const sigmaContainer = document.getElementById('sigma-container');
@@ -187,11 +190,14 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge, onContex
 
     return (
         <canvas
+            tabIndex={0}
             ref={edgeEventsRef}
             id='edge-events'
             width={parseInt(width)}
             height={parseInt(height)}
             style={{ position: 'absolute', height: height, width: width, inset: 0 }}
+            onKeyDown={(e) => setIsShiftDown(e.shiftKey)}
+            onKeyUp={(e) => setIsShiftDown(e.shiftKey)}
             onClick={handleEdgeEvents}
             onContextMenu={handleEdgeEvents}
             onMouseDown={handleEdgeEvents}

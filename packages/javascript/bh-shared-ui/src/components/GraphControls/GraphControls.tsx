@@ -30,6 +30,7 @@ import { useRef, useState } from 'react';
 import { useExploreParams } from '../../hooks';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
+import { GraphEdgeKind } from '../GraphEdgeKind';
 import GraphMenu from '../GraphMenu';
 import SearchCurrentNodes, { FlatNode } from '../SearchCurrentNodes';
 
@@ -160,6 +161,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     disabled={isCurrentSearchOpen}
                     data-testid='explore_graph-controls_search-current-results'
                 />
+
+                <GraphEdgeKind />
             </div>
             <Popper
                 open={isCurrentSearchOpen}

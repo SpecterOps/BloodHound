@@ -19,16 +19,17 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     Permission,
     isNode,
-    // useDeleteEdgeMutation,
     useDeleteNodeMutation,
     useExploreParams,
     useExploreSelectedItem,
     useFeatureFlag,
     usePermissions,
 } from 'bh-shared-ui';
+import { useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
+import { isDialogOpenAtom } from '../FoxHuntGraphView/foxhunt';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -36,8 +37,9 @@ const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
     handleClose: () => void;
 }> = ({ contextMenu, handleClose }) => {
+    const setIsDialogOpen = useSetAtom(isDialogOpenAtom);
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { mutateAsync: deleteNode } = useDeleteNodeMutation();
+    const { mutate: deleteNode } = useDeleteNodeMutation();
     // const { mutateAsync: deleteEdge } = useDeleteEdgeMutation();
     const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
@@ -47,10 +49,7 @@ const ContextMenu: FC<{
 
     const { checkPermission } = usePermissions();
 
-    const handleAddNode = () => {
-        // TODO: Implement me
-        console.log('Add node');
-    };
+    const handleAddNode = () => setIsDialogOpen(true);
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -77,11 +76,11 @@ const ContextMenu: FC<{
     };
 
     const handleDeleteNode = async () => {
-        if (selectedItemQuery?.data?.id) {
-            await deleteNode(selectedItemQuery.data.id);
-        }
+        const selectedItemData = selectedItemQuery.data;
 
-        console.log(selectedItemQuery.data);
+        if (selectedItemData && isNode(selectedItemData)) {
+            await deleteNode(selectedItemData?.objectId);
+        }
     };
 
     const isStageClick = selectedItemType === undefined;

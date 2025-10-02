@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
+import { edgeKindAtom } from 'bh-shared-ui';
 import type { Attributes } from 'graphology-types';
+import { useAtom } from 'jotai';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
@@ -40,7 +42,6 @@ interface SigmaChartRef {
     zoomTo: (id: string) => void;
     runSequentialLayout: () => void;
     runStandardLayout: () => void;
-    graph: any;
 }
 
 interface GraphEventProps {
@@ -95,6 +96,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
+    const [graphEdgeKind] = useAtom(edgeKindAtom);
 
     const registerEvents = useRegisterEvents();
     const setSettings = useSetSettings();
@@ -108,7 +110,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaChartRef,
         () => {
             return {
-                graph: graph,
                 zoomTo: (id: string) => {
                     const node = sigma.getNodeDisplayData(id);
 
@@ -269,6 +270,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
         draggedMeta.offset,
         draggedNode,
         graph,
+        graphEdgeKind,
+        highlightedItem,
         onClickNode,
         onClickStage,
         onRightClickNode,
