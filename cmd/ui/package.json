@@ -34,6 +34,7 @@
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",
         "bh-shared-ui": "workspace:*",
+        "cmdk": "^1.1.1",
         "dagrejs": "git@github.com:BloodHoundAD/dagre.git",
         "downshift": "^6.1.7",
         "graphology": "^0.25.1",

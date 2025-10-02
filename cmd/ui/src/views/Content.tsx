@@ -24,6 +24,7 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
+    ExploreHistoryDialog,
     FileUploadDialog,
     GenericErrorBoundaryFallback,
     Permission,
@@ -59,6 +60,8 @@ import {
     ROUTE_MY_PROFILE,
 } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { endpoints } from 'src/utils';
+
 const useStyles = makeStyles({
     content: {
         position: 'relative',
@@ -176,7 +179,12 @@ const Content: React.FC = () => {
                         <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
                     )}
                 </Suspense>
-                <CommandDialog open={commandPaletteOpen}>
+                <CommandDialog
+                    open={commandPaletteOpen}
+                    onOpenChange={() => {
+                        setCommandPaletteOpen((prev) => !prev);
+                    }}
+                    className='overflow-visible'>
                     <CommandInput placeholder='Type a command or search...' />
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
@@ -232,9 +240,28 @@ const Content: React.FC = () => {
                             <div onClick={showFileInjestDialog}>
                                 <CommandItem>Quick Upload</CommandItem>
                             </div>
-                            <div onClick={showBloodhound}>
+                            {/* <div onClick={showBloodhound}>
                                 <CommandItem>Bloodhound!</CommandItem>
-                            </div>
+                            </div> */}
+                            </CommandGroup>
+                        <CommandItem>
+                            <ExploreHistoryDialog />
+                        </CommandItem>
+                        <CommandGroup heading='API Explorer'>
+                            {endpoints.map((endpoint) => {
+                                const splitString = endpoint.split(' ');
+                                return (
+                                    <CommandItem
+                                        key={endpoint}
+                                        onSelect={() => {
+                                            setCommandPaletteOpen(false);
+                                            navigate('/api-explorer', { state: { scrollTo: endpoint } });
+                                        }}>
+                                        <span className='font-bold'>{splitString[0].toUpperCase()}</span>
+                                        <span>{' ' + splitString[1]}</span>
+                                    </CommandItem>
+                                );
+                            })}
                         </CommandGroup>
                     </CommandList>
                 </CommandDialog>
