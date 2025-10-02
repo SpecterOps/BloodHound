@@ -105,6 +105,7 @@ services:
       - ${BH_NEO4J_WEB_PORT:-127.0.0.1:7474}:7474
     volumes:
       - ${BH_NEO4J_VOLUME:-neo4j-data}:/data
+      - ./local-harnesses/dumps:/var/lib/neo4j/import/dumps
     labels:
       - traefik.enable=true
       - traefik.http.routers.neo4jbrowser.rule=Host(`${BH_NEO4J_HOSTNAME:-neo4j.localhost}`)

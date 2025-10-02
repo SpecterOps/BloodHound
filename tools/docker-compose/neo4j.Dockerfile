@@ -20,8 +20,9 @@ ARG memconfig
 
 RUN echo "dbms.security.auth_enabled=false" >> /var/lib/neo4j/conf/neo4j.conf && \
     # Restrict allowed procedures only to what is used to mitigate CVE-2023-23926
-    echo "dbms.security.procedures.unrestricted=apoc.periodic.*,*.specterops.*" >> /var/lib/neo4j/conf/neo4j.conf && \
-    echo "dbms.security.procedures.allowlist=apoc.periodic.*,*.specterops.*" >> /var/lib/neo4j/conf/neo4j.conf
+    echo "dbms.security.procedures.unrestricted=apoc.periodic.*,apoc.import.*,*.specterops.*" >> /var/lib/neo4j/conf/neo4j.conf && \
+    echo "dbms.security.procedures.allowlist=apoc.periodic.*,apoc.import.*,*.specterops.*" >> /var/lib/neo4j/conf/neo4j.conf && \
+    echo "apoc.import.file.enabled=true" >> /var/lib/neo4j/conf/apoc.conf
 
 RUN if [ "$memconfig" = "true" ]; then neo4j-admin memrec >> /var/lib/neo4j/conf/neo4j.conf; fi
 
