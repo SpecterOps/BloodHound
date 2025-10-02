@@ -21,6 +21,8 @@ import (
 	"log/slog"
 	"sync/atomic"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -84,6 +86,24 @@ func LogAndMeasure(level slog.Level, msg string, args ...any) func() {
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			args = append(args, FieldElapsed, elapsed)
+			slog.Log(context.TODO(), level, msg, args...)
+		}
+	}
+}
+
+func LogAndMeasureWithMetric(level slog.Level, msg string, gauge *prometheus.GaugeVec, args ...any) func() {
+	var (
+		pairID = logMeasurePairCounter.Add(1)
+		then   = time.Now()
+	)
+
+	args = append(args, FieldMeasurementID, pairID)
+	slog.Log(context.TODO(), level, msg, args...)
+
+	return func() {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			args = append(args, FieldElapsed, elapsed)
+			gauge.WithLabelValues(msg).Set(float64(elapsed))
 			slog.Log(context.TODO(), level, msg, args...)
 		}
 	}
