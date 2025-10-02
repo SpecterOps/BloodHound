@@ -27,6 +27,7 @@ import {
     GenericErrorBoundaryFallback,
     Permission,
     getExcludedIds,
+    useAppNavigate,
     useExecuteOnFileDrag,
     useFileUploadDialogContext,
     usePermissions,
@@ -40,6 +41,8 @@ import { authExpiredSelector, fullyAuthenticatedSelector } from 'src/ducks/auth/
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { endpoints } from 'src/utils';
+
 const useStyles = makeStyles({
     content: {
         position: 'relative',
@@ -58,6 +61,7 @@ const Content: React.FC = () => {
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const { checkPermission } = usePermissions();
     const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+    const navigate = useAppNavigate();
 
     useEffect(() => {
         if (isFullyAuthenticated) {
@@ -130,14 +134,29 @@ const Content: React.FC = () => {
                         <FileUploadDialog open={showFileIngestDialog} onClose={() => setShowFileIngestDialog(false)} />
                     )}
                 </Suspense>
-                <CommandDialog open={commandPaletteOpen}>
+                <CommandDialog
+                    open={commandPaletteOpen}
+                    onOpenChange={() => {
+                        setCommandPaletteOpen((prev) => !prev);
+                    }}>
                     <CommandInput placeholder='Type a command or search...' />
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
-                        <CommandGroup heading='Suggestions'>
-                            <CommandItem>Calendar</CommandItem>
-                            <CommandItem>Search Emoji</CommandItem>
-                            <CommandItem>Calculator</CommandItem>
+                        <CommandGroup heading='API Explorer'>
+                            {endpoints.map((endpoint) => {
+                                const splitString = endpoint.split(' ');
+                                return (
+                                    <CommandItem
+                                        key={endpoint}
+                                        onSelect={() => {
+                                            setCommandPaletteOpen(false);
+                                            navigate('/api-explorer', { state: { scrollTo: endpoint } });
+                                        }}>
+                                        <span className='font-bold'>{splitString[0].toUpperCase()}</span>
+                                        <span>{' ' + splitString[1]}</span>
+                                    </CommandItem>
+                                );
+                            })}
                         </CommandGroup>
                     </CommandList>
                 </CommandDialog>
