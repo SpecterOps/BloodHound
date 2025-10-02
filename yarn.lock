@@ -4760,6 +4760,7 @@ __metadata:
     eslint-plugin-react-hooks: ^4.6.0
     history: ^5.3.0
     immutable: ^5.0.0-beta.5
+    jotai: ^2.15.0
     js-client-library: "workspace:*"
     jsdom: ^27.0.0
     json-2-csv: ^5.5.9
@@ -4898,6 +4899,7 @@ __metadata:
     history: 5.3.0
     immer: ^10.0.2
     jest-webgl-canvas-mock: ^2.5.0
+    jotai: ^2.15.0
     js-client-library: "workspace:*"
     js-cookie: ^3.0.1
     js-file-download: ^0.4.12
@@ -8108,6 +8110,27 @@ __metadata:
   bin:
     jiti: bin/jiti.js
   checksum: 9cd20dabf82e3a4cceecb746a69381da7acda93d34eed0cdb9c9bdff3bce07e4f2f4a016ca89924392c935297d9aedc58ff9f7d3281bc5293319ad244926e0b7
+  languageName: node
+  linkType: hard
+
+"jotai@npm:^2.15.0":
+  version: 2.15.0
+  resolution: "jotai@npm:2.15.0"
+  peerDependencies:
+    "@babel/core": ">=7.0.0"
+    "@babel/template": ">=7.0.0"
+    "@types/react": ">=17.0.0"
+    react: ">=17.0.0"
+  peerDependenciesMeta:
+    "@babel/core":
+      optional: true
+    "@babel/template":
+      optional: true
+    "@types/react":
+      optional: true
+    react:
+      optional: true
+  checksum: bcf674db85030772984ca907ca137535d6ad88e0b88e26d025b518cb783675bb80e0295979dcd2145653708e07ad9235c309b98b2f07d25bae9ddbf10ef4677a
   languageName: node
   linkType: hard
 
