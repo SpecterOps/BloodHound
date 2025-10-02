@@ -60,6 +60,7 @@ func (s *cache) shouldSubmit(change Change) (bool, error) {
 	contentHash, err := change.Hash()
 
 	if err != nil {
+		RecordChangeLogCacheResult(actionError)
 		return false, fmt.Errorf("hash proposed change: %w", err)
 	}
 
@@ -70,6 +71,7 @@ func (s *cache) shouldSubmit(change Change) (bool, error) {
 	if storedHash, ok := s.data[idHash]; ok {
 		if storedHash == contentHash {
 			s.stats.Hits++
+			RecordChangeLogCacheResult(actionHit)
 			return false, nil // unchanged
 		}
 	}
@@ -77,6 +79,7 @@ func (s *cache) shouldSubmit(change Change) (bool, error) {
 	// new or modified -> update cache to the new snapshot
 	s.data[idHash] = contentHash
 	s.stats.Misses++
+	RecordChangeLogCacheResult(actionMis)
 	return true, nil
 }
 

@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
@@ -29,9 +30,10 @@ import (
 // and buffering for graph ingestion. It coordinates between feature flag
 // management and ingestion processing.
 type Changelog struct {
-	options     Options
-	flagManager *featureFlagManager
-	coordinator *ingestionCoordinator
+	options            Options
+	flagManager        *featureFlagManager
+	coordinator        *ingestionCoordinator
+	prometheusRegistry *prometheus.Registry
 }
 
 type Options struct {
