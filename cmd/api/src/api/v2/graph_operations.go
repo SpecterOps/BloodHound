@@ -6,6 +6,7 @@ package v2
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -143,5 +144,33 @@ func (s Resources) GetReplayLog(response http.ResponseWriter, request *http.Requ
 	json.NewEncoder(response).Encode(map[string]interface{}{
 		"count":   len(entries),
 		"entries": entries,
+	})
+}
+
+// RollToEntry rolls the graph state to a specific entry ID (logical clock).
+// Accepts a query parameter 'to' with the target entry ID.
+func (s Resources) RollToEntry(response http.ResponseWriter, request *http.Request) {
+	entryIDStr := request.URL.Query().Get("to")
+	if entryIDStr == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "query parameter 'to' with entry ID is required", request), response)
+		return
+	}
+
+	targetEntryID, err := strconv.ParseInt(entryIDStr, 10, 64)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid entry ID format", request), response)
+		return
+	}
+
+	// Perform the roll to entry
+	if err := s.GraphOpsLog.RollToEntry(request.Context(), targetEntryID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	}
+
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(map[string]interface{}{
+		"message":        "rolled to entry successfully",
+		"target_entry_id": targetEntryID,
 	})
 }

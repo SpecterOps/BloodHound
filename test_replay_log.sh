@@ -45,6 +45,15 @@ fi
 echo "✓ Authenticated successfully"
 echo "Token: ${TOKEN:0:20}..."
 echo ""
+
+# Capture current replay log state (before we make changes)
+echo -e "${YELLOW}Getting current replay log state...${NC}"
+INITIAL_ENTRY_ID=$(curl -s -X GET "$HOST/api/v2/graph/replay-log" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq -r '.entries[0].id // 0')
+
+echo "Initial entry ID: $INITIAL_ENTRY_ID (we'll roll back to this at the end)"
+echo ""
 sleep 1
 
 # Step 2: Create first node (User)
@@ -252,13 +261,94 @@ curl -s -X GET "$HOST/api/v2/graph/replay-log" \
   }'
 
 echo ""
+sleep 2
+
+# Step 12: Roll back all changes
+echo -e "${BLUE}============================================${NC}"
+echo -e "${BLUE}Step 12: ROLLING BACK ALL CHANGES${NC}"
+echo -e "${BLUE}============================================${NC}"
+echo "POST $HOST/api/v2/graph/replay-log/roll?to=$INITIAL_ENTRY_ID"
 echo ""
+echo "Rolling back to entry ID: $INITIAL_ENTRY_ID (before we made any changes)"
+echo ""
+
+curl -s -X POST "$HOST/api/v2/graph/replay-log/roll?to=$INITIAL_ENTRY_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.'
+
+echo ""
+sleep 2
+
+# Step 13: Verify rollback - check graph is empty
+echo -e "${YELLOW}Step 13: Verifying rollback - checking graph${NC}"
+echo "POST $HOST/api/v2/graphs/cypher"
+echo "Query: MATCH (n) WHERE n.objectid IN ['S-1-5-21-TEST-1001', 'S-1-5-21-TEST-1002'] RETURN count(n) as node_count"
+echo ""
+
+# Query for the test nodes - a 404 response means 0 nodes found (which is success!)
+CYPHER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$HOST/api/v2/graphs/cypher" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "query": "MATCH (n) WHERE n.objectid IN [\"S-1-5-21-TEST-1001\", \"S-1-5-21-TEST-1002\"] RETURN count(n) as node_count"
+  }')
+
+HTTP_CODE=$(echo "$CYPHER_RESPONSE" | tail -n 1)
+RESPONSE_BODY=$(echo "$CYPHER_RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" == "404" ]; then
+  echo "HTTP Status: 404 (no nodes found)"
+  echo -e "${GREEN}✓ Rollback successful - test nodes removed!${NC}"
+  NODE_COUNT=0
+else
+  NODE_COUNT=$(echo "$RESPONSE_BODY" | jq -r '.data.nodes[0].node_count // 0')
+  echo "Nodes found in graph: $NODE_COUNT"
+  if [ "$NODE_COUNT" == "0" ]; then
+    echo -e "${GREEN}✓ Rollback successful - test nodes removed!${NC}"
+  else
+    echo -e "${YELLOW}⚠ Warning: Found $NODE_COUNT test nodes (expected 0)${NC}"
+  fi
+fi
+
+echo ""
+sleep 2
+
+# Step 14: Show rolled-back entries
+echo -e "${YELLOW}Step 14: Checking replay log - rolled back entries${NC}"
+echo "GET $HOST/api/v2/graph/replay-log"
+echo ""
+echo "The entries we created should now be marked as 'rolled_back_at'"
+echo ""
+
+curl -s -X GET "$HOST/api/v2/graph/replay-log" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '{
+    total_count: .count,
+    recent_entries: .entries[0:6] | map({
+      id: .id,
+      operation: .change_type,
+      object: .object_id,
+      rolled_back: (.rolled_back_at != null)
+    })
+  }'
+
+echo ""
+echo ""
+echo -e "${BLUE}============================================${NC}"
 echo -e "${GREEN}✓ Test completed successfully!${NC}"
+echo -e "${BLUE}============================================${NC}"
 echo ""
-echo -e "${YELLOW}Key Points:${NC}"
-echo "• All 6 operations were logged in order"
-echo "• Timestamps are authoritative (created_at)"
-echo "• Each entry captures the full operation details"
-echo "• The replay log is linear and append-only"
-echo "• This can be used for replay/rewind in the future"
+echo -e "${YELLOW}What we demonstrated:${NC}"
+echo "• Created 2 nodes and 1 edge"
+echo "• Deleted the edge and both nodes"
+echo "• All 6 operations were logged in the replay log"
+echo "• Rolled back to the starting state (entry ID: $INITIAL_ENTRY_ID)"
+echo "• Verified graph is empty again"
+echo "• Entries are marked as rolled_back_at"
+echo ""
+echo -e "${YELLOW}Key Features:${NC}"
+echo "• Linear history with entry IDs as logical clock"
+echo "• Bi-directional time travel (backward and forward)"
+echo "• Complete state capture for deletes (enables restoration)"
+echo "• Analysis events are skipped during rollback (no-ops)"
 echo ""

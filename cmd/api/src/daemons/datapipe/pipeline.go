@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphopsreplaylog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -49,9 +50,10 @@ type BHCEPipeline struct {
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 	changelog           *changelog.Changelog
+	graphOpsLog         graphopsreplaylog.Service
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, cl *changelog.Changelog, graphOpsLog graphopsreplaylog.Service) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,
@@ -62,6 +64,7 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		jobService:          job.NewJobService(ctx, db),
 		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema, cl),
 		changelog:           cl,
+		graphOpsLog:         graphOpsLog,
 	}
 }
 
@@ -247,6 +250,13 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return fmt.Errorf("update last analysis completion time: %v", err)
 		} else {
 			s.jobService.CompleteAnalyzedIngestJobs()
+
+			// Log analysis completion to the replay log
+			if s.graphOpsLog != nil {
+				if err := s.graphOpsLog.LogAnalysisEnd(ctx, "system"); err != nil {
+					slog.WarnContext(ctx, "failed to log analysis completion to replay log", "error", err)
+				}
+			}
 
 			// This is cacheclearing. The analysis is still successful here
 			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {

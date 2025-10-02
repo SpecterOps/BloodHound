@@ -22,10 +22,10 @@ CREATE TABLE IF NOT EXISTS graph_operations_replay_log (
     id SERIAL PRIMARY KEY,
 
     -- Type of change operation
-    change_type VARCHAR(10) NOT NULL CHECK (change_type IN ('create', 'update', 'delete')),
+    change_type VARCHAR(20) NOT NULL CHECK (change_type IN ('create', 'update', 'delete', 'analysis_start', 'analysis_end')),
 
     -- Type of graph object being modified
-    object_type VARCHAR(10) NOT NULL CHECK (object_type IN ('node', 'edge')),
+    object_type VARCHAR(20) NOT NULL CHECK (object_type IN ('node', 'edge', 'analysis')),
 
     -- Identifier of the object (for nodes: objectid, for edges: composite key)
     object_id VARCHAR(255) NOT NULL,
@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS graph_operations_replay_log (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP,
+
+    -- Rollback tracking
+    rolled_back_at TIMESTAMP,
 
     -- Index for efficient retrieval of recent changes
     CONSTRAINT chk_edge_requires_endpoints CHECK (
