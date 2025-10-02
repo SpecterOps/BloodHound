@@ -18,16 +18,16 @@ func (a action) String() string {
 
 // TODO: Add Cache Size to Metrics
 var (
-	changeLogCacheResult = prometheus.NewCounterVec(prometheus.CounterOpts{
+	changeLogCacheActions = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "change_log_cache",
-		Help: "A counter for ",
+		Help: "A counter for changelog cache actions",
 	}, []string{"action"}) // hit or miss
 )
 
 func RecordChangeLogCacheResult(action action) {
-	changeLogCacheResult.With(prometheus.Labels{"action": action.String()}).Inc()
+	changeLogCacheActions.With(prometheus.Labels{"action": action.String()}).Inc()
 }
 
 func RegisterChangeLogMetrics(reg prometheus.Registerer) error {
-	return reg.Register(changeLogCacheResult)
+	return reg.Register(changeLogCacheActions)
 }
