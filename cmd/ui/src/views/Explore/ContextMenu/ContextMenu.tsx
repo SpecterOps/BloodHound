@@ -71,7 +71,9 @@ const ContextMenu: FC<{
 
     console.log({ selectedItemQuery });
     const handleDeleteNode = async () => {
-        if (selectedItemQuery?.data?.id) {
+        const selectedItemData = selectedItemQuery.data;
+
+        if (selectedItemData && isNode(selectedItemData)) {
             // const edgesToDelete = graphData.edges.filter((edge) =>
             //     [edge.source, edge.target].includes(selectedItemQuery?.data?.id || '')
             // );
@@ -86,8 +88,8 @@ const ContextMenu: FC<{
             //         return deleteEdge(edgeToDelete);
             //     })
             // );
-
-            await deleteNode(selectedItemQuery?.data?.id);
+            const selectedItemData = selectedItemQuery.data;
+            await deleteNode(selectedItemData?.objectId);
         }
     };
 
