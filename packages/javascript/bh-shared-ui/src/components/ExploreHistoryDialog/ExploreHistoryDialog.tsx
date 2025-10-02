@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@bloodhoundenterprise/doodleui';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { useSearchParams } from 'react-router-dom';
 import { Field, FieldsContainer } from '../../views/Explore/fragments';
@@ -32,6 +32,9 @@ export const ExploreHistoryDialog = () => {
             <DialogTrigger className='w-full text-left'>Explore Query Debug</DialogTrigger>
             <DialogContent className='bg-neutral-1'>
                 <DialogTitle>Explore Query Debug</DialogTitle>
+                <DialogDescription>
+                    Collection of all query params representing the current state of the Explore page.
+                </DialogDescription>
                 <FieldsContainer>{formattedParams}</FieldsContainer>
             </DialogContent>
         </Dialog>
