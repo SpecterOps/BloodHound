@@ -19,7 +19,6 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     Permission,
     isNode,
-    // useDeleteEdgeMutation,
     useDeleteNodeMutation,
     useExploreParams,
     useExploreSelectedItem,
@@ -76,12 +75,28 @@ const ContextMenu: FC<{
         }
     };
 
+    console.log({ selectedItemQuery });
     const handleDeleteNode = async () => {
-        if (selectedItemQuery?.data?.id) {
-            await deleteNode(selectedItemQuery.data.id);
-        }
+        const selectedItemData = selectedItemQuery.data;
 
-        console.log(selectedItemQuery.data);
+        if (selectedItemData && isNode(selectedItemData)) {
+            // const edgesToDelete = graphData.edges.filter((edge) =>
+            //     [edge.source, edge.target].includes(selectedItemQuery?.data?.id || '')
+            // );
+
+            // await Promise.all(
+            //     edgesToDelete.map((edge) => {
+            //         const edgeToDelete = {
+            //             source_object_id: edge.source,
+            //             target_object_id: edge.target,
+            //             edge_kind: edge.kind,
+            //         };
+            //         return deleteEdge(edgeToDelete);
+            //     })
+            // );
+            const selectedItemData = selectedItemQuery.data;
+            await deleteNode(selectedItemData?.objectId);
+        }
     };
 
     const isStageClick = selectedItemType === undefined;

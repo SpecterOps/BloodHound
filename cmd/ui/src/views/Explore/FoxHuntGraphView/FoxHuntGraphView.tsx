@@ -168,7 +168,6 @@ const GraphView: FC = () => {
         if (layout === 'sequential') sigmaChartRef.current?.runSequentialLayout();
     };
 
-    console.log(sigmaChartRef?.current?.graph);
     return (
         <div
             className='relative h-full w-full overflow-hidden'
