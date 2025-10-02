@@ -259,6 +259,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
             // Despite the name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
             clickStage: () => onClickStage?.(),
+            rightClickStage: () => onClickStage?.(),
         });
     }, [
         draggedMeta,

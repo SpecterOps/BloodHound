@@ -71,10 +71,10 @@ sleep 1
 
 # Step 3: Check replay log after first node
 echo -e "${YELLOW}Step 3: Checking replay log (should have 1 entry)${NC}"
-echo "GET $HOST/api/v2/graph/replay log"
+echo "GET $HOST/api/v2/graph/replay-log"
 echo ""
 
-curl -s -X GET "$HOST/api/v2/graph/replay log" \
+curl -s -X GET "$HOST/api/v2/graph/replay-log" \
   -H "Authorization: Bearer $TOKEN" \
   | jq '{
     count: .count,
@@ -113,10 +113,10 @@ sleep 1
 
 # Step 5: Check replay log after second node
 echo -e "${YELLOW}Step 5: Checking replay log (should have 2 entries)${NC}"
-echo "GET $HOST/api/v2/graph/replay log"
+echo "GET $HOST/api/v2/graph/replay-log"
 echo ""
 
-curl -s -X GET "$HOST/api/v2/graph/replay log" \
+curl -s -X GET "$HOST/api/v2/graph/replay-log" \
   -H "Authorization: Bearer $TOKEN" \
   | jq '{
     count: .count,
@@ -155,10 +155,10 @@ sleep 1
 
 # Step 7: Check replay log after edge creation
 echo -e "${YELLOW}Step 7: Checking replay log (should have 3 entries)${NC}"
-echo "GET $HOST/api/v2/graph/replay log"
+echo "GET $HOST/api/v2/graph/replay-log"
 echo ""
 
-curl -s -X GET "$HOST/api/v2/graph/replay log" \
+curl -s -X GET "$HOST/api/v2/graph/replay-log" \
   -H "Authorization: Bearer $TOKEN" \
   | jq '{
     count: .count,
@@ -222,7 +222,7 @@ sleep 2
 echo -e "${BLUE}============================================${NC}"
 echo -e "${BLUE}Step 11: FINAL REPLAY LOG (Complete History)${NC}"
 echo -e "${BLUE}============================================${NC}"
-echo "GET $HOST/api/v2/graph/replay log"
+echo "GET $HOST/api/v2/graph/replay-log"
 echo ""
 echo "This shows the complete linear history of all operations:"
 echo "• 2 node creations"
@@ -231,7 +231,7 @@ echo "• 1 edge deletion"
 echo "• 2 node deletions"
 echo ""
 
-curl -s -X GET "$HOST/api/v2/graph/replay log" \
+curl -s -X GET "$HOST/api/v2/graph/replay-log" \
   -H "Authorization: Bearer $TOKEN" \
   | jq '{
     total_count: .count,
