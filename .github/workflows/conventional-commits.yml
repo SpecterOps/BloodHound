@@ -21,7 +21,9 @@ on:
     branches:
       - main
       - "stage/**"
-    types: [opened, synchronize]
+    types:
+      - opened
+      - synchronize
 
 jobs:
   check-commit-format:
@@ -38,8 +40,20 @@ jobs:
             test
             chore
             wip
-          subjectPattern: .*\\b[A-Z]+-\\d+\\b.*|.*#\\d+\\b.*
+          subjectPattern: .*\b[A-Z]+-\d+\b.*|.*#\d+\b.*
           subjectPatternError: |
-            The subject "{subject}" found in the pull request title "{title}" didn't match the configured pattern. Please ensure that the subject contains a reference to a ticket or issue number. Here are some examples: "BED-1234...", "...#1234",  "...PQE-1234...". This is the pattern matching used: '.*\\b[A-Z]+-\\d+\\b.*|.*#\\d+\\b.*'
+            Description Pattern Error
+            The description:
+            "{subject}"
+            found in the pull request title:
+            "{title}"
+            didn't match the configured pattern.
+
+            Please ensure that the description contains a space delimited reference to a ticket or issue number.
+            Here are some example descriptions: "BED-1234 ...", "... #1234",  "... PQE-1234 ...".
+
+            This is the pattern matching used: .*\b[A-Z]+-\d+\b.*|.*#\d+\b.*
+
+            For more information see: https://github.com/SpecterOps/BloodHound/blob/main/rfc/bh-rfc-2.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
