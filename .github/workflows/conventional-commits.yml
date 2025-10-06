@@ -40,9 +40,6 @@ jobs:
             wip
           subjectPattern: (?i:[a-z]-)\d+|#\d+
           subjectPatternError: |
-            The subject "{subject}" found in the pull request title "{title}"
-            didn't match the configured pattern. Please ensure that the subject
-            contains a reference to a ticket or issue number. Here are some examples:
-            "bed-1234...", "...#1234",  "...PQE-1234...".
+            The subject "{subject}" found in the pull request title "{title}" didn't match the configured pattern. Please ensure that the subject contains a reference to a ticket or issue number. Here are some examples: "bed-1234...", "...#1234",  "...PQE-1234...".
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
