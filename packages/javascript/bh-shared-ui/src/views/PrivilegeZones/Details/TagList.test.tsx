@@ -19,10 +19,10 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
+import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 import { detailsPath, privilegeZonesPath, zonesPath } from '../../../routes';
 import { render, screen, within } from '../../../test-utils';
 import { TagList } from './TagList';
-import zoneHandlers from '../../../mocks/handlers/zoneHandlers';
 
 const testQuery = {
     isLoading: false,
