@@ -17,6 +17,7 @@
 import { AssetGroupTag } from 'js-client-library';
 import { createContext, FC } from 'react';
 import {
+    detailsPath,
     ROUTE_PZ_LABEL_CREATE_SELECTOR,
     ROUTE_PZ_LABEL_UPDATE_SELECTOR,
     ROUTE_PZ_UPDATE_LABEL,
@@ -36,14 +37,17 @@ const savePaths = [
 
 const EmptyHeader: React.FC = () => <></>;
 export interface PrivilegeZonesContextValue {
+    defaultPath: string;
     savePaths: string[];
     InfoHeader: FC;
     SupportLink?: FC;
+    Summary?: React.LazyExoticComponent<React.FC>;
     SalesMessage?: FC;
     ZoneList?: FC<{ zones: AssetGroupTag[]; setPosition: (position: number) => void; name: string }>;
 }
 
 export const defaultPrivilegeZoneCtxValue: PrivilegeZonesContextValue = {
+    defaultPath: detailsPath,
     savePaths,
     InfoHeader: EmptyHeader,
 };

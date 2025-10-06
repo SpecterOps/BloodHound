@@ -13,12 +13,19 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Skeleton } from '@mui/material';
+import { FC } from 'react';
+import { AppNavigate } from '../../components';
+import { useHighestPrivilegeTagId } from '../../hooks';
+import { privilegeZonesPath, zonesPath } from '../../routes';
 
-import PrivilegeZones from './PrivilegeZones';
+const DefaultRoot: FC<{ defaultPath: string }> = ({ defaultPath }) => {
+    const { tagId } = useHighestPrivilegeTagId();
+    if (tagId) {
+        return <AppNavigate to={`/${privilegeZonesPath}/${zonesPath}/${tagId}/${defaultPath}`} replace />;
+    } else {
+        return <Skeleton className='h-24' />;
+    }
+};
 
-export { SelectedDetails, getSavePath } from './Details/index';
-export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
-export * from './utils';
-
-export default PrivilegeZones;
+export default DefaultRoot;
