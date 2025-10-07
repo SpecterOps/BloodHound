@@ -64,8 +64,8 @@ const UpdateUserDialog: React.FC<{
                         data-testid='update-user-dialog'>
                         <VisuallyHidden asChild>
                             <>
-                                <DialogTitle>Edit User</DialogTitle>
-                                <DialogDescription></DialogDescription>
+                                <DialogTitle />
+                                <DialogDescription />
                             </>
                         </VisuallyHidden>
                         <UpdateUserForm
