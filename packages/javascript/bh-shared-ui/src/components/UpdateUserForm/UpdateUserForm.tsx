@@ -129,7 +129,7 @@ const UpdateUserForm: React.FC<{
                 all_environments: getUserQuery.data.all_environments,
                 environment_access_control: {
                     environments:
-                        getUserQuery.data.all_environments !== true
+                        getUserQuery.data.all_environments === false
                             ? getUserQuery.data.environment_access_control?.map(
                                   (environment: EnvironmentRequest) => environment
                               )
@@ -164,7 +164,6 @@ const UpdateUserFormInner: React.FC<{
     initialData,
     isLoading,
     onSubmit,
-    //open,
     roles,
     showEnvironmentAccessControls,
     SSOProviders,
@@ -202,14 +201,14 @@ const UpdateUserFormInner: React.FC<{
 
     const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
 
-    const formatReturnedEnvironments = returnMappedEnvironments?.map((item: string) => ({
+    const formatReturnedEnvironments: EnvironmentRequest[] | null = returnMappedEnvironments?.map((item: string) => ({
         environment_id: item,
     }));
 
     //console.log(returnMappedEnvironments);
 
     const matchingValues = initialEnvironmentsSelected?.filter(
-        (value: any) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
+        (value) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
     );
 
     const checkAllEnvironment = initialData.all_environments === true ? null : matchingValues;
@@ -229,7 +228,7 @@ const UpdateUserFormInner: React.FC<{
         }
     };
 
-    const handleEnvironmentSelectChange = (itemId: any, checked: any) => {
+    const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
             //console.log(formatReturnedEnvironments);
             setSelectedEnvironments((prevSelected: string[]) => [...prevSelected, itemId]);
@@ -260,6 +259,7 @@ const UpdateUserFormInner: React.FC<{
         }
 
         if (allEnvironmentsSelected) {
+            setSelectedEnvironments(returnMappedEnvironments);
             form.setValue('environment_access_control.environments', null);
         } else {
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
@@ -299,7 +299,7 @@ const UpdateUserFormInner: React.FC<{
                 });
             }
         }
-    }, [authenticationMethod, form, form.setValue, error, form.setError]);
+    }, [authenticationMethod, form, form.setValue, error, form.setError, returnMappedEnvironments]);
 
     //console.log(form.watch());
 

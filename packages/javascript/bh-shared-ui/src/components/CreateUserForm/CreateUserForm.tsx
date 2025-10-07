@@ -56,13 +56,7 @@ const CreateUserForm: React.FC<{
     onSubmit: (user: CreateUserRequestForm) => void;
     open?: boolean;
     showEnvironmentAccessControls?: boolean;
-}> = ({
-    error,
-    isLoading,
-    onSubmit,
-    //open,
-    showEnvironmentAccessControls,
-}) => {
+}> = ({ error, isLoading, onSubmit, showEnvironmentAccessControls }) => {
     const defaultValues = {
         emailAddress: '',
         principal: '',
@@ -74,7 +68,7 @@ const CreateUserForm: React.FC<{
         SSOProviderId: '',
         all_environments: false,
         environment_access_control: {
-            environments: [],
+            environments: null,
         },
     };
 
@@ -97,7 +91,7 @@ const CreateUserForm: React.FC<{
     const { data: availableEnvironments } = useAvailableEnvironments();
 
     const [searchInput, setSearchInput] = useState<string>('');
-    const [selectedEnvironments, setSelectedEnvironments] = useState<any[]>([]);
+    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
 
     const handleCheckedChange = (checked: boolean | 'indeterminate') => {
@@ -114,17 +108,23 @@ const CreateUserForm: React.FC<{
     );
 
     const allEnvironmentsSelected =
-        selectedEnvironments.length === availableEnvironments?.length && availableEnvironments.length > 0;
+        selectedEnvironments !== null &&
+        selectedEnvironments.length === availableEnvironments?.length &&
+        availableEnvironments!.length > 0;
 
-    const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
+    const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: string | boolean) => {
         if (allEnvironmentsChecked || allEnvironmentsIndeterminate) {
-            const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
+            const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map(
+                (environment) => environment.id
+            );
 
-            setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('all_environments', true);
+            returnMappedEnvironments && setSelectedEnvironments(returnMappedEnvironments);
+
             form.setValue('environment_access_control.environments', null);
+            form.setValue('all_environments', true);
         } else {
             setSelectedEnvironments([]);
+            form.setValue('environment_access_control.environments', null);
             form.setValue('all_environments', false);
         }
     };
@@ -133,13 +133,9 @@ const CreateUserForm: React.FC<{
         environment_id: itemId,
     }));
 
-    console.log(formatReturnedEnvironments);
-
-    const handleEnvironmentSelectChange = (itemId: any, checked: any) => {
+    const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
             setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
-
-            //form.setValue('all_environments', false);
         } else {
             setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
         }
@@ -155,9 +151,13 @@ const CreateUserForm: React.FC<{
         }
 
         if (allEnvironmentsSelected) {
+            form.setValue('all_environments', true);
+            form.setValue('environment_access_control.environments', null);
+        } else if (allEnvironmentsSelected === false && selectedEnvironments.length === 0) {
+            form.setValue('all_environments', false);
             form.setValue('environment_access_control.environments', null);
         } else {
-            //setSelectedEnvironments(formatReturnedEnvironments);
+            form.setValue('all_environments', false);
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         }
 
@@ -169,7 +169,7 @@ const CreateUserForm: React.FC<{
                   : 'unchecked';
         }
 
-        //('Current form :', form.watch()); // TODO: REMOVE
+        //console.log(form.watch()); // TODO: REMOVE
 
         if (error) {
             if (error?.response?.status === 409) {
@@ -198,10 +198,10 @@ const CreateUserForm: React.FC<{
         allEnvironmentsSelected,
     ]);
 
-    console.log(selectedEnvironments);
+    //console.log(selectedEnvironments); // TODO: REMOVE
 
     const handleSave = () => {
-        console.log(form.watch('environment_access_control.environments'));
+        console.log(form.watch('environment_access_control.environments')); // TODO: REMOVE
     };
 
     return (
