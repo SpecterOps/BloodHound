@@ -158,7 +158,7 @@ const Layout: React.FC<{
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faStream} />}
-                            display='ACLs'
+                            display='ACEs'
                             value={stats?.acls}
                             loading={loading}
                         />
