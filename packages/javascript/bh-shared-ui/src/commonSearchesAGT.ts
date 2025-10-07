@@ -396,7 +396,7 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'Shortest paths from Entra Users to Tier Zero / High Value targets',
                 description: '',
-                query: `MATCH p=shortestPath((s:AZUser)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE (t:${TAG_TIER_ZERO_AGT}) AND t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s:AZUser)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE (t:${TAG_TIER_ZERO_AGT}) AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths to privileged roles',
