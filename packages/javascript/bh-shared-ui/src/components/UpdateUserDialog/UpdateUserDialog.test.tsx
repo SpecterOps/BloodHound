@@ -95,6 +95,7 @@ const testUser = {
     email_address: 'testuser@example.com',
     principal_name: 'testuser',
     id: '1',
+    all_environments: true,
 };
 
 const server = setupServer(
@@ -149,13 +150,13 @@ describe('UpdateUserDialog', () => {
 
         render(
             <UpdateUserDialog
-                userId={'1'}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                isLoading={options?.renderLoading || false}
                 error={options?.renderErrors}
                 hasSelectedSelf={false}
+                isLoading={options?.renderLoading || false}
+                onClose={testOnClose}
+                onSave={testOnSave}
                 open={true}
+                userId={'1'}
             />
         );
 
@@ -170,7 +171,9 @@ describe('UpdateUserDialog', () => {
     it('should render an update user form', async () => {
         setup();
 
-        expect(screen.getByText('Edit User')).toBeInTheDocument();
+        screen.debug(undefined, Infinity);
+
+        expect(await screen.getByText('Edit User')).toBeInTheDocument();
 
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
