@@ -18,7 +18,8 @@ import userEvent from '@testing-library/user-event';
 import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../test-utils';
+import { createAuthStateWithPermissions } from '../../mocks';
+import { fireEvent, render, screen, waitFor } from '../../test-utils';
 import { userEventHelpers } from '../../utils/testHelpers';
 import CreateUserDialog from './CreateUserDialog';
 
@@ -81,6 +82,13 @@ const testSSOProviders: SSOProvider[] = [
 ];
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([]).user,
+            })
+        );
+    }),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -103,7 +111,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('CreateUserDialog', () => {
+describe('CreateUserDialog', async (open = true) => {
     type SetupOptions = {
         renderErrors?: boolean;
         renderLoading?: boolean;
@@ -116,7 +124,6 @@ describe('CreateUserDialog', () => {
         const user = userEvent.setup();
         const testOnClose = vi.fn();
         const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-        //const handleOpenChange = vi.fn();
         const testUser = {
             emailAddress: 'testuser@example.com',
             principalName: 'testuser',
@@ -151,6 +158,9 @@ describe('CreateUserDialog', () => {
 
         expect(screen.getByText('Create User')).toBeInTheDocument();
 
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
+
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
 
         expect(screen.getByLabelText('Principal Name')).toBeInTheDocument();
@@ -175,6 +185,9 @@ describe('CreateUserDialog', () => {
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
         const { user, testOnSave } = setup();
 
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
+
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
         await user.click(saveButton);
@@ -194,6 +207,9 @@ describe('CreateUserDialog', () => {
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
         const { user, testUser, testOnSave } = setup();
+
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -215,6 +231,9 @@ describe('CreateUserDialog', () => {
     it('should display all available roles', async () => {
         const { user } = setup();
 
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
+
         await user.click(await screen.findByLabelText('Role'));
 
         for (const role of testRoles) {
@@ -224,6 +243,9 @@ describe('CreateUserDialog', () => {
 
     it('should display all available SSO providers', async () => {
         const { user } = setup();
+
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
@@ -245,6 +267,9 @@ describe('CreateUserDialog', () => {
     it('should disable Cancel and Save buttons while isLoading is true', async () => {
         setup({ renderLoading: true });
 
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
+
         expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDisabled();
 
         expect(await screen.findByRole('button', { name: 'Save' })).toBeDisabled();
@@ -253,11 +278,17 @@ describe('CreateUserDialog', () => {
     it('should display error message when error prop is provided', async () => {
         setup({ renderErrors: true });
 
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
+
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
     it('should clear out the SSO Provider id from submission data when the authentication method is changed', async () => {
         const { user, testUser, testOnSave } = setup();
+
+        const triggerButton = screen.getByText('Create User');
+        fireEvent.click(triggerButton);
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
