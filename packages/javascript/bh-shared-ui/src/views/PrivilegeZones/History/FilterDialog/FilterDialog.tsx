@@ -35,6 +35,7 @@ import {
     SelectTrigger,
     SelectValue,
     Skeleton,
+    Tooltip,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
 import { SystemString } from 'js-client-library';
@@ -140,8 +141,12 @@ const FilterDialog: FC<{
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button data-testid='History_log_filter_dialog' variant='text'>
-                    <AppIcon.FilterOutline size={22} />
+                <Button data-testid='privilege-zones_history_filter-button' variant='text'>
+                    <Tooltip tooltip='Apply Filters'>
+                        <span>
+                            <AppIcon.FilterOutline size={22} />
+                        </span>
+                    </Tooltip>
                 </Button>
             </DialogTrigger>
 

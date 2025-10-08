@@ -38,8 +38,6 @@ describe('Privilege Zones History Filter Dialog', () => {
             const contextValue = {
                 currentNote: '',
                 setCurrentNote: () => {},
-                showNoteDetails: '',
-                setShowNoteDetails: () => {},
             };
 
             const defaultSetFilter = () => {};
@@ -50,7 +48,8 @@ describe('Privilege Zones History Filter Dialog', () => {
                 </HistoryTableContext.Provider>
             );
             const user = userEvent.setup();
-            const openDialog = async () => await user.click(screen.getByTestId('History_log_filter_dialog'));
+            const openDialog = async () =>
+                await user.click(screen.getByTestId('privilege-zones_history_filter-button'));
             return { screen, user, openDialog };
         });
     };
@@ -59,7 +58,7 @@ describe('Privilege Zones History Filter Dialog', () => {
         const { screen, openDialog } = await setup();
         await openDialog();
 
-        expect(screen.getByText('Filter')).toBeInTheDocument();
+        expect(await screen.findByText('Filter')).toBeInTheDocument();
 
         expect(screen.getByLabelText('Action')).toBeInTheDocument();
         expect(screen.getByLabelText('Zone/Label')).toBeInTheDocument();
