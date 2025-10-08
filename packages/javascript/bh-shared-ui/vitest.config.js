@@ -33,5 +33,13 @@ export default defineConfig({
             reportsDirectory: './coverage',
             reporter: ['text-summary', 'json-summary'],
         },
+        reporters: [
+            [
+                'allure-vitest/reporter',
+                {
+                    resultsDir: '../../../allure-results',
+                },
+            ],
+        ],
     },
 });

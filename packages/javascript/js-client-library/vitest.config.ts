@@ -19,16 +19,16 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     test: {
         setupFiles: ['allure-vitest/setup'],
+        coverage: {
+            provider: 'v8',
+            reportsDirectory: './coverage',
+            reporter: ['text-summary', 'json-summary'],
+        },
         reporters: [
             [
                 'allure-vitest/reporter',
                 {
-                    globalLabels: [
-                        {
-                            name: 'parentSuite',
-                            value: '[TEST] - JS Client Library',
-                        },
-                    ],
+                    resultsDir: '../../../allure-results',
                 },
             ],
         ],
