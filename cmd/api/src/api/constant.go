@@ -47,6 +47,7 @@ const (
 	QueryParameterFindingType     = "finding"
 	QueryParameterAssetGroupTagId = "asset_group_tag_id"
 	QueryParameterEnvironments    = "environments"
+	QueryParameterDomainSid       = "domain_sid"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
