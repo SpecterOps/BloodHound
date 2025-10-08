@@ -22,18 +22,19 @@ func (m *mockDogtagsService) GetAllFlags(ctx context.Context) map[dogtags.FlagKe
 
 
 func TestGetDogtags(t *testing.T) {
-	// Setup mock service
-	mockService := &mockDogtagsService{
+	// Setup mock provider
+	mockProvider := &mockDogtagsService{
 		flags: map[dogtags.FlagKey]interface{}{
-			dogtags.CanAppStartup:  true,
-			dogtags.MaxConnections: int64(150),
-			dogtags.ApiBaseURL:     "https://test.api.local",
+			dogtags.BypassCypherQueryLimits: true,
+			dogtags.CypherMutability:        false,
+			dogtags.ZoneAllocation:          int64(100),
+			dogtags.LabelAllocation:         int64(50),
 		},
 	}
 
-	// Create resources with mock service
+	// Create resources with service using mock provider
 	resources := v2.Resources{
-		DogtagsService: mockService,
+		DogtagsService: mockProvider,
 	}
 
 	// Create test request
@@ -63,9 +64,10 @@ func TestGetDogtags(t *testing.T) {
 
 	// Verify response data - JSON unmarshaling converts numbers to float64
 	expectedFlags := map[string]interface{}{
-		"can_app_startup":  true,
-		"max_connections":  float64(150),
-		"api_base_url":     "https://test.api.local",
+		"bypass_cypher_query_limits": true,
+		"cypher_mutability":          false,
+		"zone_allocation":            float64(100),
+		"label_allocation":           float64(50),
 	}
 
 	for key, expectedValue := range expectedFlags {

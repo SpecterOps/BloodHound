@@ -1,5 +1,3 @@
-//go:build yaml
-
 package providers
 
 import (
@@ -17,7 +15,8 @@ type YAMLProvider struct {
 	filePath string
 }
 
-func NewProvider(filePath string) (*YAMLProvider, error) {
+// NewYAMLProvider creates a new YAML-based dogtags provider
+func NewYAMLProvider(filePath string) (*YAMLProvider, error) {
 	if filePath == "" {
 		filePath = "local-harnesses/dogtags.yaml"
 	}

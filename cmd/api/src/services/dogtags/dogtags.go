@@ -7,11 +7,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags/providers"
 )
 
-// Config for dogtags service
-type Config struct {
-	FilePath string `yaml:"file_path"`
-}
-
 // FlagKey represents a valid dogtag key
 type FlagKey string
 
@@ -45,14 +40,14 @@ func ValidateFlag(key FlagKey) error {
 	return nil
 }
 
-
 // Provider defines the interface for dogtags providers
 type Provider interface {
 	GetAllFlags(ctx context.Context) map[FlagKey]interface{}
 }
 
-// rawProvider is what providers actually implement (with string keys)
-type rawProvider interface {
+// RawProvider is what providers actually implement (with string keys)
+// External repos can implement this interface to create custom providers
+type RawProvider interface {
 	GetBoolFlag(ctx context.Context, key string, defaultValue bool) bool
 	GetStringFlag(ctx context.Context, key string, defaultValue string) string
 	GetIntFlag(ctx context.Context, key string, defaultValue int64) int64
@@ -61,7 +56,7 @@ type rawProvider interface {
 
 // service wraps a raw provider with the for-loop logic
 type service struct {
-	provider rawProvider
+	provider RawProvider
 }
 
 func (s *service) GetAllFlags(ctx context.Context) map[FlagKey]interface{} {
@@ -84,11 +79,12 @@ func (s *service) GetAllFlags(ctx context.Context) map[FlagKey]interface{} {
 	return result
 }
 
-// NewService creates a new dogtags service
-func NewService(config Config) (Provider, error) {
-	rawProvider, err := providers.NewProvider(config.FilePath)
-	if err != nil {
-		return nil, err
-	}
-	return &service{provider: rawProvider}, nil
+// NewService creates a new dogtags service with the given provider
+func NewService(provider RawProvider) Provider {
+	return &service{provider: provider}
+}
+
+// NewYAMLProvider creates a YAML-based provider (convenience export)
+func NewYAMLProvider(filePath string) (RawProvider, error) {
+	return providers.NewYAMLProvider(filePath)
 }

@@ -99,14 +99,32 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	}
 
 	// Initialize DogTags service
-	dogtagsService, err := dogtags.NewService(dogtags.Config{FilePath: cfg.DogTagsFilePath})
+	slog.InfoContext(ctx, "================================================================================")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "||                      DOGTAGS INITIALIZATION                                ||")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "================================================================================")
+
+	dogtagsProvider, err := dogtags.NewYAMLProvider(cfg.DogTagsFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize dogtags service: %w", err)
+		slog.ErrorContext(ctx, "================================================================================")
+		slog.ErrorContext(ctx, "||  FATAL: FAILED TO LOAD DOGTAGS                                           ||")
+		slog.ErrorContext(ctx, "================================================================================")
+		return nil, fmt.Errorf("failed to initialize dogtags provider: %w", err)
 	}
+	dogtagsService := dogtags.NewService(dogtagsProvider)
 
 	// Log loaded flags on startup
 	flags := dogtagsService.GetAllFlags(ctx)
-	slog.InfoContext(ctx, "DogTags loaded", slog.Any("flags", flags))
+	slog.InfoContext(ctx, "DogTags Configuration:")
+	for key, value := range flags {
+		slog.InfoContext(ctx, fmt.Sprintf("  • %s = %v", key, value))
+	}
+	slog.InfoContext(ctx, "================================================================================")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "||             ✓ DOGTAGS LOADED SUCCESSFULLY                                 ||")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "================================================================================")
 
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return nil, fmt.Errorf("failed to create in-memory cache for API: %w", err)
