@@ -171,14 +171,10 @@ describe('UpdateUserDialog', () => {
     it('should render an update user form', async () => {
         setup();
 
-        //expect(await screen.getByText('Edit User')).toBeInTheDocument();
-
         // takes a couple seconds for the dialog to load
         const editUserText = await waitFor(() => screen.getByText('Edit User'), {
             timeout: 10000,
         });
-
-        screen.debug(undefined, Infinity);
 
         expect(editUserText).toBeInTheDocument();
 
@@ -306,6 +302,8 @@ describe('UpdateUserDialog', () => {
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
 
         await user.click(saveButton);
+
+        screen.debug(undefined, Infinity);
 
         await waitFor(
             () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
