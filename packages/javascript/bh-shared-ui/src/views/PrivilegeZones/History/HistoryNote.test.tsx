@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { render, screen } from '../../../test-utils';
-import HistoryNote from './HistoryNotes';
+import HistoryNote from './HistoryNote';
 import { useHistoryTableContext } from './HistoryTableContext';
 
 vi.mock('./HistoryTableContext', () => ({
