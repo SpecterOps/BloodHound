@@ -262,6 +262,7 @@ const CreateUserForm: React.FC<{
                                                             ) : (
                                                                 getRolesQuery.data?.map((role: Role) => (
                                                                     <SelectItem
+                                                                        data-testid={`create-user-dialog_select_role-${role.name}`}
                                                                         className='hover:cursor-pointer'
                                                                         key={role.id}
                                                                         value={role.id.toString()}>
