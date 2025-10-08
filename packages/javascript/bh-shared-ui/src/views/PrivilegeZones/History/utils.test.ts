@@ -17,9 +17,9 @@ import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../..';
 import { createHistoryParams, PAGE_SIZE } from './utils';
 
-const formatDateRange = (date: string) => ({
-    start: DateTime.fromFormat(date, LuxonFormat.ISO_8601).startOf('day').toISO(),
-    end: DateTime.fromFormat(date, LuxonFormat.ISO_8601).endOf('day').toISO(),
+const formatDateRange = (start: string, end: string) => ({
+    start: DateTime.fromFormat(start, LuxonFormat.ISO_8601).startOf('day').toISO(),
+    end: DateTime.fromFormat(end, LuxonFormat.ISO_8601).endOf('day').toISO(),
 });
 
 describe('createHistoryParams', () => {
@@ -33,7 +33,7 @@ describe('createHistoryParams', () => {
 
     it('constructs correct URLSearchParams with all filters', () => {
         const params = createHistoryParams(1, baseFilters);
-        const { start, end } = formatDateRange(baseFilters['start-date']);
+        const { start, end } = formatDateRange(baseFilters['start-date'], baseFilters['end-date']);
 
         expect(params.get('limit')).toBe(PAGE_SIZE.toString());
         expect(params.get('skip')).toBe('0');
@@ -65,7 +65,7 @@ describe('createHistoryParams', () => {
             madeBy: '',
             action: '',
         };
-        const { start, end } = formatDateRange(minimalFilters['start-date']);
+        const { start, end } = formatDateRange(minimalFilters['start-date'], minimalFilters['end-date']);
         const params = createHistoryParams(1, minimalFilters);
 
         expect(params.get('action')).toBeNull();
