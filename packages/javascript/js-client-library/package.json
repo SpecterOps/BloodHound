@@ -11,7 +11,7 @@
     "scripts": {
         "build": "yarn check-types && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "test": "echo \"Warning: no test specified\"",
+        "test": "vitest --reporter=default",
         "check-types": "tsc --noEmit --pretty",
         "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
@@ -23,13 +23,18 @@
         "@rollup/plugin-typescript": "^11.1.6",
         "@typescript-eslint/eslint-plugin": "^7.3.0",
         "@typescript-eslint/parser": "^7.3.0",
+        "@vitest/coverage-v8": "^3.2.4",
+        "@vitest/runner": "^3.2.4",
+        "allure-js-commons": "^3.4.1",
+        "allure-vitest": "^3.4.1",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "prettier": "^3.2.5",
         "prettier-plugin-organize-imports": "^4.1.0",
         "rollup": "^4.13.2",
         "rollup-plugin-delete": "^2.0.0",
-        "typescript": "^5.1.6"
+        "typescript": "^5.1.6",
+        "vitest": "^3.2.4"
     },
     "installConfig": {
         "hoistingLimits": "workspaces"

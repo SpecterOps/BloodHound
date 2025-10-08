@@ -13,3 +13,6 @@
 node_modules
 
 !dist
+
+allure-report
+allure-results
