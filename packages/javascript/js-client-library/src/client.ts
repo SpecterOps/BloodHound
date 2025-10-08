@@ -95,7 +95,7 @@ import {
 import * as types from './types';
 
 /** Return the value as a string with the given prefix */
-const prefixValue = (prefix: string, value: any) => (value !== undefined ? `${prefix}:${value.toString()}` : undefined);
+const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
 
 /** Return a copy of the object with all keys having undefined values have been stripped out  */
 const omitUndefined = (obj: Record<string, unknown>) =>
@@ -256,63 +256,23 @@ class BHEAPIClient {
 
     /* asset group tags (AGT) */
 
-    getAssetGroupTagHistory = (
-        {
-            action,
-            created_at,
-            limit,
-            skip,
-        }: {
-            action?: string;
-            created_at?: { lte?: string; gte?: string };
-            limit: number;
-            skip: number;
-        },
-        options?: RequestOptions
-    ) =>
+    getAssetGroupTagHistory = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsHistory>(`/api/v2/asset-group-tags-history`, {
-            params: omitUndefined({
-                limit,
-                skip,
-                created_at: created_at
-                    ? Object.entries(created_at).map(([key, value]) => prefixValue(key, value))
-                    : undefined,
-                action: prefixValue('eq', action),
-            }),
             paramsSerializer: {
                 indexes: null,
             },
             ...options,
         });
 
-    searchAssetGroupTagHistory = ({
-        action,
-        created_at,
-        limit,
-        query,
-        skip,
-    }: {
-        action?: string;
-        created_at?: { gte?: string; lte?: string };
-        limit: number;
-        query: string;
-        skip: number;
-    }) =>
+    searchAssetGroupTagHistory = (query: string, options?: RequestOptions) =>
         this.baseClient.post<AssetGroupTagsHistory>(
             `/api/v2/asset-group-tags-history`,
             { query },
             {
-                params: omitUndefined({
-                    skip,
-                    limit,
-                    created_at: created_at
-                        ? Object.entries(created_at).map(([key, value]) => prefixValue(key, value))
-                        : undefined,
-                    action: prefixValue('eq', action),
-                }),
                 paramsSerializer: {
                     indexes: null,
                 },
+                ...options,
             }
         );
 

@@ -21,7 +21,6 @@ import {
     DialogClose,
     DialogContent,
     DialogDescription,
-    DialogPortal,
     DialogTitle,
     DialogTrigger,
     Form,
@@ -33,12 +32,12 @@ import {
     Select,
     SelectContent,
     SelectItem,
-    SelectPortal,
     SelectTrigger,
     SelectValue,
     Skeleton,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
+import { SystemString } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect } from 'react';
 import { ErrorOption, useForm } from 'react-hook-form';
@@ -65,13 +64,13 @@ const actionMap: { label: string; value: string }[] = [
 
 export interface AssetGroupTagHistoryFilters {
     action: string;
-    tag: string;
+    tagId: string;
     madeBy: string;
     ['start-date']: string;
     ['end-date']: string;
 }
 
-export const DEFAULT_FILTER_VALUE = { action: '', tag: '', madeBy: '', 'start-date': '', 'end-date': '' };
+export const DEFAULT_FILTER_VALUE = { action: '', tagId: '', madeBy: '', 'start-date': '', 'end-date': '' };
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
@@ -82,7 +81,7 @@ const FilterDialog: FC<{
 }> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
-    const { setShowNoteDetails, setCurrentNote } = useHistoryTableContext();
+    const { setCurrentNote } = useHistoryTableContext();
 
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
 
@@ -116,8 +115,8 @@ const FilterDialog: FC<{
     const handleConfirm = useCallback(() => {
         const start = form.getValues(START_DATE);
         const end = form.getValues(END_DATE);
-        setShowNoteDetails(false);
-        setCurrentNote({});
+
+        setCurrentNote(null);
 
         // Allow partial filtering of records; Do not block if neither date is filled
         if (!start && !end) {
@@ -132,7 +131,7 @@ const FilterDialog: FC<{
         if (validateDateFields(startDate, endDate)) {
             setFilters({ ...form.getValues() });
         }
-    }, [form, setFilters, validateDateFields, setShowNoteDetails, setCurrentNote]);
+    }, [form, setFilters, validateDateFields, setCurrentNote]);
 
     useEffect(() => {
         form.reset(filters);
@@ -146,254 +145,245 @@ const FilterDialog: FC<{
                 </Button>
             </DialogTrigger>
 
-            <DialogPortal>
-                <DialogContent>
-                    <Form {...form}>
-                        <form className='flex flex-col gap-4'>
-                            <DialogTitle className='flex justify-between items-center'>
-                                <span className='text-xl'>Filter</span>
+            <DialogContent>
+                <Form {...form}>
+                    <form className='flex flex-col gap-4'>
+                        <DialogTitle className='flex justify-between items-center'>
+                            <span className='text-xl'>Filter</span>
+                            <Button
+                                variant={'text'}
+                                onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
+                                className='font-normal p-2'>
+                                Clear All
+                            </Button>
+                        </DialogTitle>
+                        <VisuallyHidden asChild>
+                            <DialogDescription>Filter Privilege Zone History</DialogDescription>
+                        </VisuallyHidden>
+                        <FormField
+                            control={form.control}
+                            name='action'
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel aria-labelledby='action'>Action</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder='Select' {...field} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {actionMap.map((action, index) => {
+                                                if (index === 0) return; // Do not render empty string item
+                                                return (
+                                                    <SelectItem
+                                                        key={actionMap[index].value}
+                                                        value={actionMap[index].value}>
+                                                        {actionMap[index].label}
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name='tagId'
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel aria-labelledby='tag'>Zone/Label</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        defaultValue={field.value}>
+                                        <FormControl>
+                                            {tagsQuery.isError ? (
+                                                <span className='text-error'>
+                                                    There was an error fetching this data. Please refresh the page to
+                                                    try again.
+                                                </span>
+                                            ) : (
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder='Select' />
+                                                </SelectTrigger>
+                                            )}
+                                        </FormControl>
+
+                                        {tagsQuery.isLoading ? (
+                                            <Skeleton className='h-10 w-24' />
+                                        ) : (
+                                            <SelectContent>
+                                                {tagsQuery.data?.map((tag) => (
+                                                    <SelectItem key={tag.id} value={tag.id.toString()}>
+                                                        {tag.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        )}
+                                    </Select>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name='madeBy'
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel aria-labelledby='madeBy'>Made By</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        defaultValue={field.value}>
+                                        <FormControl>
+                                            {bloodHoundUsersQuery.isError ? (
+                                                <span className='text-error'>
+                                                    There was an error fetching this data. Please refresh the page to
+                                                    try again.
+                                                </span>
+                                            ) : (
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder='Select' />
+                                                </SelectTrigger>
+                                            )}
+                                        </FormControl>
+                                        {bloodHoundUsersQuery.isLoading ? (
+                                            <Skeleton className='h-10 w-24' />
+                                        ) : (
+                                            <SelectContent>
+                                                <SelectItem value={SystemString}>{SystemString}</SelectItem>
+                                                {bloodHoundUsersQuery.data
+                                                    ?.filter((user) => {
+                                                        let hasPermission = false;
+                                                        user.roles.forEach((role) => {
+                                                            role.permissions.forEach((permission) => {
+                                                                if (
+                                                                    permission.name === 'ManageUsers' &&
+                                                                    permission.authority === 'auth'
+                                                                )
+                                                                    hasPermission = true;
+                                                            });
+                                                        });
+
+                                                        return hasPermission;
+                                                    })
+                                                    .sort((a, b) =>
+                                                        (a.email_address || a.principal_name).localeCompare(
+                                                            b.email_address || b.principal_name
+                                                        )
+                                                    )
+                                                    ?.map((user) => (
+                                                        <SelectItem key={user.id} value={user.email_address || user.id}>
+                                                            {user.email_address || user.principal_name}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        )}
+                                    </Select>
+                                </FormItem>
+                            )}
+                        />
+                        <div className='flex gap-6'>
+                            <FormField
+                                name='start-date'
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem className='w-40 flex flex-col gap-2 justify-start'>
+                                        <FormLabel htmlFor={field.name}>Start Date</FormLabel>
+                                        <FormControl>
+                                            <DatePicker
+                                                {...field}
+                                                InputElement={MaskedInput}
+                                                calendarProps={{
+                                                    mode: 'single',
+                                                    fromDate,
+                                                    toDate,
+                                                    selected: DateTime.fromFormat(
+                                                        field.value,
+                                                        LuxonFormat.ISO_8601
+                                                    ).toJSDate(),
+                                                    onSelect: (value: Date | undefined) => {
+                                                        form.setValue(
+                                                            field.name,
+                                                            value
+                                                                ? DateTime.fromJSDate(value).toFormat(
+                                                                      LuxonFormat.ISO_8601
+                                                                  )
+                                                                : ''
+                                                        );
+                                                    },
+                                                    disabled: (date: Date) => {
+                                                        return DateTime.fromJSDate(date) > DateTime.local();
+                                                    },
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                name='end-date'
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem className='w-40 flex flex-col gap-2 justify-start'>
+                                        <FormLabel htmlFor={field.name}>End Date</FormLabel>
+                                        <FormControl>
+                                            <DatePicker
+                                                {...field}
+                                                InputElement={MaskedInput}
+                                                calendarProps={{
+                                                    mode: 'single',
+                                                    fromDate,
+                                                    toDate,
+                                                    selected: DateTime.fromFormat(
+                                                        field.value,
+                                                        LuxonFormat.ISO_8601
+                                                    ).toJSDate(),
+                                                    onSelect: (value: Date | undefined) => {
+                                                        form.setValue(
+                                                            field.name,
+                                                            value
+                                                                ? DateTime.fromJSDate(value).toFormat(
+                                                                      LuxonFormat.ISO_8601
+                                                                  )
+                                                                : ''
+                                                        );
+                                                    },
+                                                    disabled: (date: Date) => {
+                                                        return DateTime.fromJSDate(date) > DateTime.local();
+                                                    },
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <DialogActions>
+                            <DialogClose asChild>
+                                <Button variant={'text'} className='p-2'>
+                                    Cancel
+                                </Button>
+                            </DialogClose>
+                            <DialogClose asChild>
                                 <Button
                                     variant={'text'}
-                                    onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
-                                    className='font-normal p-2'>
-                                    Clear All
+                                    className='text-primary dark:text-secondary-variant-2 p-2'
+                                    onClick={handleConfirm}>
+                                    Confirm
                                 </Button>
-                            </DialogTitle>
-                            <VisuallyHidden asChild>
-                                <DialogDescription>Filter Privilege Zone History</DialogDescription>
-                            </VisuallyHidden>
-                            <FormField
-                                control={form.control}
-                                name='action'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel aria-labelledby='action'>Action</FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder='Select' {...field} />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectPortal>
-                                                <SelectContent>
-                                                    {actionMap.map((action, index) => {
-                                                        if (index === 0) return; // Do not render empty string item
-                                                        return (
-                                                            <SelectItem
-                                                                key={actionMap[index].value}
-                                                                value={actionMap[index].value}>
-                                                                {actionMap[index].label}
-                                                            </SelectItem>
-                                                        );
-                                                    })}
-                                                </SelectContent>
-                                            </SelectPortal>
-                                        </Select>
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name='tag'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel aria-labelledby='tag'>Zone/Label</FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            defaultValue={field.value}>
-                                            <FormControl>
-                                                {tagsQuery.isError ? (
-                                                    <span className='text-error'>
-                                                        There was an error fetching this data. Please refresh the page
-                                                        to try again.
-                                                    </span>
-                                                ) : (
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder='Select' />
-                                                    </SelectTrigger>
-                                                )}
-                                            </FormControl>
-                                            <SelectPortal>
-                                                {tagsQuery.isLoading ? (
-                                                    <Skeleton className='h-10 w-24' />
-                                                ) : (
-                                                    <SelectContent>
-                                                        {tagsQuery.data?.map((tag) => (
-                                                            <SelectItem key={tag.id} value={tag.name}>
-                                                                {tag.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                )}
-                                            </SelectPortal>
-                                        </Select>
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name='madeBy'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel aria-labelledby='madeBy'>Made By</FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            defaultValue={field.value}>
-                                            <FormControl>
-                                                {bloodHoundUsersQuery.isError ? (
-                                                    <span className='text-error'>
-                                                        There was an error fetching this data. Please refresh the page
-                                                        to try again.
-                                                    </span>
-                                                ) : (
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder='Select' />
-                                                    </SelectTrigger>
-                                                )}
-                                            </FormControl>
-                                            <SelectPortal>
-                                                {bloodHoundUsersQuery.isLoading ? (
-                                                    <Skeleton className='h-10 w-24' />
-                                                ) : (
-                                                    <SelectContent>
-                                                        <SelectItem value={'SYSTEM'}>SYSTEM</SelectItem>
-                                                        {bloodHoundUsersQuery.data
-                                                            ?.filter((user) => {
-                                                                let hasPermission = false;
-                                                                user.roles.forEach((role) => {
-                                                                    role.permissions.forEach((permission) => {
-                                                                        if (
-                                                                            permission.name === 'ManageUsers' &&
-                                                                            permission.authority === 'auth'
-                                                                        )
-                                                                            hasPermission = true;
-                                                                    });
-                                                                });
-
-                                                                return hasPermission;
-                                                            })
-                                                            .sort((a, b) =>
-                                                                (a.email_address || a.principal_name).localeCompare(
-                                                                    b.email_address || b.principal_name
-                                                                )
-                                                            )
-                                                            ?.map((user) => (
-                                                                <SelectItem
-                                                                    key={user.id}
-                                                                    value={user.email_address || user.id}>
-                                                                    {user.email_address || user.principal_name}
-                                                                </SelectItem>
-                                                            ))}
-                                                    </SelectContent>
-                                                )}
-                                            </SelectPortal>
-                                        </Select>
-                                    </FormItem>
-                                )}
-                            />
-                            <div className='flex gap-6'>
-                                <FormField
-                                    name='start-date'
-                                    control={form.control}
-                                    render={({ field }) => (
-                                        <FormItem className='w-40 flex flex-col gap-2 justify-start'>
-                                            <FormLabel htmlFor={field.name}>Start Date</FormLabel>
-                                            <FormControl>
-                                                <DatePicker
-                                                    {...field}
-                                                    InputElement={MaskedInput}
-                                                    calendarProps={{
-                                                        mode: 'single',
-                                                        fromDate,
-                                                        toDate,
-                                                        selected: DateTime.fromFormat(
-                                                            field.value,
-                                                            LuxonFormat.ISO_8601
-                                                        ).toJSDate(),
-                                                        onSelect: (value: Date | undefined) => {
-                                                            form.setValue(
-                                                                field.name,
-                                                                value
-                                                                    ? DateTime.fromJSDate(value).toFormat(
-                                                                          LuxonFormat.ISO_8601
-                                                                      )
-                                                                    : ''
-                                                            );
-                                                        },
-                                                        disabled: (date: Date) => {
-                                                            return DateTime.fromJSDate(date) > DateTime.local();
-                                                        },
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    name='end-date'
-                                    control={form.control}
-                                    render={({ field }) => (
-                                        <FormItem className='w-40 flex flex-col gap-2 justify-start'>
-                                            <FormLabel htmlFor={field.name}>End Date</FormLabel>
-                                            <FormControl>
-                                                <DatePicker
-                                                    {...field}
-                                                    InputElement={MaskedInput}
-                                                    calendarProps={{
-                                                        mode: 'single',
-                                                        fromDate,
-                                                        toDate,
-                                                        selected: DateTime.fromFormat(
-                                                            field.value,
-                                                            LuxonFormat.ISO_8601
-                                                        ).toJSDate(),
-                                                        onSelect: (value: Date | undefined) => {
-                                                            form.setValue(
-                                                                field.name,
-                                                                value
-                                                                    ? DateTime.fromJSDate(value).toFormat(
-                                                                          LuxonFormat.ISO_8601
-                                                                      )
-                                                                    : ''
-                                                            );
-                                                        },
-                                                        disabled: (date: Date) => {
-                                                            return DateTime.fromJSDate(date) > DateTime.local();
-                                                        },
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <DialogActions>
-                                <DialogClose asChild>
-                                    <Button variant={'text'} className='p-2'>
-                                        Cancel
-                                    </Button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                    <Button
-                                        variant={'text'}
-                                        className='text-primary dark:text-secondary-variant-2 p-2'
-                                        onClick={handleConfirm}>
-                                        Confirm
-                                    </Button>
-                                </DialogClose>
-                            </DialogActions>
-                        </form>
-                    </Form>
-                </DialogContent>
-            </DialogPortal>
+                            </DialogClose>
+                        </DialogActions>
+                    </form>
+                </Form>
+            </DialogContent>
         </Dialog>
     );
 };

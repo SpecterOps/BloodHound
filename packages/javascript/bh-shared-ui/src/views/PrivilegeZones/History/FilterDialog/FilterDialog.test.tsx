@@ -76,7 +76,7 @@ describe('Privilege Zones History Filter Dialog', () => {
         const { screen, openDialog } = await setup({
             filters: {
                 action: 'CertifyNodeManual',
-                tag: 'foo',
+                tagId: 'foo',
                 madeBy: 'test_admin@specterops.io',
                 'start-date': '2025-07-12',
                 'end-date': '2025-08-12',
@@ -107,7 +107,7 @@ describe('Privilege Zones History Filter Dialog', () => {
         const { screen, openDialog } = await setup({
             filters: {
                 action: 'CertifyNodeManual',
-                tag: 'foo',
+                tagId: 'foo',
                 madeBy: 'test_admin@specterops.io',
                 'start-date': '2025-07-12',
                 'end-date': '2025-08-12',

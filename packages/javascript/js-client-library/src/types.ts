@@ -29,7 +29,9 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-type System = 'SYSTEM';
+export const SystemString = 'SYSTEM' as const;
+
+type System = typeof SystemString;
 
 type ISO_DATE_STRING = string;
 

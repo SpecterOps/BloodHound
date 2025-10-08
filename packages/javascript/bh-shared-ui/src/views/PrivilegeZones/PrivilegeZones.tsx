@@ -67,7 +67,7 @@ const PrivilegeZones: FC = () => {
     const location = useLocation();
     const ownedId = useOwnedTagId();
     const { tagId } = useHighestPrivilegeTagId();
-    const { tagType, isSummaryPage } = usePZPathParams();
+    const { isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
@@ -95,6 +95,8 @@ const PrivilegeZones: FC = () => {
         );
     }
 
+    const tabValue = isHistoryPage ? historyPath : tagType;
+
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
@@ -107,13 +109,16 @@ const PrivilegeZones: FC = () => {
                 <div className='flex flex-col h-[75vh]'>
                     <Tabs
                         defaultValue={zonesPath}
+                        value={tabValue}
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
-                        value={tagType}
                         onValueChange={(value) => {
-                            if (value === historyPath) return navigate(`/${privilegeZonesPath}/${historyPath}`);
-                            const path = isSummaryPage ? summaryPath : detailsPath;
-                            const id = value === zonesPath ? tagId : ownedId;
-                            navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
+                            if (value === historyPath) {
+                                return navigate(`/${privilegeZonesPath}/${historyPath}`);
+                            } else {
+                                const path = isSummaryPage ? summaryPath : detailsPath;
+                                const id = value === zonesPath ? tagId : ownedId;
+                                navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
+                            }
                         }}>
                         <TabsList className='w-full flex justify-start'>
                             <TabsTrigger value={zonesPath} data-testid='privilege-zones_tab-list_zones-tab'>
@@ -122,7 +127,7 @@ const PrivilegeZones: FC = () => {
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
-                            <TabsTrigger value={historyPath} data-testid='zone-management_tab-list_history-tab'>
+                            <TabsTrigger value={historyPath} data-testid='privilege-zones_tab-list_history-tab'>
                                 History
                             </TabsTrigger>
                         </TabsList>

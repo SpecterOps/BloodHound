@@ -13,19 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { DataTable } from '@bloodhoundenterprise/doodleui';
 
-import { useState } from 'react';
-import { HistoryTableContext } from './HistoryTableContext';
-
-const HistoryTableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [currentNote, setCurrentNote] = useState(null);
-
-    const contextValue = {
-        currentNote,
-        setCurrentNote,
-    };
-
-    return <HistoryTableContext.Provider value={contextValue}>{children}</HistoryTableContext.Provider>;
+export type HistoryItem = {
+    tagName: string | undefined;
+    date: string;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    environment_id: string | null;
+    note: string | null;
 };
 
-export default HistoryTableProvider;
+export type DataTableProps = React.ComponentProps<typeof DataTable>;
