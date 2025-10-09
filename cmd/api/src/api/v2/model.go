@@ -103,7 +103,7 @@ type CreateOIDCProviderRequest struct {
 }
 
 // DogtagsService alias for the interface from dogtags package
-type DogtagsService = dogtags.Provider
+type DogtagsService = dogtags.Service
 
 // Resources holds the database and configuration dependencies to be passed around the API functions
 type Resources struct {
@@ -132,6 +132,7 @@ func NewResources(
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
 	ingestSchema upload.IngestSchema,
+	dogtagsService DogtagsService,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -146,5 +147,6 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileService:                &fs.Client{},
+		DogtagsService:             dogtagsService,
 	}
 }
