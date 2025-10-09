@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FC, MouseEvent } from 'react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Popover, PopoverContent, PopoverTrigger } from 'doodle-ui';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {

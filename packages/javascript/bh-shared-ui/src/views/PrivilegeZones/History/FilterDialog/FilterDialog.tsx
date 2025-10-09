@@ -36,7 +36,7 @@ import {
     SelectValue,
     Skeleton,
     VisuallyHidden,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect } from 'react';
 import { ErrorOption, useForm } from 'react-hook-form';

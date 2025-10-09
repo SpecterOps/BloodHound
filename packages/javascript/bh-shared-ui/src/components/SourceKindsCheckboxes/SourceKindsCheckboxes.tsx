@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { Checkbox, FormControlLabel } from '@mui/material';
+import { Skeleton } from 'doodle-ui';
 import { type OptionsObject } from 'notistack';
 import { type FC } from 'react';
 import { useQuery } from 'react-query';

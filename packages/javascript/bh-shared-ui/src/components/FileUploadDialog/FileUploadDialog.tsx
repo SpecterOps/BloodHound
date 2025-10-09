@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { ReactNode, useRef } from 'react';
 import { useOnClickOutside, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';

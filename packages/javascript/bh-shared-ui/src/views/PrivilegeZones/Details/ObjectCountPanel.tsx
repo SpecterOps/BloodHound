@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Badge, Card, Skeleton } from 'doodle-ui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useEnvironmentIdList } from '../../../hooks';

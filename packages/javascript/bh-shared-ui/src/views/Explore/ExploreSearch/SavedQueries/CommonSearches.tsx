@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';

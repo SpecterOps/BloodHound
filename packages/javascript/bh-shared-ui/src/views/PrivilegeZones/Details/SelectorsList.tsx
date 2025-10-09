@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Button, Skeleton } from 'doodle-ui';
 import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 import { UseInfiniteQueryResult } from 'react-query';

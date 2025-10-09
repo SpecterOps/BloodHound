@@ -14,16 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
 import { SortOrder } from '../../types';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';

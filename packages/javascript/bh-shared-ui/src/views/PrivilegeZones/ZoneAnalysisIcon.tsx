@@ -13,14 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
 import clsx from 'clsx';
+import { TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
 import { FC } from 'react';
 import { AppIcon } from '../../components';
 import { usePZPathParams, usePrivilegeZoneAnalysis } from '../../hooks';

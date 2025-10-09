@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Popover, PopoverContent, PopoverTrigger } from 'doodle-ui';
 import { FC, MouseEvent } from 'react';
 import { AppIcon } from '../../../../components';
 interface SaveQueryActionMenuProps {

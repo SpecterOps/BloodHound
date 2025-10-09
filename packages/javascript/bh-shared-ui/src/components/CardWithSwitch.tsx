@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography, useTheme } from '@mui/material';
+import { Switch } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
 import { addOpacityToHex } from '../utils/colors';
 

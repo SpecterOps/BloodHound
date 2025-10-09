@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import { Dialog, DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'doodle-ui';
 import { PropsWithChildren } from 'react';
 
 type NoDataDialogProps = PropsWithChildren<{ open: boolean }>;

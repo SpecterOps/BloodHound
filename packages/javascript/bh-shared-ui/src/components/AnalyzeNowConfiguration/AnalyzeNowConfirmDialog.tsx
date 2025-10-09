@@ -14,14 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
+import { Button, Dialog, DialogActions, DialogContent, DialogDescription, DialogTitle } from 'doodle-ui';
 import { FC } from 'react';
 
 type AnalyzeNowConfirmDialogProps = {

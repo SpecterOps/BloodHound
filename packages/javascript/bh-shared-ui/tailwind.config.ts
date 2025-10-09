@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DoodleUIPlugin, DoodleUIPreset } from '@bloodhoundenterprise/doodleui';
+import { DoodleUIPlugin, DoodleUIPreset } from 'doodle-ui';
 import type { Config } from 'tailwindcss';
 
 export default {
-    content: ['./src/**/*.{js,ts,jsx,tsx}', './node_modules/@bloodhoundenterprise/doodleui/dist/doodleui.js'],
+    content: ['./src/**/*.{js,ts,jsx,tsx}', './node_modules/doodle-ui/dist/doodleui.js'],
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
     presets: [DoodleUIPreset],

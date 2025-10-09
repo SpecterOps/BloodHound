@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle, Box, CircularProgress, Grid, Switch, Typography } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation } from 'react-query';

@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Checkbox, ColumnDef, DataTable, Input } from '@bloodhoundenterprise/doodleui';
 import { CheckedState } from '@radix-ui/react-checkbox';
+import { Button, Checkbox, ColumnDef, DataTable, Input } from 'doodle-ui';
 import { UserMinimal } from 'js-client-library';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'react-query';

@@ -21,7 +21,7 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import { FC } from 'react';
 import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams } from '../../../hooks';

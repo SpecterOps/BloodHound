@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     Dialog,
     DialogActions,
@@ -29,6 +28,7 @@ import {
     TableRow,
     Typography,
 } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { AuthToken, NewAuthToken } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';

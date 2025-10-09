@@ -21,6 +21,7 @@ export default defineConfig({
     resolve: {
         alias: {
             'js-client-library': path.resolve(__dirname, '..', 'js-client-library', 'src'),
+            'doodle-ui': path.resolve(__dirname, '..', 'doodle-ui', 'src'),
         },
     },
     test: {

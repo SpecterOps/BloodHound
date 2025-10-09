@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { IconName, faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import clsx from 'clsx';
 import {
     Button,
     Card,
@@ -26,10 +29,7 @@ import {
     DialogTitle,
     Input,
     Tooltip,
-} from '@bloodhoundenterprise/doodleui';
-import { IconName, faClose } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import clsx from 'clsx';
+} from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { AppIcon } from '../../../../components';

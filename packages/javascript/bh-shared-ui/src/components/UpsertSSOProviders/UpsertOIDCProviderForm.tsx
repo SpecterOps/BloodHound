@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, DialogActions, DialogContent, Grid, TextField } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { OIDCProviderInfo, Role, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 import { FC, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';

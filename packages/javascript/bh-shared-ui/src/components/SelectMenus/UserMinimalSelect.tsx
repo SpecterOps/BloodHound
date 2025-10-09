@@ -14,15 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Label,
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
-    SelectValue,
-} from '@bloodhoundenterprise/doodleui';
+import { Label, Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from 'doodle-ui';
 import { User } from 'js-client-library';
 import type { FC } from 'react';
 import { useGetUsersMinimal } from '../../hooks/useGetUsers';

@@ -17,19 +17,9 @@
 // import { Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, TextField } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
-import {
-    Button,
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-    Input,
-    Label,
-} from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, useMediaQuery, useTheme } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../../../constants';

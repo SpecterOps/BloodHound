@@ -13,15 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogClose,
-    DialogContent,
-    DialogPortal,
-    DialogTitle,
-} from '@bloodhoundenterprise/doodleui';
+import { Button, Dialog, DialogActions, DialogClose, DialogContent, DialogPortal, DialogTitle } from 'doodle-ui';
 import { ErrorResponse } from 'js-client-library';
 import { useEffect, useState } from 'react';
 import FileDrop from '../../../../components/FileDrop';

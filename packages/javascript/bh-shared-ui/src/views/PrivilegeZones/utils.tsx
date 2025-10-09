@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Skeleton } from '@bloodhoundenterprise/doodleui';
+import { Skeleton } from 'doodle-ui';
 import { CSSProperties } from 'react';
 
 export const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {

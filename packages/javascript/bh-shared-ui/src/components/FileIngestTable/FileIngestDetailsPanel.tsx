@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardContent } from '@bloodhoundenterprise/doodleui';
+import { Card, CardContent } from 'doodle-ui';
 import type { FileIngestCompletedTask, FileIngestJob } from 'js-client-library';
 import { useFileUploadQuery } from '../../hooks';
 import { DetailsAccordion } from '../DetailsAccordion';

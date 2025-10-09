@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { IconName } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Card, Skeleton } from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,

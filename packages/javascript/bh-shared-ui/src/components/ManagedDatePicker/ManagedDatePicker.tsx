@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DatePicker } from '@bloodhoundenterprise/doodleui';
+import { DatePicker } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useId, useState } from 'react';
 import { LuxonFormat, fiveYearsAgo, now } from '../../utils';

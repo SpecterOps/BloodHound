@@ -33,7 +33,6 @@ export default {
         del({ targets: 'dist/*' }),
     ],
     external: [
-        '@bloodhoundenterprise/doodleui',
         '@date-io/luxon',
         '@emotion/react',
         '@emotion/styled',
@@ -52,6 +51,7 @@ export default {
         '@mui/styles/withStyles',
         '@reduxjs/toolkit',
         'clsx',
+        'doodle-ui',
         'downshift',
         'history',
         'immer',

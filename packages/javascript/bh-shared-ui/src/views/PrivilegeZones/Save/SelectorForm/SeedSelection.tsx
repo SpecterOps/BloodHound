@@ -14,16 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    FormControl,
-    FormField,
-    FormItem,
-    Input,
-    Skeleton,
-} from '@bloodhoundenterprise/doodleui';
+import { Card, CardContent, CardHeader, FormControl, FormField, FormItem, Input, Skeleton } from 'doodle-ui';
 import {
     SeedExpansionMethod,
     SeedExpansionMethodAll,

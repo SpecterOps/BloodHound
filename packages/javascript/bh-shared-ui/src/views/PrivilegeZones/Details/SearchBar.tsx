@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, Input, Popover, PopoverContent, PopoverTrigger } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,

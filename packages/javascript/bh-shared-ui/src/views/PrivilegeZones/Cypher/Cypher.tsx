@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { Button, Card, CardContent, CardHeader, CardTitle } from 'doodle-ui';
 import { SeedTypeCypher } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
