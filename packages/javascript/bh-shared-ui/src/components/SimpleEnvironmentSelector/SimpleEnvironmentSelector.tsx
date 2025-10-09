@@ -173,7 +173,7 @@ const SimpleEnvironmentSelector: React.FC<{
                         ?.sort((a: Environment, b: Environment) => {
                             return a.name.localeCompare(b.name);
                         })
-                        .map((environment: Environment, index: number) => {
+                        .map((environment: Environment) => {
                             return (
                                 <li key={environment.id}>
                                     <Button
