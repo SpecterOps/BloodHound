@@ -121,7 +121,7 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
             }
 
             // We need to exclude "gpo-tier_zero_objects" from the "Affect Objects" sum
-            // because "gpo-tier_zero_objects" already includes othe objects from this data
+            // because "gpo-tier_zero_objects" already includes other objects from this data
             let indexToExcludeFromSum: number = -1;
 
             if (label === 'Affected Objects' && Array.isArray(sections)) {
