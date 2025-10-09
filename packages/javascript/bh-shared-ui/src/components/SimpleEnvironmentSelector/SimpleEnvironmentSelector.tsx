@@ -29,7 +29,6 @@ import {
 import { faCloud, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, TextField } from '@mui/material';
-import clsx from 'clsx';
 import { Environment } from 'js-client-library';
 import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
@@ -147,19 +146,36 @@ const SimpleEnvironmentSelector: React.FC<{
                         data-testid={'data-quality_context-selector-search'}
                     />
                 </div>
-                <ul className='max-h-[500px] overflow-y-auto'>
+                <ul>
+                    <li key='active-directory-platform'>
+                        <Button
+                            className='flex justify-between items-center gap-2 w-full'
+                            onClick={handleADPlatformClick}
+                            disabled={disableADPlatform}
+                            variant={'text'}>
+                            All Active Directory Domains
+                            <FontAwesomeIcon icon={faGlobe} size='sm' />
+                        </Button>
+                    </li>
+                    <li key='azure-platform' className='border-b border-neutral-light-5 pb-2 mb-2'>
+                        <Button
+                            onClick={handleAzurePlatformClick}
+                            variant={'text'}
+                            disabled={disableAZPlatform}
+                            className='flex justify-between items-center gap-2 w-full'>
+                            All Azure Tenants
+                            <FontAwesomeIcon icon={faCloud} size='sm' />
+                        </Button>
+                    </li>
+                </ul>
+                <ul className='max-h-80 overflow-y-auto'>
                     {filteredEnvironments
                         ?.sort((a: Environment, b: Environment) => {
                             return a.name.localeCompare(b.name);
                         })
                         .map((environment: Environment, index: number) => {
                             return (
-                                <li
-                                    key={environment.id}
-                                    className={clsx(
-                                        index === filteredEnvironments.length - 1 &&
-                                            'border-b border-neutral-light-5 pb-2 mb-2'
-                                    )}>
+                                <li key={environment.id}>
                                     <Button
                                         variant={'text'}
                                         className='flex justify-between items-center gap-2 w-full'
@@ -190,26 +206,6 @@ const SimpleEnvironmentSelector: React.FC<{
                                 </li>
                             );
                         })}
-                    <li key='active-directory-platform'>
-                        <Button
-                            className='flex justify-between items-center gap-2 w-full'
-                            onClick={handleADPlatformClick}
-                            disabled={disableADPlatform}
-                            variant={'text'}>
-                            All Active Directory Domains
-                            <FontAwesomeIcon icon={faGlobe} size='sm' />
-                        </Button>
-                    </li>
-                    <li key='azure-platform'>
-                        <Button
-                            onClick={handleAzurePlatformClick}
-                            variant={'text'}
-                            disabled={disableAZPlatform}
-                            className='flex justify-between items-center gap-2 w-full'>
-                            All Azure Tenants
-                            <FontAwesomeIcon icon={faCloud} size='sm' />
-                        </Button>
-                    </li>
                 </ul>
             </PopoverContent>
         </Popover>
