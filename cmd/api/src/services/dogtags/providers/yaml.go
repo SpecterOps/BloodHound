@@ -84,7 +84,6 @@ func (p *YAMLProvider) GetFloatFlag(ctx context.Context, key string, defaultValu
 	return defaultValue
 }
 
-
 func (p *YAMLProvider) loadFlags() error {
 	data, err := os.ReadFile(p.filePath)
 	if err != nil {
