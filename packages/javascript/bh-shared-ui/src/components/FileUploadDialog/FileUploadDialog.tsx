@@ -65,6 +65,7 @@ const FileUploadDialog: React.FC<{
             maxWidth={'sm'}
             scroll='paper'
             onClose={onClose}
+            className='z-[1600]'
             ref={dialogRef}
             TransitionProps={{
                 onExited: () => {

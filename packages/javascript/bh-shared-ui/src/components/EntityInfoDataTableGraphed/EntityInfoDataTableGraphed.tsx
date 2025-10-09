@@ -105,8 +105,15 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     };
 
     let count: number | undefined;
+
     if (Array.isArray(countQuery.data)) {
-        if (countLabel !== undefined) {
+        if (label === 'Affected Objects') {
+            const tierZeroIndex = sections?.findIndex((section) => section.queryType === 'gpo-tier_zero_objects');
+
+            if (tierZeroIndex !== undefined) {
+                count = countQuery.data[tierZeroIndex].count || 0;
+            }
+        } else if (countLabel !== undefined) {
             countQuery.data.forEach((sectionData: any) => {
                 if (sectionData.countLabel === countLabel) count = sectionData.count;
             });
