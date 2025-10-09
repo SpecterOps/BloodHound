@@ -26,13 +26,13 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, groupExpansions); err != nil {
+	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, groupExpansions, changeManager); err != nil {
 		return &aggregateStats, err
 	} else if protectAdminGroupsStats, err := adAnalysis.PostProtectAdminGroups(ctx, db); err != nil {
 		return &aggregateStats, err

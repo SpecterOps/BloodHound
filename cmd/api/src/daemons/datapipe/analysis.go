@@ -39,8 +39,36 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
+// changeManagerAdapter adapts any changelog-like interface to implement analysis.ChangeManager
+// This avoids import cycles by accepting any type and doing runtime type assertions
+type changeManagerAdapter struct {
+	resolveChange func(change any) (bool, error)
+	submit        func(ctx context.Context, change any) bool
+	flushStats    func()
+}
+
+func (s *changeManagerAdapter) ResolveChange(change any) (bool, error) {
+	if s.resolveChange != nil {
+		return s.resolveChange(change)
+	}
+	return true, nil // Default: allow all changes
+}
+
+func (s *changeManagerAdapter) Submit(ctx context.Context, change any) bool {
+	if s.submit != nil {
+		return s.submit(ctx, change)
+	}
+	return false // Default: submission failed
+}
+
+func (s *changeManagerAdapter) FlushStats() {
+	if s.flushStats != nil {
+		s.flushStats()
+	}
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
-func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
+func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration, changeManager analysis.ChangeManager) error {
 	var (
 		collectedErrors      []error
 		compositionIdCounter = analysis.NewCompositionCounter()
@@ -77,7 +105,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving ADCS feature flag: %w", err))
 	} else if ntlmFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
-	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled, &compositionIdCounter); err != nil {
+	} else if stats, err := ad.Post(ctx, graphDB, adcsFlag.Enabled, appcfg.GetCitrixRDPSupport(ctx, db), ntlmFlag.Enabled, &compositionIdCounter, changeManager); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		adFailed = true
 	} else {
