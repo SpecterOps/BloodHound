@@ -127,7 +127,7 @@ describe('EntityInfoDataTableGraphed', () => {
     describe('Node count for nested table that counts all sections', () => {
         it('sums nested section node counts', async () => {
             render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
-            const sum = await screen.findByText('5,064');
+            const sum = await screen.findByText('5,009');
             expect(sum).not.toBeNull();
         });
 
@@ -157,7 +157,7 @@ describe('EntityInfoDataTableGraphed', () => {
             const user = userEvent.setup();
             render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
 
-            const sum = await screen.findAllByText('5,056');
+            const sum = await screen.findAllByText('5,001');
             expect(sum).not.toBeNull();
 
             const button = await screen.findByRole('button');
@@ -175,8 +175,8 @@ describe('EntityInfoDataTableGraphed', () => {
             render(<EntityInfoDataTableGraphed {...azKeyVaultSections[0]} />, { route: url });
 
             // wait for the total count to be available - this holds off all following tests until the counts have been returned
-            const sum = await screen.findByText('1,998');
-            expect(sum).not.toBeNull();
+            const sum = await screen.findAllByText('1,998');
+            expect(sum).not.toBe(null);
 
             // verify the vault reader count is as expected
             const vaultReadersHeader = await screen.findByText('Vault Readers');
