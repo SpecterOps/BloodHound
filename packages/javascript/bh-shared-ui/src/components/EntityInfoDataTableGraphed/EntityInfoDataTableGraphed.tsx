@@ -107,18 +107,32 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     let count: number | undefined;
 
     if (Array.isArray(countQuery.data)) {
-        if (label === 'Affected Objects') {
-            const tierZeroIndex = sections?.findIndex((section) => section.queryType === 'gpo-tier_zero_objects');
-
-            if (tierZeroIndex !== undefined) {
-                count = countQuery.data[tierZeroIndex].count || 0;
-            }
-        } else if (countLabel !== undefined) {
+        if (countLabel !== undefined) {
             countQuery.data.forEach((sectionData: any) => {
                 if (sectionData.countLabel === countLabel) count = sectionData.count;
             });
         } else {
-            count = countQuery.data.reduce((acc, val) => {
+            if (label === 'Affected Objects') {
+                const tierZeroIndex = sections?.findIndex((section) => section.queryType === 'gpo-tier_zero_objects');
+
+                if (tierZeroIndex !== undefined) {
+                    count = countQuery.data[tierZeroIndex].count || 0;
+                }
+            }
+
+            // We need to exclude "gpo-tier_zero_objects" from the "Affect Objects" sum
+            // because "gpo-tier_zero_objects" already includes othe objects from this data
+            let indexToExcludeFromSum: number = -1;
+
+            if (label === 'Affected Objects' && Array.isArray(sections)) {
+                indexToExcludeFromSum = sections?.findIndex((section) => section.queryType === 'gpo-tier_zero_objects');
+            }
+
+            count = countQuery.data.reduce((acc, val, index) => {
+                if (indexToExcludeFromSum === index) {
+                    return acc;
+                }
+
                 const count = val?.count ?? 0;
                 return acc + count;
             }, 0);
