@@ -24,7 +24,8 @@ const LabelWithCopy: FC<{
     label: ReactNode;
     valueToCopy: string | number;
     hoverOnly?: boolean;
-}> = ({ label, valueToCopy, hoverOnly = false }) => {
+    className?: string;
+}> = ({ label, valueToCopy, hoverOnly = false, className }) => {
     const theme = useTheme();
     const [copied, setCopied] = useState(false);
     const [hoverActive, setHoverActive] = useState(false);
@@ -48,7 +49,8 @@ const LabelWithCopy: FC<{
             alignItems='center'
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            sx={{ height: theme.spacing(3) }}>
+            sx={{ height: theme.spacing(3) }}
+            className={className}>
             {label}
             <Tooltip title='Copied' open={copied} placement='right'>
                 <IconButton
