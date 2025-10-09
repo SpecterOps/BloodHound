@@ -147,7 +147,7 @@ const SimpleEnvironmentSelector: React.FC<{
                         data-testid={'data-quality_context-selector-search'}
                     />
                 </div>
-                <ul>
+                <ul className='max-h-[500px] overflow-y-auto'>
                     {filteredEnvironments
                         ?.sort((a: Environment, b: Environment) => {
                             return a.name.localeCompare(b.name);
