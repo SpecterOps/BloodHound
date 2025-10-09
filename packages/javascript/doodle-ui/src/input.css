@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        @apply text-contrast;
+    }
+
+    body,
+    .docs-story {
+        @apply transition-colors dark:bg-neutral-dark-1;
+    }
+}
