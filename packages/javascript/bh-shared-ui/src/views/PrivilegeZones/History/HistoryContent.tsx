@@ -88,7 +88,6 @@ const HistoryContent = () => {
         overscan: 2,
     };
 
-    // const isLoading = isHistoryLoading || isTagsLoading;
     const isSuccess = isHistorySuccess && isTagsSuccess;
 
     const historyItems: HistoryItem[] = isSuccess
