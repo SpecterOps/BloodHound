@@ -25,7 +25,6 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     const tables = allSections[type]?.(id) || [];
 
-    console.log({ tables });
     return (
         <div data-testid='entity-info-data-table-list'>
             {tables.map((table, index) => {
