@@ -40,23 +40,23 @@ func ValidateFlag(key FlagKey) error {
 	return nil
 }
 
-// Provider defines the interface for dogtags providers
-type Provider interface {
+// Service defines the interface for the dogtags service
+type Service interface {
 	GetAllFlags(ctx context.Context) map[FlagKey]interface{}
 }
 
-// RawProvider is what providers actually implement (with string keys)
+// Provider is what provider implementations must implement (with string keys)
 // External repos can implement this interface to create custom providers
-type RawProvider interface {
+type Provider interface {
 	GetBoolFlag(ctx context.Context, key string, defaultValue bool) bool
 	GetStringFlag(ctx context.Context, key string, defaultValue string) string
 	GetIntFlag(ctx context.Context, key string, defaultValue int64) int64
 	GetFloatFlag(ctx context.Context, key string, defaultValue float64) float64
 }
 
-// service wraps a raw provider with the for-loop logic
+// service wraps a provider with the for-loop logic
 type service struct {
-	provider RawProvider
+	provider Provider
 }
 
 func (s *service) GetAllFlags(ctx context.Context) map[FlagKey]interface{} {
@@ -80,11 +80,11 @@ func (s *service) GetAllFlags(ctx context.Context) map[FlagKey]interface{} {
 }
 
 // NewService creates a new dogtags service with the given provider
-func NewService(provider RawProvider) Provider {
+func NewService(provider Provider) Service {
 	return &service{provider: provider}
 }
 
 // NewYAMLProvider creates a YAML-based provider (convenience export)
-func NewYAMLProvider(filePath string) (RawProvider, error) {
+func NewYAMLProvider(filePath string) (Provider, error) {
 	return providers.NewYAMLProvider(filePath)
 }
