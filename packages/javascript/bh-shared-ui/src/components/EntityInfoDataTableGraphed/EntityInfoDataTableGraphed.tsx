@@ -112,14 +112,6 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
                 if (sectionData.countLabel === countLabel) count = sectionData.count;
             });
         } else {
-            if (label === 'Affected Objects') {
-                const tierZeroIndex = sections?.findIndex((section) => section.queryType === 'gpo-tier_zero_objects');
-
-                if (tierZeroIndex !== undefined) {
-                    count = countQuery.data[tierZeroIndex].count || 0;
-                }
-            }
-
             // We need to exclude "gpo-tier_zero_objects" from the "Affect Objects" sum
             // because "gpo-tier_zero_objects" already includes other objects from this data
             let indexToExcludeFromSum: number = -1;
