@@ -76,7 +76,17 @@ describe('Cypher Search component for Zone Management', () => {
         const link = screen.getByRole('link', { name: 'View in Explore' });
         expect(link).toHaveAttribute(
             'href',
-            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=bWF0Y2gobikgcmV0dXJuIG4gbGltaXQgNQ=='
+            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=bWF0Y2gobikgcmV0dXJuIG4gbGltaXQgNQ%3D%3D'
+        );
+    });
+
+    it('properly encodes + sign into the "View in Explore" link', () => {
+        render(<Cypher initialInput='hello>world' />);
+
+        const link = screen.getByRole('link', { name: 'View in Explore' });
+        expect(link).toHaveAttribute(
+            'href',
+            '/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=aGVsbG8%2Bd29ybGQ%3D'
         );
     });
 
