@@ -62,6 +62,7 @@ func RegisterFossRoutes(
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
 	ingestSchema upload.IngestSchema,
+	dogtagsService v2.DogtagsService,
 ) {
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(rdms)
@@ -80,6 +81,6 @@ func RegisterFossRoutes(
 		routerInst.PathPrefix("/ui", static.AssetHandler),
 	)
 
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, dogtagsService)
 	NewV2API(resources, routerInst)
 }
