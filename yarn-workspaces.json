@@ -2,6 +2,7 @@
   "assets_dir": "cmd/api/src/api/static/assets",
   "workspaces": [
     "cmd/ui",
+    "packages/javascript/doodle-ui",
     "packages/javascript/bh-shared-ui",
     "packages/javascript/js-client-library"
   ]
