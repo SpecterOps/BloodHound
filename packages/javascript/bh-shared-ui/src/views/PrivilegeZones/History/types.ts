@@ -13,6 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { DataTable } from '@bloodhoundenterprise/doodleui';
 
-export * from './FilterDialog';
-export { default as FilterDialog } from './FilterDialog';
+export type HistoryItem = {
+    tagName: string | undefined;
+    date: string;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    environment_id: string | null;
+    note: string | null;
+};
+
+export type DataTableProps = React.ComponentProps<typeof DataTable>;
