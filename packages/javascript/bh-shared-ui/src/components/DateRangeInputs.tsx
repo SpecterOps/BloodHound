@@ -44,16 +44,14 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
         if (isStartValid && !isEndValid) {
             setEndValidationKey((prev) => prev + 1);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [start]);
+    }, [isEndValid, isStartValid, start]);
 
     // When end changes, revalidate start if previously invalid
     useEffect(() => {
         if (isEndValid && !isStartValid) {
             setStartValidationKey((prev) => prev + 1);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [end]);
+    }, [end, isEndValid, isStartValid]);
 
     useEffect(() => {
         onValidation?.(isEndValid && isStartValid);

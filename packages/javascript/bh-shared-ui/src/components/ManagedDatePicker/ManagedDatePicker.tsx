@@ -137,9 +137,7 @@ export const ManagedDatePicker: FC<Props> = ({
         }
     }, [value]);
 
-    const setNextError = (errors: string[]) => {
-        setValidationError(errors[0]);
-    };
+    const setNextError = (errors: string[]) => setValidationError(errors[0]);
 
     // Checks if typed date is valid. Updates calendarDate state when valid.
     const syncDateInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,11 +191,13 @@ export const ManagedDatePicker: FC<Props> = ({
         }
     };
 
+    // Revalidate when validationKey changes
     useEffect(() => {
         if (validationKey === '' || calendarDate === undefined) return;
         onValidation?.(validateDate(calendarDate, validations, setNextError));
+        // Validations is intendionally omitted so that only the most recent input change is reported
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [validationKey]);
+    }, [calendarDate, onValidation, validationKey]);
 
     const errorId = useId();
     return (
