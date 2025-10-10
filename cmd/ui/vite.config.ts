@@ -94,6 +94,14 @@ export default defineConfig(({ mode }) => {
                 reportsDirectory: './coverage',
                 reporter: ['text-summary', 'json-summary'],
             },
+            reporters: [
+                [
+                    'allure-vitest/reporter',
+                    {
+                        resultsDir: '../../allure-results',
+                    },
+                ],
+            ],
         },
         build: {
             outDir: env.BUILD_PATH || './dist',
