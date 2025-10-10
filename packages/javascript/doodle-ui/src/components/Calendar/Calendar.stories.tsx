@@ -1,7 +1,7 @@
 import { action } from '@storybook/addon-actions';
 import type { Meta, StoryObj } from '@storybook/react';
-import { addDays } from './utils';
 import { Calendar } from './Calendar';
+import { addDays } from './utils';
 
 /**
  * A date field component that allows users to enter and edit date.

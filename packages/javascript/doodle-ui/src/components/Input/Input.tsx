@@ -8,7 +8,7 @@ export const InputVariants = cva(
         variants: {
             variant: {
                 outlined:
-                    'rounded-md border border-neutral-dark-5 dark:border-neutral-light-5 bg-neutral-2 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:border-2',
+                    'rounded-md ring-1 ring-neutral-dark-5 dark:ring-neutral-light-5 bg-neutral-2 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:ring-2',
                 underlined:
                     'rounded-none bg-transparent border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2',
             },

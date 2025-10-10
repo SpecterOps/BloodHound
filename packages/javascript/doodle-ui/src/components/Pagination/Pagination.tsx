@@ -1,11 +1,11 @@
 import { forwardRef } from 'react';
 
-import { cn } from 'components/utils';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { SelectValueProps } from '@radix-ui/react-select';
 import { Slot } from '@radix-ui/react-slot';
 import { Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from 'components/Select';
-import { SelectValueProps } from '@radix-ui/react-select';
+import { cn } from 'components/utils';
 
 const PaginationNav = ({ className, ...props }: React.ComponentProps<'nav'>) => (
     <nav
@@ -160,10 +160,10 @@ const Pagination: React.FC<PaginationProps> = (props) => {
 
 export {
     Pagination,
-    PaginationNav,
     PaginationContent,
     PaginationEllipsis,
     PaginationLink,
+    PaginationNav,
     PaginationNext,
     PaginationPrevious,
 };

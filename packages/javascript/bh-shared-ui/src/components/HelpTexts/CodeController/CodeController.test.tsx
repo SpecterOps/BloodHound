@@ -15,14 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Screen, act, render } from '../../../test-utils';
+import { act, render } from '../../../test-utils';
 import CodeController from './CodeController';
 
 describe('CodeController', () => {
     const defaultExpected = 'testing some code to display';
     const setup = async (code = defaultExpected) => {
         const user = userEvent.setup();
-        const screen: Screen = await act(async () => {
+        const screen = await act(async () => {
             return render(<CodeController>{code}</CodeController>);
         });
         return { user, screen };

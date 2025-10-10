@@ -24,8 +24,8 @@ const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
 
 const DialogOverlayVariants = cva(
-    'fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-    { variants: { blurBackground: { true: 'backdrop-blur-sm' } } }
+    'fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+    { variants: { blurBackground: { true: 'backdrop-blur-sm' }, allowNav: { true: 'z-50', false: 'z-[1410]' } } }
 );
 
 interface DialogOverlayProps
@@ -36,10 +36,10 @@ interface DialogOverlayProps
  * See documentation: [DialogOverlay](https://www.radix-ui.com/primitives/docs/components/dialog#overlay)
  */
 const DialogOverlay = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Overlay>, DialogOverlayProps>(
-    ({ blurBackground, className, ...props }, ref) => (
+    ({ blurBackground, className, allowNav = false, ...props }, ref) => (
         <DialogPrimitive.Overlay
             ref={ref}
-            className={cn(DialogOverlayVariants({ blurBackground, className }))}
+            className={cn(DialogOverlayVariants({ blurBackground, allowNav, className }))}
             {...props}
         />
     )
@@ -49,6 +49,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 export const DialogMaxWidth = ['xl', 'lg', 'md', 'sm', 'xs'] as const;
 interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
     maxWidth?: (typeof DialogMaxWidth)[number];
+    allowNav?: boolean;
     DialogOverlayProps?: DialogOverlayProps;
 }
 
@@ -56,7 +57,7 @@ interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof Dialo
  * See documentation: [DialogContent](https://www.radix-ui.com/primitives/docs/components/dialog#content)
  */
 const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DialogContentProps>(
-    ({ DialogOverlayProps, maxWidth = 'sm', className, children, ...props }, ref) => {
+    ({ DialogOverlayProps, allowNav = false, maxWidth = 'sm', className, children, ...props }, ref) => {
         // Where do these magic values come from? They match MUIs maxWidth values
         const maxWidthMap: Record<(typeof DialogMaxWidth)[number], string> = {
             xl: 'max-w-[1536px]',
@@ -69,14 +70,20 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
 
         return (
             <>
-                <DialogOverlay {...DialogOverlayProps} />
+                <DialogOverlay {...DialogOverlayProps} allowNav={allowNav} />
                 <DialogPrimitive.Content
                     ref={ref}
                     className={cn(
-                        'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1',
+                        'fixed left-[50%] top-[50%] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1500]',
                         maxWidthClass,
                         className
                     )}
+                    onOpenAutoFocus={() => {
+                        if (allowNav) {
+                            // unblocks the body from being clickable so the user can go to another tab
+                            document.body.style.pointerEvents = '';
+                        }
+                    }}
                     {...props}>
                     {children}
                 </DialogPrimitive.Content>

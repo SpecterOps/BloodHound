@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { cn } from 'components/utils';
+import * as React from 'react';
 
 const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (

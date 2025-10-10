@@ -4,9 +4,9 @@ import { cn } from 'components/utils';
 
 const Table = React.forwardRef<
     HTMLTableElement,
-    React.HTMLAttributes<HTMLTableElement> & { disableDefaultOverflowAuto?: boolean }
->(({ className, disableDefaultOverflowAuto, ...props }, ref) => (
-    <div className={cn('relative w-full', { 'overflow-auto': !disableDefaultOverflowAuto })}>
+    React.HTMLAttributes<HTMLTableElement> & { disableDefaultOverflowAuto?: boolean; tableContainerClassName?: string }
+>(({ className, disableDefaultOverflowAuto, tableContainerClassName, ...props }, ref) => (
+    <div className={cn('relative w-full', { 'overflow-auto': !disableDefaultOverflowAuto }, tableContainerClassName)}>
         <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
 ));
@@ -39,7 +39,10 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     ({ className, ...props }, ref) => (
         <tr
             ref={ref}
-            className={cn('border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted', className)}
+            className={cn(
+                'border-b dark:border-b-0 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+                className
+            )}
             {...props}
         />
     )
@@ -74,4 +77,4 @@ const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttribu
 );
 TableCaption.displayName = 'TableCaption';
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow };

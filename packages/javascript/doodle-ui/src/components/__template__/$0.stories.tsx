@@ -8,8 +8,8 @@ const meta = {
     parameters: {
         layout: 'centered',
     },
-    // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
-    tags: ['autodocs'],
+    // This story will not appear in Storybook's sidebar or docs page: https://storybook.js.org/docs/writing-stories/tags
+    tags: ['!dev'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {},
     args: {},

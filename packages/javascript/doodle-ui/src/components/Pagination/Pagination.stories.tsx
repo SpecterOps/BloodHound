@@ -1,7 +1,7 @@
 import { Meta, StoryObj } from '@storybook/react';
 
-import { Pagination } from './Pagination';
 import { useState } from 'react';
+import { Pagination } from './Pagination';
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
     title: 'Components/Pagination',

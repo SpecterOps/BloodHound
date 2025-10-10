@@ -1,3 +1,4 @@
+import type { CheckedState } from '@radix-ui/react-checkbox';
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'components/utils';
@@ -34,4 +35,4 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
 );
 Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
-export { Checkbox };
+export { Checkbox, CheckedState };

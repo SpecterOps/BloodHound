@@ -12,7 +12,7 @@
         "build": "yarn check-types && rollup -c rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "TZ=America/Los_Angeles vitest",
-        "check-types": "tsc --noEmit --pretty",
+        "check-types": "yarn workspaces foreach -ptRv --include '{js-client-library, doodle-ui}' run build && tsc --noEmit --pretty",
         "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
@@ -99,8 +99,8 @@
         "@mui/lab": "5.x",
         "@mui/material": "5.x",
         "@mui/styles": "5.x",
-        "react": "18.x",
-        "react-dom": "18.x"
+        "react": "18.2.0",
+        "react-dom": "18.2.0"
     },
     "packageManager": "yarn@3.5.1",
     "installConfig": {

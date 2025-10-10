@@ -1,6 +1,7 @@
+import { ColumnPinningState } from '@tanstack/react-table';
+import { Pagination } from 'components/Pagination';
 import React, { useState } from 'react';
 import { DataTable } from '../DataTable';
-import { Pagination } from 'components/Pagination';
 import { getColumns, getData } from './utils';
 
 const DATA = getData(50);
@@ -11,6 +12,10 @@ const ExampleDataTable: React.FC = () => {
     const [filter, setFilter] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<keyof ReturnType<typeof getData>[0] | null>(null);
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+
+    const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+        left: ['action-menu', 'tierZeroPrincipal'],
+    });
 
     const handleRowsPerPageChange = (rowsPerPage: number) => {
         setPage(0);
@@ -81,6 +86,8 @@ const ExampleDataTable: React.FC = () => {
                 onRowClick={console.log}
                 selectedRow={data[0].id}
                 columns={columns}
+                columnPinning={columnPinning}
+                onColumnPinningChange={setColumnPinning}
                 data={data}
             />
             <Pagination

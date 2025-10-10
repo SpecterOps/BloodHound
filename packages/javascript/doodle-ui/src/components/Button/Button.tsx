@@ -16,7 +16,6 @@ export const ButtonVariants = cva(
                     'bg-transparent border border-neutral-5 dark:text-white hover:bg-primary hover:text-white hover:border-primary hover:no-underline',
                 text: 'text-neutral-dark-5 dark:text-neutral-light-5',
                 icon: 'rounded-full text-neutral-dark-1 bg-neutral-light-5 p-0 size-10 shadow-outer-1 hover:border-2 hover:border-secondary active:border-none',
-                SPECIAL: 'bg-pink',
             },
             fontColor: {
                 primary: 'text-primary dark:text-secondary-variant-2',

@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { ComboBadge } from './ComboBadge';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { Meta, StoryObj } from '@storybook/react';
 import { RadialGauge } from '../RadialGauge';
+import { ComboBadge } from './ComboBadge';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {

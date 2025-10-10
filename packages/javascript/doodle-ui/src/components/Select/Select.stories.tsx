@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import {
     Select,
-    SelectPortal,
     SelectContent,
     SelectGroup,
     SelectItem,
     SelectLabel,
+    SelectPortal,
     SelectSeparator,
     SelectTrigger,
     SelectValue,
@@ -37,6 +37,30 @@ export const Default: Story = {
     render: (args) => (
         <Select {...args}>
             <SelectTrigger className='w-60'>
+                <SelectValue placeholder='Pick your favorite color' />
+            </SelectTrigger>
+            <SelectPortal>
+                <SelectContent>
+                    <SelectItem value='red'>Red</SelectItem>
+                    <SelectItem value='green'>Green</SelectItem>
+                    <SelectItem value='blue'>Blue</SelectItem>
+                    <SelectItem value='orange'>Orange</SelectItem>
+                    <SelectItem value='yellow'>Yellow</SelectItem>
+                    <SelectItem value='purple'>Purple</SelectItem>
+                    <SelectItem value='pink'>Pink</SelectItem>
+                </SelectContent>
+            </SelectPortal>
+        </Select>
+    ),
+};
+
+/**
+ * SelectTrigger variant underlined.
+ */
+export const Underlined: Story = {
+    render: (args) => (
+        <Select {...args}>
+            <SelectTrigger variant='underlined' className='w-60'>
                 <SelectValue placeholder='Pick your favorite color' />
             </SelectTrigger>
             <SelectPortal>

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Badge } from './Badge';
 import { ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
 import { ReactNode } from 'react';
+import { Badge } from './Badge';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {

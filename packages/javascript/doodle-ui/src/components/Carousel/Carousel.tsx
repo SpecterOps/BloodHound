@@ -1,10 +1,10 @@
-import * as React from 'react';
 import { EmblaCarouselType } from 'embla-carousel';
-import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
+import * as React from 'react';
 
-import { cn } from 'components/utils';
 import { Button } from 'components/Button';
+import { cn } from 'components/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -246,4 +246,4 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 });
 CarouselNext.displayName = 'CarouselNext';
 
-export { type CarouselApi, Carousel, CarouselContent, CarouselItem, CarouselPrev, CarouselDots, CarouselNext };
+export { Carousel, CarouselContent, CarouselDots, CarouselItem, CarouselNext, CarouselPrev, type CarouselApi };

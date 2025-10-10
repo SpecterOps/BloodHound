@@ -25,6 +25,8 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
         {
             accessorKey: '',
             id: 'action-menu',
+            size: 50,
+            maxSize: 50,
             cell: () => (
                 <button className='pl-4'>
                     <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />

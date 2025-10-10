@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Carousel, CarouselContent, CarouselItem, CarouselPrev, CarouselDots, CarouselNext } from './Carousel';
+import { Carousel, CarouselContent, CarouselDots, CarouselItem, CarouselNext, CarouselPrev } from './Carousel';
 
 /**
  * A carousel with motion and swipe built using Embla.

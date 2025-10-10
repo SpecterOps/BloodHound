@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Accordion, AccordionItem, AccordionHeader, AccordionContent } from './Accordion';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
+import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from './Accordion';
 
 const meta = {
     title: 'Components/Accordion',

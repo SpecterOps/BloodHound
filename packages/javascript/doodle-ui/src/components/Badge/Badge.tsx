@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { cn } from 'components/utils';
+import * as React from 'react';
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     label: string;

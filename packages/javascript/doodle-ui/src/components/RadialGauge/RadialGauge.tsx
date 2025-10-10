@@ -1,6 +1,6 @@
 import { cn, getCssColor } from 'components/utils';
-import { ColorOptions } from '../../types';
 import { useEffect, useState } from 'react';
+import { ColorOptions } from '../../types';
 import { clampNumber, getCircumference } from './utils';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {

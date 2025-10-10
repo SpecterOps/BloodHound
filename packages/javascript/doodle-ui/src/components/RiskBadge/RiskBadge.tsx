@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn, getCssColor, getConditionalStyles } from 'components/utils';
+import { cn, getConditionalStyles, getCssColor } from 'components/utils';
 import { ColorOptions } from '../../types';
 
 // These variants are used to determine the component props and wrapper element

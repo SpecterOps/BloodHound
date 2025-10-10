@@ -1,6 +1,6 @@
-import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from 'components/utils';
+import * as React from 'react';
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
@@ -105,7 +105,10 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
                 {...rootProps}>
                 <TooltipTrigger children={props.children} {...triggerProps} />
                 <TooltipPortal>
-                    <TooltipContent contentWidth={contentWidth} {...contentProps}>
+                    <TooltipContent
+                        contentWidth={contentWidth}
+                        {...contentProps}
+                        className={cn('dark:text-black', contentProps.className)}>
                         {tooltip}
                     </TooltipContent>
                 </TooltipPortal>
@@ -114,4 +117,4 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
     );
 };
 
-export { Tooltip, TooltipProvider, TooltipRoot, TooltipTrigger, TooltipPortal, TooltipContent };
+export { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger };

@@ -1,5 +1,7 @@
 import {
     type ColumnDef,
+    ColumnPinningState,
+    OnChangeFn,
     type Row,
     type TableOptions,
     createColumnHelper,
@@ -10,9 +12,10 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from 'components/Table';
-import NoDataFallback from './NoDataFallback';
 import { cn } from 'components/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import NoDataFallback from './NoDataFallback';
+import { getCommonPinnedStyles, getConditionalPinnedStyles } from './pinnedStyles';
 
 interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
     /**
@@ -30,7 +33,13 @@ interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElem
     growLastColumn?: boolean;
     virtualizationOptions?: Partial<Parameters<typeof useVirtualizer>[0]>;
     tableOptions?: Omit<TableOptions<TData>, 'columns' | 'data' | 'getCoreRowModel'>;
-    TableProps?: React.ComponentPropsWithoutRef<typeof Table> & { disableDefaultOverflowAuto?: boolean };
+    columnPinning?: ColumnPinningState;
+    onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
+    TableProps?: React.ComponentPropsWithoutRef<typeof Table> & {
+        disableDefaultOverflowAuto?: boolean;
+        tableContainerClassName?: string;
+        heightContainerClassName?: string;
+    };
     TableHeaderProps?: React.ComponentPropsWithoutRef<typeof TableHeader>;
     TableHeaderRowProps?: React.ComponentPropsWithoutRef<typeof TableRow>;
     TableHeadProps?: React.ComponentPropsWithoutRef<typeof TableHead>;
@@ -47,6 +56,8 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         selectedRow,
         growLastColumn,
         tableOptions = {},
+        columnPinning,
+        onColumnPinningChange,
         className,
         TableProps,
         TableHeaderProps,
@@ -97,8 +108,22 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         columns,
         getCoreRowModel: getCoreRowModel(),
         initialState: defaultInitialState,
+        state: {
+            ...(columnPinning && { columnPinning }),
+        },
+        ...(onColumnPinningChange && { onColumnPinningChange }),
         ...tableOptions,
     });
+
+    useEffect(() => {
+        if (!selectedRow && table.getIsSomeRowsSelected()) {
+            table.setRowSelection({});
+        }
+
+        if (selectedRow && !table.getState().rowSelection[selectedRow]) {
+            table.setRowSelection({ [selectedRow]: true });
+        }
+    }, [selectedRow, table]);
 
     const virtualizationOptions = useMemo(
         () => ({
@@ -116,7 +141,13 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     const handleRowClick = useCallback(
         (row: Row<TData>) => {
             if (typeof onRowClick === 'function') {
-                table.setRowSelection({ [row.id]: true });
+                const isAlreadySelected = table.getState().rowSelection[row.id];
+
+                if (isAlreadySelected) {
+                    table.setRowSelection({});
+                } else {
+                    table.setRowSelection({ [row.id]: true });
+                }
 
                 onRowClick(row?.original);
             }
@@ -124,23 +155,30 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         [onRowClick, table]
     );
 
-    const { className: tableClassName, ...restTableProps } = TableProps || {};
+    const { className: tableClassName, heightContainerClassName, ...restTableProps } = TableProps || {};
+    const { className: headerClassName, ...restHeaderProps } = TableHeaderProps || {};
+    const { className: headerRowClassName, ...restHeaderRowProps } = TableHeaderRowProps || {};
 
     const tableRows = table.getRowModel().rows;
 
+    const haveLeftPinnedColumns = (columnPinning?.left?.length || 0) > 0;
+
     return (
         <div className={cn('w-full bg-neutral-light dark:bg-neutral-dark', className)} {...wrapperRest} ref={parentRef}>
-            <div style={{ height: `${virtualizer.getTotalSize()}px` }}>
+            <div style={{ height: `${virtualizer.getTotalSize()}px` }} className={heightContainerClassName}>
                 <Table
                     {...restTableProps}
                     className={cn(
                         'after:inline-block after:h-[var(--prevent-vanishing-sticky-header)]',
                         tableClassName
                     )}>
-                    <TableHeader {...TableHeaderProps}>
+                    <TableHeader {...restHeaderProps} className={cn(headerClassName, '[&_tr]:border-0')}>
                         {table.getHeaderGroups().map((headerGroup) => {
                             return (
-                                <TableRow key={headerGroup.id} {...TableHeaderRowProps}>
+                                <TableRow
+                                    key={headerGroup.id}
+                                    {...restHeaderRowProps}
+                                    className={cn(headerRowClassName, 'border-0')}>
                                     {headerGroup.headers.map((header, index, array) => {
                                         let propsClassName,
                                             tableHeadRest = {};
@@ -166,7 +204,15 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     propsClassName
                                                 )}
                                                 {...tableHeadRest}
-                                                style={{ width }}>
+                                                style={{
+                                                    width,
+                                                    ...(header.column.getIsPinned() === 'left' &&
+                                                        getCommonPinnedStyles(header.column.getStart('left'))),
+                                                    ...(haveLeftPinnedColumns &&
+                                                        header.column.getIsFirstColumn('center') && {
+                                                            paddingLeft: '12px',
+                                                        }),
+                                                }}>
                                                 {header.isPlaceholder
                                                     ? null
                                                     : flexRender(header.column.columnDef.header, header.getContext())}
@@ -192,6 +238,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                         {tableRows.length ? (
                             virtualizer.getVirtualItems().map((virtualRow, index) => {
                                 const row = tableRows[virtualRow.index];
+                                const isLastRow = virtualRow.index === tableRows.length - 1;
 
                                 let propsClassName,
                                     tableBodyRowRest = {};
@@ -205,13 +252,17 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                 return (
                                     <TableRow
                                         key={row.id}
-                                        onClick={() => handleRowClick(row)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRowClick(row);
+                                        }}
                                         data-state={row.getIsSelected() && 'selected'}
                                         className={cn(
                                             'hover:bg-neutral-light-4 dark:hover:bg-neutral-dark-4',
                                             {
                                                 // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
-                                                'shadow-[inset_0px_0px_0px_2px_var(--primary)]': row.getIsSelected(),
+                                                'shadow-[inset_0px_0px_0px_2px_var(--primary)] dark:shadow-[inset_0px_0px_0px_2px_#4A42B5]':
+                                                    row.getIsSelected(),
                                                 // Not using CSS odd:even since those values are not tied to data in a virtualized table
                                                 'bg-neutral-light-3 dark:bg-neutral-dark-3': row.index % 2 === 0,
                                                 'bg-neutral-light-2 dark:bg-neutral-dark-2': row.index % 2 !== 0,
@@ -229,6 +280,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                         {row.getVisibleCells().map((cell, index, array) => {
                                             let propsClassName,
                                                 tableCellRest = {};
+                                            const isLastPinnedColumn = cell.column.getIsLastColumn('left');
 
                                             if (TableCellProps) {
                                                 const { className, ...rest } = TableCellProps;
@@ -243,12 +295,28 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
                                                 width = isLastColumn ? lastColumnStyle : width;
                                             }
+
                                             return (
                                                 <TableCell
                                                     key={cell.id}
                                                     className={cn('text-left', propsClassName)}
                                                     {...tableCellRest}
-                                                    style={{ width }}>
+                                                    style={{
+                                                        width,
+                                                        ...(cell.column.getIsPinned() === 'left' && {
+                                                            backgroundColor: 'inherit',
+                                                            ...getCommonPinnedStyles(cell.column.getStart('left')),
+                                                            ...getConditionalPinnedStyles(
+                                                                isLastPinnedColumn,
+                                                                isLastRow,
+                                                                row.getIsSelected()
+                                                            ),
+                                                        }),
+                                                        ...(haveLeftPinnedColumns &&
+                                                            cell.column.getIsFirstColumn('center') && {
+                                                                paddingLeft: '12px',
+                                                            }),
+                                                    }}>
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </TableCell>
                                             );

@@ -8,6 +8,7 @@ export * from './Carousel';
 export * from './Checkbox';
 export * from './ComboBadge';
 export * from './DataTable';
+export * from './DatePicker';
 export * from './Dialog';
 export * from './Form';
 export * from './Input';

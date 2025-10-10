@@ -1,8 +1,8 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { cva, VariantProps } from 'class-variance-authority';
+import { cn } from 'components/utils';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import * as React from 'react';
-
-import { cn } from 'components/utils';
 
 const Select = SelectPrimitive.Root;
 
@@ -12,17 +12,28 @@ const SelectGroup = SelectPrimitive.Group;
 
 const SelectValue = SelectPrimitive.Value;
 
+export const SelectTriggerVariants = cva(
+    'flex h-10 w-full items-center justify-between bg-neutral-2 rounded-sm p-2 ring-offset-background placeholder:text-neutral-5 focus:outline-none focus:ring-2 focus:ring-secondary focus:dark:ring-secondary-variant-2 focus:ring-transparent focus:dark:ring-transparent focus:rounded-sm disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
+    {
+        variants: {
+            variant: {
+                outlined:
+                    'rounded-md ring-1 ring-neutral-dark-5 dark:ring-neutral-light-5 px-3 py-2 text-sm ring-offset-secondary dark:ring-offset-secondary-variant-2 focus-visible:border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary-variant-2 focus-visible:ring-offset-2 hover:ring-2 bg-neutral-1',
+                underlined:
+                    'rounded-none ring-none bg-transparent border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2',
+            },
+        },
+        defaultVariants: {
+            variant: 'outlined',
+        },
+    }
+);
+
 const SelectTrigger = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Trigger>,
-    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-    <SelectPrimitive.Trigger
-        ref={ref}
-        className={cn(
-            'flex h-10 w-full items-center justify-between border-b border-black dark:border-neutral-light-1 bg-neutral-2 rounded-sm p-2 ring-offset-background placeholder:text-neutral-5 focus:outline-none focus:ring-2 focus:ring-secondary focus:dark:ring-secondary-variant-2 focus:border-transparent focus:dark:border-transparent focus:rounded-sm disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
-            className
-        )}
-        {...props}>
+    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & VariantProps<typeof SelectTriggerVariants>
+>(({ className, variant, children, ...props }, ref) => (
+    <SelectPrimitive.Trigger ref={ref} className={cn(SelectTriggerVariants({ variant, className }))} {...props}>
         {children}
         <SelectPrimitive.Icon asChild>
             <ChevronDown className='h-4 w-4' />
@@ -64,7 +75,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
         ref={ref}
         className={cn(
-            'relative z-50 max-h-96 overflow-hidden border rounded dark:border-neutral-light-5 bg-neutral-light-1 dark:bg-neutral-dark-2 text-black dark:text-white dark:shadow-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+            'relative z-[1500] max-h-96 overflow-hidden border rounded dark:border-neutral-light-5 bg-neutral-light-1 dark:bg-neutral-dark-2 text-black dark:text-white dark:shadow-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
             position === 'popper' &&
                 'data-[side=bottom]:-translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
             className

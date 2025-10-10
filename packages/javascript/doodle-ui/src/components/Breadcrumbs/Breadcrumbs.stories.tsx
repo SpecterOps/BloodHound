@@ -2,12 +2,12 @@ import { Meta, StoryObj } from '@storybook/react';
 
 import {
     Breadcrumb,
-    BreadcrumbList,
+    BreadcrumbEllipsis,
     BreadcrumbItem,
     BreadcrumbLink,
+    BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-    BreadcrumbEllipsis,
 } from './Breadcrumbs';
 
 const meta: Meta<typeof Breadcrumb> = {
