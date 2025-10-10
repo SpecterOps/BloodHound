@@ -92,7 +92,7 @@ type Props = {
         errorMessage: string;
     }[];
 
-    /** Unique key to revalidate when changed */
+    /** If provided, updating this key will cause the date to be revalidated */
     validationKey?: string;
 
     /** Value of the date picker */
@@ -135,9 +135,11 @@ export const ManagedDatePicker: FC<Props> = ({
             setInputDateString('');
             setCalendarDate(undefined);
         }
-    }, [value, validationError]);
+    }, [value]);
 
-    const setNextError = (errors: string[]) => setValidationError(errors[0]);
+    const setNextError = (errors: string[]) => {
+        setValidationError(errors[0]);
+    };
 
     // Checks if typed date is valid. Updates calendarDate state when valid.
     const syncDateInput = (event: React.ChangeEvent<HTMLInputElement>) => {
