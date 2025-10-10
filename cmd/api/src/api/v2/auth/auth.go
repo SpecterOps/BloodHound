@@ -919,28 +919,33 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Default the password to check against to the user from the path param
-		secretToValidate := *user.AuthSecret
 		bhCtx := ctx.FromRequest(request)
 		if authedUser, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
+			// Default the password to check against to the user from the path param
+			secretToValidate := *user.AuthSecret
+
 			if authedUser.ID != userId {
 				// If the operation is being performed on a different user than who is logged in then we need to ensure they have proper permission
 				if s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 					// Compare passed password against the logged in user's password instead
-					secretToValidate = *authedUser.AuthSecret
+					if authedUser.AuthSecret != nil {
+						secretToValidate = *authedUser.AuthSecret
+					}
 				} else {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "must be an admin to disable MFA for another user", request), response)
 					return
 				}
 			}
-		}
 
-		// Check the password
-		if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
-			// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
-			// b/c the bearer token is valid despite the secret in the request payload being invalid
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
-			return
+			// Check the password only if the current authed user is not using SSO
+			if !authedUser.SSOProviderID.Valid {
+				if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
+					// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
+					// b/c the bearer token is valid despite the secret in the request payload being invalid
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
+					return
+				}
+			}
 		}
 
 		user.AuthSecret.TOTPSecret = ""

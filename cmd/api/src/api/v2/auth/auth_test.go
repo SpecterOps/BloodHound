@@ -4638,6 +4638,62 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 	}
 }
 
+func TestDisenrollMFA_Admin_SuccessNoPasswordSSO(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+
+	endpoint := "/api/v2/auth/users/%s/mfa"
+
+	admin := model.User{
+		FirstName:     null.String{NullString: sql.NullString{String: "Admin", Valid: true}},
+		LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+		EmailAddress:  null.String{NullString: sql.NullString{String: "admin@gmail.com", Valid: true}},
+		PrincipalName: "AdminUser",
+		SSOProviderID: null.Int32{
+			NullInt32: sql.NullInt32{
+				Int32: 9,
+				Valid: true,
+			},
+		},
+	}
+
+	nonAdminId := test.NewUUIDv4(t)
+
+	mockDB.EXPECT().GetUser(gomock.Any(), nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password"), Unique: model.Unique{ID: nonAdminId}}, nil).AnyTimes()
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
+
+	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	bhCtx := ctx.Get(adminContext)
+	bhCtx.AuthCtx.Owner = admin
+	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+		Enabled: true,
+		Permissions: model.Permissions{
+			authz.Permissions().AuthManageUsers,
+		},
+	}
+	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+	require.True(t, isUser)
+
+	input := auth.MFAEnrollmentRequest{}
+	if payload, err := json.Marshal(input); err != nil {
+		t.Fatal(err)
+	} else if req, err := http.NewRequestWithContext(adminContext, "DELETE", fmt.Sprintf(endpoint, nonAdminId.String()), bytes.NewReader(payload)); err != nil {
+		t.Fatal(err)
+	} else {
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		router := mux.NewRouter()
+		router.HandleFunc(fmt.Sprintf(endpoint, "{user_id}"), resources.DisenrollMFA).Methods("DELETE")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Contains(t, rr.Body.String(), auth.MFADeactivated)
+	}
+}
+
 func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

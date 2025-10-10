@@ -79,6 +79,7 @@ const Users: FC = () => {
     const listUsersQuery = useBloodHoundUsers();
 
     const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
+    const isSelfSSOUser = !!getSelfQuery.data?.sso_provider_id;
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
         onSuccess: () => {
@@ -281,7 +282,7 @@ const Users: FC = () => {
                     setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
-                onSave={(secret: string) => {
+                onSave={(secret?: string) => {
                     setDisable2FAError('');
                     apiClient
                         .disenrollMFA(selectedUserId!, { secret })
@@ -298,7 +299,12 @@ const Users: FC = () => {
                 error={disable2FAError}
                 secret={disable2FASecret}
                 onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
-                contentText='Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
+                showPasswordConfirmation={!isSelfSSOUser}
+                contentText={
+                    isSelfSSOUser
+                        ? 'Are you sure you want to disable MFA for this user?'
+                        : 'Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
+                }
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}
