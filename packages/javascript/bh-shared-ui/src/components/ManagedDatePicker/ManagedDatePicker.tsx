@@ -59,21 +59,43 @@ const validateDate = (
 
     if (hasErrors) {
         onInvalid(errors);
+    } else {
+        // Clear any previous errors
+        onInvalid(['']);
     }
 
     return !hasErrors;
 };
 
 type Props = {
+    /** The earliest selectable date */
     fromDate?: Date;
+
+    /** Text to display in input when not focused */
     hint?: string;
+
+    /** Callback executed when the date changes */
     onDateChange: (date?: Date) => void;
+
+    /** Callback executed when the date is validated */
     onValidation?: (isValid: boolean) => void;
+
+    /** The latest selectable date */
     toDate?: Date;
+
+    /** Array of validation rules to apply to the date. If not provided, the date is always valid. */
     validations?: {
+        /** Function that returns true when the date is valid */
         rule: (date: Date) => boolean;
+
+        /** Message to display when the date is invalid */
         errorMessage: string;
     }[];
+
+    /** If provided, updating this key will cause the date to be revalidated */
+    validationKey?: string;
+
+    /** Value of the date picker */
     value?: Date;
 };
 
@@ -88,6 +110,7 @@ export const ManagedDatePicker: FC<Props> = ({
     onValidation,
     toDate = now(),
     validations = [],
+    validationKey = '',
     value,
 }) => {
     // `hint` shows (ex. 'Start Date') as placeholder while input is unfocused.
@@ -102,12 +125,13 @@ export const ManagedDatePicker: FC<Props> = ({
     // When inputDateString is valid, this will hold the value as a JS Date
     const [calendarDate, setCalendarDate] = useState<Date | undefined>(value);
 
-    // Validation produces an array of errors. Only one (the first) is displayed.
+    // Validation produces an array of errors. Only one (the first) is displayed. Clears on valid.
     const [validationError, setValidationError] = useState('');
 
-    // Reset inputDateString when value goes undefiend
+    // Reset inputDateString and calendarDate when value goes undefined
     useEffect(() => {
         if (value === undefined) {
+            setValidationError('');
             setInputDateString('');
             setCalendarDate(undefined);
         }
@@ -151,22 +175,29 @@ export const ManagedDatePicker: FC<Props> = ({
 
     // Apply validation props and update text input when Calendar date is clicked
     const validateCalendarDate = (selectedDay: Date | undefined) => {
-        setValidationError('');
-
         if (selectedDay === undefined) {
+            setValidationError('');
             return;
         }
 
         setCalendarDate(selectedDay);
         setInputDateString(DateTime.fromJSDate(selectedDay).toFormat(LuxonFormat.ISO_8601));
+        onDateChange(selectedDay);
 
         if (validateDate(selectedDay, validations, setNextError)) {
-            onDateChange(selectedDay);
             onValidation?.(true);
         } else {
             onValidation?.(false);
         }
     };
+
+    // Revalidate when validationKey changes
+    useEffect(() => {
+        if (validationKey === '' || calendarDate === undefined) return;
+        onValidation?.(validateDate(calendarDate, validations, setNextError));
+        // Validations is intendionally omitted so that only the most recent input change is reported
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [calendarDate, onValidation, validationKey]);
 
     const errorId = useId();
     return (
