@@ -33,8 +33,27 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
     const endDate = end ? new Date(end) : undefined;
     const startDate = start ? new Date(start) : undefined;
 
-    const [isEndValid, setIsEndValid] = useState(true);
     const [isStartValid, setIsStartValid] = useState(true);
+    const [startValidationKey, setStartValidationKey] = useState(0);
+
+    const [isEndValid, setIsEndValid] = useState(true);
+    const [endValidationKey, setEndValidationKey] = useState(0);
+
+    // When start changes, revalidate end if previously invalid
+    useEffect(() => {
+        if (isStartValid && !isEndValid) {
+            setEndValidationKey((prev) => prev + 1);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [start]);
+
+    // When end changes, revalidate start if previously invalid
+    useEffect(() => {
+        if (isEndValid && !isStartValid) {
+            setStartValidationKey((prev) => prev + 1);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [end]);
 
     useEffect(() => {
         onValidation?.(isEndValid && isStartValid);
@@ -50,6 +69,7 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
                 onValidation={setIsStartValid}
                 value={startDate}
                 validations={[VALIDATIONS.isBeforeDate(endDate, 'Start time must come before end.')]}
+                validationKey={String(startValidationKey)}
             />
 
             <ManagedDatePicker
@@ -61,6 +81,7 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
                 onValidation={setIsEndValid}
                 value={endDate}
                 validations={[VALIDATIONS.isAfterDate(startDate, 'End time must be after start.')]}
+                validationKey={String(endValidationKey)}
             />
         </div>
     );
