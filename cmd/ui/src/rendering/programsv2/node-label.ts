@@ -30,7 +30,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
 
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
-    const size = settings.labelSize,
+    const size = settings.labelSize * inverseSqrtZoomRatio,
         font = settings.labelFont,
         weight = settings.labelWeight;
 

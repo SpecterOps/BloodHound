@@ -26,27 +26,21 @@ import { Settings } from 'sigma/settings';
 import { Coordinates, NodeDisplayData, PartialButFor } from 'sigma/types';
 import { EdgeDistanceProperties, calculateEdgeDistanceForLabel } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { GraphItemData } from '../utils/utils';
-import { getControlPointsFromGroupSize } from './edge.self';
+import { GraphItemData, getControlPointsFromGroupSize } from '../utils/utils';
 import drawLabel from './node-label';
 
 const PADDING_SCALAR = 5;
 
-const getXPadding = (inverseSqrtZoomRatio: number) => {
-    return PADDING_SCALAR * inverseSqrtZoomRatio;
+const getXPadding = () => {
+    return PADDING_SCALAR;
 };
 
-export const getBackgroundBoundInfo = (
-    inverseSqrtZoomRatio: number,
-    textLength: number,
-    edgeSize: number,
-    edgeLabelSize: number
-) => {
-    const xPadding = getXPadding(inverseSqrtZoomRatio);
+export const getBackgroundBoundInfo = (textLength: number, edgeSize: number, edgeLabelSize: number) => {
+    const xPadding = getXPadding();
     const deltaX = -textLength / 2 - xPadding;
-    const deltaY = (edgeSize / 2) * inverseSqrtZoomRatio - edgeLabelSize * inverseSqrtZoomRatio;
+    const deltaY = edgeSize / 2 - edgeLabelSize;
     const width = textLength + 2 * xPadding;
-    const height = edgeLabelSize * inverseSqrtZoomRatio * 1.4;
+    const height = edgeLabelSize * 1.4;
 
     return { deltaX: deltaX, deltaY: deltaY, width: width, height: height };
 };
@@ -108,6 +102,8 @@ export default function draw(
     settings: Settings
 ): void {
     const label = edgeData.label;
+
+    console.log(edgeData);
 
     if (!label) return;
 

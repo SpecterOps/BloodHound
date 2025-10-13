@@ -14,61 +14,71 @@
 // //
 // // SPDX-License-Identifier: Apache-2.0
 
-// /**
-//  * Sigma.js WebGL Renderer Arrow Program
-//  * ======================================
-//  *
-//  * Program rendering direction arrows as a simple triangle.
-//  * This is pulled directly from Sigma, we are just using different shaders
-//  * @module
-//  */
 // import { AbstractEdgeProgram } from 'sigma/rendering';
-// import { NodeDisplayData, RenderParams } from 'sigma/types';
-// import { floatColor } from 'sigma/utils';
-// import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
-// import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
-// import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
+// // import vertexShaderSource from 'sigma/rendering/webgl/shaders/edge.clamped.vert.glsl';
+// import vertexShaderSource from 'sigma/rendering/programs/edge-clamped/vert.glsl';
+// import fragmentShaderSource from 'sigma/rendering/webgl/shaders/edge.frag.glsl';
+// import { EdgeDisplayData, NodeDisplayData, RenderParams } from 'sigma/types';
+// import { canUse32BitsIndices, floatColor } from 'sigma/utils';
 // import { getNodeRadius } from 'src/rendering/utils/utils';
 
-// const POINTS = 3,
-//     ATTRIBUTES = 9,
+// const POINTS = 4,
+//     ATTRIBUTES = 6,
 //     STRIDE = POINTS * ATTRIBUTES;
 
-// export default class EdgeArrowHeadProgram extends AbstractEdgeProgram {
-//     // Locations
+// export default class EdgeClampedProgram extends AbstractEdgeProgram {
+//     IndicesArray: Uint32ArrayConstructor | Uint16ArrayConstructor;
+//     indicesArray: Uint32Array | Uint16Array;
+//     indicesBuffer: WebGLBuffer;
+//     indicesType: GLenum;
 //     positionLocation: GLint;
 //     colorLocation: GLint;
 //     normalLocation: GLint;
 //     radiusLocation: GLint;
-//     barycentricLocation: GLint;
 //     matrixLocation: WebGLUniformLocation;
 //     sqrtZoomRatioLocation: WebGLUniformLocation;
 //     correctionRatioLocation: WebGLUniformLocation;
+//     canUse32BitsIndices: boolean;
 
 //     constructor(gl: WebGLRenderingContext) {
 //         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
 
-//         // Locations
+//         // Initializing indices buffer
+//         const indicesBuffer = gl.createBuffer();
+//         if (indicesBuffer === null) throw new Error('EdgeClampedProgram: error while getting resolutionLocation');
+//         this.indicesBuffer = indicesBuffer;
+
+//         // Locations:
 //         this.positionLocation = gl.getAttribLocation(this.program, 'a_position');
 //         this.colorLocation = gl.getAttribLocation(this.program, 'a_color');
 //         this.normalLocation = gl.getAttribLocation(this.program, 'a_normal');
 //         this.radiusLocation = gl.getAttribLocation(this.program, 'a_radius');
-//         this.barycentricLocation = gl.getAttribLocation(this.program, 'a_barycentric');
 
 //         // Uniform locations
 //         const matrixLocation = gl.getUniformLocation(this.program, 'u_matrix');
-//         if (matrixLocation === null) throw new Error('EdgeArrowHeadProgram: error while getting matrixLocation');
+//         if (matrixLocation === null) throw new Error('EdgeClampedProgram: error while getting matrixLocation');
 //         this.matrixLocation = matrixLocation;
 
 //         const sqrtZoomRatioLocation = gl.getUniformLocation(this.program, 'u_sqrtZoomRatio');
 //         if (sqrtZoomRatioLocation === null)
-//             throw new Error('EdgeArrowHeadProgram: error while getting sqrtZoomRatioLocation');
+//             throw new Error('EdgeClampedProgram: error while getting cameraRatioLocation');
 //         this.sqrtZoomRatioLocation = sqrtZoomRatioLocation;
 
 //         const correctionRatioLocation = gl.getUniformLocation(this.program, 'u_correctionRatio');
 //         if (correctionRatioLocation === null)
-//             throw new Error('EdgeArrowHeadProgram: error while getting correctionRatioLocation');
+//             throw new Error('EdgeClampedProgram: error while getting viewportRatioLocation');
 //         this.correctionRatioLocation = correctionRatioLocation;
+
+//         // Enabling the OES_element_index_uint extension
+//         // NOTE: on older GPUs, this means that really large graphs won't
+//         // have all their edges rendered. But it seems that the
+//         // `OES_element_index_uint` is quite everywhere so we'll handle
+//         // the potential issue if it really arises.
+//         // NOTE: when using webgl2, the extension is enabled by default
+//         this.canUse32BitsIndices = canUse32BitsIndices(gl);
+//         this.IndicesArray = this.canUse32BitsIndices ? Uint32Array : Uint16Array;
+//         this.indicesArray = new this.IndicesArray();
+//         this.indicesType = this.canUse32BitsIndices ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
 
 //         this.bind();
 //     }
@@ -76,12 +86,13 @@
 //     bind(): void {
 //         const gl = this.gl;
 
+//         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indicesBuffer);
+
 //         // Bindings
 //         gl.enableVertexAttribArray(this.positionLocation);
 //         gl.enableVertexAttribArray(this.normalLocation);
-//         gl.enableVertexAttribArray(this.radiusLocation);
 //         gl.enableVertexAttribArray(this.colorLocation);
-//         gl.enableVertexAttribArray(this.barycentricLocation);
+//         gl.enableVertexAttribArray(this.radiusLocation);
 
 //         gl.vertexAttribPointer(
 //             this.positionLocation,
@@ -93,51 +104,37 @@
 //         );
 //         gl.vertexAttribPointer(this.normalLocation, 2, gl.FLOAT, false, ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT, 8);
 //         gl.vertexAttribPointer(
-//             this.radiusLocation,
-//             1,
-//             gl.FLOAT,
-//             false,
-//             ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
-//             16
-//         );
-//         gl.vertexAttribPointer(
 //             this.colorLocation,
 //             4,
 //             gl.UNSIGNED_BYTE,
 //             true,
 //             ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
-//             20
+//             16
 //         );
-
-//         // TODO: maybe we can optimize here by packing this in a bit mask
 //         gl.vertexAttribPointer(
-//             this.barycentricLocation,
-//             3,
+//             this.radiusLocation,
+//             1,
 //             gl.FLOAT,
 //             false,
 //             ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
-//             24
+//             20
 //         );
-//     }
-
-//     computeIndices(): void {
-//         // nothing to do
 //     }
 
 //     process(
 //         sourceData: NodeDisplayData,
 //         targetData: NodeDisplayData,
-//         data: CurvedEdgeDisplayData,
+//         data: EdgeDisplayData & { inverseSqrtZoomRatio: number },
 //         hidden: boolean,
 //         offset: number
 //     ): void {
 //         if (hidden) {
 //             for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
-
 //             return;
 //         }
 
 //         const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+
 //         const thickness = data.size || 1,
 //             x1 = sourceData.x,
 //             y1 = sourceData.y,
@@ -166,37 +163,61 @@
 //         const array = this.array;
 
 //         // First point
-//         array[i++] = x2;
-//         array[i++] = y2;
+//         array[i++] = x1;
+//         array[i++] = y1;
+//         array[i++] = n1;
+//         array[i++] = n2;
+//         array[i++] = color;
+//         array[i++] = 0;
+
+//         // First point flipped
+//         array[i++] = x1;
+//         array[i++] = y1;
 //         array[i++] = -n1;
 //         array[i++] = -n2;
-//         array[i++] = radius;
 //         array[i++] = color;
-//         array[i++] = 1;
-//         array[i++] = 0;
 //         array[i++] = 0;
 
 //         // Second point
 //         array[i++] = x2;
 //         array[i++] = y2;
-//         array[i++] = -n1;
-//         array[i++] = -n2;
-//         array[i++] = radius;
+//         array[i++] = n1;
+//         array[i++] = n2;
 //         array[i++] = color;
-//         array[i++] = 0;
-//         array[i++] = 1;
-//         array[i++] = 0;
+//         array[i++] = radius;
 
-//         // Third point
+//         // Second point flipped
 //         array[i++] = x2;
 //         array[i++] = y2;
 //         array[i++] = -n1;
 //         array[i++] = -n2;
-//         array[i++] = radius;
 //         array[i++] = color;
-//         array[i++] = 0;
-//         array[i++] = 0;
-//         array[i] = 1;
+//         array[i] = -radius;
+//     }
+
+//     computeIndices(): void {
+//         const l = this.array.length / ATTRIBUTES;
+//         const size = l + l / 2;
+//         const indices = new this.IndicesArray(size);
+
+//         for (let i = 0, c = 0; i < l; i += 4) {
+//             indices[c++] = i;
+//             indices[c++] = i + 1;
+//             indices[c++] = i + 2;
+//             indices[c++] = i + 2;
+//             indices[c++] = i + 1;
+//             indices[c++] = i + 3;
+//         }
+
+//         this.indicesArray = indices;
+//     }
+
+//     bufferData(): void {
+//         super.bufferData();
+
+//         // Indices data
+//         const gl = this.gl;
+//         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indicesArray, gl.STATIC_DRAW);
 //     }
 
 //     render(params: RenderParams): void {
@@ -213,6 +234,6 @@
 //         gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
 
 //         // Drawing:
-//         gl.drawArrays(gl.TRIANGLES, 0, this.array.length / ATTRIBUTES);
+//         gl.drawElements(gl.TRIANGLES, this.indicesArray.length, this.indicesType, 0);
 //     }
 // }

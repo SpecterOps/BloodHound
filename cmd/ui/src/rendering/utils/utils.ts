@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { NodeDisplayData, PartialButFor } from 'sigma/types';
+import { Coordinates, NodeDisplayData, PartialButFor } from 'sigma/types';
 
 /** Threshold of graph zoom before labels fade out */
 export const STARTING_ZOOM_FADE_RATIO = 0.65;
@@ -99,7 +99,8 @@ export const getLabelBoundsFromContext = (
     const labelWidth = labelBounds.width;
     // Add the space above the text baseline plus the space below it
     const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
-    const labelOffsetX = ((params.size ?? 0) + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
+    // const labelOffsetX = ((params.size ?? 0) + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
+    const labelOffsetX = (params.size || 1) + 4;
     const labelOffsetY = labelHeight / 2;
 
     return [
@@ -128,4 +129,47 @@ export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number
     else radius = size * inverseSqrtZoomRatio;
 
     return radius;
+};
+
+export const getControlPointsFromGroupSize = (
+    groupPosition: number,
+    radius: number,
+    center: Coordinates,
+    invertY: boolean,
+    invertX: boolean
+) => {
+    const position = groupPosition++;
+    const step = Math.PI / 2;
+
+    const theta2 = step * position - Math.PI / 2;
+    const theta1 = theta2 + step;
+
+    const x1Offset = radius * Math.cos(theta1);
+    const y1Offset = radius * Math.sin(theta1);
+
+    const x2Offset = radius * Math.cos(theta2);
+    const y2Offset = radius * Math.sin(theta2);
+
+    if (invertX && !invertY) {
+        const control2 = { x: center.x + -1 * x1Offset, y: center.y + y1Offset };
+        const control3 = { x: center.x + -1 * x2Offset, y: center.y + y2Offset };
+
+        return { control2: control2, control3: control3 };
+    }
+    if (invertY && !invertX) {
+        const control2 = { x: center.x + x1Offset, y: center.y + -1 * y1Offset };
+        const control3 = { x: center.x + x2Offset, y: center.y + -1 * y2Offset };
+
+        return { control2: control2, control3: control3 };
+    } else if (invertY && invertX) {
+        const control2 = { x: center.x + -1 * x1Offset, y: center.y + -1 * y1Offset };
+        const control3 = { x: center.x + -1 * x2Offset, y: center.y + -1 * y2Offset };
+
+        return { control2: control2, control3: control3 };
+    } else {
+        const control2 = { x: center.x + x1Offset, y: center.y + y1Offset };
+        const control3 = { x: center.x + x2Offset, y: center.y + y2Offset };
+
+        return { control2: control2, control3: control3 };
+    }
 };

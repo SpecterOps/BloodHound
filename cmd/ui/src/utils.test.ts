@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SigmaNodeEventPayload } from 'sigma/sigma';
-import type { MouseCoords } from 'sigma/types';
+import type { MouseCoords, SigmaNodeEventPayload } from 'sigma/types';
 import { preventAllDefaults } from './utils';
 
 describe('preventAllDefaults', () => {

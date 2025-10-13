@@ -17,8 +17,7 @@
 import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
-import type { SigmaNodeEventPayload } from 'sigma/sigma';
-import type { Coordinates, MouseCoords } from 'sigma/types';
+import type { Coordinates, MouseCoords, SigmaNodeEventPayload } from 'sigma/types';
 import { logout } from 'src/ducks/auth/authSlice';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { Glyph } from 'src/rendering/programs/node.glyphs';

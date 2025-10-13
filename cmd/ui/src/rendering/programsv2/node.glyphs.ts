@@ -18,10 +18,13 @@
 //  * Sigma.js WebGL Renderer Node Program
 //  * =====================================
 //  *
-//  * Program rendering nodes using GL_TRIANGLE by using an inscribed circle. The
-//  * program is derived from 'node.image' but overcoming the limitation that
-//  * gl_PointSize is limited to a specific number of pixels (e.g. macOS: 64px,
-//  * see https://webglreport.com/?v=2)
+//  * Program rendering nodes using GL_TRIANGLE by using an inscribed circle, with the
+//  * option to render up to 4 glyphs around the edge of the node using the same method.
+//  * Derived from the "combined" node renderer found in this unmerged PR:
+//  * https://github.com/jacomyal/sigma.js/pull/1206
+//  *
+//  * For performance reasons, it is recommended to use other node types unless you need to render
+//  * glyphs for that node.
 //  *
 //  * @module
 //  */
@@ -29,12 +32,12 @@
 // import { AbstractNodeProgram } from 'sigma/rendering';
 // import { Coordinates, Dimensions, NodeDisplayData, RenderParams } from 'sigma/types';
 // import { floatColor } from 'sigma/utils';
-// import { fragmentShaderSource } from '../shaders/node.combined.frag';
-// import { vertexShaderSource } from '../shaders/node.combined.vert';
+// import { fragmentShaderSource } from 'src/rendering/shaders/node.glyphs.frag';
+// import { vertexShaderSource } from 'src/rendering/shaders/node.glyphs.vert';
 
 // const POINTS = 3,
 //     /*
-//      atttributes sizing in floats:
+//      attributes sizing in floats:
 //       - position (xy: 2xfloat)
 //       - size (1xfloat)
 //       - color (4xbyte => 1xfloat)
@@ -42,7 +45,9 @@
 //       - angle (1xfloat)
 //       - borderColor (4xbyte = 1xfloat)
 //    */
-//     ATTRIBUTES = 9,
+//     ATTRIBUTES = 11,
+//     // Number of possible circles to be drawn -- 1 node + 4 glyphs
+//     CIRCLES = 5,
 //     // maximum size of single texture in atlas
 //     MAX_TEXTURE_SIZE = 192,
 //     // maximum width of atlas texture (limited by browser)
@@ -59,9 +64,18 @@
 // type ImageReady = { status: 'ready' } & Coordinates & Dimensions;
 // type ImageType = ImageLoading | ImageError | ImagePending | ImageReady;
 
+// export type Glyph = { location: GlyphLocation; image: string; backgroundColor: string; color: string };
+// // The numerical values of this enum are used to calculate angle of rotation for the glyph's origin
+// export enum GlyphLocation {
+//     TOP_RIGHT,
+//     BOTTOM_RIGHT,
+//     BOTTOM_LEFT,
+//     TOP_LEFT,
+// }
+
 // // This class only exists for the return typing of `getNodeCombinedProgram`:
 // /* eslint-disable @typescript-eslint/no-unused-vars */
-// class AbstractNodeCombinedProgram extends AbstractNodeProgram {
+// class AbstractNodeGlyphsProgram extends AbstractNodeProgram {
 //     constructor(gl: WebGLRenderingContext, renderer: Sigma) {
 //         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
 //     }
@@ -77,7 +91,7 @@
 //  * hovered nodes (to prevent some flickering, mostly), this program must be
 //  * "built" for each sigma instance:
 //  */
-// export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedProgram {
+// export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram {
 //     /**
 //      * These attributes are shared between all instances of this exact class,
 //      * returned by this call to getNodeProgramImage:
@@ -244,13 +258,14 @@
 //         rebindTextureFns.forEach((fn) => fn());
 //     }
 
-//     return class NodeCombinedProgram extends AbstractNodeProgram {
+//     return class NodeGlyphsProgram extends AbstractNodeProgram {
 //         texture: WebGLTexture;
 //         textureLocation: GLint;
 //         atlasLocation: WebGLUniformLocation;
 //         sqrtZoomRatioLocation: WebGLUniformLocation;
 //         correctionRatioLocation: WebGLUniformLocation;
 //         angleLocation: GLint;
+//         translationLocation: GLint;
 //         borderColorLocation: GLint;
 //         latestRenderParams?: RenderParams;
 
@@ -268,6 +283,7 @@
 //             this.textureLocation = gl.getAttribLocation(this.program, 'a_texture');
 //             this.angleLocation = gl.getAttribLocation(this.program, 'a_angle');
 //             this.borderColorLocation = gl.getAttribLocation(this.program, 'a_borderColor');
+//             this.translationLocation = gl.getAttribLocation(this.program, 'a_translation');
 
 //             // Uniform Location
 //             const atlasLocation = gl.getUniformLocation(this.program, 'u_atlas');
@@ -303,6 +319,7 @@
 
 //             gl.enableVertexAttribArray(this.textureLocation);
 //             gl.enableVertexAttribArray(this.angleLocation);
+//             gl.enableVertexAttribArray(this.translationLocation);
 //             gl.enableVertexAttribArray(this.borderColorLocation);
 
 //             gl.vertexAttribPointer(
@@ -322,25 +339,97 @@
 //                 28
 //             );
 //             gl.vertexAttribPointer(
+//                 this.translationLocation,
+//                 2,
+//                 gl.FLOAT,
+//                 false,
+//                 this.attributes * Float32Array.BYTES_PER_ELEMENT,
+//                 32
+//             );
+//             gl.vertexAttribPointer(
 //                 this.borderColorLocation,
 //                 4,
 //                 gl.UNSIGNED_BYTE,
 //                 true,
 //                 this.attributes * Float32Array.BYTES_PER_ELEMENT,
-//                 32
+//                 40
 //             );
 //         }
 
+//         // We need to override this method to multiply the default array size by number of glyphs + 1 node
+//         allocate(capacity: number): void {
+//             this.array = new Float32Array(this.points * this.attributes * capacity * CIRCLES);
+//         }
+
 //         process(
-//             data: NodeDisplayData & { image?: string; borderColor?: string },
+//             data: NodeDisplayData & { image?: string; borderColor?: string; glyphs?: Glyph[] },
 //             hidden: boolean,
 //             offset: number
 //         ): void {
-//             const array = this.array;
-//             let i = offset * POINTS * ATTRIBUTES;
+//             let i = offset * POINTS * ATTRIBUTES * CIRCLES;
 
-//             const imageSource = data.image;
+//             this.fillCircleAttributeBuffer(
+//                 this.array,
+//                 i,
+//                 hidden,
+//                 data.x,
+//                 data.y,
+//                 data.size,
+//                 data.color,
+//                 data.borderColor ?? data.color,
+//                 data.image
+//             );
+
+//             i += POINTS * ATTRIBUTES;
+
+//             // Filter down to one of each glyph, favoring the last at each position
+//             const glyphs = new Array(4).fill(undefined);
+//             if (data.glyphs) {
+//                 data.glyphs.forEach((g) => (glyphs[g.location] = g));
+//             }
+
+//             for (const glyph of glyphs) {
+//                 if (glyph) {
+//                     // Calculate coordinates of glyph based on node size and GlyphLocation enum value
+//                     const x = (data.size / 2) * Math.sin((Math.PI / 4) * (2 * glyph.location + 1));
+//                     const y = (data.size / 2) * Math.cos((Math.PI / 4) * (2 * glyph.location + 1));
+
+//                     this.fillCircleAttributeBuffer(
+//                         this.array,
+//                         i,
+//                         hidden,
+//                         data.x,
+//                         data.y,
+//                         data.size / 2.4,
+//                         glyph.backgroundColor, //fill
+//                         glyph.color, //border
+//                         glyph.image,
+//                         { x, y }
+//                     );
+//                 }
+//                 i += POINTS * ATTRIBUTES;
+//             }
+//         }
+
+//         fillCircleAttributeBuffer(
+//             array: Float32Array,
+//             currentIndex: number,
+//             hidden: boolean,
+//             x: number,
+//             y: number,
+//             size: number,
+//             color: string,
+//             borderColor: string,
+//             image?: string,
+//             translation?: Coordinates
+//         ): void {
+//             let i = currentIndex;
+//             const imageSource = image;
 //             const imageState = imageSource && images[imageSource];
+
+//             const translateX = translation?.x ?? 0;
+//             const translateY = translation?.y ?? 0;
+
 //             if (typeof imageSource === 'string' && !imageState) loadImage(imageSource);
 
 //             if (hidden) {
@@ -355,17 +444,20 @@
 //                 array[i++] = 0;
 //                 // Angle:
 //                 array[i++] = 0;
+//                 // Translation:
+//                 array[i++] = 0;
+//                 array[i++] = 0;
 //                 // Border Color:
 //                 array[i++] = 0;
-//                 return;
 //             }
 
-//             const color = floatColor(data.color);
-//             const borderColor = floatColor(data.borderColor ?? data.color);
-//             array[i++] = data.x;
-//             array[i++] = data.y;
-//             array[i++] = data.size;
-//             array[i++] = color;
+//             const fcolor = floatColor(color);
+//             const fborderColor = floatColor(borderColor ?? color);
+
+//             array[i++] = x;
+//             array[i++] = y;
+//             array[i++] = size;
+//             array[i++] = fcolor;
 
 //             if (imageState && imageState.status === 'ready') {
 //                 const { width, height } = textureImage;
@@ -381,12 +473,14 @@
 //                 array[i++] = 0;
 //             }
 //             array[i++] = ANGLE_1;
-//             array[i++] = borderColor;
+//             array[i++] = translateX;
+//             array[i++] = translateY;
+//             array[i++] = fborderColor;
 
-//             array[i++] = data.x;
-//             array[i++] = data.y;
-//             array[i++] = data.size;
-//             array[i++] = color;
+//             array[i++] = x;
+//             array[i++] = y;
+//             array[i++] = size;
+//             array[i++] = fcolor;
 
 //             // ratio: R/texture_height
 //             const r = (8 / 3) * (1 - Math.sin((2 * Math.PI) / 3));
@@ -403,12 +497,14 @@
 //                 array[i++] = 0;
 //             }
 //             array[i++] = ANGLE_2;
-//             array[i++] = borderColor;
+//             array[i++] = translateX;
+//             array[i++] = translateY;
+//             array[i++] = fborderColor;
 
-//             array[i++] = data.x;
-//             array[i++] = data.y;
-//             array[i++] = data.size;
-//             array[i++] = color;
+//             array[i++] = x;
+//             array[i++] = y;
+//             array[i++] = size;
+//             array[i++] = fcolor;
 //             if (imageState && imageState.status === 'ready') {
 //                 // ANGLE_3: bottom left UV coordinates
 //                 const { width, height } = textureImage;
@@ -421,7 +517,9 @@
 //                 array[i++] = 0;
 //             }
 //             array[i++] = ANGLE_3;
-//             array[i++] = borderColor;
+//             array[i++] = translateX;
+//             array[i++] = translateY;
+//             array[i++] = fborderColor;
 //         }
 
 //         render(params: RenderParams): void {
@@ -441,15 +539,14 @@
 //             gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
 //             //gl.uniform1f(this.sqrtZoomRatioLocation, params.ratio);
 //             gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
-//             gl.uniform1i(this.atlasLocation, 0);
+//             gl.uniform1i(this.atlasLocation, 1);
 
 //             gl.drawArrays(gl.TRIANGLES, 0, this.array.length / ATTRIBUTES);
 //         }
 
 //         rebindTexture() {
 //             const gl = this.gl;
-
-//             gl.activeTexture(gl.TEXTURE0);
+//             gl.activeTexture(gl.TEXTURE1);
 //             gl.bindTexture(gl.TEXTURE_2D, this.texture);
 //             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureImage);
 //             gl.generateMipmap(gl.TEXTURE_2D);

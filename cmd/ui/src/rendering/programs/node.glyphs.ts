@@ -28,10 +28,9 @@
  *
  * @module
  */
-import { AbstractNodeProgram } from 'sigma/rendering/webgl/programs/common/node';
-import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import Sigma from 'sigma/sigma';
-import { Coordinates, Dimensions, NodeDisplayData } from 'sigma/types';
+import Sigma from 'sigma';
+import { AbstractNodeProgram } from 'sigma/rendering';
+import { Coordinates, Dimensions, NodeDisplayData, RenderParams } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
 import { fragmentShaderSource } from 'src/rendering/shaders/node.glyphs.frag';
 import { vertexShaderSource } from 'src/rendering/shaders/node.glyphs.vert';

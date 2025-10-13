@@ -42,9 +42,9 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
+import { SigmaNodeEventPayload } from 'sigma/types';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
-import SigmaChart from 'src/components/SigmaChart';
+import SigmaChart from 'src/components/SigmaChartv3';
 import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -54,6 +54,13 @@ import ContextMenuPrivilegeZonesEnabled from './ContextMenu/ContextMenuPrivilege
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
+
+interface SigmaChartRef extends HTMLDivElement {
+    resetCamera: () => void;
+    zoomTo: (id: string) => void;
+    runSequentialLayout: () => void;
+    runStandardLayout: () => void;
+}
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -70,7 +77,7 @@ const GraphView: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
-    const sigmaChartRef = useRef<any>(null);
+    const sigmaChartRef = useRef<SigmaChartRef>(null);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
@@ -175,7 +182,7 @@ const GraphView: FC = () => {
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
-                graph={graphologyGraph}
+                graph={graphologyGraph || new MultiDirectedGraph()}
                 highlightedItem={selectedItem}
                 onClickEdge={setSelectedItem}
                 onClickNode={setSelectedItem}

@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import AbstractGraph, { Attributes } from 'graphology-types';
+import { Attributes } from 'graphology-types';
 import Sigma from 'sigma';
 import { CameraState, Coordinates, Extent, NodeDisplayData } from 'sigma/types';
 import { graphExtent } from 'sigma/utils';
 
 export const GROUP_SPREAD = 0.06;
-export const MIN_CAMERA_RATIO = 0.5;
+export const MIN_CAMERA_RATIO = 0.15;
 export const MAX_CAMERA_RATIO = 15;
 
 /** Node drags shorter than this distance are considered accidental and handled as clicks */
@@ -153,7 +153,7 @@ export const getEdgeLabelTextLength = (
 };
 
 export const graphToFramedGraph = (
-    sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>,
+    sigma: Sigma<Attributes, Attributes, Attributes>,
     coordinates: Coordinates
 ): Coordinates => {
     return sigma.viewportToFramedGraph(sigma.graphToViewport(coordinates));
@@ -169,7 +169,7 @@ const graphGetMidpoint = (graphExtent: { x: Extent; y: Extent }): Coordinates =>
     return { x: midX, y: midY };
 };
 
-const centerCameraOnGraph = (sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>): void => {
+const centerCameraOnGraph = (sigma: Sigma<Attributes, Attributes, Attributes>): void => {
     const graph = sigma.getGraph();
     const extent = graphExtent(graph);
     const camera = sigma.getCamera();
@@ -225,7 +225,7 @@ const calculateNewBBox = (sigma: Sigma): { x: Extent; y: Extent } => {
     };
 };
 
-export const resetCamera = (sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>): void => {
+export const resetCamera = (sigma: Sigma<Attributes, Attributes, Attributes>): void => {
     sigma.setCustomBBox(calculateNewBBox(sigma));
     setTimeout(() => {
         centerCameraOnGraph(sigma);

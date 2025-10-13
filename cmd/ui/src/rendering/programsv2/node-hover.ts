@@ -16,7 +16,7 @@
 
 import { Settings } from 'sigma/settings';
 import { NodeDisplayData, PartialButFor } from 'sigma/types';
-import { calculateLabelOpacity } from '../utils/utils';
+import { calculateLabelOpacity, getNodeRadius } from '../utils/utils';
 import drawLabel from './node-label';
 
 export default function drawHover(
@@ -33,13 +33,12 @@ export default function drawHover(
     const weight = settings.labelWeight;
 
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-    const size = settings.labelSize;
+    const size = settings.labelSize * inverseSqrtZoomRatio;
 
     context.font = `${weight} ${size}px ${font}`;
     context.fillStyle = data.highlightedBackground;
 
-    // const radius = getNodeRadius(true, inverseSqrtZoomRatio, data.size);
-    const radius = data.size + 4;
+    const radius = getNodeRadius(true, inverseSqrtZoomRatio, data.size);
     const nodeLabelExists = typeof data.label === 'string';
 
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);

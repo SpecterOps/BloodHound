@@ -15,14 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
+import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdge, GraphEdges, GraphNodes } from 'js-client-library';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
-import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
-import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
+import { EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
     forceAtlas2.assign(graph, {
@@ -103,7 +102,8 @@ const initGraphNodes = (
         const node = nodes[key];
         // Set default node parameters
         const nodeParams: Partial<NodeParams> = {
-            type: 'combined',
+            // type: 'combined',
+            type: 'image',
             label: node.label,
             forceLabel: true,
             hidden: hideNodes,
@@ -115,34 +115,34 @@ const initGraphNodes = (
         nodeParams.image = iconInfo.url || '';
         nodeParams.glyphs = [];
 
-        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphMap);
-        if (glyphImage) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.TOP_RIGHT,
-                image: glyphImage,
-                ...themedOptions.glyph.colors,
-            });
-        }
+        // const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphMap);
+        // if (glyphImage) {
+        //     nodeParams.type = 'glyphs';
+        //     nodeParams.glyphs.push({
+        //         location: GlyphLocation.TOP_RIGHT,
+        //         image: glyphImage,
+        //         ...themedOptions.glyph.colors,
+        //     });
+        // }
 
-        // Tier zero nodes should be marked with a gem glyph
-        if (node.isTierZero) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.TOP_RIGHT,
-                image: themedOptions.glyph.tierZeroGlyph.url || '',
-                ...themedOptions.glyph.colors,
-            });
-        }
+        // // Tier zero nodes should be marked with a gem glyph
+        // if (node.isTierZero) {
+        //     nodeParams.type = 'glyphs';
+        //     nodeParams.glyphs.push({
+        //         location: GlyphLocation.TOP_RIGHT,
+        //         image: themedOptions.glyph.tierZeroGlyph.url || '',
+        //         ...themedOptions.glyph.colors,
+        //     });
+        // }
 
-        if (node.isOwnedObject) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.BOTTOM_RIGHT,
-                image: themedOptions.glyph.ownedObjectGlyph.url || '',
-                ...themedOptions.glyph.colors,
-            });
-        }
+        // if (node.isOwnedObject) {
+        //     nodeParams.type = 'glyphs';
+        //     nodeParams.glyphs.push({
+        //         location: GlyphLocation.BOTTOM_RIGHT,
+        //         image: themedOptions.glyph.ownedObjectGlyph.url || '',
+        //         ...themedOptions.glyph.colors,
+        //     });
+        // }
 
         graph.addNode(key, {
             size: 25,
@@ -182,7 +182,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
                 size: 3,
-                type: 'arrow',
+                type: 'curved',
                 label: edge.label,
                 groupPosition: 0,
                 groupSize: 1,
@@ -197,19 +197,22 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
 
             // Handle edge groups that have a mix of directions that edges travel between source and target.
             // We can use the value of the enum to indicate which direction the curve should bend
-            const groupStart = group.split('_')[0];
-            const edgeDirection = groupStart === edge.source ? EdgeDirection.FORWARDS : EdgeDirection.BACKWARDS;
+            // const groupStart = group.split('_')[0];
+            // const edgeDirection = groupStart === edge.source ? EdgeDirection.FORWARDS : EdgeDirection.BACKWARDS;
 
             if (edgeShouldBeCurved) {
                 edgeParams.type = 'curved';
-                edgeParams.groupPosition = i;
-                edgeParams.groupSize = groupSize;
-                edgeParams.direction = edgeDirection;
+                edgeParams.curvature = (i + 1) / 4;
+
+                // edgeParams.groupPosition = i;
+                // edgeParams.groupSize = groupSize;
+                // edgeParams.direction = edgeDirection;
             }
             if (isSelfEdge) {
-                edgeParams.type = 'self';
-                edgeParams.groupPosition = i;
-                edgeParams.groupSize = groupSize;
+                edgeParams.type = 'curved';
+                // edgeParams.curvature = 0.1;
+                // edgeParams.groupPosition = i;
+                // edgeParams.groupSize = groupSize;
             }
 
             graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);

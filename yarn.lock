@@ -2956,6 +2956,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sigma/edge-curve@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@sigma/edge-curve@npm:3.1.0"
+  peerDependencies:
+    sigma: ">=3.0.0-beta.10"
+  checksum: 3fbebdbc5b34e6e6b490d28b3f90cb8cc79af308123f1e20217597486317b16360b472b7fbf814e5425dcab85b7fec62a1dad3ffaee08142df2192eebe7ce4ca
+  languageName: node
+  linkType: hard
+
+"@sigma/node-image@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@sigma/node-image@npm:3.0.0"
+  peerDependencies:
+    sigma: ">=3.0.0-beta.10"
+  checksum: 741449b8338b84d71c20c7ca1cabd9c7da4870423c1b787ac4ea029529bc7efd5b39baa3bac123a662a3ab881ccb3cf2e67077ec268b4ffaded880340b94d1cc
+  languageName: node
+  linkType: hard
+
 "@sinclair/typebox@npm:^0.27.8":
   version: 0.27.8
   resolution: "@sinclair/typebox@npm:0.27.8"
@@ -4219,13 +4237,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yomguithereal/helpers@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@yomguithereal/helpers@npm:1.1.1"
-  checksum: 901aa14a232d56a99c423ac5968dd7915954a4bb3e570169cb450f1f3d328456025977c9812df3a34b061c74757b4bbd673bd467b2449c660a2dea347dda402a
-  languageName: node
-  linkType: hard
-
 "@zxing/text-encoding@npm:0.9.0":
   version: 0.9.0
   resolution: "@zxing/text-encoding@npm:0.9.0"
@@ -4866,6 +4877,8 @@ __metadata:
     "@mui/x-date-pickers": ^5.0.20
     "@react-sigma/core": ^3.4.1
     "@reduxjs/toolkit": ^1.8.5
+    "@sigma/edge-curve": ^3.1.0
+    "@sigma/node-image": ^3.0.0
     "@testing-library/jest-dom": ^5.16.5
     "@testing-library/react": ^13.3.0
     "@testing-library/user-event": ^14.4.3
@@ -4891,7 +4904,7 @@ __metadata:
     eslint-plugin-react: ^7.34.1
     eslint-plugin-react-hooks: ^4.6.0
     eslint-plugin-react-refresh: ^0.4.6
-    graphology: ^0.25.1
+    graphology: ^0.26.0
     graphology-layout: ^0.6.1
     graphology-layout-forceatlas2: ^0.10.1
     graphology-types: ^0.24.7
@@ -4925,7 +4938,7 @@ __metadata:
     redux-saga: ^1.1.3
     redux-saga-test-plan: ^4.0.3
     sass: ^1.62.1
-    sigma: ^2.4.0
+    sigma: ^3.0.0-beta.6
     tailwindcss: ^3.4.17
     typescript: ^5.1.6
     vite: ^5.4.19
@@ -7134,7 +7147,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphology-utils@npm:^2.1.0, graphology-utils@npm:^2.3.0, graphology-utils@npm:^2.5.0":
+"graphology-utils@npm:^2.1.0, graphology-utils@npm:^2.3.0, graphology-utils@npm:^2.5.2":
   version: 2.5.2
   resolution: "graphology-utils@npm:2.5.2"
   peerDependencies:
@@ -7143,15 +7156,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphology@npm:^0.25.1":
-  version: 0.25.4
-  resolution: "graphology@npm:0.25.4"
+"graphology@npm:^0.26.0":
+  version: 0.26.0
+  resolution: "graphology@npm:0.26.0"
   dependencies:
     events: ^3.3.0
-    obliterator: ^2.0.2
   peerDependencies:
     graphology-types: ">=0.24.0"
-  checksum: ad8fe5d57c923eb399e5fd91d95e142dd87e1f1fcc1988896b4fd76a2faee67e0336541bdb3c5c3f6ab8ff3ce7e895b239c52ae10c34889edf0cf260e9ee0d90
+  checksum: c6058989424243f22e03923575eb2a69b2bfcc81c851829b9191c3ee03e5071f7a85a9244367a7d8ef459f5eaa6cee0b990af578d5406da4615f887e5b0e7cdf
   languageName: node
   linkType: hard
 
@@ -9316,7 +9328,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"obliterator@npm:^2.0.1, obliterator@npm:^2.0.2":
+"obliterator@npm:^2.0.1":
   version: 2.0.4
   resolution: "obliterator@npm:2.0.4"
   checksum: f28ad35b6d812089315f375dc3e6e5f9bebf958ebe4b10ccd471c7115cbcf595e74bdac4783ae758e5b1f47e3096427fdb37cfa7bed566b132df92ff317b9a7c
@@ -11030,14 +11042,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sigma@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "sigma@npm:2.4.0"
+"sigma@npm:^3.0.0-beta.6":
+  version: 3.0.2
+  resolution: "sigma@npm:3.0.2"
   dependencies:
-    "@yomguithereal/helpers": ^1.1.1
     events: ^3.3.0
-    graphology-utils: ^2.5.0
-  checksum: c9161859bb3dc2dbff8a918e6a400cec1f75e60de9fe7fb42ecf16ddc9d3f1e8a10a372f9876c674bb9e973006e0e852cdb9b4a0e525bc08eb3a959f475f99ce
+    graphology-utils: ^2.5.2
+  checksum: 58c1dbcbbfb44930b8a4b90605a47a4654cc8960aeb634e4130fce32879a691da645374521b247f4ac5f3529cc79a220eb48d878cd916d58111128af80af0d69
   languageName: node
   linkType: hard
 
