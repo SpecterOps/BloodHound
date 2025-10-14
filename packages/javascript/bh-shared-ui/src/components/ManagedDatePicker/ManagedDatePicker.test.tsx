@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { ManagedDatePicker, VALIDATIONS } from './ManagedDatePicker';
 
 const JAN_1 = new Date('2025-01-01T00:00:00Z');
@@ -213,13 +213,13 @@ describe('ManagedDatePicker - value', () => {
         expect(onDateChangeMock).toHaveBeenCalledWith(new Date('2025-01-01T00:00:00.000Z'));
     });
 
-    it('does not updates value after blur when bad date typed', async () => {
+    it('sets value to undefined after blur when bad date typed', async () => {
         const { clickAway, onDateChangeMock, typeInput } = renderDatePicker();
 
         await typeInput('2025');
         await clickAway();
 
-        expect(onDateChangeMock).not.toHaveBeenCalled();
+        expect(onDateChangeMock).toHaveBeenCalledWith(undefined);
     });
 });
 
@@ -230,10 +230,12 @@ describe('ManagedDatePicker - input', () => {
         await typeInput('2025-01-01');
         await openCalendar();
 
-        const calendarDay = screen.getByRole('gridcell', { selected: true });
+        waitFor(() => {
+            const calendarDay = screen.getByRole('gridcell', { selected: true });
 
-        expect(calendarDay).toBeInTheDocument();
-        expect(calendarDay).toHaveTextContent('1');
+            expect(calendarDay).toBeInTheDocument();
+            expect(calendarDay).toHaveTextContent('1');
+        });
     });
 
     it('does not updates calendar when bad date typed', async () => {
@@ -259,6 +261,6 @@ describe('ManagedDatePicker - input', () => {
 
         await clickAway();
 
-        expect(onDateChangeMock).toHaveBeenCalledWith();
+        expect(onDateChangeMock).toHaveBeenCalledWith(undefined);
     });
 });
