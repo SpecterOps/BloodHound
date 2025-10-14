@@ -229,7 +229,7 @@ describe('ManagedDatePicker - input', () => {
 
         await openCalendar();
 
-        const calendarDay = screen.getByRole('gridcell', { selected: true });
+        const calendarDay = await screen.findByRole('gridcell', { selected: true });
 
         expect(calendarDay).toBeInTheDocument();
         expect(calendarDay).toHaveTextContent('1');
