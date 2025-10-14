@@ -24,7 +24,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	az "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -331,13 +330,9 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 					slog.String("target", rel.Target.Value),
 					slog.Bool("resolved_source", srcOK),
 					slog.Bool("resolved_target", targetOK))
-				if sourceKind == ad.Entity || sourceKind == az.Entity {
-					// do not report an error for invalid relationships when performing generic ingest
-					errs.Add(
-						fmt.Errorf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
-					)
-				}
-
+				errs.Add(
+					fmt.Errorf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
+				)
 				continue
 			}
 
