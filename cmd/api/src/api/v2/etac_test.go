@@ -57,7 +57,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{
+				envs := []model.EnvironmentTargetedAccessControl{
 					{
 						UserID:        userUuid.String(),
 						EnvironmentID: "1",
@@ -90,7 +90,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{
+				envs := []model.EnvironmentTargetedAccessControl{
 					{
 						UserID:        userUuid.String(),
 						EnvironmentID: "1",
@@ -122,7 +122,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{
+				envs := []model.EnvironmentTargetedAccessControl{
 					{
 						UserID:        userUuid.String(),
 						EnvironmentID: "1",
@@ -155,7 +155,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{}
+				envs := []model.EnvironmentTargetedAccessControl{}
 
 				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},

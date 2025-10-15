@@ -17,6 +17,7 @@
 
 -- Set all_environments to true for existing users
 UPDATE users SET all_environments = true;
+
 -- Rename environment to environment_id to prepare for data partitioning, if the column does not exist then we throw away the error for idempotence
 DO
 $$
@@ -68,3 +69,12 @@ CREATE INDEX IF NOT EXISTS idx_agt_history_target ON asset_group_history USING b
 CREATE INDEX IF NOT EXISTS idx_agt_history_email ON asset_group_history USING btree (email);
 CREATE INDEX IF NOT EXISTS idx_agt_history_env_id ON asset_group_history USING btree (environment_id);
 CREATE INDEX IF NOT EXISTS idx_agt_history_created_at ON asset_group_history USING btree (created_at);
+
+-- Fix naming inconsistencies for ETAC
+ALTER TABLE IF EXISTS environment_access_control
+    RENAME TO environment_targeted_access_control;
+UPDATE feature_flags
+SET key         = 'environment_targeted_access_control',
+    name        = 'Environment Targeted Access Control',
+    description = 'Enable power users and admins to set environment targeted access controls on users'
+WHERE key = 'targeted_access_control';

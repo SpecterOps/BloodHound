@@ -364,11 +364,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
-		// eTAC
+		// ETAC
 		// This is to handle an edge case where GORM defaults this value to false on user creation
 		// Once ETAC is available to GA, this can be removed
 		userTemplate.AllEnvironments = true
-		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		} else if etacFeatureFlag.Enabled {
@@ -504,8 +504,8 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			user.Roles = roles
 		}
 
-		// eTAC
-		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
+		// ETAC
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		} else if etacFeatureFlag.Enabled {

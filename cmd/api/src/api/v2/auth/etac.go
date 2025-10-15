@@ -37,17 +37,17 @@ import (
 // Administrators and Power Users may not have an ETAC list applied to them
 // The user may not request all environments and have an ETAC list applied to them
 func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserRequest, roles model.Roles, user *model.User, graphDB queries.Graph) error {
-	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentAccessControl != nil {
+	if updateUserRequest.AllEnvironments.Valid || updateUserRequest.EnvironmentTargetedAccessControl != nil {
 		// Admin / Power Users can only have all_environments set to true
 		if (roles.Has(model.Role{Name: auth.RoleAdministrator}) || roles.Has(model.Role{Name: auth.RolePowerUser})) &&
-			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentAccessControl != nil && len(updateUserRequest.EnvironmentAccessControl.Environments) > 0)) {
+			(!updateUserRequest.AllEnvironments.Bool || (updateUserRequest.EnvironmentTargetedAccessControl != nil && len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) > 0)) {
 			return errors.New(api.ErrorResponseETACInvalidRoles)
 		}
 		user.AllEnvironments = updateUserRequest.AllEnvironments.Bool
 	}
 
-	if updateUserRequest.EnvironmentAccessControl == nil || len(updateUserRequest.EnvironmentAccessControl.Environments) == 0 {
-		user.EnvironmentAccessControl = make([]model.EnvironmentAccess, 0)
+	if updateUserRequest.EnvironmentTargetedAccessControl == nil || len(updateUserRequest.EnvironmentTargetedAccessControl.Environments) == 0 {
+		user.EnvironmentTargetedAccessControl = make([]model.EnvironmentTargetedAccessControl, 0)
 		return nil
 	}
 
@@ -59,7 +59,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 
 	// Validate provided environment ids exist in the graph prior to adding ETAC control
 	var envIds []string
-	for _, environment := range updateUserRequest.EnvironmentAccessControl.Environments {
+	for _, environment := range updateUserRequest.EnvironmentTargetedAccessControl.Environments {
 		envIds = append(envIds, environment.EnvironmentID)
 	}
 
@@ -74,7 +74,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 			if _, ok := nodesByObject[envId]; !ok {
 				return fmt.Errorf("domain or tenant not found: %s", envId)
 			} else {
-				user.EnvironmentAccessControl = append(user.EnvironmentAccessControl, model.EnvironmentAccess{
+				user.EnvironmentTargetedAccessControl = append(user.EnvironmentTargetedAccessControl, model.EnvironmentTargetedAccessControl{
 					UserID:        user.ID.String(),
 					EnvironmentID: envId,
 				})
