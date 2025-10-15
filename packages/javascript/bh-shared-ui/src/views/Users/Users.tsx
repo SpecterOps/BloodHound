@@ -292,8 +292,13 @@ const Users: FC = () => {
                             setDisable2FASecret('');
                             listUsersQuery.refetch();
                         })
-                        .catch(() => {
-                            setDisable2FAError('Unable to verify password. Please try again.');
+                        .catch((err) => {
+                            if (!isSelfSSOUser && err.status === 400) {
+                                setDisable2FAError('Unable to verify password. Please try again.');
+                            } else {
+                                setDisable2FADialogOpen(false);
+                                addNotification('Unknown error disabling MFA for user', 'disableUserMfaUnknownError');
+                            }
                         });
                 }}
                 error={disable2FAError}

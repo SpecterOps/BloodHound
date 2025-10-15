@@ -88,6 +88,7 @@ describe('Users', () => {
         const noMFARow = await screen.findByRole('row', { name: /test_admin/i });
 
         await userEvent.click(within(noMFARow).getByRole('button', { name: 'bars' }));
+        await screen.findByRole('menuitem', { name: /update user/i, hidden: false });
         expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).not.toBeInTheDocument();
     });
 

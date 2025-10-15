@@ -948,8 +948,10 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 			}
 		}
 
-		user.AuthSecret.TOTPSecret = ""
-		user.AuthSecret.TOTPActivated = false
+		if user.AuthSecret != nil {
+			user.AuthSecret.TOTPSecret = ""
+			user.AuthSecret.TOTPActivated = false
+		}
 
 		if err := s.db.UpdateAuthSecret(request.Context(), *user.AuthSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)
