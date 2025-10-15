@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import Users from '.';
-import { bloodHoundUsersHandlers, testBloodHoundUsers, testSSOProviders } from '../../mocks';
+import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
 import { render, screen, within } from '../../test-utils';
 
 const server = setupServer(...bloodHoundUsersHandlers);
@@ -79,5 +80,63 @@ describe('Users', () => {
         const rows = screen.getAllByRole('row');
         // Only the header row renders even though there is a mock endpoint that serves data
         expect(rows).toHaveLength(1);
+    });
+
+    it('does not show the "Disable MFA" context menu option for users without MFA enabled', async () => {
+        render(<Users />);
+
+        const noMFARow = await screen.findByRole('row', { name: /test_admin/i });
+
+        await userEvent.click(within(noMFARow).getByRole('button', { name: 'bars' }));
+        expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).not.toBeInTheDocument();
+    });
+
+    it('shows the "Disable MFA" context menu option for users with MFA enabled', async () => {
+        render(<Users />);
+
+        const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
+
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        expect(screen.queryByRole('menuitem', { name: /disable mfa/i, hidden: false })).toBeInTheDocument();
+    });
+
+    it('requires a password to disable MFA for a user when logged in without SSO', async () => {
+        render(<Users />);
+
+        const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
+
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
+
+        const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });
+        const input = screen.queryByLabelText(/password/i);
+
+        expect(dialog).toBeInTheDocument();
+        expect(input).toBeInTheDocument();
+    });
+
+    it('hides the password field and removes the requirement when logged in with SSO', async () => {
+        // Override logged in admin with a SSO provider value
+        server.use(
+            rest.get('/api/v2/self', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { ...testAuthenticatedUser, sso_provider_id: 1 },
+                    })
+                );
+            })
+        );
+        render(<Users />);
+
+        const withMFARow = await screen.findByRole('row', { name: /mfa_user/i });
+
+        await userEvent.click(within(withMFARow).getByRole('button', { name: 'bars' }));
+        await userEvent.click(screen.getByRole('menuitem', { name: /disable mfa/i }));
+
+        const dialog = screen.queryByRole('dialog', { name: /disable multi-factor authentication/i });
+        const input = screen.queryByLabelText(/password/i);
+
+        expect(dialog).toBeInTheDocument();
+        expect(input).not.toBeInTheDocument();
     });
 });

@@ -26,7 +26,7 @@ import {
     DialogTrigger,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 import { useRef, useState } from 'react';
 import { useObjectState } from '../../hooks';
 import { FileIngestFilterParams, typedEntries } from '../../utils';
