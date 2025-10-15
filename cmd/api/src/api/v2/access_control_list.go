@@ -94,3 +94,15 @@ func FilterUserEnvironments(ctx context.Context, db database.Database, user mode
 
 	return filtered, nil
 }
+
+// ExtractEnvironmentIDsFromUser is a helper function
+// to extract a user's environments from their model as a list of strings
+func ExtractEnvironmentIDsFromUser(user *model.User) []string {
+	list := make([]string, 0, len(user.EnvironmentAccessControl))
+
+	for _, envAccess := range user.EnvironmentAccessControl {
+		list = append(list, envAccess.EnvironmentID)
+	}
+
+	return list
+}
