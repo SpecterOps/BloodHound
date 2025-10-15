@@ -72,7 +72,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 					},
 				}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "3"},
@@ -105,7 +105,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 					},
 				}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2"},
@@ -137,7 +137,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 					},
 				}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "4"},
@@ -157,7 +157,7 @@ func Test_CheckAccessToEnvironments(t *testing.T) {
 
 				envs := []model.EnvironmentTargetedAccessControl{}
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "4"},
