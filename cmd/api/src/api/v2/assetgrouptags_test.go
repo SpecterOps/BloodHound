@@ -1303,8 +1303,8 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(agtSelectors, 0, nil).Times(1)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), agtSelectors[0].ID).
-						Return(agtSelectorNodes, nil).Times(1)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), agtSelectors[0].ID).
+						Return(agtSelectorNodes, 0, nil).Times(1)
 					mockGraphDb.EXPECT().
 						CountFilteredNodes(gomock.Any(), query.And(
 							query.KindIn(query.Node(), assetGroupTag.ToKind()),
