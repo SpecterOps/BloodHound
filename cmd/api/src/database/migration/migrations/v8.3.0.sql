@@ -69,6 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_agt_history_email ON asset_group_history USING bt
 CREATE INDEX IF NOT EXISTS idx_agt_history_env_id ON asset_group_history USING btree (environment_id);
 CREATE INDEX IF NOT EXISTS idx_agt_history_created_at ON asset_group_history USING btree (created_at);
 
+-- Remigrate old custom AGI selectors to PZ selectors for any instances without PZ feature flag enabled
 DO $$
 BEGIN
 		IF
@@ -100,3 +101,9 @@ BEGIN
 END IF;
 END;
 $$;
+
+-- Set all default selectors to enabled for bootstrapped instances
+UPDATE asset_group_tag_selectors SET disabled_at = NULL, disabled_by = NULL WHERE is_default = true AND created_at > current_timestamp - '7 min'::interval;
+
+-- Set PZ feature flag enabled for bootstrapped instances
+UPDATE feature_flags SET enabled = true WHERE key = 'tier_management_engine' AND created_at > current_timestamp - '7 min'::interval;
