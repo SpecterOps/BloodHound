@@ -70,12 +70,12 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@v4
         if: ${{ github.event.ref == 'refs/heads/main' }}
+        uses: actions/checkout@v4
 
       - name: Install Go
-        uses: actions/setup-go@v5
         if: ${{ github.event.ref == 'refs/heads/main' }}
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
@@ -97,16 +97,16 @@ jobs:
           cat test_results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
 
       - name: Get Allure history
-        uses: actions/checkout@v2
         if: ${{ github.event.ref == 'refs/heads/main' }}
+        uses: actions/checkout@v4
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
 
       - name: Build test report
-        uses: simple-elf/allure-report-action@v1.12
         if: ${{ github.event.ref == 'refs/heads/main' }}
+        uses: simple-elf/allure-report-action@v1.12
         with:
           gh_pages: gh-pages
           allure_history: allure-history
@@ -114,8 +114,8 @@ jobs:
           allure_report: allure-report
       
       - name: Upload Test Report 
-        uses: actions/upload-artifact@v4
         if: ${{ github.event.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report
