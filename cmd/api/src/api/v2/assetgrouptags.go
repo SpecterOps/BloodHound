@@ -773,6 +773,11 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			filter.Params = append(filter.Params, environmentIds)
 		}
 
+		if assetGroupTag.RequireCertify.ValueOrZero() {
+			filter.SQLString += " AND certified > ?"
+			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+		}
+
 		if selectorNodes, count, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, sort, skip, limit, selectorId); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
