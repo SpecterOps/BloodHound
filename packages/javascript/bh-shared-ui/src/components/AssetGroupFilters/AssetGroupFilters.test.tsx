@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Screen, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AssetGroupMemberCountsResponse, AssetGroupMemberParams } from 'js-client-library';
 import { rest } from 'msw';
@@ -48,7 +48,7 @@ describe('AssetGroupEdit', () => {
     }) => {
         const user = userEvent.setup();
         const handleFilterChange = vi.fn();
-        const screen: Screen = await act(async () => {
+        const screen = await act(async () => {
             return render(
                 <AssetGroupFilters
                     filterParams={options?.filterParams ?? {}}
@@ -181,9 +181,9 @@ describe('AssetGroupEdit', () => {
 
         it('is disabled if no filters are active', async () => {
             const { screen } = await setup();
-            const clearFilersButton: HTMLButtonElement = screen.getByText('Clear Filters');
+            const clearFilersButton = screen.getByText('Clear Filters');
 
-            expect(clearFilersButton.disabled).toBe(true);
+            expect((clearFilersButton as HTMLButtonElement).disabled).toBe(true);
         });
     });
 });
