@@ -16,9 +16,21 @@
 
 import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
+import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
-import { isNode, useExploreParams, useExploreSelectedItem, useTagsQuery } from '../../../hooks';
-import useAssetGroupMenuItems from '../../../hooks/useAssetGroupMenuItems';
+import { useMutation } from 'react-query';
+import {
+    NodeResponse,
+    isNode,
+    useExploreParams,
+    useExploreSelectedItem,
+    usePermissions,
+    useTagsQuery,
+} from '../../../hooks';
+import { useNotifications } from '../../../providers';
+import { detailsPath, labelsPath, privilegeZonesPath, zonesPath } from '../../../routes';
+import { Permission, apiClient } from '../../../utils';
+import { AssetGroupMenuItem } from '../../../views';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
@@ -30,7 +42,29 @@ const ContextMenu: FC<{
     const { selectedItemQuery } = useExploreSelectedItem();
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
     const getAssetGroupTagsQuery = useTagsQuery();
-    const assetGroupMenuItems = useAssetGroupMenuItems(setDialogOpen);
+    const { checkPermission } = usePermissions();
+    const { addNotification } = useNotifications();
+
+    const createAssetGroupTagSelectorMutation = useMutation({
+        mutationFn: ({ assetGroupId, node }: { assetGroupId: string | number; node: NodeResponse }) => {
+            return apiClient.createAssetGroupTagSelector(assetGroupId, {
+                name: node.label ?? node.objectId,
+                seeds: [
+                    {
+                        type: SeedTypeObjectId,
+                        value: node.objectId,
+                    },
+                ],
+            });
+        },
+        onSuccess: () => {
+            addNotification('Node successfully added.', 'AssetGroupUpdateSuccess');
+        },
+        onError: (error: any) => {
+            console.error(error);
+            addNotification('An error occurred when adding node', 'AssetGroupUpdateError');
+        },
+    });
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
@@ -52,6 +86,15 @@ const ContextMenu: FC<{
                 exploreSearchTab: 'pathfinding',
                 searchType,
                 secondarySearch: selectedItemData?.objectId,
+            });
+        }
+    };
+
+    const handleAddNode = (assetGroupId: string | number) => {
+        if (!createAssetGroupTagSelectorMutation.isLoading) {
+            createAssetGroupTagSelectorMutation.mutate({
+                assetGroupId,
+                node: selectedItemQuery.data as NodeResponse,
             });
         }
     };
@@ -80,6 +123,52 @@ const ContextMenu: FC<{
                 <MenuItem disabled>Unavailable</MenuItem>
             </Menu>
         );
+    }
+
+    const assetGroupMenuItems: JSX.Element[] = [];
+    if (checkPermission(Permission.GRAPH_DB_WRITE)) {
+        const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
+            return value.position === 1;
+        });
+
+        if (tierZeroAssetGroup) {
+            assetGroupMenuItems.push(
+                <AssetGroupMenuItem
+                    key={tierZeroAssetGroup.id}
+                    disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
+                    assetGroupId={tierZeroAssetGroup.id}
+                    assetGroupName={tierZeroAssetGroup.name}
+                    onAddNode={handleAddNode}
+                    removeNodePath={`/${privilegeZonesPath}/${zonesPath}/${tierZeroAssetGroup.id}/${detailsPath}`}
+                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
+                    onShowConfirmation={() => {
+                        setDialogOpen(true);
+                    }}
+                    onCancelConfirmation={() => {
+                        setDialogOpen(false);
+                    }}
+                    showConfirmationOnAdd
+                    confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup.name}? This action will initiate an analysis run to update group membership.`}
+                />
+            );
+        }
+
+        const ownedAssetGroup = getAssetGroupTagsQuery.data?.find((value) => {
+            return value.type === 3;
+        });
+        if (ownedAssetGroup) {
+            assetGroupMenuItems.push(
+                <AssetGroupMenuItem
+                    key={ownedAssetGroup.id}
+                    disableAddNode={createAssetGroupTagSelectorMutation.isLoading}
+                    assetGroupId={ownedAssetGroup.id}
+                    assetGroupName={ownedAssetGroup.name}
+                    onAddNode={handleAddNode}
+                    removeNodePath={`/${privilegeZonesPath}/${labelsPath}/${ownedAssetGroup.id}/${detailsPath}`}
+                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
+                />
+            );
+        }
     }
 
     return (
