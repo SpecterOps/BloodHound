@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
@@ -97,6 +98,34 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		}
 	}
 
+	// Initialize DogTags service
+	slog.InfoContext(ctx, "================================================================================")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "||                      DOGTAGS INITIALIZATION                                ||")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "================================================================================")
+
+	dogtagsProvider, err := dogtags.NewYAMLProvider(cfg.DogTagsFilePath)
+	if err != nil {
+		slog.ErrorContext(ctx, "================================================================================")
+		slog.ErrorContext(ctx, "||  FATAL: FAILED TO LOAD DOGTAGS                                           ||")
+		slog.ErrorContext(ctx, "================================================================================")
+		return nil, fmt.Errorf("failed to initialize dogtags provider: %w", err)
+	}
+	dogtagsService := dogtags.NewService(dogtagsProvider)
+
+	// Log loaded flags on startup
+	flags := dogtagsService.GetAllFlags(ctx)
+	slog.InfoContext(ctx, "DogTags Configuration:")
+	for key, value := range flags {
+		slog.InfoContext(ctx, fmt.Sprintf("  • %s = %v", key, value))
+	}
+	slog.InfoContext(ctx, "================================================================================")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "||             ✓ DOGTAGS LOADED SUCCESSFULLY                                 ||")
+	slog.InfoContext(ctx, "||                                                                            ||")
+	slog.InfoContext(ctx, "================================================================================")
+
 	if apiCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
 		return nil, fmt.Errorf("failed to create in-memory cache for API: %w", err)
 	} else if graphQueryCache, err := cache.NewCache(cache.Config{MaxSize: cfg.MaxAPICacheSize}); err != nil {
@@ -120,7 +149,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dogtagsService)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
