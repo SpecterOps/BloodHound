@@ -48,7 +48,7 @@ func TestVersion5Analysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{}, nil)
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -76,7 +76,7 @@ func TestVersion6ADCSAnalysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{}, nil)
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -104,7 +104,7 @@ func TestVersion6AllAnalysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{}, nil)
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")
@@ -132,7 +132,7 @@ func TestVersion6Analysis(t *testing.T) {
 	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &expected)
 	require.NoError(t, err)
 
-	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{})
+	err = datapipe.RunAnalysisOperations(ctx, testSuite.BHDatabase, testSuite.GraphDB, config.Configuration{}, nil)
 	require.NoError(t, err)
 
 	expected, err = generic.LoadGraphFromFile(os.DirFS(analysisFilePath), "analyzed.json")

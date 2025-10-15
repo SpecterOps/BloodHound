@@ -26,19 +26,19 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, groupExpansions); err != nil {
+	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, groupExpansions, changeManager); err != nil {
 		return &aggregateStats, err
-	} else if protectAdminGroupsStats, err := adAnalysis.PostProtectAdminGroups(ctx, db); err != nil {
+	} else if protectAdminGroupsStats, err := adAnalysis.PostProtectAdminGroups(ctx, db, changeManager); err != nil {
 		return &aggregateStats, err
-	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, groupExpansions); err != nil {
+	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, groupExpansions, changeManager); err != nil {
 		return &aggregateStats, err
-	} else if hasTrustKeyStats, err := adAnalysis.PostHasTrustKeys(ctx, db); err != nil {
+	} else if hasTrustKeyStats, err := adAnalysis.PostHasTrustKeys(ctx, db, changeManager); err != nil {
 		return &aggregateStats, err
 	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
 		return &aggregateStats, err

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/RoaringBitmap/roaring/v2/roaring64"
 	"github.com/specterops/bloodhound/packages/go/analysis"
@@ -34,6 +35,79 @@ import (
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util/channels"
 )
+
+// submitPostRelationshipJob checks the changelog for deduplication before submitting a post-processing job.
+// If the relationship is unchanged, it submits to changelog for lastseen tracking only.
+// If the relationship is new/modified, it submits the job for actual creation.
+func submitPostRelationshipJob(
+	ctx context.Context,
+	tx graph.Transaction,
+	outC chan<- analysis.CreatePostRelationshipJob,
+	job analysis.CreatePostRelationshipJob,
+	changeManager analysis.ChangeManager,
+) bool {
+	// If no changelog, submit job directly
+	if changeManager == nil {
+		return channels.Submit(ctx, outC, job)
+	}
+
+	// Get objectids for changelog check
+	fromObjectID, err := getNodeObjectID(tx, job.FromID)
+	if err != nil {
+		slog.WarnContext(ctx, "failed to get from node objectid for changelog check", "node_id", job.FromID, "err", err)
+		return channels.Submit(ctx, outC, job) // Fall back to submitting job
+	}
+
+	toObjectID, err := getNodeObjectID(tx, job.ToID)
+	if err != nil {
+		slog.WarnContext(ctx, "failed to get to node objectid for changelog check", "node_id", job.ToID, "err", err)
+		return channels.Submit(ctx, outC, job) // Fall back to submitting job
+	}
+
+	// Create changelog edge change
+	relProps := graph.NewProperties().Set("lastseen", time.Now().UTC())
+	// Add any additional properties from the job
+	if job.RelProperties != nil {
+		for key, value := range job.RelProperties {
+			relProps.Set(key, value)
+		}
+	}
+
+	change := analysis.NewEdgeChange(fromObjectID, toObjectID, job.Kind, relProps)
+
+	// Check if this relationship needs to be created
+	shouldSubmit, err := changeManager.ResolveChange(change)
+	if err != nil {
+		slog.WarnContext(ctx, "changelog resolve failed", "err", err)
+		return channels.Submit(ctx, outC, job) // Fall back to submitting job
+	}
+
+	if !shouldSubmit {
+		// Unchanged: submit to changelog for lastseen tracking only
+		changeManager.Submit(ctx, change)
+		return true // Successfully handled (no job submission needed)
+	}
+
+	// New or modified: submit the job for creation
+	return channels.Submit(ctx, outC, job)
+}
+
+// getNodeObjectID fetches the objectid property for a given node ID
+func getNodeObjectID(tx graph.Transaction, nodeID graph.ID) (string, error) {
+	node, err := tx.Nodes().Filterf(func() graph.Criteria {
+		return query.Equals(query.NodeID(), nodeID)
+	}).First()
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch node %d: %w", nodeID, err)
+	}
+
+	objectID, err := node.Properties.Get("objectid").String()
+	if err != nil {
+		return "", fmt.Errorf("node %d missing objectid property: %w", nodeID, err)
+	}
+
+	return objectID, nil
+}
 
 func PostProcessedRelationships() []graph.Kind {
 	return []graph.Kind{
@@ -73,7 +147,7 @@ func PostProcessedRelationships() []graph.Kind {
 	}
 }
 
-func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -90,11 +164,11 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansion
 				} else {
 					for _, computer := range computers {
 						lapsSyncers.Each(func(value uint64) bool {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							submitPostRelationshipJob(ctx, tx, outC, analysis.CreatePostRelationshipJob{
 								FromID: graph.ID(value),
 								ToID:   computer,
 								Kind:   ad.SyncLAPSPassword,
-							})
+							}, changeManager)
 							return true
 						})
 					}
@@ -108,7 +182,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansion
 	}
 }
 
-func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
+func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -123,14 +197,16 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 					return nil
 				} else {
 					dcSyncers.Each(func(value uint64) bool {
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						submitPostRelationshipJob(ctx, tx, outC, analysis.CreatePostRelationshipJob{
 							FromID: graph.ID(value),
 							ToID:   innerDomain.ID,
 							Kind:   ad.DCSync,
-						})
+						}, changeManager)
 						return true
 					})
 
+					slog.InfoContext(ctx, "PostDCSync changelog stats")
+					changeManager.FlushStats()
 					return nil
 				}
 			})
@@ -140,7 +216,7 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 	}
 }
 
-func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostProtectAdminGroups(ctx context.Context, db graph.Database, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
 	if err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
@@ -164,11 +240,11 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 			} else {
 				fromID := adminSDHolderIDs[0] // AdminSDHolder should be unique per domain
 				for _, toID := range protectedObjectIDs {
-					channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+					submitPostRelationshipJob(ctx, tx, outC, analysis.CreatePostRelationshipJob{
 						FromID: fromID,
 						ToID:   toID,
 						Kind:   ad.ProtectAdminGroups,
-					})
+					}, changeManager)
 				}
 				return nil
 			}
@@ -178,7 +254,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*analysis.A
 	return &operation.Stats, operation.Done()
 }
 
-func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func PostHasTrustKeys(ctx context.Context, db graph.Database, changeManager analysis.ChangeManager) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
 	} else {
@@ -203,11 +279,11 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 							slog.DebugContext(ctx, fmt.Sprintf("Trust account not found for domain SID %s and NetBIOS %s", trustingDomainSid, netbios))
 							continue
 						} else {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+							submitPostRelationshipJob(ctx, tx, outC, analysis.CreatePostRelationshipJob{
 								FromID: domain.ID,
 								ToID:   trustAccount.ID,
 								Kind:   ad.HasTrustKeys,
-							})
+							}, changeManager)
 						}
 					}
 				}

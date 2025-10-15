@@ -31,6 +31,32 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+// ChangeManager represents a minimal interface for changelog operations during post-processing.
+// This interface is defined here to avoid import cycles with the graphify package.
+type ChangeManager interface {
+	ResolveChange(change any) (bool, error)
+	Submit(ctx context.Context, change any) bool
+	FlushStats()
+}
+
+// EdgeChange represents a generic edge change for post-processing deduplication
+type EdgeChange struct {
+	SourceNodeID string
+	TargetNodeID string
+	Kind         graph.Kind
+	Properties   *graph.Properties
+}
+
+// NewEdgeChange creates a new edge change for post-processing
+func NewEdgeChange(sourceNodeID, targetNodeID string, kind graph.Kind, properties *graph.Properties) *EdgeChange {
+	return &EdgeChange{
+		SourceNodeID: sourceNodeID,
+		TargetNodeID: targetNodeID,
+		Kind:         kind,
+		Properties:   properties,
+	}
+}
+
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {
 	kinds := make([]graph.Kind, 0, len(value))
 
@@ -168,6 +194,9 @@ func DeleteTransitEdges(ctx context.Context, db graph.Database, baseKinds graph.
 		relationshipIDs []graph.ID
 		stats           = NewAtomicPostProcessingStats()
 	)
+
+	// POC: don't delete PPE's
+	return &stats, nil
 
 	for _, kind := range targetRelationships {
 		closureKindCopy := kind

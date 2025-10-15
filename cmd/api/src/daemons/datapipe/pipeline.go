@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -236,7 +237,46 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			return fmt.Errorf("update last analysis start time: %v", err)
 		}
 
-		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg); err != nil {
+		// Wrap changelog in adapter to satisfy analysis.ChangeManager interface
+		var changeManager *changeManagerAdapter
+		if s.changelog != nil {
+			cl := s.changelog // Capture for closures
+			changeManager = &changeManagerAdapter{
+				resolveChange: func(change any) (bool, error) {
+					// Convert analysis.EdgeChange to changelog.EdgeChange
+					if edgeChange, ok := change.(*analysis.EdgeChange); ok {
+						changelogChange := changelog.NewEdgeChange(
+							edgeChange.SourceNodeID,
+							edgeChange.TargetNodeID,
+							edgeChange.Kind,
+							edgeChange.Properties,
+						)
+						return cl.ResolveChange(changelogChange)
+					}
+					// For other types, try direct conversion (fallback)
+					return cl.ResolveChange(change.(changelog.Change))
+				},
+				submit: func(ctx context.Context, change any) bool {
+					// Convert analysis.EdgeChange to changelog.EdgeChange
+					if edgeChange, ok := change.(*analysis.EdgeChange); ok {
+						changelogChange := changelog.NewEdgeChange(
+							edgeChange.SourceNodeID,
+							edgeChange.TargetNodeID,
+							edgeChange.Kind,
+							edgeChange.Properties,
+						)
+						return cl.Submit(ctx, changelogChange)
+					}
+					// For other types, try direct conversion (fallback)
+					return cl.Submit(ctx, change.(changelog.Change))
+				},
+				flushStats: func() {
+					cl.FlushStats()
+				},
+			}
+		}
+
+		if err := RunAnalysisOperations(ctx, s.db, s.graphdb, s.cfg, changeManager); err != nil {
 			if errors.Is(err, ErrAnalysisFailed) {
 				s.jobService.FailAnalyzedIngestJobs()
 			} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
