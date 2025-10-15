@@ -107,3 +107,17 @@ UPDATE asset_group_tag_selectors SET disabled_at = NULL, disabled_by = NULL WHER
 
 -- Set PZ feature flag enabled for bootstrapped instances
 UPDATE feature_flags SET enabled = true WHERE key = 'tier_management_engine' AND created_at > current_timestamp - '7 min'::interval;
+
+-- Add unique constraint for asset group tag selectors name per asset group tag
+-- Before we add unique constraint, rename any duplicates with `_X` to prevent constraint failing
+WITH duplicate_selectors AS (
+  SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rn
+  FROM asset_group_tag_selectors
+)
+UPDATE asset_group_tag_selectors agts
+SET name = agts.name || '_' || rn FROM duplicate_selectors
+WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rn > 1;
+
+ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
+ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
+
