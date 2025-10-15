@@ -27,7 +27,7 @@ export default {
     },
     plugins: [
         typescript({
-            exclude: ['**/*.test.*', 'src/setupTests.tsx'],
+            exclude: ['**/*.test.*', '**/*.stories.tsx'],
         }),
         terser(),
         del({ targets: 'dist/*' }),

@@ -20,7 +20,7 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
-    plugins: [react(), dts({ rollupTypes: true, exclude: ['**/*.stories.{ts,tsx}'] })],
+    plugins: [react(), dts({ exclude: ['**/*.stories.ts'] })],
     resolve: {
         alias: {
             components: resolve(__dirname, 'src/components'),
@@ -28,8 +28,23 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: '/src',
-            name: 'doodle',
+            entry: resolve(__dirname, 'src/index.ts'),
+            name: 'doodle-ui',
+            // },
+            // sourcemap: true,
+            // rollupOptions: {
+            //     output: {
+            //         dir: 'dist',
+            //         format: 'es',
+            //     },
+            //     plugins: [
+            //         typescript({
+            //             exclude: ['**/*.test.tsx', '**/*.stories.tsx'],
+            //         }),
+            //         terser(),
+            //         del({ targets: 'dist/*' }),
+            //     ],
+            //     external: ['react', 'react-dom', 'react/jsx-runtime', 'tailwindcss'],
         },
     },
 });
