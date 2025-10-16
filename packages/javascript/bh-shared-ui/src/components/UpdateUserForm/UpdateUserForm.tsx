@@ -124,7 +124,7 @@ const UpdateUserForm: React.FC<{
                 principal: getUserQuery.data.principal_name || '',
                 firstName: getUserQuery.data.first_name || '',
                 lastName: getUserQuery.data.last_name || '',
-                SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || '',
+                SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || undefined,
                 roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
                 all_environments: getUserQuery.data.all_environments,
                 environment_access_control: {
@@ -175,8 +175,6 @@ const UpdateUserFormInner: React.FC<{
         },
     });
 
-    console.log(initialData);
-
     const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
     const roleInputValue = form.watch('roles');
     const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
@@ -193,8 +191,6 @@ const UpdateUserFormInner: React.FC<{
         (item) => item.environment_id
     );
 
-    //console.log(initialEnvironmentsSelected);
-
     const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
     );
@@ -204,8 +200,6 @@ const UpdateUserFormInner: React.FC<{
     const formatReturnedEnvironments: EnvironmentRequest[] | null = returnMappedEnvironments?.map((item: string) => ({
         environment_id: item,
     }));
-
-    //console.log(returnMappedEnvironments);
 
     const matchingValues = initialEnvironmentsSelected?.filter(
         (value) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
@@ -217,20 +211,15 @@ const UpdateUserFormInner: React.FC<{
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
-            //console.log(formatReturnedEnvironments);
-
             setSelectedEnvironments(returnMappedEnvironments);
-            //form.setValue('all_environments', true);
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         } else {
             setSelectedEnvironments([]);
-            //form.setValue('all_environments', false);
         }
     };
 
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
-            //console.log(formatReturnedEnvironments);
             setSelectedEnvironments((prevSelected: string[]) => [...prevSelected, itemId]);
             form.setValue('environment_access_control.environments', formatReturnedEnvironments);
         } else {
@@ -273,8 +262,6 @@ const UpdateUserFormInner: React.FC<{
                   : 'unchecked';
         }
 
-        //console.log('Current form :', form.watch()); // TODO: REMOVE
-
         if (error) {
             const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
             if (error.response?.status === 400) {
@@ -300,8 +287,6 @@ const UpdateUserFormInner: React.FC<{
             }
         }
     }, [authenticationMethod, form, form.setValue, error, form.setError, returnMappedEnvironments]);
-
-    //console.log(form.watch());
 
     return (
         <Form {...form}>
@@ -651,7 +636,7 @@ const UpdateUserFormInner: React.FC<{
                     </Card>
                     {showEnvironmentAccessControls && selectedRole && (
                         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
-                            <DialogTitle>Environment Access Control</DialogTitle>
+                            <DialogTitle>Environmental Targeted Access Control</DialogTitle>
                             <div
                                 className='flex flex-col h-full pb-6'
                                 data-testid='update-user-dialog_environments-checkboxes-dialog'>
