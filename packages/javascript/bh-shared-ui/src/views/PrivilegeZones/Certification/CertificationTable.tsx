@@ -5,30 +5,44 @@ import {
     CertificationPending,
     CertificationRevoked,
     CertificationTypeMap,
+    AssetGroupTagCertificationRecord,
+    ExtendedCertificationFilters,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
+import { FilterDialog } from './FilterDialog';
+import { SearchInput } from '../../../components/SearchInput';
 
 type CertificationTableProps = {
     data: any;
+    filters: any;
+    setFilters: () => void;
+    search: string;
+    setSearch: () => void;
     isLoading: boolean;
     isFetching: boolean;
     isSuccess: boolean;
     fetchNextPage: any;
     filterRows: (dropdownSelection: DropdownOption) => void;
+    applyAdvancedFilters?: (advancedFilters: Partial<ExtendedCertificationFilters>) => void;
     selectedRows: number[];
     setSelectedRows: any;
 };
 
 const CertificationTable: FC<CertificationTableProps> = ({
     data,
+    filters,
+    setFilters,
+    search,
+    setSearch,
     isLoading,
     isFetching,
     isSuccess,
     fetchNextPage,
     filterRows,
+    applyAdvancedFilters,
     selectedRows,
     setSelectedRows,
 }) => {
@@ -40,7 +54,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
 
-    const environmentMap = useMemo(() => {
+    const domainMap = useMemo(() => {
         const map = new Map<string, string>();
         for (const domain of availableEnvironments) {
             map.set(domain.id, domain.name);
@@ -57,37 +71,50 @@ const CertificationTable: FC<CertificationTableProps> = ({
     }, [assetGroupTags]);
 
     const certificationsData = data ?? { pages: [{ count: 0, data: { members: [] } }] };
-    const totalDBRowCount = certificationsData.pages[0].count;
-    const certificationsItemsRaw = certificationsData.pages.flatMap((item: any) => item.data.members);
+    const count = certificationsData.pages[0].count;
+    const certificationsItemsRaw = data?.pages.flatMap((page) => page.data?.members ?? []) ?? [];
     const totalFetched = certificationsItemsRaw.length;
+
+    const certificationsItems = isSuccess
+        ? certificationsItemsRaw
+              .map((item: AssetGroupTagCertificationRecord) => {
+                  return {
+                      ...item,
+                      date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+                      domainName: domainMap.get(item.environment_id) ?? 'Unknown',
+                      zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
+                  };
+              })
+              .filter((item: AssetGroupTagCertificationRecord) => {
+                  if (filters.objectType && item.primary_kind !== filters.objectType) return false;
+                  if (filters.approvedBy && item.certified_by !== filters.approvedBy) return false;
+                  if (
+                      filters['start-date'] &&
+                      DateTime.fromISO(item.created_at) < DateTime.fromISO(filters['start-date'])
+                  )
+                      return false;
+                  if (filters['end-date'] && DateTime.fromISO(item.created_at) > DateTime.fromISO(filters['end-date']))
+                      return false;
+                  return true;
+              })
+        : [];
 
     const fetchMoreOnBottomReached = useCallback(
         (containerRefElement?: HTMLDivElement | null) => {
             if (containerRefElement) {
                 const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
                 //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
-                if (scrollHeight - scrollTop - clientHeight < 500 && !isFetching && totalFetched < totalDBRowCount) {
+                if (scrollHeight - scrollTop - clientHeight < 500 && !isFetching && totalFetched < count) {
                     fetchNextPage();
                 }
             }
         },
-        [fetchNextPage, isFetching, totalFetched, totalDBRowCount]
+        [fetchNextPage, isFetching, totalFetched, count]
     );
 
     useEffect(() => {
         fetchMoreOnBottomReached(scrollRef.current);
     }, [fetchMoreOnBottomReached]);
-
-    const certificationsItems = isSuccess
-        ? certificationsItemsRaw.map((item: any) => {
-              return {
-                  ...item,
-                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
-                  domainName: environmentMap.get(item.environment_id) ?? 'Unknown',
-                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
-              };
-          })
-        : [];
 
     const allSelected = certificationsItems?.length > 0 && selectedRows.length === certificationsItems?.length;
     const someSelected = selectedRows.length > 0 && !allSelected;
@@ -211,7 +238,33 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     onChange={(selectedCertificationType: DropdownOption) => {
                         setDropdownSelection(selectedCertificationType.value);
                         filterRows(selectedCertificationType);
-                    }}></DropdownSelector>
+                    }}
+                />
+                <div className='flex items-center'>
+                    <SearchInput value={search} onInputChange={setSearch} />
+                    {applyAdvancedFilters && (
+                        <FilterDialog
+                            filters={filters}
+                            setFilters={setFilters}
+                            onApplyFilters={applyAdvancedFilters}
+                            data={certificationsItems}
+                        />
+                    )}
+                </div>
+            </div>
+            <div
+                onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+                ref={scrollRef}
+                className='overflow-y-auto h-[calc(90vh_-_255px)]'>
+                <DataTable
+                    data={certificationsItems ?? []}
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
+                    columns={columns}
+                    virtualizationOptions={virtualizationOptions}
+                />
             </div>
             <DataTable
                 data={certificationsItems ?? []}
