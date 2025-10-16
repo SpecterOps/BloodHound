@@ -363,7 +363,11 @@ const MOCK_USER = [
 ];
 
 describe('UpdateUserForm', () => {
-    const defaultSetup = () => {
+    type SetupOptions = {
+        renderShowEnvironmentAccessControls?: boolean;
+    };
+
+    const setup = (options?: SetupOptions) => {
         const mockState = [
             {
                 key: ['getUser', DEFAULT_PROPS.userId],
@@ -379,14 +383,17 @@ describe('UpdateUserForm', () => {
 
         render(
             <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} />
+                <UpdateUserForm
+                    {...DEFAULT_PROPS}
+                    showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
+                />
             </Dialog>,
             { queryClient }
         );
     };
 
     it('should not allow the input to exceed the allowed length', async () => {
-        defaultSetup();
+        setup();
         const user = userEvent.setup();
 
         const button = screen.getByRole('button', { name: 'Save' });
@@ -458,7 +465,7 @@ describe('UpdateUserForm', () => {
     });
 
     it('should not allow leading or trailing empty spaces', async () => {
-        defaultSetup();
+        setup();
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -474,26 +481,7 @@ describe('UpdateUserForm', () => {
     });
 
     it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and Read-Only role is selected', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
-
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} showEnvironmentAccessControls={true} />
-            </Dialog>,
-            { queryClient }
-        );
-
+        setup({ renderShowEnvironmentAccessControls: true });
         const user = userEvent.setup();
 
         const input = screen.getByRole('combobox', { name: /Role/i });
@@ -508,25 +496,7 @@ describe('UpdateUserForm', () => {
     });
 
     it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and User role is selected', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
-
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} showEnvironmentAccessControls={true} />
-            </Dialog>,
-            { queryClient }
-        );
+        setup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
 
@@ -542,25 +512,7 @@ describe('UpdateUserForm', () => {
     });
 
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and power user role is selected', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
-
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} showEnvironmentAccessControls={true} />
-            </Dialog>,
-            { queryClient }
-        );
+        setup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
 
@@ -585,25 +537,7 @@ describe('UpdateUserForm', () => {
     });
 
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is false', async () => {
-        const mockState = [
-            {
-                key: ['getUser', DEFAULT_PROPS.userId],
-                data: MOCK_USER,
-            },
-            {
-                key: ['getRoles'],
-                data: MOCK_ROLES,
-            },
-            { key: ['listSSOProviders'], data: null },
-        ];
-        const queryClient = setUpQueryClient(mockState);
-
-        render(
-            <Dialog open={true}>
-                <UpdateUserForm {...DEFAULT_PROPS} showEnvironmentAccessControls={false} />
-            </Dialog>,
-            { queryClient }
-        );
+        setup({ renderShowEnvironmentAccessControls: false });
 
         expect(screen.queryByLabelText('Environmental Targeted Access Control')).not.toBeInTheDocument();
         expect(await screen.findByText('Edit User')).toBeInTheDocument();
