@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
@@ -49,8 +50,12 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 			entraObjIDMap = make(map[graph.ID]string, 1024)
 			// adObjIDMap is used as a reverse mapping of a list of Entra node ids indexed by the AD user objectids
 			adObjIDMap = make(map[string][]graph.ID, 1024)
-			// entraToADMap is the final mapping between an Entra user node id to an AD user node id
-			entraToADMap = make(map[graph.ID]graph.ID, 1024)
+			// entraToADUserMap is the final mapping between an Entra user node id to an AD user node id
+			entraToADUserMap = make(map[graph.ID]graph.ID, 1024)
+			// entraToADComputerMap is the mapping between an Entra computer node id to an AD computer node id
+			entraToADComputerMap = make(map[graph.ID]graph.ID, 1024)
+			// A map of device ids to the entra node Id of the device
+			adObjIdToEntraDeviceMap = make(map[string][]graph.ID, 1024)
 		)
 
 		// Work on Entra users by their tenant association. Loop therefore through each Entra tenant
@@ -76,7 +81,26 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 
 						// Initialize the current user id as an index in the entraToADMap, but use 0 as the nodeid for AD since we
 						// currently don't know it and 0 is never going to be a valid user node id
-						entraToADMap[tenantUser.ID] = 0
+						entraToADUserMap[tenantUser.ID] = 0
+					}
+				}
+			}
+
+			// We just get the tenantDevices for now since we don't haveh the AD devices
+			if tenantDevices, err := fetchEntraDevices(tx, tenant); err != nil {
+				return err
+			} else if len(tenantDevices) == 0 {
+				continue
+			} else {
+				for _, tenantDevice := range tenantDevices {
+					// The deviceId is the object Id of the on-premises computer
+					if deviceId, err := tenantDevice.Properties.Get(azureSchema.DeviceID.String()).String(); err != nil {
+						return err
+					} else {
+						// Canonicalize to all uppercase
+						deviceId = strings.ToUpper(deviceId)
+						// [device Id uuid] -> node id of entra node id
+						adObjIdToEntraDeviceMap[deviceId] = append(adObjIdToEntraDeviceMap[deviceId], tenantDevice.ID)
 					}
 				}
 			}
@@ -98,20 +122,38 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				} else {
 					// Because there could theoretically be more than one Entra user mapped to this objectid, we want to loop through all when adding our current id to the final map
 					for _, azUser := range azUsers {
-						entraToADMap[azUser] = adUser.ID
+						entraToADUserMap[azUser] = adUser.ID
+					}
+				}
+			}
+		}
+
+		if adComputers, err := fetchADComputers(tx); err != nil {
+			return err
+		} else {
+			for _, adComputer := range adComputers {
+				if objectID, err := adComputer.Properties.Get(string(adSchema.ObjectGUID)).String(); err != nil {
+					// This node doesn't have an objectguid, continue
+					continue
+				} else if azComputers, ok := adObjIdToEntraDeviceMap[strings.ToUpper(objectID)]; !ok {
+					continue
+				} else {
+					// There should only be a one to one mapping but just in case
+					for _, azComputer := range azComputers {
+						entraToADComputerMap[azComputer] = adComputer.ID
 					}
 				}
 			}
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-			for azUser, potentialADUser := range entraToADMap {
+			for azUser, potentialADUser := range entraToADUserMap {
 				var adUser = potentialADUser
 
 				// The 0 value should never be a valid id for an AD user node, just by the nature of the graph, so we're cheating
 				// by checking if we set it to 0 as a flag that this node was never actually found, meaning it needs to be created first
 				if potentialADUser == 0 {
-					if adUserNode, err := createMissingADUser(ctx, db, entraObjIDMap[azUser]); err != nil {
+					if adUserNode, err := createMissingADKind(ctx, db, entraObjIDMap[azUser], adSchema.User); err != nil {
 						return err
 					} else {
 						adUser = adUserNode.ID
@@ -135,6 +177,38 @@ func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostPro
 				}
 
 				if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {
+					return nil
+				}
+			}
+
+			for azComputer, potentialADComputer := range entraToADComputerMap {
+				var adComputer = potentialADComputer
+
+				if potentialADComputer == 0 {
+					if adComputerNode, err := createMissingADKind(ctx, db, entraObjIDMap[azComputer], adSchema.Computer); err != nil {
+						return err
+					} else {
+						adComputer = adComputerNode.ID
+					}
+				}
+
+				SyncedToEntraComputerRelationship := analysis.CreatePostRelationshipJob{
+					FromID: adComputer,
+					ToID:   azComputer,
+					Kind:   adSchema.SyncedToEntraComputer,
+				}
+
+				if !channels.Submit(ctx, outC, SyncedToEntraComputerRelationship) {
+					return nil
+				}
+
+				SyncedToADComputerRelationship := analysis.CreatePostRelationshipJob{
+					FromID: azComputer,
+					ToID:   adComputer,
+					Kind:   azureSchema.SyncedToADComputer,
+				}
+
+				if !channels.Submit(ctx, outC, SyncedToADComputerRelationship) {
 					return nil
 				}
 			}
@@ -173,7 +247,7 @@ func hasOnPremUser(node *graph.Node) (string, bool, error) {
 }
 
 // createMissingADUser will create a new standalone AD User node with the required objectID for displaying in hybrid graphs
-func createMissingADUser(ctx context.Context, db graph.Database, objectID string) (*graph.Node, error) {
+func createMissingADKind(ctx context.Context, db graph.Database, objectID string, kind graph.Kind) (*graph.Node, error) {
 	var (
 		err     error
 		newNode *graph.Node
@@ -186,13 +260,13 @@ func createMissingADUser(ctx context.Context, db graph.Database, objectID string
 
 	err = db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if newNode, err = analysis.FetchNodeByObjectID(tx, objectID); errors.Is(err, graph.ErrNoResultsFound) {
-			if newNode, err = tx.CreateNode(properties, adSchema.Entity, adSchema.User); err != nil {
-				return fmt.Errorf("create missing ad user: %w", err)
+			if newNode, err = tx.CreateNode(properties, adSchema.Entity, kind); err != nil {
+				return fmt.Errorf("create missing %s: %w", kind, err)
 			} else {
 				return nil
 			}
 		} else if err != nil {
-			return fmt.Errorf("create missing ad user precheck: %w", err)
+			return fmt.Errorf("create missing %s precheck: %w", kind, err)
 		} else {
 			return nil
 		}
@@ -212,11 +286,29 @@ func fetchEntraUsers(tx graph.Transaction, root *graph.Node) (graph.NodeSet, err
 	}))
 }
 
+func fetchEntraDevices(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), root.ID),
+			query.Kind(query.Relationship(), azureSchema.Contains),
+			query.KindIn(query.End(), azureSchema.Device),
+		)
+	}))
+}
+
 // fetchADUsers gets all AD Users in the graph
 func fetchADUsers(tx graph.Transaction) ([]*graph.Node, error) {
 	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), adSchema.User),
+		)
+	}))
+}
+
+func fetchADComputers(tx graph.Transaction) ([]*graph.Node, error) {
+	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), adSchema.Computer),
 		)
 	}))
 }

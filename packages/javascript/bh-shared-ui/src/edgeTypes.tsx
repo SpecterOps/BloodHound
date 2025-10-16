@@ -128,7 +128,7 @@ export const AllEdgeTypes: Category[] = [
             },
             {
                 name: 'Cross Platform',
-                edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToEntraUser],
+                edgeTypes: [ActiveDirectoryRelationshipKind.SyncedToEntraUser, ActiveDirectoryRelationshipKind.SyncedToEntraComputer],
             },
             {
                 name: 'NTLM Relay',
