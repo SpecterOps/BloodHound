@@ -27,9 +27,6 @@ export { default as AssetGroupMemberList } from './AssetGroupMemberList';
 export * from './CardWithSwitch';
 export { default as CardWithSwitch } from './CardWithSwitch';
 
-export * from './CheckboxGroup';
-export { default as CheckboxGroup } from './CheckboxGroup';
-
 export * from './CitrixRDPConfiguration';
 export { default as CitrixRDPConfiguration } from './CitrixRDPConfiguration';
 

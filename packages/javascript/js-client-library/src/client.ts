@@ -67,7 +67,6 @@ import {
     CreateAuthTokenResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
-    Environment,
     FileIngestCompletedTasksResponse,
     GetClientResponse,
     GetCollectorsResponse,
@@ -86,7 +85,6 @@ import {
     PostureHistoryResponse,
     PostureResponse,
     PreviewSelectorsResponse,
-    SavedQuery,
     SavedQueryPermissionsResponse,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
@@ -146,7 +144,7 @@ class BHEAPIClient {
     };
 
     getUserSavedQueries = (scope: QueryScope, options?: RequestOptions) => {
-        return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
+        return this.baseClient.get<PaginatedResponse<types.SavedQuery[]>>(
             '/api/v2/saved-queries',
             Object.assign(
                 {
@@ -161,14 +159,14 @@ class BHEAPIClient {
     };
 
     createUserQuery = (payload: CreateUserQueryRequest, options?: RequestOptions) => {
-        return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
+        return this.baseClient.post<BasicResponse<types.SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
     updateUserQuery = (payload: UpdateUserQueryRequest) => {
         const headers = {
             'Content-Type': 'application/json',
         };
-        return this.baseClient.put<BasicResponse<SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
+        return this.baseClient.put<BasicResponse<types.SavedQuery>>(`/api/v2/saved-queries/${payload.id}`, payload, {
             headers,
         });
     };
@@ -249,7 +247,7 @@ class BHEAPIClient {
     };
 
     getAvailableEnvironments = (options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<Environment[]>>('/api/v2/available-domains', options);
+        this.baseClient.get<BasicResponse<types.Environment[]>>('/api/v2/available-domains', options);
 
     /* audit */
     getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);

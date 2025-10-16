@@ -20,6 +20,111 @@ export interface Serial {
     updated_at: string;
 }
 
+export type AuthToken = TimestampFields & {
+    hmac_method: string;
+    id: string;
+    last_access: string;
+    name: string;
+    user_id: string;
+};
+
+export interface EnvironmentZone {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
+}
+export type Environment = {
+    type: 'active-directory' | 'azure';
+    impactValue: number;
+    name: string;
+    id: string;
+    collected: boolean;
+    exposures?: EnvironmentZone[];
+};
+
+export type ActiveDirectoryQualityStat = TimestampFields & {
+    users: number;
+    computers: number;
+    groups: number;
+    ous: number;
+    gpos: number;
+    aiacas: number;
+    rootcas: number;
+    enterprisecas: number;
+    ntauthstores: number;
+    certtemplates: number;
+    issuancepolicies: number;
+    acls: number;
+    relationships: number;
+    sessions: number;
+    local_group_completeness: number;
+    session_completeness: number;
+    containers?: number;
+    domains?: number;
+};
+
+export type AzureDataQualityStat = TimestampFields & {
+    run_id: string;
+    relationships: number;
+    users: number;
+    groups: number;
+    apps: number;
+    service_principals: number;
+    devices: number;
+    management_groups: number;
+    subscriptions: number;
+    resource_groups: number;
+    vms: number;
+    key_vaults: number;
+    automation_accounts: number;
+    container_registries: number;
+    function_apps: number;
+    logic_apps: number;
+    managed_clusters: number;
+    vm_scale_sets: number;
+    web_apps: number;
+    tenants?: number;
+    tenantid?: string;
+};
+
+export type PostureHistoryData = {
+    date: string;
+    value: number;
+};
+
+export type PostureStat = TimestampFields & {
+    domain_sid: string;
+    exposure_index: number;
+    tier_zero_count: number;
+    critical_risk_count: number;
+    id: number;
+};
+
+export type PostureFindingTrend = {
+    environment_id: string;
+    finding: string;
+    finding_count_start: number;
+    finding_count_end: number;
+    finding_count_increase: number;
+    finding_count_decrease: number;
+    composite_risk: number;
+    display_title: string;
+    display_type: string;
+};
+
+export type DatapipeStatus = {
+    status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
+    last_complete_analysis_at: string;
+    updated_at: string;
+};
+
+export type SavedQuery = {
+    id: number;
+    name: string;
+    description: string;
+    query: string;
+    user_id: string;
+};
+
 export interface AssetGroupMemberParams {
     environment_kind?: string;
     environment_id?: string;
@@ -27,6 +132,15 @@ export interface AssetGroupMemberParams {
     custom_member?: string;
     skip?: number;
     limit?: number;
+}
+
+export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
+    source: NodeSourceTypes;
+}
+
+export interface AssetGroupTagMemberInfo extends AssetGroupTagMember {
+    properties: Record<string, any>;
+    selectors: AssetGroupTagSelector[];
 }
 
 export const SystemString = 'SYSTEM' as const;

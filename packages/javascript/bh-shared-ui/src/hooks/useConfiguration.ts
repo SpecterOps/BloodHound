@@ -32,15 +32,18 @@ export const useGetConfiguration = () => {
     });
 };
 
+/**
+ * @description Returns whether or not Privilege Zone Analysis is enabled
+ */
 export const usePrivilegeZoneAnalysis = () => {
     const { data, isLoading } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
     const privilegeZoneAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
 
-    return isLoading ? undefined : privilegeZoneAnalysisEnabled;
+    return isLoading ? false : privilegeZoneAnalysisEnabled;
 };
 
-const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
+const updateConfiguration = async (payload: ConfigurationPayload, options?: RequestOptions) => {
     return apiClient.updateConfiguration(payload, options).then((res) => res.data);
 };
 

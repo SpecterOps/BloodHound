@@ -57,6 +57,19 @@ interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
     onSort: () => void;
 }
 
+export const defaultSortSequence = (sortOrder: SortOrder, setSortOrder: (sortOrder: SortOrder) => void) => {
+    if (sortOrder === undefined) {
+        // first click
+        setSortOrder('desc');
+    } else if (sortOrder === 'desc') {
+        // second click
+        setSortOrder('asc');
+    } else if (sortOrder === 'asc') {
+        // third click
+        setSortOrder(undefined);
+    }
+};
+
 export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     const { title, tooltipText, sortOrder, disable, classes, onSort, ...rest } = props;
 

@@ -18,7 +18,7 @@ import PrivilegeZones from './PrivilegeZones';
 
 export { SelectedDetails, getSavePath } from './Details/index';
 export * from './PrivilegeZonesContext';
-export * from './ZoneAnalysisIcon';
+export * from './ZoneIcon';
 export * from './utils';
 
 export default PrivilegeZones;

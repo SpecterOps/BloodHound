@@ -16,19 +16,27 @@
 
 import type { AxiosResponse } from 'axios';
 import {
+    ActiveDirectoryQualityStat,
     AssetGroupTag,
     AssetGroupTagHistoryRecord,
     AssetGroupTagMember,
+    AssetGroupTagMemberInfo,
+    AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
+    AuthToken,
+    AzureDataQualityStat,
     Client,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
+    DatapipeStatus,
     EnterpriseCollectorType,
     FileIngestCompletedTask,
     FileIngestJob,
     GraphData,
-    NodeSourceTypes,
+    PostureFindingTrend,
+    PostureHistoryData,
+    PostureStat,
     ScheduledJobDisplay,
     TimestampFields,
 } from './types';
@@ -50,86 +58,13 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
-export type Environment = {
-    type: 'active-directory' | 'azure';
-    impactValue: number;
-    name: string;
-    id: string;
-    collected: boolean;
-};
-
 export type GraphResponse = BasicResponse<GraphData>;
-
-export type ActiveDirectoryQualityStat = TimestampFields & {
-    users: number;
-    computers: number;
-    groups: number;
-    ous: number;
-    gpos: number;
-    aiacas: number;
-    rootcas: number;
-    enterprisecas: number;
-    ntauthstores: number;
-    certtemplates: number;
-    issuancepolicies: number;
-    acls: number;
-    relationships: number;
-    sessions: number;
-    local_group_completeness: number;
-    session_completeness: number;
-    containers?: number;
-    domains?: number;
-};
 
 export type ActiveDirectoryDataQualityResponse = PaginatedResponse<ActiveDirectoryQualityStat[]>;
 
-export type AzureDataQualityStat = TimestampFields & {
-    run_id: string;
-    relationships: number;
-    users: number;
-    groups: number;
-    apps: number;
-    service_principals: number;
-    devices: number;
-    management_groups: number;
-    subscriptions: number;
-    resource_groups: number;
-    vms: number;
-    key_vaults: number;
-    automation_accounts: number;
-    container_registries: number;
-    function_apps: number;
-    logic_apps: number;
-    managed_clusters: number;
-    vm_scale_sets: number;
-    web_apps: number;
-    tenants?: number;
-    tenantid?: string;
-};
-
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
-type PostureStat = TimestampFields & {
-    domain_sid: string;
-    exposure_index: number;
-    tier_zero_count: number;
-    critical_risk_count: number;
-    id: number;
-};
-
 export type PostureResponse = PaginatedResponse<PostureStat[]>;
-
-type PostureFindingTrend = {
-    environment_id: string;
-    finding: string;
-    finding_count_start: number;
-    finding_count_end: number;
-    finding_count_increase: number;
-    finding_count_decrease: number;
-    composite_risk: number;
-    display_title: string;
-    display_type: string;
-};
 
 export type PostureFindingTrendsResponse = TimeWindowedResponse<{
     findings: PostureFindingTrend[];
@@ -137,30 +72,11 @@ export type PostureFindingTrendsResponse = TimeWindowedResponse<{
     total_finding_count_end: number;
 }>;
 
-export type PostureHistoryData = {
-    date: string;
-    value: number;
-};
-
 export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> & {
     data_type: string;
 };
 
-type DatapipeStatus = {
-    status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
-    last_complete_analysis_at: string;
-    updated_at: string;
-};
-
 export type DatapipeStatusResponse = BasicResponse<DatapipeStatus>;
-
-export type AuthToken = TimestampFields & {
-    hmac_method: string;
-    id: string;
-    last_access: string;
-    name: string;
-    user_id: string;
-};
 
 export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;
 
@@ -173,15 +89,6 @@ export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
 
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
-
-export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
-    source: NodeSourceTypes;
-}
-
-export interface AssetGroupTagMemberInfo extends AssetGroupTagMember {
-    properties: Record<string, any>;
-    selectors: AssetGroupTagSelector[];
-}
 
 export type AssetGroupTagSearchResponse = BasicResponse<{
     tags: AssetGroupTag[];
@@ -236,14 +143,6 @@ export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
 export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
 
 export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>;
-
-export type SavedQuery = {
-    id: number;
-    name: string;
-    description: string;
-    query: string;
-    user_id: string;
-};
 
 export type SavedQueryPermissionsResponse = {
     shared_to_user_ids: string[];
