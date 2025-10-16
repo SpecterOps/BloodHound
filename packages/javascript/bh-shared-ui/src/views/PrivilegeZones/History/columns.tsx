@@ -20,6 +20,20 @@ import { HistoryItem } from './types';
 
 const columnHelper = createColumnHelper<HistoryItem>();
 
+const actionTranslate: Record<string, string> = {
+    CreateTag: 'Create Tag',
+    UpdateTag: 'Update Tag',
+    DeleteTag: 'Delete Tag',
+    AnalysisEnableTag: 'Analysis Enable Tag',
+    AnalysisDisabledTag: 'Analysis Disable Tag',
+    CreateSelector: 'Create Selector',
+    UpdateSelector: 'Update Selector',
+    DeleteSelector: 'DeleteSelector',
+    CertifyNodeAuto: 'Automatic Certification',
+    CertifyNodeManual: 'User Certification',
+    CertifyNodeRevoked: 'Certify Revoked',
+};
+
 export const columns = [
     columnHelper.accessor('target', {
         id: 'target',
@@ -31,6 +45,7 @@ export const columns = [
                 <div className='truncate'>{row.original.target}</div>
             </Tooltip>
         ),
+
         size: 150,
     }),
     columnHelper.accessor('action', {
@@ -38,7 +53,7 @@ export const columns = [
         header: () => {
             return <div className='pl-8 text-left'>Action</div>;
         },
-        cell: ({ row }) => <div>{row.original.action.replace(/([A-Z])/g, ' $1').trim()}</div>,
+        cell: ({ row }) => <div>{actionTranslate[row.original.action] || row.original.action}</div>,
         size: 150,
     }),
     columnHelper.accessor('created_at', {
