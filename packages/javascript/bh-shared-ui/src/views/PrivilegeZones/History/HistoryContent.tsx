@@ -19,6 +19,7 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
+import { LuxonFormat } from '../../../utils';
 import { DEFAULT_FILTER_VALUE, FilterDialog, type AssetGroupTagHistoryFilters } from './FilterDialog';
 import HistoryNote from './HistoryNote';
 import { columns } from './columns';
@@ -40,7 +41,7 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'truncate group relative px-8',
+    className: 'truncate group relative px-8 py-0',
 };
 
 const emptyHistoryData = { pages: [{ count: 0, data: { records: [] } }] };
@@ -86,6 +87,7 @@ const HistoryContent = () => {
         getScrollElement: () => scrollRef.current,
         measureElement,
         overscan: 2,
+        estimateSize: () => 50,
     };
 
     const isSuccess = isHistorySuccess && isTagsSuccess;
@@ -97,7 +99,7 @@ const HistoryContent = () => {
               return {
                   ...item,
                   tagName,
-                  date: DateTime.fromISO(item.created_at).toFormat('yyyy-MM-dd'),
+                  date: DateTime.fromISO(item.created_at).toFormat(LuxonFormat.ISO_8601),
               };
           })
         : [];

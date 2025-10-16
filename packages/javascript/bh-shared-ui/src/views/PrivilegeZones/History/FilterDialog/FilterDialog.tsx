@@ -142,7 +142,7 @@ const FilterDialog: FC<{
         <Dialog>
             <DialogTrigger asChild>
                 <Button data-testid='privilege-zones_history_filter-button' variant='text'>
-                    <Tooltip tooltip='Apply Filters'>
+                    <Tooltip tooltip='Filters'>
                         <span>
                             <AppIcon.FilterOutline size={22} />
                         </span>

@@ -53,7 +53,11 @@ export const columns = [
         header: () => {
             return <div className='pl-8 text-left'>Action</div>;
         },
-        cell: ({ row }) => <div>{actionTranslate[row.original.action] || row.original.action}</div>,
+        cell: ({ row }) => (
+            <Tooltip tooltip={actionTranslate[row.original.action]}>
+                <div className='truncate'>{actionTranslate[row.original.action]}</div>
+            </Tooltip>
+        ),
         size: 150,
     }),
     columnHelper.accessor('created_at', {
