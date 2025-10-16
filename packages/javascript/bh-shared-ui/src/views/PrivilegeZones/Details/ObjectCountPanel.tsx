@@ -73,10 +73,10 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
                 {Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
                     return (
                         <div className='flex justify-between mt-4 items-center' key={key}>
-                            <p>
+                            <div className='flex gap-1'>
                                 <NodeIcon nodeType={key} />
                                 {key}
-                            </p>
+                            </div>
                             <Badge label={value.toLocaleString()} />
                         </div>
                     );
