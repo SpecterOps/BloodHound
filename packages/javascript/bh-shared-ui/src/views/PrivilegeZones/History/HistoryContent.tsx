@@ -97,13 +97,13 @@ const HistoryContent = () => {
               return {
                   ...item,
                   tagName,
-                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+                  date: DateTime.fromISO(item.created_at).toFormat('yyyy-MM-dd'),
               };
           })
         : [];
 
     return (
-        <div data-testid='history-wrapper' className={`flex gap-8 mt-6 grow`}>
+        <div data-testid='history-wrapper' className='flex gap-8 mt-6 grow'>
             <Card className='grow'>
                 <CardHeader className='flex-row ml-3 justify-between items-center'>
                     <CardTitle>History Log</CardTitle>
