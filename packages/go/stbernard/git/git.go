@@ -95,7 +95,7 @@ func CheckClean(cwd string, env environment.Environment) (bool, error) {
 
 	diffIndexPlan := cmdrunner.ExecutionPlan{
 		Command:        "git",
-		Args:           []string{"diff-index", "--quiet", "HEAD", "--"},
+		Args:           []string{"diff-index", "HEAD", "--"},
 		Path:           cwd,
 		Env:            env.Slice(),
 		SuppressErrors: true,
