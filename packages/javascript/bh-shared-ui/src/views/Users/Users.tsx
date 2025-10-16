@@ -197,7 +197,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                     />
                     */}
                     <CreateUserDialog
-                        error={true}
+                        error={createUserMutation.error}
                         isLoading={createUserMutation.isLoading}
                         onClose={toggleCreateUserDialog}
                         onExited={createUserMutation.reset}
