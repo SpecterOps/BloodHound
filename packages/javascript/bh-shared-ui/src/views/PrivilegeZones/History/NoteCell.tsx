@@ -50,15 +50,13 @@ export const NoteCell = ({ row }: { row: { original: Partial<HistoryItem> } }) =
                 </Tooltip>
             ) : (
                 <Tooltip tooltip={!note ? 'No notes' : currentNote ? 'Hide note' : 'Show note'}>
-                    <span>
-                        <Button
-                            variant={'text'}
-                            className='disabled:opacity-25'
-                            onClick={handleOnClick}
-                            disabled={!note}>
-                            <AppIcon.LinedPaper size={24} />
-                        </Button>
-                    </span>
+                    <Button
+                        variant={'text'}
+                        className='disabled:opacity-25 p-0 h-6'
+                        onClick={handleOnClick}
+                        disabled={!note}>
+                        <AppIcon.LinedPaper size={24} />
+                    </Button>
                 </Tooltip>
             )}
         </div>
