@@ -26,6 +26,9 @@ $$
             RENAME COLUMN environment TO environment_id;
     EXCEPTION
         WHEN undefined_column THEN
+            NULL;
+        WHEN undefined_table THEN
+            NULL;
     END;
 $$;
 
