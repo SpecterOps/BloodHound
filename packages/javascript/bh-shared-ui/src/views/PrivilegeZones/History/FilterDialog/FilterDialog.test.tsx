@@ -36,7 +36,9 @@ describe('Privilege Zones History Filter Dialog', () => {
     const setup = async (props?: Partial<React.ComponentProps<typeof FilterDialog>>) => {
         return await act(() => {
             const contextValue = {
-                currentNote: '',
+                currentNote: { note: null, createdBy: null, timestamp: undefined },
+                clearCurrentNote: () => {},
+                isCurrentNote: () => true,
                 setCurrentNote: () => {},
             };
 

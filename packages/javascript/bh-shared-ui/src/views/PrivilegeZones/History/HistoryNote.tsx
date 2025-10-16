@@ -22,9 +22,9 @@ const HistoryNote = () => {
 
     return (
         <div>
-            <Card className='flex justify-center mb-4 p-4 h-[56px] w-[400px] min-w-[300px] max-w-[32rem]'>
-                <CardTitle className='flex  items-center gap-2'>
-                    <AppIcon.LinedPaper size={24} />
+            <Card className='flex justify-center mb-4 p-4 h-14 w-96 min-w-80 max-w-[32rem]'>
+                <CardTitle className='flex items-center gap-2'>
+                    <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
                     Note
                 </CardTitle>
             </Card>

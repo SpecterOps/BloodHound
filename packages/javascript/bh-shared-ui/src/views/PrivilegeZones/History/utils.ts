@@ -16,7 +16,7 @@
 
 import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../../utils';
-import { type AssetGroupTagHistoryFilters } from './FilterDialog';
+import { type AssetGroupTagHistoryFilters } from './types';
 
 export const PAGE_SIZE = 25;
 
@@ -25,8 +25,14 @@ export const createHistoryParams = (pageParam: number, filters: AssetGroupTagHis
 
     const { tagId, madeBy, action } = filters;
 
-    const start = DateTime.fromFormat(filters['start-date'], LuxonFormat.ISO_8601).startOf('day').toISO();
-    const end = DateTime.fromFormat(filters['end-date'], LuxonFormat.ISO_8601).endOf('day').toISO();
+    const start =
+        filters['start-date'] !== ''
+            ? DateTime.fromFormat(filters['start-date'], LuxonFormat.ISO_8601).startOf('day').toISO()
+            : DateTime.fromMillis(0).toISO();
+    const end =
+        filters['end-date'] !== ''
+            ? DateTime.fromFormat(filters['end-date'], LuxonFormat.ISO_8601).endOf('day').toISO()
+            : DateTime.now().toISO();
 
     const params = new URLSearchParams();
 
@@ -53,3 +59,20 @@ export const measureElement: ((element: Element) => number) | undefined =
     typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined;
+
+export const actionMap: { label: string; value: string }[] = [
+    { label: '', value: '' }, // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
+    { label: 'Create Tag', value: 'CreateTag' },
+    { label: 'Update Tag', value: 'UpdateTag' },
+    { label: 'Delete Tag', value: 'DeleteTag' },
+    { label: 'Analysis Enabled Tag', value: 'AnalysisEnabledTag' },
+    { label: 'Analysis Disabled Tag', value: 'AnalysisDisabledTag' },
+    { label: 'Create Selector', value: 'CreateSelector' },
+    { label: 'Update Selector', value: 'UpdateSelector' },
+    { label: 'Delete Selector', value: 'DeleteSelector' },
+    { label: 'Automatic Certification', value: 'CertifyNodeAuto' },
+    { label: 'User Certification', value: 'CertifyNodeManual' },
+    { label: 'Certify Revoked', value: 'CertifyNodeRevoked' },
+];
+
+export const DEFAULT_FILTER_VALUE = { action: '', tagId: '', madeBy: '', 'start-date': '', 'end-date': '' };

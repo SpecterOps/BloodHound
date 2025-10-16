@@ -74,8 +74,12 @@ export const columns = [
             return <div className='pl-8 text-left'>Zone/Label</div>;
         },
         cell: ({ row }) => (
-            <Tooltip tooltip={row.original.tagName}>
-                <div className='truncate'>{row.original.tagName}</div>
+            <Tooltip tooltip={row.original.tagName || 'Deleted'}>
+                {row.original.tagName ? (
+                    <div className='truncate'>{row.original.tagName}</div>
+                ) : (
+                    <div className='truncate italic'>Deleted</div>
+                )}
             </Tooltip>
         ),
         size: 150,

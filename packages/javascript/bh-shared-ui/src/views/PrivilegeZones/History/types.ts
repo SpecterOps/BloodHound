@@ -28,3 +28,11 @@ export type HistoryItem = {
 };
 
 export type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+export interface AssetGroupTagHistoryFilters {
+    action: string;
+    tagId: string;
+    madeBy: string;
+    ['start-date']: string;
+    ['end-date']: string;
+}

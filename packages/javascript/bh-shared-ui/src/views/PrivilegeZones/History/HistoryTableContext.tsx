@@ -15,9 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext } from 'react';
 
+export type HistoryNote = {
+    note: string | null | undefined;
+    createdBy: string | null | undefined;
+    timestamp: string | undefined;
+} | null;
+
 export interface HistoryTableContext {
-    currentNote: any;
-    setCurrentNote: (newCurrentNote: any) => void;
+    isCurrentNote: (note: HistoryNote) => null | boolean;
+    currentNote: HistoryNote;
+    clearCurrentNote: () => void;
+    setCurrentNote: (note: HistoryNote) => void;
 }
 
 export const HistoryTableContext = createContext<HistoryTableContext | null>(null);

@@ -16,31 +16,22 @@
 
 import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { SystemString } from 'js-client-library';
-import { AppIcon } from '../../../components';
-import { useHistoryTableContext } from './HistoryTableContext';
+import { AppIcon } from '../../../components/AppIcon';
+import { HistoryNote, useHistoryTableContext } from './HistoryTableContext';
 import { HistoryItem } from './types';
 
 export const NoteCell = ({ row }: { row: { original: Partial<HistoryItem> } }) => {
-    const { currentNote, setCurrentNote } = useHistoryTableContext();
+    const { clearCurrentNote, setCurrentNote, isCurrentNote } = useHistoryTableContext();
     const { email, note, date, actor } = row.original;
-
-    const handleOnClick = () => {
-        const selectedNote = {
-            note: note,
-            createdBy: email,
-            timestamp: date,
-        };
-
-        // If the same note that is selected is clicked on, hide the note
-        if (
-            currentNote &&
-            currentNote.note === note &&
-            currentNote.createdBy === email &&
-            currentNote.timestamp === date
-        )
-            setCurrentNote(null);
-        else setCurrentNote(selectedNote);
+    const cellNote: HistoryNote = {
+        note,
+        createdBy: email,
+        timestamp: date,
     };
+
+    const cellNoteIsActive = isCurrentNote(cellNote);
+
+    const handleClick = () => (cellNoteIsActive ? clearCurrentNote() : setCurrentNote(cellNote));
 
     return (
         <div className='w-full flex justify-center'>
@@ -49,14 +40,12 @@ export const NoteCell = ({ row }: { row: { original: Partial<HistoryItem> } }) =
                     <p>-</p>
                 </Tooltip>
             ) : (
-                <Tooltip tooltip={!note ? 'No notes' : currentNote ? 'Hide note' : 'Show note'}>
-                    <Button
-                        variant={'text'}
-                        className='disabled:opacity-25 p-0 h-6'
-                        onClick={handleOnClick}
-                        disabled={!note}>
-                        <AppIcon.LinedPaper size={24} />
-                    </Button>
+                <Tooltip tooltip={!note ? 'No notes' : cellNoteIsActive ? 'Hide note' : 'Show note'}>
+                    <span>
+                        <Button variant={'text'} className='disabled:opacity-25' onClick={handleClick} disabled={!note}>
+                            <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
+                        </Button>
+                    </span>
                 </Tooltip>
             )}
         </div>

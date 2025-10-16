@@ -17,15 +17,15 @@
 import { Card, CardHeader, CardTitle, DataTable } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { LuxonFormat } from '../../..';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
-import { LuxonFormat } from '../../../utils';
-import { DEFAULT_FILTER_VALUE, FilterDialog, type AssetGroupTagHistoryFilters } from './FilterDialog';
+import { FilterDialog } from './FilterDialog';
 import HistoryNote from './HistoryNote';
 import { columns } from './columns';
 import { useAssetGroupTagHistoryQuery } from './hooks';
-import { DataTableProps, HistoryItem } from './types';
-import { measureElement } from './utils';
+import { AssetGroupTagHistoryFilters, DataTableProps, HistoryItem } from './types';
+import { DEFAULT_FILTER_VALUE, measureElement } from './utils';
 
 const tableProps: DataTableProps['TableProps'] = {
     className: 'table-fixed',
@@ -118,7 +118,7 @@ const HistoryContent = () => {
                 <div
                     onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
                     ref={scrollRef}
-                    className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
+                    className='overflow-y-auto h-[68dvh]'>
                     <DataTable
                         data={historyItems}
                         TableHeaderProps={tableHeaderProps}

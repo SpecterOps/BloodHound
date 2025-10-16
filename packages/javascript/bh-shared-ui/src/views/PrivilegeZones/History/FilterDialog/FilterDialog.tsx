@@ -18,7 +18,6 @@ import {
     DatePicker,
     Dialog,
     DialogActions,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogTitle,
@@ -38,40 +37,19 @@ import {
     Tooltip,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
+import { faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SystemString } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { ErrorOption, useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../../components';
 import { useTagsQuery } from '../../../../hooks';
 import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
-import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
+import { CustomRangeError, END_DATE, LuxonFormat, START_DATE, cn } from '../../../../utils';
 import { useHistoryTableContext } from '../HistoryTableContext';
-
-const actionMap: { label: string; value: string }[] = [
-    { label: '', value: '' }, // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
-    { label: 'Create Tag', value: 'CreateTag' },
-    { label: 'Update Tag', value: 'UpdateTag' },
-    { label: 'Delete Tag', value: 'DeleteTag' },
-    { label: 'Analysis Enable Tag', value: 'AnalysisEnableTag' },
-    { label: 'Analysis Disabled Tag', value: 'AnalysisDisabledTag' },
-    { label: 'Create Selector', value: 'CreateSelector' },
-    { label: 'Update Selector', value: 'UpdateSelector' },
-    { label: 'Delete Selector', value: 'DeleteSelector' },
-    { label: 'Automatic Certification', value: 'CertifyNodeAuto' },
-    { label: 'User Certification', value: 'CertifyNodeManual' },
-    { label: 'Certify Revoked', value: 'CertifyNodeRevoked' },
-];
-
-export interface AssetGroupTagHistoryFilters {
-    action: string;
-    tagId: string;
-    madeBy: string;
-    ['start-date']: string;
-    ['end-date']: string;
-}
-
-export const DEFAULT_FILTER_VALUE = { action: '', tagId: '', madeBy: '', 'start-date': '', 'end-date': '' };
+import { AssetGroupTagHistoryFilters } from '../types';
+import { DEFAULT_FILTER_VALUE, actionMap } from '../utils';
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
@@ -82,7 +60,8 @@ const FilterDialog: FC<{
 }> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
     const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useBloodHoundUsers();
-    const { setCurrentNote } = useHistoryTableContext();
+    const { clearCurrentNote } = useHistoryTableContext();
+    const [open, setOpen] = useState(false);
 
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
 
@@ -116,32 +95,38 @@ const FilterDialog: FC<{
     const handleConfirm = useCallback(() => {
         const start = form.getValues(START_DATE);
         const end = form.getValues(END_DATE);
+        // If the start date is empty use the start of epoch time
+        const startDate = start !== '' ? DateTime.fromFormat(start, LuxonFormat.ISO_8601) : DateTime.fromMillis(0);
+        // Use the client time if the end date is empty
+        const endDate = end !== '' ? DateTime.fromFormat(end, LuxonFormat.ISO_8601) : DateTime.now();
 
-        setCurrentNote(null);
-
-        // Allow partial filtering of records; Do not block if neither date is filled
-        if (!start && !end) {
-            setFilters({ ...form.getValues() });
-            return;
-        }
-
-        const startDate = DateTime.fromFormat(start, LuxonFormat.ISO_8601);
-        const endDate = DateTime.fromFormat(end, LuxonFormat.ISO_8601);
-
-        // Otherwise validate that both dates are chosen for a valid range
+        // Prevent setting invalid dates before applying filters, e.g., bogus date like 9999/99/99 or a range where the start date is after the end date
         if (validateDateFields(startDate, endDate)) {
             setFilters({ ...form.getValues() });
+            clearCurrentNote();
+            closeDialog();
         }
-    }, [form, setFilters, validateDateFields, setCurrentNote]);
+    }, [form, setFilters, validateDateFields, clearCurrentNote]);
+
+    const closeDialog = () => setOpen(false);
 
     useEffect(() => {
         form.reset(filters);
     }, [form, filters]);
 
     return (
-        <Dialog>
+        <Dialog
+            open={open}
+            onOpenChange={(open) => {
+                setOpen(open);
+            }}>
             <DialogTrigger asChild>
-                <Button data-testid='privilege-zones_history_filter-button' variant='text'>
+                <Button
+                    data-testid='privilege-zones_history_filter-button'
+                    variant='text'
+                    onClick={() => {
+                        setOpen((prev) => !prev);
+                    }}>
                     <Tooltip tooltip='Filters'>
                         <span>
                             <AppIcon.FilterOutline size={22} />
@@ -175,11 +160,22 @@ const FilterDialog: FC<{
                                         onValueChange={field.onChange}
                                         value={field.value}
                                         defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder='Select' {...field} />
-                                            </SelectTrigger>
-                                        </FormControl>
+                                        <div className='flex gap-2'>
+                                            <FormControl className='w-11/12'>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder='Select' {...field} />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <Button
+                                                variant={'text'}
+                                                disabled={!field.value}
+                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                onClick={() => {
+                                                    form.setValue(field.name, '');
+                                                }}>
+                                                <FontAwesomeIcon icon={faClose} />
+                                            </Button>
+                                        </div>
                                         <SelectContent>
                                             {actionMap.map((action, index) => {
                                                 if (index === 0) return; // Do not render empty string item
@@ -206,18 +202,29 @@ const FilterDialog: FC<{
                                         onValueChange={field.onChange}
                                         value={field.value}
                                         defaultValue={field.value}>
-                                        <FormControl>
-                                            {tagsQuery.isError ? (
-                                                <span className='text-error'>
-                                                    There was an error fetching this data. Please refresh the page to
-                                                    try again.
-                                                </span>
-                                            ) : (
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder='Select' />
-                                                </SelectTrigger>
-                                            )}
-                                        </FormControl>
+                                        <div className='flex gap-2'>
+                                            <FormControl className='w-11/12'>
+                                                {tagsQuery.isError ? (
+                                                    <span className='text-error'>
+                                                        There was an error fetching this data. Please refresh the page
+                                                        to try again.
+                                                    </span>
+                                                ) : (
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder='Select' />
+                                                    </SelectTrigger>
+                                                )}
+                                            </FormControl>
+                                            <Button
+                                                variant={'text'}
+                                                disabled={!field.value}
+                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                onClick={() => {
+                                                    form.setValue(field.name, '');
+                                                }}>
+                                                <FontAwesomeIcon icon={faClose} />
+                                            </Button>
+                                        </div>
 
                                         {tagsQuery.isLoading ? (
                                             <Skeleton className='h-10 w-24' />
@@ -244,18 +251,29 @@ const FilterDialog: FC<{
                                         onValueChange={field.onChange}
                                         value={field.value}
                                         defaultValue={field.value}>
-                                        <FormControl>
-                                            {bloodHoundUsersQuery.isError ? (
-                                                <span className='text-error'>
-                                                    There was an error fetching this data. Please refresh the page to
-                                                    try again.
-                                                </span>
-                                            ) : (
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder='Select' />
-                                                </SelectTrigger>
-                                            )}
-                                        </FormControl>
+                                        <div className='flex gap-2'>
+                                            <FormControl className='w-11/12'>
+                                                {bloodHoundUsersQuery.isError ? (
+                                                    <span className='text-error'>
+                                                        There was an error fetching this data. Please refresh the page
+                                                        to try again.
+                                                    </span>
+                                                ) : (
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder='Select' />
+                                                    </SelectTrigger>
+                                                )}
+                                            </FormControl>
+                                            <Button
+                                                variant={'text'}
+                                                disabled={!field.value}
+                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                onClick={() => {
+                                                    form.setValue(field.name, '');
+                                                }}>
+                                                <FontAwesomeIcon icon={faClose} />
+                                            </Button>
+                                        </div>
                                         {bloodHoundUsersQuery.isLoading ? (
                                             <Skeleton className='h-10 w-24' />
                                         ) : (
@@ -299,11 +317,12 @@ const FilterDialog: FC<{
                                 render={({ field }) => (
                                     <FormItem className='w-40 flex flex-col gap-2 justify-start'>
                                         <FormLabel htmlFor={field.name}>Start Date</FormLabel>
-                                        <FormControl>
+                                        <div className='flex gap-2'>
                                             <DatePicker
                                                 {...field}
                                                 InputElement={MaskedInput}
                                                 calendarProps={{
+                                                    className: 'w-11/12',
                                                     mode: 'single',
                                                     fromDate,
                                                     toDate,
@@ -326,7 +345,17 @@ const FilterDialog: FC<{
                                                     },
                                                 }}
                                             />
-                                        </FormControl>
+                                            <Button
+                                                variant={'text'}
+                                                disabled={!field.value}
+                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                onClick={() => {
+                                                    form.setValue(field.name, '');
+                                                    form.clearErrors();
+                                                }}>
+                                                <FontAwesomeIcon icon={faClose} />
+                                            </Button>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -337,34 +366,47 @@ const FilterDialog: FC<{
                                 render={({ field }) => (
                                     <FormItem className='w-40 flex flex-col gap-2 justify-start'>
                                         <FormLabel htmlFor={field.name}>End Date</FormLabel>
-                                        <FormControl>
-                                            <DatePicker
-                                                {...field}
-                                                InputElement={MaskedInput}
-                                                calendarProps={{
-                                                    mode: 'single',
-                                                    fromDate,
-                                                    toDate,
-                                                    selected: DateTime.fromFormat(
-                                                        field.value,
-                                                        LuxonFormat.ISO_8601
-                                                    ).toJSDate(),
-                                                    onSelect: (value: Date | undefined) => {
-                                                        form.setValue(
-                                                            field.name,
-                                                            value
-                                                                ? DateTime.fromJSDate(value).toFormat(
-                                                                      LuxonFormat.ISO_8601
-                                                                  )
-                                                                : ''
-                                                        );
-                                                    },
-                                                    disabled: (date: Date) => {
-                                                        return DateTime.fromJSDate(date) > DateTime.local();
-                                                    },
-                                                }}
-                                            />
-                                        </FormControl>
+                                        <div className='flex gap-2'>
+                                            <FormControl>
+                                                <DatePicker
+                                                    {...field}
+                                                    InputElement={MaskedInput}
+                                                    calendarProps={{
+                                                        className: 'w-11/12',
+                                                        mode: 'single',
+                                                        fromDate,
+                                                        toDate,
+                                                        selected: DateTime.fromFormat(
+                                                            field.value,
+                                                            LuxonFormat.ISO_8601
+                                                        ).toJSDate(),
+                                                        onSelect: (value: Date | undefined) => {
+                                                            form.setValue(
+                                                                field.name,
+                                                                value
+                                                                    ? DateTime.fromJSDate(value).toFormat(
+                                                                          LuxonFormat.ISO_8601
+                                                                      )
+                                                                    : ''
+                                                            );
+                                                        },
+                                                        disabled: (date: Date) => {
+                                                            return DateTime.fromJSDate(date) > DateTime.local();
+                                                        },
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <Button
+                                                variant={'text'}
+                                                disabled={!field.value}
+                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                onClick={() => {
+                                                    form.setValue(field.name, '');
+                                                    form.clearErrors();
+                                                }}>
+                                                <FontAwesomeIcon icon={faClose} />
+                                            </Button>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -372,19 +414,15 @@ const FilterDialog: FC<{
                         </div>
 
                         <DialogActions>
-                            <DialogClose asChild>
-                                <Button variant={'text'} className='p-2'>
-                                    Cancel
-                                </Button>
-                            </DialogClose>
-                            <DialogClose asChild>
-                                <Button
-                                    variant={'text'}
-                                    className='text-primary dark:text-secondary-variant-2 p-2'
-                                    onClick={handleConfirm}>
-                                    Confirm
-                                </Button>
-                            </DialogClose>
+                            <Button variant={'text'} className='p-2' onClick={closeDialog}>
+                                Cancel
+                            </Button>
+                            <Button
+                                variant={'text'}
+                                className='text-primary dark:text-secondary-variant-2 p-2'
+                                onClick={handleConfirm}>
+                                Confirm
+                            </Button>
                         </DialogActions>
                     </form>
                 </Form>

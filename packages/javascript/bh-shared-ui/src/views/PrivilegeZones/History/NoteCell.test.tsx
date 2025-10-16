@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { SystemString } from 'js-client-library';
 import { fireEvent, render, screen } from '../../../test-utils';
-import { useHistoryTableContext } from './HistoryTableContext';
+import { HistoryNote, useHistoryTableContext } from './HistoryTableContext';
 import { NoteCell } from './NoteCell';
 
 // Mock AppIcon
-vi.mock('../../../components', () => ({
+vi.mock('../../../components/AppIcon', () => ({
     AppIcon: {
         LinedPaper: (props: any) => <svg data-testid='lined-paper-icon' {...props} />,
     },
@@ -32,6 +32,7 @@ vi.mock('./HistoryTableContext', () => ({
 
 describe('NoteCell component', () => {
     const mockSetCurrentNote = vi.fn();
+    const mockClearCurrentNote = vi.fn();
 
     const defaultNoteData = {
         email: 'user@example.com',
@@ -44,6 +45,8 @@ describe('NoteCell component', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             currentNote: null,
             setCurrentNote: mockSetCurrentNote,
+            isCurrentNote: vi.fn(),
+            clearCurrentNote: mockClearCurrentNote,
         });
 
         render(<NoteCell row={{ original: { ...defaultNoteData, actor: SystemString } }} />);
@@ -53,9 +56,17 @@ describe('NoteCell component', () => {
     });
 
     it('renders a button when actor is not SystemString and note exists', () => {
+        const currentNote: HistoryNote = {
+            note: defaultNoteData.note,
+            createdBy: defaultNoteData.email,
+            timestamp: defaultNoteData.date,
+        };
+
         (useHistoryTableContext as jest.Mock).mockReturnValue({
-            currentNote: null,
+            currentNote,
             setCurrentNote: mockSetCurrentNote,
+            isCurrentNote: vi.fn(),
+            clearCurrentNote: mockClearCurrentNote,
         });
 
         render(<NoteCell row={{ original: defaultNoteData }} />);
@@ -68,6 +79,8 @@ describe('NoteCell component', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             currentNote: null,
             setCurrentNote: mockSetCurrentNote,
+            isCurrentNote: () => false,
+            clearCurrentNote: mockClearCurrentNote,
         });
 
         const rowData = { ...defaultNoteData, note: null };
@@ -82,6 +95,8 @@ describe('NoteCell component', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             currentNote: null,
             setCurrentNote: mockSetCurrentNote,
+            isCurrentNote: () => false,
+            clearCurrentNote: mockClearCurrentNote,
         });
 
         render(<NoteCell row={{ original: defaultNoteData }} />);
@@ -106,6 +121,8 @@ describe('NoteCell component', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             currentNote,
             setCurrentNote: mockSetCurrentNote,
+            isCurrentNote: () => true,
+            clearCurrentNote: mockClearCurrentNote,
         });
 
         render(<NoteCell row={{ original: defaultNoteData }} />);
@@ -113,6 +130,6 @@ describe('NoteCell component', () => {
         const button = screen.getByRole('button');
         fireEvent.click(button);
 
-        expect(mockSetCurrentNote).toHaveBeenCalledWith(null);
+        expect(mockClearCurrentNote).toHaveBeenCalled();
     });
 });
