@@ -17,6 +17,7 @@
 import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
+import { NodeIcon } from '../../../components';
 import { useEnvironmentIdList } from '../../../hooks';
 import { apiClient } from '../../../utils';
 
@@ -72,7 +73,10 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
                 {Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
                     return (
                         <div className='flex justify-between mt-4 items-center' key={key}>
-                            <p>{key}</p>
+                            <p>
+                                <NodeIcon nodeType={key} />
+                                {key}
+                            </p>
                             <Badge label={value.toLocaleString()} />
                         </div>
                     );
