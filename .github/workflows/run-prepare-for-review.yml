@@ -1,0 +1,57 @@
+name: Run Prepare for Review
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+jobs:
+  run-prepare-for-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code with Submodule
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0  # tags required
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ~1.24.4
+          cache: true
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Yarn
+        run: |
+          npm install --global yarn
+
+      - name: Install Dependencies
+        run: |
+          go tool stbernard deps
+
+      - name: Run Static Analysis
+        run: |
+          go tool stbernard analysis
+
+      - name: Run Modsync
+        run: |
+          go tool stbernard modsync
+
+      - name: Run Generate
+        run: |
+          go tool stbernard generate
+
+      - name: Run Show
+        run: |
+          go tool stbernard show
