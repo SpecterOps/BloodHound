@@ -66,7 +66,7 @@ allOf:
         type: boolean
         readOnly: true
       environment_targeted_access_control:
-        description: A collection of environment targeteed access controls that a user has been granted access to.
+        description: A collection of environment targeted access controls that a user has been granted access to.
         type: array
         readOnly: true
         items:

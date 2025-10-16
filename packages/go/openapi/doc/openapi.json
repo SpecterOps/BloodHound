@@ -17835,7 +17835,7 @@
                 "readOnly": true
               },
               "environment_targeted_access_control": {
-                "description": "A collection of environment targeteed access controls that a user has been granted access to.",
+                "description": "A collection of environment targeted access controls that a user has been granted access to.",
                 "type": "array",
                 "readOnly": true,
                 "items": {
@@ -18524,7 +18524,7 @@
           "environment_targeted_access_control": {
             "type": "object",
             "additionalProperties": false,
-            "description": "Sets a environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "description": "Sets an environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
             "properties": {
               "environments": {
                 "type": "array",

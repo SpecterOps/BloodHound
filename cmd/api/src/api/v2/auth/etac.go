@@ -70,6 +70,7 @@ func handleETACRequest(ctx context.Context, updateUserRequest v2.UpdateUserReque
 	} else if nodesByObject, err := nodeSetToObjectIDMap(nodes); err != nil {
 		return err
 	} else {
+		user.EnvironmentTargetedAccessControl = make([]model.EnvironmentTargetedAccessControl, 0, len(envIds))
 		for _, envId := range envIds {
 			if _, ok := nodesByObject[envId]; !ok {
 				return fmt.Errorf("domain or tenant not found: %s", envId)
