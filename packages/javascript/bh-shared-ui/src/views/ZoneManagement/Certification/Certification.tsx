@@ -5,6 +5,7 @@ import {
     CertificationManual,
     CertificationRevoked,
     CertificationType,
+    ExtendedCertificationFilters,
     UpdateCertificationRequest,
 } from 'js-client-library';
 import { FC, useCallback, useState } from 'react';
@@ -21,7 +22,7 @@ const Certification: FC = () => {
     const { tierId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState<AssetGroupTagCertificationParams>({});
+    const [filters, setFilters] = useState<ExtendedCertificationFilters>({});
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
@@ -30,19 +31,20 @@ const Certification: FC = () => {
 
     const queryClient = useQueryClient();
 
+    const { addNotification } = useNotifications();
+
     const mockMemberId = 1;
     const PAGE_SIZE = 15;
 
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
-        const queryKey = doSearch ? query : filters;
         return useInfiniteQuery<{
             count: number;
-            data: { records: AssetGroupTagCertificationRecord[] };
+            data: { members: AssetGroupTagCertificationRecord[] };
             limit: number;
             skip: number;
         }>({
-            queryKey: ['certifications', queryKey],
+            queryKey: ['certifications', filters, query],
             queryFn: async ({ pageParam = 1 }) => {
                 const skip = (pageParam - 1) * PAGE_SIZE;
 
@@ -68,6 +70,7 @@ const Certification: FC = () => {
 
                 return firstPage.skip / PAGE_SIZE - 1;
             },
+            keepPreviousData: false,
         });
     };
 
@@ -111,8 +114,6 @@ const Certification: FC = () => {
         search
     );
 
-    const { addNotification } = useNotifications();
-
     const createCertificationRequestBody = (
         action: typeof CertificationManual | typeof CertificationRevoked,
         objectIds: number[],
@@ -137,13 +138,14 @@ const Certification: FC = () => {
         setCertifyAction(action);
     };
 
-    const filterByCertification = useCallback(
-        (dropdownSelection: DropdownOption) => {
-            const certificationStatus = dropdownSelection.key as CertificationType;
-            setFilters((prev) => ({ ...prev, certificationStatus }));
-        },
-        [setFilters]
-    );
+    const filterByCertification = useCallback((dropdownSelection: DropdownOption) => {
+        const certificationStatus = dropdownSelection.key as CertificationType;
+        setFilters((prev) => ({ ...prev, certificationStatus }));
+    }, []);
+
+    const applyAdvancedFilters = useCallback((advancedFilters: Partial<ExtendedCertificationFilters>) => {
+        setFilters((prev) => ({ ...prev, ...advancedFilters }));
+    }, []);
 
     const handleConfirm = useCallback(
         (withNote: boolean, certifyNote?: string) => {
@@ -152,7 +154,7 @@ const Certification: FC = () => {
             if (selectedMemberIds.length === 0) {
                 addNotification(
                     'Members must be selected for certification',
-                    `zone-management_update-certification_no-members`,
+                    `privilege_zones_update-certification_no-members`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -180,11 +182,14 @@ const Certification: FC = () => {
                         data={data}
                         filters={filters}
                         setFilters={setFilters}
+                        search={search}
+                        setSearch={setSearch}
                         isLoading={isLoading}
                         isFetching={isFetching}
                         isSuccess={isSuccess}
                         fetchNextPage={fetchNextPage}
                         filterRows={filterByCertification}
+                        applyAdvancedFilters={applyAdvancedFilters}
                         selectedRows={selectedRows}
                         setSelectedRows={setSelectedRows}
                     />

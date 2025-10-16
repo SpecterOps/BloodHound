@@ -69,6 +69,12 @@ export interface AssetGroupTagCertificationParams {
     certificationStatus?: CertificationType;
 }
 
+export type ExtendedCertificationFilters = AssetGroupTagCertificationParams & {
+    action?: string;
+    approvedBy?: string;
+    objectType?: string;
+};
+
 export const AssetGroupTagTypeTier = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;

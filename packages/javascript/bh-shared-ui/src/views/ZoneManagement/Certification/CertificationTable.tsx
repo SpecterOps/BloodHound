@@ -6,22 +6,27 @@ import {
     CertificationRevoked,
     CertificationTypeMap,
     AssetGroupTagCertificationRecord,
+    ExtendedCertificationFilters,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
 import { FilterDialog } from './FilterDialog';
+import { SearchInput } from '../../../components/SearchInput';
 
 type CertificationTableProps = {
     data: any;
     filters: any;
     setFilters: () => void;
+    search: string;
+    setSearch: () => void;
     isLoading: boolean;
     isFetching: boolean;
     isSuccess: boolean;
     fetchNextPage: any;
     filterRows: (dropdownSelection: DropdownOption) => void;
+    applyAdvancedFilters?: (advancedFilters: Partial<ExtendedCertificationFilters>) => void;
     selectedRows: number[];
     setSelectedRows: any;
 };
@@ -30,11 +35,14 @@ const CertificationTable: FC<CertificationTableProps> = ({
     data,
     filters,
     setFilters,
+    search,
+    setSearch,
     isLoading,
     isFetching,
     isSuccess,
     fetchNextPage,
     filterRows,
+    applyAdvancedFilters,
     selectedRows,
     setSelectedRows,
 }) => {
@@ -63,18 +71,31 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     const certificationsData = data ?? { pages: [{ count: 0, data: { members: [] } }] };
     const count = certificationsData.pages[0].count;
-    const certificationsItemsRaw = certificationsData.pages.flatMap((item) => item.data.members);
+    const certificationsItemsRaw = data?.pages.flatMap((page) => page.data?.members ?? []) ?? [];
     const totalFetched = certificationsItemsRaw.length;
 
     const certificationsItems = isSuccess
-        ? certificationsItemsRaw.map((item: AssetGroupTagCertificationRecord) => {
-              return {
-                  ...item,
-                  date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
-                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
-                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
-              };
-          })
+        ? certificationsItemsRaw
+              .map((item: AssetGroupTagCertificationRecord) => {
+                  return {
+                      ...item,
+                      date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+                      domainName: domainMap.get(item.environment_id) ?? 'Unknown',
+                      zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
+                  };
+              })
+              .filter((item: AssetGroupTagCertificationRecord) => {
+                  if (filters.objectType && item.primary_kind !== filters.objectType) return false;
+                  if (filters.approvedBy && item.certified_by !== filters.approvedBy) return false;
+                  if (
+                      filters['start-date'] &&
+                      DateTime.fromISO(item.created_at) < DateTime.fromISO(filters['start-date'])
+                  )
+                      return false;
+                  if (filters['end-date'] && DateTime.fromISO(item.created_at) > DateTime.fromISO(filters['end-date']))
+                      return false;
+                  return true;
+              })
         : [];
 
     const fetchMoreOnBottomReached = useCallback(
@@ -217,13 +238,24 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     onChange={(selectedCertificationType: DropdownOption) => {
                         setDropdownSelection(selectedCertificationType.value);
                         filterRows(selectedCertificationType);
-                    }}></DropdownSelector>
-                <FilterDialog setFilters={setFilters} filters={filters} />
+                    }}
+                />
+                <div className='flex items-center'>
+                    <SearchInput value={search} onInputChange={setSearch} />
+                    {applyAdvancedFilters && (
+                        <FilterDialog
+                            filters={filters}
+                            setFilters={setFilters}
+                            onApplyFilters={applyAdvancedFilters}
+                            data={certificationsItems}
+                        />
+                    )}
+                </div>
             </div>
             <div
                 onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
                 ref={scrollRef}
-                className={`overflow-y-auto h-[calc(90vh_-_255px)] `}>
+                className='overflow-y-auto h-[calc(90vh_-_255px)]'>
                 <DataTable
                     data={certificationsItems ?? []}
                     TableHeaderProps={tableHeaderProps}
