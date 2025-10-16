@@ -241,7 +241,7 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 				return nil
 			}); err != nil {
 				if err := operation.Done(); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error caught during azure AppRoleAssignments teardown: %v", err))
+					slog.ErrorContext(ctx, "Error caught during azure AppRoleAssignments teardown", slog.String("err", err.Error()))
 				}
 
 				return &operation.Stats, err
@@ -724,7 +724,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 			return nil
 		}); err != nil {
 			if err := operation.Done(); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error caught during azure ExecuteCommand teardown: %v", err))
+				slog.ErrorContext(ctx, "Error caught during azure ExecuteCommand teardown", slog.String("err", err.Error()))
 			}
 
 			return &operation.Stats, err
@@ -810,7 +810,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 
 		return nil
 	}); err != nil {
-		slog.Error(fmt.Sprintf("Failed to submit azure global admins post processing job: %v", err))
+		slog.Error("Failed to submit azure global admins post processing job", slog.String("err", err.Error()))
 	}
 }
 
@@ -828,7 +828,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 		return nil
 	}); err != nil {
-		slog.Error(fmt.Sprintf("Failed to submit privileged role admins post processing job: %v", err))
+		slog.Error("Failed to submit privileged role admins post processing job", slog.String("err", err.Error()))
 	}
 }
 
@@ -846,7 +846,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 		return nil
 	}); err != nil {
-		slog.Error(fmt.Sprintf("Failed to submit azure privileged auth admins post processing job: %v", err))
+		slog.Error("Failed to submit azure privileged auth admins post processing job", slog.String("err", err.Error()))
 	}
 }
 
@@ -870,13 +870,29 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			slog.Error(fmt.Sprintf("Failed to submit azure add members AddMemberAllGroupsTargetRoles post processing job: %v", err))
+			slog.Error("Failed to submit post processing job for users with role allowing AZAddMembers edge", slog.String("err", err.Error()))
+		}
+
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			roleAssignments.ServicePrincipalsWithRole(AddMemberAllGroupsTargetRoles()...).Each(func(nextID uint64) bool {
+				nextJob := analysis.CreatePostRelationshipJob{
+					FromID: graph.ID(nextID),
+					ToID:   innerGroupID,
+					Kind:   azure.AddMembers,
+				}
+
+				return channels.Submit(ctx, outC, nextJob)
+			})
+
+			return nil
+		}); err != nil {
+			slog.Error("Failed to submit post processing job for service principals with role allowing AZAddMembers edge", slog.String("err", err.Error()))
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
-					slog.WarnContext(ctx, fmt.Sprintf("Node %d is missing property %s", innerGroup.ID, azure.IsAssignableToRole))
+					slog.WarnContext(ctx, "Node is missing property", slog.Uint64("nodeID", innerGroup.ID.Uint64()), slog.String("property", azure.IsAssignableToRole.String()))
 				} else {
 					return err
 				}
@@ -894,7 +910,31 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			slog.Error(fmt.Sprintf("Failed to submit azure add members AddMemberGroupNotRoleAssignableTargetRoles post processing job: %v", err))
+			slog.Error("Failed to submit post processing job for users with role allowing AZAddMembers edge", slog.String("err", err.Error()))
+		}
+
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
+				if graph.IsErrPropertyNotFound(err) {
+					slog.WarnContext(ctx, "Node is missing property", slog.Uint64("nodeID", innerGroup.ID.Uint64()), slog.String("property", azure.IsAssignableToRole.String()))
+				} else {
+					return err
+				}
+			} else if !isRoleAssignable {
+				roleAssignments.ServicePrincipalsWithRole(AddMemberGroupNotRoleAssignableTargetRoles()...).Each(func(nextID uint64) bool {
+					nextJob := analysis.CreatePostRelationshipJob{
+						FromID: graph.ID(nextID),
+						ToID:   innerGroupID,
+						Kind:   azure.AddMembers,
+					}
+
+					return channels.Submit(ctx, outC, nextJob)
+				})
+			}
+
+			return nil
+		}); err != nil {
+			slog.Error("Failed to submit post processing job for service principals with role allowing AZAddMembers edge", slog.String("err", err.Error()))
 		}
 	}
 }
@@ -908,14 +948,14 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 		for _, tenant := range tenantNodes {
 			if roleAssignments, err := TenantRoleAssignments(ctx, db, tenant); err != nil {
 				if err := operation.Done(); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error caught during azure UserRoleAssignments.TenantRoleAssignments teardown: %v", err))
+					slog.ErrorContext(ctx, "Error caught during azure UserRoleAssignments.TenantRoleAssignments teardown", slog.String("err", err.Error()))
 				}
 
 				return &analysis.AtomicPostProcessingStats{}, err
 			} else {
 				if err := resetPassword(operation, tenant, roleAssignments); err != nil {
 					if err := operation.Done(); err != nil {
-						slog.ErrorContext(ctx, fmt.Sprintf("Error caught during azure UserRoleAssignments.resetPassword teardown: %v", err))
+						slog.ErrorContext(ctx, "Error caught during azure UserRoleAssignments.resetPassword teardown", slog.String("err", err.Error()))
 					}
 
 					return &analysis.AtomicPostProcessingStats{}, err
