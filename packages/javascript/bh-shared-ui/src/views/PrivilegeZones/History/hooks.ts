@@ -17,7 +17,7 @@
 import { type AssetGroupTagHistoryRecord } from 'js-client-library';
 import { useInfiniteQuery } from 'react-query';
 import { apiClient } from '../../../utils';
-import { type AssetGroupTagHistoryFilters } from './FilterDialog';
+import { type AssetGroupTagHistoryFilters } from './types';
 import { createHistoryParams, PAGE_SIZE } from './utils';
 
 export const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilters, query?: string) => {
