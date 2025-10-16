@@ -53,6 +53,7 @@ import (
 	InboundRelationshipKinds: [...types.#Kind]
 	OutboundRelationshipKinds: [...types.#Kind]
 	EdgeCompositionRelationships: [...types.#Kind]
+	PostProcessedRelationships: [...types.#Kind]
 }
 
 // Definitons
@@ -85,4 +86,5 @@ ActiveDirectory: #ActiveDirectory & {
 	InboundRelationshipKinds:		ad.InboundRelationshipKinds
 	OutboundRelationshipKinds:		ad.OutboundRelationshipKinds
 	EdgeCompositionRelationships: 	ad.EdgeCompositionRelationships
+	PostProcessedRelationships: ad.PostProcessedRelationships
 }

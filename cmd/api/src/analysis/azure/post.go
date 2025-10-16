@@ -33,7 +33,7 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 	if err := azureAnalysis.FixManagementGroupNames(ctx, db); err != nil {
 		slog.WarnContext(ctx, "Error fixing management group names", slog.String("err", err.Error()))
 	}
-	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.PostProcessedRelationships()...); err != nil {
+	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if userRoleStats, err := azureAnalysis.UserRoleAssignments(ctx, db); err != nil {
 		return &aggregateStats, err

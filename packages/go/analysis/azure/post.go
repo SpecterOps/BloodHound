@@ -117,25 +117,6 @@ func PasswordAdministratorPasswordResetTargetRoles() []string {
 	}
 }
 
-func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{
-		azure.AddSecret,
-		azure.ExecuteCommand,
-		azure.ResetPassword,
-		azure.AddMembers,
-		azure.GlobalAdmin,
-		azure.PrivilegedRoleAdmin,
-		azure.PrivilegedAuthAdmin,
-		azure.AZMGAddMember,
-		azure.AZMGAddOwner,
-		azure.AZMGAddSecret,
-		azure.AZMGGrantAppRoles,
-		azure.AZMGGrantRole,
-		azure.SyncedToADUser,
-		azure.AZRoleApprover,
-	}
-}
-
 func IsWindowsDevice(node *graph.Node) (bool, error) {
 	if os, err := node.Properties.Get(common.OperatingSystem.String()).String(); err != nil {
 		if graph.IsErrPropertyNotFound(err) {

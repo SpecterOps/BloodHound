@@ -225,6 +225,16 @@ func GenerateGolangAzure(pkgName, dir string, azureSchema model.Azure) error {
 		),
 	)
 
+	root.Func().Id("PostProcessedRelationships").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, pathRelationship := range azureSchema.PostProcessedRelationships {
+					group.Id(pathRelationship.Symbol)
+				}
+			}),
+		),
+	)
+
 	root.Func().Id("NodeKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
@@ -408,6 +418,16 @@ func GenerateGolangActiveDirectory(pkgName, dir string, adSchema model.ActiveDir
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, pathRelationship := range adSchema.OutboundRelationshipKinds {
+					group.Id(pathRelationship.Symbol)
+				}
+			}),
+		),
+	)
+
+	root.Func().Id("PostProcessedRelationships").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(
+			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+				for _, pathRelationship := range adSchema.PostProcessedRelationships {
 					group.Id(pathRelationship.Symbol)
 				}
 			}),
