@@ -78,7 +78,8 @@ export const Cypher: FC<{
     );
 
     const exploreUrl = useMemo(
-        () => `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeCypherQuery(cypherQuery)}`,
+        () =>
+            `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeURIComponent(encodeCypherQuery(cypherQuery))}`,
         [cypherQuery]
     );
 
