@@ -54,6 +54,8 @@ const UpdateUserDialog: React.FC<{
             .catch((err) => console.error(err));
     };
 
+    console.log(showEnvironmentAccessControls);
+
     return (
         <Dialog open={open} onOpenChange={onClose} data-testid='manage-users_update-user-dialog'>
             <DialogPortal>
