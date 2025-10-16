@@ -169,8 +169,6 @@ const CreateUserForm: React.FC<{
                   : 'unchecked';
         }
 
-        //console.log(form.watch()); // TODO: REMOVE
-
         if (error) {
             if (error?.response?.status === 409) {
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
@@ -196,13 +194,8 @@ const CreateUserForm: React.FC<{
         form.watch,
         allEnvironmentsIndeterminate,
         allEnvironmentsSelected,
+        form.formState.errors,
     ]);
-
-    //console.log(selectedEnvironments); // TODO: REMOVE
-
-    const handleSave = () => {
-        console.log(form.watch('environment_access_control.environments')); // TODO: REMOVE
-    };
 
     return (
         <Form {...form}>
@@ -578,16 +571,14 @@ const CreateUserForm: React.FC<{
                                     data-testid='update-user-dialog_button-save'
                                     disabled={isLoading}
                                     role='button'
-                                    type='submit'
-                                    onClick={handleSave} // TODO REMOVE
-                                >
+                                    type='submit'>
                                     Save
                                 </Button>
                             </DialogActions>
                         </Card>
                         {showEnvironmentAccessControls && selectedRole && (
                             <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
-                                <DialogTitle>Environment Access Control</DialogTitle>
+                                <DialogTitle>Environmental Targeted Access Control </DialogTitle>
                                 <div
                                     className='flex flex-col h-full pb-6'
                                     data-testid='create-user-dialog_environments-checkboxes-dialog'>
