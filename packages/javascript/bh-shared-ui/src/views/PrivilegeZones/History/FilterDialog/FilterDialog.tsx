@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import {
     Button,
-    DatePicker,
     Dialog,
     DialogActions,
     DialogContent,
@@ -23,43 +22,26 @@ import {
     DialogTitle,
     DialogTrigger,
     Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-    Skeleton,
     Tooltip,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { faClose } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SystemString } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { ErrorOption, useForm } from 'react-hook-form';
-import { AppIcon, MaskedInput } from '../../../../components';
-import { useTagsQuery } from '../../../../hooks';
-import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
-import { CustomRangeError, END_DATE, LuxonFormat, START_DATE, cn } from '../../../../utils';
+import { AppIcon } from '../../../../components';
+import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
 import { useHistoryTableContext } from '../HistoryTableContext';
 import { AssetGroupTagHistoryFilters } from '../types';
-import { DEFAULT_FILTER_VALUE, actionMap } from '../utils';
-
-const toDate = DateTime.local().toJSDate();
-const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
+import { DEFAULT_FILTER_VALUE } from '../utils';
+import ActionField from './ActionField';
+import { EndDateField, StartDateField } from './DateField';
+import MadeByField from './MadeByField';
+import TagIdField from './TagIdField';
 
 const FilterDialog: FC<{
     setFilters: (filters: AssetGroupTagHistoryFilters) => void;
     filters?: AssetGroupTagHistoryFilters;
 }> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
-    const tagsQuery = useTagsQuery();
-    const bloodHoundUsersQuery = useBloodHoundUsers();
     const { clearCurrentNote } = useHistoryTableContext();
     const [open, setOpen] = useState(false);
 
@@ -150,267 +132,16 @@ const FilterDialog: FC<{
                         <VisuallyHidden asChild>
                             <DialogDescription>Filter Privilege Zone History</DialogDescription>
                         </VisuallyHidden>
-                        <FormField
-                            control={form.control}
-                            name='action'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel aria-labelledby='action'>Action</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                        defaultValue={field.value}>
-                                        <div className='flex gap-2'>
-                                            <FormControl className='w-11/12'>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder='Select' {...field} />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <Button
-                                                variant={'text'}
-                                                disabled={!field.value}
-                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                                onClick={() => {
-                                                    form.setValue(field.name, '');
-                                                }}>
-                                                <FontAwesomeIcon icon={faClose} />
-                                            </Button>
-                                        </div>
-                                        <SelectContent>
-                                            {actionMap.map((action, index) => {
-                                                if (index === 0) return; // Do not render empty string item
-                                                return (
-                                                    <SelectItem
-                                                        key={actionMap[index].value}
-                                                        value={actionMap[index].value}>
-                                                        {actionMap[index].label}
-                                                    </SelectItem>
-                                                );
-                                            })}
-                                        </SelectContent>
-                                    </Select>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name='tagId'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel aria-labelledby='tag'>Zone/Label</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                        defaultValue={field.value}>
-                                        <div className='flex gap-2'>
-                                            <FormControl className='w-11/12'>
-                                                {tagsQuery.isError ? (
-                                                    <span className='text-error'>
-                                                        There was an error fetching this data. Please refresh the page
-                                                        to try again.
-                                                    </span>
-                                                ) : (
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder='Select' />
-                                                    </SelectTrigger>
-                                                )}
-                                            </FormControl>
-                                            <Button
-                                                variant={'text'}
-                                                disabled={!field.value}
-                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                                onClick={() => {
-                                                    form.setValue(field.name, '');
-                                                }}>
-                                                <FontAwesomeIcon icon={faClose} />
-                                            </Button>
-                                        </div>
 
-                                        {tagsQuery.isLoading ? (
-                                            <Skeleton className='h-10 w-24' />
-                                        ) : (
-                                            <SelectContent>
-                                                {tagsQuery.data?.map((tag) => (
-                                                    <SelectItem key={tag.id} value={tag.id.toString()}>
-                                                        {tag.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        )}
-                                    </Select>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name='madeBy'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel aria-labelledby='madeBy'>Made By</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                        defaultValue={field.value}>
-                                        <div className='flex gap-2'>
-                                            <FormControl className='w-11/12'>
-                                                {bloodHoundUsersQuery.isError ? (
-                                                    <span className='text-error'>
-                                                        There was an error fetching this data. Please refresh the page
-                                                        to try again.
-                                                    </span>
-                                                ) : (
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder='Select' />
-                                                    </SelectTrigger>
-                                                )}
-                                            </FormControl>
-                                            <Button
-                                                variant={'text'}
-                                                disabled={!field.value}
-                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                                onClick={() => {
-                                                    form.setValue(field.name, '');
-                                                }}>
-                                                <FontAwesomeIcon icon={faClose} />
-                                            </Button>
-                                        </div>
-                                        {bloodHoundUsersQuery.isLoading ? (
-                                            <Skeleton className='h-10 w-24' />
-                                        ) : (
-                                            <SelectContent>
-                                                <SelectItem value={SystemString}>{SystemString}</SelectItem>
-                                                {bloodHoundUsersQuery.data
-                                                    ?.filter((user) => {
-                                                        let hasPermission = false;
-                                                        user.roles.forEach((role) => {
-                                                            role.permissions.forEach((permission) => {
-                                                                if (
-                                                                    permission.name === 'ManageUsers' &&
-                                                                    permission.authority === 'auth'
-                                                                )
-                                                                    hasPermission = true;
-                                                            });
-                                                        });
+                        <ActionField form={form} />
 
-                                                        return hasPermission;
-                                                    })
-                                                    .sort((a, b) =>
-                                                        (a.email_address || a.principal_name).localeCompare(
-                                                            b.email_address || b.principal_name
-                                                        )
-                                                    )
-                                                    ?.map((user) => (
-                                                        <SelectItem key={user.id} value={user.email_address || user.id}>
-                                                            {user.email_address || user.principal_name}
-                                                        </SelectItem>
-                                                    ))}
-                                            </SelectContent>
-                                        )}
-                                    </Select>
-                                </FormItem>
-                            )}
-                        />
+                        <TagIdField form={form} />
+
+                        <MadeByField form={form} />
+
                         <div className='flex gap-6'>
-                            <FormField
-                                name='start-date'
-                                control={form.control}
-                                render={({ field }) => (
-                                    <FormItem className='w-40 flex flex-col gap-2 justify-start'>
-                                        <FormLabel htmlFor={field.name}>Start Date</FormLabel>
-                                        <div className='flex gap-2'>
-                                            <DatePicker
-                                                {...field}
-                                                InputElement={MaskedInput}
-                                                calendarProps={{
-                                                    className: 'w-11/12',
-                                                    mode: 'single',
-                                                    fromDate,
-                                                    toDate,
-                                                    selected: DateTime.fromFormat(
-                                                        field.value,
-                                                        LuxonFormat.ISO_8601
-                                                    ).toJSDate(),
-                                                    onSelect: (value: Date | undefined) => {
-                                                        form.setValue(
-                                                            field.name,
-                                                            value
-                                                                ? DateTime.fromJSDate(value).toFormat(
-                                                                      LuxonFormat.ISO_8601
-                                                                  )
-                                                                : ''
-                                                        );
-                                                    },
-                                                    disabled: (date: Date) => {
-                                                        return DateTime.fromJSDate(date) > DateTime.local();
-                                                    },
-                                                }}
-                                            />
-                                            <Button
-                                                variant={'text'}
-                                                disabled={!field.value}
-                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                                onClick={() => {
-                                                    form.setValue(field.name, '');
-                                                    form.clearErrors();
-                                                }}>
-                                                <FontAwesomeIcon icon={faClose} />
-                                            </Button>
-                                        </div>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                name='end-date'
-                                control={form.control}
-                                render={({ field }) => (
-                                    <FormItem className='w-40 flex flex-col gap-2 justify-start'>
-                                        <FormLabel htmlFor={field.name}>End Date</FormLabel>
-                                        <div className='flex gap-2'>
-                                            <FormControl>
-                                                <DatePicker
-                                                    {...field}
-                                                    InputElement={MaskedInput}
-                                                    calendarProps={{
-                                                        className: 'w-11/12',
-                                                        mode: 'single',
-                                                        fromDate,
-                                                        toDate,
-                                                        selected: DateTime.fromFormat(
-                                                            field.value,
-                                                            LuxonFormat.ISO_8601
-                                                        ).toJSDate(),
-                                                        onSelect: (value: Date | undefined) => {
-                                                            form.setValue(
-                                                                field.name,
-                                                                value
-                                                                    ? DateTime.fromJSDate(value).toFormat(
-                                                                          LuxonFormat.ISO_8601
-                                                                      )
-                                                                    : ''
-                                                            );
-                                                        },
-                                                        disabled: (date: Date) => {
-                                                            return DateTime.fromJSDate(date) > DateTime.local();
-                                                        },
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <Button
-                                                variant={'text'}
-                                                disabled={!field.value}
-                                                className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                                onClick={() => {
-                                                    form.setValue(field.name, '');
-                                                    form.clearErrors();
-                                                }}>
-                                                <FontAwesomeIcon icon={faClose} />
-                                            </Button>
-                                        </div>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <StartDateField form={form} />
+                            <EndDateField form={form} />
                         </div>
 
                         <DialogActions>

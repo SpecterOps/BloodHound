@@ -16,7 +16,7 @@
 
 import { Card, CardHeader, CardTitle, DataTable } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LuxonFormat } from '../../..';
 import { SearchInput } from '../../../components/SearchInput';
 import { useTagsQuery } from '../../../hooks';
@@ -53,10 +53,19 @@ const HistoryContent = () => {
     const {
         data: logHistory,
         isFetching: isHistoryFetching,
-        isSuccess: isHistorySuccess,
         fetchNextPage,
     } = useAssetGroupTagHistoryQuery(filters, search);
-    const { data: tags, isSuccess: isTagsSuccess } = useTagsQuery();
+    const { data: tags = [] } = useTagsQuery();
+
+    const tagMap = useMemo(() => {
+        const map: Record<number, string> = {};
+
+        tags.forEach((tag) => {
+            map[tag.id] = tag.name;
+        });
+
+        return map;
+    }, [tags]);
 
     const historyData = logHistory ?? emptyHistoryData;
     const totalDBRowCount = historyData.pages[0].count;
@@ -90,19 +99,11 @@ const HistoryContent = () => {
         estimateSize: () => 50,
     };
 
-    const isSuccess = isHistorySuccess && isTagsSuccess;
-
-    const historyItems: HistoryItem[] = isSuccess
-        ? historyItemsRaw.map((item) => {
-              const tagName = tags?.find((tag) => tag.id === item.asset_group_tag_id)?.name;
-
-              return {
-                  ...item,
-                  tagName,
-                  date: DateTime.fromISO(item.created_at).toFormat(LuxonFormat.ISO_8601),
-              };
-          })
-        : [];
+    const historyItems: HistoryItem[] = historyItemsRaw.map((item) => ({
+        ...item,
+        tagName: tagMap[item.asset_group_tag_id],
+        date: DateTime.fromISO(item.created_at).toFormat(LuxonFormat.ISO_8601),
+    }));
 
     return (
         <div data-testid='history-wrapper' className='flex gap-8 mt-6 grow'>

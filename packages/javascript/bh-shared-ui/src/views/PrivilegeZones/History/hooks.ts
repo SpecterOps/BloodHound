@@ -14,22 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { type AssetGroupTagHistoryRecord } from 'js-client-library';
+import { AssetGroupTagsHistory } from 'js-client-library';
 import { useInfiniteQuery } from 'react-query';
 import { apiClient } from '../../../utils';
 import { type AssetGroupTagHistoryFilters } from './types';
-import { createHistoryParams, PAGE_SIZE } from './utils';
+import { PAGE_SIZE, createHistoryParams } from './utils';
 
 export const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilters, query?: string) => {
     const doSearch = query && query.length >= 3;
     const queryKey = doSearch ? query : 'static';
 
-    return useInfiniteQuery<{
-        count: number;
-        data: { records: AssetGroupTagHistoryRecord[] };
-        limit: number;
-        skip: number;
-    }>({
+    return useInfiniteQuery<AssetGroupTagsHistory>({
         queryKey: ['asset-group-tag-history', queryKey, filters],
         queryFn: async ({ pageParam = 1 }) => {
             const params = createHistoryParams(pageParam, filters);

@@ -34,14 +34,14 @@ import {
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
-export type BasicResponse<T> = {
+export interface BasicResponse<T> {
     data: T;
-};
+}
 
-export type TimeWindowedResponse<T> = BasicResponse<T> & {
+export interface TimeWindowedResponse<T> extends BasicResponse<T> {
     start: string;
     end: string;
-};
+}
 
 export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
     Required<BasicResponse<T>> & {
