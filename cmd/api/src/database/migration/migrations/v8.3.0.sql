@@ -71,7 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_agt_history_created_at ON asset_group_history USI
 
 -- Remigrate old custom AGI selectors to PZ selectors for any instances without PZ feature flag enabled
 DO $$
-BEGIN
+  BEGIN
 		IF
       (SELECT enabled FROM feature_flags WHERE key  = 'tier_management_engine') = false
     THEN
@@ -97,9 +97,8 @@ BEGIN
           RETURNING id, description
           )
       INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
-
-END IF;
-END;
+    END IF;
+  END;
 $$;
 
 -- Set all default selectors to enabled for bootstrapped instances
@@ -111,12 +110,12 @@ UPDATE feature_flags SET enabled = true WHERE key = 'tier_management_engine' AND
 -- Add unique constraint for asset group tag selectors name per asset group tag
 -- Before we add unique constraint, rename any duplicates with `_X` to prevent constraint failing
 WITH duplicate_selectors AS (
-  SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rn
+  SELECT id, name, asset_group_tag_id, ROW_NUMBER() OVER (PARTITION BY name, asset_group_tag_id ORDER BY id) AS rowNumber
   FROM asset_group_tag_selectors
 )
 UPDATE asset_group_tag_selectors agts
-SET name = agts.name || '_' || rn FROM duplicate_selectors
-WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rn > 1;
+SET name = agts.name || '_' || rowNumber FROM duplicate_selectors
+WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 
 ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
