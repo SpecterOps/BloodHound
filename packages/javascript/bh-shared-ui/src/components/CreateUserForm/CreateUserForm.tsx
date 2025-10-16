@@ -647,7 +647,7 @@ const CreateUserForm: React.FC<{
                                         </div>
                                         <div
                                             className='flex flex-col'
-                                            data-testid='create-user-dialog_environments-checkboxes'>
+                                            data-testid='create-user-dialog_environments-checkboxes-div'>
                                             {filteredEnvironments &&
                                                 filteredEnvironments?.map((item) => {
                                                     return (
@@ -673,6 +673,7 @@ const CreateUserForm: React.FC<{
                                                                                 )
                                                                             }
                                                                             value={item.name}
+                                                                            data-testid='create-user-dialog_environments-checkboxes'
                                                                         />
                                                                         <FormLabel
                                                                             htmlFor='environments'
