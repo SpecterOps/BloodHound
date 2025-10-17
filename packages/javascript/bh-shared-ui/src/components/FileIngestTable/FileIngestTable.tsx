@@ -23,6 +23,7 @@ import DataTable from '../DataTable';
 import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
 import { StatusIndicator } from '../StatusIndicator';
 import { FileIngestDetailsPanel } from './FileIngestDetailsPanel';
+import { FileIngestFilterDialog } from './FileIngestFilterDialog';
 
 const HEADERS = ['ID / User / Status', 'Message', 'Start Time', 'Duration', 'File Information'];
 
@@ -68,17 +69,24 @@ export const FileIngestTable: FC = () => {
     const [selectedIngest, setSelectedIngest] = useState<FileIngestJob>();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [filters, setFilters] = useState({});
 
-    const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage });
+    const { data, isLoading } = useGetFileUploadsQuery({ page, rowsPerPage, filters });
 
     const fileUploadJobs = data?.data ?? [];
     const count = data?.count ?? 0;
 
     const getRowWithSelect = getRow(setSelectedIngest);
 
+    const handleOnConfirm = (filters: any) => {
+        setFilters(filters);
+        setPage(0);
+    };
+
     return (
         <div className='grid h-full grid-cols-[1fr_27rem] grid-rows-[auto_minmax(0,1fr)] pt-4 gap-4'>
             <div className='col-[1] row-[1] flex items-center justify-end gap-2'>
+                <FileIngestFilterDialog onConfirm={handleOnConfirm} />
                 <FileIngestUploadButton />
             </div>
 

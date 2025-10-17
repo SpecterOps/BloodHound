@@ -65,6 +65,7 @@ export const useTagFormUtils = () => {
         privilegeZoneAnalysisEnabled,
         disableNameInput,
         formTitle,
+        tagId,
         tagType,
         tagTypeDisplay,
         isLabelPage,

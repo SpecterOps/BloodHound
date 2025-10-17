@@ -30,7 +30,6 @@ import (
 )
 
 func TestVersion5Analysis(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -58,7 +57,6 @@ func TestVersion5Analysis(t *testing.T) {
 }
 
 func TestVersion6ADCSAnalysis(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -86,7 +84,6 @@ func TestVersion6ADCSAnalysis(t *testing.T) {
 }
 
 func TestVersion6AllAnalysis(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 
@@ -114,7 +111,6 @@ func TestVersion6AllAnalysis(t *testing.T) {
 }
 
 func TestVersion6Analysis(t *testing.T) {
-	t.Parallel()
 	var (
 		ctx = context.Background()
 

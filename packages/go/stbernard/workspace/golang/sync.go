@@ -17,6 +17,7 @@
 package golang
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -33,7 +34,13 @@ func TidyModules(modPath string, env environment.Environment) error {
 		args    = []string{"mod", "tidy"}
 	)
 
-	if _, err := cmdrunner.Run(command, args, modPath, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    modPath,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("go mod tidy in %s: %w", modPath, err)
 	}
 
@@ -53,7 +60,13 @@ func SyncWorkspace(cwd string, env environment.Environment) error {
 		return nil
 	}
 
-	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("go work sync: %w", err)
 	} else {
 		return nil

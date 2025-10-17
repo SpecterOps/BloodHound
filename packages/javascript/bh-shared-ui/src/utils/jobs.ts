@@ -38,10 +38,23 @@ type JobsFilterParams = {
     status?: JobStatusCode;
 };
 
+export type FileIngestFilterParams = {
+    user_id?: string;
+    end_time?: string;
+    start_time?: string;
+    status?: JobStatusCode;
+};
+
 export type FinishedJobsFilter = EnabledCollections & JobsFilterParams;
 
 export interface FinishedJobParams {
     filters?: FinishedJobsFilter;
+    page: number;
+    rowsPerPage: number;
+}
+
+export interface FileUploadParams {
+    filters?: FileIngestFilterParams;
     page: number;
     rowsPerPage: number;
 }
@@ -59,7 +72,7 @@ export const JOB_STATUS_MAP: Record<number, string> = {
     8: 'Partially Completed',
 } as const satisfies Record<number, string>;
 
-type JobStatusCode = keyof typeof JOB_STATUS_MAP;
+export type JobStatusCode = keyof typeof JOB_STATUS_MAP;
 
 export const JOB_STATUS_INDICATORS: Record<JobStatusCode, { status: IndicatorType; pulse?: boolean }> = {
     [-1]: { status: 'bad' },
@@ -94,12 +107,19 @@ export const getCollectionState = (state: FinishedJobsFilter): EnabledCollection
 export const isCollectionKey = (key: string): key is JobCollectionKey =>
     (jobCollectionKeys as readonly string[]).includes(key);
 
-export const NO_PERMISSION_MESSAGE =
+export const FINISHED_JOBS_NO_PERMISSION_MESSAGE =
     'Your role does not permit viewing finished job details. Please contact your administrator for assistance.';
-export const NO_PERMISSION_KEY = 'finished-jobs-permission';
+export const FINISHED_JOBS_NO_PERMISSION_KEY = 'finished-jobs-permission';
 
-export const FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
-export const FETCH_ERROR_KEY = 'finished-jobs-error';
+export const FINISHED_JOBS_FETCH_ERROR_MESSAGE = 'Unable to fetch finished jobs. Please try again.';
+export const FINISHED_JOBS_FETCH_ERROR_KEY = 'finished-jobs-error';
+
+export const FILE_INGEST_NO_PERMISSION_MESSAGE = `Your user role does not grant permission to view the file ingest jobs details. Please
+    contact your administrator for details.`;
+export const FILE_INGEST_NO_PERMISSION_KEY = 'file-upload-permission';
+
+export const FILE_INGEST_FETCH_ERROR_MESSAGE = 'Unable to fetch file upload jobs. Please try again.';
+export const FILE_INGEST_FETCH_ERROR_KEY = 'file-upload-error';
 
 /** Returns a string listing all the collections methods for the given job */
 export const toCollected = (job: Pick<ScheduledJobDisplay, JobCollectionKey>) =>

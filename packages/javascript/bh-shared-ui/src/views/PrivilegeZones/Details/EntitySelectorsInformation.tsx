@@ -14,16 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { useCallback, useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { CSSProperties, useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
-import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { itemSkeletons } from '../../../views';
-
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
 import { useExploreParams, usePZPathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
+import { apiClient, cn, useAppNavigate } from '../../../utils';
+
+const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
+    return (
+        <li
+            key={key}
+            data-testid={`privilege-zones_${title.toLowerCase()}-list_loading-skeleton`}
+            style={style}
+            className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
+            <Skeleton className={`${height ?? 'min-h-10'} rounded-none`} />
+        </li>
+    );
+};
+
+const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();

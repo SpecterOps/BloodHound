@@ -31,9 +31,11 @@ import {
     Skeleton,
     Switch,
     Textarea,
+    Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import clsx from 'clsx';
 import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
@@ -44,6 +46,7 @@ import {
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { AppIcon } from '../../../../components';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import {
     useAssetGroupTagInfo,
@@ -52,23 +55,24 @@ import {
     useDeleteAssetGroupTag,
     usePatchAssetGroupTag,
 } from '../../../../hooks/useAssetGroupTags';
-import { usePZPathParams } from '../../../../hooks/usePZParams';
 import { useNotifications } from '../../../../providers';
 import { useAppNavigate } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
+import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
 
 const MAX_NAME_LENGTH = 250;
 
 export const TagForm: FC = () => {
+    const [glyphDialogOpen, setGlyphDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const navigate = useAppNavigate();
     const { addNotification } = useNotifications();
 
-    const { tagId } = usePZPathParams();
     const {
+        tagId,
         privilegeZoneAnalysisEnabled,
         disableNameInput,
         isLabelPage,
@@ -94,7 +98,8 @@ export const TagForm: FC = () => {
 
     const diffValues = (
         data: AssetGroupTag | undefined,
-        formValues: UpdateAssetGroupTagRequest
+        formValues: UpdateAssetGroupTagRequest,
+        isLabelPage: boolean
     ): Partial<UpdateAssetGroupTagRequest> => {
         if (data === undefined) return formValues;
         const workingCopy = { ...formValues };
@@ -102,10 +107,15 @@ export const TagForm: FC = () => {
 
         if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
         if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+
+        // return early so as not to set values specific to zones
+        if (isLabelPage) return diffed;
+
         if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
         if (data.require_certify != workingCopy.require_certify) diffed.require_certify = workingCopy.require_certify;
         if (data.analysis_enabled !== workingCopy.analysis_enabled)
             diffed.analysis_enabled = workingCopy.analysis_enabled;
+        if (data.glyph != workingCopy.glyph) diffed.glyph = workingCopy.glyph;
 
         return diffed;
     };
@@ -114,9 +124,10 @@ export const TagForm: FC = () => {
         defaultValues: {
             name: '',
             description: '',
+            position: -1,
             require_certify: false,
             analysis_enabled: false,
-            position: -1,
+            glyph: '',
         },
     });
 
@@ -129,13 +140,14 @@ export const TagForm: FC = () => {
     const handleCreateTag = useCallback(
         async (formData: CreateAssetGroupTagRequest) => {
             try {
-                const requestValues = {
+                const requestValues: CreateAssetGroupTagRequest = {
                     name: formData.name,
                     description: formData.description,
                     require_certify: isZonePage ? formData.require_certify : null,
                     position: null,
                     type: isLabelPage ? AssetGroupTagTypeLabel : AssetGroupTagTypeZone,
                 };
+                if (formData.glyph !== '') requestValues.glyph = formData.glyph;
 
                 const response = await createTagMutation.mutateAsync({
                     values: requestValues,
@@ -153,50 +165,51 @@ export const TagForm: FC = () => {
         [isZonePage, isLabelPage, createTagMutation, addNotification, tagTypeDisplay, handleCreateNavigate, tagType]
     );
 
-    const handleUpdateTag = useCallback(async () => {
-        try {
-            const diffedValues = diffValues(tagQuery.data, { ...getValues() });
-            if (isEmpty(diffedValues)) {
-                addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                });
-                return;
-            }
-
-            const updatedValues = { ...diffedValues };
-
-            if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
-            if (isLabelPage) delete updatedValues.require_certify;
-
-            await updateTagMutation.mutateAsync({
-                updatedValues,
-                tagId,
-            });
-
-            addNotification(
-                `${tagTypeDisplay} was updated successfully!`,
-                `privilege-zones_update-${tagType}_success_${tagId}`,
-                {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+    const handleUpdateTag = useCallback(
+        async (formData: UpdateAssetGroupTagRequest) => {
+            try {
+                const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
+                if (isEmpty(diffedValues)) {
+                    addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    });
+                    return;
                 }
-            );
 
-            handleUpdateNavigate();
-        } catch (error) {
-            handleError(error, 'updating', tagType, addNotification);
-        }
-    }, [
-        tagQuery.data,
-        getValues,
-        privilegeZoneAnalysisEnabled,
-        isLabelPage,
-        updateTagMutation,
-        tagId,
-        addNotification,
-        tagTypeDisplay,
-        tagType,
-        handleUpdateNavigate,
-    ]);
+                const updatedValues = { ...diffedValues };
+
+                if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
+
+                await updateTagMutation.mutateAsync({
+                    updatedValues,
+                    tagId,
+                });
+
+                addNotification(
+                    `${tagTypeDisplay} was updated successfully!`,
+                    `privilege-zones_update-${tagType}_success_${tagId}`,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
+
+                handleUpdateNavigate();
+            } catch (error) {
+                handleError(error, 'updating', tagType, addNotification);
+            }
+        },
+        [
+            tagQuery.data,
+            privilegeZoneAnalysisEnabled,
+            isLabelPage,
+            updateTagMutation,
+            tagId,
+            addNotification,
+            tagTypeDisplay,
+            tagType,
+            handleUpdateNavigate,
+        ]
+    );
 
     const handleDeleteTag = useCallback(async () => {
         try {
@@ -222,13 +235,21 @@ export const TagForm: FC = () => {
             if (tagId === '') {
                 handleCreateTag(formData as CreateAssetGroupTagRequest);
             } else {
-                handleUpdateTag();
+                handleUpdateTag(formData);
             }
         },
         [tagId, handleCreateTag, handleUpdateTag]
     );
 
-    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
+    const handleDeleteCancel = useCallback(() => setDeleteDialogOpen(false), []);
+
+    const handleGlyphCancel = useCallback(() => setGlyphDialogOpen(false), []);
+    const handleGlyphSelect = useCallback((iconName?: IconName) => {
+        if (iconName) setValue('glyph', iconName, { shouldDirty: true });
+        else setValue('glyph', '', { shouldDirty: true });
+
+        setGlyphDialogOpen(false);
+    }, []);
 
     useEffect(() => {
         if (tagQuery.data) {
@@ -238,6 +259,7 @@ export const TagForm: FC = () => {
                 position: tagQuery.data.position,
                 require_certify: tagQuery.data.require_certify || false,
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
+                glyph: tagQuery.data.glyph === null ? '' : tagQuery.data.glyph,
             });
         }
     }, [tagQuery.data, reset]);
@@ -274,6 +296,12 @@ export const TagForm: FC = () => {
                                     <div className='grid gap-2'>
                                         <Label>Enable Analysis</Label>
                                         <Skeleton className='h-3 w-6' />
+                                    </div>
+                                )}
+                                {isZonePage && (
+                                    <div className='grid gap-2'>
+                                        <Label>Apply Custom Glyph</Label>
+                                        <Skeleton className='h-20 w-full' />
                                     </div>
                                 )}
                             </div>
@@ -313,6 +341,8 @@ export const TagForm: FC = () => {
         );
 
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
+
+    const glyph = getValues('glyph');
 
     return (
         <Form {...form}>
@@ -421,6 +451,74 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 )}
+                                {isZonePage && getValues('position') !== 1 && (
+                                    <FormField
+                                        control={control}
+                                        name='glyph'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className='flex gap-2 items-center'>
+                                                    Apply Custom Glyph
+                                                    <Tooltip
+                                                        tooltip={
+                                                            'Custom glyphs visually mark nodes in the graph for quick context.'
+                                                        }
+                                                        contentProps={{
+                                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
+                                                            side: 'right',
+                                                            align: 'end',
+                                                        }}>
+                                                        <span>
+                                                            <AppIcon.Info />
+                                                        </span>
+                                                    </Tooltip>
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        data-testid='privilege-zones_save_tag-form_glyph-input'
+                                                        type='text'
+                                                        className='hidden'
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <div className='w-full flex items-end justify-between'>
+                                                    <div className='flex gap-4 text-sm'>
+                                                        <div>
+                                                            <p className='font-medium'>Selected Glyph:</p>
+                                                            <p className={clsx(glyph && 'italic')}>
+                                                                {glyph || 'None Selected'}
+                                                            </p>
+                                                        </div>
+
+                                                        <Card
+                                                            className={clsx([
+                                                                'flex items-center justify-center size-12',
+                                                                !glyph && 'invisible',
+                                                            ])}>
+                                                            <CardContent className='dark:bg-neutral-4 rounded-sm'>
+                                                                {glyph && (
+                                                                    <FontAwesomeIcon
+                                                                        icon={glyph as IconName}
+                                                                        size='lg'
+                                                                    />
+                                                                )}
+                                                            </CardContent>
+                                                        </Card>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() => {
+                                                            setGlyphDialogOpen(true);
+                                                        }}
+                                                        className='w-48'
+                                                        variant={'secondary'}>
+                                                        <span>Select Glyph</span>
+                                                    </Button>
+                                                </div>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
                                 <div className='hidden'>
                                     <FormField
                                         control={control}
@@ -486,11 +584,19 @@ export const TagForm: FC = () => {
                     />
                 )}
             </form>
+
+            <GlyphSelectDialog
+                open={glyphDialogOpen}
+                selected={glyph as IconName}
+                onCancel={handleGlyphCancel}
+                onSelect={handleGlyphSelect}
+            />
+
             <DeleteConfirmationDialog
                 isLoading={tagQuery.isLoading}
                 itemName={tagQuery.data?.name || tagType}
                 itemType={tagType}
-                onCancel={handleCancel}
+                onCancel={handleDeleteCancel}
                 onConfirm={handleDeleteTag}
                 open={deleteDialogOpen}
             />

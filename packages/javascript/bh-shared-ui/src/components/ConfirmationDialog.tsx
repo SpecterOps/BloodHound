@@ -59,8 +59,8 @@ const ConfirmationDialog: React.FC<{
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
-                        <>
-                            <DialogDescription className='text-sm'>
+                        <DialogDescription asChild className='text-sm'>
+                            <div>
                                 Please input "{challengeTxt}" prior to clicking confirm.
                                 <Input
                                     placeholder={challengeTxt}
@@ -69,11 +69,11 @@ const ConfirmationDialog: React.FC<{
                                     value={challengeTxtReply}
                                     data-testid='confirmation-dialog_challenge-text'
                                 />
-                            </DialogDescription>
-                        </>
+                            </div>
+                        </DialogDescription>
                     )}
                     <DialogActions>
-                        {error && <p className='content-center text-[color:#d32f2f] text-xs mt-[3px]'>{error}</p>}
+                        {error && <p className='content-center text-error text-xs mt-[3px]'>{error}</p>}
                         <Button
                             variant='tertiary'
                             onClick={handleClose}
