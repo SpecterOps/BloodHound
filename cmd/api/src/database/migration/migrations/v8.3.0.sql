@@ -154,7 +154,7 @@ SELECT
   d.description,
   true,
   d.allow_disable,
-  false
+  2
 FROM src_data d WHERE NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = d.name)
   RETURNING id, name
 )
