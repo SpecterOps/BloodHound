@@ -17,6 +17,7 @@
 import { Menu, MenuItem } from '@mui/material';
 
 import {
+    CopyMenuItem,
     Permission,
     isNode,
     useExploreParams,
@@ -28,7 +29,6 @@ import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
-import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
