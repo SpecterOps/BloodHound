@@ -18,6 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../../../test-utils';
+import { mockCodemirrorLayoutMethods } from '../../../../utils/testHelpers';
 import { SavedQueriesProvider } from '../../providers';
 import SaveQueryDialog from './SaveQueryDialog';
 const testUsers = [
@@ -442,6 +443,7 @@ const handlers = [
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen());
+beforeEach(() => mockCodemirrorLayoutMethods());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
