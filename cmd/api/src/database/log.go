@@ -53,18 +53,35 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		sql, _ := fc()
 
-		slog.ErrorContext(ctx, "Database error", "query", sql, "err", err)
+		slog.ErrorContext(
+			ctx,
+			"Database error",
+			slog.String("query", sql),
+			slog.String("err", err.Error()),
+		)
 	} else {
 		elapsed := time.Since(begin)
 
 		if elapsed >= s.SlowQueryErrorThreshold {
 			sql, rows := fc()
 
-			slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows, "sql", sql)
+			slog.ErrorContext(
+				ctx,
+				"Slow database query",
+				slog.Int64("duration_ms", elapsed.Milliseconds()),
+				slog.Int64("num_rows", rows),
+				slog.String("sql", sql),
+			)
 		} else if elapsed >= s.SlowQueryWarnThreshold {
 			sql, rows := fc()
 
-			slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows, "sql", sql)
+			slog.WarnContext(
+				ctx,
+				"Slow database query",
+				slog.Int64("duration_ms", elapsed.Milliseconds()),
+				slog.Int64("num_rows", rows),
+				slog.String("sql", sql),
+			)
 		}
 	}
 }

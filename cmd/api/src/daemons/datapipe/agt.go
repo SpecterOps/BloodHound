@@ -18,7 +18,6 @@ package datapipe
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strconv"
 	"sync"
@@ -80,7 +79,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 			switch seed.Type {
 			case model.SelectorTypeObjectId:
 				if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value)).First(); err != nil {
-					slog.WarnContext(ctx, "AGT: Fetch Object ID Err", "objectId", seed.Value, "err", err)
+					slog.WarnContext(ctx, "AGT: Fetch Object ID Err", slog.String("objectid", seed.Value), slog.String("err", err.Error()))
 				} else {
 					nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
 					if result.AddIfNotExists(nodeWithSrc) {
@@ -92,7 +91,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 				}
 			case model.SelectorTypeCypher:
 				if nodes, err := ops.FetchNodesByQuery(tx, seed.Value, limit); err != nil {
-					slog.WarnContext(ctx, "AGT: Fetch Cypher Err", "cypherQuery", seed.Value, "err", err)
+					slog.WarnContext(ctx, "AGT: Fetch Cypher Err", slog.String("cypherQuery", seed.Value), slog.String("err", err.Error()))
 				} else {
 					for _, node := range nodes {
 						nodeWithSrc := &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceSeed, Node: node}
@@ -105,7 +104,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 					}
 				}
 			default:
-				slog.WarnContext(ctx, fmt.Sprintf("AGT: Unsupported selector type: %d", seed.Type))
+				slog.WarnContext(ctx, "AGT: Unsupported selector type", slog.Int("type", int(seed.Type)))
 			}
 		}
 		return nil
@@ -221,7 +220,7 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 				} else {
 					// Fetch child nodes for this node and send any collected to the collector
 					if err := fetchChildNodes(chCtx, traversalInst, node.Node, collectorCh); err != nil {
-						slog.ErrorContext(ctx, "AGT: error fetching child nodes", "node", node.ID, "err", err)
+						slog.ErrorContext(ctx, "AGT: error fetching child nodes", slog.Uint64("node", node.ID.Uint64()), slog.String("err", err.Error()))
 					}
 
 					// Fire to collector to signal job done to synchronously decr queue
@@ -373,11 +372,11 @@ func fetchParentNodes(ctx context.Context, db graph.Database, seedNodes nodeWith
 			defer wg.Done()
 			if node.Kinds.ContainsOneOf(ad.Entity) {
 				if err := fetchADParentNodes(ctxWithCancel, traversalInst, node.Node, ch); err != nil {
-					slog.ErrorContext(ctx, "AGT: error fetching active directory parent nodes", "node", node.ID, "err", err)
+					slog.ErrorContext(ctx, "AGT: error fetching active directory parent nodes", slog.Uint64("node", node.ID.Uint64()), slog.String("err", err.Error()))
 				}
 			} else if node.Kinds.ContainsOneOf(azure.Entity) {
 				if err := fetchAzureParentNodes(ctxWithCancel, traversalInst, node.Node, ch); err != nil {
-					slog.ErrorContext(ctx, "AGT: error fetching azure parent nodes", "node", node.ID, "err", err)
+					slog.ErrorContext(ctx, "AGT: error fetching azure parent nodes", slog.Uint64("node", node.ID.Uint64()), slog.String("err", err.Error()))
 				}
 			}
 		}()
@@ -474,7 +473,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				if graphNode, ok := nodesWithSrcSet[oldSelectorNode.NodeId]; !ok {
 					// todo: maybe grab it from graph manually in this case?
-					slog.Warn("AGT: selected node for update missing graph node...skipping update to protect data integrity", "node", oldSelectorNode.NodeId)
+					slog.WarnContext(ctx, "AGT: selected node for update missing graph node...skipping update to protect data integrity", slog.Uint64("node", oldSelectorNode.NodeId.Uint64()))
 				} else {
 					primaryKind, displayName, objectId, envId := model.GetAssetGroupMemberProperties(graphNode.Node)
 					if err = db.UpdateSelectorNodesByNodeId(ctx, selector.AssetGroupTagId, selector.ID, oldSelectorNode.NodeId, certified, certifiedBy, primaryKind, envId, objectId, displayName); err != nil {
@@ -493,7 +492,15 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			}
 		}
 
-		slog.Info("AGT: Completed selecting", "selector", selector.Name, "countTotal", len(nodesWithSrcSet), "countInserted", countInserted, "countUpdated", len(nodesToUpdate), "countDeleted", len(oldSelectedNodesByNodeId))
+		slog.InfoContext(
+			ctx,
+			"AGT: Completed selecting",
+			slog.String("selector", selector.Name),
+			slog.Int("countTotal", len(nodesWithSrcSet)),
+			slog.Int("countInserted", countInserted),
+			slog.Int("countUpdated", len(nodesToUpdate)),
+			slog.Int("countDeleted", len(oldSelectedNodesByNodeId)),
+		)
 	}
 	return nil
 }
@@ -527,7 +534,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 					go func() {
 						defer wg.Done()
 						if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
-							slog.Error("AGT: Error selecting nodes", "selector", selector, "err", err)
+							slog.ErrorContext(ctx, "AGT: Error selecting nodes", slog.Any("selector", selector), slog.String("err", err.Error()))
 						}
 					}()
 				}
@@ -649,7 +656,15 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			return err
 		}
 
-		slog.Info("AGT: Completed tagging", tag.ToType(), tag.Name, "total", countTotal, "tagged", newTaggedNodes.Cardinality(), "untagged", oldTaggedNodes.Cardinality())
+		slog.InfoContext(
+			ctx,
+			"AGT: Completed tagging",
+			slog.String("tag_type", tag.ToType()),
+			slog.String("tag_name", tag.Name),
+			slog.Int("total", countTotal),
+			slog.Uint64("tagged", newTaggedNodes.Cardinality()),
+			slog.Uint64("untagged", oldTaggedNodes.Cardinality()),
+		)
 	}
 	return nil
 }
@@ -674,7 +689,12 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			case model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned:
 				labelsOrOwned = append(labelsOrOwned, tag)
 			default:
-				slog.WarnContext(ctx, fmt.Sprintf("AGT: Tag type %d is not supported", tag.Type), "tag", tag)
+				slog.WarnContext(
+					ctx,
+					"AGT: Tag type is not supported",
+					slog.Int("tag_type", int(tag.Type)),
+					slog.Any("tag", tag),
+				)
 			}
 		}
 
@@ -687,7 +707,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 				defer wg.Done()
 				// Nodes can contain multiple labels therefore there is no need to exclude here
 				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
-					slog.Error("AGT: Error tagging nodes", tag.ToType(), tag, "err", err)
+					slog.ErrorContext(ctx, "AGT: Error tagging nodes", slog.Any("tag", tag), slog.String("err", err.Error()))
 				}
 			}()
 		}
@@ -696,7 +716,12 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		for _, tier := range tiersOrdered {
 			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
 			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, additionalFilters...); err != nil {
-				slog.Error("AGT: Error tagging nodes", "tier", tier, "err", err)
+				slog.ErrorContext(
+					ctx,
+					"AGT: Error tagging nodes",
+					slog.Any("tier", tier),
+					slog.String("err", err.Error()),
+				)
 			}
 		}
 
@@ -758,9 +783,18 @@ func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, asse
 // ClearAssetGroupHistoryRecords Truncate the asset group history table to the rolling window
 func ClearAssetGroupHistoryRecords(ctx context.Context, db database.Database) {
 	if recordsDeletedCount, err := db.DeleteAssetGroupHistoryRecordsByCreatedDate(ctx, time.Now().UTC().AddDate(0, 0, -1*model.AssetGroupHistoryRecordRollingWindow)); err != nil {
-		slog.WarnContext(ctx, "AGT: ClearAssetGroupHistoryRecords error", slog.String("countDeleted", strconv.FormatInt(recordsDeletedCount, 10)), slog.String("err", err.Error()))
+		slog.WarnContext(
+			ctx,
+			"AGT: ClearAssetGroupHistoryRecords error",
+			slog.String("count_deleted", strconv.FormatInt(recordsDeletedCount, 10)),
+			slog.String("err", err.Error()),
+		)
 	} else {
-		slog.InfoContext(ctx, "AGT: ClearAssetGroupHistoryRecords", slog.String("countDeleted", strconv.FormatInt(recordsDeletedCount, 10)))
+		slog.InfoContext(
+			ctx,
+			"AGT: ClearAssetGroupHistoryRecords",
+			slog.String("count_deleted", strconv.FormatInt(recordsDeletedCount, 10)),
+		)
 	}
 }
 
@@ -772,23 +806,23 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 
 		for _, selector := range selectorsToMigrate {
 			if len(selector.Seeds) > 1 {
-				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", "selector", selector)
+				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", slog.Any("selector", selector))
 				continue
 			} else if len(selector.Seeds) == 1 {
 				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Seeds[0].Value)).First(); err != nil {
-						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "err", err)
+						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", slog.String("objectId", selector.Seeds[0].Value), slog.String("err", err.Error()))
 						countSkipped++
 					} else {
 						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
 						if name == "" {
-							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "err", err)
+							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", slog.String("objectId", selector.Seeds[0].Value))
 							countSkipped++
 							return nil
 						}
 						selector.Name = name
 						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
-							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", "selector", selector)
+							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", slog.Any("selector", selector))
 							countSkipped++
 						}
 						countUpdated++
@@ -800,7 +834,13 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 			}
 		}
 		if len(selectorsToMigrate) > 0 {
-			slog.InfoContext(ctx, "AGT: customSelectorMigration - Migrated custom selectors", "countFound", len(selectorsToMigrate), "countUpdated", countUpdated, "countSkipped", countSkipped)
+			slog.InfoContext(
+				ctx,
+				"AGT: customSelectorMigration - Migrated custom selectors",
+				slog.Int("count_found", len(selectorsToMigrate)),
+				slog.Int("count_updated", countUpdated),
+				slog.Int("count_skipped", countSkipped),
+			)
 		}
 	}
 
@@ -814,46 +854,46 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 	if appcfg.GetTieringEnabled(ctx, db) {
 		// Tiering enabled, we don't want system tags present
 		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
-			slog.Error(fmt.Sprintf("AGT: wiping old system tags: %v", err))
+			slog.ErrorContext(ctx, "AGT: wiping old system tags", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 
 		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
-			slog.Error(fmt.Sprintf("AGT: migrating custom selector names failed: %v", err))
+			slog.ErrorContext(ctx, "AGT: migrating custom selector names failed", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 
 		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
-			slog.Error(fmt.Sprintf("AGT: selecting failed: %v", err))
+			slog.ErrorContext(ctx, "AGT: selecting failed", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 
 		if err := tagAssetGroupNodes(ctx, db, graphDb, additionalFilters...); err != nil {
-			slog.Error(fmt.Sprintf("AGT: tagging failed: %v", err))
+			slog.ErrorContext(ctx, "AGT: tagging failed", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
 		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
-			slog.Error(fmt.Sprintf("AGT: clearing tags failed: %v", err))
+			slog.ErrorContext(ctx, "AGT: clearing tags failed", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 
 		if err := clearSystemTags(ctx, graphDb, additionalFilters...); err != nil {
-			slog.Error(fmt.Sprintf("Failed clearing system tags: %v", err))
+			slog.ErrorContext(ctx, "Failed clearing system tags", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		} else if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
-			slog.Error(fmt.Sprintf("Failed updating asset group isolation tags: %v", err))
+			slog.ErrorContext(ctx, "Failed updating asset group isolation tags", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 
 		if err := tagActiveDirectoryTierZero(ctx, db, graphDb); err != nil {
-			slog.Error(fmt.Sprintf("Failed tagging Active Directory attack path roots: %v", err))
+			slog.ErrorContext(ctx, "Failed tagging Active Directory attack path roots", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 
 		if err := parallelTagAzureTierZero(ctx, graphDb); err != nil {
-			slog.Error(fmt.Sprintf("Failed tagging Azure attack path roots: %v", err))
+			slog.ErrorContext(ctx, "Failed tagging Azure attack path roots", slog.String("err", err.Error()))
 			errors = append(errors, err)
 		}
 	}

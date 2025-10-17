@@ -78,12 +78,12 @@ func LogAndMeasure(level slog.Level, msg string, args ...any) func() {
 		then   = time.Now()
 	)
 
-	args = append(args, FieldMeasurementID, pairID)
+	args = append(args, slog.Uint64(FieldMeasurementID, pairID))
 	slog.Log(context.TODO(), level, msg, args...)
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
-			args = append(args, FieldElapsed, elapsed)
+			args = append(args, slog.Duration(FieldElapsed, elapsed))
 			slog.Log(context.TODO(), level, msg, args...)
 		}
 	}

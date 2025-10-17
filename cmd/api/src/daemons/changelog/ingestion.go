@@ -58,7 +58,7 @@ func (s *ingestionCoordinator) start(ctx context.Context, batchSize int, flushIn
 	s.buffer = make([]Change, 0, batchSize)
 
 	if flushInterval <= 0 {
-		slog.WarnContext(cctx, "invalid flush interval; defaulting to 5s", slog.Duration("requested_interval", flushInterval))
+		slog.WarnContext(cctx, "Invalid flush interval; defaulting to 5s", slog.Duration("requested_interval", flushInterval))
 		flushInterval = 5 * time.Second
 	}
 	s.flushInterval = flushInterval
@@ -81,7 +81,7 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 			// final flush on shutdown
 			flushCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			s.flushBuffer(flushCtx, true)
-			slog.InfoContext(flushCtx, "ending changelog loop")
+			slog.InfoContext(flushCtx, "Ending changelog loop")
 			cancel()
 			return
 
@@ -94,15 +94,15 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 
 			if len(s.buffer) >= s.batchSize {
 				if err := s.flushBuffer(ctx, false); err != nil {
-					slog.WarnContext(ctx, "size-based flush failed", slog.Any("err", err))
+					slog.WarnContext(ctx, "Size-based flush failed", slog.String("err", err.Error()))
 				}
 			}
 
 		case <-ticker.C:
 			if len(s.buffer) > 0 {
-				slog.InfoContext(ctx, "periodic flush")
+				slog.InfoContext(ctx, "Periodic flush")
 				if err := s.flushBuffer(ctx, true); err != nil {
-					slog.WarnContext(ctx, "periodic flush failed", slog.Any("err", err))
+					slog.WarnContext(ctx, "Periodic flush failed", slog.String("err", err.Error()))
 				}
 			}
 		}
@@ -121,7 +121,7 @@ func (s *ingestionCoordinator) flushBuffer(ctx context.Context, force bool) erro
 	err := s.db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, change := range s.buffer {
 			if change == nil {
-				slog.DebugContext(ctx, "skipping nil change")
+				slog.DebugContext(ctx, "Skipping nil change")
 				continue
 			}
 			if err := change.Apply(batch); err != nil {

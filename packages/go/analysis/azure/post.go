@@ -1007,10 +1007,20 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		tenantMap := make(map[string]string)
 		for _, tenant := range tenants {
 			if id, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, "Error getting tenant objectid", slog.Int64("tenantID", tenant.ID.Int64()), slog.String("err", err.Error()))
+				slog.ErrorContext(
+					ctx,
+					"Error getting tenant objectid",
+					slog.Int64("tenant_id", tenant.ID.Int64()),
+					slog.String("err", err.Error()),
+				)
 				continue
 			} else if tenantName, err := tenant.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.ErrorContext(ctx, "Error getting tenant name", slog.Int64("tenantID", tenant.ID.Int64()), slog.String("err", err.Error()))
+				slog.ErrorContext(
+					ctx,
+					"Error getting tenant name",
+					slog.Int64("tenant_id", tenant.ID.Int64()),
+					slog.String("err", err.Error()),
+				)
 				continue
 			} else {
 				tenantMap[id] = tenantName
@@ -1020,7 +1030,12 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			for _, managementGroup := range managementGroups {
 				if tenantId, err := managementGroup.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					slog.ErrorContext(ctx, "Error getting tenantid for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
+					slog.ErrorContext(
+						ctx,
+						"Error getting tenantid for management group",
+						slog.Int64("managementGroupID", managementGroup.ID.Int64()),
+						slog.String("err", err.Error()),
+					)
 					continue
 				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
 					slog.ErrorContext(ctx, "Error getting display name for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))

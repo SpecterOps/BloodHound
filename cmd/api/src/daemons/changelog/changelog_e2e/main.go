@@ -76,19 +76,19 @@ func newHarness() *Harness {
 
 	pool, err := pg.NewPool(connStr)
 	if err != nil {
-		slog.Error("failed to connect", "err", err)
+		slog.Error("Failed to connect", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
 	dawgsDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{ConnectionString: connStr, Pool: pool})
 	if err != nil {
-		slog.Error("failed to open", "err", err)
+		slog.Error("Failed to open", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
 	gormDB, err := database.OpenDatabase(connStr)
 	if err != nil {
-		slog.Error("failed to open", "err", err)
+		slog.Error("Failed to open", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
@@ -108,7 +108,7 @@ func newHarness() *Harness {
 		`, nil)
 
 	if err := dawgsDB.AssertSchema(ctx, schema()); err != nil {
-		slog.Error("schema validation failed", "err", err)
+		slog.Error("Schema validation failed", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
@@ -146,7 +146,7 @@ func main() {
 	waitForShutdown(harness.Cancel, harness.WaitGroup)
 
 	if err := runTest(harness.Ctx, harness.Log, harness.DB); err != nil {
-		slog.Error("test failed", "err", err)
+		slog.Error("Test failed", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
@@ -161,20 +161,20 @@ func runTest(ctx context.Context, log *changelog.Changelog, db graph.Database) e
 	diffBegins := 900_000
 
 	if err := runNodeBatch(ctx, log, db, numNodes, diffBegins, false, "node batch 1"); err != nil {
-		slog.ErrorContext(ctx, "run node batch 1", "err", err)
+		slog.ErrorContext(ctx, "Run node batch 1", slog.String("err", err.Error()))
 	}
 	if err := runNodeBatch(ctx, log, db, numNodes, diffBegins, true, "node batch 2"); err != nil {
-		slog.ErrorContext(ctx, "run node batch 2", "err", err)
+		slog.ErrorContext(ctx, "Run node batch 2", slog.String("err", err.Error()))
 	}
 
 	if err := runEdgeBatch(ctx, log, db, numNodes, diffBegins, false, "edge batch 3"); err != nil {
-		slog.ErrorContext(ctx, "run edge batch 1", "err", err)
+		slog.ErrorContext(ctx, "Run edge batch 1", slog.String("err", err.Error()))
 	}
 	if err := runEdgeBatch(ctx, log, db, numNodes, diffBegins, true, "edge batch 4"); err != nil {
-		slog.ErrorContext(ctx, "run edge batch 2", "err", err)
+		slog.ErrorContext(ctx, "Run edge batch 2", slog.String("err", err.Error()))
 	}
 
-	slog.Info("Done with test")
+	slog.InfoContext(ctx, "Done with test")
 	return nil
 }
 
@@ -206,7 +206,7 @@ func runNodeBatch(ctx context.Context, log *changelog.Changelog, db graph.Databa
 
 			change := changelog.NewNodeChange(strconv.Itoa(idx), nodeKinds, props)
 			if shouldSubmit, err := log.ResolveChange(change); err != nil {
-				slog.Error("ResolveChange failed", "err", err)
+				slog.Error("ResolveChange failed", slog.String("err", err.Error()))
 			} else if shouldSubmit {
 				if err := batch.UpdateNodeBy(graph.NodeUpdate{
 					Node:               graph.PrepareNode(props, nodeKinds...),
@@ -257,7 +257,7 @@ func runEdgeBatch(ctx context.Context, log *changelog.Changelog, db graph.Databa
 
 			change := changelog.NewEdgeChange(startObjID, endObjID, edgeKinds[0], props)
 			if shouldSubmit, err := log.ResolveChange(change); err != nil {
-				slog.Error("ResolveChange failed", "err", err)
+				slog.Error("ResolveChange failed", slog.String("err", err.Error()))
 			} else if shouldSubmit {
 				batchCount++
 				update := graph.RelationshipUpdate{

@@ -331,7 +331,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no metadata found in opengraph payload; continuing to nodes")
+			slog.Debug("No metadata found in opengraph payload; continuing to nodes")
 		} else {
 			var meta ein.GenericMetadata
 			if err := decoder.Decode(&meta); err != nil {
@@ -349,7 +349,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no nodes found in opengraph payload; continuing to edges")
+			slog.Debug("No nodes found in opengraph payload; continuing to edges")
 		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
 			return err
 		}
@@ -359,7 +359,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no edges found in opengraph payload")
+			slog.Debug("No edges found in opengraph payload")
 		} else {
 			return DecodeGenericData(batch, decoder, sourceKind, ConvertGenericEdge)
 		}

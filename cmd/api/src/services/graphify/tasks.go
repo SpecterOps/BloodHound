@@ -20,7 +20,6 @@ import (
 	"archive/zip"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -44,7 +43,7 @@ type UpdateJobFunc func(jobId int64, fileData []IngestFileData)
 // clearFileTask removes a generic ingest task for ingested data.
 func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error removing ingest task from db: %v", err))
+		slog.ErrorContext(s.ctx, "Error removing ingest task from db", slog.String("err", err.Error()))
 	}
 }
 
@@ -77,10 +76,10 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 
 		defer func() {
 			if err := archive.Close(); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Error closing archive %s: %v", path, err))
+				slog.ErrorContext(s.ctx, "Error closing archive", slog.String("path", path), slog.String("err", err.Error()))
 			}
 			if err := os.Remove(path); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting archive %s: %v", path, err))
+				slog.ErrorContext(s.ctx, "Error deleting archive", slog.String("path", path), slog.String("err", err.Error()))
 			}
 		}()
 
@@ -199,7 +198,12 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 
 	file, err := os.Open(fileData.Path)
 	if err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", fileData.Path, err))
+		slog.ErrorContext(
+			ctx,
+			"Error opening ingest file",
+			slog.String("filepath", fileData.Path),
+			slog.String("err", err.Error()),
+		)
 		return err
 	}
 
@@ -207,12 +211,17 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 		file.Close()
 		// Always remove the file after attempting to ingest it. Even if it failed
 		if err := os.Remove(fileData.Path); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", fileData.Path, err))
+			slog.ErrorContext(ctx, "Error removing ingest file", slog.String("filepath", fileData.Path), slog.String("err", err.Error()))
 		}
 	}()
 
 	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", fileData.Path, err))
+		slog.ErrorContext(
+			ctx,
+			"Error reading ingest file",
+			slog.String("filepath", fileData.Path),
+			slog.String("err", err.Error()),
+		)
 		return err
 	}
 
@@ -222,7 +231,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 func (s *GraphifyService) getAllTasks() model.IngestTasks {
 	tasks, err := s.db.GetAllIngestTasks(s.ctx)
 	if err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
+		slog.ErrorContext(s.ctx, "Failed fetching available ingest tasks", slog.String("err", err.Error()))
 		return model.IngestTasks{}
 	}
 	return tasks
@@ -237,8 +246,8 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 
 	start := time.Now()
 	slog.InfoContext(s.ctx,
-		"ingest run starting",
-		"task_count", len(tasks),
+		"Ingest run starting",
+		slog.Int("task_count", len(tasks)),
 	)
 
 	if s.ctx.Err() != nil {
@@ -253,7 +262,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
 	flagEnabled := false
 	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
-		slog.WarnContext(s.ctx, "get changelog feature flag failed", "err", err)
+		slog.WarnContext(s.ctx, "Get changelog feature flag failed", slog.String("err", err.Error()))
 	} else {
 		flagEnabled = changelogFF.Enabled
 	}
@@ -265,23 +274,23 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
 			slog.WarnContext(s.ctx,
-				"ingest file missing",
-				"task_id", task.ID,
-				"file", task.OriginalFileName,
-				"err", err,
+				"Ingest file missing",
+				slog.Int64("task_id", task.ID),
+				slog.String("file", task.OriginalFileName),
+				slog.String("err", err.Error()),
 			)
 		case err != nil:
 			slog.ErrorContext(s.ctx,
-				"ingest task failed",
-				"task_id", task.ID,
-				"file", task.OriginalFileName,
-				"err", err,
+				"Ingest task failed",
+				slog.Int64("task_id", task.ID),
+				slog.String("file", task.OriginalFileName),
+				slog.String("err", err.Error()),
 			)
 		default:
 			slog.InfoContext(s.ctx,
-				"ingest task processed",
-				"task_id", task.ID,
-				"file", task.OriginalFileName,
+				"Ingest task processed",
+				slog.Int64("task_id", task.ID),
+				slog.String("file", task.OriginalFileName),
 			)
 		}
 
@@ -290,9 +299,9 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	}
 
 	slog.InfoContext(s.ctx,
-		"ingest run finished",
-		"duration", time.Since(start),
-		"task_count", len(tasks),
+		"Ingest run finished",
+		slog.Duration("duration", time.Since(start)),
+		slog.Int("task_count", len(tasks)),
 	)
 
 	if flagEnabled {

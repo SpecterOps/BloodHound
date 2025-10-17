@@ -91,9 +91,9 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
 	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
-		slog.WarnContext(ingestCtx.Ctx, "changelog submit dropped",
-			slog.String("sourceObjectID", sourceObjectID),
-			slog.String("targetObjectID", targetObjectID),
+		slog.WarnContext(ingestCtx.Ctx, "Changelog submit dropped",
+			slog.String("source_object_id", sourceObjectID),
+			slog.String("target_object_id", targetObjectID),
 			slog.String("kind", update.Relationship.Kind.String()))
 	}
 
@@ -135,7 +135,7 @@ func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleR
 
 	for _, next := range relationships {
 		if err := ingestDNRelationship(batch, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting relationship: %v", err))
+			slog.Error("Error ingesting relationship", slog.String("err", err.Error()))
 			errs.Add(err)
 		}
 	}
@@ -179,7 +179,7 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 
 	for _, next := range sessions {
 		if err := ingestSession(batch, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting sessions: %v", err))
+			slog.Error("Error ingesting sessions", slog.String("err", err.Error()))
 			errs.Add(err)
 		}
 	}
@@ -325,7 +325,7 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 			targetID, targetOK := resolveEndpointID(rel.Target, cache)
 
 			if !srcOK || !targetOK {
-				slog.Warn("skipping unresolved relationship",
+				slog.Warn("Skipping unresolved relationship",
 					slog.String("source", rel.Source.Value),
 					slog.String("target", rel.Target.Value),
 					slog.Bool("resolved_source", srcOK),

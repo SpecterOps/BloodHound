@@ -420,8 +420,10 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 	} else if !s.DisableCypherComplexityLimit && complexityMeasure.RelativeFitness <= queryComplexityLimit {
 		// log query details if it is rejected due to poor fitness
 		slog.Error(
-			fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.RelativeFitness, queryComplexityLimit),
-			"query", strippedQueryBuffer.String(),
+			"Query rejected because it exceeded the complexity limit",
+			slog.Int64("fitness", complexityMeasure.RelativeFitness),
+			slog.Int64("complexity_limit", queryComplexityLimit),
+			slog.String("query", strippedQueryBuffer.String()),
 		)
 
 		return graphQuery, ErrCypherQueryTooComplex
@@ -485,12 +487,14 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 	if err != nil {
 		// Log query details if neo4j times out
 		if util.IsNeoTimeoutError(err) {
-			slog.Error("Neo4j timed out while executing cypher query",
-				"query", pQuery.StrippedQuery,
-				"query cost", fmt.Sprintf("%d", pQuery.complexity.RelativeFitness),
+			slog.ErrorContext(
+				ctx,
+				"Neo4j timed out while executing cypher query",
+				slog.String("query", pQuery.StrippedQuery),
+				slog.Int64("fitness", pQuery.complexity.RelativeFitness),
 			)
 		} else {
-			slog.WarnContext(ctx, fmt.Sprintf("RawCypherQuery failed: %v", err))
+			slog.WarnContext(ctx, "RawCypherQuery failed", slog.String("err", err.Error()))
 		}
 	}
 
@@ -626,7 +630,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		slog.DebugContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
+		slog.DebugContext(ctx, "Running entity count query", slog.String("entity_key", delegateKey))
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()

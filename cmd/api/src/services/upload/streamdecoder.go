@@ -217,7 +217,7 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 				if tok, err := scanner.nextToken(); err != nil {
 					return ingest.Metadata{}, ErrInvalidJSON
 				} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenSquareBracket {
-					slog.Warn("expected '[' after data key", slog.Any("got", tok))
+					slog.Warn("Expected '[' after data key", slog.Any("got", tok))
 					return ingest.Metadata{}, ingest.ErrDataTagNotFound
 				}
 				dataFound = true
@@ -239,7 +239,7 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 				if shouldValidateGraph {
 					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
-							slog.With("validation", report).Warn("opengraph ingest failed")
+							slog.Warn("Opengraph ingest failed", slog.Any("validation", report))
 						}
 						return meta, err
 					}

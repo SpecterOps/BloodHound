@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -130,11 +129,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
 
-			slog.Info(borderString)
-			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info(passwordMsg)
-			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info(borderString)
+			fmt.Print(borderString)
+			fmt.Printf("#%s#", paddingString)
+			fmt.Print(passwordMsg)
+			fmt.Printf("#%s#", paddingString)
+			fmt.Print(borderString)
 		}
 	}
 

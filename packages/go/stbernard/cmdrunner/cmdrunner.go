@@ -125,7 +125,7 @@ func logCommand(result *ExecutionResult, suppressErrors bool) func() {
 	commandStr := shortCommandString(result.Command, result.Arguments, maxShortArgs)
 	started := time.Now()
 
-	slog.Info("exec", slog.String("command", commandStr))
+	slog.Info("Exec", slog.String("command", commandStr))
 
 	return func() {
 		elapsed := time.Since(started)
@@ -136,7 +136,7 @@ func logCommand(result *ExecutionResult, suppressErrors bool) func() {
 			logLevel = slog.LevelError
 		}
 
-		slog.Log(context.TODO(), logLevel, "exec result",
+		slog.Log(context.TODO(), logLevel, "Exec result",
 			slog.String("command", result.Command),
 			slog.String("args", strings.Join(result.Arguments, " ")),
 			slog.String("path", result.Path),
