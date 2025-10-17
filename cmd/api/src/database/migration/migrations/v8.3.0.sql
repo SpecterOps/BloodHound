@@ -17,6 +17,7 @@
 
 -- Set all_environments to true for existing users
 UPDATE users SET all_environments = true;
+
 -- Rename environment to environment_id to prepare for data partitioning, if the column does not exist then we throw away the error for idempotence
 DO
 $$
@@ -25,6 +26,9 @@ $$
             RENAME COLUMN environment TO environment_id;
     EXCEPTION
         WHEN undefined_column THEN
+            NULL;
+        WHEN undefined_table THEN
+            NULL;
     END;
 $$;
 
@@ -120,3 +124,12 @@ WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
 
+
+-- Fix naming inconsistencies for ETAC
+ALTER TABLE IF EXISTS environment_access_control
+    RENAME TO environment_targeted_access_control;
+UPDATE feature_flags
+SET key         = 'environment_targeted_access_control',
+    name        = 'Environment Targeted Access Control',
+    description = 'Enable power users and admins to set environment targeted access controls on users'
+WHERE key = 'targeted_access_control';
