@@ -15,16 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card, CardHeader, CardTitle, DataTable } from '@bloodhoundenterprise/doodleui';
-import { DateTime } from 'luxon';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LuxonFormat } from '../../..';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
-import { useTagsQuery } from '../../../hooks';
 import { FilterDialog } from './FilterDialog';
 import HistoryNote from './HistoryNote';
 import { columns } from './columns';
 import { useAssetGroupTagHistoryQuery } from './hooks';
-import { AssetGroupTagHistoryFilters, DataTableProps, HistoryItem } from './types';
+import { AssetGroupTagHistoryFilters, DataTableProps } from './types';
 import { DEFAULT_FILTER_VALUE, measureElement } from './utils';
 
 const tableProps: DataTableProps['TableProps'] = {
@@ -50,27 +47,12 @@ const HistoryContent = () => {
     const [search, setSearch] = useState('');
     const [filters, setFilters] = useState<AssetGroupTagHistoryFilters>(DEFAULT_FILTER_VALUE);
 
-    const {
-        data: logHistory,
-        isFetching: isHistoryFetching,
-        fetchNextPage,
-    } = useAssetGroupTagHistoryQuery(filters, search);
-    const { data: tags = [] } = useTagsQuery();
+    const { data, isFetching: isHistoryFetching, fetchNextPage } = useAssetGroupTagHistoryQuery(filters, search);
 
-    const tagMap = useMemo(() => {
-        const map: Record<number, string> = {};
-
-        tags.forEach((tag) => {
-            map[tag.id] = tag.name;
-        });
-
-        return map;
-    }, [tags]);
-
-    const historyData = logHistory ?? emptyHistoryData;
+    const historyData = data ?? emptyHistoryData;
+    const records = historyData.pages.flatMap((item) => item.data.records);
     const totalDBRowCount = historyData.pages[0].count;
-    const historyItemsRaw = historyData.pages.flatMap((item) => item.data.records);
-    const totalFetched = historyItemsRaw.length;
+    const totalFetched = records.length;
 
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -99,12 +81,6 @@ const HistoryContent = () => {
         estimateSize: () => 50,
     };
 
-    const historyItems: HistoryItem[] = historyItemsRaw.map((item) => ({
-        ...item,
-        tagName: tagMap[item.asset_group_tag_id],
-        date: DateTime.fromISO(item.created_at).toFormat(LuxonFormat.ISO_8601),
-    }));
-
     return (
         <div data-testid='history-wrapper' className='flex gap-8 mt-6 grow'>
             <Card className='grow'>
@@ -121,7 +97,7 @@ const HistoryContent = () => {
                     ref={scrollRef}
                     className='overflow-y-auto h-[68dvh]'>
                     <DataTable
-                        data={historyItems}
+                        data={records}
                         TableHeaderProps={tableHeaderProps}
                         TableHeadProps={tableHeadProps}
                         TableProps={tableProps}

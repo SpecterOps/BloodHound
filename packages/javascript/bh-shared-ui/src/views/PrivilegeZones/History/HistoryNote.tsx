@@ -14,11 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Card, CardContent, CardFooter, CardTitle } from '@bloodhoundenterprise/doodleui';
+import { DateTime } from 'luxon';
+import { LuxonFormat } from '../../..';
 import { AppIcon } from '../../../components';
 import { useHistoryTableContext } from './HistoryTableContext';
 
 const HistoryNote = () => {
-    const { currentNote } = useHistoryTableContext();
+    const { selected } = useHistoryTableContext();
 
     return (
         <div>
@@ -29,14 +31,15 @@ const HistoryNote = () => {
                 </CardTitle>
             </Card>
 
-            {currentNote && (
+            {selected && (
                 <Card className='p-4 '>
                     <CardContent>
-                        <p className='text-xl'>{currentNote.note}</p>
+                        <p className='text-xl'>{selected.note}</p>
                     </CardContent>
                     <CardFooter>
                         <p>
-                            By {currentNote.createdBy} on {currentNote.timestamp}
+                            By {selected.email} on{' '}
+                            {DateTime.fromISO(selected.created_at).toFormat(LuxonFormat.ISO_8601)}
                         </p>
                     </CardFooter>
                 </Card>

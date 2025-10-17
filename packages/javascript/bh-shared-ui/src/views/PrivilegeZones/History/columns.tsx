@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip, createColumnHelper } from '@bloodhoundenterprise/doodleui';
+import { DateTime } from 'luxon';
+import { LuxonFormat } from '../../..';
 import { NoteCell } from './NoteCell';
 import { HistoryItem } from './types';
 
@@ -41,7 +43,7 @@ export const columns = [
             return <div className='pl-8 text-left'>Name</div>;
         },
         cell: ({ row }) => (
-            <Tooltip tooltip={row.original.target}>
+            <Tooltip tooltip={row.original.target} contentProps={{ align: 'start' }}>
                 <div className='truncate'>{row.original.target}</div>
             </Tooltip>
         ),
@@ -54,7 +56,7 @@ export const columns = [
             return <div className='pl-8 text-left'>Action</div>;
         },
         cell: ({ row }) => (
-            <Tooltip tooltip={actionTranslate[row.original.action]}>
+            <Tooltip tooltip={actionTranslate[row.original.action]} contentProps={{ align: 'start' }}>
                 <div className='truncate'>{actionTranslate[row.original.action]}</div>
             </Tooltip>
         ),
@@ -66,7 +68,7 @@ export const columns = [
             return <div className='pl-8 text-left'>Date</div>;
         },
         size: 96,
-        cell: ({ row }) => <div>{row.original.date}</div>,
+        cell: ({ row }) => <div>{DateTime.fromISO(row.original.created_at).toFormat(LuxonFormat.ISO_8601)}</div>,
     }),
     columnHelper.accessor('tagName', {
         id: 'tagName',
@@ -74,7 +76,7 @@ export const columns = [
             return <div className='pl-8 text-left'>Zone/Label</div>;
         },
         cell: ({ row }) => (
-            <Tooltip tooltip={row.original.tagName || 'Deleted'}>
+            <Tooltip tooltip={row.original.tagName || 'Deleted'} contentProps={{ align: 'start' }}>
                 {row.original.tagName ? (
                     <div className='truncate'>{row.original.tagName}</div>
                 ) : (
@@ -90,7 +92,7 @@ export const columns = [
             return <div className='pl-8 text-left'>Made By</div>;
         },
         cell: ({ row }: any) => (
-            <Tooltip tooltip={row.original.email || row.original.actor}>
+            <Tooltip tooltip={row.original.email || row.original.actor} contentProps={{ align: 'start' }}>
                 <div className='truncate'>{row.original.email || row.original.actor}</div>
             </Tooltip>
         ),

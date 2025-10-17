@@ -15,26 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import { HistoryNote, HistoryTableContext } from './HistoryTableContext';
+import { HistoryTableContext } from './HistoryTableContext';
+import { HistoryItem } from './types';
 
 const HistoryTableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [currentNote, setCurrentNote] = useState<HistoryNote>(null);
+    const [selected, setSelected] = useState<HistoryItem | null>(null);
 
-    const clearCurrentNote = () => setCurrentNote(null);
-
-    const isCurrentNote = (note: HistoryNote) => {
-        return (
-            currentNote?.note === note?.note &&
-            currentNote?.createdBy === note?.createdBy &&
-            currentNote?.timestamp === note?.timestamp
-        );
-    };
+    const clearSelected = () => setSelected(null);
 
     const contextValue = {
-        isCurrentNote,
-        currentNote,
-        setCurrentNote,
-        clearCurrentNote,
+        selected,
+        setSelected,
+        clearSelected,
     };
 
     return <HistoryTableContext.Provider value={contextValue}>{children}</HistoryTableContext.Provider>;

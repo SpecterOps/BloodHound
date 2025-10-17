@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { SystemString } from 'js-client-library';
 import { fireEvent, render, screen } from '../../../test-utils';
-import { HistoryNote, useHistoryTableContext } from './HistoryTableContext';
+import { useHistoryTableContext } from './HistoryTableContext';
 import { NoteCell } from './NoteCell';
 
 // Mock AppIcon
@@ -31,45 +31,43 @@ vi.mock('./HistoryTableContext', () => ({
 }));
 
 describe('NoteCell component', () => {
-    const mockSetCurrentNote = vi.fn();
-    const mockClearCurrentNote = vi.fn();
+    const mockSetSelected = vi.fn();
+    const mockClearSelected = vi.fn();
 
-    const defaultNoteData = {
-        email: 'user@example.com',
-        note: 'This is a note',
-        date: '2025-10-08 11:00:00',
+    const defaultItem = {
+        id: 132,
+        created_at: '2025-10-08T11:00:00.000000Z',
         actor: 'some-user',
+        email: 'spam@example.com',
+        action: 'CreateSelector',
+        target: '6546',
+        asset_group_tag_id: 5,
+        environment_id: null,
+        note: 'note',
+        tagName: 'foo',
     };
 
     it('renders a dash when actor is SystemString', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
-            currentNote: null,
-            setCurrentNote: mockSetCurrentNote,
-            isCurrentNote: vi.fn(),
-            clearCurrentNote: mockClearCurrentNote,
+            selected: null,
+            setSelected: mockSetSelected,
+            clearSelected: mockClearSelected,
         });
 
-        render(<NoteCell row={{ original: { ...defaultNoteData, actor: SystemString } }} />);
+        render(<NoteCell row={{ original: { ...defaultItem, actor: SystemString } }} />);
 
         expect(screen.getByText('-')).toBeInTheDocument();
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
     it('renders a button when actor is not SystemString and note exists', () => {
-        const currentNote: HistoryNote = {
-            note: defaultNoteData.note,
-            createdBy: defaultNoteData.email,
-            timestamp: defaultNoteData.date,
-        };
-
         (useHistoryTableContext as jest.Mock).mockReturnValue({
-            currentNote,
-            setCurrentNote: mockSetCurrentNote,
-            isCurrentNote: vi.fn(),
-            clearCurrentNote: mockClearCurrentNote,
+            selected: defaultItem,
+            setSelected: mockSetSelected,
+            clearSelected: mockClearSelected,
         });
 
-        render(<NoteCell row={{ original: defaultNoteData }} />);
+        render(<NoteCell row={{ original: defaultItem }} />);
 
         expect(screen.getByRole('button')).toBeInTheDocument();
         expect(screen.getByTestId('lined-paper-icon')).toBeInTheDocument();
@@ -78,12 +76,11 @@ describe('NoteCell component', () => {
     it('button is disabled when note is falsy', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             currentNote: null,
-            setCurrentNote: mockSetCurrentNote,
-            isCurrentNote: () => false,
-            clearCurrentNote: mockClearCurrentNote,
+            setSelected: mockSetSelected,
+            clearSelected: mockClearSelected,
         });
 
-        const rowData = { ...defaultNoteData, note: null };
+        const rowData = { ...defaultItem, note: null };
 
         render(<NoteCell row={{ original: rowData }} />);
 
@@ -91,45 +88,33 @@ describe('NoteCell component', () => {
         expect(button).toBeDisabled();
     });
 
-    it('calls setCurrentNote with correct data on click', () => {
+    it('calls setSelected with correct data on click', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
-            currentNote: null,
-            setCurrentNote: mockSetCurrentNote,
-            isCurrentNote: () => false,
-            clearCurrentNote: mockClearCurrentNote,
+            selected: null,
+            setSelected: mockSetSelected,
+            clearSelected: mockClearSelected,
         });
 
-        render(<NoteCell row={{ original: defaultNoteData }} />);
+        render(<NoteCell row={{ original: defaultItem }} />);
 
         const button = screen.getByRole('button');
         fireEvent.click(button);
 
-        expect(mockSetCurrentNote).toHaveBeenCalledWith({
-            note: defaultNoteData.note,
-            createdBy: defaultNoteData.email,
-            timestamp: defaultNoteData.date,
-        });
+        expect(mockSetSelected).toHaveBeenCalledWith(defaultItem);
     });
 
-    it('clears currentNote if same note is clicked again', () => {
-        const currentNote = {
-            note: defaultNoteData.note,
-            createdBy: defaultNoteData.email,
-            timestamp: defaultNoteData.date,
-        };
-
+    it('clears selected if same note is clicked again', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
-            currentNote,
-            setCurrentNote: mockSetCurrentNote,
-            isCurrentNote: () => true,
-            clearCurrentNote: mockClearCurrentNote,
+            selected: defaultItem,
+            setSelected: mockSetSelected,
+            clearSelected: mockClearSelected,
         });
 
-        render(<NoteCell row={{ original: defaultNoteData }} />);
+        render(<NoteCell row={{ original: defaultItem }} />);
 
         const button = screen.getByRole('button');
         fireEvent.click(button);
 
-        expect(mockClearCurrentNote).toHaveBeenCalled();
+        expect(mockClearSelected).toHaveBeenCalled();
     });
 });

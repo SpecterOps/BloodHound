@@ -14,17 +14,30 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagsHistory } from 'js-client-library';
+import { useMemo } from 'react';
 import { useInfiniteQuery } from 'react-query';
+import { useTagsQuery } from '../../..';
 import { apiClient } from '../../../utils';
-import { type AssetGroupTagHistoryFilters } from './types';
+import { HistoryItem, type AssetGroupTagHistoryFilters } from './types';
 import { PAGE_SIZE, createHistoryParams } from './utils';
 
 export const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilters, query?: string) => {
     const doSearch = query && query.length >= 3;
     const queryKey = doSearch ? query : 'static';
 
-    return useInfiniteQuery<AssetGroupTagsHistory>({
+    const { data: tags = [] } = useTagsQuery();
+
+    const tagMap = useMemo(() => {
+        const map: Record<number, string> = {};
+
+        tags.forEach((tag) => {
+            map[tag.id] = tag.name;
+        });
+
+        return map;
+    }, [tags]);
+
+    return useInfiniteQuery({
         queryKey: ['asset-group-tag-history', queryKey, filters],
         queryFn: async ({ pageParam = 1 }) => {
             const params = createHistoryParams(pageParam, filters);
@@ -33,7 +46,12 @@ export const useAssetGroupTagHistoryQuery = (filters: AssetGroupTagHistoryFilter
                 ? apiClient.searchAssetGroupTagHistory(query, { params })
                 : apiClient.getAssetGroupTagHistory({ params }));
 
-            return result.data;
+            const historyItems: HistoryItem[] = result.data.data.records.map((item) => ({
+                ...item,
+                tagName: tagMap[item.asset_group_tag_id],
+            }));
+
+            return { ...result.data, data: { records: historyItems } };
         },
         getNextPageParam: (lastPage) => {
             const nextPage = lastPage.skip / PAGE_SIZE + 2;

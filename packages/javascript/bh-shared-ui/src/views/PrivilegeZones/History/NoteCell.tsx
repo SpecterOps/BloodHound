@@ -17,21 +17,16 @@
 import { Button, Tooltip } from '@bloodhoundenterprise/doodleui';
 import { SystemString } from 'js-client-library';
 import { AppIcon } from '../../../components/AppIcon';
-import { HistoryNote, useHistoryTableContext } from './HistoryTableContext';
+import { useHistoryTableContext } from './HistoryTableContext';
 import { HistoryItem } from './types';
 
-export const NoteCell = ({ row }: { row: { original: Partial<HistoryItem> } }) => {
-    const { clearCurrentNote, setCurrentNote, isCurrentNote } = useHistoryTableContext();
-    const { email, note, date, actor } = row.original;
-    const cellNote: HistoryNote = {
-        note,
-        createdBy: email,
-        timestamp: date,
-    };
+export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
+    const { selected, setSelected, clearSelected } = useHistoryTableContext();
+    const { note, id, actor } = row.original;
 
-    const cellNoteIsActive = isCurrentNote(cellNote);
+    const noteIsActive = selected?.id === id;
 
-    const handleClick = () => (cellNoteIsActive ? clearCurrentNote() : setCurrentNote(cellNote));
+    const handleClick = () => (noteIsActive ? clearSelected() : setSelected(row.original));
 
     return (
         <div className='w-full flex justify-center'>
@@ -40,7 +35,7 @@ export const NoteCell = ({ row }: { row: { original: Partial<HistoryItem> } }) =
                     <p>-</p>
                 </Tooltip>
             ) : (
-                <Tooltip tooltip={!note ? 'No notes' : cellNoteIsActive ? 'Hide note' : 'Show note'}>
+                <Tooltip tooltip={!note ? 'No notes' : noteIsActive ? 'Hide note' : 'Show note'}>
                     <span>
                         <Button variant={'text'} className='disabled:opacity-25' onClick={handleClick} disabled={!note}>
                             <AppIcon.LinedPaper size={24} className='-mb-[3px]' />

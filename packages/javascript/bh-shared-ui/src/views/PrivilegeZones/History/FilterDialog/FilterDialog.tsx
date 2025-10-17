@@ -42,7 +42,7 @@ const FilterDialog: FC<{
     setFilters: (filters: AssetGroupTagHistoryFilters) => void;
     filters?: AssetGroupTagHistoryFilters;
 }> = ({ filters = DEFAULT_FILTER_VALUE, setFilters = () => {} }) => {
-    const { clearCurrentNote } = useHistoryTableContext();
+    const { clearSelected } = useHistoryTableContext();
     const [open, setOpen] = useState(false);
 
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
@@ -85,10 +85,10 @@ const FilterDialog: FC<{
         // Prevent setting invalid dates before applying filters, e.g., bogus date like 9999/99/99 or a range where the start date is after the end date
         if (validateDateFields(startDate, endDate)) {
             setFilters({ ...form.getValues() });
-            clearCurrentNote();
+            clearSelected();
             closeDialog();
         }
-    }, [form, setFilters, validateDateFields, clearCurrentNote]);
+    }, [form, setFilters, validateDateFields, clearSelected]);
 
     const closeDialog = () => setOpen(false);
 

@@ -17,7 +17,6 @@ import { DataTable } from '@bloodhoundenterprise/doodleui';
 
 export type HistoryItem = {
     tagName: string | undefined;
-    date: string;
     created_at: string;
     actor: string;
     email: string | null;
@@ -25,6 +24,7 @@ export type HistoryItem = {
     target: string;
     environment_id: string | null;
     note: string | null;
+    id: number;
 };
 
 export type DataTableProps = React.ComponentProps<typeof DataTable>;

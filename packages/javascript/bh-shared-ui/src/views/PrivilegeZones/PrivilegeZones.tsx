@@ -113,11 +113,11 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
                             if (value === historyPath) {
-                                return navigate(`/${privilegeZonesPath}/${historyPath}`);
+                                return navigate(`/${privilegeZonesPath}/${historyPath}`, { discardQueryParams: true });
                             } else {
                                 const path = isSummaryPage ? summaryPath : detailsPath;
                                 const id = value === zonesPath ? tagId : ownedId;
-                                navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
+                                navigate(`/${privilegeZonesPath}/${value}/${id}/${path}?environmentAggregation=all`);
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>

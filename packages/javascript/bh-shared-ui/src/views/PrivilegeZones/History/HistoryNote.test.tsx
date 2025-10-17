@@ -30,7 +30,7 @@ vi.mock('../../../components', () => ({
 describe('HistoryNotes Component', () => {
     it('renders note header correctly', () => {
         // Mock with no note
-        (useHistoryTableContext as jest.Mock).mockReturnValue({ currentNote: null });
+        (useHistoryTableContext as jest.Mock).mockReturnValue({ selected: null });
 
         render(<HistoryNote />);
 
@@ -38,8 +38,8 @@ describe('HistoryNotes Component', () => {
         expect(screen.getByTestId('lined-paper-icon')).toBeInTheDocument();
     });
 
-    it('does not render note content when currentNote is null', () => {
-        (useHistoryTableContext as jest.Mock).mockReturnValue({ currentNote: null });
+    it('does not render note content when selected is null', () => {
+        (useHistoryTableContext as jest.Mock).mockReturnValue({ selected: null });
 
         render(<HistoryNote />);
 
@@ -48,17 +48,26 @@ describe('HistoryNotes Component', () => {
     });
 
     it('renders note content when currentNote is present', () => {
-        const mockNote = {
-            note: 'Fixed the critical issue',
-            createdBy: 'Jane Doe',
-            timestamp: '2025-10-08 10:30AM',
+        const defaultItem = {
+            id: 132,
+            created_at: '2025-10-08T11:00:00.000000Z',
+            actor: 'some-user',
+            email: 'spam@example.com',
+            action: 'CreateSelector',
+            target: '6546',
+            asset_group_tag_id: 5,
+            environment_id: null,
+            note: 'note',
+            tagName: 'foo',
         };
 
-        (useHistoryTableContext as jest.Mock).mockReturnValue({ currentNote: mockNote });
+        (useHistoryTableContext as jest.Mock).mockReturnValue({
+            selected: defaultItem,
+        });
 
         render(<HistoryNote />);
 
-        expect(screen.getByText('Fixed the critical issue')).toBeInTheDocument();
-        expect(screen.getByText(/By Jane Doe on 2025-10-08 10:30AM/)).toBeInTheDocument();
+        expect(screen.getByText('note')).toBeInTheDocument();
+        expect(screen.getByText(/By spam@example.com on 2025-10-08/)).toBeInTheDocument();
     });
 });
