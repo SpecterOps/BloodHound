@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Paper, Typography } from '@mui/material';
 import { CreateUserRequest, PutUserAuthSecretRequest, UpdateUserRequest, User } from 'js-client-library';
 import find from 'lodash/find';
@@ -36,7 +35,7 @@ import { useNotifications } from '../../providers';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
 
-const Users: FC = () => {
+const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmentAccessControls = false }) => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
     const [disable2FAError, setDisable2FAError] = useState('');
@@ -121,6 +120,10 @@ const Users: FC = () => {
                 ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
+                all_environments: user.all_environments || undefined,
+                environment_access_control: {
+                    environments: user.environment_access_control.environments || null,
+                },
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);
@@ -182,49 +185,53 @@ const Users: FC = () => {
                     </Typography>
                 }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    <Button
-                        disabled={!hasPermission}
-                        onClick={() => {
-                            setSelectedUserId(null);
-                            toggleCreateUserDialog();
-                        }}
-                        data-testid='manage-users_button-create-user'>
-                        Create User
-                    </Button>
+                    {/* TODO: https://specterops.atlassian.net/browse/BED-6229 */}
+                    {/*
+                    <FeatureFlag
+                    flagKey='PUT_ETAC_FEATURE_FLAG_HERE'
+                        enabled={
+                        }
+                        disabled={
+                        }
+                    />
+                    */}
+                    <CreateUserDialog
+                        error={createUserMutation.error}
+                        isLoading={createUserMutation.isLoading}
+                        onClose={toggleCreateUserDialog}
+                        onExited={createUserMutation.reset}
+                        onSave={createUserMutation.mutateAsync}
+                        open={createUserDialogOpen}
+                        showEnvironmentAccessControls={showEnvironmentAccessControls}
+                    />
                 </Box>
                 <Paper data-testid='manage-users_table'>
                     <UsersTable
-                        onUpdateUser={toggleUpdateUserDialog}
+                        onDeleteUser={toggleDeleteUserDialog}
                         onDisabledUser={toggleDisableUserDialog}
                         onEnabledUser={toggleEnableUserDialog}
-                        onDeleteUser={toggleDeleteUserDialog}
-                        onUpdateUserPassword={toggleResetUserPasswordDialog}
                         onExpiredUserPassword={toggleExpireUserPasswordDialog}
                         onManageUserTokens={toggleManageUserTokensDialog}
+                        onUpdateUser={toggleUpdateUserDialog}
+                        onUpdateUserPassword={toggleResetUserPasswordDialog}
                         setDisable2FADialogOpen={setDisable2FADialogOpen}
                         setSelectedUserId={(id) => setSelectedUserId(id)}
                     />
                 </Paper>
             </PageWithTitle>
 
-            <CreateUserDialog
-                open={createUserDialogOpen}
-                onClose={toggleCreateUserDialog}
-                onExited={createUserMutation.reset}
-                onSave={createUserMutation.mutateAsync}
-                isLoading={createUserMutation.isLoading}
-                error={createUserMutation.error}
-            />
             <UpdateUserDialog
-                open={updateUserDialogOpen}
+                error={updateUserMutation.error}
+                hasSelectedSelf={hasSelectedSelf}
+                isLoading={updateUserMutation.isLoading}
                 onClose={toggleUpdateUserDialog}
                 onExited={updateUserMutation.reset}
-                userId={selectedUserId!}
-                hasSelectedSelf={hasSelectedSelf}
                 onSave={updateUserMutation.mutateAsync}
-                isLoading={updateUserMutation.isLoading}
-                error={updateUserMutation.error}
+                open={updateUserDialogOpen}
+                showEnvironmentAccessControls={showEnvironmentAccessControls}
+                userId={selectedUserId!}
             />
+
             <ConfirmationDialog
                 open={enableUserDialogOpen}
                 text={'Are you sure you want to enable this user?'}
