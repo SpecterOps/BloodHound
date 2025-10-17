@@ -23,6 +23,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -57,7 +58,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 			ctx,
 			"Database error",
 			slog.String("query", sql),
-			slog.String("err", err.Error()),
+			attr.Error(err),
 		)
 	} else {
 		elapsed := time.Since(begin)

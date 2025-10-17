@@ -30,6 +30,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
@@ -184,7 +185,7 @@ func (s *tagScanner) nextToken() (json.Token, error) {
 func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
 	var m ingest.Metadata
 	if err := decoder.Decode(&m); err != nil {
-		slog.Warn("Found invalid metatag, skipping", slog.String("err", err.Error()))
+		slog.Warn("Found invalid metatag, skipping", attr.Error(err))
 		return ingest.Metadata{}, nil
 	}
 	if !m.Type.IsValid() {

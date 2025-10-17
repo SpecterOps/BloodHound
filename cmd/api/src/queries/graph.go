@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -494,7 +495,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 				slog.Int64("fitness", pQuery.complexity.RelativeFitness),
 			)
 		} else {
-			slog.WarnContext(ctx, "RawCypherQuery failed", slog.String("err", err.Error()))
+			slog.WarnContext(ctx, "RawCypherQuery failed", attr.Error(err))
 		}
 	}
 

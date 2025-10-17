@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -48,7 +49,7 @@ func (s *featureFlagManager) isPrimary(ctx context.Context) (bool, context.Conte
 
 	// Try to get the HA lock to determine if we're primary
 	if lockResult, err := s.haMutex.TryLock(); err != nil {
-		slog.ErrorContext(ctx, "Failed to validate HA election status", slog.String("err", err.Error()))
+		slog.ErrorContext(ctx, "Failed to validate HA election status", attr.Error(err))
 		return false, ctx
 	} else if lockResult.IsPrimary {
 		// If we are primary, return the primary context
@@ -92,7 +93,7 @@ func (s *featureFlagManager) runPoller(ctx context.Context) {
 
 			flagEnabled, size, err := s.flagGetter(ctx)
 			if err != nil {
-				slog.WarnContext(ctx, "Feature flag check failed", slog.String("err", err.Error()))
+				slog.WarnContext(ctx, "Feature flag check failed", attr.Error(err))
 				continue
 			}
 

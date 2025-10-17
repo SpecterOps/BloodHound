@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/bloodhound/packages/go/analysis/hybrid"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
@@ -31,7 +32,7 @@ import (
 func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if err := azureAnalysis.FixManagementGroupNames(ctx, db); err != nil {
-		slog.WarnContext(ctx, "Error fixing management group names", slog.String("err", err.Error()))
+		slog.WarnContext(ctx, "Error fixing management group names", attr.Error(err))
 	}
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err

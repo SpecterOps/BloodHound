@@ -84,7 +84,6 @@
       "sloglint": {
         "kv-only": false,
         "attr-only": true,
-        "context": "scope",
         "static-msg": true,
         "msg-style": "capitalized",
         "key-naming-case": "snake",

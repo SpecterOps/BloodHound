@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/channels"
 )
@@ -94,7 +95,7 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 
 			if len(s.buffer) >= s.batchSize {
 				if err := s.flushBuffer(ctx, false); err != nil {
-					slog.WarnContext(ctx, "Size-based flush failed", slog.String("err", err.Error()))
+					slog.WarnContext(ctx, "Size-based flush failed", attr.Error(err))
 				}
 			}
 
@@ -102,7 +103,7 @@ func (s *ingestionCoordinator) runIngestionLoop(ctx context.Context) {
 			if len(s.buffer) > 0 {
 				slog.InfoContext(ctx, "Periodic flush")
 				if err := s.flushBuffer(ctx, true); err != nil {
-					slog.WarnContext(ctx, "Periodic flush failed", slog.String("err", err.Error()))
+					slog.WarnContext(ctx, "Periodic flush failed", attr.Error(err))
 				}
 			}
 		}

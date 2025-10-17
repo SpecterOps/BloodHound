@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -39,7 +40,7 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 		if err := IngestNode(ingestCtx, baseKind, next); err != nil {
 			slog.Error("Error ingesting node",
 				slog.String("objectid", next.ObjectID),
-				slog.String("err", err.Error()),
+				attr.Error(err),
 			)
 			errs.Add(err)
 		}

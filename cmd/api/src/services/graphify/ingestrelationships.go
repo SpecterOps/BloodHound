@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -135,7 +136,7 @@ func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleR
 
 	for _, next := range relationships {
 		if err := ingestDNRelationship(batch, next); err != nil {
-			slog.Error("Error ingesting relationship", slog.String("err", err.Error()))
+			slog.Error("Error ingesting relationship", attr.Error(err))
 			errs.Add(err)
 		}
 	}
@@ -179,7 +180,7 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 
 	for _, next := range sessions {
 		if err := ingestSession(batch, next); err != nil {
-			slog.Error("Error ingesting sessions", slog.String("err", err.Error()))
+			slog.Error("Error ingesting sessions", attr.Error(err))
 			errs.Add(err)
 		}
 	}
@@ -262,7 +263,7 @@ func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelation
 				nameVal, _ := node.Properties.Get(common.Name.String()).String()
 				objectID, err := node.Properties.Get(string(common.ObjectID)).String()
 				if err != nil || objectID == "" {
-					slog.Warn("matched node missing objectid",
+					slog.Warn("Matched node missing objectid",
 						slog.String("name", nameVal),
 						slog.Any("kinds", node.Kinds))
 					continue

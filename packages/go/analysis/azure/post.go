@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -222,7 +223,7 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atomi
 				return nil
 			}); err != nil {
 				if err := operation.Done(); err != nil {
-					slog.ErrorContext(ctx, "Error caught during azure AppRoleAssignments teardown", slog.String("err", err.Error()))
+					slog.ErrorContext(ctx, "Error caught during azure AppRoleAssignments teardown", attr.Error(err))
 				}
 
 				return &operation.Stats, err
@@ -642,7 +643,13 @@ func addSecret(operation analysis.StatTrackedOperation[analysis.CreatePostRelati
 		} else {
 			for _, role := range addSecretRoles {
 				for _, target := range tenantAppsAndSPs {
-					slog.DebugContext(ctx, fmt.Sprintf("Adding AZAddSecret edge from role %s to %s %d", role.ID.String(), target.Kinds.Strings(), target.ID))
+					slog.DebugContext(
+						ctx,
+						"Adding AZAddSecret edge from role to target",
+						slog.String("role_id", role.ID.String()),
+						slog.String("target_kinds", strings.Join(target.Kinds.Strings(), ",")),
+						slog.Any("target_id", target.ID),
+					)
 					nextJob := analysis.CreatePostRelationshipJob{
 						FromID: role.ID,
 						ToID:   target.ID,
@@ -705,7 +712,7 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*analysis.AtomicPos
 			return nil
 		}); err != nil {
 			if err := operation.Done(); err != nil {
-				slog.ErrorContext(ctx, "Error caught during azure ExecuteCommand teardown", slog.String("err", err.Error()))
+				slog.ErrorContext(ctx, "Error caught during azure ExecuteCommand teardown", attr.Error(err))
 			}
 
 			return &operation.Stats, err
@@ -791,7 +798,7 @@ func globalAdmins(roleAssignments RoleAssignments, tenant *graph.Node, operation
 
 		return nil
 	}); err != nil {
-		slog.Error("Failed to submit azure global admins post processing job", slog.String("err", err.Error()))
+		slog.Error("Failed to submit azure global admins post processing job", attr.Error(err))
 	}
 }
 
@@ -809,7 +816,7 @@ func privilegedRoleAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 		return nil
 	}); err != nil {
-		slog.Error("Failed to submit privileged role admins post processing job", slog.String("err", err.Error()))
+		slog.Error("Failed to submit privileged role admins post processing job", attr.Error(err))
 	}
 }
 
@@ -827,7 +834,7 @@ func privilegedAuthAdmins(roleAssignments RoleAssignments, tenant *graph.Node, o
 
 		return nil
 	}); err != nil {
-		slog.Error("Failed to submit azure privileged auth admins post processing job", slog.String("err", err.Error()))
+		slog.Error("Failed to submit azure privileged auth admins post processing job", attr.Error(err))
 	}
 }
 
@@ -851,7 +858,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			slog.Error("Failed to submit post processing job for users with role allowing AZAddMembers edge", slog.String("err", err.Error()))
+			slog.Error("Failed to submit post processing job for users with role allowing AZAddMembers edge", attr.Error(err))
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -867,13 +874,18 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			slog.Error("Failed to submit post processing job for service principals with role allowing AZAddMembers edge", slog.String("err", err.Error()))
+			slog.Error("Failed to submit post processing job for service principals with role allowing AZAddMembers edge", attr.Error(err))
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
-					slog.WarnContext(ctx, "Node is missing property", slog.Uint64("nodeID", innerGroup.ID.Uint64()), slog.String("property", azure.IsAssignableToRole.String()))
+					slog.WarnContext(
+						ctx,
+						"Node is missing property",
+						slog.Uint64("node_id", innerGroup.ID.Uint64()),
+						slog.String("property", azure.IsAssignableToRole.String()),
+					)
 				} else {
 					return err
 				}
@@ -891,13 +903,18 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			slog.Error("Failed to submit post processing job for users with role allowing AZAddMembers edge", slog.String("err", err.Error()))
+			slog.Error("Failed to submit post processing job for users with role allowing AZAddMembers edge", attr.Error(err))
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 			if isRoleAssignable, err := innerGroup.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
-					slog.WarnContext(ctx, "Node is missing property", slog.Uint64("nodeID", innerGroup.ID.Uint64()), slog.String("property", azure.IsAssignableToRole.String()))
+					slog.WarnContext(
+						ctx,
+						"Node is missing property",
+						slog.Uint64("node_id", innerGroup.ID.Uint64()),
+						slog.String("property", azure.IsAssignableToRole.String()),
+					)
 				} else {
 					return err
 				}
@@ -915,7 +932,7 @@ func addMembers(roleAssignments RoleAssignments, operation analysis.StatTrackedO
 
 			return nil
 		}); err != nil {
-			slog.Error("Failed to submit post processing job for service principals with role allowing AZAddMembers edge", slog.String("err", err.Error()))
+			slog.Error("Failed to submit post processing job for service principals with role allowing AZAddMembers edge", attr.Error(err))
 		}
 	}
 }
@@ -929,14 +946,14 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 		for _, tenant := range tenantNodes {
 			if roleAssignments, err := TenantRoleAssignments(ctx, db, tenant); err != nil {
 				if err := operation.Done(); err != nil {
-					slog.ErrorContext(ctx, "Error caught during azure UserRoleAssignments.TenantRoleAssignments teardown", slog.String("err", err.Error()))
+					slog.ErrorContext(ctx, "Error caught during azure UserRoleAssignments.TenantRoleAssignments teardown", attr.Error(err))
 				}
 
 				return &analysis.AtomicPostProcessingStats{}, err
 			} else {
 				if err := resetPassword(operation, tenant, roleAssignments); err != nil {
 					if err := operation.Done(); err != nil {
-						slog.ErrorContext(ctx, "Error caught during azure UserRoleAssignments.resetPassword teardown", slog.String("err", err.Error()))
+						slog.ErrorContext(ctx, "Error caught during azure UserRoleAssignments.resetPassword teardown", attr.Error(err))
 					}
 
 					return &analysis.AtomicPostProcessingStats{}, err
@@ -1011,7 +1028,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					ctx,
 					"Error getting tenant objectid",
 					slog.Int64("tenant_id", tenant.ID.Int64()),
-					slog.String("err", err.Error()),
+					attr.Error(err),
 				)
 				continue
 			} else if tenantName, err := tenant.Properties.Get(common.Name.String()).String(); err != nil {
@@ -1019,7 +1036,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					ctx,
 					"Error getting tenant name",
 					slog.Int64("tenant_id", tenant.ID.Int64()),
-					slog.String("err", err.Error()),
+					attr.Error(err),
 				)
 				continue
 			} else {
@@ -1033,15 +1050,20 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					slog.ErrorContext(
 						ctx,
 						"Error getting tenantid for management group",
-						slog.Int64("managementGroupID", managementGroup.ID.Int64()),
-						slog.String("err", err.Error()),
+						slog.Int64("management_group_id", managementGroup.ID.Int64()),
+						attr.Error(err),
 					)
 					continue
 				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
-					slog.ErrorContext(ctx, "Error getting display name for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
+					slog.ErrorContext(
+						ctx,
+						"Error getting display name for management group",
+						slog.Int64("management_group_id", managementGroup.ID.Int64()),
+						attr.Error(err),
+					)
 					continue
 				} else if tenantName, ok := tenantMap[tenantId]; !ok {
-					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()))
+					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("management_group_id", managementGroup.ID.Int64()))
 					continue
 				} else {
 					managementGroup.Properties.Set(common.Name.String(), strings.ToUpper(fmt.Sprintf("%s@%s", displayName, tenantName)))

@@ -28,6 +28,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
@@ -43,7 +44,7 @@ type UpdateJobFunc func(jobId int64, fileData []IngestFileData)
 // clearFileTask removes a generic ingest task for ingested data.
 func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
-		slog.ErrorContext(s.ctx, "Error removing ingest task from db", slog.String("err", err.Error()))
+		slog.ErrorContext(s.ctx, "Error removing ingest task from db", attr.Error(err))
 	}
 }
 
@@ -76,10 +77,20 @@ func (s *GraphifyService) extractIngestFiles(path string, providedFileName strin
 
 		defer func() {
 			if err := archive.Close(); err != nil {
-				slog.ErrorContext(s.ctx, "Error closing archive", slog.String("path", path), slog.String("err", err.Error()))
+				slog.ErrorContext(
+					s.ctx,
+					"Error closing archive",
+					slog.String("path", path),
+					attr.Error(err),
+				)
 			}
 			if err := os.Remove(path); err != nil {
-				slog.ErrorContext(s.ctx, "Error deleting archive", slog.String("path", path), slog.String("err", err.Error()))
+				slog.ErrorContext(
+					s.ctx,
+					"Error deleting archive",
+					slog.String("path", path),
+					attr.Error(err),
+				)
 			}
 		}()
 
@@ -202,7 +213,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 			ctx,
 			"Error opening ingest file",
 			slog.String("filepath", fileData.Path),
-			slog.String("err", err.Error()),
+			attr.Error(err),
 		)
 		return err
 	}
@@ -211,7 +222,12 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 		file.Close()
 		// Always remove the file after attempting to ingest it. Even if it failed
 		if err := os.Remove(fileData.Path); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			slog.ErrorContext(ctx, "Error removing ingest file", slog.String("filepath", fileData.Path), slog.String("err", err.Error()))
+			slog.ErrorContext(
+				ctx,
+				"Error removing ingest file",
+				slog.String("filepath", fileData.Path),
+				attr.Error(err),
+			)
 		}
 	}()
 
@@ -220,7 +236,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 			ctx,
 			"Error reading ingest file",
 			slog.String("filepath", fileData.Path),
-			slog.String("err", err.Error()),
+			attr.Error(err),
 		)
 		return err
 	}
@@ -231,7 +247,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 func (s *GraphifyService) getAllTasks() model.IngestTasks {
 	tasks, err := s.db.GetAllIngestTasks(s.ctx)
 	if err != nil {
-		slog.ErrorContext(s.ctx, "Failed fetching available ingest tasks", slog.String("err", err.Error()))
+		slog.ErrorContext(s.ctx, "Failed fetching available ingest tasks", attr.Error(err))
 		return model.IngestTasks{}
 	}
 	return tasks
@@ -262,7 +278,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
 	flagEnabled := false
 	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
-		slog.WarnContext(s.ctx, "Get changelog feature flag failed", slog.String("err", err.Error()))
+		slog.WarnContext(s.ctx, "Get changelog feature flag failed", attr.Error(err))
 	} else {
 		flagEnabled = changelogFF.Enabled
 	}
@@ -277,14 +293,14 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 				"Ingest file missing",
 				slog.Int64("task_id", task.ID),
 				slog.String("file", task.OriginalFileName),
-				slog.String("err", err.Error()),
+				attr.Error(err),
 			)
 		case err != nil:
 			slog.ErrorContext(s.ctx,
 				"Ingest task failed",
 				slog.Int64("task_id", task.ID),
 				slog.String("file", task.OriginalFileName),
-				slog.String("err", err.Error()),
+				attr.Error(err),
 			)
 		default:
 			slog.InfoContext(s.ctx,
