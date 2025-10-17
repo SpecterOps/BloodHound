@@ -14,5 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './FilterDialog';
-export { default as FilterDialog } from './FilterDialog';
+import HistoryContent from './HistoryContent';
+import HistoryTableProvider from './HistoryTableProvider';
+
+const History = () => {
+    return (
+        <HistoryTableProvider>
+            <HistoryContent />
+        </HistoryTableProvider>
+    );
+};
+
+export default History;

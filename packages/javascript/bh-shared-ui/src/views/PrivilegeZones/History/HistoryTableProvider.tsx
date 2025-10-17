@@ -14,5 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './FilterDialog';
-export { default as FilterDialog } from './FilterDialog';
+import { useState } from 'react';
+import { HistoryTableContext } from './HistoryTableContext';
+import { HistoryItem } from './types';
+
+const HistoryTableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [selected, setSelected] = useState<HistoryItem | null>(null);
+
+    const clearSelected = () => setSelected(null);
+
+    const contextValue = {
+        selected,
+        setSelected,
+        clearSelected,
+    };
+
+    return <HistoryTableContext.Provider value={contextValue}>{children}</HistoryTableContext.Provider>;
+};
+
+export default HistoryTableProvider;

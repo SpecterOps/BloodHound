@@ -13,6 +13,23 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { createContext, useContext } from 'react';
+import { HistoryItem } from './types';
 
-export * from './FilterDialog';
-export { default as FilterDialog } from './FilterDialog';
+export interface HistoryTableContext {
+    selected: HistoryItem | null;
+    clearSelected: () => void;
+    setSelected: (item: HistoryItem | null) => void;
+}
+
+export const HistoryTableContext = createContext<HistoryTableContext | null>(null);
+
+export const useHistoryTableContext = () => {
+    const context = useContext(HistoryTableContext);
+
+    if (!context) {
+        throw new Error('useHistoryTableContext is outside of HistoryTableContext');
+    }
+
+    return context;
+};

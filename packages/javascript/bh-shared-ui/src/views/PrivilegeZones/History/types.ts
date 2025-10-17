@@ -13,6 +13,19 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagHistoryRecord } from 'js-client-library';
 
-export * from './FilterDialog';
-export { default as FilterDialog } from './FilterDialog';
+export interface HistoryItem extends AssetGroupTagHistoryRecord {
+    tagName: string | undefined;
+}
+
+export type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+export interface AssetGroupTagHistoryFilters {
+    action: string;
+    tagId: string;
+    madeBy: string;
+    ['start-date']: string;
+    ['end-date']: string;
+}
