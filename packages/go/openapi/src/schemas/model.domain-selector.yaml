@@ -28,3 +28,20 @@ properties:
   collected:
     type: boolean
     readOnly: true
+  impactValue: 
+    type: integer
+    readOnly: true
+    description: "Enterprise Only"
+  exposures: 
+    type: array
+    readOnly: true
+    description: "Enterprise Only"
+    items: 
+      type: object
+      properties: 
+        exposure_percent: 
+          type: integer
+          readOnly: true
+        asset_group_tag:
+          $ref: './model.asset-group-tag.yaml'
+  
