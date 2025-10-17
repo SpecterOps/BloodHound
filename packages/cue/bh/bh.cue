@@ -42,6 +42,7 @@ import (
 	ExecutionPrivilegeKinds: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
 	InboundOutboundRelationshipKinds: [...types.#Kind]
+	PostProcessedRelationships: [...types.#Kind]
 }
 
 #ActiveDirectory: {
@@ -75,16 +76,17 @@ Azure: #Azure & {
 	ExecutionPrivilegeKinds:          azure.ExecutionPrivilegeKinds
 	PathfindingRelationships:         azure.PathfindingRelationships
 	InboundOutboundRelationshipKinds: azure.InboundOutboundRelationshipKinds
+	PostProcessedRelationships:       azure.PostProcessedRelationships
 }
 
 ActiveDirectory: #ActiveDirectory & {
-	Properties:               		ad.Properties
-	NodeKinds:                		ad.NodeKinds
-	RelationshipKinds:        		ad.RelationshipKinds
-	ACLRelationships:         		ad.ACLRelationships
-	PathfindingRelationships: 		ad.PathfindingRelationships
-	InboundRelationshipKinds:		ad.InboundRelationshipKinds
-	OutboundRelationshipKinds:		ad.OutboundRelationshipKinds
-	EdgeCompositionRelationships: 	ad.EdgeCompositionRelationships
-	PostProcessedRelationships: ad.PostProcessedRelationships
+	Properties:                   ad.Properties
+	NodeKinds:                    ad.NodeKinds
+	RelationshipKinds:            ad.RelationshipKinds
+	ACLRelationships:             ad.ACLRelationships
+	PathfindingRelationships:     ad.PathfindingRelationships
+	InboundRelationshipKinds:     ad.InboundRelationshipKinds
+	OutboundRelationshipKinds:    ad.OutboundRelationshipKinds
+	EdgeCompositionRelationships: ad.EdgeCompositionRelationships
+	PostProcessedRelationships:   ad.PostProcessedRelationships
 }
