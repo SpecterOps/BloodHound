@@ -14,18 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { DataTable } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagHistoryRecord } from 'js-client-library';
 
-export type HistoryItem = {
+export interface HistoryItem extends AssetGroupTagHistoryRecord {
     tagName: string | undefined;
-    created_at: string;
-    actor: string;
-    email: string | null;
-    action: string;
-    target: string;
-    environment_id: string | null;
-    note: string | null;
-    id: number;
-};
+}
 
 export type DataTableProps = React.ComponentProps<typeof DataTable>;
 
