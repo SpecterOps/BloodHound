@@ -15,13 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package model
 
-// EnvironmentAccess defines the model for a row in the environment_access_control table
-type EnvironmentAccess struct {
+// EnvironmentTargetedAccessControl defines the model for a row in the environment_targeted_access_control table
+type EnvironmentTargetedAccessControl struct {
 	UserID        string `json:"user_id"`
 	EnvironmentID string `json:"environment_id"`
 	BigSerial
 }
 
-func (EnvironmentAccess) TableName() string {
-	return "environment_access_control"
+func (EnvironmentTargetedAccessControl) TableName() string {
+	return "environment_targeted_access_control"
 }
