@@ -213,38 +213,26 @@ describe('ManagedDatePicker - value', () => {
         expect(onDateChangeMock).toHaveBeenCalledWith(new Date('2025-01-01T00:00:00.000Z'));
     });
 
-    it('does not updates value after blur when bad date typed', async () => {
+    it('sets value to undefined after blur when bad date typed', async () => {
         const { clickAway, onDateChangeMock, typeInput } = renderDatePicker();
 
         await typeInput('2025');
         await clickAway();
 
-        expect(onDateChangeMock).not.toHaveBeenCalled();
+        expect(onDateChangeMock).toHaveBeenCalledWith(undefined);
     });
 });
 
 describe('ManagedDatePicker - input', () => {
-    it('updates calendar when a valid date typed', async () => {
-        const { openCalendar, typeInput } = renderDatePicker();
+    it('sets calendar date to match value', async () => {
+        const { openCalendar } = renderDatePicker({ value: JAN_1 });
 
-        await typeInput('2025-01-01');
         await openCalendar();
 
-        const calendarDay = screen.getByRole('gridcell', { selected: true });
+        const calendarDay = await screen.findByRole('gridcell', { selected: true });
 
         expect(calendarDay).toBeInTheDocument();
         expect(calendarDay).toHaveTextContent('1');
-    });
-
-    it('does not updates calendar when bad date typed', async () => {
-        const { openCalendar, typeInput } = renderDatePicker();
-
-        await typeInput('2025');
-        await openCalendar();
-
-        const calendarDay = screen.queryByRole('gridcell', { selected: true });
-
-        expect(calendarDay).not.toBeInTheDocument();
     });
 
     it('clears value if input is empty', async () => {
@@ -259,6 +247,6 @@ describe('ManagedDatePicker - input', () => {
 
         await clickAway();
 
-        expect(onDateChangeMock).toHaveBeenCalledWith();
+        expect(onDateChangeMock).toHaveBeenCalledWith(undefined);
     });
 });

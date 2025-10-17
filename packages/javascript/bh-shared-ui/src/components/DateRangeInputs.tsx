@@ -49,7 +49,7 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
                 onDateChange={(date) => onChange({ start_time: date ? date.toISOString() : undefined })}
                 onValidation={setIsStartValid}
                 value={startDate}
-                validations={[VALIDATIONS.isBeforeDate(endDate, 'Start time must come before end.')]}
+                validations={[VALIDATIONS.isBeforeDate(endDate, 'Start date must be on or before end date.')]}
             />
 
             <ManagedDatePicker
@@ -60,7 +60,7 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
                 }
                 onValidation={setIsEndValid}
                 value={endDate}
-                validations={[VALIDATIONS.isAfterDate(startDate, 'End time must be after start.')]}
+                validations={[VALIDATIONS.isAfterDate(startDate, 'End date must be on or after start date.')]}
             />
         </div>
     );
