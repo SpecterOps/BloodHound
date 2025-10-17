@@ -70,7 +70,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 				"Slow database query",
 				slog.Int64("duration_ms", elapsed.Milliseconds()),
 				slog.Int64("num_rows", rows),
-				slog.String("sql", sql),
+				slog.String("query", sql),
 			)
 		} else if elapsed >= s.SlowQueryWarnThreshold {
 			sql, rows := fc()
@@ -80,7 +80,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 				"Slow database query",
 				slog.Int64("duration_ms", elapsed.Milliseconds()),
 				slog.Int64("num_rows", rows),
-				slog.String("sql", sql),
+				slog.String("query", sql),
 			)
 		}
 	}

@@ -33,58 +33,58 @@ var (
 	measureThreshold      = time.Second
 )
 
-func ContextMeasure(ctx context.Context, level slog.Level, msg string, args ...any) func() {
+func ContextMeasure(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func() {
 	then := time.Now()
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
-			args = append(args, FieldElapsed, elapsed)
-			slog.Log(ctx, level, msg, args...)
+			args = append(args, slog.Duration(FieldElapsed, elapsed))
+			slog.LogAttrs(ctx, level, msg, args...)
 		}
 	}
 }
 
-func Measure(level slog.Level, msg string, args ...any) func() {
+func Measure(level slog.Level, msg string, args ...slog.Attr) func() {
 	then := time.Now()
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
-			args = append(args, FieldElapsed, elapsed)
-			slog.Log(context.TODO(), level, msg, args...)
+			args = append(args, slog.Duration(FieldElapsed, elapsed))
+			slog.LogAttrs(context.TODO(), level, msg, args...)
 		}
 	}
 }
 
-func ContextLogAndMeasure(ctx context.Context, level slog.Level, msg string, args ...any) func() {
-	var (
-		pairID = logMeasurePairCounter.Add(1)
-		then   = time.Now()
-	)
-
-	args = append(args, FieldMeasurementID, pairID)
-	slog.Log(ctx, level, msg, args...)
-
-	return func() {
-		if elapsed := time.Since(then); elapsed >= measureThreshold {
-			args = append(args, FieldElapsed, elapsed)
-			slog.Log(ctx, level, msg, args...)
-		}
-	}
-}
-
-func LogAndMeasure(level slog.Level, msg string, args ...any) func() {
+func ContextLogAndMeasure(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func() {
 	var (
 		pairID = logMeasurePairCounter.Add(1)
 		then   = time.Now()
 	)
 
 	args = append(args, slog.Uint64(FieldMeasurementID, pairID))
-	slog.Log(context.TODO(), level, msg, args...)
+	slog.LogAttrs(ctx, level, msg, args...)
 
 	return func() {
 		if elapsed := time.Since(then); elapsed >= measureThreshold {
 			args = append(args, slog.Duration(FieldElapsed, elapsed))
-			slog.Log(context.TODO(), level, msg, args...)
+			slog.LogAttrs(ctx, level, msg, args...)
+		}
+	}
+}
+
+func LogAndMeasure(level slog.Level, msg string, args ...slog.Attr) func() {
+	var (
+		pairID = logMeasurePairCounter.Add(1)
+		then   = time.Now()
+	)
+
+	args = append(args, slog.Uint64(FieldMeasurementID, pairID))
+	slog.LogAttrs(context.TODO(), level, msg, args...)
+
+	return func() {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			args = append(args, slog.Duration(FieldElapsed, elapsed))
+			slog.LogAttrs(context.TODO(), level, msg, args...)
 		}
 	}
 }

@@ -68,7 +68,7 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansio
 
 						} else if domainSid, err := targetNode.Properties.GetOrDefault(ad.DomainSID.String(), "").String(); err != nil {
 							// Get the domain SID of the target node
-							slog.Error("Failed fetching domain SID for postownsandwriteowner", slog.String("err", err.Error()))
+							slog.ErrorContext(ctx, "Failed fetching domain SID for postownsandwriteowner", slog.String("err", err.Error()))
 							continue
 
 						} else {

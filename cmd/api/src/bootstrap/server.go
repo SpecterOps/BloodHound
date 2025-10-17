@@ -129,11 +129,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
 
-			fmt.Print(borderString)
-			fmt.Printf("#%s#", paddingString)
-			fmt.Print(passwordMsg)
-			fmt.Printf("#%s#", paddingString)
-			fmt.Print(borderString)
+			fmt.Println(borderString)
+			fmt.Printf("#%s#\n", paddingString)
+			fmt.Println(passwordMsg)
+			fmt.Printf("#%s#\n", paddingString)
+			fmt.Println(borderString)
 		}
 	}
 
