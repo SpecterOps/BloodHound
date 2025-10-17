@@ -309,7 +309,7 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 // RoleMembersWithGrants returns the NodeSet of members for a given set of roles, including those members who may be able to grant themselves one of the given roles
 // NOTE: The current implementation also includes the role nodes in the returned set. It may be worth considering removing those nodes from the set if doing so doesn't break tier zero/high value assignment
 func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "RoleMembersWithGrants", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasure(slog.LevelInfo, "RoleMembersWithGrants", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err

@@ -31,10 +31,13 @@ import (
 )
 
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
-	slog.Info("DeleteCollectedGraphData",
-		slog.Bool("delete all data", deleteRequest.DeleteAllGraph),
-		slog.Bool("delete sourceless data", deleteRequest.DeleteSourcelessGraph),
-		slog.String("delete source kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")))
+	slog.InfoContext(
+		ctx,
+		"DeleteCollectedGraphData",
+		slog.Bool("delete_all_data", deleteRequest.DeleteAllGraph),
+		slog.Bool("delete_sourceless_data", deleteRequest.DeleteSourcelessGraph),
+		slog.String("delete_source_kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")),
+	)
 
 	operation := ops.StartNewOperation[graph.ID](ops.OperationContext{
 		Parent:     ctx,
