@@ -1536,7 +1536,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal:                        "good user",
 					AllEnvironments:                  null.BoolFrom(true),
-					EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{},
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
 				},
 				SetUserSecretRequest: v2.SetUserSecretRequest{
 					Secret:             "abcDEF123456$$",
@@ -1564,7 +1564,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 						Environments: []v2.UpdateEnvironmentRequest{
 							{
 								EnvironmentID: "12345",
@@ -1633,7 +1633,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 						Environments: []v2.UpdateEnvironmentRequest{
 							{
 								EnvironmentID: "12345",
@@ -1674,7 +1674,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 						Environments: []v2.UpdateEnvironmentRequest{
 							{
 								EnvironmentID: "12345",
@@ -1710,7 +1710,7 @@ func TestCreateUser_ETAC(t *testing.T) {
 			createReq: v2.CreateUserRequest{
 				UpdateUserRequest: v2.UpdateUserRequest{
 					Principal: "good user",
-					EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 						Environments: []v2.UpdateEnvironmentRequest{
 							{
 								EnvironmentID: "12345",
@@ -2967,7 +2967,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled:                       &isDisabled,
 				AllEnvironments:                  null.BoolFrom(true),
-				EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{},
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
 			},
 			expectedStatus: http.StatusOK,
 			assertBody:     func(t *testing.T, _ string) {},
@@ -2986,7 +2986,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled:      &isDisabled,
 				AllEnvironments: null.BoolFrom(false),
-				EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
 							EnvironmentID: "12345",
@@ -3018,7 +3018,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			},
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled: &isDisabled,
-				EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
 							EnvironmentID: "12345",
@@ -3045,7 +3045,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled:      &isDisabled,
 				AllEnvironments: null.BoolFrom(true),
-				EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
 							EnvironmentID: "12345",
@@ -3075,7 +3075,7 @@ func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
 			updateRequest: v2.UpdateUserRequest{
 				IsDisabled:      &isDisabled,
 				AllEnvironments: null.BoolFrom(false),
-				EnvironmentTargetedAccessControl: &v2.UpdateUserEnvironmentAccessControlRequest{
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
 					Environments: []v2.UpdateEnvironmentRequest{
 						{
 							EnvironmentID: "12345",

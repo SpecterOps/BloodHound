@@ -27,7 +27,7 @@ type UpdateEnvironmentRequest struct {
 	EnvironmentID string `json:"environment_id"`
 }
 
-type UpdateUserEnvironmentAccessControlRequest struct {
+type UpdateUserETACRequest struct {
 	Environments []UpdateEnvironmentRequest `json:"environments"`
 }
 
