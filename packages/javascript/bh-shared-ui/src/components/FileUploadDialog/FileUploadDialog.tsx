@@ -66,6 +66,7 @@ const FileUploadDialog: React.FC<{
             scroll='paper'
             onClose={onClose}
             ref={dialogRef}
+            className='z-[1600]'
             TransitionProps={{
                 onExited: () => {
                     setFileUploadStep(FileUploadStep.ADD_FILES);
