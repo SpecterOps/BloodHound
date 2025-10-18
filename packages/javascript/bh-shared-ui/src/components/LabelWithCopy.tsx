@@ -18,7 +18,7 @@ import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 import { FC, ReactNode, useState } from 'react';
-import { copyToClipboard } from '../utils';
+import { cn, copyToClipboard } from '../utils';
 
 const LabelWithCopy: FC<{
     label: ReactNode;
@@ -49,8 +49,7 @@ const LabelWithCopy: FC<{
             alignItems='center'
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            sx={{ height: theme.spacing(3) }}
-            className={className}>
+            className={cn('h-6', className)}>
             {label}
             <Tooltip title='Copied' open={copied} placement='right'>
                 <IconButton
