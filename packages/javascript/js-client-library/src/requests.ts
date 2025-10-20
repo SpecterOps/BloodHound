@@ -255,7 +255,7 @@ export interface UpdateUserRequest {
     SSOProviderId?: number;
     is_disabled?: boolean;
     all_environments?: boolean;
-    environment_access_control: {
+    environment_targeted_access_control: {
         environments: EnvironmentRequest[] | null;
     };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
