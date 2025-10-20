@@ -111,7 +111,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('CreateUserDialog', async (open = true) => {
+describe('CreateUserDialog', async () => {
     type SetupOptions = {
         renderErrors?: boolean;
         renderLoading?: boolean;
@@ -136,7 +136,7 @@ describe('CreateUserDialog', async (open = true) => {
 
         render(
             <CreateUserDialog
-                open={true}
+                //open={true}
                 showEnvironmentAccessControls={true}
                 onClose={testOnClose}
                 onSave={testOnSave}

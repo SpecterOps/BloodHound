@@ -196,6 +196,7 @@ const CreateUserForm: React.FC<{
         allEnvironmentsSelected,
         form.formState.errors,
         formatReturnedEnvironments,
+        selectedEnvironments.length,
     ]);
 
     return (
@@ -644,6 +645,7 @@ const CreateUserForm: React.FC<{
                                                 filteredEnvironments?.map((item) => {
                                                     return (
                                                         <div
+                                                            key={item.id}
                                                             className='flex justify-start items-center ml-5'
                                                             data-testid='create-user-dialog_environments-checkbox'>
                                                             <FormField

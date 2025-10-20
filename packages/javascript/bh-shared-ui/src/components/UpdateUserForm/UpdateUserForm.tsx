@@ -314,7 +314,18 @@ const UpdateUserFormInner: React.FC<{
                 });
             }
         }
-    }, [authenticationMethod, form, form.setValue, error, form.setError, checkedEnvironments]);
+    }, [
+        authenticationMethod,
+        form,
+        form.setValue,
+        error,
+        form.setError,
+        checkedEnvironments,
+        allEnvironmentsIndeterminate,
+        allEnvironmentsSelected,
+        formatSelectedEnvironments,
+        selectedEnvironments,
+    ]);
 
     return (
         <Form {...form}>
@@ -729,6 +740,7 @@ const UpdateUserFormInner: React.FC<{
                                             filteredEnvironments?.map((item) => {
                                                 return (
                                                     <div
+                                                        key={item.id}
                                                         className='flex justify-start items-center ml-5'
                                                         data-testid='update-user-dialog_environments-checkbox'>
                                                         <FormField
