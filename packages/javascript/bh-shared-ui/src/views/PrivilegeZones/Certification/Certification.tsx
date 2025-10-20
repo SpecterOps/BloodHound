@@ -1,7 +1,6 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTagCertificationParams,
-    AssetGroupTagCertificationRecord,
     CertificationManual,
     CertificationRevoked,
     CertificationType,
@@ -10,6 +9,7 @@ import {
 import { useCallback, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { useParams } from 'react-router-dom';
+import { SelectedNode } from '../../..';
 import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useNotifications } from '../../../providers';
 import { EntityKinds, apiClient } from '../../../utils';
@@ -20,7 +20,7 @@ import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
 const Certification = () => {
     const { tierId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-    const [search, setSearch] = useState('');
+    const [search] = useState('');
     const [filters, setFilters] = useState<AssetGroupTagCertificationParams>({});
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -36,12 +36,7 @@ const Certification = () => {
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
         const doSearch = query && query.length >= 3;
         const queryKey = doSearch ? query : filters;
-        return useInfiniteQuery<{
-            count: number;
-            data: { records: AssetGroupTagCertificationRecord[] };
-            limit: number;
-            skip: number;
-        }>({
+        return useInfiniteQuery({
             queryKey: ['certifications', queryKey],
             queryFn: async ({ pageParam = 1 }) => {
                 const skip = (pageParam - 1) * PAGE_SIZE;
@@ -126,11 +121,11 @@ const Certification = () => {
         };
     };
 
-    const selectedNode = {
-        id: memberQuery.data?.object_id,
-        name: memberQuery.data?.name,
-        type: memberQuery.data?.primary_kind as EntityKinds,
-    };
+    const { id: memberId, name: memberName, primary_kind: memberType } = memberQuery.data ?? {};
+    const selectedNode: SelectedNode | null =
+        memberQuery.data && memberId && memberName && memberType
+            ? { id: memberId.toString(), name: memberName, type: memberType as EntityKinds }
+            : null;
 
     const showDialog = (action: typeof CertificationManual | typeof CertificationRevoked) => {
         setIsDialogOpen(true);
@@ -189,16 +184,20 @@ const Certification = () => {
                 </div>
                 <div className='basis-1/3'>
                     <div className='w-[400px] max-w-[400px]'>
-                        <EntityInfoPanel
-                            DataTable={EntityInfoDataTable}
-                            selectedNode={selectedNode}
-                            additionalTables={[
-                                {
-                                    sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
-                                    TableComponent: EntitySelectorsInformation,
-                                },
-                            ]}
-                        />
+                        {selectedNode ? (
+                            <EntityInfoPanel
+                                DataTable={EntityInfoDataTable}
+                                selectedNode={selectedNode}
+                                additionalTables={[
+                                    {
+                                        sectionProps: { label: 'Selectors', id: selectedNode.id },
+                                        TableComponent: EntitySelectorsInformation,
+                                    },
+                                ]}
+                            />
+                        ) : (
+                            <EntityInfoPanel DataTable={EntityInfoDataTable} selectedNode={null} />
+                        )}
                     </div>
                 </div>
             </div>

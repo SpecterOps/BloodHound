@@ -40,7 +40,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
 
-    const domainMap = useMemo(() => {
+    const environmentMap = useMemo(() => {
         const map = new Map<string, string>();
         for (const domain of availableEnvironments) {
             map.set(domain.id, domain.name);
@@ -83,7 +83,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
               return {
                   ...item,
                   date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
-                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
+                  domainName: environmentMap.get(item.environment_id) ?? 'Unknown',
                   zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
               };
           })
@@ -139,7 +139,9 @@ const CertificationTable: FC<CertificationTableProps> = ({
         }),
         columnHelper.accessor('primary_kind', {
             header: () => <div className='pl-8 text-left'>Type</div>,
-            cell: (info) => <div className='text-primary dark:text-secondary-variant-2'>{info.getValue()}</div>,
+            cell: (info) => {
+                return <div className='text-primary dark:text-secondary-variant-2'>{info.getValue()}</div>;
+            },
         }),
         columnHelper.accessor('name', {
             header: () => <div className='pl-8 text-left'>Member Name</div>,
