@@ -15,22 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Settings } from 'sigma/settings';
-import {
-    EDGE_MIDDLE_ALIGN_OFFSET,
-    EDGE_TYPES,
-    GraphItemData,
-    LABEL_PADDING,
-    LabelBoundsParams,
-    calculateLabelOpacity,
-    getLabelBoundsFromContext,
-} from '../utils/utils';
+import { GraphItemData, LabelBoundsParams, calculateLabelOpacity, getLabelBoundsFromContext } from '../utils/utils';
 
 export default function drawLabel(context: CanvasRenderingContext2D, data: GraphItemData, settings: Settings): void {
-    if (!data.label || !settings.labelColor.color) return;
+    if (!data.label || !settings.labelColor.color || data.highlighted) return;
 
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
-    const size = settings.labelSize,
+    const size = settings.labelSize * inverseSqrtZoomRatio,
         font = settings.labelFont,
         weight = settings.labelWeight;
 
@@ -41,22 +33,16 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         inverseSqrtZoomRatio,
         label: data.label,
         position: data,
-        size: data.size ?? 0, // fallback prevents NaN
+        size: size ?? 0, // fallback prevents NaN
     };
 
     const labelbounds = getLabelBoundsFromContext(context, labelParams);
 
-    // This method is reused to draw edge labels as well, however, edge labels
-    // must be offset to middle to align with unrendered edge label mouse target
-    if (EDGE_TYPES.includes(data.type ?? '')) {
-        labelbounds[0] = labelbounds[0] - labelbounds[2] / 2 - EDGE_MIDDLE_ALIGN_OFFSET;
-    }
-
-    context.fillStyle = data.highlighted ? data.highlightedBackground : data.backgroundColor;
+    context.fillStyle = data.backgroundColor;
     context.fillRect(...labelbounds);
 
     context.fillStyle = data.highlighted ? data.highlightedText : settings.labelColor.color;
-    context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
+    context.fillText(data.label, labelbounds[0], labelbounds[1]);
 
     context.globalAlpha = 1;
 }

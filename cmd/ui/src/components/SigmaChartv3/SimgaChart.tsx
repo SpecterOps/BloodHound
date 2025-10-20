@@ -21,15 +21,16 @@ import { Sigma } from 'sigma';
 import { Settings } from 'sigma/settings';
 import { SigmaNodeEventPayload } from 'sigma/types';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
+// import drawEdgeLabel from 'src/rendering/programs/edge-label';
 // import EdgeArrowProgram from 'src/rendering/programs/edge.arrow';
 // import CurvedEdgeArrowProgram from 'src/rendering/programs/edge.curvedArrow';
 // import SelfEdgeArrowProgram from 'src/rendering/programs/edge.selfArrow';
 import { EdgeCurvedArrowProgram } from '@sigma/edge-curve';
+import { createNodeBorderProgram } from '@sigma/node-border';
 import { createNodeImageProgram } from '@sigma/node-image';
-import { EdgeArrowProgram } from 'sigma/rendering';
-import drawEdgeLabel from 'src/rendering/programs/edge-label';
+import { EdgeArrowProgram, createNodeCompoundProgram } from 'sigma/rendering';
+import createNodeGlyphProgram from 'src/rendering/programs/glyph/factory';
 import drawHover from 'src/rendering/programs/node-hover';
-import drawLabel from 'src/rendering/programs/node-label';
 import { GraphEvents } from './GraphEvents';
 
 interface SigmaChartProps {
@@ -50,36 +51,53 @@ interface SigmaChartRef {
     runStandardLayout: () => void;
 }
 
+const nodeProgram = createNodeCompoundProgram([
+    createNodeBorderProgram(),
+    createNodeImageProgram({
+        padding: 0.3,
+        size: { mode: 'force', value: 256 },
+        drawingMode: 'color',
+        colorAttribute: 'iconColor',
+    }),
+]);
+
+const glyphProgram = createNodeCompoundProgram([
+    nodeProgram,
+    createNodeGlyphProgram({
+        size: { mode: 'force', value: 256 },
+        colorAttribute: 'glyphBackgroundColor',
+        imageAttribute: undefined,
+    }),
+    createNodeGlyphProgram({
+        padding: 0.4,
+        size: { mode: 'force', value: 256 },
+        drawingMode: 'color',
+        colorAttribute: 'glyphColor',
+        imageAttribute: 'glyph',
+    }),
+]);
+
 const defaultSettings = {
     nodeProgramClasses: {
-        image: createNodeImageProgram(),
-        // combined: getNodeCombinedProgram(),
-        // glyphs: getNodeGlyphsProgram(),
+        combined: nodeProgram,
+        glyph: glyphProgram,
     },
-    defaultNodeType: 'image',
+    defaultNodeType: 'combined',
     edgeProgramClasses: {
-        // straightNoArrow: EdgeRectangleProgram,
-        // curvedNoArrow: EdgeCurveProgram,
-        // straightArrow: EdgeArrowProgram,
-        // curvedArrow: EdgeCurvedArrowProgram,
-        // straightDoubleArrow: EdgeDoubleArrowProgram,
-        // curvedDoubleArrow: EdgeCurvedDoubleArrowProgram,
         arrow: EdgeArrowProgram,
         curved: EdgeCurvedArrowProgram,
         self: EdgeCurvedArrowProgram,
     },
-    renderEdgeLabels: true,
     renderLabels: true,
+    labelRenderer: drawHover,
     // hoverRenderer: drawHover,
     defaultDrawNodeHover: drawHover,
-    defaultDrawEdgeLabel: drawEdgeLabel,
-    edgeLabelRenderer: drawEdgeLabel,
-    edgeLabelSize: 12,
-    enableEdgeEvents: true,
     labelSize: 12,
     labelFont: 'Roboto',
     labelColor: { color: '#000' },
-    labelRenderer: drawLabel,
+    renderEdgeLabels: true,
+    edgeLabelSize: 12,
+    enableEdgeEvents: true,
     maxCameraRatio: MAX_CAMERA_RATIO,
     minCameraRatio: MIN_CAMERA_RATIO,
     allowInvalidContainer: true,

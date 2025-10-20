@@ -34,6 +34,7 @@
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",
         "@sigma/edge-curve": "^3.1.0",
+        "@sigma/node-border": "^3.0.0",
         "@sigma/node-image": "^3.0.0",
         "bh-shared-ui": "workspace:*",
         "dagrejs": "git@github.com:BloodHoundAD/dagre.git",

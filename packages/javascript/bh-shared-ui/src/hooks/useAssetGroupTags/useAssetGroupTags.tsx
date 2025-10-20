@@ -38,7 +38,7 @@ import {
     GLYPH_SCALE,
     GenericQueryOptions,
     apiClient,
-    getModifiedSvgUrlFromIcon,
+    getModifiedSvgUrlFromIcon2,
 } from '../../utils';
 import { PageParam, createPaginatedFetcher } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
@@ -104,12 +104,12 @@ const glyphTransformer = (glyph: string, darkMode?: boolean): string => {
 
     if (!iconDefiniton) return '';
 
-    const glyphIconUrl = getModifiedSvgUrlFromIcon(iconDefiniton, {
+    const glyphIconUrl = getModifiedSvgUrlFromIcon2(iconDefiniton, {
         styles: {
             'transform-origin': 'center',
             scale: GLYPH_SCALE,
-            background: darkMode ? DEFAULT_GLYPH_COLOR : DEFAULT_GLYPH_BACKGROUND_COLOR,
-            color: darkMode ? DEFAULT_GLYPH_BACKGROUND_COLOR : DEFAULT_GLYPH_COLOR,
+            background: !darkMode ? DEFAULT_GLYPH_COLOR : DEFAULT_GLYPH_BACKGROUND_COLOR,
+            color: !darkMode ? DEFAULT_GLYPH_BACKGROUND_COLOR : DEFAULT_GLYPH_COLOR,
         },
     });
 

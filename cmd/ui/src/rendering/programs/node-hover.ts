@@ -16,8 +16,7 @@
 
 import { Settings } from 'sigma/settings';
 import { NodeDisplayData, PartialButFor } from 'sigma/types';
-import { calculateLabelOpacity } from '../utils/utils';
-import drawLabel from './node-label';
+import { LABEL_PADDING, LabelBoundsParams, calculateLabelOpacity, getLabelBoundsFromContext } from '../utils/utils';
 
 export default function drawHover(
     context: CanvasRenderingContext2D,
@@ -33,7 +32,7 @@ export default function drawHover(
     const weight = settings.labelWeight;
 
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
-    const size = settings.labelSize;
+    const size = settings.labelSize * inverseSqrtZoomRatio;
 
     context.font = `${weight} ${size}px ${font}`;
     context.fillStyle = data.highlightedBackground;
@@ -52,8 +51,36 @@ export default function drawHover(
 
     // Draw label and highlight
     if (nodeLabelExists && settings.renderLabels) {
-        drawLabel(context, data, settings);
-    }
+        if (!data.label || !settings.labelColor.color) return;
 
-    context.globalAlpha = 1;
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+
+        const size = settings.labelSize * inverseSqrtZoomRatio,
+            font = settings.labelFont,
+            weight = settings.labelWeight;
+
+        context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
+        context.font = `${weight} ${size}px ${font}`;
+
+        const labelParams: LabelBoundsParams = {
+            inverseSqrtZoomRatio,
+            label: data.label,
+            position: data,
+            size: size ?? 0, // fallback prevents NaN
+        };
+
+        const labelbounds = getLabelBoundsFromContext(context, labelParams);
+
+        context.fillStyle = data.highlightedBackground;
+        context.fillRect(...labelbounds);
+
+        context.fillStyle = data.highlighted ? data.highlightedText : settings.labelColor.color;
+        context.fillText(
+            data.label,
+            labelbounds[0] + LABEL_PADDING * 2,
+            labelbounds[1] + labelbounds[3] - LABEL_PADDING
+        );
+
+        context.globalAlpha = 1;
+    }
 }

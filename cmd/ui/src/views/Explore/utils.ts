@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
+import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -75,7 +75,7 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
                 backgroundColor: theme.palette.color.primary,
                 color: theme.palette.neutral.primary, //border
             },
-            tierZeroGlyph: darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
+            tierZeroGlyph: !darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
             ownedObjectGlyph: darkMode ? GLYPHS[GlyphKind.OWNED_OBJECT_DARK] : GLYPHS[GlyphKind.OWNED_OBJECT],
         },
     };
@@ -102,8 +102,7 @@ const initGraphNodes = (
         const node = nodes[key];
         // Set default node parameters
         const nodeParams: Partial<NodeParams> = {
-            // type: 'combined',
-            type: 'image',
+            type: 'combined',
             label: node.label,
             forceLabel: true,
             hidden: hideNodes,
@@ -112,40 +111,32 @@ const initGraphNodes = (
 
         const iconInfo = GetIconInfo(node.kind, customIcons);
         nodeParams.color = iconInfo.color;
+        nodeParams.iconColor = '#000';
         nodeParams.image = iconInfo.url || '';
         nodeParams.glyphs = [];
+        nodeParams.glyphColor = themedOptions.glyph.colors.color;
+        nodeParams.glyphBackgroundColor = themedOptions.glyph.colors.backgroundColor;
 
-        // const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphMap);
-        // if (glyphImage) {
-        //     nodeParams.type = 'glyphs';
-        //     nodeParams.glyphs.push({
-        //         location: GlyphLocation.TOP_RIGHT,
-        //         image: glyphImage,
-        //         ...themedOptions.glyph.colors,
-        //     });
-        // }
+        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphMap);
+        if (glyphImage) {
+            nodeParams.type = 'glyph';
+            nodeParams.glyph = glyphImage;
+        }
 
-        // // Tier zero nodes should be marked with a gem glyph
-        // if (node.isTierZero) {
-        //     nodeParams.type = 'glyphs';
-        //     nodeParams.glyphs.push({
-        //         location: GlyphLocation.TOP_RIGHT,
-        //         image: themedOptions.glyph.tierZeroGlyph.url || '',
-        //         ...themedOptions.glyph.colors,
-        //     });
-        // }
+        // Tier zero nodes should be marked with a gem glyph
+        if (node.isTierZero) {
+            nodeParams.type = 'glyph';
+            nodeParams.glyph = themedOptions.glyph.tierZeroGlyph.url || '';
+        }
 
-        // if (node.isOwnedObject) {
-        //     nodeParams.type = 'glyphs';
-        //     nodeParams.glyphs.push({
-        //         location: GlyphLocation.BOTTOM_RIGHT,
-        //         image: themedOptions.glyph.ownedObjectGlyph.url || '',
-        //         ...themedOptions.glyph.colors,
-        //     });
-        // }
+        if (node.isOwnedObject) {
+            nodeParams.type = 'glyph';
+            nodeParams.glyph = themedOptions.glyph.ownedObjectGlyph.url || '';
+        }
 
         graph.addNode(key, {
             size: 25,
+            borderSize: 27,
             borderColor: themedOptions.nodeBorderColor,
             ...nodeParams,
         });
@@ -182,7 +173,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
             // Set default values for single edges
             const edgeParams: Partial<EdgeParams> = {
                 size: 3,
-                type: 'curved',
+                type: 'arrow',
                 label: edge.label,
                 groupPosition: 0,
                 groupSize: 1,

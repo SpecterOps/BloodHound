@@ -154,6 +154,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const graph = sigma.getGraph();
     const sigmaContainer = sigma.getContainer();
 
+    const [neighbors, setNeighbors] = useState<Set<string>>(new Set());
     const [draggedMeta, setDraggedMeta] = useState<DragMetadata>(DEFAULT_DRAGGED_META);
     const draggedNode = draggedMeta.id && graph.getNodeAttributes(draggedMeta.id);
 
@@ -199,50 +200,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
         [sigma, graph]
     );
 
-    // const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
-
-    // const curvedEdgeReducer = useCallback(
-    //     (edge: string, data: Attributes, newData: Attributes) => {
-    //         // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
-    //         // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
-    //         const edgeData = getEdgeDataFromKey(edge);
-    //         if (edgeData !== null) {
-    //             const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
-    //             if (nodeDisplayData !== null) {
-    //                 const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
-    //                 const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
-
-    //                 const height = calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-    //                 const control = getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
-
-    //                 newData.control = control;
-    //                 newData.controlInViewport = sigma.framedGraphToViewport(control);
-    //             }
-    //         }
-    //     },
-    //     [sigma, calculateCurveHeight, getControlAtMidpoint]
-    // );
-
-    // const selfEdgeReducer = useCallback(
-    //     (edge: string, newData: Attributes) => {
-    //         const edgeData = getEdgeDataFromKey(edge);
-    //         if (edgeData !== null) {
-    //             const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
-    //             if (nodeDisplayData !== null) {
-    //                 const nodeRadius = getNodeRadius(false, newData.inverseSqrtZoomRatio, nodeDisplayData.source.size);
-
-    //                 const framedGraphNodeRadius = getLineLength(
-    //                     graphToFramedGraph(sigma, { x: 0, y: 0 }),
-    //                     graphToFramedGraph(sigma, { x: nodeRadius, y: nodeRadius })
-    //                 );
-
-    //                 newData.framedGraphNodeRadius = framedGraphNodeRadius;
-    //             }
-    //         }
-    //     },
-    //     [sigma, getLineLength]
-    // );
-
     const events = useMemo((): Partial<Record<(typeof allEventKeys)[number], (event?: any) => void>> => {
         return {
             enterNode: () => {
@@ -252,8 +209,12 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 sigmaContainer.style.cursor = 'default';
             },
             downNode: (event: SigmaNodeEventPayload) => {
+                //@ts-ignore
                 if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
+                    sigma.setSettings({ renderEdgeLabels: false });
                     const node = graph.getNodeAttributes(event.node);
+
+                    setNeighbors(new Set(graph.neighbors(event.node)));
                     setDraggedMeta({
                         cancelNextClick: false,
                         id: event.node,
@@ -263,10 +224,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 }
             },
             upNode: () => {
-                // if (draggedNode) {
-                // Timeout prevents state update race conditions between this an mousemovebody.
-                setTimeout(() => setDraggedMeta(DEFAULT_DRAGGED_META), 10);
-                // }
+                if (draggedNode) {
+                    sigma.setSettings({ renderEdgeLabels: true });
+                    // Timeout prevents state update race conditions between this an mousemovebody.
+                    setTimeout(() => setDraggedMeta(DEFAULT_DRAGGED_META), 10);
+                }
             },
             mousemovebody: (event: MouseCoords) => {
                 if (draggedNode && draggedMeta.offset) {
@@ -322,7 +284,13 @@ export const GraphEvents = forwardRef(function GraphEvents(
             // Reducers must run again on camera state update to position edge labels correctly
             // Despite the name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
-            clickStage: () => onClickStage?.(),
+            downStage: () => sigma.setSettings({ renderEdgeLabels: false }),
+            upStage: () => sigma.setSettings({ renderEdgeLabels: true }),
+
+            clickStage: () => {
+                onClickStage?.();
+                setNeighbors(new Set());
+            },
         };
     }, [
         draggedMeta,
@@ -339,23 +307,23 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const registerEvents = useCallback(
         (events: Partial<AllEvents>): void => {
             Object.entries(events).forEach(([event, handler]) => {
-                if (sigmaEventKeys.includes(event)) {
+                if (sigmaEventKeys.includes(event as (typeof sigmaEventKeys)[number])) {
                     sigma.on(event as keyof SigmaEvents, handler as (payload: SigmaEventPayload) => void);
                 }
 
-                if (mouseEventKeys.includes(event)) {
+                if (mouseEventKeys.includes(event as (typeof mouseEventKeys)[number])) {
                     sigma
                         .getMouseCaptor()
                         .on(event as keyof MouseCaptorEvents, handler as (payload: MouseCoords) => void);
                 }
 
-                if (touchEventKeys.includes(event)) {
+                if (touchEventKeys.includes(event as (typeof touchEventKeys)[number])) {
                     sigma
                         .getTouchCaptor()
                         .on(event as keyof TouchCaptorEvents, handler as (coordinates: TouchCoords) => void);
                 }
 
-                if (cameraEventKeys.includes(event)) {
+                if (cameraEventKeys.includes(event as (typeof cameraEventKeys)[number])) {
                     sigma.getCamera().on(event as keyof CameraEvents, handler as (state: CameraState) => void);
                 }
             });
@@ -388,21 +356,29 @@ export const GraphEvents = forwardRef(function GraphEvents(
         registerEvents(events);
 
         return () => removeEvents();
-    }, [registerEvents, events, sigma, removeEvents]);
+    }, [sigma, events, registerEvents, removeEvents]);
 
     useEffect(() => {
         sigma.setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                return {
+                const highlighted = node === highlightedItem;
+                const newData: Attributes = {
                     ...data,
-                    highlighted: node === highlightedItem,
+                    highlighted,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
+
+                if (highlightedItem && !highlighted && !neighbors.has(node)) {
+                    newData.label = '';
+                    newData.color = '';
+                }
+                return newData;
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
                 const highlighted = edge === highlightedItem;
+
                 const newData: Attributes = {
                     ...data,
                     hidden: false,
@@ -410,21 +386,21 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                // if (data.type === 'curved') {
-                //     curvedEdgeReducer(edge, data, newData);
-                // } else if (data.type === 'self') {
-                //     selfEdgeReducer(edge, newData);
-                // }
-
+                if (
+                    highlightedItem &&
+                    !highlightedItem.includes('_') &&
+                    !graph
+                        .extremities(edge)
+                        .every((n) => n === highlightedItem || graph.areNeighbors(n, highlightedItem))
+                ) {
+                    newData.hidden = true;
+                } else {
+                    newData.hidden = false;
+                }
                 return newData;
             },
         });
     }, [highlightedItem, sigma]);
-
-    // Toggle off edge labels when dragging a node to avoid performance hit
-    // useLayoutEffect(() => {
-    //     sigma.setSettings({ renderEdgeLabels: draggedNode ? false : showEdgeLabels });
-    // }, [draggedNode, sigma, showEdgeLabels]);
 
     useLayoutEffect(() => {
         if (sigmaChartRef?.current) {

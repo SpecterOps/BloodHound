@@ -2965,6 +2965,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sigma/node-border@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@sigma/node-border@npm:3.0.0"
+  peerDependencies:
+    sigma: ">=3.0.0-beta.17"
+  checksum: 1ab585d10fe0df832c98b7a25876d892d8ce5e7a01092414cd69dffb934cf1518076b0b98092ecf58973cbe9520de3f8419dd4afda0be2c36653a1f426837559
+  languageName: node
+  linkType: hard
+
 "@sigma/node-image@npm:^3.0.0":
   version: 3.0.0
   resolution: "@sigma/node-image@npm:3.0.0"
@@ -4878,6 +4887,7 @@ __metadata:
     "@react-sigma/core": ^3.4.1
     "@reduxjs/toolkit": ^1.8.5
     "@sigma/edge-curve": ^3.1.0
+    "@sigma/node-border": ^3.0.0
     "@sigma/node-image": ^3.0.0
     "@testing-library/jest-dom": ^5.16.5
     "@testing-library/react": ^13.3.0

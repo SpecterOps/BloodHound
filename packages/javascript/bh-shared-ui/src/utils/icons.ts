@@ -292,16 +292,36 @@ export const GetIconInfo = (iconName: string, customIcons: IconDictionary): Icon
     return UNKNOWN_ICON;
 };
 
-export const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, iconParams?: IconParams): string => {
+export const getModifiedSvgUrlFromIcon2 = (iconDefinition: IconDefinition, iconParams?: IconParams): string => {
     const params = iconParams ?? { styles: { 'transform-origin': 'center' } };
 
     const modifiedIcon = icon(iconDefinition, {
+        ...params,
         styles: { 'transform-origin': 'center', ...params.styles },
     });
 
     const svg = modifiedIcon.html[0];
 
-    const amendedSvg = svg.replace(/<svg/, '<svg width="200" height="200"');
+    const amendedSvg = svg.replace(/<svg/, '<svg width="16" height="16"');
+
+    const blob = new Blob([amendedSvg], { type: 'image/svg+xml' });
+
+    return URL.createObjectURL(blob);
+};
+
+export const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, iconParams?: IconParams): string => {
+    // const params = iconParams ?? { styles: { 'transform-origin': 'center' } };
+
+    const modifiedIcon = icon(
+        iconDefinition
+        //     {
+        //     styles: { 'transform-origin': 'center' },
+        // }
+    );
+
+    const svg = modifiedIcon.html[0];
+
+    const amendedSvg = svg.replace(/<svg/, '<svg width="16" height="16"');
 
     const blob = new Blob([amendedSvg], { type: 'image/svg+xml' });
 
