@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -91,9 +92,9 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
 	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
-		slog.WarnContext(ingestCtx.Ctx, "changelog submit dropped",
-			slog.String("sourceObjectID", sourceObjectID),
-			slog.String("targetObjectID", targetObjectID),
+		slog.WarnContext(ingestCtx.Ctx, "Changelog submit dropped",
+			slog.String("source_object_id", sourceObjectID),
+			slog.String("target_object_id", targetObjectID),
 			slog.String("kind", update.Relationship.Kind.String()))
 	}
 
@@ -135,7 +136,7 @@ func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleR
 
 	for _, next := range relationships {
 		if err := ingestDNRelationship(batch, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting relationship: %v", err))
+			slog.Error("Error ingesting relationship", attr.Error(err))
 			errs.Add(err)
 		}
 	}
@@ -179,7 +180,7 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 
 	for _, next := range sessions {
 		if err := ingestSession(batch, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting sessions: %v", err))
+			slog.Error("Error ingesting sessions", attr.Error(err))
 			errs.Add(err)
 		}
 	}
@@ -262,7 +263,7 @@ func resolveAllEndpointsByName(batch BatchUpdater, rels []ein.IngestibleRelation
 				nameVal, _ := node.Properties.Get(common.Name.String()).String()
 				objectID, err := node.Properties.Get(string(common.ObjectID)).String()
 				if err != nil || objectID == "" {
-					slog.Warn("matched node missing objectid",
+					slog.Warn("Matched node missing objectid",
 						slog.String("name", nameVal),
 						slog.Any("kinds", node.Kinds))
 					continue
@@ -325,7 +326,7 @@ func resolveRelationships(batch *IngestContext, rels []ein.IngestibleRelationshi
 			targetID, targetOK := resolveEndpointID(rel.Target, cache)
 
 			if !srcOK || !targetOK {
-				slog.Warn("skipping unresolved relationship",
+				slog.Warn("Skipping unresolved relationship",
 					slog.String("source", rel.Source.Value),
 					slog.String("target", rel.Target.Value),
 					slog.Bool("resolved_source", srcOK),

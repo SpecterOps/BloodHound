@@ -202,7 +202,7 @@ func (s aggregator) resolve(targetID uint64) cardinality.Provider[uint64] {
 
 func (s aggregator) Cardinality(targets ...uint64) cardinality.Provider[uint64] {
 	slog.Debug(fmt.Sprintf("Calculating pathMembers cardinality for %d targets", len(targets)))
-	defer measure.Measure(slog.LevelDebug, "Calculated pathMembers cardinality", "num_targets", len(targets))()
+	defer measure.Measure(slog.LevelDebug, "Calculated pathMembers cardinality", slog.Int("num_targets", len(targets)))()
 
 	impact := s.newCardinalityProvider()
 

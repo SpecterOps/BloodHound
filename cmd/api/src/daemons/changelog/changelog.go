@@ -96,9 +96,10 @@ func (s *Changelog) FlushStats() {
 	}
 
 	stats := c.resetStats()
-	slog.Info("changelog metrics",
-		"hits", stats.Hits,
-		"misses", stats.Misses,
+	slog.Info(
+		"Changelog metrics",
+		slog.Uint64("hits", stats.Hits),
+		slog.Uint64("misses", stats.Misses),
 	)
 }
 

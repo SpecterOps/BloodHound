@@ -17734,7 +17734,7 @@
           }
         }
       },
-      "model.environment-access-control": {
+      "model.environment-targeted-access-control": {
         "type": "object",
         "properties": {
           "user_id": {
@@ -17834,12 +17834,12 @@
                 "type": "boolean",
                 "readOnly": true
               },
-              "environment_access_control": {
-                "description": "A collection of environments that a user has been granted access to as part of ETAC",
+              "environment_targeted_access_control": {
+                "description": "A collection of environment targeted access controls that a user has been granted access to.",
                 "type": "array",
                 "readOnly": true,
                 "items": {
-                  "$ref": "#/components/schemas/model.environment-access-control"
+                  "$ref": "#/components/schemas/model.environment-targeted-access-control"
                 }
               }
             }
@@ -18521,10 +18521,10 @@
             "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
             "type": "boolean"
           },
-          "environment_access_control": {
+          "environment_targeted_access_control": {
             "type": "object",
             "additionalProperties": false,
-            "description": "Sets an environment access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "description": "Sets an environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
             "properties": {
               "environments": {
                 "type": "array",
@@ -18549,13 +18549,13 @@
             ],
             "not": {
               "required": [
-                "environment_access_control"
+                "environment_targeted_access_control"
               ]
             }
           },
           {
             "required": [
-              "environment_access_control"
+              "environment_targeted_access_control"
             ],
             "not": {
               "required": [

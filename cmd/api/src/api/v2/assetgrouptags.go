@@ -508,8 +508,13 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 				resp = GetAssetGroupTagSelectorResponse{
 					Selectors: make([]AssetGroupTagSelectorView, 0, len(selectors)),
 				}
+				filter = model.SQLFilter{}
 			)
 
+			if assetGroupTag.RequireCertify.ValueOrZero() {
+				filter.SQLString = " AND certified > ?"
+				filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+			}
 			for _, selector := range selectors {
 				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
 				if paramIncludeCounts {
@@ -517,7 +522,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 					// if the selector is not disabled
 					if selector.DisabledAt.Time.IsZero() {
 						// get all the nodes which are selected
-						if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
+						if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, model.Sort{}, 0, 0, selector.ID); err != nil {
 							api.HandleDatabaseError(request, response, err)
 						} else {
 							nodeIds := make([]graph.ID, 0, len(selectorNodes))
@@ -797,6 +802,11 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 		if len(environmentIds) > 0 {
 			filter.SQLString = "AND node_environment_id IN ?"
 			filter.Params = append(filter.Params, environmentIds)
+		}
+
+		if assetGroupTag.RequireCertify.ValueOrZero() {
+			filter.SQLString += " AND certified > ?"
+			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
 		}
 
 		if selectorNodes, count, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, sort, skip, limit, selectorId); err != nil {
