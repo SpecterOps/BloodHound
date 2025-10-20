@@ -136,7 +136,7 @@ describe('CreateUserDialog', async () => {
 
         render(
             <CreateUserDialog
-                //open={true}
+                open={true}
                 showEnvironmentAccessControls={true}
                 onClose={testOnClose}
                 onSave={testOnSave}
