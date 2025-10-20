@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle } from '@mui/material';
 import { useAppNavigate } from 'bh-shared-ui';
+import { Button } from 'doodle-ui';
 import React from 'react';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';

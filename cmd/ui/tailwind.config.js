@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DoodleUIPlugin, DoodleUIPreset } from '@bloodhoundenterprise/doodleui';
+import { DoodleUIPlugin, DoodleUIPreset } from 'doodle-ui';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -33,7 +33,7 @@ export default {
     content: [
         './index.html',
         './src/**/*.{js,ts,jsx,tsx}',
-        './node_modules/@bloodhoundenterprise/doodleui/dist/doodleui.js',
+        './node_modules/doodle-ui/src/**/*.{js,ts,jsx,tsx}',
         './node_modules/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
     ],
     darkMode: ['class'],

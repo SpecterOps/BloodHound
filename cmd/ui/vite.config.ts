@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
             alias: {
                 src: path.resolve(__dirname, './src'),
                 'bh-shared-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'bh-shared-ui', 'src'),
+                'doodle-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'doodle-ui', 'src'),
                 'js-client-library': path.resolve(
                     __dirname,
                     '..',
@@ -41,7 +42,7 @@ export default defineConfig(({ mode }) => {
                 ),
             },
             dedupe: [
-                '@bloodhoundenterprise/doodleui',
+                'doodle-ui',
                 '@emotion/react',
                 '@emotion/styled',
                 '@faker-js/faker',

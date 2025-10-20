@@ -310,42 +310,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.30":
-  version: 1.0.0-alpha.30
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.30"
-  dependencies:
-    "@radix-ui/react-accordion": ^1.1.2
-    "@radix-ui/react-checkbox": ^1.1.2
-    "@radix-ui/react-dialog": ^1.1.2
-    "@radix-ui/react-label": ^2.1.7
-    "@radix-ui/react-popover": ^1.1.2
-    "@radix-ui/react-select": ^2.1.1
-    "@radix-ui/react-slot": ^1.2.3
-    "@radix-ui/react-switch": ^1.0.2
-    "@radix-ui/react-tabs": ^1.1.8
-    "@radix-ui/react-tooltip": ^1.1.3
-    "@radix-ui/react-visually-hidden": ^1.1.0
-    "@tanstack/react-table": ^8.17.3
-    "@tanstack/react-virtual": ^3.13.12
-    class-variance-authority: ^0.7.0
-    clsx: ^2.1.1
-    date-fns: ^3.0.0
-    embla-carousel: ^8.3.0
-    embla-carousel-autoplay: ^8.3.0
-    embla-carousel-react: ^8.3.0
-    lucide-react: ^0.436.0
-    react-day-picker: 8.10.1
-    react-hook-form: ^7.61.1
-    tailwind-merge: ^2.3.0
-    tailwindcss-animate: ^1.0.7
-  peerDependencies:
-    react: ^18.2.0
-    react-dom: ^18.2.0
-    tailwindcss: ^3.4.3
-  checksum: 23dadce44e9f6310664afb8da8c1b0e5a06df655d8d45e64f268333aa461e265ce6f0777183a087935023a72bf7d2ba0156cfbc6f453185b2a8acdb24860eeaf
-  languageName: node
-  linkType: hard
-
 "@braintree/sanitize-url@npm:=6.0.2":
   version: 6.0.2
   resolution: "@braintree/sanitize-url@npm:6.0.2"
@@ -5999,7 +5963,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.30
     "@date-io/luxon": ^3.2.0
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -6036,6 +5999,7 @@ __metadata:
     autoprefixer: ^10.4.20
     bh-shared-ui: "workspace:*"
     dagrejs: "git@github.com:BloodHoundAD/dagre.git"
+    doodle-ui: "workspace:*"
     downshift: ^6.1.7
     eslint: ^8.57.0
     eslint-config-prettier: ^9.1.0
@@ -7151,7 +7115,6 @@ __metadata:
     "@radix-ui/react-tooltip": ^1.1.3
     "@radix-ui/react-visually-hidden": ^1.1.0
     "@rollup/plugin-terser": ^0.4.4
-    "@rollup/plugin-typescript": ^11.1.6
     "@storybook/addon-a11y": ^8.3.6
     "@storybook/addon-essentials": ^8.3.6
     "@storybook/addon-interactions": ^8.3.6
@@ -7205,13 +7168,13 @@ __metadata:
     tailwindcss: ^3.4.3
     tailwindcss-animate: ^1.0.7
     tsx: ^4.7.3
-    typescript: ^5.6.3
     vite: ^5.4.12
-    vite-plugin-dts: ^4.4.0
+    vite-plugin-dts: ^4.0.0
     vitest: ^2.1.5
   peerDependencies:
     react: 18.2.0
     react-dom: 18.2.0
+    typescript: 5.1.x
   languageName: unknown
   linkType: soft
 
@@ -9206,7 +9169,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-core-module@npm:^2.13.0, is-core-module@npm:^2.16.0":
+"is-core-module@npm:^2.13.0, is-core-module@npm:^2.16.0, is-core-module@npm:^2.16.1":
   version: 2.16.1
   resolution: "is-core-module@npm:2.16.1"
   dependencies:
@@ -12454,7 +12417,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@npm:^1.1.7, resolve@npm:^1.19.0, resolve@npm:^1.22.1, resolve@npm:^1.22.8, resolve@npm:~1.22.1, resolve@npm:~1.22.2":
+"resolve@npm:^1.1.7, resolve@npm:^1.19.0, resolve@npm:^1.22.1, resolve@npm:^1.22.8":
   version: 1.22.10
   resolution: "resolve@npm:1.22.10"
   dependencies:
@@ -12480,7 +12443,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@patch:resolve@^1.1.7#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.8#~builtin<compat/resolve>, resolve@patch:resolve@~1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@~1.22.2#~builtin<compat/resolve>":
+"resolve@npm:~1.22.1, resolve@npm:~1.22.2":
+  version: 1.22.11
+  resolution: "resolve@npm:1.22.11"
+  dependencies:
+    is-core-module: ^2.16.1
+    path-parse: ^1.0.7
+    supports-preserve-symlinks-flag: ^1.0.0
+  bin:
+    resolve: bin/resolve
+  checksum: 6d5baa2156b95a65ac431e7642e21106584e9f4194da50871cae8bc1bbd2b53bb7cee573c92543d83bb999620b224a087f62379d800ed1ccb189da6df5d78d50
+  languageName: node
+  linkType: hard
+
+"resolve@patch:resolve@^1.1.7#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.8#~builtin<compat/resolve>":
   version: 1.22.10
   resolution: "resolve@patch:resolve@npm%3A1.22.10#~builtin<compat/resolve>::version=1.22.10&hash=c3c19d"
   dependencies:
@@ -12503,6 +12479,19 @@ __metadata:
   bin:
     resolve: bin/resolve
   checksum: 064d09c1808d0c51b3d90b5d27e198e6d0c5dad0eb57065fd40803d6a20553e5398b07f76739d69cbabc12547058bec6b32106ea66622375fb0d7e8fca6a846c
+  languageName: node
+  linkType: hard
+
+"resolve@patch:resolve@~1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@~1.22.2#~builtin<compat/resolve>":
+  version: 1.22.11
+  resolution: "resolve@patch:resolve@npm%3A1.22.11#~builtin<compat/resolve>::version=1.22.11&hash=c3c19d"
+  dependencies:
+    is-core-module: ^2.16.1
+    path-parse: ^1.0.7
+    supports-preserve-symlinks-flag: ^1.0.0
+  bin:
+    resolve: bin/resolve
+  checksum: 1462da84ac3410d7c2e12e4f5f25c1423d8a174c3b4245c43eafea85e7bbe6af3eb7ec10a4850b5e518e8531608604742b8cbd761e1acd7ad1035108b7c98013
   languageName: node
   linkType: hard
 
@@ -14098,43 +14087,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.8.2":
-  version: 5.8.2
-  resolution: "typescript@npm:5.8.2"
+"typescript@npm:5.1.x":
+  version: 5.1.6
+  resolution: "typescript@npm:5.1.6"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 7f9e3d7ac15da6df713e439e785e51facd65d6450d5f51fab3e8d2f2e3f4eb317080d895480b8e305450cdbcb37e17383e8bf521e7395f8b556e2f2a4730ed86
+  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.1.6, typescript@npm:^5.6.3":
-  version: 5.9.3
-  resolution: "typescript@npm:5.9.3"
+"typescript@patch:typescript@npm%3A5.1.x#~builtin<compat/typescript>":
+  version: 5.1.6
+  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=5da071"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 0d0ffb84f2cd072c3e164c79a2e5a1a1f4f168e84cb2882ff8967b92afe1def6c2a91f6838fb58b168428f9458c57a2ba06a6737711fdd87a256bbe83e9a217f
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@5.8.2#~builtin<compat/typescript>":
-  version: 5.8.2
-  resolution: "typescript@patch:typescript@npm%3A5.8.2#~builtin<compat/typescript>::version=5.8.2&hash=14eedb"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: a58d19ff9811c1764a299dd83ca20ed8020f0ab642906dafc880121b710751227201531fdc99878158205c356ac79679b0b61ac5b42eda0e28bfb180947a258d
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>, typescript@patch:typescript@^5.6.3#~builtin<compat/typescript>":
-  version: 5.9.3
-  resolution: "typescript@patch:typescript@npm%3A5.9.3#~builtin<compat/typescript>::version=5.9.3&hash=14eedb"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 8bb8d86819ac86a498eada254cad7fb69c5f74778506c700c2a712daeaff21d3a6f51fd0d534fe16903cb010d1b74f89437a3d02d4d0ff5ca2ba9a4660de8497
+  checksum: f53bfe97f7c8b2b6d23cf572750d4e7d1e0c5fff1c36d859d0ec84556a827b8785077bc27676bf7e71fae538e517c3ecc0f37e7f593be913d884805d931bc8be
   languageName: node
   linkType: hard
 
@@ -14347,7 +14316,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-dts@npm:^4.4.0":
+"vite-plugin-dts@npm:^4.0.0":
   version: 4.5.4
   resolution: "vite-plugin-dts@npm:4.5.4"
   dependencies:

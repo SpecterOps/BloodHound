@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from '@bloodhoundenterprise/doodleui';
 import {
     AppIcon,
     MainNavData,
@@ -24,6 +23,7 @@ import {
     useFileUploadDialogContext,
     usePermissions,
 } from 'bh-shared-ui';
+import { Switch } from 'doodle-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';

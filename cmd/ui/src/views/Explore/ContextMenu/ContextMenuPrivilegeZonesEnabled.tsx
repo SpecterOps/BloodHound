@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
 import {
     NodeResponse,
@@ -31,6 +30,7 @@ import {
     useTagsQuery,
     zonesPath,
 } from 'bh-shared-ui';
+import { Dialog } from 'doodle-ui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';

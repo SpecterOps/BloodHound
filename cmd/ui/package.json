@@ -16,7 +16,6 @@
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
     "dependencies": {
-        "@bloodhoundenterprise/doodleui": "^1.0.0-alpha.30",
         "@date-io/luxon": "^3.2.0",
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
@@ -35,6 +34,7 @@
         "@reduxjs/toolkit": "^1.8.5",
         "bh-shared-ui": "workspace:*",
         "dagrejs": "git@github.com:BloodHoundAD/dagre.git",
+        "doodle-ui": "workspace:*",
         "downshift": "^6.1.7",
         "graphology": "^0.25.1",
         "graphology-layout": "^0.6.1",

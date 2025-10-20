@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AD_PLATFORM,
     AZ_PLATFORM,
@@ -30,6 +29,7 @@ import {
     useInitialEnvironment,
     usePZPathParams,
 } from 'bh-shared-ui';
+import { Button } from 'doodle-ui';
 import { FC, useEffect, useState } from 'react';
 
 const aggregationFromType = (type: SelectorValueTypes | null): EnvironmentAggregation | null => {

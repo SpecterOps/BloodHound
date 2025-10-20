@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
+import { Dialog } from 'doodle-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';

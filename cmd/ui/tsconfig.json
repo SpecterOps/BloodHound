@@ -23,7 +23,7 @@
         "paths": {
             "src/*": ["./src/*"]
         },
-        "types": ["vitest/globals", "@testing-library/jest-dom", "bh-shared-ui"]
+        "types": ["vitest/globals", "@testing-library/jest-dom", "bh-shared-ui", "doodle-ui"]
     },
     "include": ["src"],
     "references": [
