@@ -14,37 +14,36 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import terser from '@rollup/plugin-terser';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import del from 'rollup-plugin-delete';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+import packageJson from './package.json';
 
 export default defineConfig({
-    plugins: [react(), dts({ exclude: ['**/*.stories.ts'] })],
+    plugins: [react(), dts({ exclude: ['**/*.stories.ts'], pathsToAliases: true })],
     resolve: {
         alias: {
             components: resolve(__dirname, 'src/components'),
+            'components/*': resolve(__dirname, 'src/components/*'),
         },
     },
     build: {
         lib: {
-            entry: resolve(__dirname, 'src/index.ts'),
-            name: 'doodle-ui',
-            // },
-            // sourcemap: true,
-            // rollupOptions: {
-            //     output: {
-            //         dir: 'dist',
-            //         format: 'es',
-            //     },
-            //     plugins: [
-            //         typescript({
-            //             exclude: ['**/*.test.tsx', '**/*.stories.tsx'],
-            //         }),
-            //         terser(),
-            //         del({ targets: 'dist/*' }),
-            //     ],
-            //     external: ['react', 'react-dom', 'react/jsx-runtime', 'tailwindcss'],
+            entry: resolve(__dirname, 'src'),
+            formats: ['es'],
+        },
+        sourcemap: true,
+        rollupOptions: {
+            external: ['react', 'react-dom', 'react/jsx-runtime', 'tailwindcss'],
+            output: {
+                manualChunks: {
+                    vendor: Object.keys(packageJson.dependencies),
+                },
+            },
+            plugins: [del({ targets: 'dist/*' }), terser()],
         },
     },
 });

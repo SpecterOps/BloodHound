@@ -1,34 +1,33 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
         "module": "ESNext",
-        "jsx": "react-jsx",
-        "sourceMap": true,
-        "outDir": "dist",
-        "strict": true,
-        "moduleResolution": "bundler",
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "types": ["vitest/globals", "@testing-library/jest-dom"],
-        "noUnusedLocals": true,
-        "noUnusedParameters": false,
-        "noFallthroughCasesInSwitch": true,
-        "declarationDir": "dist",
-        "declaration": true,
-        "declarationMap": true,
-        "allowJs": true,
 
-        
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+
         /* Aliases */
+        "baseUrl": ".",
         "paths": {
             "components": ["./src/components"],
             "components/*": ["./src/components/*"]
         },
+        "types": ["vitest/globals"]
     },
     "include": ["src"],
     "exclude": ["**/*.stories.tsx", "**/*.test.tsx"],
-    "references": [{ "path": "./tsconfig.node.json" }]
 }

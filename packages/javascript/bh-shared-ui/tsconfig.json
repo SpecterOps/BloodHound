@@ -12,14 +12,18 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "types": ["vitest/globals", "@testing-library/jest-dom"],
+        "types": ["vitest/globals", "@testing-library/jest-dom", "doodle-ui"],
         "noUnusedLocals": true,
         "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true,
         "declarationDir": "dist",
         "declaration": true,
         "declarationMap": true,
-        "allowJs": true
+        "allowJs": true,
+
+        "paths": {
+            "doodle-ui": ["./node_modules/doodleui/src"]
+        }
     },
     "include": ["src"]
 }

@@ -1,10 +1,10 @@
 {
     "name": "doodle-ui",
     "description": "todo",
-    "main": "dist/index",
-    "types": "dist/index",
+    "main": "./dist/doodle-ui.js",
+    "types": "./dist/index.d.ts",
     "files": [
-        "dist",
+        "./dist",
         "README.md"
     ],
     "type": "module",
@@ -63,7 +63,6 @@
         "@fortawesome/free-solid-svg-icons": "^6.5.2",
         "@fortawesome/react-fontawesome": "^0.2.2",
         "@rollup/plugin-terser": "^0.4.4",
-        "@rollup/plugin-typescript": "^11.1.6",
         "@storybook/addon-a11y": "^8.3.6",
         "@storybook/addon-essentials": "^8.3.6",
         "@storybook/addon-interactions": "^8.3.6",
@@ -104,14 +103,14 @@
         "storybook": "^8.3.6",
         "tailwindcss": "^3.4.3",
         "tsx": "^4.7.3",
-        "typescript": "^5.6.3",
         "vite": "^5.4.12",
-        "vite-plugin-dts": "^4.4.0",
+        "vite-plugin-dts": "^4.0.0",
         "vitest": "^2.1.5"
     },
     "peerDependencies": {
-        "react": "18.2.0",
-        "react-dom": "18.2.0"
+        "react": "18.2.x",
+        "react-dom": "18.2.x",
+        "typescript": "5.1.x"
     },
     "packageManager": "yarn@3.5.1",
     "installConfig": {
