@@ -236,7 +236,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "3"},
@@ -254,7 +254,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{
+				envs := []model.EnvironmentTargetedAccessControl{
 					{
 						UserID:        userUuid.String(),
 						EnvironmentID: "1",
@@ -268,8 +268,8 @@ func Test_FilterUserEnvironments(t *testing.T) {
 						EnvironmentID: "3",
 					},
 				}
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "3"},
@@ -287,7 +287,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{
+				envs := []model.EnvironmentTargetedAccessControl{
 					{
 						UserID:        userUuid.String(),
 						EnvironmentID: "1",
@@ -301,9 +301,9 @@ func Test_FilterUserEnvironments(t *testing.T) {
 						EnvironmentID: "3",
 					},
 				}
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2"},
@@ -320,7 +320,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{
+				envs := []model.EnvironmentTargetedAccessControl{
 					{
 						UserID:        userUuid.String(),
 						EnvironmentID: "1",
@@ -334,9 +334,9 @@ func Test_FilterUserEnvironments(t *testing.T) {
 						EnvironmentID: "3",
 					},
 				}
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "4"},
@@ -354,10 +354,10 @@ func Test_FilterUserEnvironments(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
-				envs := []model.EnvironmentAccess{}
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				envs := []model.EnvironmentTargetedAccessControl{}
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
-				mock.mockDatabase.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
+				mock.mockDatabase.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), mock.mockUser).Return(envs, nil)
 			},
 			input: input{
 				environments: []string{"1", "2", "4"},
@@ -373,7 +373,7 @@ func Test_FilterUserEnvironments(t *testing.T) {
 		{
 			name: "Positive Test - All Environments True",
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 
 			},
 			input: input{

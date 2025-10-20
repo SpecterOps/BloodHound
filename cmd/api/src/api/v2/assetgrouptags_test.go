@@ -130,7 +130,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, errors.New("failure"))
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -277,7 +277,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						CountNodesByKind(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(int64(0), nil).Times(4)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1617,7 +1617,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: true}, errors.New("db error"))
 				},
 				Test: func(output apitest.Output) {
@@ -1641,7 +1641,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any()).
 						Return(map[string]int{}, fmt.Errorf("GetAssetGroupTag Nodes fail"))
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -1658,7 +1658,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 					apitest.AddQueryParam(input, "environments", "testenv")
 				},
 				Setup: func() {
-					envs := []model.EnvironmentAccess{
+					envs := []model.EnvironmentTargetedAccessControl{
 						{
 							EnvironmentID: "testenv",
 						},
@@ -1667,9 +1667,9 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).
 						Return(envs, nil)
 					mockGraphDb.EXPECT().
 						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any(), []graph.Criteria{
@@ -1701,7 +1701,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraphDb.EXPECT().
 						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any()).

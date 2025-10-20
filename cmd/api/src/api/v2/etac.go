@@ -61,7 +61,7 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentT
 }
 
 func FilterUserEnvironments(ctx context.Context, db database.Database, user model.User, environments ...string) ([]string, error) {
-	flag, err := db.GetFlagByKey(ctx, appcfg.FeatureEnvironmentAccessControl)
+	flag, err := db.GetFlagByKey(ctx, appcfg.FeatureETAC)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get feature flag: %w", err)
 	}
@@ -75,7 +75,7 @@ func FilterUserEnvironments(ctx context.Context, db database.Database, user mode
 		return environments, nil
 	}
 
-	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user)
+	allowedList, err := db.GetEnvironmentTargetedAccessControlForUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}
