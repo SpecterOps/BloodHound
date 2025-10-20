@@ -127,14 +127,14 @@ const UpdateUserForm: React.FC<{
                 SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || undefined,
                 roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
                 all_environments: getUserQuery.data.all_environments,
-                environment_access_control: {
+                environment_targeted_access_control: {
                     environments:
                         getUserQuery.data.all_environments === false
-                            ? getUserQuery.data.environment_access_control?.map(
+                            ? getUserQuery.data.environment_targeted_access_control?.map(
                                   (environment: EnvironmentRequest) => environment
                               )
                             : null,
-                    //getUserQuery.data.environment_access_control.environments || [],
+                    //getUserQuery.data.environment_targeted_access_control.environments || [],
                 },
             }}
             error={error}
@@ -187,7 +187,7 @@ const UpdateUserFormInner: React.FC<{
 
     const { data: availableEnvironments } = useAvailableEnvironments();
 
-    const initialEnvironmentsSelected = initialData.environment_access_control?.environments?.map(
+    const initialEnvironmentsSelected = initialData.environment_targeted_access_control?.environments?.map(
         (item) => item.environment_id
     );
 
@@ -212,7 +212,7 @@ const UpdateUserFormInner: React.FC<{
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
             setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
         } else {
             setSelectedEnvironments([]);
         }
@@ -221,7 +221,7 @@ const UpdateUserFormInner: React.FC<{
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
             setSelectedEnvironments((prevSelected: string[]) => [...prevSelected, itemId]);
-            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
         } else {
             setSelectedEnvironments((prevSelected: string[]) => prevSelected?.filter((id: string) => id !== itemId));
         }
@@ -249,9 +249,9 @@ const UpdateUserFormInner: React.FC<{
 
         if (allEnvironmentsSelected) {
             setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('environment_access_control.environments', null);
+            form.setValue('environment_targeted_access_control.environments', null);
         } else {
-            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
         }
 
         if (allEnvironmentsCheckboxRef.current) {
@@ -704,7 +704,7 @@ const UpdateUserFormInner: React.FC<{
                                                         className='flex justify-start items-center ml-5'
                                                         data-testid='update-user-dialog_environments-checkbox'>
                                                         <FormField
-                                                            name='environment_access_control.environments'
+                                                            name='environment_targeted_access_control.environments'
                                                             control={form.control}
                                                             render={() => (
                                                                 <FormItem className='flex flex-row items-center'>

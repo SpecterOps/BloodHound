@@ -67,7 +67,7 @@ const CreateUserForm: React.FC<{
         roles: [3],
         SSOProviderId: '',
         all_environments: false,
-        environment_access_control: {
+        environment_targeted_access_control: {
             environments: null,
         },
     };
@@ -120,11 +120,11 @@ const CreateUserForm: React.FC<{
 
             returnMappedEnvironments && setSelectedEnvironments(returnMappedEnvironments);
 
-            form.setValue('environment_access_control.environments', null);
+            form.setValue('environment_targeted_access_control.environments', null);
             form.setValue('all_environments', true);
         } else {
             setSelectedEnvironments([]);
-            form.setValue('environment_access_control.environments', null);
+            form.setValue('environment_targeted_access_control.environments', null);
             form.setValue('all_environments', false);
         }
     };
@@ -152,13 +152,13 @@ const CreateUserForm: React.FC<{
 
         if (allEnvironmentsSelected) {
             form.setValue('all_environments', true);
-            form.setValue('environment_access_control.environments', null);
+            form.setValue('environment_targeted_access_control.environments', null);
         } else if (allEnvironmentsSelected === false && selectedEnvironments.length === 0) {
             form.setValue('all_environments', false);
-            form.setValue('environment_access_control.environments', null);
+            form.setValue('environment_targeted_access_control.environments', null);
         } else {
             form.setValue('all_environments', false);
-            form.setValue('environment_access_control.environments', formatReturnedEnvironments);
+            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
         }
 
         if (allEnvironmentsCheckboxRef.current) {
@@ -195,7 +195,10 @@ const CreateUserForm: React.FC<{
         allEnvironmentsIndeterminate,
         allEnvironmentsSelected,
         form.formState.errors,
+        formatReturnedEnvironments,
     ]);
+
+    console.log(form.watch('environment_targeted_access_control.environments'));
 
     return (
         <Form {...form}>
@@ -646,7 +649,7 @@ const CreateUserForm: React.FC<{
                                                             className='flex justify-start items-center ml-5'
                                                             data-testid='create-user-dialog_environments-checkbox'>
                                                             <FormField
-                                                                name='environment_access_control.environments'
+                                                                name='environment_targeted_access_control.environments'
                                                                 control={form.control}
                                                                 render={({ field }) => (
                                                                     <FormItem className='flex flex-row items-center'>
