@@ -64,23 +64,21 @@ const InfoHeader: FC = () => {
     }, [initialEnvironment]);
 
     return (
-        <div className='flex justify-around basis-2/3'>
-            <div className='flex justify-start gap-4 items-center basis-2/3'>
-                <SimpleEnvironmentSelector
-                    selected={{
-                        type: selectedEnvironment?.type ?? null,
-                        id: selectedEnvironment?.id ?? null,
-                    }}
-                    onSelect={handleSelect}
-                />
-                <Button variant='primary' disabled={!tagId} asChild>
-                    <AppLink
-                        data-testid='privilege-zones_create-selector-link'
-                        to={`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`}>
-                        Create Selector
-                    </AppLink>
-                </Button>
-            </div>
+        <div className='flex justify-start gap-4 items-center'>
+            <SimpleEnvironmentSelector
+                selected={{
+                    type: selectedEnvironment?.type ?? null,
+                    id: selectedEnvironment?.id ?? null,
+                }}
+                onSelect={handleSelect}
+            />
+            <Button variant='primary' disabled={!tagId} asChild>
+                <AppLink
+                    data-testid='privilege-zones_create-selector-link'
+                    to={`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`}>
+                    Create Selector
+                </AppLink>
+            </Button>
         </div>
     );
 };

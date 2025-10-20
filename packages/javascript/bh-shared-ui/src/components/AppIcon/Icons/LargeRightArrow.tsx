@@ -24,5 +24,3 @@ export const LargeRightArrow: React.FC<BaseSVGProps> = (props) => {
         </BaseSVG>
     );
 };
-
-export default LargeRightArrow;

@@ -91,6 +91,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		// User management for all BloodHound users
 		routerInst.GET("/api/v2/bloodhound-users", managementResource.ListUsers).RequirePermissions(permissions.AuthManageUsers),
 		routerInst.POST("/api/v2/bloodhound-users", managementResource.CreateUser).RequirePermissions(permissions.AuthManageUsers),
+		routerInst.GET("/api/v2/bloodhound-users-minimal", managementResource.ListActiveUsersMinimal).RequirePermissions(permissions.AuthReadUsers), // returns user data without any sensitive information.
 
 		routerInst.GET(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.GetUser).RequirePermissions(permissions.AuthManageUsers),
 		routerInst.PATCH(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.UpdateUser).RequirePermissions(permissions.AuthManageUsers),
@@ -214,6 +215,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.POST("/api/v2/graphs/cypher", resources.CypherQuery).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/saved-queries", resources.ListSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.POST("/api/v2/saved-queries", resources.CreateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.GET("/api/v2/saved-queries/export", resources.ExportSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
+		routerInst.POST("/api/v2/saved-queries/import", resources.ImportSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.GetSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.UpdateSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.DeleteSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
@@ -221,8 +224,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.DeleteSavedQueryPermissions).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.ShareSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}/export", api.URIPathVariableSavedQueryID), resources.ExportSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
-		routerInst.GET("/api/v2/saved-queries/export", resources.ExportSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
-		routerInst.POST("/api/v2/saved-queries/import", resources.ImportSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 
 		// Azure Entity API
 		routerInst.GET("/api/v2/azure/{entity_type}", resources.GetAZEntity).RequirePermissions(permissions.GraphDBRead),

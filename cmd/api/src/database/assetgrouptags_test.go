@@ -829,16 +829,16 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", "", null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "1", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "2", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "3", "", false, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "4", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "5", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
 	require.NoError(t, err)
 
 	t.Run("single item count", func(t *testing.T) {

@@ -99,7 +99,7 @@ const SearchBar: React.FC = () => {
         : { Zones: 'tags', Selectors: 'selectors', Members: 'members' };
 
     return (
-        <div {...getComboboxProps()} className='relative w-4/6'>
+        <div {...getComboboxProps()} className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverTrigger asChild>
                     <div className='flex items-center'>
@@ -108,6 +108,7 @@ const SearchBar: React.FC = () => {
                     </div>
                 </PopoverTrigger>
                 <PopoverContent
+                    align='start'
                     className='w-[448px] max-h-[400px] overflow-y-auto'
                     onOpenAutoFocus={(e) => e.preventDefault()}>
                     {/* supressing ref error as Popover isn't mounted on initial render */}

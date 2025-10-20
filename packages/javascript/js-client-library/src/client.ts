@@ -60,6 +60,7 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
@@ -94,7 +95,7 @@ import {
 import * as types from './types';
 
 /** Return the value as a string with the given prefix */
-const prefixValue = (prefix: string, value: any) => (value !== undefined ? `${prefix}:${value.toString()}` : undefined);
+const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
 
 /** Return a copy of the object with all keys having undefined values have been stripped out  */
 const omitUndefined = (obj: Record<string, unknown>) =>
@@ -254,6 +255,26 @@ class BHEAPIClient {
     getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);
 
     /* asset group tags (AGT) */
+
+    getAssetGroupTagHistory = (options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagsHistory>(`/api/v2/asset-group-tags-history`, {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
+
+    searchAssetGroupTagHistory = (query: string, options?: RequestOptions) =>
+        this.baseClient.post<AssetGroupTagsHistory>(
+            `/api/v2/asset-group-tags-history`,
+            { query },
+            {
+                paramsSerializer: {
+                    indexes: null,
+                },
+                ...options,
+            }
+        );
 
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
@@ -845,16 +866,42 @@ class BHEAPIClient {
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
-    listFileIngestJobs = (skip?: number, limit?: number, sortBy?: string) =>
+    listFileIngestJobs = (
+        {
+            skip,
+            limit,
+            sortBy,
+            status,
+            user_id,
+            start_time,
+            end_time,
+        }: {
+            skip?: number;
+            limit?: number;
+            sortBy?: string;
+            status?: number;
+            user_id?: string;
+            start_time?: string;
+            end_time?: string;
+        },
+        options?: RequestOptions
+    ) =>
         this.baseClient.get<ListFileIngestJobsResponse>(
             'api/v2/file-upload',
-            Object.assign({
-                params: {
-                    skip,
-                    limit,
-                    sort_by: sortBy,
+            Object.assign(
+                {
+                    params: omitUndefined({
+                        skip,
+                        limit,
+                        sort_by: sortBy,
+                        status: prefixValue('eq', status),
+                        user_id: prefixValue('eq', user_id),
+                        start_time: prefixValue('gte', start_time),
+                        end_time: prefixValue('lte', end_time),
+                    }),
                 },
-            })
+                options
+            )
         );
 
     listFileTypesForIngest = () =>
@@ -1017,6 +1064,9 @@ class BHEAPIClient {
 
     listUsers = (options?: RequestOptions) =>
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
+
+    listUsersMinimal = (options?: RequestOptions) =>
+        this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users-minimal', options);
 
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);

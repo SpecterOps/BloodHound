@@ -122,6 +122,10 @@ func (s RoleAssignments) GetNodeSet(bm cardinality.Duplex[uint64]) graph.NodeSet
 	return s.GetNodeKindSet(bm).AllNodes()
 }
 
+func (s RoleAssignments) ServicePrincipals() cardinality.Duplex[uint64] {
+	return s.Principals.Get(azure.ServicePrincipal).IDBitmap()
+}
+
 func (s RoleAssignments) Users() cardinality.Duplex[uint64] {
 	return s.Principals.Get(azure.User).IDBitmap()
 }
@@ -146,6 +150,12 @@ func (s RoleAssignments) UsersWithoutRoles() cardinality.Duplex[uint64] {
 func (s RoleAssignments) UsersWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
 	result := s.PrincipalsWithRole(roleTemplateIDs...)
 	result.And(s.Users())
+	return result
+}
+
+func (s RoleAssignments) ServicePrincipalsWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
+	result := s.PrincipalsWithRole(roleTemplateIDs...)
+	result.And(s.ServicePrincipals())
 	return result
 }
 
@@ -299,7 +309,7 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 // RoleMembersWithGrants returns the NodeSet of members for a given set of roles, including those members who may be able to grant themselves one of the given roles
 // NOTE: The current implementation also includes the role nodes in the returned set. It may be worth considering removing those nodes from the set if doing so doesn't break tier zero/high value assignment
 func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "RoleMembersWithGrants", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasure(slog.LevelInfo, "RoleMembersWithGrants", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err

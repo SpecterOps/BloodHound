@@ -17,6 +17,7 @@
 import type { AxiosResponse } from 'axios';
 import {
     AssetGroupTag,
+    AssetGroupTagHistoryRecord,
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
@@ -33,14 +34,14 @@ import {
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
-export type BasicResponse<T> = {
+export interface BasicResponse<T> {
     data: T;
-};
+}
 
-export type TimeWindowedResponse<T> = BasicResponse<T> & {
+export interface TimeWindowedResponse<T> extends BasicResponse<T> {
     start: string;
     end: string;
-};
+}
 
 export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
     Required<BasicResponse<T>> & {
@@ -168,6 +169,8 @@ export type NewAuthToken = AuthToken & {
 };
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
+
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
 
 export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
 
