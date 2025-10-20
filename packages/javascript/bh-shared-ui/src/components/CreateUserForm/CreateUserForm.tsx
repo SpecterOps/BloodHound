@@ -198,8 +198,6 @@ const CreateUserForm: React.FC<{
         formatReturnedEnvironments,
     ]);
 
-    console.log(form.watch('environment_targeted_access_control.environments'));
-
     return (
         <Form {...form}>
             <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(onSubmit)}>

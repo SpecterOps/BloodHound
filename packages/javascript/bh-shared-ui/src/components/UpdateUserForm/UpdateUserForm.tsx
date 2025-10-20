@@ -197,33 +197,45 @@ const UpdateUserFormInner: React.FC<{
 
     const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
 
+    // TODO: REMOVE?
+    /*
     const formatReturnedEnvironments: EnvironmentRequest[] | null = returnMappedEnvironments?.map((item: string) => ({
         environment_id: item,
     }));
+    */
 
-    const matchingValues = initialEnvironmentsSelected?.filter(
+    const matchingEnvironmentValues = initialEnvironmentsSelected?.filter(
         (value) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
     );
 
-    const checkAllEnvironment = initialData.all_environments === true ? null : matchingValues;
+    const checkedEnvironments =
+        initialData.all_environments === true ? returnMappedEnvironments : matchingEnvironmentValues;
 
-    const [selectedEnvironments, setSelectedEnvironments] = useState<any>(checkAllEnvironment);
+    const [selectedEnvironments, setSelectedEnvironments] = useState<any>(checkedEnvironments);
 
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
             setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
+            form.setValue('all_environments', true);
+            form.setValue('environment_targeted_access_control.environments', null);
         } else {
             setSelectedEnvironments([]);
         }
     };
 
+    const formatSelectedEnvironments: EnvironmentRequest[] | null = selectedEnvironments?.map((item: string) => ({
+        environment_id: item,
+    }));
+
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
-            setSelectedEnvironments((prevSelected: string[]) => [...prevSelected, itemId]);
-            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
+            setSelectedEnvironments((prevSelected: any) => [...prevSelected, itemId]);
+            form.setValue('all_environments', false);
+            form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         } else {
-            setSelectedEnvironments((prevSelected: string[]) => prevSelected?.filter((id: string) => id !== itemId));
+            setSelectedEnvironments((prevSelected: any) => prevSelected?.filter((id: string) => id !== itemId));
+            form.setValue('all_environments', false);
+            form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         }
     };
 
@@ -243,15 +255,31 @@ const UpdateUserFormInner: React.FC<{
             form.setValue('SSOProviderId', undefined);
         }
 
-        if (initialData.all_environments === true) {
-            setSelectedEnvironments(returnMappedEnvironments);
+        // user selects all environment checkboxes, all_environments should be true and environment_targeted_access_control.environments should be null
+        if (allEnvironmentsCheckboxRef.current) {
+            if (allEnvironmentsCheckboxRef.current.dataset.state === 'checked') {
+                form.setValue('all_environments', true);
+                form.setValue('environment_targeted_access_control.environments', null);
+            }
         }
 
-        if (allEnvironmentsSelected) {
-            setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('environment_targeted_access_control.environments', null);
-        } else {
-            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
+        // user unselects all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
+        if (allEnvironmentsCheckboxRef.current) {
+            if (allEnvironmentsCheckboxRef.current.dataset.state === 'unchecked' && selectedEnvironments.length === 0) {
+                form.setValue('all_environments', false);
+                form.setValue('environment_targeted_access_control.environments', null);
+            }
+        }
+
+        // user selects between 0 and all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
+        if (allEnvironmentsCheckboxRef.current) {
+            if (
+                allEnvironmentsCheckboxRef.current.dataset.state === 'indeterminate' &&
+                selectedEnvironments.length > 0
+            ) {
+                form.setValue('all_environments', false);
+                form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
+            }
         }
 
         if (allEnvironmentsCheckboxRef.current) {
@@ -286,7 +314,7 @@ const UpdateUserFormInner: React.FC<{
                 });
             }
         }
-    }, [authenticationMethod, form, form.setValue, error, form.setError, returnMappedEnvironments]);
+    }, [authenticationMethod, form, form.setValue, error, form.setError, checkedEnvironments]);
 
     return (
         <Form {...form}>
