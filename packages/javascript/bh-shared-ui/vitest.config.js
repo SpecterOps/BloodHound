@@ -21,7 +21,10 @@ export default defineConfig({
     resolve: {
         alias: {
             'js-client-library': path.resolve(__dirname, '..', 'js-client-library', 'src'),
-            'doodle-ui': path.resolve(__dirname, '..', 'doodle-ui', 'src'),
+
+            'react': path.resolve(__dirname, './node_modules/react'),
+            'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+            'react/jsx-runtime': path.resolve(__dirname, './node_modules/react/jsx-runtime'),
         },
     },
     test: {

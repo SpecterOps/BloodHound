@@ -29,5 +29,4 @@
         "types": ["vitest/globals"]
     },
     "include": ["src"],
-    "exclude": ["**/*.stories.tsx", "**/*.test.tsx"],
 }
