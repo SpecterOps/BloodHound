@@ -16,43 +16,20 @@ This library is written in TypeScript and leverages [Radix](https://www.radix-ui
 ## Using TailwindCSS
 
 1. Install [TailwindCSS](https://tailwindcss.com/docs/installation)
-2. Install DoodleUI (example using `yarn` shown below)
+2. Update your Tailwind configuration to include the DoodleUI plugin, preset and content
 
 ```
-$ yarn add @bloodhoundenterprise/DoodleUI
-```
+import { DoodleUIPlugin, DoodleUIPreset } from './src/tailwind';
 
-3. Update your Tailwind configuration to include the DoodleUI plugin, preset and content
-
-```
-import { DoodleUIPlugin, DoodleUIPreset } from '@bloodhoundenterprise/doodleui';
-
-module.exports = {
-  content: [
-    "./src/**/*.{html,js}" // your application source code
-    "node_modules/@bloodhoundenterprise/doodleui/dist/index.js" // DoodleUI components
-  ],
-  plugins: [DoodleUIPlugin],
-  presets: [DoodleUIPreset],
-  ...
-}
+export default {
+    presets: [DoodleUIPreset],
+    plugins: [DoodleUIPlugin],
+    darkMode: ['class'],
+    content: ['./src/**/*.tsx', '.storybook/preview.tsx'],
+};
 ```
 
 These configuration options provide the base theme customizations and additional utility classes required to render DoodleUI components in alignment with the design system used by BloodHound Community Edition and BloodHound Enterprise.
-
-## Manual Installation
-
-1. Install DoodleUI (example using `yarn` shown below)
-
-```
-$ yarn add @bloodhoundenterprise/DoodleUI
-```
-
-2. Add the DoodleUI stylesheet to your application
-
-```
-<link rel="stylesheet" href="node_modules/@bloodhoundenterprise/doodleui/dist/styles.css">
-```
 
 ## Developer Notes
 
@@ -74,27 +51,6 @@ Then import the font in your entrypoint:
 import '@fontsource/roboto/400.css';
 ```
 
-### Getting Started
-
-Clone this repository
-
-```
-git clone git@github.com:SpecterOps/DoodleUI.git
-```
-
-Install dependencies with `yarn`
-
-```
-cd DoodleUI
-yarn
-```
-
-Start the dev server
-
-```
-yarn dev
-```
-
 ### Other Scripts
 
 | Command                           | Description                                          |
@@ -110,7 +66,6 @@ yarn dev
 | create-component <component name> | Create a new component in `src/components`           |
 | format:check                      | Check file formatting                                |
 | format:write                      | Fix file formatting                                  |
-| update-badge                      | Updates the version badge in the [README](README.md) |
 
 ## Licensing
 
