@@ -323,6 +323,7 @@ const UpdateUserFormInner: React.FC<{
         allEnvironmentsSelected,
         selectedEnvironments,
         formatSelectedEnvironments,
+        checkedEnvironments, // this is making tests weird
     ]);
 
     return (
