@@ -198,6 +198,7 @@ const CreateUserForm: React.FC<{
         selectedEnvironments.length,
         allEnvironmentsSelected,
         allEnvironmentsIndeterminate,
+        formatReturnedEnvironments, // this is making tests weird
     ]);
 
     return (
