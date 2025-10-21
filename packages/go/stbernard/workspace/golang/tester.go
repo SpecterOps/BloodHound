@@ -52,7 +52,7 @@ var (
 )
 
 // TestWorkspace runs all Go tests for a given workspace. Setting integration to true will run integration tests, otherwise we only run unit tests
-func TestWorkspace(cwd string, modPath string, profileDir string, env environment.Environment, integration bool, tags string) error {
+func TestWorkspace(cwd string, modPath string, profileDir string, env environment.Environment, integration bool, tags string, goReporting bool) error {
 	var (
 		manifest = make(map[string]string, len(modPath))
 		command  = "go"
@@ -67,6 +67,10 @@ func TestWorkspace(cwd string, modPath string, profileDir string, env environmen
 		}
 
 		args = append(args, []string{"-tags", tags}...)
+	}
+
+	if goReporting {
+		args = append(args, []string{"-json"}...)
 	}
 
 	modName, err := getModuleName(modPath)
