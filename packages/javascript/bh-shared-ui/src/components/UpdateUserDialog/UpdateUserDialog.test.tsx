@@ -316,15 +316,16 @@ describe('UpdateUserDialog', () => {
 
         //screen.debug(undefined, Infinity);
 
-        expect(testOnSave).toHaveBeenCalledWith(expect.arrayContaining([]));
+        //expect(testOnSave).toHaveBeenCalledWith([]);
 
-        /*
+        // check return value
+        
         await waitFor(
             () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
             {
                 timeout: 30000,
             }
         );
-        */
+    
     });
 });
