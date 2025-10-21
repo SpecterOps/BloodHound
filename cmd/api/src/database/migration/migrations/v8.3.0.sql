@@ -133,3 +133,8 @@ SET key         = 'environment_targeted_access_control',
     name        = 'Environment Targeted Access Control',
     description = 'Enable power users and admins to set environment targeted access controls on users'
 WHERE key = 'targeted_access_control';
+
+
+-- Remove data from a bad migration in 7.4.0 that caused some `lastseen` values
+-- to be incorrectly stored in the database.
+DELETE FROM edge WHERE edge.properties ? 'lastseen' AND edge.properties ->> 'lastseen' = '{}';
