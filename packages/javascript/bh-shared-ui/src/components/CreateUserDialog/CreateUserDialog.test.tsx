@@ -104,6 +104,13 @@ const server = setupServer(
                 data: testSSOProviders,
             })
         );
+    }),
+    rest.get('/api/v2/available-domains', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

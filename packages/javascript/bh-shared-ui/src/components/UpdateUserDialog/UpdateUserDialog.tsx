@@ -73,7 +73,7 @@ const UpdateUserDialog: React.FC<{
                             isLoading={isLoading}
                             onSubmit={handleOnSave}
                             hasSelectedSelf={hasSelectedSelf}
-                            open={open}
+                            //open={open}
                             showEnvironmentAccessControls={showEnvironmentAccessControls}
                             userId={userId!}
                         />

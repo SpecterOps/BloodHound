@@ -57,7 +57,7 @@ const UpdateUserForm: React.FC<{
     hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
-    open?: boolean;
+    //open?: boolean;
     showEnvironmentAccessControls?: boolean;
 }> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
     const getUserQuery = useQuery(
@@ -134,7 +134,6 @@ const UpdateUserForm: React.FC<{
                                   (environment: EnvironmentRequest) => environment
                               )
                             : null,
-                    //getUserQuery.data.environment_targeted_access_control.environments || [],
                 },
             }}
             error={error}
@@ -153,7 +152,7 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf: boolean;
     initialData: UpdateUserRequestForm;
     isLoading: boolean;
-    open?: boolean;
+    //open?: boolean;
     onSubmit: (user: UpdateUserRequestForm) => void;
     roles?: Role[];
     showEnvironmentAccessControls?: boolean;
@@ -316,15 +315,14 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [
         authenticationMethod,
-        form,
-        form.setValue,
         error,
+        form,
         form.setError,
-        checkedEnvironments,
+        form.setValue,
         allEnvironmentsIndeterminate,
         allEnvironmentsSelected,
-        formatSelectedEnvironments,
         selectedEnvironments,
+        formatSelectedEnvironments,
     ]);
 
     return (

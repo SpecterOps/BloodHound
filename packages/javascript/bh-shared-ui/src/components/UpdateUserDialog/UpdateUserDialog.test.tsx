@@ -117,6 +117,13 @@ const server = setupServer(
     }),
     rest.get('/api/v2/bloodhound-users/1', (req, res, ctx) => {
         return res(ctx.json({ data: testUser }));
+    }),
+    rest.get('/api/v2/available-domains', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
@@ -305,9 +312,9 @@ describe('UpdateUserDialog', () => {
         await testOnSave(); // Await the function to ensure the promise resolves.
         expect(testOnSave).toHaveBeenCalled();
 
-        console.log(testOnSave);
+        //console.log(testOnSave);
 
-        screen.debug(undefined, Infinity);
+        //screen.debug(undefined, Infinity);
 
         expect(testOnSave).toHaveBeenCalledWith(expect.arrayContaining([]));
 
