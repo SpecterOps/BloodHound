@@ -2,6 +2,8 @@
 # Project Level Git Ignore
 ################################
 
+license.yaml
+
 # Temporary backup files
 *.bak
 
