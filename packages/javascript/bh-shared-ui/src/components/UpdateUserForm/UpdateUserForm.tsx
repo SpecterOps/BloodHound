@@ -42,7 +42,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
 import { Environment, EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import { Minus } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
@@ -52,14 +52,21 @@ import { apiClient } from '../../utils';
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
 
 const UpdateUserForm: React.FC<{
-    onSubmit: (user: UpdateUserRequestForm) => void;
+    //onSubmit: (user: UpdateUserRequestForm) => void;
     userId: string;
     hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
     //open?: boolean;
     showEnvironmentAccessControls?: boolean;
-}> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
+}> = ({
+    //onSubmit,
+    userId,
+    hasSelectedSelf,
+    isLoading,
+    error,
+    showEnvironmentAccessControls,
+}) => {
     const getUserQuery = useQuery(
         ['getUser', userId],
         ({ signal }) => apiClient.getUser(userId, { signal }).then((res) => res.data.data),
@@ -139,7 +146,7 @@ const UpdateUserForm: React.FC<{
             error={error}
             hasSelectedSelf={hasSelectedSelf}
             isLoading={isLoading}
-            onSubmit={onSubmit}
+            //onSubmit={onSubmit}
             roles={getRolesQuery.data}
             SSOProviders={listSSOProvidersQuery.data}
             showEnvironmentAccessControls={showEnvironmentAccessControls}
@@ -153,7 +160,7 @@ const UpdateUserFormInner: React.FC<{
     initialData: UpdateUserRequestForm;
     isLoading: boolean;
     //open?: boolean;
-    onSubmit: (user: UpdateUserRequestForm) => void;
+    //onSubmit: (user: UpdateUserRequestForm) => void;
     roles?: Role[];
     showEnvironmentAccessControls?: boolean;
     SSOProviders?: SSOProvider[];
@@ -162,7 +169,7 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf,
     initialData,
     isLoading,
-    onSubmit,
+    //onSubmit,
     roles,
     showEnvironmentAccessControls,
     SSOProviders,
@@ -249,46 +256,7 @@ const UpdateUserFormInner: React.FC<{
         selectedEnvironments.length > 0 &&
         selectedEnvironments.length < availableEnvironments!.length;
 
-    useEffect(() => {
-        if (authenticationMethod === 'password') {
-            form.setValue('SSOProviderId', undefined);
-        }
-
-        // user selects all environment checkboxes, all_environments should be true and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (allEnvironmentsCheckboxRef.current.dataset.state === 'checked') {
-                form.setValue('all_environments', true);
-                form.setValue('environment_targeted_access_control.environments', null);
-            }
-        }
-
-        // user unselects all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (allEnvironmentsCheckboxRef.current.dataset.state === 'unchecked' && selectedEnvironments.length === 0) {
-                form.setValue('all_environments', false);
-                form.setValue('environment_targeted_access_control.environments', null);
-            }
-        }
-
-        // user selects between 0 and all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (
-                allEnvironmentsCheckboxRef.current.dataset.state === 'indeterminate' &&
-                selectedEnvironments.length > 0
-            ) {
-                form.setValue('all_environments', false);
-                form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
-            }
-        }
-
-        if (allEnvironmentsCheckboxRef.current) {
-            allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
-                ? 'indeterminate'
-                : allEnvironmentsSelected
-                  ? 'checked'
-                  : 'unchecked';
-        }
-
+    const onError = () => {
         if (error) {
             const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
             if (error.response?.status === 400) {
@@ -313,7 +281,100 @@ const UpdateUserFormInner: React.FC<{
                 });
             }
         }
+    };
+
+    const onSubmit = useCallback(
+        (user: UpdateUserRequestForm) => {
+            user;
+
+            if (authenticationMethod === 'password') {
+                form.setValue('SSOProviderId', undefined);
+            }
+
+            // user selects all environment checkboxes, all_environments should be true and environment_targeted_access_control.environments should be null
+            if (allEnvironmentsCheckboxRef.current) {
+                if (allEnvironmentsCheckboxRef.current.dataset.state === 'checked') {
+                    form.setValue('all_environments', true);
+                    form.setValue('environment_targeted_access_control.environments', null);
+                }
+            }
+
+            // user unselects all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
+            if (allEnvironmentsCheckboxRef.current) {
+                if (
+                    allEnvironmentsCheckboxRef.current.dataset.state === 'unchecked' &&
+                    selectedEnvironments.length === 0
+                ) {
+                    form.setValue('all_environments', false);
+                    form.setValue('environment_targeted_access_control.environments', null);
+                }
+            }
+
+            // user selects between 0 and all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
+            if (allEnvironmentsCheckboxRef.current) {
+                if (
+                    allEnvironmentsCheckboxRef.current.dataset.state === 'indeterminate' &&
+                    selectedEnvironments.length > 0
+                ) {
+                    form.setValue('all_environments', false);
+                    form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
+                }
+            }
+
+            if (allEnvironmentsCheckboxRef.current) {
+                allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
+                    ? 'indeterminate'
+                    : allEnvironmentsSelected
+                      ? 'checked'
+                      : 'unchecked';
+            }
+        },
+        [
+            authenticationMethod,
+            form,
+            form.setValue,
+            allEnvironmentsIndeterminate,
+            allEnvironmentsSelected,
+            formatSelectedEnvironments,
+            selectedEnvironments,
+        ]
+    );
+
+    useEffect(() => {
+        // on submit for password and setvalues on form and error states
+        /*
+        if (authenticationMethod === 'password') {
+            form.setValue('SSOProviderId', undefined);
+        }
+        */
+        /*
+        if (error) {
+            const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
+            if (error.response?.status === 400) {
+                if (errMsg.includes('role provision enabled')) {
+                    form.setError('root.generic', {
+                        type: 'custom',
+                        message: 'Cannot modify user roles for role provision enabled SSO providers.',
+                    });
+                }
+            } else if (error.response?.status === 409) {
+                if (errMsg.includes('principal name')) {
+                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                } else if (errMsg.includes('email')) {
+                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
+                } else {
+                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
+                }
+            } else {
+                form.setError('root.generic', {
+                    type: 'custom',
+                    message: 'An unexpected error occurred. Please try again.',
+                });
+            }
+        }
+        */
     }, [
+        /*
         authenticationMethod,
         error,
         form,
@@ -321,14 +382,23 @@ const UpdateUserFormInner: React.FC<{
         form.setValue,
         allEnvironmentsIndeterminate,
         allEnvironmentsSelected,
-        selectedEnvironments,
         formatSelectedEnvironments,
+                selectedEnvironments,
+
+        */
+        form,
+        form.setValue,
+        formatSelectedEnvironments,
+        selectedEnvironments,
         checkedEnvironments, // this is making tests weird
     ]);
 
+    console.log(form.watch('all_environments'));
+    console.log(form.watch('environment_targeted_access_control.environments'));
+
     return (
         <Form {...form}>
-            <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit)}>
+            <form autoComplete='off' onSubmit={form.handleSubmit(onSubmit, onError)}>
                 <div className='flex gap-x-4 justify-center'>
                     <Card className='p-6 rounded shadow max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
