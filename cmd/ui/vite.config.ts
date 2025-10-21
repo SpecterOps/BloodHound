@@ -19,13 +19,18 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
 import glsl from 'vite-plugin-glsl';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        plugins: [react(), glsl()],
+        plugins: [
+            react(),
+            glsl(),
+            tsconfigPaths({ projects: ['./tsconfig.json', '../../packages/javascript/doodle-ui/tsconfig.json'] }),
+        ],
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),

@@ -10,7 +10,7 @@
         "build": "yarn check-types && vite build",
         "preview": "vite preview",
         "test": "TZ=America/Los_Angeles vitest",
-        "check-types": "yarn workspaces foreach -ptRv --include '{bh-shared-ui,js-client-library}' run build && tsc --noEmit --pretty",
+        "check-types": "yarn workspaces foreach -ptRv --include '{doodle-ui, bh-shared-ui, js-client-library}' run build && tsc --noEmit --pretty",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
@@ -100,6 +100,7 @@
         "typescript": "^5.1.6",
         "vite": "^5.4.19",
         "vite-plugin-glsl": "^1.3.0",
+        "vite-tsconfig-paths": "^5.1.4",
         "vitest": "^2.1.9",
         "vitest-canvas-mock": "^0.3.3",
         "whatwg-fetch": "^3.6.2"
