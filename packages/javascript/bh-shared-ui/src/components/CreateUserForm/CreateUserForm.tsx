@@ -129,9 +129,11 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const formatReturnedEnvironments: EnvironmentRequest[] = selectedEnvironments?.map((itemId: string) => ({
-        environment_id: itemId,
-    }));
+    const formatReturnedEnvironments: EnvironmentRequest[] =
+        selectedEnvironments &&
+        selectedEnvironments.map((itemId: string) => ({
+            environment_id: itemId,
+        }));
 
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
@@ -192,11 +194,10 @@ const CreateUserForm: React.FC<{
         error,
         form.setError,
         form.watch,
-        allEnvironmentsIndeterminate,
-        allEnvironmentsSelected,
         form.formState.errors,
-        formatReturnedEnvironments,
         selectedEnvironments.length,
+        allEnvironmentsSelected,
+        allEnvironmentsIndeterminate,
     ]);
 
     return (
