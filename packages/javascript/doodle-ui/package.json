@@ -1,6 +1,5 @@
 {
     "name": "doodle-ui",
-    "description": "todo",
     "main": "./dist/doodle-ui.js",
     "types": "./dist/index.d.ts",
     "files": [

@@ -23,7 +23,7 @@ import dts from 'vite-plugin-dts';
 import packageJson from './package.json';
 
 export default defineConfig({
-    plugins: [react(), dts({ exclude: ['**/*.stories.ts'], pathsToAliases: true })],
+    plugins: [react(), dts({ exclude: ['**/*.stories.ts', '**/__template__/*'], pathsToAliases: true })],
     resolve: {
         alias: {
             components: resolve(__dirname, 'src/components'),

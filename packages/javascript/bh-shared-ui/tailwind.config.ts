@@ -18,7 +18,7 @@ import { DoodleUIPlugin, DoodleUIPreset } from 'doodle-ui';
 import type { Config } from 'tailwindcss';
 
 export default {
-    content: ['./src/**/*.{js,ts,jsx,tsx}', './node_modules/doodle-ui/dist/doodleui.js'],
+    content: ['./src/**/*.{js,ts,jsx,tsx}', './node_modules/doodle-ui/dist/doodle-ui.js'],
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
     presets: [DoodleUIPreset],

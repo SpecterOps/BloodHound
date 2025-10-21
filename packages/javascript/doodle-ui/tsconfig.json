@@ -19,9 +19,9 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
+        "sourceMap": true,
 
         /* Aliases */
-        "baseUrl": ".",
         "paths": {
             "components": ["./src/components"],
             "components/*": ["./src/components/*"]

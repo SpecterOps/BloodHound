@@ -30,8 +30,7 @@ import {
 } from '@mui/material';
 import clsx from 'clsx';
 import { Button } from 'doodle-ui';
-import { AssetGroupMemberCounts } from 'js-client-library';
-import { AssetGroupMemberParams } from 'js-client-library/dist/types';
+import { AssetGroupMemberCounts, AssetGroupMemberParams } from 'js-client-library';
 import { FC, useState } from 'react';
 import NodeIcon from '../NodeIcon';
 

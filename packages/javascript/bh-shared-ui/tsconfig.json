@@ -20,10 +20,6 @@
         "declaration": true,
         "declarationMap": true,
         "allowJs": true,
-
-        "paths": {
-            "doodle-ui": ["./node_modules/doodleui/src"]
-        }
     },
     "include": ["src"]
 }

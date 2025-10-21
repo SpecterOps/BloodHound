@@ -24,8 +24,8 @@ import {
     GraphNode,
     SeedTypeObjectId,
     SeedTypes,
+    SelectorSeedRequest,
 } from 'js-client-library';
-import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
