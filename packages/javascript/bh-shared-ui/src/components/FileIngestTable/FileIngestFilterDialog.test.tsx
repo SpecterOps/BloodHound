@@ -193,7 +193,7 @@ describe('FileIngestFilterDialog', () => {
             await inputDate(user, 'Start Date', '2025-01-01');
             await user.click(screen.getByRole('button', { name: 'Confirm' }));
 
-            expect(onConfirmMock).toBeCalledWith({ start_time: '2025-01-01T00:00:00.000Z' });
+            expect(onConfirmMock).toBeCalledWith({ start_time: '2025-01-01T00:00:00.000+00:00' });
         });
 
         it('does not allow confirmation while dates are invalid', async () => {

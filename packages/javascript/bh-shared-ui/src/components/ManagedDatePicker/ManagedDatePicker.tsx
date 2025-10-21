@@ -61,13 +61,7 @@ export const ManagedDatePicker: FC<Props> = ({
     // Value for text input. Will be invalid as date during keystrokes.
     const [inputDateString, setInputDateString] = useState<string>(value?.slice(0, 10) || '');
 
-    let calendarValue: DateTime | undefined = undefined;
-
-    try {
-        calendarValue = value ? DateTime.fromJSDate(new Date(value)) : undefined;
-    } catch (error) {
-        calendarValue = undefined;
-    }
+    const calendarValue = value ? DateTime.fromISO(value) : undefined;
 
     // Validation produces an array of errors. Only one (the first) is displayed.
     const [validationError, setValidationError] = useState(validationErrorProp);
@@ -166,7 +160,7 @@ export const ManagedDatePicker: FC<Props> = ({
                     mode: 'single',
                     onSelect: setInputFromCalendar,
                     // `selected` represents the value of the component
-                    selected: calendarValue?.toJSDate(),
+                    selected: calendarValue?.isValid ? calendarValue.toJSDate() : undefined,
                     toDate: toDate,
                 }}
             />

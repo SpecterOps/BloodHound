@@ -33,7 +33,8 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
     const [isEndValid, setIsEndValid] = useState(true);
     const [isStartValid, setIsStartValid] = useState(true);
 
-    const isCorrectOrder = !start || !end || DateTime.fromISO(start) <= DateTime.fromISO(end);
+    const isCorrectOrder =
+        !start || !end || (isStartValid && isEndValid && DateTime.fromISO(start) <= DateTime.fromISO(end));
 
     const onStartChange = useCallback(
         (dateStr: string, isValid: boolean) => {
@@ -89,7 +90,9 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
                 hint='End Date'
                 onDateChange={onEndChange}
                 value={end}
-                validationError={!isCorrectOrder ? 'End date must be on or after start date' : ''}
+                validationError={
+                    !isCorrectOrder && isStartValid && isEndValid ? 'End date must be on or after start date' : ''
+                }
             />
         </div>
     );
