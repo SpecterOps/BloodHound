@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -83,7 +84,13 @@ func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
 		panic("configuration error: " + err.Error())
 	}
 
-	dbinput := s.Address + ":5432"
+	cname, err := net.LookupCNAME(s.Address)
+	if err != nil {
+		fmt.Printf("Error looking up CNAME for %s: %v. Using original address", s.Address, err)
+		cname = s.Address
+	}
+
+	dbinput := cname + ":5432"
 	slog.Info("requesting auth token")
 	authenticationToken, err := auth.BuildAuthToken(context.TODO(), dbinput, "us-east-1", s.Username, cfg.Credentials)
 	if err != nil {
