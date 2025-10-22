@@ -24,7 +24,7 @@ import {
     ExtendedCertificationFilters,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector, NodeIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
@@ -55,6 +55,8 @@ type CertificationTableProps = {
     applyAdvancedFilters?: (advancedFilters: Partial<ExtendedCertificationFilters>) => void;
     selectedRows: number[];
     setSelectedRows: Dispatch<SetStateAction<number[]>>;
+    dropdownSelection: string;
+    setDropdownSelection: Dispatch<SetStateAction<string>>;
 };
 
 const CertificationTable: FC<CertificationTableProps> = ({
@@ -71,10 +73,10 @@ const CertificationTable: FC<CertificationTableProps> = ({
     applyAdvancedFilters,
     selectedRows,
     setSelectedRows,
+    dropdownSelection,
+    setDropdownSelection,
 }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
-
-    const [dropdownSelection, setDropdownSelection] = useState('Pending');
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();

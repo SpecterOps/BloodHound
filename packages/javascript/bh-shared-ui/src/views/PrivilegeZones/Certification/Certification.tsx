@@ -39,6 +39,7 @@ const Certification = () => {
     const [filters, setFilters] = useState<ExtendedCertificationFilters>({});
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [dropdownSelection, setDropdownSelection] = useState('Pending');
     const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
         CertificationManual
     );
@@ -181,10 +182,14 @@ const Certification = () => {
             <div className='flex gap-8 mt-4'>
                 <div className='basis-2/3'>
                     <div className='flex gap-4 mb-4'>
-                        <Button onClick={() => showDialog(CertificationManual)}>Certify</Button>
-                        <Button variant='secondary' onClick={() => showDialog(CertificationRevoked)}>
-                            Revoke
-                        </Button>
+                        {dropdownSelection !== 'Automatic Certification' && (
+                            <>
+                                <Button onClick={() => showDialog(CertificationManual)}>Certify</Button>
+                                <Button variant='secondary' onClick={() => showDialog(CertificationRevoked)}>
+                                    Revoke
+                                </Button>
+                            </>
+                        )}
                     </div>
 
                     <CertificationTable
@@ -205,6 +210,8 @@ const Certification = () => {
                         applyAdvancedFilters={applyAdvancedFilters}
                         selectedRows={selectedRows}
                         setSelectedRows={setSelectedRows}
+                        dropdownSelection={dropdownSelection}
+                        setDropdownSelection={setDropdownSelection}
                     />
                 </div>
                 <div className='basis-1/3'>
