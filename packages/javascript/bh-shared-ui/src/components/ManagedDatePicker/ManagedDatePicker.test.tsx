@@ -16,46 +16,32 @@
 
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../test-utils';
-import { ManagedDatePicker, VALIDATIONS } from './ManagedDatePicker';
+import { ManagedDatePicker } from './ManagedDatePicker';
 
 const JAN_1 = new Date('2025-01-01T00:00:00Z');
-const JAN_2 = new Date('2025-01-02T00:00:00Z');
 const JAN_31 = new Date('2025-01-31T00:00:00Z');
 
 const originalTZ = process.env.TZ;
 
-const DEFAULT_VALIDATIONS = [VALIDATIONS.isBeforeDate(JAN_2, 'Date is not before Jan 2nd')];
-
 type RenderDatePickerOptions = {
     hint?: string;
-    value?: Date;
-    validations?: typeof DEFAULT_VALIDATIONS;
+    value?: string;
 };
 
 const renderDatePicker = (props: RenderDatePickerOptions = {}) => {
-    const { hint, value, validations } = props;
+    const { hint, value } = props;
     const user = userEvent.setup();
 
     const onDateChangeMock = vi.fn();
-    const onValidationMock = vi.fn();
 
     render(
-        <ManagedDatePicker
-            fromDate={JAN_1}
-            hint={hint}
-            onDateChange={onDateChangeMock}
-            onValidation={onValidationMock}
-            toDate={JAN_31}
-            validations={validations}
-            value={value}
-        />
+        <ManagedDatePicker fromDate={JAN_1} hint={hint} onDateChange={onDateChangeMock} toDate={JAN_31} value={value} />
     );
 
     return {
         clickAway: () => user.click(document.body),
         clickInput: () => user.click(screen.getByRole('textbox')),
         onDateChangeMock,
-        onValidationMock,
         openCalendar: () => user.click(screen.getByRole('button', { name: /choose date/i })),
         selectDate: (date: string) => user.click(screen.getAllByRole('gridcell', { name: date })[0]),
         typeInput: (text: string) => user.type(screen.getByRole('textbox'), text),
@@ -74,67 +60,7 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-describe('VALIDATIONS', () => {
-    it('returns true when isAfterDate is called without after or date', () => {
-        expect(VALIDATIONS.isAfterDate(undefined, '').rule(JAN_2)).toBeTruthy();
-    });
-
-    it('returns true when date is after or equal to the given after date', () => {
-        expect(VALIDATIONS.isAfterDate(JAN_1, '').rule(JAN_2)).toBeTruthy();
-    });
-
-    it('returns false when date is before the given after date', () => {
-        expect(VALIDATIONS.isAfterDate(JAN_2, '').rule(JAN_1)).toBeFalsy();
-    });
-
-    it('returns true when isBeforeDate is called without before or date', () => {
-        expect(VALIDATIONS.isBeforeDate(undefined, '').rule(JAN_2)).toBeTruthy();
-    });
-
-    it('returns true when date is before or equal to the given before date', () => {
-        expect(VALIDATIONS.isBeforeDate(JAN_2, '').rule(JAN_1)).toBeTruthy();
-    });
-
-    it('returns false when date is after the given before date', () => {
-        expect(VALIDATIONS.isBeforeDate(JAN_1, '').rule(JAN_2)).toBeFalsy();
-    });
-});
-
 describe('ManagedDatePicker - date validation', () => {
-    it('returns true when no validations are provided', async () => {
-        const { clickAway, onValidationMock, openCalendar, selectDate } = renderDatePicker();
-
-        await openCalendar();
-        await selectDate('1');
-
-        expect(onValidationMock).toHaveBeenCalledWith(true);
-
-        clickAway();
-
-        await openCalendar();
-        await selectDate('3');
-
-        expect(onValidationMock).toHaveBeenCalledWith(true);
-    });
-
-    it('returns true when validations pass', async () => {
-        const { onValidationMock, openCalendar, selectDate } = renderDatePicker({ validations: DEFAULT_VALIDATIONS });
-
-        await openCalendar();
-        await selectDate('1');
-
-        expect(onValidationMock).toHaveBeenCalledWith(true);
-    });
-
-    it('returns false when validations fail', async () => {
-        const { onValidationMock, openCalendar, selectDate } = renderDatePicker({ validations: DEFAULT_VALIDATIONS });
-
-        await openCalendar();
-        await selectDate('3');
-
-        expect(onValidationMock).toHaveBeenCalledWith(false);
-    });
-
     it('sets input text on date click', async () => {
         const { openCalendar, selectDate } = renderDatePicker();
 
@@ -145,25 +71,24 @@ describe('ManagedDatePicker - date validation', () => {
     });
 
     it('displays a validation error', async () => {
-        const { openCalendar, selectDate } = renderDatePicker({ validations: DEFAULT_VALIDATIONS });
+        const { typeInput } = renderDatePicker();
 
-        await openCalendar();
-        await selectDate('3');
+        await typeInput('not a date');
 
-        expect(screen.getByText('Date is not before Jan 2nd')).toBeInTheDocument();
+        expect(await screen.findByText('Input is not a valid date.')).toBeInTheDocument();
     });
 
     it('clear validation error on input', async () => {
-        const { clickAway, typeInput } = renderDatePicker({ validations: DEFAULT_VALIDATIONS });
+        const { clickAway, typeInput } = renderDatePicker();
 
-        await typeInput('2025-01-03');
+        await typeInput('not a date');
+
+        expect(await screen.findByText('Input is not a valid date.')).toBeInTheDocument();
+
+        await typeInput('{backspace}'.repeat(10));
         await clickAway();
 
-        expect(screen.getByText('Date is not before Jan 2nd')).toBeInTheDocument();
-
-        await typeInput('{backspace}'.repeat(1));
-
-        expect(screen.queryByText('Date is not before Jan 2nd')).not.toBeInTheDocument();
+        expect(await screen.queryByText('Input is not a valid date.')).not.toBeInTheDocument();
     });
 });
 
@@ -199,35 +124,32 @@ describe('ManagedDatePicker - value', () => {
     });
 
     it('sets input text to value', async () => {
-        renderDatePicker({ value: JAN_1 });
+        renderDatePicker({ value: JAN_1.toISOString() });
 
         expect(screen.getByRole('textbox')).toHaveValue('2025-01-01');
     });
 
-    it('updates value after blur when a valid date typed', async () => {
+    it('updates value when a valid date typed', async () => {
         const { clickAway, onDateChangeMock, typeInput } = renderDatePicker();
 
         await typeInput('2025-01-01');
         await clickAway();
 
-        expect(onDateChangeMock).toHaveBeenCalledWith(new Date('2025-01-01T00:00:00.000Z'));
+        expect(onDateChangeMock).toHaveBeenCalledWith('2025-01-01', true);
     });
 
-    it('does not updates value after blur when bad date typed', async () => {
+    it('updates value when an invalid date typed', async () => {
         const { clickAway, onDateChangeMock, typeInput } = renderDatePicker();
 
         await typeInput('2025');
         await clickAway();
 
-        expect(onDateChangeMock).not.toHaveBeenCalled();
+        expect(onDateChangeMock).toHaveBeenCalledWith('2025', false);
     });
-});
 
-describe('ManagedDatePicker - input', () => {
-    it('updates calendar when a valid date typed', async () => {
-        const { openCalendar, typeInput } = renderDatePicker();
+    it('sets the calendar date to match the valid', async () => {
+        const { openCalendar } = renderDatePicker({ value: JAN_1.toISOString() });
 
-        await typeInput('2025-01-01');
         await openCalendar();
 
         const calendarDay = screen.getByRole('gridcell', { selected: true });
@@ -235,30 +157,21 @@ describe('ManagedDatePicker - input', () => {
         expect(calendarDay).toBeInTheDocument();
         expect(calendarDay).toHaveTextContent('1');
     });
+});
 
-    it('does not updates calendar when bad date typed', async () => {
-        const { openCalendar, typeInput } = renderDatePicker();
-
-        await typeInput('2025');
-        await openCalendar();
-
-        const calendarDay = screen.queryByRole('gridcell', { selected: true });
-
-        expect(calendarDay).not.toBeInTheDocument();
-    });
-
+describe('ManagedDatePicker - input', () => {
     it('clears value if input is empty', async () => {
         const { clickAway, onDateChangeMock, typeInput } = renderDatePicker();
 
         await typeInput('2025-01-01');
         await clickAway();
 
-        expect(onDateChangeMock).toHaveBeenCalledWith(new Date('2025-01-01T00:00:00.000Z'));
+        expect(onDateChangeMock).toHaveBeenCalledWith('2025-01-01', true);
 
         await typeInput('{backspace}'.repeat(10));
 
         await clickAway();
 
-        expect(onDateChangeMock).toHaveBeenCalledWith();
+        expect(onDateChangeMock).toHaveBeenCalledWith('', true);
     });
 });
