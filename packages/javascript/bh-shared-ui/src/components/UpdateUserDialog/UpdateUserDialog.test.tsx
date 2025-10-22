@@ -309,23 +309,11 @@ describe('UpdateUserDialog', () => {
 
         await user.click(saveButton);
 
-        await testOnSave(); // Await the function to ensure the promise resolves.
-        expect(testOnSave).toHaveBeenCalled();
-
-        //console.log(testOnSave);
-
-        //screen.debug(undefined, Infinity);
-
-        //expect(testOnSave).toHaveBeenCalledWith([]);
-
-        // check return value
-        
         await waitFor(
             () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
             {
                 timeout: 30000,
             }
         );
-    
     });
 });

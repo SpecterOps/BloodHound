@@ -198,7 +198,7 @@ const CreateUserForm: React.FC<{
         selectedEnvironments.length,
         allEnvironmentsSelected,
         allEnvironmentsIndeterminate,
-        formatReturnedEnvironments, // this is making tests weird
+        //formatReturnedEnvironments, // this is making tests weird
     ]);
 
     return (
@@ -521,36 +521,52 @@ const CreateUserForm: React.FC<{
                                             </div>
                                         </>
                                     ) : (
-                                        <div className='mb-4'>
-                                            <FormItem>
-                                                <FormLabel htmlFor='sso'>SSO Provider</FormLabel>
-                                                <Select
-                                                    onValueChange={(value) => setAuthenticationMethod(value as string)}
-                                                    value={authenticationMethod}>
-                                                    <FormControl>
-                                                        <SelectTrigger
-                                                            data-testid='create-user-dialog_select_sso-provider'
-                                                            id='sso'
-                                                            className='bg-transparent'
-                                                            variant='underlined'>
-                                                            <SelectValue placeholder='SSO Provider' />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectPortal>
-                                                        <SelectContent>
-                                                            {listSSOProvidersQuery.data?.map(
-                                                                (SSOProvider: SSOProvider) => (
-                                                                    <SelectItem
-                                                                        value={SSOProvider.id.toString()}
-                                                                        key={SSOProvider.id}>
-                                                                        {SSOProvider.name}
-                                                                    </SelectItem>
-                                                                )
-                                                            )}
-                                                        </SelectContent>
-                                                    </SelectPortal>
-                                                </Select>
-                                            </FormItem>
+                                        <div>
+                                            <FormField
+                                                name='SSOProviderId'
+                                                control={form.control}
+                                                rules={{
+                                                    required: 'SSO Provider is required',
+                                                }}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel
+                                                            className='font-medium !text-sm'
+                                                            htmlFor='sso'
+                                                            id='SSOProviderId-label'>
+                                                            SSO Provider
+                                                        </FormLabel>
+
+                                                        <Select
+                                                            onValueChange={field.onChange}
+                                                            defaultValue={field.value}
+                                                            value={field.value}>
+                                                            <FormControl className='pointer-events-auto'>
+                                                                <SelectTrigger
+                                                                    variant='underlined'
+                                                                    className='bg-transparent'
+                                                                    id='sso'>
+                                                                    <SelectValue placeholder='SSO Provider' />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectPortal>
+                                                                <SelectContent>
+                                                                    {listSSOProvidersQuery.data?.map(
+                                                                        (SSOProvider: SSOProvider) => (
+                                                                            <SelectItem
+                                                                                role='option'
+                                                                                value={SSOProvider.id.toString()}
+                                                                                key={SSOProvider.id}>
+                                                                                {SSOProvider.name}
+                                                                            </SelectItem>
+                                                                        )
+                                                                    )}
+                                                                </SelectContent>
+                                                            </SelectPortal>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
                                         </div>
                                     )}
                                 </>
