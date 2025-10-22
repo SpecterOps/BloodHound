@@ -43,9 +43,14 @@ import { AssetGroupTagCertificationRecord, ExtendedCertificationFilters } from '
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { AppIcon, MaskedInput } from '../../../../components';
-import { useBloodHoundUsers } from '../../../../hooks/useBloodHoundUsers';
-import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
+import { AppIcon, MaskedInput } from '../../../components';
+import { useBloodHoundUsers } from '../../../hooks/useBloodHoundUsers';
+import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../utils';
+
+type FilterFormValues = Partial<ExtendedCertificationFilters> & {
+    'start-date'?: string;
+    'end-date'?: string;
+};
 
 interface FilterDialogProps {
     filters: Partial<ExtendedCertificationFilters>;
@@ -54,7 +59,7 @@ interface FilterDialogProps {
     data: AssetGroupTagCertificationRecord[];
 }
 
-const defaultValues = { objectType: '', approvedBy: '', 'start-date': '', 'end-date': '' };
+const defaultValues: FilterFormValues = { objectType: '', approvedBy: '', 'start-date': '', 'end-date': '' };
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
@@ -63,7 +68,7 @@ const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 const FilterDialog: FC<FilterDialogProps> = ({ filters, setFilters, onApplyFilters, data }) => {
     const bloodHoundUsersQuery = useBloodHoundUsers();
 
-    const form = useForm<Partial<ExtendedCertificationFilters>>({
+    const form = useForm<FilterFormValues>({
         defaultValues: filters,
     });
 

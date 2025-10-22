@@ -1,3 +1,18 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTagCertificationParams,
@@ -10,18 +25,16 @@ import {
 } from 'js-client-library';
 import { useCallback, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
-import { useParams } from 'react-router-dom';
-import { SelectedNode } from '../../..';
 import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useNotifications } from '../../../providers';
+import { SelectedNode } from '../../../types';
 import { EntityKinds, apiClient } from '../../../utils';
-import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
 import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
 
 const Certification = () => {
-    const { tierId, labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
+    const [selectedTagId, setSelectedTagId] = useState<number | undefined>(undefined);
+    const [selectedMemberId, setSelectedMemberId] = useState<number | undefined>(undefined);
     const [search, setSearch] = useState('');
     const [filters, setFilters] = useState<ExtendedCertificationFilters>({});
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
@@ -34,24 +47,20 @@ const Certification = () => {
 
     const { addNotification } = useNotifications();
 
-    const mockMemberId = 1;
     const PAGE_SIZE = 15;
 
-    const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams, query?: string) => {
-        const doSearch = query && query.length >= 3;
+    const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams) => {
         return useInfiniteQuery<{
             count: number;
             data: { members: AssetGroupTagCertificationRecord[] };
             limit: number;
             skip: number;
         }>({
-            queryKey: ['certifications', filters, query],
+            queryKey: ['certifications', filters],
             queryFn: async ({ pageParam = 1 }) => {
                 const skip = (pageParam - 1) * PAGE_SIZE;
 
-                const result = doSearch
-                    ? await apiClient.searchAssetGroupTagsCertifications(PAGE_SIZE, skip, query)
-                    : await apiClient.getAssetGroupTagsCertifications(PAGE_SIZE, skip, filters);
+                const result = await apiClient.getAssetGroupTagsCertifications(PAGE_SIZE, skip, filters);
 
                 return result.data;
             },
@@ -74,17 +83,6 @@ const Certification = () => {
             keepPreviousData: false,
         });
     };
-
-    const memberQuery = useQuery({
-        queryKey: ['zone-management', 'tags', tagId, 'member', mockMemberId],
-        queryFn: async () => {
-            if (!tagId || !mockMemberId) return undefined;
-            return apiClient.getAssetGroupTagMemberInfo(tagId, mockMemberId).then((res) => {
-                return res.data.data['member'];
-            });
-        },
-        enabled: tagId !== undefined && mockMemberId !== undefined,
-    });
 
     const certifyMutation = useMutation({
         mutationFn: async (requestBody: UpdateCertificationRequest) => {
@@ -110,10 +108,18 @@ const Certification = () => {
         },
     });
 
-    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(
-        filters,
-        search
-    );
+    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(filters);
+
+    const memberQuery = useQuery({
+        queryKey: ['privilege-zones', 'tags', selectedTagId, 'member', selectedMemberId],
+        queryFn: async () => {
+            if (!selectedTagId || !selectedMemberId) return undefined;
+            return apiClient.getAssetGroupTagMemberInfo(selectedTagId, selectedMemberId).then((res) => {
+                return res.data.data['member'];
+            });
+        },
+        enabled: !!selectedTagId && !!selectedMemberId,
+    });
 
     const createCertificationRequestBody = (
         action: typeof CertificationManual | typeof CertificationRevoked,
@@ -128,11 +134,13 @@ const Certification = () => {
         };
     };
 
-    const { id: memberId, name: memberName, primary_kind: memberType } = memberQuery.data ?? {};
-    const selectedNode: SelectedNode | null =
-        memberQuery.data && memberId && memberName && memberType
-            ? { id: memberId.toString(), name: memberName, type: memberType as EntityKinds }
-            : null;
+    const selectedNode: SelectedNode | null = memberQuery.data
+        ? {
+              id: memberQuery.data.object_id?.toString() ?? '',
+              name: memberQuery.data.name ?? 'Unknown',
+              type: memberQuery.data.primary_kind as EntityKinds,
+          }
+        : null;
 
     const showDialog = (action: typeof CertificationManual | typeof CertificationRevoked) => {
         setIsDialogOpen(true);
@@ -185,6 +193,10 @@ const Certification = () => {
                         setFilters={setFilters}
                         search={search}
                         setSearch={setSearch}
+                        onRowSelect={(row) => {
+                            setSelectedMemberId(row?.id);
+                            setSelectedTagId(row?.asset_group_tag_id);
+                        }}
                         isLoading={isLoading}
                         isFetching={isFetching}
                         isSuccess={isSuccess}
@@ -198,23 +210,20 @@ const Certification = () => {
                 <div className='basis-1/3'>
                     <div className='w-[400px] max-w-[400px]'>
                         {selectedNode ? (
-                            <EntityInfoPanel
-                                DataTable={EntityInfoDataTable}
-                                selectedNode={selectedNode}
-                                additionalTables={[
-                                    {
-                                        sectionProps: { label: 'Selectors', id: selectedNode.id },
-                                        TableComponent: EntitySelectorsInformation,
-                                    },
-                                ]}
-                            />
+                            <EntityInfoPanel DataTable={EntityInfoDataTable} selectedNode={selectedNode} />
                         ) : (
                             <EntityInfoPanel DataTable={EntityInfoDataTable} selectedNode={null} />
                         )}
                     </div>
                 </div>
             </div>
-            {isDialogOpen && <CertifyMembersConfirmDialog open={isDialogOpen} onConfirm={handleConfirm} />}
+            {isDialogOpen && (
+                <CertifyMembersConfirmDialog
+                    open={isDialogOpen}
+                    onClose={() => setIsDialogOpen(false)}
+                    onConfirm={handleConfirm}
+                />
+            )}
         </>
     );
 };

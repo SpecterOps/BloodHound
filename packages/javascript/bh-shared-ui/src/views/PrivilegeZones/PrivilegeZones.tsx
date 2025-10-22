@@ -102,7 +102,11 @@ const PrivilegeZones: FC = () => {
         );
     }
 
-    const tabValue = isHistoryPage ? historyPath : tagType;
+    const tabValue = location.pathname.includes(certificationsPath)
+        ? certificationsPath
+        : isHistoryPage
+          ? historyPath
+          : tagType;
 
     return (
         <main>

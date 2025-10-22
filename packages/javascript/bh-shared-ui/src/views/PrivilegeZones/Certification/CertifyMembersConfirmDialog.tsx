@@ -20,10 +20,11 @@ import { FC, useState } from 'react';
 
 type CertifyMembersConfirmDialogProps = {
     onConfirm: (withNote: boolean, note?: string) => void;
+    onClose: () => void;
     open: boolean;
 };
 
-const CertifyMembersConfirmDialog: FC<CertifyMembersConfirmDialogProps> = ({ onConfirm, open }) => {
+const CertifyMembersConfirmDialog: FC<CertifyMembersConfirmDialogProps> = ({ onConfirm, open, onClose }) => {
     const [note, setNote] = useState('');
     const handleChange = (event: any) => {
         setNote(event.target.value);
@@ -46,12 +47,19 @@ const CertifyMembersConfirmDialog: FC<CertifyMembersConfirmDialogProps> = ({ onC
                     value={note}
                     onChange={handleChange}></TextField>
                 <DialogActions>
-                    <Button onClick={() => onConfirm(false)} variant={'text'} className='px-2'>
-                        Skip Note
-                    </Button>
-                    <Button onClick={() => onConfirm(true, note)} variant={'text'} className='px-2'>
-                        Save Note
-                    </Button>
+                    <div className='flex w-full justify-between items-center'>
+                        <Button onClick={onClose} variant='text'>
+                            Cancel
+                        </Button>
+                        <div className='flex'>
+                            <Button onClick={() => onConfirm(false)} variant='text'>
+                                Skip Note
+                            </Button>
+                            <Button onClick={() => onConfirm(true, note)} variant='text'>
+                                Save Note
+                            </Button>
+                        </div>
+                    </div>
                 </DialogActions>
             </DialogContent>
         </Dialog>

@@ -233,28 +233,28 @@ export const getAssetGroupTagMembers = (
         limit
     );
 
-    export const useAssetGroupTagMembers = (
-        tagId: number | string | undefined,
-        sortOrder: SortOrder = 'asc',
-        environments: string[] = []
-    ) => {
-        return useQuery({
-            queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder, environments),
-            queryFn: async ({ signal }) => {
-                if (!tagId) throw new Error('No tag ID provided for tag members request');
-                const response = await apiClient.getAssetGroupTagMembers(
-                    tagId,
-                    0,
-                    PAGE_SIZE,
-                    sortOrder === 'asc' ? 'name' : '-name',
-                    environments,
-                    { signal }
-                );
-                return response.data.data.members;
-            },
-            enabled: !!tagId,
-        });
-    };
+export const useAssetGroupTagMembers = (
+    tagId: number | string | undefined,
+    sortOrder: SortOrder = 'asc',
+    environments: string[] = []
+) => {
+    return useQuery({
+        queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments),
+        queryFn: async ({ signal }) => {
+            if (!tagId) throw new Error('No tag ID provided for tag members request');
+            const response = await apiClient.getAssetGroupTagMembers(
+                tagId,
+                0,
+                PAGE_SIZE,
+                sortOrder === 'asc' ? 'name' : '-name',
+                environments,
+                { signal }
+            );
+            return response.data.data.members;
+        },
+        enabled: !!tagId,
+    });
+};
 
 export const useTagMembersInfiniteQuery = (
     tagId: number | string | undefined,

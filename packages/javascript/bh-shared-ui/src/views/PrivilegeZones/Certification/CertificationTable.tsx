@@ -1,26 +1,42 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
 import {
+    AssetGroupTagCertificationRecord,
     CertificationAuto,
     CertificationManual,
     CertificationPending,
     CertificationRevoked,
     CertificationTypeMap,
-    AssetGroupTagCertificationRecord,
     ExtendedCertificationFilters,
 } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
-import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
-import { FilterDialog } from './FilterDialog';
 import { SearchInput } from '../../../components/SearchInput';
+import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
+import FilterDialog from './FilterDialog';
 
 type CertificationTableProps = {
     data: any;
     filters: any;
-    setFilters: () => void;
+    setFilters: Dispatch<SetStateAction<ExtendedCertificationFilters>>;
     search: string;
-    setSearch: () => void;
+    setSearch: Dispatch<SetStateAction<string>>;
+    onRowSelect: (row: AssetGroupTagCertificationRecord | null) => void;
     isLoading: boolean;
     isFetching: boolean;
     isSuccess: boolean;
@@ -37,7 +53,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
     setFilters,
     search,
     setSearch,
-    isLoading,
+    onRowSelect,
     isFetching,
     isSuccess,
     fetchNextPage,
@@ -46,7 +62,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
     selectedRows,
     setSelectedRows,
 }) => {
-    const mockPending = '9';
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const [dropdownSelection, setDropdownSelection] = useState('Status');
@@ -72,7 +87,10 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     const certificationsData = data ?? { pages: [{ count: 0, data: { members: [] } }] };
     const count = certificationsData.pages[0].count;
-    const certificationsItemsRaw = data?.pages.flatMap((page) => page.data?.members ?? []) ?? [];
+    const certificationsItemsRaw =
+        data?.pages.flatMap(
+            (page: { data?: { members: AssetGroupTagCertificationRecord[] } }) => page.data?.members ?? []
+        ) ?? [];
     const totalFetched = certificationsItemsRaw.length;
 
     const certificationsItems = isSuccess
@@ -95,6 +113,12 @@ const CertificationTable: FC<CertificationTableProps> = ({
                       return false;
                   if (filters['end-date'] && DateTime.fromISO(item.created_at) > DateTime.fromISO(filters['end-date']))
                       return false;
+                  if (search) {
+                      const query = search.toLowerCase();
+                      return (
+                          item.name?.toLowerCase().includes(query) || item.primary_kind?.toLowerCase().includes(query)
+                      );
+                  }
                   return true;
               })
         : [];
@@ -163,28 +187,29 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     />
                 </div>
             ),
+            size: 65,
         }),
         columnHelper.accessor('primary_kind', {
-            header: () => <div className='pl-8 text-left'>Type</div>,
-            cell: (info) => {
-                return <div className='text-primary dark:text-secondary-variant-2'>{info.getValue()}</div>;
-            },
+            header: 'Type',
+            cell: (info) => <div className='text-primary dark:text-secondary-variant-2'>{info.getValue()}</div>,
+            size: 100,
         }),
         columnHelper.accessor('name', {
-            header: () => <div className='pl-8 text-left'>Member Name</div>,
-            cell: (info) => <div>{info.getValue()}</div>,
+            header: 'Member Name',
+            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
+            size: 150,
         }),
         columnHelper.accessor('domainName', {
-            header: () => <div className='pl-8 text-left'>Domain</div>,
-            cell: (info) => <div>{info.getValue()}</div>,
+            header: 'Domain',
+            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
         }),
         columnHelper.accessor('zoneName', {
-            header: () => <div className='pl-8 text-left'>Zone</div>,
-            cell: (info) => <div>{info.getValue()}</div>,
+            header: 'Zone',
+            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
         }),
         columnHelper.accessor('date', {
-            header: () => <div className='pl-8 text-center'>First Seen</div>,
-            cell: (info) => <div className='text-center'>{info.getValue()}</div>,
+            header: 'First Seen',
+            cell: (info) => <div className='text-left'>{info.getValue()}</div>,
         }),
     ];
 
@@ -200,11 +225,11 @@ const CertificationTable: FC<CertificationTableProps> = ({
     };
 
     const tableHeadProps: DataTableProps['TableHeadProps'] = {
-        className: 'pr-2 text-center',
+        className: 'pl-8 text-left',
     };
 
     const tableCellProps: DataTableProps['TableCellProps'] = {
-        className: 'truncate group relative pl-8',
+        className: 'pl-8 text-left truncate group relative',
     };
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
@@ -222,11 +247,11 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
-            <div className='flex items-center'>
-                <h1 className='text-xl font-bold'>Certifications</h1>
-                <p>{`${mockPending} pending`}</p>
+            <div className='flex items-center px-8 py-4'>
+                <h1 className='text-xl font-bold pr-4'>Certifications</h1>
+                {count && <p>{`${count} pending`}</p>}
             </div>
-            <div>
+            <div className='pl-8 flex justify-between'>
                 <DropdownSelector
                     variant='transparent'
                     options={certOptions}
@@ -258,6 +283,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                 className='overflow-y-auto h-[calc(90vh_-_255px)]'>
                 <DataTable
                     data={certificationsItems ?? []}
+                    onRowClick={(row) => onRowSelect(row)}
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}
@@ -266,15 +292,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     virtualizationOptions={virtualizationOptions}
                 />
             </div>
-            <DataTable
-                data={certificationsItems ?? []}
-                TableHeaderProps={tableHeaderProps}
-                TableHeadProps={tableHeadProps}
-                TableProps={tableProps}
-                TableCellProps={tableCellProps}
-                columns={columns}
-                virtualizationOptions={virtualizationOptions}
-            />
         </div>
     );
 };
