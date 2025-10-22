@@ -30,6 +30,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/cmd/api/src/cmd/dawgs-harness/tests"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
@@ -44,14 +45,14 @@ func fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
-func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.TestSuite {
+func RunTestSuite(ctx context.Context, connectionStr, driverName string, cfg config.DatabaseConfiguration) tests.TestSuite {
 	var (
 		pool *pgxpool.Pool
 		err  error
 	)
 
 	if driverName == pg.DriverName {
-		pool, err = pg.NewPool(connectionStr)
+		pool, err = pg.NewPool(cfg)
 		if err != nil {
 			fatalf("Failed creating a new pgxpool: %s", err)
 		}
@@ -141,6 +142,10 @@ func main() {
 
 	bhlog.ConfigureDefaultText(os.Stdout)
 
+	cfg := config.NewDefaultConfiguration(); err != nil {
+		return configuration, fmt.Errorf("failed to create default configuration: %w", err)
+	}
+
 	switch testType {
 	case "both":
 		n4jTestSuite := execSuite(neo4j.DriverName, func() tests.TestSuite {
@@ -149,11 +154,13 @@ func main() {
 
 		fmt.Println()
 
+		
+
 		// Sleep between tests
 		time.Sleep(time.Second * 3)
 
 		pgTestSuite := execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg)
 		})
 		fmt.Println()
 
@@ -161,12 +168,12 @@ func main() {
 
 	case "postgres":
 		execSuite(pg.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName)
+			return RunTestSuite(ctx, pgConnectionStr, pg.DriverName, cfg)
 		})
 
 	case "neo4j":
 		execSuite(neo4j.DriverName, func() tests.TestSuite {
-			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName)
+			return RunTestSuite(ctx, neo4jConnectionStr, neo4j.DriverName, cfg)
 		})
 	}
 }
