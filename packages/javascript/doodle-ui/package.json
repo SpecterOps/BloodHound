@@ -3,7 +3,7 @@
     "main": "./dist/doodle-ui.js",
     "types": "./dist/index.d.ts",
     "files": [
-        "./dist",
+        "dist",
         "README.md"
     ],
     "type": "module",

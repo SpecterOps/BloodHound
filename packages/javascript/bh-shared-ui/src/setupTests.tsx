@@ -23,6 +23,7 @@ import React from 'react';
 //@ts-ignore
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'whatwg-fetch';
+import { cleanup } from '@testing-library/react';
 
 // jest-dom extensions
 expect.extend(matchers);
@@ -45,6 +46,16 @@ beforeAll(() => {
 
 beforeEach(() => {
     vi.clearAllMocks();
+});
+
+afterEach(() => {
+    // same cleanup that happens automatically
+    cleanup();
+
+    // Additional hand roll clean up as needed.
+
+    // Clears body inline styles that Radix Dialog adds
+    document.body.removeAttribute('style');
 });
 
 // See https://fontawesome.com/v5.15/how-to-use/on-the-web/using-with/react#unit-testing for more information

@@ -26,7 +26,7 @@
             "components": ["./src/components"],
             "components/*": ["./src/components/*"]
         },
-        "types": ["vitest/globals"]
+        "types": ["vitest/globals",]
     },
     "include": ["src"],
 }
