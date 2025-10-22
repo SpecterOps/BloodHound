@@ -15,32 +15,104 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    AssetGroupTagCertificationParams,
     AssetGroupTagCertificationRecord,
     CertificationManual,
     CertificationRevoked,
     CertificationType,
-    ExtendedCertificationFilters,
+    CertificationTypeMap,
     UpdateCertificationRequest,
 } from 'js-client-library';
+import { DateTime } from 'luxon';
 import { useCallback, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useNotifications } from '../../../providers';
 import { SelectedNode } from '../../../types';
-import { EntityKinds, apiClient } from '../../../utils';
+import { EntityKinds, LuxonFormat, apiClient } from '../../../utils';
 import CertificationTable from './CertificationTable';
 import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
+import { defaultFilterValues } from './constants';
+import { ExtendedCertificationFilters } from './types';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
+
+const PAGE_SIZE = 15;
+
+const createCertificationReqParams = (skip: number, limit: number, filters?: ExtendedCertificationFilters) => {
+    const params = new URLSearchParams();
+    params.append('skip', skip.toString());
+    params.append('limit', PAGE_SIZE.toString());
+
+    if (!filters) return params;
+
+    if (filters.certificationStatus !== undefined) params.append('certified', `eq:${filters.certificationStatus}`);
+
+    if (filters.objectType) params.append('primary_kind', `eq:${filters.objectType}`);
+
+    if (filters.approvedBy) params.append('certified_by', `eq:${filters.approvedBy}`);
+
+    const start =
+        filters['start-date'] !== ''
+            ? DateTime.fromFormat(filters['start-date'], LuxonFormat.ISO_8601).startOf('day').toISO()
+            : DateTime.fromMillis(0).toISO();
+    const end =
+        filters['end-date'] !== ''
+            ? DateTime.fromFormat(filters['end-date'], LuxonFormat.ISO_8601).endOf('day').toISO()
+            : DateTime.now().toISO();
+
+    if (start && end) {
+        params.append('created_at', 'gte:' + start);
+        params.append('created_at', 'lte:' + end);
+    }
+
+    return params;
+};
+
+const useAssetGroupTagsCertificationsQuery = (filters?: ExtendedCertificationFilters) => {
+    return useInfiniteQuery<{
+        count: number;
+        data: { members: AssetGroupTagCertificationRecord[] };
+        limit: number;
+        skip: number;
+    }>({
+        queryKey: ['certifications', filters],
+        queryFn: async ({ pageParam = 1 }) => {
+            const skip = (pageParam - 1) * PAGE_SIZE;
+
+            const params = createCertificationReqParams(skip, PAGE_SIZE, filters);
+
+            const result = await apiClient.getAssetGroupTagsCertifications({ params });
+
+            return result.data;
+        },
+        getNextPageParam: (lastPage) => {
+            const nextPage = lastPage.skip / PAGE_SIZE + 2;
+
+            if ((nextPage - 1) * PAGE_SIZE >= lastPage.count) {
+                return undefined;
+            }
+
+            return nextPage;
+        },
+        getPreviousPageParam: (firstPage) => {
+            if (firstPage.skip === 0) {
+                return undefined;
+            }
+
+            return firstPage.skip / PAGE_SIZE - 1;
+        },
+        keepPreviousData: false,
+    });
+};
 
 const Certification = () => {
     const [selectedTagId, setSelectedTagId] = useState<number | undefined>(undefined);
     const [selectedMemberId, setSelectedMemberId] = useState<number | undefined>(undefined);
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState<ExtendedCertificationFilters>({});
+    const [filters, setFilters] = useState<ExtendedCertificationFilters>(defaultFilterValues);
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [dropdownSelection, setDropdownSelection] = useState('Pending');
+    const [dropdownSelection, setDropdownSelection] =
+        useState<(typeof CertificationTypeMap)[CertificationType]>('Pending');
     const [certifyAction, setCertifyAction] = useState<typeof CertificationRevoked | typeof CertificationManual>(
         CertificationManual
     );
@@ -48,43 +120,6 @@ const Certification = () => {
     const queryClient = useQueryClient();
 
     const { addNotification } = useNotifications();
-
-    const PAGE_SIZE = 50;
-
-    const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams) => {
-        return useInfiniteQuery<{
-            count: number;
-            data: { members: AssetGroupTagCertificationRecord[] };
-            limit: number;
-            skip: number;
-        }>({
-            queryKey: ['certifications', filters],
-            queryFn: async ({ pageParam = 1 }) => {
-                const skip = (pageParam - 1) * PAGE_SIZE;
-
-                const result = await apiClient.getAssetGroupTagsCertifications(PAGE_SIZE, skip, filters);
-
-                return result.data;
-            },
-            getNextPageParam: (lastPage) => {
-                const nextPage = lastPage.skip / PAGE_SIZE + 2;
-
-                if ((nextPage - 1) * PAGE_SIZE >= lastPage.count) {
-                    return undefined;
-                }
-
-                return nextPage;
-            },
-            getPreviousPageParam: (firstPage) => {
-                if (firstPage.skip === 0) {
-                    return undefined;
-                }
-
-                return firstPage.skip / PAGE_SIZE - 1;
-            },
-            keepPreviousData: false,
-        });
-    };
 
     const certifyMutation = useMutation({
         mutationFn: async (requestBody: UpdateCertificationRequest) => {

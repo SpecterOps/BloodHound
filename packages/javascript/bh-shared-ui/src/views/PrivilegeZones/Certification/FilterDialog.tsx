@@ -39,72 +39,44 @@ import {
     Skeleton,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagCertificationRecord, ExtendedCertificationFilters } from 'js-client-library';
+import { AssetGroupTagCertificationRecord } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../components';
-import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../utils';
-import { AzureNodeKind, ActiveDirectoryNodeKind } from '../../../graphSchema';
 import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
-
-type FilterFormValues = Partial<ExtendedCertificationFilters> & {
-    'start-date'?: string;
-    'end-date'?: string;
-};
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
+import { END_DATE, LuxonFormat, START_DATE } from '../../../utils';
+import { fromDate, getStartAndEndDateTimes, toDate, validateFormDates } from '../utils';
+import { defaultFilterValues } from './constants';
+import { FilterFormValues } from './types';
 
 interface FilterDialogProps {
-    filters: Partial<ExtendedCertificationFilters>;
-    setFilters: (filters: ExtendedCertificationFilters) => void;
-    onApplyFilters: (filters: Partial<ExtendedCertificationFilters>) => void;
+    filters: FilterFormValues;
+    onApplyFilters: (filters: FilterFormValues) => void;
     data: AssetGroupTagCertificationRecord[];
 }
-
-const defaultValues: FilterFormValues = { objectType: '', approvedBy: '', 'start-date': '', 'end-date': '' };
-
-const toDate = DateTime.local().toJSDate();
-const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 //TODO: we need to consolidate this into one universal shared component but separating in the interest of time
 const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
     const bloodHoundUsersQuery = useGetUsersMinimal();
 
     const form = useForm<FilterFormValues>({
-        defaultValues: filters,
+        defaultValues: defaultFilterValues,
     });
 
     const allObjectTypes = [...Object.values(AzureNodeKind), ...Object.values(ActiveDirectoryNodeKind)];
 
     const validateDates = useCallback(
-        (startDate?: DateTime, endDate?: DateTime) => {
-            form.clearErrors();
-            const errors: { name: typeof START_DATE | typeof END_DATE; error: any }[] = [];
-
-            if (startDate && !startDate.isValid)
-                errors.push({ name: START_DATE, error: { message: CustomRangeError.INVALID_DATE } });
-            if (endDate && !endDate.isValid)
-                errors.push({ name: END_DATE, error: { message: CustomRangeError.INVALID_DATE } });
-
-            if (startDate && endDate && startDate > endDate) {
-                errors.push({ name: START_DATE, error: { message: CustomRangeError.INVALID_RANGE_START } });
-                errors.push({ name: END_DATE, error: { message: CustomRangeError.INVALID_RANGE_END } });
-            }
-
-            errors.forEach((e) => form.setError(e.name, e.error));
-
-            return errors.length === 0;
-        },
+        (startDate: DateTime, endDate: DateTime) => validateFormDates(form, startDate, endDate)(),
         [form]
     );
 
     const handleConfirm = useCallback(() => {
         const values = form.getValues();
-        if (
-            validateDates(
-                values.startDate ? DateTime.fromFormat(values.startDate, LuxonFormat.ISO_8601) : undefined,
-                values.endDate ? DateTime.fromFormat(values.endDate, LuxonFormat.ISO_8601) : undefined
-            )
-        ) {
+        const { startDate, endDate } = getStartAndEndDateTimes(values[START_DATE], values[END_DATE]);
+
+        if (validateDates(startDate, endDate)) {
             onApplyFilters(values); // parent table only updated on Confirm
         }
     }, [form, onApplyFilters, validateDates]);
@@ -112,6 +84,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
     useEffect(() => {
         form.reset(filters);
     }, [form, filters]);
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -128,7 +101,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                 <Button
                                     variant='text'
                                     onClick={() => {
-                                        form.reset(defaultValues);
+                                        form.reset(defaultFilterValues);
                                     }}
                                     className='font-normal p-2'>
                                     Clear All
@@ -211,12 +184,10 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                                         mode: 'single',
                                                         fromDate,
                                                         toDate,
-                                                        selected: field.value
-                                                            ? DateTime.fromFormat(
-                                                                  field.value,
-                                                                  LuxonFormat.ISO_8601
-                                                              ).toJSDate()
-                                                            : undefined,
+                                                        selected: DateTime.fromFormat(
+                                                            field.value,
+                                                            LuxonFormat.ISO_8601
+                                                        ).toJSDate(),
                                                         onSelect: (date) => {
                                                             form.setValue(
                                                                 field.name,
@@ -250,12 +221,10 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                                         mode: 'single',
                                                         fromDate,
                                                         toDate,
-                                                        selected: field.value
-                                                            ? DateTime.fromFormat(
-                                                                  field.value,
-                                                                  LuxonFormat.ISO_8601
-                                                              ).toJSDate()
-                                                            : undefined,
+                                                        selected: DateTime.fromFormat(
+                                                            field.value,
+                                                            LuxonFormat.ISO_8601
+                                                        ).toJSDate(),
                                                         onSelect: (date) => {
                                                             form.setValue(
                                                                 field.name,

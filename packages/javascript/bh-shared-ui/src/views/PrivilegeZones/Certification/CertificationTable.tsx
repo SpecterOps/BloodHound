@@ -14,22 +14,39 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Checkbox, createColumnHelper, DataTable, Tooltip } from '@bloodhoundenterprise/doodleui';
-import {
-    AssetGroupTagCertificationRecord,
-    CertificationAuto,
-    CertificationManual,
-    CertificationPending,
-    CertificationRevoked,
-    CertificationTypeMap,
-    ExtendedCertificationFilters,
-} from 'js-client-library';
+import { AssetGroupTagCertificationRecord } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
+import { InfiniteData } from 'react-query';
 import { AppIcon, DropdownOption, DropdownSelector, NodeIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
+import { certificationCountTextMap, certOptions } from './constants';
 import FilterDialog from './FilterDialog';
-import { InfiniteData } from 'react-query';
+import { ExtendedCertificationFilters, FilterFormValues } from './types';
+
+type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+const tableProps: DataTableProps['TableProps'] = {
+    className: 'table-fixed',
+    disableDefaultOverflowAuto: true,
+};
+
+const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
+    className: 'sticky top-0 z-10 shadow-sm text-base',
+};
+
+const tableHeadProps: DataTableProps['TableHeadProps'] = {
+    className: 'pl-8 text-left',
+};
+
+const tableCellProps: DataTableProps['TableCellProps'] = {
+    className: 'pl-8 text-left truncate group relative',
+};
+
+const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
+    estimateSize: () => 79,
+};
 
 type CertificationsPage = {
     count: number;
@@ -52,7 +69,7 @@ type CertificationTableProps = {
     isSuccess: boolean;
     fetchNextPage: () => Promise<unknown>;
     filterRows: (dropdownSelection: DropdownOption) => void;
-    applyAdvancedFilters?: (advancedFilters: Partial<ExtendedCertificationFilters>) => void;
+    applyAdvancedFilters?: (advancedFilters: FilterFormValues) => void;
     selectedRows: number[];
     setSelectedRows: Dispatch<SetStateAction<number[]>>;
     dropdownSelection: string;
@@ -62,7 +79,6 @@ type CertificationTableProps = {
 const CertificationTable: FC<CertificationTableProps> = ({
     data,
     filters,
-    setFilters,
     search,
     setSearch,
     onRowSelect,
@@ -116,12 +132,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
                   };
               })
               .filter((item: AssetGroupTagCertificationRecord) => {
-                  if (filters.objectType && item.primary_kind !== filters.objectType) return false;
-                  if (filters.approvedBy && item.certified_by !== filters.approvedBy) return false;
-                  if (filters.startDate && DateTime.fromISO(item.created_at) < DateTime.fromISO(filters.startDate))
-                      return false;
-                  if (filters.endDate && DateTime.fromISO(item.created_at) > DateTime.fromISO(filters.endDate))
-                      return false;
                   if (search) {
                       const query = search.toLowerCase();
                       return (
@@ -234,45 +244,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
         }),
     ];
 
-    type DataTableProps = React.ComponentProps<typeof DataTable>;
-
-    const tableProps: DataTableProps['TableProps'] = {
-        className: 'table-fixed',
-        disableDefaultOverflowAuto: true,
-    };
-
-    const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-        className: 'sticky top-0 z-10 shadow-sm text-base',
-    };
-
-    const tableHeadProps: DataTableProps['TableHeadProps'] = {
-        className: 'pl-8 text-left',
-    };
-
-    const tableCellProps: DataTableProps['TableCellProps'] = {
-        className: 'pl-8 text-left truncate group relative',
-    };
-
-    const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
-        estimateSize: () => 79,
-    };
-
-    const certOptions: DropdownOption[] = [
-        CertificationPending,
-        CertificationManual,
-        CertificationAuto,
-        CertificationRevoked,
-    ].map((certType) => {
-        return { key: certType, value: CertificationTypeMap[certType] };
-    });
-
-    const certificationCountTextMap: Record<string, string> = {
-        Pending: 'pending',
-        'User Certified': 'certified',
-        'Automatic Certification': 'automatically certified',
-        Rejected: 'rejected',
-    };
-
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
             <div className='flex items-center px-8 py-4'>
@@ -298,7 +269,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     {applyAdvancedFilters && (
                         <FilterDialog
                             filters={filters}
-                            setFilters={setFilters}
                             onApplyFilters={applyAdvancedFilters}
                             data={certificationsItems}
                         />

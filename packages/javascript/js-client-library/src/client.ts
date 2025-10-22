@@ -278,28 +278,8 @@ class BHEAPIClient {
             }
         );
 
-    getAssetGroupTagsCertifications = (
-        limit: number,
-        skip: number,
-        filter?: types.AssetGroupTagCertificationParams,
-        options?: RequestOptions
-    ) => {
-        const params = new URLSearchParams();
-        params.append('skip', skip.toString());
-        params.append('limit', limit.toString());
-        if (filter) {
-            if (filter.certificationStatus !== undefined)
-                params.append('certified', `eq:${filter.certificationStatus}`);
-        }
-        return this.baseClient.get<AssetGroupTagsCertification>(
-            `/api/v2/asset-group-tags/certifications`,
-            Object.assign(
-                {
-                    params,
-                },
-                options
-            )
-        );
+    getAssetGroupTagsCertifications = (options?: RequestOptions) => {
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, options);
     };
 
     getAssetGroupTags = (options?: RequestOptions) =>

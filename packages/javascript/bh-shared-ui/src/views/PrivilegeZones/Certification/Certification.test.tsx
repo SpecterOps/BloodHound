@@ -271,15 +271,15 @@ describe('Certification', () => {
         const certificationDropdown = await screen.findByText('Pending');
         expect(certificationDropdown).toBeInTheDocument();
         await user.click(certificationDropdown);
-        const selection = await screen.findByText('Certified');
+        const selection = await screen.findByText('User Certified');
         await user.click(selection);
         expect(useInfiniteQuerySpy).toHaveBeenLastCalledWith(
             expect.objectContaining({
                 queryKey: [
                     'certifications',
-                    {
+                    expect.objectContaining({
                         certificationStatus: CertificationManual,
-                    },
+                    }),
                 ],
             })
         );
