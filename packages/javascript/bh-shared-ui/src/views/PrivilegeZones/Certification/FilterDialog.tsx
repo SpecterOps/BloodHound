@@ -44,9 +44,9 @@ import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../components';
-import { useBloodHoundUsers } from '../../../hooks/useBloodHoundUsers';
 import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../utils';
 import { AzureNodeKind, ActiveDirectoryNodeKind } from '../../../graphSchema';
+import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
 
 type FilterFormValues = Partial<ExtendedCertificationFilters> & {
     'start-date'?: string;
@@ -67,7 +67,7 @@ const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 //TODO: we need to consolidate this into one universal shared component but separating in the interest of time
 const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
-    const bloodHoundUsersQuery = useBloodHoundUsers();
+    const bloodHoundUsersQuery = useGetUsersMinimal();
 
     const form = useForm<FilterFormValues>({
         defaultValues: filters,
@@ -180,11 +180,16 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                             </FormControl>
                                             <SelectPortal>
                                                 <SelectContent>
-                                                    {bloodHoundUsersQuery.data?.map((user) => (
-                                                        <SelectItem key={user.id} value={user.email_address || user.id}>
-                                                            {user.email_address || user.principal_name}
-                                                        </SelectItem>
-                                                    ))}
+                                                    {bloodHoundUsersQuery.data?.map((user) => {
+                                                        if (!user.email_address) return null;
+                                                        return (
+                                                            <SelectItem
+                                                                key={user.id}
+                                                                value={user.email_address || user.id}>
+                                                                {user.email_address || user.principal_name}
+                                                            </SelectItem>
+                                                        );
+                                                    })}
                                                 </SelectContent>
                                             </SelectPortal>
                                         </Select>

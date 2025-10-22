@@ -31,6 +31,7 @@ import { SelectedNode } from '../../../types';
 import { EntityKinds, apiClient } from '../../../utils';
 import CertificationTable from './CertificationTable';
 import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
+import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 
 const Certification = () => {
     const [selectedTagId, setSelectedTagId] = useState<number | undefined>(undefined);
@@ -48,7 +49,7 @@ const Certification = () => {
 
     const { addNotification } = useNotifications();
 
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 50;
 
     const useAssetGroupTagsCertificationsQuery = (filters?: AssetGroupTagCertificationParams) => {
         return useInfiniteQuery<{
@@ -219,8 +220,17 @@ const Certification = () => {
                 </div>
                 <div className='basis-1/3'>
                     <div className='w-[400px] max-w-[400px]'>
-                        {selectedNode ? (
-                            <EntityInfoPanel DataTable={EntityInfoDataTable} selectedNode={selectedNode} />
+                        {memberQuery.data && selectedNode ? (
+                            <EntityInfoPanel
+                                DataTable={EntityInfoDataTable}
+                                selectedNode={selectedNode}
+                                additionalTables={[
+                                    {
+                                        sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
+                                        TableComponent: EntitySelectorsInformation,
+                                    },
+                                ]}
+                            />
                         ) : (
                             <EntityInfoPanel DataTable={EntityInfoDataTable} selectedNode={null} />
                         )}
