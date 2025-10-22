@@ -78,18 +78,18 @@ const DropdownSelector: FC<{
                     { 'w-80': buttonPrimary },
                     { 'w-full': !buttonPrimary }
                 )}>
-                <ul>
-                    {options.map((option: DropdownOption) => {
-                        return (
-                            <li key={option.key}>
-                                <Button
-                                    variant={'text'}
-                                    className='flex justify-between items-center gap-2 w-full'
-                                    onClick={() => {
-                                        onChange(option);
-                                        handleClose();
-                                    }}>
-                                    <TooltipProvider>
+                <TooltipProvider>
+                    <ul>
+                        {options.map((option: DropdownOption) => {
+                            return (
+                                <li key={option.key}>
+                                    <Button
+                                        variant={'text'}
+                                        className='flex justify-between items-center gap-2 w-full'
+                                        onClick={() => {
+                                            onChange(option);
+                                            handleClose();
+                                        }}>
                                         <TooltipRoot>
                                             <TooltipTrigger>
                                                 <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
@@ -102,20 +102,20 @@ const DropdownSelector: FC<{
                                                 </TooltipContent>
                                             </TooltipPortal>
                                         </TooltipRoot>
-                                    </TooltipProvider>
-                                    {option.icon && (
-                                        <FontAwesomeIcon
-                                            style={{ width: '10%', alignSelf: 'center' }}
-                                            icon={option.icon}
-                                            data-testid={`dropdown-icon-${option.icon.iconName}`}
-                                            size='sm'
-                                        />
-                                    )}
-                                </Button>
-                            </li>
-                        );
-                    })}
-                </ul>
+                                        {option.icon && (
+                                            <FontAwesomeIcon
+                                                style={{ width: '10%', alignSelf: 'center' }}
+                                                icon={option.icon}
+                                                data-testid={`dropdown-icon-${option.icon.iconName}`}
+                                                size='sm'
+                                            />
+                                        )}
+                                    </Button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </TooltipProvider>
             </PopoverContent>
         </Popover>
     );

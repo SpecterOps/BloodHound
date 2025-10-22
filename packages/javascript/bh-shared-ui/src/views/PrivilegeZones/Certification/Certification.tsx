@@ -35,7 +35,7 @@ import { defaultFilterValues } from './constants';
 import { ExtendedCertificationFilters } from './types';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 50;
 
 const createCertificationReqParams = (skip: number, limit: number, filters?: ExtendedCertificationFilters) => {
     const params = new URLSearchParams();
@@ -261,7 +261,7 @@ const Certification = () => {
                                 selectedNode={selectedNode}
                                 additionalTables={[
                                     {
-                                        sectionProps: { label: 'Selectors', id: memberQuery.data?.object_id },
+                                        sectionProps: { label: 'Selectors', id: memberQuery.data.object_id },
                                         TableComponent: EntitySelectorsInformation,
                                     },
                                 ]}
