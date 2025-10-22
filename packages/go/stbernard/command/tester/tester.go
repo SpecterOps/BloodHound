@@ -39,7 +39,6 @@ type command struct {
 	env         environment.Environment
 	yarnOnly    bool
 	goOnly      bool
-	goReporting bool
 	integration bool
 	tags        string
 }
@@ -67,7 +66,6 @@ func (s *command) Parse(cmdIndex int) error {
 	cmd.BoolVar(&s.yarnOnly, "y", false, "Yarn only")
 	cmd.BoolVar(&s.goOnly, "g", false, "Go only")
 	cmd.BoolVar(&s.integration, "i", false, "Include integration tests")
-	cmd.BoolVar(&s.goReporting, "r", false, "Capture Go test results")
 	cmd.StringVar(&s.tags, "tags", "integration,serial_integration", "Go build tags to include")
 
 	cmd.Usage = func() {
@@ -121,7 +119,7 @@ func (s *command) runTests(cwd string, coverPath string, modPath string) error {
 			}
 		}
 
-		if err := golang.TestWorkspace(cwd, modPath, coverPath, s.env, s.integration, s.tags, s.goReporting); err != nil {
+		if err := golang.TestWorkspace(cwd, modPath, coverPath, s.env, s.integration, s.tags); err != nil {
 			return fmt.Errorf("testing go workspace: %w", err)
 		}
 	}

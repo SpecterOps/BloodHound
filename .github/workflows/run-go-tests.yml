@@ -45,6 +45,7 @@ jobs:
           check-latest: true
 
       - name: Run Tests
+        # TODO integrate allure reporting
         run: |
           export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
           go tool stbernard test -g -i
@@ -83,7 +84,7 @@ jobs:
       - name: Run Tests
         if: ${{ github.event.ref == 'refs/heads/main' }}
         run: |
-          go tool stbernard test -g -r > test_results.json
+          go test -json -cover ./... > test_results.json
 
       - name: Install AllureCtl
         if: ${{ github.event.ref == 'refs/heads/main' }}
