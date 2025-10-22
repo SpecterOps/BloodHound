@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
@@ -290,7 +291,7 @@ func GetTextLoggerEnabled() bool {
 		slog.Warn(
 			"Failed to parse text logger environment variable",
 			slog.String("env_key", env),
-			slog.String("err", err.Error()),
+			attr.Error(err),
 		)
 		return false
 	} else {

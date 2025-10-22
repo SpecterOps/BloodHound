@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -48,7 +49,7 @@ func (s *featureFlagManager) isPrimary(ctx context.Context) (bool, context.Conte
 
 	// Try to get the HA lock to determine if we're primary
 	if lockResult, err := s.haMutex.TryLock(); err != nil {
-		slog.ErrorContext(ctx, "Failed to validate HA election status", slog.Any("err", err))
+		slog.ErrorContext(ctx, "Failed to validate HA election status", attr.Error(err))
 		return false, ctx
 	} else if lockResult.IsPrimary {
 		// If we are primary, return the primary context
@@ -92,7 +93,7 @@ func (s *featureFlagManager) runPoller(ctx context.Context) {
 
 			flagEnabled, size, err := s.flagGetter(ctx)
 			if err != nil {
-				slog.WarnContext(ctx, "feature flag check failed", "err", err)
+				slog.WarnContext(ctx, "Feature flag check failed", attr.Error(err))
 				continue
 			}
 
@@ -112,7 +113,7 @@ func (s *featureFlagManager) enable(ctx context.Context, size int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	slog.InfoContext(ctx, "enabling changelog", slog.Int("cache size", size))
+	slog.InfoContext(ctx, "Enabling changelog", slog.Int("cache_size", size))
 	cache := newCache(size)
 	s.cache = cache
 }
@@ -122,7 +123,7 @@ func (s *featureFlagManager) disable(ctx context.Context) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	slog.InfoContext(ctx, "disabling changelog, clearing cache")
+	slog.InfoContext(ctx, "Disabling changelog, clearing cache")
 	s.cache = nil
 }
 
@@ -133,7 +134,7 @@ func (s *featureFlagManager) clearCache(ctx context.Context) {
 	// Check if we're the primary instance before clearing cache
 	isPrimary, primaryCtx := s.isPrimary(ctx)
 	if !isPrimary {
-		slog.InfoContext(ctx, "skipping cache clear - not primary instance")
+		slog.InfoContext(ctx, "Skipping cache clear - not primary instance")
 		return
 	}
 
@@ -141,10 +142,10 @@ func (s *featureFlagManager) clearCache(ctx context.Context) {
 	defer s.mu.Unlock()
 
 	if s.cache != nil {
-		slog.InfoContext(primaryCtx, "forcibly clearing changelog cache due to graph data deletion")
+		slog.InfoContext(primaryCtx, "Forcibly clearing changelog cache due to graph data deletion")
 		s.cache.clear()
 	} else {
-		slog.InfoContext(primaryCtx, "changelog cache already cleared (feature disabled)")
+		slog.InfoContext(primaryCtx, "Changelog cache already cleared (feature disabled)")
 	}
 }
 

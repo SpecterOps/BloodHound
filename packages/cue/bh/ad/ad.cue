@@ -30,6 +30,7 @@ PathfindingRelationships: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
+PostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1925,4 +1926,40 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
 	CanApplyGPO,
+]
+
+PostProcessedRelationships: [
+	DCSync,
+	ProtectAdminGroups,
+	SyncLAPSPassword,
+	CanRDP,
+	AdminTo,
+	CanPSRemote,
+	ExecuteDCOM,
+	TrustedForNTAuth,
+	IssuedSignedBy,
+	EnterpriseCAFor,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC10a,
+	ADCSESC10b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC13,
+	EnrollOnBehalfOf,
+	SyncedToEntraUser,
+	Owns,
+	WriteOwner,
+	ExtendedByPolicy,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
+	HasTrustKeys,
 ]

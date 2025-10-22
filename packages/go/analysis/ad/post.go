@@ -35,44 +35,6 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{
-		ad.DCSync,
-		ad.ProtectAdminGroups,
-		ad.SyncLAPSPassword,
-		ad.CanRDP,
-		ad.AdminTo,
-		ad.CanPSRemote,
-		ad.ExecuteDCOM,
-		ad.TrustedForNTAuth,
-		ad.IssuedSignedBy,
-		ad.EnterpriseCAFor,
-		ad.GoldenCert,
-		ad.ADCSESC1,
-		ad.ADCSESC3,
-		ad.ADCSESC4,
-		ad.ADCSESC6a,
-		ad.ADCSESC6b,
-		ad.ADCSESC10a,
-		ad.ADCSESC10b,
-		ad.ADCSESC9a,
-		ad.ADCSESC9b,
-		ad.ADCSESC13,
-		ad.EnrollOnBehalfOf,
-		ad.SyncedToEntraUser,
-		ad.Owns,
-		ad.WriteOwner,
-		ad.ExtendedByPolicy,
-		ad.CoerceAndRelayNTLMToADCS,
-		ad.CoerceAndRelayNTLMToSMB,
-		ad.CoerceAndRelayNTLMToLDAP,
-		ad.CoerceAndRelayNTLMToLDAPS,
-		ad.GPOAppliesTo,
-		ad.CanApplyGPO,
-		ad.HasTrustKeys,
-	}
-}
-
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err

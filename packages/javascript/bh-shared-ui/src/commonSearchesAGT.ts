@@ -25,7 +25,7 @@ const azureTransitEdgeTypes = AzurePathfindingEdges().join('|');
 const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 
 const highPrivilegedRoleDisplayNameRegex =
-    '^(Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator).*$';
+    '^(Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator|Privileged Role Administrator).*$';
 
 /*
     NOTE: temporarily there exists 2 common searches files, edits here should be reflected in ./commonSearchesAGI.ts as well
@@ -396,7 +396,7 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'Shortest paths from Entra Users to Tier Zero / High Value targets',
                 description: '',
-                query: `MATCH p=shortestPath((s:AZUser)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE (t:${TAG_TIER_ZERO_AGT}) AND t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}' AND s<>t\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p=shortestPath((s:AZUser)-[:${azureTransitEdgeTypes}*1..]->(t:AZBase))\nWHERE (t:${TAG_TIER_ZERO_AGT}) AND s<>t\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Shortest paths to privileged roles',

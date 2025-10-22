@@ -147,7 +147,7 @@ func Run(env environment.Environment) error {
 	wg.Wait()
 	diff := time.Since(now)
 
-	slog.Info("running scans on bhce", slog.Duration("execution_time", diff))
+	slog.Info("Running scans on bhce", slog.Duration("execution_time", diff))
 	return errors.Join(errs...)
 }
 
@@ -166,7 +166,7 @@ func processFile(path string) error {
 	case ".cs":
 		return writeFile(path, generateLicenseHeader("/*"))
 	default:
-		slog.Warn("unknown extension", slog.String("path", path))
+		slog.Warn("Unknown extension", slog.String("path", path))
 		return nil
 	}
 }

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -37,7 +38,10 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 
 	for _, next := range nodes {
 		if err := IngestNode(ingestCtx, baseKind, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
+			slog.Error("Error ingesting node",
+				slog.String("objectid", next.ObjectID),
+				attr.Error(err),
+			)
 			errs.Add(err)
 		}
 	}
@@ -72,14 +76,14 @@ func IngestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleN
 func validateNodeKinds(objectID string, kinds graph.Kinds) error {
 	switch {
 	case len(kinds) == 0:
-		slog.Warn("skipping node with no kinds",
+		slog.Warn("Skipping node with no kinds",
 			slog.String("objectid", objectID),
 			slog.Int("num_kinds", 0),
 		)
 		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", objectID)
 
 	case len(kinds) > 3:
-		slog.Warn("skipping node with too many kinds",
+		slog.Warn("Skipping node with too many kinds",
 			slog.String("objectid", objectID),
 			slog.Int("num_kinds", len(kinds)),
 			slog.String("kinds", strings.Join(kinds.Strings(), ", ")),
@@ -126,7 +130,7 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
 	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
-		slog.WarnContext(ingestCtx.Ctx, "changelog submit dropped", slog.String("objectid", objectid))
+		slog.WarnContext(ingestCtx.Ctx, "Changelog submit dropped", slog.String("objectid", objectid))
 	}
 
 	return nil
