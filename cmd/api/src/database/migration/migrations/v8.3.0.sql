@@ -137,3 +137,6 @@ WHERE key = 'targeted_access_control';
 UPDATE asset_group_tag_selector_seeds 
 SET value = E'MATCH (n:Computer)\nWHERE n.isreadonlydc = true\nRETURN n;' 
 WHERE selector_id in (SELECT id FROM asset_group_tag_selectors WHERE name = 'Read-Only DCs' AND is_default = true);
+
+-- Set Open Graph Phase 2 feature flag to enable UI behind it
+UPDATE feature_flags SET enabled = true WHERE key = 'open_graph_phase_2'
