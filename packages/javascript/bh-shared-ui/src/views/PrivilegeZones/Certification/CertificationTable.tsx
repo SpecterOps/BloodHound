@@ -75,7 +75,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const [dropdownSelection, setDropdownSelection] = useState('Pending');
-    console.log('🚀 ~ CertificationTable ~ dropdownSelection:', dropdownSelection);
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
