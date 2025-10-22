@@ -49,7 +49,7 @@ import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
-const Certification = React.lazy(() => import('./Certification/Certification'));
+const Certification = React.lazy(() => import('./Certification'));
 
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
@@ -71,7 +71,7 @@ const PrivilegeZones: FC = () => {
     const location = useLocation();
     const ownedId = useOwnedTagId();
     const { tagId } = useHighestPrivilegeTagId();
-    const { isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
+    const { isCertificationsPage, isHistoryPage, tagType, isSummaryPage } = usePZPathParams();
 
     const context = useContext(PrivilegeZonesContext);
     if (!context) {
@@ -102,11 +102,7 @@ const PrivilegeZones: FC = () => {
         );
     }
 
-    const tabValue = location.pathname.includes(certificationsPath)
-        ? certificationsPath
-        : isHistoryPage
-          ? historyPath
-          : tagType;
+    const tabValue = isCertificationsPage ? certificationsPath : isHistoryPage ? historyPath : tagType;
 
     return (
         <main>

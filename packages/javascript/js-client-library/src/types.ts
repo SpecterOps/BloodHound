@@ -106,16 +106,11 @@ export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationAuto]: 'Automatic Certification',
 };
 
-export interface AssetGroupTagCertificationParams {
-    certificationStatus?: CertificationType;
-}
-
-export type ExtendedCertificationFilters = AssetGroupTagCertificationParams & {
-    action?: string;
-    approvedBy?: string;
-    objectType?: string;
-    startDate?: string;
-    endDate?: string;
+export type AssetGroupTagCertificationParams = {
+    certified?: CertificationType;
+    certified_by?: string;
+    primary_kind?: string;
+    created_at?: string;
 };
 
 export const AssetGroupTagTypeZone = 1 as const;
