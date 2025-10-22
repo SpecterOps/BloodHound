@@ -1311,7 +1311,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 		Input          []int
 		ExpectedLength int
 	}{
-		"returns all selected nodes, ignores tags and auto certified nodes": {
+		"returns all selected nodes, ignores tags": {
 			Input:          []int{testObjectId1, testObjectId2},
 			ExpectedLength: 2,
 		},

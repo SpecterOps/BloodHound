@@ -58,6 +58,10 @@ const (
 	excludeProperties = false
 )
 
+var (
+	ErrCannotUpdateAutoCertifiedNodes = errors.New("cannot update auto-certified nodes")
+)
+
 type AssetGroupTagCounts struct {
 	Selectors int   `json:"selectors"`
 	Members   int64 `json:"members"`
@@ -1064,6 +1068,7 @@ type setSelectorNodeCertifier interface {
 // selectorNodeRecords supplied must be in order of nodeId, followed by position.
 // If there are duplicate nodeIds in selectorNodeRecords, only the lowest position (highest priority) selectorNodeRecords is updated,
 // and all lower-priority selectorNodeRecords are set to Pending Certification.
+// Throws an error if any node in the slice is auto-certified, as auto-certified nodes can't be modified.
 func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, userId string, note null.String) error {
 	var (
 		certificationStatus model.AssetGroupCertification
@@ -1077,6 +1082,9 @@ func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier se
 
 	// Only update the records with the highest priority for a given nodeID
 	for _, record := range selectorNodeRecords {
+		if record.Certified == model.AssetGroupCertificationAuto {
+			return ErrCannotUpdateAutoCertifiedNodes
+		}
 		certificationStatus = model.AssetGroupCertificationPending
 		certifiedBy = null.String{}
 		if recordEligibleForUpdate(record, lastProcessedNodeId, highestPriorityForGivenNode) {
@@ -1084,8 +1092,8 @@ func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier se
 			highestPriorityForGivenNode = record.Position
 			certifiedBy = userEmail
 			lastProcessedNodeId = record.NodeId
-			// don't actually update records that already match the request action or are auto-certified
-			if record.Certified == requestAction || record.Certified == model.AssetGroupCertificationAuto {
+			// don't actually update records that already match the request action
+			if record.Certified == requestAction {
 				continue
 			}
 		}
@@ -1116,7 +1124,11 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(requestCtx, reqBody.MemberIDs...); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, user.ID.String(), null.StringFrom(reqBody.Note)); err != nil {
-		api.HandleDatabaseError(request, response, err)
+		if err == ErrCannotUpdateAutoCertifiedNodes {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalidMembers, request), response)
+		} else {
+			api.HandleDatabaseError(request, response, err)
+		}
 	} else {
 		response.WriteHeader(http.StatusOK)
 	}
