@@ -231,6 +231,8 @@ const UpdateUserFormInner: React.FC<{
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
             setSelectedEnvironments((prevSelected: any) => [...prevSelected, itemId]);
+            console.log(selectedEnvironments);
+
             form.setValue('all_environments', false);
             form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         } else {
@@ -279,6 +281,7 @@ const UpdateUserFormInner: React.FC<{
     };
 
     const handleOnSave = (user: UpdateUserRequestForm) => {
+        /*
         if (authenticationMethod === 'password') {
             form.setValue('SSOProviderId', undefined);
         }
@@ -317,11 +320,27 @@ const UpdateUserFormInner: React.FC<{
                   ? 'checked'
                   : 'unchecked';
         }
+        */
+
+        const values = form.getValues();
+        console.log(values);
 
         onSubmit({
-            ...user,
+            emailAddress: values.emailAddress,
+            principal: values.principal,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            SSOProviderId: authenticationMethod === 'password' ? undefined : values.SSOProviderId?.toString(),
+            roles: selectedRoleValue,
+            all_environments: allEnvironmentsSelected ? true : false,
+            environment_targeted_access_control: {
+                environments: !allEnvironmentsSelected ? formatSelectedEnvironments : null,
+            },
         });
     };
+
+    //console.log(form.getValues());
+    //console.log(form.watch());
 
     useEffect(() => {
         // on submit for password and setvalues on form and error states
@@ -408,8 +427,9 @@ const UpdateUserFormInner: React.FC<{
     ]);
 
     const handleSave = () => {
-        console.log(form.watch('all_environments'));
-        console.log(form.watch('environment_targeted_access_control.environments'));
+        //console.log(form.watch('all_environments'));
+        //console.log(form.watch('environment_targeted_access_control.environments'));
+        console.log(form.watch());
     };
 
     return (
