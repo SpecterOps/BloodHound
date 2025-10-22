@@ -268,7 +268,7 @@ describe('Certification', () => {
     });
     it('re-fetches the data if a certification status dropdown choice is selected', async () => {
         render(<Certification></Certification>);
-        const certificationDropdown = await screen.findByText('Status');
+        const certificationDropdown = await screen.findByText('Pending');
         expect(certificationDropdown).toBeInTheDocument();
         await user.click(certificationDropdown);
         const selection = await screen.findByText('Certified');

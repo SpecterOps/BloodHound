@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { createColumnHelper, DataTable } from '@bloodhoundenterprise/doodleui';
+import { Checkbox, createColumnHelper, DataTable, Tooltip } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTagCertificationRecord,
     CertificationAuto,
@@ -110,7 +110,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
               .map((item: AssetGroupTagCertificationRecord) => {
                   return {
                       ...item,
-                      date: DateTime.fromISO(item.created_at).toFormat('MM-dd-yyyy'),
+                      date: DateTime.fromISO(item.created_at).toFormat('yyyy-MM-dd'),
                       domainName: domainMap.get(item.environment_id) ?? 'Unknown',
                       zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
                   };
@@ -180,28 +180,23 @@ const CertificationTable: FC<CertificationTableProps> = ({
             id: 'bulk-certify',
             header: () => (
                 <div className='pl-8'>
-                    <input
+                    <Checkbox
                         data-testid='certification-table-select-all'
-                        type='checkbox'
-                        checked={allSelected}
-                        ref={(el) => {
-                            if (el) el.indeterminate = someSelected;
-                        }}
-                        onChange={(event) => toggleAll(event.target.checked)}
+                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                        onCheckedChange={(checked: boolean | 'indeterminate') => toggleAll(checked === true)}
                     />
                 </div>
             ),
             cell: (info) => (
                 <div className='pl-8'>
-                    <input
-                        type='checkbox'
+                    <Checkbox
                         data-testid={`certification-table-row-${info.row.original.id}`}
                         checked={selectedRows.includes(info.row.original.id)}
-                        onChange={(event) => toggleRow(event.target.checked, info.row.original.id)}
+                        onCheckedChange={(checked: boolean) => toggleRow(!!checked, info.row.original.id)}
                     />
                 </div>
             ),
-            size: 65,
+            size: 85,
         }),
         columnHelper.accessor('primary_kind', {
             header: 'Type',
@@ -215,17 +210,16 @@ const CertificationTable: FC<CertificationTableProps> = ({
         columnHelper.accessor('name', {
             header: 'Member Name',
             cell: (info) => {
-                const name = info.getValue() ?? '';
                 return (
-                    <div className='min-w-0 w-[150px] truncate' title={name}>
-                        {name}
-                    </div>
+                    <Tooltip tooltip={info.getValue()}>
+                        <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>
+                    </Tooltip>
                 );
             },
             size: 150,
         }),
         columnHelper.accessor('domainName', {
-            header: 'Domain',
+            header: 'Environment',
             cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
         }),
         columnHelper.accessor('zoneName', {

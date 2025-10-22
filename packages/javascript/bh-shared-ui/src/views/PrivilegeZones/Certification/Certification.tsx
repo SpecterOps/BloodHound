@@ -102,7 +102,7 @@ const Certification = () => {
             queryClient.invalidateQueries({ queryKey: ['certifications', filters] });
         },
         onError: (error: any) => {
-            console.log(error);
+            console.error(error);
             addNotification('There was an error updating certification', `zone-management_update-certification_error`, {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             });

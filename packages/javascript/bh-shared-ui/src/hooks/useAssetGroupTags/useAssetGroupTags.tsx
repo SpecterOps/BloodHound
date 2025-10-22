@@ -79,8 +79,6 @@ export const privilegeZonesKeys = {
     members: () => [...privilegeZonesKeys.all, 'members'] as const,
     membersByTag: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
         [...privilegeZonesKeys.members(), 'tag', tagId, sortOrder, ...environments] as const,
-    membersByTagList: (tagId: string | number, sortOrder: SortOrder, environments: string[] = []) =>
-        [...privilegeZonesKeys.members(), 'tag', tagId, 'list', sortOrder, ...environments] as const,
     membersByTagAndSelector: (
         tagId: string | number,
         selectorId: string | number | undefined,
@@ -234,29 +232,6 @@ export const getAssetGroupTagMembers = (
         skip,
         limit
     );
-
-export const useAssetGroupTagMembers = (
-    tagId: number | string | undefined,
-    sortOrder: SortOrder = 'asc',
-    environments: string[] = []
-) => {
-    return useQuery({
-        queryKey: privilegeZonesKeys.membersByTagList(tagId!, sortOrder, environments),
-        queryFn: async ({ signal }) => {
-            if (!tagId) throw new Error('No tag ID provided for tag members request');
-            const response = await apiClient.getAssetGroupTagMembers(
-                tagId,
-                0,
-                PAGE_SIZE,
-                sortOrder === 'asc' ? 'name' : '-name',
-                environments,
-                { signal }
-            );
-            return response.data.data.members;
-        },
-        enabled: !!tagId,
-    });
-};
 
 export const useTagMembersInfiniteQuery = (
     tagId: number | string | undefined,

@@ -145,7 +145,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters, data }) 
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Object Type</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder='Select Object Type' />
@@ -170,7 +170,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters, data }) 
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Approved By</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 {bloodHoundUsersQuery.isLoading ? (
                                                     <Skeleton className='h-10 w-24' />

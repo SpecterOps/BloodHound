@@ -302,14 +302,6 @@ class BHEAPIClient {
         );
     };
 
-    searchAssetGroupTagsCertifications = (limit: number, skip: number, body: any) =>
-        this.baseClient.post<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, body, {
-            params: {
-                skip,
-                limit,
-            },
-        });
-
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
