@@ -26,7 +26,7 @@ type CertifyMembersConfirmDialogProps = {
 
 const CertifyMembersConfirmDialog: FC<CertifyMembersConfirmDialogProps> = ({ onConfirm, open, onClose }) => {
     const [note, setNote] = useState('');
-    const handleChange = (event: any) => {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNote(event.target.value);
     };
 
