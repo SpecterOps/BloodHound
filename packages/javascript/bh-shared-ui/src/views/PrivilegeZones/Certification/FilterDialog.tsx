@@ -65,7 +65,7 @@ const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
 
 //TODO: we need to consolidate this into one universal shared component but separating in the interest of time
-const FilterDialog: FC<FilterDialogProps> = ({ filters, setFilters, onApplyFilters, data }) => {
+const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters, data }) => {
     const bloodHoundUsersQuery = useBloodHoundUsers();
 
     const form = useForm<FilterFormValues>({
