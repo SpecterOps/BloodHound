@@ -26,8 +26,9 @@ const originalTZ = process.env.TZ;
 const mockObjectHook = (initialState = {}) => {
     const applyState = vi.fn();
     const deleteKeys = vi.fn();
+    const setState = vi.fn();
     const state = initialState;
-    vi.spyOn(hooks, 'useObjectState').mockReturnValue({ applyState, deleteKeys, state } as any);
+    vi.spyOn(hooks, 'useObjectState').mockReturnValue({ applyState, deleteKeys, setState, state } as any);
 
     return { applyState, deleteKeys };
 };
