@@ -74,7 +74,8 @@ const CertificationTable: FC<CertificationTableProps> = ({
 }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const [dropdownSelection, setDropdownSelection] = useState('Status');
+    const [dropdownSelection, setDropdownSelection] = useState('Pending');
+    console.log('🚀 ~ CertificationTable ~ dropdownSelection:', dropdownSelection);
 
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
@@ -252,11 +253,18 @@ const CertificationTable: FC<CertificationTableProps> = ({
         return { key: certType, value: CertificationTypeMap[certType] };
     });
 
+    const certificationCountTextMap: Record<string, string> = {
+        Pending: 'pending',
+        Certified: 'certified',
+        'Automatic Certification': 'automatically certified',
+        Rejected: 'rejected',
+    };
+
     return (
         <div className='bg-neutral-light-2 dark:bg-neutral-dark-2'>
             <div className='flex items-center px-8 py-4'>
                 <h1 className='text-xl font-bold pr-4'>Certifications</h1>
-                {count && <p>{`${count} pending`}</p>}
+                {count && <p>{`${count} ${certificationCountTextMap[dropdownSelection] ?? 'pending'}`}</p>}
             </div>
             <div className='pl-8 flex justify-between'>
                 <DropdownSelector
