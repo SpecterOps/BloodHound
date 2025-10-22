@@ -16,65 +16,30 @@
 
 import { DatePicker } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
-import { FC, useEffect, useId, useState } from 'react';
+import { FC, useEffect, useId, useRef, useState } from 'react';
 import { LuxonFormat, fiveYearsAgo, now } from '../../utils';
 
 const DATE_FORMAT_MASK = 'yyyy-mm-dd';
-
-export const VALIDATIONS = {
-    isAfterDate: (after: Date | undefined, errorMessage: string) => ({
-        rule: (date?: Date) => {
-            if (!after || !date) {
-                return true;
-            }
-            return date.getTime() >= after.getTime();
-        },
-        errorMessage,
-    }),
-    isBeforeDate: (before: Date | undefined, errorMessage: string) => ({
-        rule: (date?: Date) => {
-            if (!before || !date) {
-                return true;
-            }
-            return before.getTime() >= date.getTime();
-        },
-        errorMessage,
-    }),
-};
-
-/** Returns true if date passes validations, otherwise return false and runs onInvalid */
-const validateDate = (
-    date: Date,
-    validations: NonNullable<Props['validations']> = [],
-    onInvalid: (errors: string[]) => void
-) => {
-    const errors = validations.reduce((agg: string[], { rule, errorMessage }) => {
-        if (!rule(date)) {
-            agg.push(errorMessage);
-        }
-        return agg;
-    }, []);
-
-    const hasErrors = errors.length > 0;
-
-    if (hasErrors) {
-        onInvalid(errors);
-    }
-
-    return !hasErrors;
-};
+const INVALID_DATE_MESSAGE = 'Input is not a valid date.';
 
 type Props = {
+    /** The earliest selectable date */
     fromDate?: Date;
+
+    /** Text to display in input when not focused */
     hint?: string;
-    onDateChange: (date?: Date) => void;
-    onValidation?: (isValid: boolean) => void;
+
+    /** Callback executed when the date changes; `isValid` is false if `dateStr` is not a valid date */
+    onDateChange: (dateStr: string, isValid: boolean) => void;
+
+    /** The latest selectable date */
     toDate?: Date;
-    validations?: {
-        rule: (date: Date) => boolean;
-        errorMessage: string;
-    }[];
-    value?: Date;
+
+    /** If provided, will be displayed as an error */
+    validationError?: string;
+
+    /** The initial value of the component */
+    value?: string;
 };
 
 /**
@@ -85,9 +50,8 @@ export const ManagedDatePicker: FC<Props> = ({
     fromDate = fiveYearsAgo(),
     hint = DATE_FORMAT_MASK,
     onDateChange,
-    onValidation,
     toDate = now(),
-    validations = [],
+    validationError: validationErrorProp = '',
     value,
 }) => {
     // `hint` shows (ex. 'Start Date') as placeholder while input is unfocused.
@@ -95,87 +59,96 @@ export const ManagedDatePicker: FC<Props> = ({
     const [placeholder, setPlaceholder] = useState(hint);
 
     // Value for text input. Will be invalid as date during keystrokes.
-    const [inputDateString, setInputDateString] = useState<string>(
-        value ? DateTime.fromJSDate(value).toFormat(LuxonFormat.ISO_8601) : ''
-    );
+    const [inputDateString, setInputDateString] = useState<string>(value?.slice(0, 10) || '');
 
-    // When inputDateString is valid, this will hold the value as a JS Date
-    const [calendarDate, setCalendarDate] = useState<Date | undefined>(value);
+    const calendarValue = value ? DateTime.fromISO(value) : undefined;
 
     // Validation produces an array of errors. Only one (the first) is displayed.
-    const [validationError, setValidationError] = useState('');
+    const [validationError, setValidationError] = useState(validationErrorProp);
 
-    // Reset inputDateString when value goes undefiend
+    // Used to debounce execution of validation
+    const lastKeyEvent = useRef<NodeJS.Timeout | null>(null);
+
+    // Update input as user types
+    const setInputFromEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const dateStr = event.target.value;
+        setInputDateString(dateStr);
+        setValidationError(validationErrorProp);
+
+        if (dateStr === '') {
+            onDateChange(dateStr, true);
+            lastKeyEvent.current && clearTimeout(lastKeyEvent.current);
+            return;
+        }
+
+        // Debounce execution of validation
+        // Can't use lodash debounce because validateInput needs updated onDateChange
+        lastKeyEvent.current && clearTimeout(lastKeyEvent.current);
+        lastKeyEvent.current = setTimeout(() => validateInput(dateStr), 300);
+    };
+
+    // Check if `inputDateString` is a valid date
+    const validateInput = (dateStr: string) => {
+        if (dateStr === '') {
+            return;
+        }
+
+        const dateTime = DateTime.fromFormat(dateStr, LuxonFormat.ISO_8601);
+
+        // Date string doesn't match format
+        if (dateTime.invalidReason === 'unparsable') {
+            setValidationError(INVALID_DATE_MESSAGE);
+            onDateChange(dateStr, false);
+            return;
+        }
+
+        // Date string is not a valid date
+        if (!dateTime.isValid) {
+            setValidationError(INVALID_DATE_MESSAGE);
+            onDateChange(dateStr, false);
+            return;
+        }
+
+        // Date string is a valid date
+        onDateChange(dateStr, true);
+    };
+
+    // Update input when user selects a date from the calendar
+    const setInputFromCalendar = (date?: Date) => {
+        setValidationError(validationErrorProp);
+
+        // Technically, not possible for calendar to select undefined, but this keeps TS happy
+        if (date === undefined) return;
+
+        const dateStr = DateTime.fromJSDate(date).toFormat(LuxonFormat.ISO_8601);
+        setInputDateString(dateStr);
+        onDateChange(dateStr, true);
+    };
+
+    // Clear input if value is changed to undefined
     useEffect(() => {
         if (value === undefined) {
             setInputDateString('');
-            setCalendarDate(undefined);
+            setValidationError(validationErrorProp);
         }
-    }, [value]);
+    }, [validationErrorProp, value]);
 
-    const setNextError = (errors: string[]) => setValidationError(errors[0]);
-
-    // Checks if typed date is valid. Updates calendarDate state when valid.
-    const syncDateInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const dateString = event.target.value;
-        setInputDateString(dateString);
-        setValidationError('');
-
-        if (dateString === '') {
-            onDateChange();
-            setCalendarDate(undefined);
-            onValidation?.(true);
-            return;
-        }
-
-        const dateTime = DateTime.fromFormat(dateString, LuxonFormat.ISO_8601);
-
-        if (!dateTime.isValid) {
-            return;
-        }
-
-        onValidation?.(true);
-        setCalendarDate(dateTime.toJSDate());
-    };
-
-    const updateHintAndValidate = () => {
-        if (inputDateString !== '' && !DateTime.fromFormat(inputDateString, LuxonFormat.ISO_8601).isValid) {
-            setValidationError('Input is not a valid date.');
-            onValidation?.(false);
-            return;
-        }
-
-        setPlaceholder(hint);
-        validateCalendarDate(calendarDate);
-    };
-
-    // Apply validation props and update text input when Calendar date is clicked
-    const validateCalendarDate = (selectedDay: Date | undefined) => {
-        setValidationError('');
-
-        if (selectedDay === undefined) {
-            return;
-        }
-
-        setCalendarDate(selectedDay);
-        setInputDateString(DateTime.fromJSDate(selectedDay).toFormat(LuxonFormat.ISO_8601));
-
-        if (validateDate(selectedDay, validations, setNextError)) {
-            onDateChange(selectedDay);
-            onValidation?.(true);
-        } else {
-            onValidation?.(false);
-        }
-    };
+    // Update validation error if prop changes
+    useEffect(() => {
+        setValidationError(validationErrorProp);
+    }, [validationErrorProp]);
 
     const errorId = useId();
     return (
         <>
             <DatePicker
                 className='bg-transparent dark:bg-transparent pl-2'
-                onChange={syncDateInput}
+                onBlur={() => {
+                    setPlaceholder(hint);
+                    validateInput(inputDateString);
+                }}
+                onChange={setInputFromEvent}
                 onFocus={() => setPlaceholder(DATE_FORMAT_MASK)}
-                onBlur={updateHintAndValidate}
                 placeholder={placeholder}
                 // `value` only represents input buffer
                 value={inputDateString}
@@ -185,10 +158,9 @@ export const ManagedDatePicker: FC<Props> = ({
                 calendarProps={{
                     fromDate: fromDate,
                     mode: 'single',
-                    // Validation happen on calendar date select
-                    onSelect: validateCalendarDate,
+                    onSelect: setInputFromCalendar,
                     // `selected` represents the value of the component
-                    selected: calendarDate,
+                    selected: calendarValue?.isValid ? calendarValue.toJSDate() : undefined,
                     toDate: toDate,
                 }}
             />
