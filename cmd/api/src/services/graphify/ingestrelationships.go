@@ -58,6 +58,9 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 // maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
 func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.RelationshipUpdate) error {
+	// Track that we processed this relationship (regardless of whether it's written)
+	ingestCtx.Stats.RelationshipsProcessed.Add(1)
+
 	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
 		return ingestCtx.Batch.UpdateRelationshipBy(update)
@@ -85,7 +88,7 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 	}
 
 	if shouldSubmit {
-		// New/modified: update via dawgs batch
+		// New/modified: update via dawgs batch (will increment RelationshipsWritten)
 		return ingestCtx.Batch.UpdateRelationshipBy(update)
 	}
 
