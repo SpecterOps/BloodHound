@@ -134,8 +134,8 @@ SET key         = 'environment_targeted_access_control',
 WHERE key = 'targeted_access_control';
 
 -- Update RO-DC default selector within Tier Zero to use the correct attribute name
-UPDATE asset_group_tag_selector_seeds 
-SET value = E'MATCH (n:Computer)\nWHERE n.isreadonlydc = true\nRETURN n;' 
+UPDATE asset_group_tag_selector_seeds
+SET value = E'MATCH (n:Computer)\nWHERE n.isreadonlydc = true\nRETURN n;'
 WHERE selector_id in (SELECT id FROM asset_group_tag_selectors WHERE name = 'Read-Only DCs' AND is_default = true);
 
 -- Set Open Graph Phase 2 feature flag to enable UI behind it
