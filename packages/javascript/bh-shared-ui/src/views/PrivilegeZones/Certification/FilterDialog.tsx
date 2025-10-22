@@ -46,6 +46,7 @@ import { useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../components';
 import { useBloodHoundUsers } from '../../../hooks/useBloodHoundUsers';
 import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../utils';
+import { AzureNodeKind, ActiveDirectoryNodeKind } from '../../../graphSchema';
 
 type FilterFormValues = Partial<ExtendedCertificationFilters> & {
     'start-date'?: string;
@@ -71,6 +72,8 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters, data }) 
     const form = useForm<FilterFormValues>({
         defaultValues: filters,
     });
+
+    const allObjectTypes = [...Object.values(AzureNodeKind), ...Object.values(ActiveDirectoryNodeKind)];
 
     const validateDates = useCallback(
         (startDate?: DateTime, endDate?: DateTime) => {
@@ -105,11 +108,6 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters, data }) 
             onApplyFilters(values); // parent table only updated on Confirm
         }
     }, [form, onApplyFilters, validateDates]);
-
-    //filter out duplicate member types
-    const uniqueObjects = data.filter(
-        (item, index, self) => index === self.findIndex((t) => t.primary_kind === item.primary_kind)
-    );
 
     useEffect(() => {
         form.reset(filters);
@@ -153,9 +151,9 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters, data }) 
                                             </FormControl>
                                             <SelectPortal>
                                                 <SelectContent>
-                                                    {uniqueObjects.map((obj) => (
-                                                        <SelectItem key={obj.primary_kind} value={obj.primary_kind}>
-                                                            {obj.primary_kind}
+                                                    {allObjectTypes.map((objType) => (
+                                                        <SelectItem key={objType} value={objType}>
+                                                            {objType}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
