@@ -158,8 +158,10 @@ const CertificationTable: FC<CertificationTableProps> = ({
     const someSelected = selectedRows.length > 0 && !allSelected;
 
     const toggleAll = (checked: boolean) => {
+        onRowSelect(null);
+
         if (checked) {
-            setSelectedRows(certificationsItems.map((row: any) => row.id));
+            setSelectedRows(certificationsItems.map((row) => row.id));
         } else {
             setSelectedRows([]);
         }
@@ -266,7 +268,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     const certificationCountTextMap: Record<string, string> = {
         Pending: 'pending',
-        Certified: 'certified',
+        'User Certified': 'certified',
         'Automatic Certification': 'automatically certified',
         Rejected: 'rejected',
     };
@@ -306,7 +308,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
             <div
                 onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
                 ref={scrollRef}
-                className='overflow-y-auto h-[calc(90vh_-_255px)]'>
+                className='overflow-y-scroll h-[calc(90vh_-_255px)]'>
                 <DataTable
                     data={certificationsItems ?? []}
                     onRowClick={(row) => onRowSelect(row)}

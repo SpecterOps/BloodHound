@@ -102,7 +102,7 @@ export type CertificationType =
 export const CertificationTypeMap: Record<CertificationType, string> = {
     [CertificationPending]: 'Pending',
     [CertificationRevoked]: 'Rejected',
-    [CertificationManual]: 'Certified',
+    [CertificationManual]: 'User Certified',
     [CertificationAuto]: 'Automatic Certification',
 };
 
