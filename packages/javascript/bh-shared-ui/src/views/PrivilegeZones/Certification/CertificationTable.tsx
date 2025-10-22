@@ -29,10 +29,20 @@ import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
 import FilterDialog from './FilterDialog';
+import { InfiniteData } from 'react-query';
+
+type CertificationsPage = {
+    count: number;
+    limit: number;
+    skip: number;
+    data: {
+        members: AssetGroupTagCertificationRecord[];
+    };
+};
 
 type CertificationTableProps = {
-    data: any;
-    filters: any;
+    data: InfiniteData<CertificationsPage> | undefined;
+    filters: ExtendedCertificationFilters;
     setFilters: Dispatch<SetStateAction<ExtendedCertificationFilters>>;
     search: string;
     setSearch: Dispatch<SetStateAction<string>>;
@@ -40,11 +50,11 @@ type CertificationTableProps = {
     isLoading: boolean;
     isFetching: boolean;
     isSuccess: boolean;
-    fetchNextPage: any;
+    fetchNextPage: () => Promise<unknown>;
     filterRows: (dropdownSelection: DropdownOption) => void;
     applyAdvancedFilters?: (advancedFilters: Partial<ExtendedCertificationFilters>) => void;
     selectedRows: number[];
-    setSelectedRows: any;
+    setSelectedRows: Dispatch<SetStateAction<number[]>>;
 };
 
 const CertificationTable: FC<CertificationTableProps> = ({
@@ -106,12 +116,9 @@ const CertificationTable: FC<CertificationTableProps> = ({
               .filter((item: AssetGroupTagCertificationRecord) => {
                   if (filters.objectType && item.primary_kind !== filters.objectType) return false;
                   if (filters.approvedBy && item.certified_by !== filters.approvedBy) return false;
-                  if (
-                      filters['start-date'] &&
-                      DateTime.fromISO(item.created_at) < DateTime.fromISO(filters['start-date'])
-                  )
+                  if (filters.startDate && DateTime.fromISO(item.created_at) < DateTime.fromISO(filters.startDate))
                       return false;
-                  if (filters['end-date'] && DateTime.fromISO(item.created_at) > DateTime.fromISO(filters['end-date']))
+                  if (filters.endDate && DateTime.fromISO(item.created_at) > DateTime.fromISO(filters.endDate))
                       return false;
                   if (search) {
                       const query = search.toLowerCase();

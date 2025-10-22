@@ -114,6 +114,8 @@ export type ExtendedCertificationFilters = AssetGroupTagCertificationParams & {
     action?: string;
     approvedBy?: string;
     objectType?: string;
+    startDate?: string;
+    endDate?: string;
 };
 
 export const AssetGroupTagTypeZone = 1 as const;
