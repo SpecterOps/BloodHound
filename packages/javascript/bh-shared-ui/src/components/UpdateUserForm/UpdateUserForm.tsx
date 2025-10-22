@@ -247,7 +247,8 @@ const UpdateUserFormInner: React.FC<{
         selectedEnvironments.length === availableEnvironments?.length &&
         availableEnvironments!.length > 0;
 
-    const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
+    //const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
+
     const allEnvironmentsIndeterminate =
         selectedEnvironments &&
         selectedEnvironments.length > 0 &&
@@ -263,7 +264,8 @@ const UpdateUserFormInner: React.FC<{
                         message: 'Cannot modify user roles for role provision enabled SSO providers.',
                     });
                 }
-            } else if (error.response?.status === 409) {
+            }
+            if (error.response?.status === 409) {
                 if (errMsg.includes('principal name')) {
                     form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
                 } else if (errMsg.includes('email')) {
@@ -271,57 +273,11 @@ const UpdateUserFormInner: React.FC<{
                 } else {
                     form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
-            } else {
-                form.setError('root.generic', {
-                    type: 'custom',
-                    message: 'An unexpected error occurred. Please try again.',
-                });
             }
         }
     };
 
-    const handleOnSave = (user: UpdateUserRequestForm) => {
-        /*
-        if (authenticationMethod === 'password') {
-            form.setValue('SSOProviderId', undefined);
-        }
-
-        // user selects all environment checkboxes, all_environments should be true and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (allEnvironmentsCheckboxRef.current.dataset.state === 'checked') {
-                form.setValue('all_environments', true);
-                form.setValue('environment_targeted_access_control.environments', null);
-            }
-        }
-
-        // user unselects all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (allEnvironmentsCheckboxRef.current.dataset.state === 'unchecked' && selectedEnvironments.length === 0) {
-                form.setValue('all_environments', false);
-                form.setValue('environment_targeted_access_control.environments', null);
-            }
-        }
-
-        // user selects between 0 and all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (
-                allEnvironmentsCheckboxRef.current.dataset.state === 'indeterminate' &&
-                selectedEnvironments.length > 0
-            ) {
-                form.setValue('all_environments', false);
-                form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
-            }
-        }
-
-        if (allEnvironmentsCheckboxRef.current) {
-            allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
-                ? 'indeterminate'
-                : allEnvironmentsSelected
-                  ? 'checked'
-                  : 'unchecked';
-        }
-        */
-
+    const handleOnSave = () => {
         const values = form.getValues();
         console.log(values);
 
@@ -338,9 +294,6 @@ const UpdateUserFormInner: React.FC<{
             },
         });
     };
-
-    //console.log(form.getValues());
-    //console.log(form.watch());
 
     useEffect(() => {
         // on submit for password and setvalues on form and error states
@@ -387,33 +340,15 @@ const UpdateUserFormInner: React.FC<{
                     : 'unchecked';
         }
         */
-        /*
         if (error) {
-            const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
-            if (error.response?.status === 400) {
-                if (errMsg.includes('role provision enabled')) {
-                    form.setError('root.generic', {
-                        type: 'custom',
-                        message: 'Cannot modify user roles for role provision enabled SSO providers.',
-                    });
-                }
-            } else if (error.response?.status === 409) {
-                if (errMsg.includes('principal name')) {
-                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
-                } else if (errMsg.includes('email')) {
-                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
-                } else {
-                    form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
-                }
-            } else {
-                form.setError('root.generic', {
-                    type: 'custom',
-                    message: 'An unexpected error occurred. Please try again.',
-                });
-            }
+            form.setError('root.generic', {
+                type: 'custom',
+                message: 'An unexpected error occurred. Please try again.',
+            });
         }
-        */
     }, [
+        error,
+        /*
         authenticationMethod,
         error,
         form,
@@ -424,6 +359,7 @@ const UpdateUserFormInner: React.FC<{
         selectedEnvironments,
         formatSelectedEnvironments,
         checkedEnvironments, // this is making tests weird
+        */
     ]);
 
     const handleSave = () => {
@@ -645,112 +581,106 @@ const UpdateUserFormInner: React.FC<{
                                 />
                             </div>
 
-                            <>
-                                {!hasSelectedSelf && (
-                                    <div className=''>
-                                        <FormField
-                                            name='authenticationMethod'
-                                            control={form.control}
-                                            rules={{
-                                                required: 'Authentication Method is required',
-                                            }}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel
-                                                        className='font-medium !text-sm'
-                                                        htmlFor='authenticationMethod'>
-                                                        Authentication Method
-                                                    </FormLabel>
+                            {!hasSelectedSelf && (
+                                <div className='mb-4'>
+                                    <FormField
+                                        name='authenticationMethod'
+                                        control={form.control}
+                                        rules={{
+                                            required: 'Authentication Method is required',
+                                        }}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel
+                                                    className='font-medium !text-sm'
+                                                    htmlFor='authenticationMethod'>
+                                                    Authentication Method
+                                                </FormLabel>
 
-                                                    <Select
-                                                        defaultValue={field.value}
-                                                        onValueChange={(field: any) => {
-                                                            form.setValue('authenticationMethod', field);
-                                                            //setAuthenticationMethod(field);
-                                                        }}
-                                                        value={field.value}>
-                                                        <FormControl className='pointer-events-auto'>
-                                                            <SelectTrigger
-                                                                variant='underlined'
-                                                                className='bg-transparent'
-                                                                id='authenticationMethod'>
-                                                                <SelectValue
-                                                                    placeholder={
-                                                                        authenticationMethod === 'password'
-                                                                            ? 'Username / Password'
-                                                                            : 'Single Sign-On (SSO)'
-                                                                    }
-                                                                />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectPortal>
-                                                            <SelectContent>
-                                                                <SelectItem value='password'>
-                                                                    Username / Password
+                                                <Select
+                                                    defaultValue={field.value}
+                                                    onValueChange={field.onChange}
+                                                    value={field.value}>
+                                                    <FormControl className='pointer-events-auto'>
+                                                        <SelectTrigger
+                                                            variant='underlined'
+                                                            className='bg-transparent'
+                                                            id='authenticationMethod'>
+                                                            <SelectValue
+                                                                placeholder={
+                                                                    authenticationMethod === 'password'
+                                                                        ? 'Username / Password'
+                                                                        : 'Single Sign-On (SSO)'
+                                                                }
+                                                            />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectPortal>
+                                                        <SelectContent>
+                                                            <SelectItem value='password'>
+                                                                Username / Password
+                                                            </SelectItem>
+                                                            {SSOProviders && SSOProviders.length > 0 && (
+                                                                <SelectItem value='sso'>
+                                                                    Single Sign-On (SSO)
                                                                 </SelectItem>
-                                                                {SSOProviders && SSOProviders.length > 0 && (
-                                                                    <SelectItem value='sso'>
-                                                                        Single Sign-On (SSO)
-                                                                    </SelectItem>
-                                                                )}
-                                                            </SelectContent>
-                                                        </SelectPortal>
-                                                    </Select>
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                )}
+                                                            )}
+                                                        </SelectContent>
+                                                    </SelectPortal>
+                                                </Select>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
 
-                                {authenticationMethod === 'sso' && !hasSelectedSelf && (
-                                    <div className=''>
-                                        <FormField
-                                            name='SSOProviderId'
-                                            control={form.control}
-                                            rules={{
-                                                required: 'SSO Provider is required',
-                                            }}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel
-                                                        className='font-medium !text-sm'
-                                                        htmlFor='sso'
-                                                        id='SSOProviderId-label'>
-                                                        SSO Provider
-                                                    </FormLabel>
+                            {authenticationMethod === 'sso' && !hasSelectedSelf && (
+                                <div>
+                                    <FormField
+                                        name='SSOProviderId'
+                                        control={form.control}
+                                        rules={{
+                                            required: 'SSO Provider is required',
+                                        }}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel
+                                                    className='font-medium !text-sm'
+                                                    htmlFor='sso'
+                                                    id='SSOProviderId-label'>
+                                                    SSO Provider
+                                                </FormLabel>
 
-                                                    <Select
-                                                        onValueChange={(field: any) => {
-                                                            form.setValue('authenticationMethod', field.value);
-                                                        }}
-                                                        value={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger
-                                                                variant='underlined'
-                                                                className='bg-transparent'
-                                                                id='sso'>
-                                                                <SelectValue placeholder='SSO Provider' />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectPortal>
-                                                            <SelectContent>
-                                                                {SSOProviders?.map((SSOProvider: SSOProvider) => (
-                                                                    <SelectItem
-                                                                        role='option'
-                                                                        value={SSOProvider.id.toString()}
-                                                                        key={SSOProvider.id}>
-                                                                        {SSOProvider.name}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </SelectPortal>
-                                                    </Select>
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                )}
-                            </>
+                                                <Select
+                                                    defaultValue={field.value}
+                                                    onValueChange={field.onChange}
+                                                    value={field.value}>
+                                                    <FormControl className='pointer-events-auto'>
+                                                        <SelectTrigger
+                                                            variant='underlined'
+                                                            className='bg-transparent'
+                                                            id='sso'>
+                                                            <SelectValue placeholder='SSO Provider' />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectPortal>
+                                                        <SelectContent>
+                                                            {SSOProviders?.map((SSOProvider: SSOProvider) => (
+                                                                <SelectItem
+                                                                    role='option'
+                                                                    value={SSOProvider.id.toString()}
+                                                                    key={SSOProvider.id}>
+                                                                    {SSOProvider.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </SelectPortal>
+                                                </Select>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
 
                             {!!form.formState.errors.root?.generic && (
                                 <div>
@@ -808,21 +738,20 @@ const UpdateUserFormInner: React.FC<{
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
-                                                        ref={allEnvironmentsCheckboxRef}
+                                                        //ref={allEnvironmentsCheckboxRef}
                                                         checked={
                                                             allEnvironmentsSelected || allEnvironmentsIndeterminate
                                                         }
                                                         id='allEnvironments'
                                                         onCheckedChange={handleSelectAllEnvironmentsChange}
                                                         className={
-                                                            allEnvironmentsIndeterminate
-                                                                ? 'data-[state=indeterminate]'
-                                                                : 'data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
+                                                            allEnvironmentsSelected &&
+                                                            '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
                                                         }
                                                         icon={
                                                             allEnvironmentsIndeterminate && (
                                                                 <Minus
-                                                                    className='h-full w-full'
+                                                                    className='h-full w-full bg-[#f4f4f4] text-neutral-dark-1 dark:bg-[#222222] dark:text-[#f4f4f4]'
                                                                     absoluteStrokeWidth={true}
                                                                     strokeWidth={3}
                                                                 />
