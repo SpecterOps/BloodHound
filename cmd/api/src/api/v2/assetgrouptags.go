@@ -1123,12 +1123,10 @@ func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.R
 		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupMemberIDsRequired, request), response)
 	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(requestCtx, reqBody.MemberIDs...); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, user.ID.String(), null.StringFrom(reqBody.Note)); err != nil {
-		if err == ErrCannotUpdateAutoCertifiedNodes {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalidMembers, request), response)
-		} else {
-			api.HandleDatabaseError(request, response, err)
-		}
+	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, user.ID.String(), null.StringFrom(reqBody.Note)); errors.Is(err, ErrCannotUpdateAutoCertifiedNodes) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAGTCannotUpdateAutoCertifiedNodes, request), response)
+	} else if err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)
 	}

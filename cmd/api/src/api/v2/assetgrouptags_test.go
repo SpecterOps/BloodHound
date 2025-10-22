@@ -3495,7 +3495,7 @@ func TestResources_CertifyMembers(t *testing.T) {
 			},
 			expected: expected{
 				responseCode: http.StatusBadRequest,
-				responseBody: api.ErrorResponseAssetGroupTagInvalidMembers,
+				responseBody: api.ErrorResponseAGTCannotUpdateAutoCertifiedNodes,
 			}},
 
 		{
