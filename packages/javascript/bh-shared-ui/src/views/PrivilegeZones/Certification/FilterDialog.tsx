@@ -95,14 +95,14 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, setFilters, onApplyFilte
     );
 
     const handleConfirm = useCallback(() => {
-        const startValue = form.getValues(START_DATE);
-        const endValue = form.getValues(END_DATE);
-
-        const startDate = startValue ? DateTime.fromFormat(startValue, LuxonFormat.ISO_8601) : undefined;
-        const endDate = endValue ? DateTime.fromFormat(endValue, LuxonFormat.ISO_8601) : undefined;
-
-        if (validateDates(startDate, endDate)) {
-            onApplyFilters(form.getValues());
+        const values = form.getValues();
+        if (
+            validateDates(
+                values.startDate ? DateTime.fromFormat(values.startDate, LuxonFormat.ISO_8601) : undefined,
+                values.endDate ? DateTime.fromFormat(values.endDate, LuxonFormat.ISO_8601) : undefined
+            )
+        ) {
+            onApplyFilters(values); // parent table only updated on Confirm
         }
     }, [form, onApplyFilters, validateDates]);
 
@@ -130,8 +130,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, setFilters, onApplyFilte
                                 <Button
                                     variant='text'
                                     onClick={() => {
-                                        form.reset({});
-                                        setFilters(defaultValues);
+                                        form.reset(defaultValues);
                                     }}
                                     className='font-normal p-2'>
                                     Clear All
