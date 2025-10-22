@@ -214,7 +214,14 @@ const CertificationTable: FC<CertificationTableProps> = ({
         }),
         columnHelper.accessor('name', {
             header: 'Member Name',
-            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
+            cell: (info) => {
+                const name = info.getValue() ?? '';
+                return (
+                    <div className='min-w-0 w-[150px] truncate' title={name}>
+                        {name}
+                    </div>
+                );
+            },
             size: 150,
         }),
         columnHelper.accessor('domainName', {
