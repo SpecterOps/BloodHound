@@ -25,7 +25,7 @@ import {
 } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppIcon, DropdownOption, DropdownSelector } from '../../../components';
+import { AppIcon, DropdownOption, DropdownSelector, NodeIcon } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
 import { useAssetGroupTags, useAvailableEnvironments } from '../../../hooks';
 import FilterDialog from './FilterDialog';
@@ -198,7 +198,11 @@ const CertificationTable: FC<CertificationTableProps> = ({
         }),
         columnHelper.accessor('primary_kind', {
             header: 'Type',
-            cell: (info) => <div className='text-primary dark:text-secondary-variant-2'>{info.getValue()}</div>,
+            cell: (info) => (
+                <div className='text-primary dark:text-secondary-variant-2'>
+                    {<NodeIcon nodeType={info.getValue()} />}
+                </div>
+            ),
             size: 100,
         }),
         columnHelper.accessor('name', {
