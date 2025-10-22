@@ -173,6 +173,10 @@ func (s Configuration) TempDirectory() string {
 	return filepath.Join(s.WorkDir, "tmp")
 }
 
+func (s Configuration) RetainedFilesDirectory() string {
+	return filepath.Join(s.WorkDir, "retained")
+}
+
 func (s Configuration) ClientLogDirectory() string {
 	return filepath.Join(s.WorkDir, "client_logs")
 }
