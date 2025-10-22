@@ -149,6 +149,11 @@ const CertificationTable: FC<CertificationTableProps> = ({
         fetchMoreOnBottomReached(scrollRef.current);
     }, [fetchMoreOnBottomReached]);
 
+    useEffect(() => {
+        // clear selection whenever the dropdown filter changes
+        setSelectedRows([]);
+    }, [dropdownSelection, setSelectedRows]);
+
     const allSelected = certificationsItems?.length > 0 && selectedRows.length === certificationsItems?.length;
     const someSelected = selectedRows.length > 0 && !allSelected;
 
