@@ -27,6 +27,8 @@ import (
 
 // The GraphifyData interface is designed to manage the lifecycle of ingestion tasks
 type GraphifyData interface {
+	appcfg.ParameterService
+
 	// Task handlers
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
