@@ -287,7 +287,7 @@ export const TagForm: FC = () => {
                                     <Skeleton className='h-16 w-full' />
                                 </div>
                                 {isZonePage && (
-                                    <div className='grid gap-2'>
+                                    <div className='grid gap-2 hidden'>
                                         <Label>Require Certification</Label>
                                         <Skeleton className='h-3 w-6' />
                                     </div>
@@ -407,7 +407,7 @@ export const TagForm: FC = () => {
                                         control={control}
                                         name='require_certify'
                                         render={({ field }) => (
-                                            <FormItem>
+                                            <FormItem className='hidden'>
                                                 <FormLabel>Require Certification</FormLabel>
                                                 <div className='flex gap-2'>
                                                     <FormControl>

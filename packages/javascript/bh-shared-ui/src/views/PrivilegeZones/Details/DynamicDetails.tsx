@@ -107,7 +107,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
                 {type === AssetGroupTagTypeZone && (
-                    <div className='mt-4'>
+                    <div className='mt-4 hidden'>
                         <DetailField label='Certification' value={require_certify ? 'Required' : 'Not Required'} />
                     </div>
                 )}
@@ -146,7 +146,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
                 {isZonePage && (
-                    <div className='mt-4'>
+                    <div className='mt-4 hidden'>
                         <DetailField
                             label='Automatic Certification'
                             value={AssetGroupTagSelectorAutoCertifyMap[auto_certify] ?? 'Off'}

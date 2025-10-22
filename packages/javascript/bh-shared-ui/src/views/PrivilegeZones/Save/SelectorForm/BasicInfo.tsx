@@ -220,7 +220,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     control={control}
                                     name='auto_certify'
                                     render={({ field }) => (
-                                        <FormItem>
+                                        <FormItem className='hidden'>
                                             <FormLabel aria-labelledby='auto_certify'>
                                                 Automatic Certification
                                             </FormLabel>
