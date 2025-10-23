@@ -27,8 +27,8 @@ interface EntityInfoPanelProps {
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
     additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
+        sectionProps: any;
+        TableComponent: React.FC<any>;
     }[];
 }
 

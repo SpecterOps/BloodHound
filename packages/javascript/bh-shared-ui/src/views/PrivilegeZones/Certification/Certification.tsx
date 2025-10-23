@@ -27,6 +27,7 @@ import { useCallback, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { useNotifications } from '../../../providers';
+import { zonesPath } from '../../../routes';
 import { SelectedNode } from '../../../types';
 import { EntityKinds, LuxonFormat, apiClient } from '../../../utils';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
@@ -274,7 +275,11 @@ const Certification = () => {
                                 selectedNode={selectedNode}
                                 additionalTables={[
                                     {
-                                        sectionProps: { label: 'Selectors', id: memberQuery.data.object_id },
+                                        sectionProps: {
+                                            memberId: memberQuery.data.id,
+                                            tagType: zonesPath,
+                                            tagId: memberQuery.data.asset_group_tag_id,
+                                        },
                                         TableComponent: EntitySelectorsInformation,
                                     },
                                 ]}

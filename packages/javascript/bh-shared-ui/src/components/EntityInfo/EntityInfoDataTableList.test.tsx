@@ -19,8 +19,9 @@ import { setupServer } from 'msw/node';
 import { useParams } from 'react-router-dom';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { zoneHandlers } from '../../mocks';
+import { zonesPath } from '../../routes';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
-import { EntityInfoDataTableProps, EntityKinds } from '../../utils';
+import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import EntitySelectorsInformation from '../../views/PrivilegeZones/Details/EntitySelectorsInformation';
 import { EntityInfoDataTable } from '../EntityInfoDataTable';
@@ -65,8 +66,8 @@ const EntityInfoContentWithProvider = ({
     nodeType: EntityKinds | string;
     databaseId?: string;
     additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
+        sectionProps: any;
+        TableComponent: React.FC<any>;
     }[];
 }) => (
     <ObjectInfoPanelContextProvider>
@@ -105,7 +106,7 @@ describe('EntityInfoDataTableList', () => {
                 nodeType={nodeType}
                 additionalTables={[
                     {
-                        sectionProps: { label: 'Selectors', id: '1' },
+                        sectionProps: { memberId: '7', tagType: zonesPath, tagId: '1' },
                         TableComponent: EntitySelectorsInformation,
                     },
                 ]}
