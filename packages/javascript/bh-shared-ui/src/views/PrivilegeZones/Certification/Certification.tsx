@@ -268,7 +268,7 @@ const Certification = () => {
                         setDropdownSelection={setDropdownSelection}
                     />
                 </div>
-                <div className='basis-1/3'>
+                <div className='basis-1/3 overflow-y-auto h-[calc(100vh_-_257px)]'>
                     <div className='w-[400px] max-w-[400px]'>
                         {memberQuery.data && selectedNode ? (
                             <EntityInfoPanel
