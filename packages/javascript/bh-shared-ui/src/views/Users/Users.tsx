@@ -79,6 +79,7 @@ const Users: FC = () => {
     const listUsersQuery = useBloodHoundUsers();
 
     const hasSelectedSelf = getSelfQuery.data?.id === selectedUserId!;
+    const isSelfSSOUser = !!getSelfQuery.data?.sso_provider_id;
 
     const createUserMutation = useMutation((newUser: CreateUserRequest) => apiClient.createUser(newUser), {
         onSuccess: () => {
@@ -281,7 +282,7 @@ const Users: FC = () => {
                     setDisable2FASecret('');
                     getSelfQuery.refetch();
                 }}
-                onSave={(secret: string) => {
+                onSave={(secret?: string) => {
                     setDisable2FAError('');
                     apiClient
                         .disenrollMFA(selectedUserId!, { secret })
@@ -291,14 +292,24 @@ const Users: FC = () => {
                             setDisable2FASecret('');
                             listUsersQuery.refetch();
                         })
-                        .catch(() => {
-                            setDisable2FAError('Unable to verify password. Please try again.');
+                        .catch((err) => {
+                            if (!isSelfSSOUser && err.status === 400) {
+                                setDisable2FAError('Unable to verify password. Please try again.');
+                            } else {
+                                setDisable2FADialogOpen(false);
+                                addNotification('Unknown error disabling MFA for user', 'disableUserMfaUnknownError');
+                            }
                         });
                 }}
                 error={disable2FAError}
                 secret={disable2FASecret}
                 onSecretChange={(e: any) => setDisable2FASecret(e.target.value)}
-                contentText='Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
+                showPasswordConfirmation={!isSelfSSOUser}
+                contentText={
+                    isSelfSSOUser
+                        ? 'Are you sure you want to disable MFA for this user?'
+                        : 'Are you sure you want to disable MFA for this user? Please enter your password to confirm.'
+                }
             />
             <PasswordDialog
                 open={resetUserPasswordDialogOpen}

@@ -18890,6 +18890,64 @@
           }
         }
       },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
+          },
+          "analysis_enabled": {
+            "$ref": "#/components/schemas/null.boolean"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
+          }
+        }
+      },
       "model.domain-selector": {
         "type": "object",
         "properties": {
@@ -18908,6 +18966,28 @@
           "collected": {
             "type": "boolean",
             "readOnly": true
+          },
+          "impactValue": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
+          "exposures": {
+            "type": "array",
+            "readOnly": true,
+            "description": "Enterprise Only",
+            "items": {
+              "type": "object",
+              "properties": {
+                "exposure_percent": {
+                  "type": "integer",
+                  "readOnly": true
+                },
+                "asset_group_tag": {
+                  "$ref": "#/components/schemas/model.asset-group-tag"
+                }
+              }
+            }
           }
         }
       },
@@ -19330,64 +19410,6 @@
       "api.params.predicate.filter.boolean": {
         "type": "boolean",
         "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "null.boolean": {
-        "type": "object",
-        "properties": {
-          "bool": {
-            "type": "boolean"
-          },
-          "valid": {
-            "description": "Valid is true if `boolean` is not `null`",
-            "type": "boolean"
-          }
-        }
-      },
-      "model.asset-group-tag": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "type": {
-            "type": "integer"
-          },
-          "kind_id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "created_by": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_by": {
-            "type": "string"
-          },
-          "position": {
-            "$ref": "#/components/schemas/null.int32"
-          },
-          "require_certify": {
-            "$ref": "#/components/schemas/null.boolean"
-          },
-          "analysis_enabled": {
-            "$ref": "#/components/schemas/null.boolean"
-          },
-          "glyph": {
-            "$ref": "#/components/schemas/null.string"
-          }
-        }
       },
       "model.asset-group-tag-request": {
         "type": "object",

@@ -16,16 +16,16 @@
 
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
-import { FC, useState } from 'react';
-import { copyToClipboard } from '../utils';
+import { IconButton, Tooltip } from '@mui/material';
+import { FC, ReactNode, useState } from 'react';
+import { cn, copyToClipboard } from '../utils';
 
 const LabelWithCopy: FC<{
-    label: string;
+    label: ReactNode;
     valueToCopy: string | number;
     hoverOnly?: boolean;
-}> = ({ label, valueToCopy, hoverOnly = false }) => {
-    const theme = useTheme();
+    className?: string;
+}> = ({ label, valueToCopy, hoverOnly = false, className }) => {
     const [copied, setCopied] = useState(false);
     const [hoverActive, setHoverActive] = useState(false);
 
@@ -43,12 +43,10 @@ const LabelWithCopy: FC<{
     };
 
     return (
-        <Box
-            display='flex'
-            alignItems='center'
+        <div
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            sx={{ height: theme.spacing(3) }}>
+            className={cn('h-6 flex items-center', className)}>
             {label}
             <Tooltip title='Copied' open={copied} placement='right'>
                 <IconButton
@@ -57,7 +55,7 @@ const LabelWithCopy: FC<{
                     <FontAwesomeIcon icon={faCopy} />
                 </IconButton>
             </Tooltip>
-        </Box>
+        </div>
     );
 };
 

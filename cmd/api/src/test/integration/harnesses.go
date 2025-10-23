@@ -593,6 +593,7 @@ type RDPHarnessWithCitrix struct {
 	DomainGroupD           *graph.Node
 	DomainGroupE           *graph.Node
 	DomainGroupF           *graph.Node
+	DomainGroupG           *graph.Node
 	RDPLocalGroup          *graph.Node
 	DirectAccessUsersGroup *graph.Node
 	DomainUsersGroup       *graph.Node
@@ -632,6 +633,7 @@ func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
 	s.DomainGroupD = testCtx.NewActiveDirectoryGroup("Domain Group D", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.DomainGroupE = testCtx.NewActiveDirectoryGroup("Domain Group E", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.DomainGroupF = testCtx.NewActiveDirectoryGroup("Domain Group F", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
+	s.DomainGroupG = testCtx.NewActiveDirectoryGroup("Domain Group G", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
 	testCtx.NewRelationship(s.EliUser, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 	testCtx.NewRelationship(s.EliUser, s.Computer, ad.RemoteInteractiveLogonRight, DefaultRelProperties)
@@ -672,6 +674,9 @@ func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.RDPLocalGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
 
 	testCtx.NewRelationship(s.DirectAccessUsersGroup, s.Computer, ad.LocalToComputer, DefaultRelProperties)
+
+	testCtx.NewRelationship(s.DomainGroupG, s.RDPLocalGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
+	testCtx.NewRelationship(s.DomainGroupG, s.DirectAccessUsersGroup, ad.MemberOfLocalGroup, DefaultRelProperties)
 
 	// add users to the DAU local group
 	testCtx.NewRelationship(s.UliUser, s.DirectAccessUsersGroup, ad.MemberOfLocalGroup, DefaultRelProperties)

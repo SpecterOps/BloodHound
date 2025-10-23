@@ -19,8 +19,10 @@ import {
     DialogActions,
     DialogClose,
     DialogContent,
+    DialogDescription,
     DialogPortal,
     DialogTitle,
+    VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
 import { ErrorResponse } from 'js-client-library';
 import { useEffect, useState } from 'react';
@@ -189,6 +191,9 @@ const ImportQueryDialog: React.FC<{
                 }
             }}>
             <DialogPortal>
+                <VisuallyHidden asChild>
+                    <DialogDescription>Import Custom Queries</DialogDescription>
+                </VisuallyHidden>
                 <DialogContent
                     DialogOverlayProps={{
                         blurBackground: false,

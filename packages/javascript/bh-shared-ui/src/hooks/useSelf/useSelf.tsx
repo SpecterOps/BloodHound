@@ -30,7 +30,7 @@ export const useSelf = () => {
     const getSelfRoles = useQuery(['getSelf'], ({ signal }) => getSelf({ signal }), {
         cacheTime: Number.POSITIVE_INFINITY,
         select: (data) => {
-            const userRoles = data?.roles.map((role: any) => role.name) || [];
+            const userRoles = data?.roles?.map((role: any) => role.name) || [];
             return userRoles;
         },
     });
