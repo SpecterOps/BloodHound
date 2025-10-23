@@ -126,8 +126,8 @@ const CertificationTable: FC<CertificationTableProps> = ({
               return {
                   ...item,
                   date: DateTime.fromISO(item.created_at).toFormat('yyyy-MM-dd'),
-                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
-                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
+                  domain_name: domainMap.get(item.environment_id) ?? 'Unknown',
+                  zone_name: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
               };
           })
         : [];
@@ -181,7 +181,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
 
     const columns = [
         columnHelper.display({
-            id: 'bulk-certify',
+            id: 'bulk_certify',
             header: () => (
                 <div className='pl-8'>
                     <Checkbox
@@ -223,12 +223,12 @@ const CertificationTable: FC<CertificationTableProps> = ({
             },
             size: 150,
         }),
-        columnHelper.accessor('domainName', {
+        columnHelper.accessor('domain_name', {
             header: 'Environment',
             cell: (info) => <div className='min-w-0 truncate'>{info.getValue()}</div>,
             size: 150,
         }),
-        columnHelper.accessor('zoneName', {
+        columnHelper.accessor('zone_name', {
             header: 'Zone',
             cell: (info) => <div className='min-w-0 truncate'>{info.getValue()}</div>,
             size: 150,
