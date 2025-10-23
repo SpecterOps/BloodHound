@@ -591,26 +591,42 @@ type GetAssetGroupTagMemberCountsResponse struct {
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
 	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-		return
-	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+	// if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+	// 	slog.Error("Unable to get user from auth context")
+	// 	api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	// 	return
+	// } else
+	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		filteredEnvs, err := FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
-		if err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-			return
-		}
+		// filteredEnvs, err := FilterUserEnvironments(request.Context(), s.DB, user, environmentIds...)
+		// if err != nil {
+		// 	api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		// 	return
+		// }
+
+		// accessList := ExtractEnvironmentIDsFromUser(&user)
+		// filters := []graph.Criteria{}
+		// // ETAC feature flag
+		// if flag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+		// 	api.HandleDatabaseError(request, response, err)
+		// 	return
+		// } else if flag.Enabled && !user.AllEnvironments {
+
+		// 	filters = append(filters, query.Or(
+		// 		query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
+		// 		query.In(query.NodeProperty(azure.TenantID.String()), accessList),
+		// 	),
+		// 	)
+		// }
 
 		filters := []graph.Criteria{}
-		if len(filteredEnvs) > 0 {
+		if len(environmentIds) > 0 {
 			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), filteredEnvs),
-				query.In(query.NodeProperty(azure.TenantID.String()), filteredEnvs),
+				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
 			))
 		}
 
