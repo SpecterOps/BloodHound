@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import * as bhSharedUI from 'bh-shared-ui';
-import { render } from 'src/test-utils';
+import * as hooks from '../../../hooks';
+import { render } from '../../../test-utils';
 import CopyMenuItem from './CopyMenuItem';
 
-const useExploreSelectedItemSpy = vi.spyOn(bhSharedUI, 'useExploreSelectedItem');
+const useExploreSelectedItemSpy = vi.spyOn(hooks, 'useExploreSelectedItem');
 
 describe('CopyMenuItem', () => {
     const selectedNode = {
