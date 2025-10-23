@@ -185,7 +185,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                                                 <SelectItem
                                                                     key={user.id}
                                                                     value={user.email_address || user.id}>
-                                                                    {user.email_address || user.principal_name}
+                                                                    {user.email_address}
                                                                 </SelectItem>
                                                             );
                                                         })}
