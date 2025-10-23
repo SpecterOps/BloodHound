@@ -17,7 +17,8 @@
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MenuItem, Tooltip, TooltipProps, styled, tooltipClasses } from '@mui/material';
-import { NodeResponse, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { NodeResponse, useExploreSelectedItem } from '../../../hooks';
+import { useNotifications } from '../../../providers';
 
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />

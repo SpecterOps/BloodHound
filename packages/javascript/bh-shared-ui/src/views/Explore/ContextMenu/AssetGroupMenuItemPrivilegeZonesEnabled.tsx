@@ -29,6 +29,7 @@ import { Link } from 'react-router-dom';
 const AssetGroupMenuItem: FC<{
     assetGroupId: number;
     assetGroupName: string;
+    disableAddNode: boolean;
     isCurrentMember: boolean;
     removeNodePath: string;
     onAddNode?: (assetGroupId: string | number) => void;
@@ -39,6 +40,7 @@ const AssetGroupMenuItem: FC<{
 }> = ({
     assetGroupId,
     assetGroupName,
+    disableAddNode,
     isCurrentMember,
     removeNodePath,
     onAddNode = () => {},
@@ -65,6 +67,7 @@ const AssetGroupMenuItem: FC<{
                         onCancel={handleOnCancel}
                         onAccept={handleAddNode}
                         dialogContent={confirmationOnAddMessage}
+                        disableAccept={disableAddNode}
                     />
                 </>
             );
@@ -84,7 +87,8 @@ const ConfirmNodeChangesDialog: FC<{
     onCancel: () => void;
     onAccept: () => void;
     dialogContent: string;
-}> = ({ onCancel, onAccept, dialogContent }) => {
+    disableAccept: boolean;
+}> = ({ onCancel, onAccept, dialogContent, disableAccept }) => {
     return (
         <DialogPortal>
             <DialogContent>
@@ -94,7 +98,7 @@ const ConfirmNodeChangesDialog: FC<{
                     <Button variant='tertiary' onClick={onCancel}>
                         Cancel
                     </Button>
-                    <Button variant='primary' onClick={onAccept}>
+                    <Button variant='primary' onClick={onAccept} disabled={disableAccept}>
                         Ok
                     </Button>
                 </DialogActions>

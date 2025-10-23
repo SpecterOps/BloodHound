@@ -15,10 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
+import { createAuthStateWithPermissions } from '../../../mocks';
+import { render, screen, waitFor } from '../../../test-utils';
+import { Permission } from '../../../utils';
 import ContextMenu from './ContextMenuPrivilegeZonesEnabled';
 
 const server = setupServer(
