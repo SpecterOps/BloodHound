@@ -18,7 +18,6 @@ import {
     DatePicker,
     Dialog,
     DialogActions,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogPortal,
@@ -39,14 +38,16 @@ import {
     Skeleton,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
+import { faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagCertificationRecord } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../components';
-import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
-import { END_DATE, LuxonFormat, START_DATE } from '../../../utils';
+import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
+import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../utils';
 import { fromDate, getStartAndEndDateTimes, toDate, validateFormDates } from '../utils';
 import { defaultFilterValues } from './constants';
 import { FilterFormValues } from './types';
@@ -60,6 +61,7 @@ interface FilterDialogProps {
 //TODO: we need to consolidate this into one universal shared component but separating in the interest of time
 const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
     const bloodHoundUsersQuery = useGetUsersMinimal();
+    const [open, setOpen] = useState(false);
 
     const form = useForm<FilterFormValues>({
         defaultValues: defaultFilterValues,
@@ -78,17 +80,29 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
 
         if (validateDates(startDate, endDate)) {
             onApplyFilters(values); // parent table only updated on Confirm
+            closeDialog();
         }
     }, [form, onApplyFilters, validateDates]);
+
+    const closeDialog = () => setOpen(false);
 
     useEffect(() => {
         form.reset(filters);
     }, [form, filters]);
 
     return (
-        <Dialog>
+        <Dialog
+            open={open}
+            onOpenChange={(open) => {
+                setOpen(open);
+            }}>
             <DialogTrigger asChild>
-                <Button variant='text' data-testid='certifications_filter_dialog'>
+                <Button
+                    variant='text'
+                    data-testid='certifications_filter_dialog'
+                    onClick={() => {
+                        setOpen((prev) => !prev);
+                    }}>
                     <AppIcon.FilterOutline size={22} />
                 </Button>
             </DialogTrigger>
@@ -117,20 +131,31 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                     <FormItem>
                                         <FormLabel>Object Type</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder='Select Object Type' />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectPortal>
-                                                <SelectContent>
-                                                    {allObjectTypes.map((objType) => (
-                                                        <SelectItem key={objType} value={objType}>
-                                                            {objType}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </SelectPortal>
+                                            <div className='flex gap-2'>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder='Select Object Type' />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectPortal>
+                                                    <SelectContent>
+                                                        {allObjectTypes.map((objType) => (
+                                                            <SelectItem key={objType} value={objType}>
+                                                                {objType}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </SelectPortal>
+                                                <Button
+                                                    variant={'text'}
+                                                    disabled={!field.value}
+                                                    className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                    onClick={() => {
+                                                        form.setValue(field.name, '');
+                                                    }}>
+                                                    <FontAwesomeIcon icon={faClose} />
+                                                </Button>
+                                            </div>
                                         </Select>
                                     </FormItem>
                                 )}
@@ -142,29 +167,40 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                     <FormItem>
                                         <FormLabel>Approved By</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                {bloodHoundUsersQuery.isLoading ? (
-                                                    <Skeleton className='h-10 w-24' />
-                                                ) : (
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder='Select User' />
-                                                    </SelectTrigger>
-                                                )}
-                                            </FormControl>
-                                            <SelectPortal>
-                                                <SelectContent>
-                                                    {bloodHoundUsersQuery.data?.map((user) => {
-                                                        if (!user.email_address) return null;
-                                                        return (
-                                                            <SelectItem
-                                                                key={user.id}
-                                                                value={user.email_address || user.id}>
-                                                                {user.email_address || user.principal_name}
-                                                            </SelectItem>
-                                                        );
-                                                    })}
-                                                </SelectContent>
-                                            </SelectPortal>
+                                            <div className='flex gap-2'>
+                                                <FormControl>
+                                                    {bloodHoundUsersQuery.isLoading ? (
+                                                        <Skeleton className='h-10 w-24' />
+                                                    ) : (
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder='Select User' />
+                                                        </SelectTrigger>
+                                                    )}
+                                                </FormControl>
+                                                <SelectPortal>
+                                                    <SelectContent>
+                                                        {bloodHoundUsersQuery.data?.map((user) => {
+                                                            if (!user.email_address) return null;
+                                                            return (
+                                                                <SelectItem
+                                                                    key={user.id}
+                                                                    value={user.email_address || user.id}>
+                                                                    {user.email_address || user.principal_name}
+                                                                </SelectItem>
+                                                            );
+                                                        })}
+                                                    </SelectContent>
+                                                </SelectPortal>
+                                                <Button
+                                                    variant={'text'}
+                                                    disabled={!field.value}
+                                                    className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                    onClick={() => {
+                                                        form.setValue(field.name, '');
+                                                    }}>
+                                                    <FontAwesomeIcon icon={faClose} />
+                                                </Button>
+                                            </div>
                                         </Select>
                                     </FormItem>
                                 )}
@@ -176,7 +212,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Start Date</FormLabel>
-                                            <FormControl>
+                                            <div className='flex gap-2'>
                                                 <DatePicker
                                                     {...field}
                                                     InputElement={MaskedInput}
@@ -202,7 +238,17 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                                             DateTime.fromJSDate(date) > DateTime.local(),
                                                     }}
                                                 />
-                                            </FormControl>
+                                                <Button
+                                                    variant={'text'}
+                                                    disabled={!field.value}
+                                                    className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                    onClick={() => {
+                                                        form.setValue(field.name, '');
+                                                        form.clearErrors();
+                                                    }}>
+                                                    <FontAwesomeIcon icon={faClose} />
+                                                </Button>
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -213,7 +259,7 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>End Date</FormLabel>
-                                            <FormControl>
+                                            <div className='flex gap-2'>
                                                 <DatePicker
                                                     {...field}
                                                     InputElement={MaskedInput}
@@ -239,7 +285,17 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                                                             DateTime.fromJSDate(date) > DateTime.local(),
                                                     }}
                                                 />
-                                            </FormControl>
+                                                <Button
+                                                    variant={'text'}
+                                                    disabled={!field.value}
+                                                    className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                                    onClick={() => {
+                                                        form.setValue(field.name, '');
+                                                        form.clearErrors();
+                                                    }}>
+                                                    <FontAwesomeIcon icon={faClose} />
+                                                </Button>
+                                            </div>{' '}
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -247,14 +303,12 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                             </div>
 
                             <DialogActions>
-                                <DialogClose asChild>
-                                    <Button variant='text'>Cancel</Button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                    <Button variant='text' onClick={handleConfirm}>
-                                        Confirm
-                                    </Button>
-                                </DialogClose>
+                                <Button variant='text' onClick={closeDialog}>
+                                    Cancel
+                                </Button>
+                                <Button variant='text' onClick={handleConfirm}>
+                                    Confirm
+                                </Button>
                             </DialogActions>
                         </form>
                     </Form>
