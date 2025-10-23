@@ -95,6 +95,7 @@ export default defineConfig(({ mode }) => {
                 reporter: ['text-summary', 'json-summary'],
             },
             reporters: [
+                'default',
                 [
                     'allure-vitest/reporter',
                     {

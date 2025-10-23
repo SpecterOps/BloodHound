@@ -23,6 +23,9 @@ on:
     types:
       - opened
       - synchronize
+  push:
+    branches:
+      - main
 
 jobs:
   run-tests:
@@ -45,27 +48,9 @@ jobs:
           export CI=false
           go tool stbernard deps
           go tool stbernard test -y
-          
-      - name: Get Allure history
-        uses: actions/checkout@v2
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build test report
-        uses: simple-elf/allure-report-action@v1.12
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        with:
-          gh_pages: gh-pages
-          allure_history: allure-history
-          allure_results: allure-results
-          allure_report: allure-report
-      
-      - name: Upload Test Report 
+      - name: Upload Allure Results
         uses: actions/upload-artifact@v4
-        if: ${{ github.event.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
-          name: allure-report
-          path: allure-report
+          name: allure-results
+          path: allure-results

@@ -34,6 +34,7 @@ export default defineConfig({
             reporter: ['text-summary', 'json-summary'],
         },
         reporters: [
+            'default',
             [
                 'allure-vitest/reporter',
                 {
