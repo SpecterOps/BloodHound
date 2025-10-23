@@ -21,13 +21,14 @@ import {
     CertificationTypeMap,
 } from 'js-client-library';
 import { DropdownOption } from '../../..';
-import { FilterFormValues } from './types';
+import { ExtendedCertificationFilters } from './types';
 
-export const defaultFilterValues: FilterFormValues = {
+export const defaultFilterValues: ExtendedCertificationFilters = {
     objectType: '',
     approvedBy: '',
     'start-date': '',
     'end-date': '',
+    certificationStatus: CertificationPending,
 };
 
 export const certOptions: DropdownOption[] = [
