@@ -273,7 +273,7 @@ const Certification = () => {
                             <EntityInfoPanel
                                 DataTable={EntityInfoDataTable}
                                 selectedNode={selectedNode}
-                                additionalTables={[
+                                priorityTables={[
                                     {
                                         sectionProps: {
                                             memberId: memberQuery.data.id,
