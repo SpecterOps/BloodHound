@@ -73,20 +73,20 @@ export interface Auditable {
 }
 
 export interface NewUser {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
     SAMLProviderId?: string;
     password?: string;
-    needsPasswordReset?: boolean;
+    needs_password_reset?: boolean;
 }
 
 export interface UpdatedUser {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
 }

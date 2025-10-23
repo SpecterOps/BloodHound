@@ -316,6 +316,6 @@ describe('CreateUserDialog', async () => {
 
         await user.click(saveButton);
 
-        expect(testOnSave).toBeCalledWith(expect.objectContaining({ SSOProviderId: undefined }));
+        expect(testOnSave).toBeCalledWith(expect.objectContaining({ sso_provider_id: undefined }));
     });
 });
