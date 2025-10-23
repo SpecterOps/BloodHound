@@ -181,7 +181,7 @@ const ContextMenu: FC<{
                 keepMounted>
                 <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
                 <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-                {assetGroupMenuItems.length ? assetGroupMenuItems.map((MenuItem) => MenuItem) : null}
+                {assetGroupMenuItems}
                 <CopyMenuItem />
             </Menu>
         </Dialog>
