@@ -168,13 +168,16 @@ const CertificationTable: FC<CertificationTableProps> = ({
     };
 
     const toggleRow = (checked: boolean, selectedId: number) => {
-        const newSelectedRows = checked
-            ? [...selectedRows, selectedId]
-            : selectedRows.filter((rowId: number) => rowId !== selectedId);
-        setSelectedRows(newSelectedRows);
-        if (newSelectedRows.length > 1) {
-            onRowSelect(null);
-        }
+        setSelectedRows((prev) => {
+            const newSelectedRows = checked
+                ? [...prev, selectedId]
+                : prev.filter((rowId: number) => rowId !== selectedId);
+
+            if (newSelectedRows.length > 1) {
+                onRowSelect(null);
+            }
+            return newSelectedRows;
+        });
     };
 
     const columnHelper = createColumnHelper<any>();
