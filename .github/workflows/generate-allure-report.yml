@@ -27,11 +27,12 @@ on:
 jobs:
   generate-allure-report:
     runs-on: ubuntu-latest
+    # Only run if the triggering workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Get Allure history
         uses: actions/checkout@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
         continue-on-error: true
         with:
           ref: gh-pages
@@ -39,7 +40,6 @@ jobs:
     
       - name: Download Allure Results
         uses: actions/download-artifact@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           name: allure-results
           path: allure-results
@@ -51,7 +51,6 @@ jobs:
       # Pinning a specific sha v1.13
       # https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use#using-third-party-actions
         uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
-        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           gh_pages: gh-pages
           allure_history: allure-history
