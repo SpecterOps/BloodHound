@@ -69,7 +69,7 @@ type CertificationTableProps = {
     isSuccess: boolean;
     fetchNextPage: () => Promise<unknown>;
     filterRows: (dropdownSelection: DropdownOption) => void;
-    applyAdvancedFilters?: (advancedFilters: FilterFormValues) => void;
+    applyAdvancedFilters: (advancedFilters: FilterFormValues) => void;
     selectedRows: number[];
     setSelectedRows: Dispatch<SetStateAction<number[]>>;
     dropdownSelection: string;
@@ -122,24 +122,14 @@ const CertificationTable: FC<CertificationTableProps> = ({
     const totalFetched = certificationsItemsRaw.length;
 
     const certificationsItems = isSuccess
-        ? certificationsItemsRaw
-              .map((item: AssetGroupTagCertificationRecord) => {
-                  return {
-                      ...item,
-                      date: DateTime.fromISO(item.created_at).toFormat('yyyy-MM-dd'),
-                      domainName: domainMap.get(item.environment_id) ?? 'Unknown',
-                      zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
-                  };
-              })
-              .filter((item: AssetGroupTagCertificationRecord) => {
-                  if (search) {
-                      const query = search.toLowerCase();
-                      return (
-                          item.name?.toLowerCase().includes(query) || item.primary_kind?.toLowerCase().includes(query)
-                      );
-                  }
-                  return true;
-              })
+        ? certificationsItemsRaw.map((item: AssetGroupTagCertificationRecord) => {
+              return {
+                  ...item,
+                  date: DateTime.fromISO(item.created_at).toFormat('yyyy-MM-dd'),
+                  domainName: domainMap.get(item.environment_id) ?? 'Unknown',
+                  zoneName: tagMap.get(item.asset_group_tag_id) ?? 'Unknown',
+              };
+          })
         : [];
 
     const fetchMoreOnBottomReached = useCallback(
@@ -266,13 +256,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                 />
                 <div className='flex items-center'>
                     <SearchInput value={search} onInputChange={setSearch} />
-                    {applyAdvancedFilters && (
-                        <FilterDialog
-                            filters={filters}
-                            onApplyFilters={applyAdvancedFilters}
-                            data={certificationsItems}
-                        />
-                    )}
+                    <FilterDialog filters={filters} onApplyFilters={applyAdvancedFilters} data={certificationsItems} />
                 </div>
             </div>
             <div

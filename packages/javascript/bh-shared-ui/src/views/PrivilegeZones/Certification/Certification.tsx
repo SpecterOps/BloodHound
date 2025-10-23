@@ -29,15 +29,20 @@ import { DropdownOption, EntityInfoDataTable, EntityInfoPanel } from '../../../c
 import { useNotifications } from '../../../providers';
 import { SelectedNode } from '../../../types';
 import { EntityKinds, LuxonFormat, apiClient } from '../../../utils';
+import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
 import CertifyMembersConfirmDialog from './CertifyMembersConfirmDialog';
 import { defaultFilterValues } from './constants';
 import { ExtendedCertificationFilters } from './types';
-import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 
 const PAGE_SIZE = 50;
 
-const createCertificationReqParams = (skip: number, limit: number, filters?: ExtendedCertificationFilters) => {
+const createCertificationReqParams = (
+    skip: number,
+    limit: number,
+    filters?: ExtendedCertificationFilters,
+    search?: string
+) => {
     const params = new URLSearchParams();
     params.append('skip', skip.toString());
     params.append('limit', PAGE_SIZE.toString());
@@ -50,35 +55,40 @@ const createCertificationReqParams = (skip: number, limit: number, filters?: Ext
 
     if (filters.approvedBy) params.append('certified_by', `eq:${filters.approvedBy}`);
 
-    const start =
-        filters['start-date'] !== ''
-            ? DateTime.fromFormat(filters['start-date'], LuxonFormat.ISO_8601).startOf('day').toISO()
-            : DateTime.fromMillis(0).toISO();
-    const end =
-        filters['end-date'] !== ''
-            ? DateTime.fromFormat(filters['end-date'], LuxonFormat.ISO_8601).endOf('day').toISO()
-            : DateTime.now().toISO();
+    if (filters['start-date'] && filters['start-date'] !== '') {
+        params.append(
+            'created_at',
+            'gte:' + DateTime.fromFormat(filters['start-date'], LuxonFormat.ISO_8601).startOf('day').toISO()
+        );
+    }
 
-    if (start && end) {
-        params.append('created_at', 'gte:' + start);
-        params.append('created_at', 'lte:' + end);
+    if (filters['end-date'] && filters['end-date'] !== '') {
+        params.append(
+            'created_at',
+            'lte:' + DateTime.fromFormat(filters['end-date'], LuxonFormat.ISO_8601).endOf('day').toISO()
+        );
+    }
+
+    if (search) {
+        // todo once API supports more fuzzy searching, name must be uppercase to work
+        params.append('name', '~eq:' + search.toUpperCase());
     }
 
     return params;
 };
 
-const useAssetGroupTagsCertificationsQuery = (filters?: ExtendedCertificationFilters) => {
+const useAssetGroupTagsCertificationsQuery = (filters?: ExtendedCertificationFilters, search?: string) => {
     return useInfiniteQuery<{
         count: number;
         data: { members: AssetGroupTagCertificationRecord[] };
         limit: number;
         skip: number;
     }>({
-        queryKey: ['certifications', filters],
+        queryKey: ['certifications', filters, search],
         queryFn: async ({ pageParam = 1 }) => {
             const skip = (pageParam - 1) * PAGE_SIZE;
 
-            const params = createCertificationReqParams(skip, PAGE_SIZE, filters);
+            const params = createCertificationReqParams(skip, PAGE_SIZE, filters, search);
 
             const result = await apiClient.getAssetGroupTagsCertifications({ params });
 
@@ -145,7 +155,10 @@ const Certification = () => {
         },
     });
 
-    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(filters);
+    const { data, isLoading, isFetching, isSuccess, fetchNextPage } = useAssetGroupTagsCertificationsQuery(
+        filters,
+        search
+    );
 
     const memberQuery = useQuery({
         queryKey: ['privilege-zones', 'tags', selectedTagId, 'member', selectedMemberId],
