@@ -247,12 +247,12 @@ export interface EnvironmentRequest {
 }
 
 export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
+    first_name: string;
+    last_name: string;
+    email_address: string;
     principal: string;
     roles: number[];
-    SSOProviderId?: number;
+    sso_provider_id?: number;
     is_disabled?: boolean;
     all_environments?: boolean;
     environment_targeted_access_control?: {
@@ -263,7 +263,7 @@ export interface UpdateUserRequest {
 }
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
     password?: string;
-    needsPasswordReset?: boolean;
+    needs_password_reset?: boolean;
 }
 
 export type UpdateConfigurationRequest = ConfigurationPayload;

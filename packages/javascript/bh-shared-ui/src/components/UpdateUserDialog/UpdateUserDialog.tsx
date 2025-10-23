@@ -40,13 +40,13 @@ const UpdateUserDialog: React.FC<{
 }> = ({ error, hasSelectedSelf, isLoading, onClose, onSave, open, showEnvironmentAccessControls, userId }) => {
     const handleOnSave = (user: UpdateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
-        if (user.SSOProviderId) {
-            parsedSSOProviderId = parseInt(user.SSOProviderId);
+        if (user.sso_provider_id) {
+            parsedSSOProviderId = parseInt(user.sso_provider_id);
         }
 
         onSave({
             ...user,
-            SSOProviderId: parsedSSOProviderId,
+            sso_provider_id: parsedSSOProviderId,
         })
             .then(() => {
                 onClose();
