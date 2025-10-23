@@ -139,4 +139,7 @@ SET value = E'MATCH (n:Computer)\nWHERE n.isreadonlydc = true\nRETURN n;'
 WHERE selector_id in (SELECT id FROM asset_group_tag_selectors WHERE name = 'Read-Only DCs' AND is_default = true);
 
 -- Set Open Graph Phase 2 feature flag to enable UI behind it
-UPDATE feature_flags SET enabled = true WHERE key = 'open_graph_phase_2'
+UPDATE feature_flags SET enabled = true WHERE key = 'open_graph_phase_2';
+
+-- Add Analysis file retention defaults
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.retain_ingest_files', 'Analysis Retain Ingest Files', 'This config param sets the default beehavior of ingest file retention', '{"enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
