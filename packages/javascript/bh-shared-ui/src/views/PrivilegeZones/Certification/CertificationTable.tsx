@@ -41,11 +41,11 @@ const tableHeadProps: DataTableProps['TableHeadProps'] = {
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
-    className: 'pl-8 text-left truncate group relative',
+    className: 'pl-8 text-left truncate group relative py-0',
 };
 
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
-    estimateSize: () => 79,
+    estimateSize: () => 50,
 };
 
 type CertificationsPage = {
@@ -207,7 +207,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                     {<NodeIcon nodeType={info.getValue()} />}
                 </div>
             ),
-            size: 100,
+            size: 55,
         }),
         columnHelper.accessor('name', {
             header: 'Member Name',
@@ -240,7 +240,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
                 <h1 className='text-xl font-bold pr-4'>Certifications</h1>
                 {count && <p>{`${count} ${certificationCountTextMap[dropdownSelection] ?? 'pending'}`}</p>}
             </div>
-            <div className='pl-8 flex justify-between'>
+            <div className='pl-8 flex justify-between p-3'>
                 <DropdownSelector
                     variant='transparent'
                     options={certOptions}

@@ -275,12 +275,7 @@ describe('Certification', () => {
         await user.click(selection);
         expect(useInfiniteQuerySpy).toHaveBeenLastCalledWith(
             expect.objectContaining({
-                queryKey: [
-                    'certifications',
-                    expect.objectContaining({
-                        certificationStatus: CertificationManual,
-                    }),
-                ],
+                queryKey: ['certifications', expect.objectContaining({ certificationStatus: 2 }), ''],
             })
         );
     });
