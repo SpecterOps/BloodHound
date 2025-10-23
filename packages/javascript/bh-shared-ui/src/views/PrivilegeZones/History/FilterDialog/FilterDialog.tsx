@@ -49,7 +49,7 @@ const FilterDialog: FC<{
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
 
     const validateDateFields = useCallback(
-        (startDate: DateTime, endDate: DateTime) => validateFormDates(form, startDate, endDate),
+        (startDate: DateTime, endDate: DateTime) => validateFormDates(form, startDate, endDate)(),
         [form]
     );
 
