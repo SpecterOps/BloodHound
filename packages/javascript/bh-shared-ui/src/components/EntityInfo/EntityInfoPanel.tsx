@@ -22,17 +22,26 @@ import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/Ob
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
+export type EntityTables = {
+    sectionProps: any;
+    TableComponent: React.FC<any>;
+}[];
+
 interface EntityInfoPanelProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
-    additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
-    }[];
+    additionalTables?: EntityTables;
+    priorityTables?: EntityTables;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
+    selectedNode,
+    sx,
+    additionalTables,
+    priorityTables,
+    DataTable,
+}) => {
     const styles = usePaneStyles();
 
     return (
@@ -47,6 +56,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, add
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        priorityTables={priorityTables}
                         additionalTables={additionalTables}
                     />
                 ) : (

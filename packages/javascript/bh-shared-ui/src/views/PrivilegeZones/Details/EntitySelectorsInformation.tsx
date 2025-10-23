@@ -19,7 +19,7 @@ import { CSSProperties, useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
-import { useExploreParams, usePZPathParams } from '../../../hooks';
+import { useExploreParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
 
@@ -37,9 +37,12 @@ const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSPr
 
 const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
 
-const EntitySelectorsInformation: React.FC = () => {
+const EntitySelectorsInformation: React.FC<{ memberId: string; tagType: string; tagId: string }> = ({
+    memberId,
+    tagType,
+    tagId,
+}) => {
     const navigate = useAppNavigate();
-    const { memberId, tagType, tagId } = usePZPathParams();
 
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 

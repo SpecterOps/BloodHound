@@ -16,15 +16,14 @@
 
 import { FC } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
+import { usePZPathParams } from '../../../hooks';
 import { EntityKinds, apiClient } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
-    const { zoneId, labelId, selectorId, memberId } = useParams();
-    const tagId = labelId === undefined ? zoneId : labelId;
+    const { selectorId, memberId, tagType, tagId } = usePZPathParams();
 
     const tagQuery = useQuery({
         queryKey: ['privilege-zones', 'tags', tagId],
@@ -72,7 +71,7 @@ export const SelectedDetails: FC = () => {
                     selectedNode={selectedNode}
                     additionalTables={[
                         {
-                            sectionProps: { label: 'Selectors', id: memberQuery.data.object_id },
+                            sectionProps: { memberId, tagType, tagId },
                             TableComponent: EntitySelectorsInformation,
                         },
                     ]}

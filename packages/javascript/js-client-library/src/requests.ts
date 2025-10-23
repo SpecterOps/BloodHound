@@ -20,6 +20,8 @@ import {
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
     AssetGroupTagType,
+    CertificationManual,
+    CertificationRevoked,
     SeedExpansionMethod,
     SSOProviderConfiguration,
 } from './types';
@@ -46,6 +48,12 @@ export type CreateAssetGroupTagRequest = {
 export type UpdateAssetGroupTagRequest = Partial<
     Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: boolean | undefined }
 >;
+
+export type UpdateCertificationRequest = {
+    member_ids: number[];
+    action: typeof CertificationRevoked | typeof CertificationManual;
+    note?: string;
+};
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[]; expansion: SeedExpansionMethod };
 
