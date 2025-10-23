@@ -24,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -219,10 +220,28 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		}
 	}
 
+	ingestJobUserId1 := uuid.NullUUID{UUID: createdUsers[1].ID, Valid: true}
+	seedIngestJobs := []model.IngestJob{{UserID: ingestJobUserId1}, {UserID: ingestJobUserId1}, {UserID: ingestJobUserId1}}
+	for _, job := range seedIngestJobs {
+		if _, err := dbInst.CreateIngestJob(ctx, job); err != nil {
+			t.Fatalf("Failed to create ingest job: %v", err)
+		}
+	}
+
 	if err := dbInst.DeleteUser(ctx, createdUsers[1]); err != nil {
 		t.Fatalf("Failed to delete user: %v", err)
 	} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionDeleteUser, "principal_name", users[1].PrincipalName); err != nil {
 		t.Fatalf("Failed to validate Deleteuser audit logs:\n%v", err)
+	} else if jobs, _, err := dbInst.GetAllIngestJobs(ctx, 0, 3, "start_time", model.SQLFilter{}); err != nil {
+		t.Fatalf("Failed to get users ingest jobs: %v", err)
+	} else {
+		for _, job := range jobs {
+			if isValidUuid := job.UserID.Valid; isValidUuid {
+				t.Fatalf("Failed to clear ingest job association")
+			} else if jobEmail := job.UserEmailAddress; jobEmail.Valid == false {
+				t.Fatalf("Failed to add user email to ingest job")
+			}
+		}
 	}
 
 	if usersResponse, err := dbInst.GetAllUsers(ctx, "first_name", model.SQLFilter{}); err != nil {
