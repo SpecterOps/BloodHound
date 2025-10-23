@@ -95,7 +95,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 const selectedUser = find(listUsersQuery.data, (user) => user.id === selectedUserId);
                 // if the user previously had a SSO Provider ID but does not have one after the update then show the
                 // password reset dialog with the "Force Password Reset?" input defaulted to checked
-                if (selectedUser?.sso_provider_id !== null && !updatedUser.SSOProviderId) {
+                if (selectedUser?.sso_provider_id !== null && !updatedUser.sso_provider_id) {
                     setNeedsPasswordReset(true);
                     toggleResetUserPasswordDialog();
                 }
@@ -116,20 +116,15 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
             const environmentList = { environments: user.environment_targeted_access_control?.environments || null };
 
             const updatedUser: UpdateUserRequest = {
-                emailAddress: user.email_address || '',
+                email_address: user.email_address || '',
                 principal: user.principal_name || '',
-                firstName: user.first_name || '',
-                lastName: user.last_name || '',
-                ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+                ...(user.sso_provider_id && { sso_provider_id: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
                 all_environments: user.all_environments || undefined,
                 environment_targeted_access_control: environmentList || undefined,
-                /*
-                environment_targeted_access_control: {
-                    environments: user.environment_targeted_access_control?.environments || null,
-                },
-                */
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);
@@ -202,7 +197,8 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                     />
                     */}
                     <CreateUserDialog
-                        error={createUserMutation.error}
+                        error={true}
+                        //error={createUserMutation.error}
                         isLoading={createUserMutation.isLoading}
                         onClose={toggleCreateUserDialog}
                         onExited={createUserMutation.reset}
