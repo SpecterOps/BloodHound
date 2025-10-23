@@ -196,6 +196,9 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 					job.FailedFiles += 1
 					completedTask.Errors = file.Errors
 				}
+				if len(file.UserDataErrs) > 0 {
+					completedTask.Errors = append(completedTask.Errors, file.UserDataErrs...)
+				}
 
 				if _, err = db.CreateCompletedTask(ctx, completedTask); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Failed to create completed task for ingest task %d: %v", job.ID, err))
