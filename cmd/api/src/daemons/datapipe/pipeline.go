@@ -81,7 +81,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) error {
 	}()
 	defer measure.LogAndMeasure(slog.LevelInfo, "Purge Graph Data")()
 
-	slog.Info("Begin Purge Graph Data")
+	slog.InfoContext(ctx, "Begin Purge Graph Data")
 
 	if err := s.db.CancelAllIngestJobs(ctx); err != nil {
 		return fmt.Errorf("cancelling jobs during data deletion: %v", err)
@@ -255,9 +255,9 @@ func (s *BHCEPipeline) Analyze(ctx context.Context) error {
 			if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
 			} else if err := s.cache.Reset(); err != nil {
-				slog.Error(fmt.Sprintf("Error while resetting the cache: %v", err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error while resetting the cache: %v", err))
 			} else {
-				slog.Info("Cache successfully reset by datapipe daemon")
+				slog.InfoContext(ctx, "Cache successfully reset by datapipe daemon")
 			}
 
 			return nil

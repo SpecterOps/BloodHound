@@ -26,7 +26,7 @@ import {
     DialogTrigger,
     VisuallyHidden,
 } from '@bloodhoundenterprise/doodleui';
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 import { useRef, useState } from 'react';
 import { useObjectState } from '../../hooks';
 import { FileIngestFilterParams, typedEntries } from '../../utils';
@@ -86,8 +86,12 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
         onConfirm(filters.state);
     };
 
+    const undoChanges = () => {
+        filters.setState(prevState.current);
+    };
+
     return (
-        <Dialog>
+        <Dialog onOpenChange={undoChanges}>
             <DialogTrigger asChild>
                 <Button data-testid='file_ingest_log-open_filter_dialog' variant='icon'>
                     <AppIcon.FilterOutline size={22} />

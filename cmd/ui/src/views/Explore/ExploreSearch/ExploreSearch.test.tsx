@@ -65,7 +65,10 @@ const server = setupServer(
     rest.get(`/api/v2/self`, async (req, res, ctx) => {
         return res(
             ctx.json({
-                data: { id: '4e09c965-65bd-4f15-ae71-5075a6fed14b', roles: ['Administrator'] },
+                data: {
+                    id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
+                    roles: [{ name: 'Administrator', permissions: [] }],
+                },
             })
         );
     }),
