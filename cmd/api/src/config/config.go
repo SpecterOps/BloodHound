@@ -90,7 +90,7 @@ func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
 		cname = s.Address
 	}
 
-	dbinput := cname + ":5432"
+	dbinput := strings.TrimSuffix(cname, ".") + ":5432"
 	slog.Info("requesting auth token")
 	authenticationToken, err := auth.BuildAuthToken(context.TODO(), dbinput, "us-east-1", s.Username, cfg.Credentials)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
 	slog.Info("auth token successfully created")
 	encodedToken := url.QueryEscape(authenticationToken)
 
-	return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, encodedToken, s.Address, s.Database)
+	return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, encodedToken, dbinput, s.Database)
 }
 
 func (s DatabaseConfiguration) Neo4jConnectionString() string {
