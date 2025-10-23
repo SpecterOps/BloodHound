@@ -49,7 +49,9 @@ import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../consta
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
 import { apiClient } from '../../utils';
 
-export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
+export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id'> & {
+    sso_provider_id: string | undefined;
+};
 
 const UpdateUserForm: React.FC<{
     onSubmit: (user: UpdateUserRequestForm) => void;
@@ -116,15 +118,14 @@ const UpdateUserForm: React.FC<{
             </Card>
         );
     }
-
     return (
         <UpdateUserFormInner
             initialData={{
-                emailAddress: getUserQuery.data.email_address || '',
+                email_address: getUserQuery.data.email_address || '',
                 principal: getUserQuery.data.principal_name || '',
-                firstName: getUserQuery.data.first_name || '',
-                lastName: getUserQuery.data.last_name || '',
-                SSOProviderId: getUserQuery.data.sso_provider_id?.toString() || undefined,
+                first_name: getUserQuery.data.first_name || '',
+                last_name: getUserQuery.data.last_name || '',
+                sso_provider_id: getUserQuery.data.sso_provider_id?.toString() || undefined,
                 roles: getUserQuery.data.roles ? getUserQuery.data.roles?.map((role: any) => role.id) : [],
                 all_environments: getUserQuery.data.all_environments,
                 environment_targeted_access_control: {
@@ -172,18 +173,19 @@ const UpdateUserFormInner: React.FC<{
     const form = useForm<UpdateUserRequestForm & { authenticationMethod: 'sso' | 'password' }>({
         defaultValues: {
             ...initialData,
-            authenticationMethod: initialData.SSOProviderId ? 'sso' : 'password',
+            authenticationMethod: initialData.sso_provider_id ? 'sso' : 'password',
         },
     });
 
     const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
+    const [searchInput, setSearchInput] = useState<string>('');
     const roleInputValue = form.watch('roles');
     const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
     const authenticationMethod = form.watch('authenticationMethod');
-    const [searchInput, setSearchInput] = useState<string>('');
+    const selectedETACEnabledRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
-        ({ id }) => id === Number(form.watch('SSOProviderId'))
+        ({ id }) => id === Number(form.watch('sso_provider_id'))
     )?.config?.auto_provision?.role_provision;
 
     const { data: availableEnvironments } = useAvailableEnvironments();
@@ -217,8 +219,8 @@ const UpdateUserFormInner: React.FC<{
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
             setSelectedEnvironments(returnMappedEnvironments);
-            form.setValue('all_environments', true);
-            form.setValue('environment_targeted_access_control.environments', null);
+            //form.setValue('all_environments', true);
+            //form.setValue('environment_targeted_access_control.environments', null);
         } else {
             setSelectedEnvironments([]);
         }
@@ -231,14 +233,8 @@ const UpdateUserFormInner: React.FC<{
     const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
         if (checked) {
             setSelectedEnvironments((prevSelected: any) => [...prevSelected, itemId]);
-            console.log(selectedEnvironments);
-
-            //form.setValue('all_environments', false);
-            //form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         } else {
             setSelectedEnvironments((prevSelected: any) => prevSelected?.filter((id: string) => id !== itemId));
-            //form.setValue('all_environments', false);
-            //form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         }
     };
 
@@ -247,14 +243,13 @@ const UpdateUserFormInner: React.FC<{
         selectedEnvironments.length === availableEnvironments?.length &&
         availableEnvironments!.length > 0;
 
-    //const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
-
     const allEnvironmentsIndeterminate =
         selectedEnvironments &&
         selectedEnvironments.length > 0 &&
         selectedEnvironments.length < availableEnvironments!.length;
 
     const onError = () => {
+        // onSubmit error
         if (error) {
             const errMsg = error.response?.data?.errors[0]?.message.toLowerCase();
             if (error.response?.status === 400) {
@@ -269,7 +264,7 @@ const UpdateUserFormInner: React.FC<{
                 if (errMsg.includes('principal name')) {
                     form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
                 } else if (errMsg.includes('email')) {
-                    form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
+                    form.setError('email_address', { type: 'custom', message: 'Email is already in use.' });
                 } else {
                     form.setError('root.generic', { type: 'custom', message: `A conflict has occured.` });
                 }
@@ -281,21 +276,34 @@ const UpdateUserFormInner: React.FC<{
         const values = form.getValues();
         console.log(values);
 
-        onSubmit({
-            emailAddress: values.emailAddress,
+        const formData = {
+            email_address: values.email_address,
             principal: values.principal,
-            firstName: values.firstName,
-            lastName: values.lastName,
-            SSOProviderId: authenticationMethod === 'password' ? undefined : values.SSOProviderId?.toString(),
+            first_name: values.first_name,
+            last_name: values.last_name,
+            sso_provider_id: authenticationMethod === 'password' ? undefined : values.sso_provider_id?.toString(),
             roles: selectedRoleValue,
+        };
+
+        const eTACFormData = {
+            ...formData,
             all_environments: allEnvironmentsSelected ? true : false,
-            environment_targeted_access_control: {
-                environments: !allEnvironmentsSelected ? formatSelectedEnvironments : null,
-            },
+            ...(selectedETACEnabledRole === true && {
+                environment_targeted_access_control: {
+                    ...(selectedETACEnabledRole === true && {
+                        environments: !allEnvironmentsSelected ? formatSelectedEnvironments : null,
+                    }),
+                },
+            }),
+        };
+
+        onSubmit({
+            ...(selectedETACEnabledRole === false ? formData : eTACFormData),
         });
     };
 
     useEffect(() => {
+        // on form loaded
         if (error) {
             form.setError('root.generic', {
                 type: 'custom',
@@ -303,6 +311,8 @@ const UpdateUserFormInner: React.FC<{
             });
         }
     }, [form.formState.errors]);
+
+    console.log(form.watch());
 
     return (
         <Form {...form}>
@@ -383,7 +393,7 @@ const UpdateUserFormInner: React.FC<{
                             <div className='mb-4'>
                                 <FormField
                                     control={form.control}
-                                    name='emailAddress'
+                                    name='email_address'
                                     rules={{
                                         required: 'Email Address is required',
                                         maxLength: {
@@ -447,7 +457,7 @@ const UpdateUserFormInner: React.FC<{
 
                             <div className='mb-4'>
                                 <FormField
-                                    name='firstName'
+                                    name='first_name'
                                     control={form.control}
                                     rules={{
                                         required: 'First Name is required',
@@ -483,7 +493,7 @@ const UpdateUserFormInner: React.FC<{
 
                             <div className='mb-4'>
                                 <FormField
-                                    name='lastName'
+                                    name='last_name'
                                     control={form.control}
                                     rules={{
                                         required: 'Last Name is required',
@@ -573,7 +583,7 @@ const UpdateUserFormInner: React.FC<{
                             {authenticationMethod === 'sso' && !hasSelectedSelf && (
                                 <div>
                                     <FormField
-                                        name='SSOProviderId'
+                                        name='sso_provider_id'
                                         control={form.control}
                                         rules={{
                                             required: 'SSO Provider is required',

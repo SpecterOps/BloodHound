@@ -26,7 +26,6 @@ const DEFAULT_PROPS = {
     hasSelectedSelf: false,
     isLoading: false,
     error: false,
-    //showEnvironmentAccessControls: false,
     open: true,
 };
 
@@ -385,7 +384,7 @@ describe('UpdateUserForm', () => {
             <Dialog open={true}>
                 <UpdateUserForm
                     {...DEFAULT_PROPS}
-                    showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
+                    showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls}
                 />
             </Dialog>,
             { queryClient }
@@ -514,24 +513,47 @@ describe('UpdateUserForm', () => {
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and power user role is selected', async () => {
         setup({ renderShowEnvironmentAccessControls: true });
 
+        screen.debug(undefined, Infinity);
+
         const user = userEvent.setup();
 
         const input = screen.getByRole('combobox', { name: /Role/i });
 
         await user.click(input);
 
-        const option = screen.getByRole('option', { name: /Read-Only/i });
-        await user.click(option);
-
-        expect(option).not.toBeInTheDocument();
+        const optionUser = screen.getByRole('option', { name: /Read-Only/i });
+        await user.click(optionUser);
+        expect(optionUser).not.toBeInTheDocument();
 
         const panelHeader = await screen.findByText(/Environmental Targeted Access Control/i);
         expect(panelHeader).toBeInTheDocument();
 
         await user.click(input);
-
         const optionPowerUser = screen.getByRole('option', { name: /Power User/i });
         await user.click(optionPowerUser);
+
+        expect(panelHeader).not.toBeInTheDocument();
+    });
+
+    it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and admin user role is selected', async () => {
+        setup({ renderShowEnvironmentAccessControls: true });
+
+        const user = userEvent.setup();
+
+        const input = screen.getByRole('combobox', { name: /Role/i });
+
+        await user.click(input);
+
+        const optionUser = screen.getByRole('option', { name: /Read-Only/i });
+        await user.click(optionUser);
+        expect(optionUser).not.toBeInTheDocument();
+
+        const panelHeader = await screen.findByText(/Environmental Targeted Access Control/i);
+        expect(panelHeader).toBeInTheDocument();
+
+        await user.click(input);
+        const optionAdmin = screen.getByRole('option', { name: /Administrator/i });
+        await user.click(optionAdmin);
 
         expect(panelHeader).not.toBeInTheDocument();
     });
