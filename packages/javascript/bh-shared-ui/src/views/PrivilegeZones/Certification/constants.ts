@@ -42,7 +42,7 @@ export const certOptions: DropdownOption[] = [
 
 export const certificationCountTextMap: Record<string, string> = {
     Pending: 'pending',
-    Certified: 'certified',
+    'User Certified': 'user certified',
     'Automatic Certification': 'automatically certified',
     Rejected: 'rejected',
 };
