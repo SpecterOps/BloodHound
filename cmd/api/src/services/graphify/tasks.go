@@ -49,10 +49,11 @@ func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 }
 
 type IngestFileData struct {
-	Name       string
-	ParentFile string
-	Path       string
-	Errors     []string
+	Name         string
+	ParentFile   string
+	Path         string
+	Errors       []string
+	UserDataErrs []string
 }
 
 // extractIngestFiles will take a path and extract zips if necessary, returning the paths for files to process
@@ -169,7 +170,10 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, task model.Ingest
 
 				if err := processSingleFile(ic.Ctx, data, ic, readOpts); err != nil {
 					var graphifyError errorlist.Error
-					if ok := errors.As(err, &graphifyError); ok {
+					var userDataErr errorlist.IngestUserDataError
+					if ok := errors.As(err, &userDataErr); ok {
+						fileData[i].UserDataErrs = append(fileData[i].UserDataErrs, userDataErr.Error())
+					} else if ok := errors.As(err, &graphifyError); ok {
 						fileData[i].Errors = append(fileData[i].Errors, graphifyError.AsStrings()...)
 					} else {
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
