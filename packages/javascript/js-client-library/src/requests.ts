@@ -243,7 +243,7 @@ export interface ClearDatabaseRequest {
 }
 
 export interface EnvironmentRequest {
-    environment_id: string;
+    environment_id?: string;
 }
 
 export interface UpdateUserRequest {
@@ -255,13 +255,12 @@ export interface UpdateUserRequest {
     SSOProviderId?: number;
     is_disabled?: boolean;
     all_environments?: boolean;
-    environment_targeted_access_control: {
-        environments: EnvironmentRequest[] | null;
+    environment_targeted_access_control?: {
+        environments?: EnvironmentRequest[] | null;
     };
     /** @deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead */
     SAMLProviderId?: string;
 }
-
 export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
     password?: string;
     needsPasswordReset?: boolean;

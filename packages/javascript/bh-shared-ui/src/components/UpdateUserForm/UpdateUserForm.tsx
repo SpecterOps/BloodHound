@@ -233,12 +233,12 @@ const UpdateUserFormInner: React.FC<{
             setSelectedEnvironments((prevSelected: any) => [...prevSelected, itemId]);
             console.log(selectedEnvironments);
 
-            form.setValue('all_environments', false);
-            form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
+            //form.setValue('all_environments', false);
+            //form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         } else {
             setSelectedEnvironments((prevSelected: any) => prevSelected?.filter((id: string) => id !== itemId));
-            form.setValue('all_environments', false);
-            form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
+            //form.setValue('all_environments', false);
+            //form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
         }
     };
 
@@ -296,77 +296,13 @@ const UpdateUserFormInner: React.FC<{
     };
 
     useEffect(() => {
-        // on submit for password and setvalues on form and error states
-        /*
-        if (authenticationMethod === 'password') {
-            form.setValue('SSOProviderId', undefined);
-        }
-
-        // user selects all environment checkboxes, all_environments should be true and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (allEnvironmentsCheckboxRef.current.dataset.state === 'checked') {
-                form.setValue('all_environments', true);
-                form.setValue('environment_targeted_access_control.environments', null);
-            }
-        }
-
-        // user unselects all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (
-                allEnvironmentsCheckboxRef.current.dataset.state === 'unchecked' &&
-                selectedEnvironments.length === 0
-            ) {
-                form.setValue('all_environments', false);
-                form.setValue('environment_targeted_access_control.environments', null);
-            }
-        }
-
-        // user selects between 0 and all environment checkboxes, all_environments should be false and environment_targeted_access_control.environments should be null
-        if (allEnvironmentsCheckboxRef.current) {
-            if (
-                allEnvironmentsCheckboxRef.current.dataset.state === 'indeterminate' &&
-                selectedEnvironments.length > 0
-            ) {
-                form.setValue('all_environments', false);
-                form.setValue('environment_targeted_access_control.environments', formatSelectedEnvironments);
-            }
-        }
-
-        if (allEnvironmentsCheckboxRef.current) {
-            allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
-                ? 'indeterminate'
-                : allEnvironmentsSelected
-                    ? 'checked'
-                    : 'unchecked';
-        }
-        */
         if (error) {
             form.setError('root.generic', {
                 type: 'custom',
                 message: 'An unexpected error occurred. Please try again.',
             });
         }
-    }, [
-        error,
-        /*
-        authenticationMethod,
-        error,
-        form,
-        form.setError,
-        form.setValue,
-        allEnvironmentsIndeterminate,
-        allEnvironmentsSelected,
-        selectedEnvironments,
-        formatSelectedEnvironments,
-        checkedEnvironments, // this is making tests weird
-        */
-    ]);
-
-    const handleSave = () => {
-        //console.log(form.watch('all_environments'));
-        //console.log(form.watch('environment_targeted_access_control.environments'));
-        console.log(form.watch());
-    };
+    }, [form.formState.errors]);
 
     return (
         <Form {...form}>
@@ -703,8 +639,7 @@ const UpdateUserFormInner: React.FC<{
                                 data-testid='update-user-dialog_button-save'
                                 disabled={isLoading}
                                 role='button'
-                                type='submit'
-                                onClick={handleSave}>
+                                type='submit'>
                                 Save
                             </Button>
                         </DialogActions>
