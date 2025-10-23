@@ -3483,6 +3483,20 @@ func TestResources_CertifyMembers(t *testing.T) {
 				responseCode: http.StatusInternalServerError,
 				responseBody: api.ErrorResponseDetailsInternalServerError,
 			}},
+		{
+			name:    "error - cannot update auto certified node",
+			request: httptest.NewRequestWithContext(createContextWithOwnerEmail(userEmailAddress, userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d, "note": "%s"}`, model.AssetGroupCertificationManual, stringNote))),
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				nodes := []model.AssetGroupSelectorNodeExpanded{
+					assetGroupSelectorNode1AutoCertified}
+				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(gomock.Any(), gomock.Any()).Return(nodes, nil)
+				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any()).Times(0)
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: api.ErrorResponseAGTCannotUpdateAutoCertifiedNodes,
+			}},
 
 		{
 			name:    "success - one node certified",
@@ -3726,20 +3740,6 @@ func TestResources_CertifyMembers(t *testing.T) {
 				}
 				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(gomock.Any(), gomock.Any()).Return(nodes, nil)
 				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), expectedDbInput)
-			},
-			expected: expected{
-				responseCode: http.StatusOK,
-				responseBody: "",
-			}},
-		{
-			name:    "success - ignore auto certified node",
-			request: httptest.NewRequestWithContext(createContextWithOwnerEmail(userEmailAddress, userId), http.MethodPost, endpoint, strings.NewReader(fmt.Sprintf(`{"member_ids": [1], "action": %d, "note": "%s"}`, model.AssetGroupCertificationManual, stringNote))),
-			setupMocks: func(t *testing.T, mock *mock) {
-				t.Helper()
-				nodes := []model.AssetGroupSelectorNodeExpanded{
-					assetGroupSelectorNode1AutoCertified}
-				mock.mockDatabase.EXPECT().GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(gomock.Any(), gomock.Any()).Return(nodes, nil)
-				mock.mockDatabase.EXPECT().UpdateCertificationBySelectorNode(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,

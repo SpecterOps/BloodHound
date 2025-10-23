@@ -997,11 +997,11 @@ func (s *BloodhoundDB) GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(c
 				FROM %s n
 				JOIN %s s ON n.selector_id = s.id
 				JOIN %s t ON s.asset_group_tag_id = t.id
-				WHERE n.node_id IN ? AND t.type = ? AND n.certified != ?
+				WHERE n.node_id IN ? AND t.type = ?
 				ORDER BY n.node_id DESC, position ASC`,
 		model.AssetGroupSelectorNode{}.TableName(),
 		model.AssetGroupTagSelector{}.TableName(),
 		model.AssetGroupTag{}.TableName()),
-		nodeIds, model.AssetGroupTagTypeTier, model.AssetGroupCertificationAuto).
+		nodeIds, model.AssetGroupTagTypeTier).
 		Find(&nodes))
 }

@@ -124,7 +124,6 @@ WHERE agts.id = duplicate_selectors.id AND duplicate_selectors.rowNumber > 1;
 ALTER TABLE IF EXISTS asset_group_tag_selectors DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_unique_name_asset_group_tag;
 ALTER TABLE IF EXISTS asset_group_tag_selectors ADD CONSTRAINT asset_group_tag_selectors_unique_name_asset_group_tag UNIQUE ("name",asset_group_tag_id,is_default);
 
-
 -- Fix naming inconsistencies for ETAC
 ALTER TABLE IF EXISTS environment_access_control
     RENAME TO environment_targeted_access_control;
@@ -133,3 +132,11 @@ SET key         = 'environment_targeted_access_control',
     name        = 'Environment Targeted Access Control',
     description = 'Enable power users and admins to set environment targeted access controls on users'
 WHERE key = 'targeted_access_control';
+
+-- Update RO-DC default selector within Tier Zero to use the correct attribute name
+UPDATE asset_group_tag_selector_seeds
+SET value = E'MATCH (n:Computer)\nWHERE n.isreadonlydc = true\nRETURN n;'
+WHERE selector_id in (SELECT id FROM asset_group_tag_selectors WHERE name = 'Read-Only DCs' AND is_default = true);
+
+-- Set Open Graph Phase 2 feature flag to enable UI behind it
+UPDATE feature_flags SET enabled = true WHERE key = 'open_graph_phase_2'
