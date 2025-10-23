@@ -83,7 +83,7 @@ const CreateUserDialog: React.FC<{
                             error={error}
                             isLoading={isLoading}
                             onSubmit={handleOnSave}
-                            open={open}
+                            //open={open}
                             showEnvironmentAccessControls={showEnvironmentAccessControls}
                         />
                     </DialogContent>

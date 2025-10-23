@@ -113,6 +113,8 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 return;
             }
 
+            const environmentList = { environments: user.environment_targeted_access_control?.environments || null };
+
             const updatedUser: UpdateUserRequest = {
                 emailAddress: user.email_address || '',
                 principal: user.principal_name || '',
@@ -122,9 +124,12 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
                 all_environments: user.all_environments || undefined,
+                environment_targeted_access_control: environmentList || undefined,
+                /*
                 environment_targeted_access_control: {
-                    environments: user.environment_targeted_access_control.environments || null,
+                    environments: user.environment_targeted_access_control?.environments || null,
                 },
+                */
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);

@@ -148,7 +148,7 @@ describe('CreateUserDialog', async () => {
                 onClose={testOnClose}
                 onSave={testOnSave}
                 isLoading={options?.renderLoading || false}
-                error={options?.renderErrors}
+                error={options?.renderErrors || false}
             />
         );
 

@@ -54,7 +54,6 @@ const CreateUserForm: React.FC<{
     error: any;
     isLoading: boolean;
     onSubmit: (user: CreateUserRequestForm) => void;
-    open?: boolean;
     showEnvironmentAccessControls?: boolean;
 }> = ({ error, isLoading, onSubmit, showEnvironmentAccessControls }) => {
     const defaultValues = {
@@ -78,7 +77,7 @@ const CreateUserForm: React.FC<{
     const [selectedRoleValue, setSelectedRoleValue] = useState([3]);
 
     const roleInputValue = form.watch('roles');
-    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
+    const selectedETACEnabledRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
         apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
@@ -107,8 +106,8 @@ const CreateUserForm: React.FC<{
         environment.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
-    const allEnvironmentsSelected =
-        selectedEnvironments !== null &&
+    const allEnvironmentsSelected: any =
+        selectedEnvironments &&
         selectedEnvironments.length === availableEnvironments?.length &&
         availableEnvironments!.length > 0;
 
@@ -120,12 +119,12 @@ const CreateUserForm: React.FC<{
 
             returnMappedEnvironments && setSelectedEnvironments(returnMappedEnvironments);
 
-            form.setValue('environment_targeted_access_control.environments', null);
-            form.setValue('all_environments', true);
+            //form.setValue('environment_targeted_access_control.environments', null);
+            //form.setValue('all_environments', true);
         } else {
             setSelectedEnvironments([]);
-            form.setValue('environment_targeted_access_control.environments', null);
-            form.setValue('all_environments', false);
+            //form.setValue('environment_targeted_access_control.environments', null);
+            //form.setValue('all_environments', false);
         }
     };
 
@@ -143,38 +142,18 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
+    //const allEnvironmentsCheckboxRef = React.useRef<HTMLButtonElement>(null);
     const allEnvironmentsIndeterminate =
         selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
 
-    useEffect(() => {
-        if (authenticationMethod === 'password') {
-            form.setValue('SSOProviderId', undefined);
-        }
-
-        if (allEnvironmentsSelected) {
-            form.setValue('all_environments', true);
-            form.setValue('environment_targeted_access_control.environments', null);
-        } else if (allEnvironmentsSelected === false && selectedEnvironments.length === 0) {
-            form.setValue('all_environments', false);
-            form.setValue('environment_targeted_access_control.environments', null);
-        } else {
-            form.setValue('all_environments', false);
-            form.setValue('environment_targeted_access_control.environments', formatReturnedEnvironments);
-        }
-
-        if (allEnvironmentsCheckboxRef.current) {
-            allEnvironmentsCheckboxRef.current.dataset.state = allEnvironmentsIndeterminate
-                ? 'indeterminate'
-                : allEnvironmentsSelected
-                  ? 'checked'
-                  : 'unchecked';
-        }
-
+    const onError = () => {
         if (error) {
             if (error?.response?.status === 409) {
                 if (error.response?.data?.errors[0]?.message.toLowerCase().includes('principal name')) {
-                    form.setError('principal', { type: 'custom', message: 'Principal name is already in use.' });
+                    form.setError('principal', {
+                        type: 'custom',
+                        message: 'Principal name is already in use.',
+                    });
                 } else if (error.response?.data?.errors[0]?.message.toLowerCase().includes('email')) {
                     form.setError('emailAddress', { type: 'custom', message: 'Email is already in use.' });
                 } else {
@@ -187,23 +166,85 @@ const CreateUserForm: React.FC<{
                 });
             }
         }
-    }, [
-        authenticationMethod,
-        form,
-        form.setValue,
-        error,
-        form.setError,
-        form.watch,
-        form.formState.errors,
-        selectedEnvironments.length,
-        allEnvironmentsSelected,
-        allEnvironmentsIndeterminate,
-        //formatReturnedEnvironments, // this is making tests weird
-    ]);
+    };
+
+    console.log(selectedETACEnabledRole);
+
+    const handleOnSave = () => {
+        const values = form.getValues();
+        console.log(values);
+
+        const formData = {
+            emailAddress: values.emailAddress,
+            principal: values.principal,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            SSOProviderId: authenticationMethod === 'password' ? undefined : values.SSOProviderId?.toString(),
+            roles: selectedRoleValue,
+        };
+
+        const eTACFormData = {
+            ...formData,
+            all_environments: allEnvironmentsSelected ? true : false,
+            ...(selectedETACEnabledRole === true && {
+                environment_targeted_access_control: {
+                    ...(selectedETACEnabledRole === true && {
+                        environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
+                    }),
+                },
+            }),
+        };
+
+        if (selectedETACEnabledRole === false) {
+            onSubmit({
+                emailAddress: values.emailAddress,
+                principal: values.principal,
+                firstName: values.firstName,
+                lastName: values.lastName,
+                SSOProviderId: authenticationMethod === 'password' ? undefined : values.SSOProviderId?.toString(),
+                roles: selectedRoleValue,
+            });
+        }
+
+        if (selectedETACEnabledRole === true) {
+            onSubmit({
+                emailAddress: values.emailAddress,
+                principal: values.principal,
+                firstName: values.firstName,
+                lastName: values.lastName,
+                SSOProviderId: authenticationMethod === 'password' ? undefined : values.SSOProviderId?.toString(),
+                roles: selectedRoleValue,
+                all_environments: allEnvironmentsSelected ? true : false,
+                environment_targeted_access_control: {
+                    environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
+                },
+            });
+        }
+
+        /*
+        onSubmit({
+            //...(selectedETACEnabledRole === false ? formData : eTACFormData),
+        });
+        */
+    };
+
+    useEffect(() => {
+        if (error) {
+            form.setError('root.generic', {
+                type: 'custom',
+                message: 'An unexpected error occurred. Please try again.',
+            });
+        }
+    }, [form, form.formState.errors, form.unregister]);
+
+    console.log(form.watch());
 
     return (
         <Form {...form}>
-            <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+                autoComplete='off'
+                data-testid='create-user-dialog_form'
+                onSubmit={form.handleSubmit(handleOnSave, onError)}>
                 {!(getRolesQuery.isLoading || listSSOProvidersQuery.isLoading) && (
                     <div className='flex gap-x-4 justify-center'>
                         <Card className='p-6 rounded shadow max-w-[600px] w-full'>
@@ -241,7 +282,6 @@ const CreateUserForm: React.FC<{
                                                         form.setValue('roles', [Number(field)]);
                                                         setSelectedRoleValue([Number([field])]);
                                                     }}
-                                                    //open
                                                     value={String(selectedRoleValue)}>
                                                     <FormControl>
                                                         <SelectTrigger
@@ -596,7 +636,7 @@ const CreateUserForm: React.FC<{
                                 </Button>
                             </DialogActions>
                         </Card>
-                        {showEnvironmentAccessControls && selectedRole && (
+                        {showEnvironmentAccessControls && selectedETACEnabledRole && (
                             <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
                                 <DialogTitle>Environmental Targeted Access Control </DialogTitle>
                                 <div
@@ -625,21 +665,20 @@ const CreateUserForm: React.FC<{
                                                 render={() => (
                                                     <FormItem className='flex flex-row items-center'>
                                                         <Checkbox
-                                                            ref={allEnvironmentsCheckboxRef}
+                                                            //ref={allEnvironmentsCheckboxRef}
                                                             checked={
                                                                 allEnvironmentsSelected || allEnvironmentsIndeterminate
                                                             }
                                                             id='allEnvironments'
                                                             onCheckedChange={handleSelectAllEnvironmentsChange}
                                                             className={
-                                                                allEnvironmentsIndeterminate
-                                                                    ? 'data-[state=indeterminate]'
-                                                                    : 'data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
+                                                                allEnvironmentsSelected &&
+                                                                '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
                                                             }
                                                             icon={
                                                                 allEnvironmentsIndeterminate && (
                                                                     <Minus
-                                                                        className='h-full w-full'
+                                                                        className='h-full w-full bg-[#f4f4f4] text-neutral-dark-1 dark:bg-[#222222] dark:text-[#f4f4f4]'
                                                                         absoluteStrokeWidth={true}
                                                                         strokeWidth={3}
                                                                     />
