@@ -168,10 +168,12 @@ const CertificationTable: FC<CertificationTableProps> = ({
     };
 
     const toggleRow = (checked: boolean, selectedId: number) => {
-        if (checked) {
-            setSelectedRows([...selectedRows, selectedId]);
-        } else {
-            setSelectedRows(selectedRows.filter((rowId: number) => rowId !== selectedId));
+        const newSelectedRows = checked
+            ? [...selectedRows, selectedId]
+            : selectedRows.filter((rowId: number) => rowId !== selectedId);
+        setSelectedRows(newSelectedRows);
+        if (newSelectedRows.length > 1) {
+            onRowSelect(null);
         }
     };
 
@@ -192,6 +194,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
             cell: (info) => (
                 <div className='pl-8'>
                     <Checkbox
+                        onClick={(e) => e.stopPropagation()}
                         data-testid={`certification-table-row-${info.row.original.id}`}
                         checked={selectedRows.includes(info.row.original.id)}
                         onCheckedChange={(checked: boolean) => toggleRow(!!checked, info.row.original.id)}
