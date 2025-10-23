@@ -41,13 +41,13 @@ const CreateUserDialog: React.FC<{
 }> = ({ error, isLoading, onClose, onSave, open, showEnvironmentAccessControls }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
-        if (user.SSOProviderId) {
-            parsedSSOProviderId = parseInt(user.SSOProviderId);
+        if (user.sso_provider_id) {
+            parsedSSOProviderId = parseInt(user.sso_provider_id);
         }
 
         onSave({
             ...user,
-            SSOProviderId: parsedSSOProviderId,
+            sso_provider_id: parsedSSOProviderId,
         })
             .then(() => {
                 onClose();

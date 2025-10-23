@@ -310,7 +310,7 @@ describe('UpdateUserDialog', () => {
         await user.click(saveButton);
 
         await waitFor(
-            () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ SSOProviderId: undefined })),
+            () => expect(testOnSave).toHaveBeenCalledWith(expect.objectContaining({ sso_provider_id: undefined })),
             {
                 timeout: 30000,
             }
