@@ -230,21 +230,22 @@ const Certification = () => {
     return (
         <>
             <div className='flex gap-8 mt-4'>
+                <div className='flex gap-4 mb-4'>
+                    <Button
+                        onClick={() => showDialog(CertificationManual)}
+                        disabled={dropdownSelection === 'Automatic Certification'}>
+                        Certify
+                    </Button>
+                    <Button
+                        variant='secondary'
+                        onClick={() => showDialog(CertificationRevoked)}
+                        disabled={dropdownSelection === 'Automatic Certification'}>
+                        Revoke
+                    </Button>
+                </div>
+            </div>
+            <div className='flex gap-4 mb-4'>
                 <div className='basis-2/3'>
-                    <div className='flex gap-4 mb-4'>
-                        <Button
-                            onClick={() => showDialog(CertificationManual)}
-                            disabled={dropdownSelection === 'Automatic Certification'}>
-                            Certify
-                        </Button>
-                        <Button
-                            variant='secondary'
-                            onClick={() => showDialog(CertificationRevoked)}
-                            disabled={dropdownSelection === 'Automatic Certification'}>
-                            Revoke
-                        </Button>
-                    </div>
-
                     <CertificationTable
                         data={data}
                         filters={filters}

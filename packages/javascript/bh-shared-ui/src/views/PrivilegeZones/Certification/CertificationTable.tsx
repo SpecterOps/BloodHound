@@ -214,7 +214,7 @@ const CertificationTable: FC<CertificationTableProps> = ({
             cell: (info) => {
                 return (
                     <Tooltip tooltip={info.getValue()}>
-                        <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>
+                        <div className='min-w-0 truncate'>{info.getValue()}</div>
                     </Tooltip>
                 );
             },
@@ -222,11 +222,13 @@ const CertificationTable: FC<CertificationTableProps> = ({
         }),
         columnHelper.accessor('domainName', {
             header: 'Environment',
-            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
+            cell: (info) => <div className='min-w-0 truncate'>{info.getValue()}</div>,
+            size: 150,
         }),
         columnHelper.accessor('zoneName', {
             header: 'Zone',
-            cell: (info) => <div className='min-w-0 w-[150px] truncate'>{info.getValue()}</div>,
+            cell: (info) => <div className='min-w-0 truncate'>{info.getValue()}</div>,
+            size: 150,
         }),
         columnHelper.accessor('date', {
             header: 'First Seen',
