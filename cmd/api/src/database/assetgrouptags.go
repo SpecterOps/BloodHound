@@ -847,9 +847,10 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 	// with the lowest position zone, then finding the row with highest value of certified and grabbing the earliest created_at date seen across rows.
 	baseQuery := fmt.Sprintf(`
 		WITH nodes_associated_with_min_pos AS (
-			SELECT 
-				n.*, 
+			SELECT
+				n.*,
 				t.position,
+				t.require_certify,
 				s.asset_group_tag_id,
 				MIN(t.position) OVER (PARTITION BY n.node_id) AS min_position_for_node
 			FROM %s n
@@ -873,7 +874,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 				MIN(sort.created_at) OVER (PARTITION BY sort.node_id) AS created_at,    -- make a column that tracks the earliest created_at for a given node_id
 				sort.asset_group_tag_id
 			FROM nodes_associated_with_min_pos sort
-			WHERE sort.position = sort.min_position_for_node
+			WHERE sort.position = sort.min_position_for_node AND sort.require_certify = true
 			ORDER BY sort.node_id, sort.certified DESC     -- when there are multiple rows of same node_id, take the one with the highest value of certified
 		)`,
 		model.AssetGroupSelectorNode{}.TableName(),
@@ -886,7 +887,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 			hybrid.node_id,
 			hybrid.selector_id,
 			hybrid.certified,
-			hybrid.certified_by,  
+			hybrid.certified_by,
 			hybrid.source,
 			hybrid.node_primary_kind,
 			hybrid.node_environment_id,
@@ -897,7 +898,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 			hybrid.created_at,
 			hybrid.asset_group_tag_id
 		FROM sort_on_created_at hybrid
-		%s 
+		%s
 		ORDER BY hybrid.node_id ASC
 		%s;`,
 		sqlFilter.SQLString,
@@ -908,7 +909,7 @@ func (s *BloodhoundDB) GetAggregatedSelectorNodesCertification(ctx context.Conte
 	} else {
 		// get a total count on the above query without pagination
 		countQuery := fmt.Sprintf(`
-			SELECT COUNT(*) 
+			SELECT COUNT(*)
 			FROM sort_on_created_at %s;`,
 			sqlFilter.SQLString)
 
