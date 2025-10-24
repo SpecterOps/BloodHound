@@ -676,7 +676,7 @@ const UpdateUserFormInner: React.FC<{
                                     </div>
                                     <div
                                         className='flex flex-row ml-4 mt-6 mb-2 items-center'
-                                        data-testid='create-user-dialog_select-all-environments-checkbox-div'>
+                                        data-testid='update-user-dialog_select-all-environments-checkbox-div'>
                                         <FormField
                                             name='all_environments'
                                             control={form.control}

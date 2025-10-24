@@ -479,7 +479,7 @@ describe('UpdateUserForm', () => {
         expect(await screen.findByText('Last Name does not allow leading or trailing spaces')).toBeInTheDocument();
     });
 
-    it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and Read-Only role is selected', async () => {
+    it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and read-only role is selected', async () => {
         setup({ renderShowEnvironmentAccessControls: true });
         const user = userEvent.setup();
 
@@ -494,7 +494,7 @@ describe('UpdateUserForm', () => {
         expect(await screen.findByText('Environmental Targeted Access Control')).toBeInTheDocument();
     });
 
-    it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and User role is selected', async () => {
+    it('should display Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and user role is selected', async () => {
         setup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
@@ -512,8 +512,6 @@ describe('UpdateUserForm', () => {
 
     it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and power user role is selected', async () => {
         setup({ renderShowEnvironmentAccessControls: true });
-
-        screen.debug(undefined, Infinity);
 
         const user = userEvent.setup();
 
@@ -535,7 +533,7 @@ describe('UpdateUserForm', () => {
         expect(panelHeader).not.toBeInTheDocument();
     });
 
-    it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and admin user role is selected', async () => {
+    it('should hide Environmental Targeted Access Control panel when showEnvironmentAccessControls prop is true and admin role is selected', async () => {
         setup({ renderShowEnvironmentAccessControls: true });
 
         const user = userEvent.setup();
