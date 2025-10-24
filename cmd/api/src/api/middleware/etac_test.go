@@ -54,7 +54,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Success feature flag disabled",
 			setupMocks: func() {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 					Return(appcfg.FeatureFlag{Enabled: false}, nil)
 			},
 			expectedCode:  http.StatusOK,
@@ -64,15 +64,15 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Success All Environments enabled",
 			setupMocks: func() {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
 			},
 			bhCtx: ctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
-						AllEnvironments:          true,
-						EnvironmentAccessControl: nil,
+						AllEnvironments:                  true,
+						EnvironmentTargetedAccessControl: nil,
 					},
 					Session: model.UserSession{},
 				},
@@ -84,9 +84,9 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Success All Environments disabled and user does have domain in etac list",
 			setupMocks: func() {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentAccess{
+				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{
 					{
 						EnvironmentID: "12345",
 					},
@@ -96,8 +96,8 @@ func TestSupportsETACMiddleware(t *testing.T) {
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
-						AllEnvironments:          false,
-						EnvironmentAccessControl: nil,
+						AllEnvironments:                  false,
+						EnvironmentTargetedAccessControl: nil,
 					},
 					Session: model.UserSession{},
 				},
@@ -109,7 +109,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Error getting feature flag",
 			setupMocks: func() {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 					Return(appcfg.FeatureFlag{}, errors.New("db failure"))
 			},
 			expectedCode:  http.StatusInternalServerError,
@@ -119,16 +119,16 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Error checking for environments on a user",
 			setupMocks: func() {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentAccess{{}}, errors.New("an error"))
+				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{{}}, errors.New("an error"))
 			},
 			bhCtx: ctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
-						AllEnvironments:          false,
-						EnvironmentAccessControl: nil,
+						AllEnvironments:                  false,
+						EnvironmentTargetedAccessControl: nil,
 					},
 					Session: model.UserSession{},
 				},
@@ -140,16 +140,16 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			name: "Error All Environments disabled and user does not have domain in etac list",
 			setupMocks: func() {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureEnvironmentAccessControl).
+					GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 					Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mockDB.EXPECT().GetEnvironmentAccessListForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentAccess{{}}, nil)
+				mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), gomock.Any()).Return([]model.EnvironmentTargetedAccessControl{{}}, nil)
 			},
 			bhCtx: ctx.Context{
 				AuthCtx: auth.Context{
 					PermissionOverrides: auth.PermissionOverrides{},
 					Owner: model.User{
-						AllEnvironments:          false,
-						EnvironmentAccessControl: nil,
+						AllEnvironments:                  false,
+						EnvironmentTargetedAccessControl: nil,
 					},
 					Session: model.UserSession{},
 				},
