@@ -145,7 +145,7 @@ const UsersTable: FC<UsersTableProps> = ({
                 onUpdateUserPassword={onUpdateUserPassword}
                 onExpireUserPassword={onExpiredUserPassword}
                 onManageUserTokens={onManageUserTokens}
-                onDisableUserMfa={setDisable2FADialogOpen}
+                onDisableUserMfa={() => setDisable2FADialogOpen(true)}
                 index={index}
             />,
             /* eslint-enable react/jsx-key */

@@ -148,6 +148,9 @@ describe('useFinishedJobs', () => {
     });
 
     it('shows an error notification if there is an error fetching', async () => {
+        // override console error temporarily, since we are expecting an error response and don't want stderr noise
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
         server.use(rest.get('/api/v2/jobs/finished', (req, res, ctx) => res(ctx.status(400))));
         checkPermissionMock.mockImplementation(() => true);
         const { result } = renderHook(() => useFinishedJobs({ page: 0, rowsPerPage: 10 }));
@@ -157,6 +160,8 @@ describe('useFinishedJobs', () => {
             FINISHED_JOBS_FETCH_ERROR_MESSAGE,
             FINISHED_JOBS_FETCH_ERROR_KEY
         );
+
+        consoleErrorSpy.mockRestore();
     });
 
     it('dismisses the "no permission" notification on unmount', async () => {
