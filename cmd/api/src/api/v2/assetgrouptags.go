@@ -30,6 +30,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -486,8 +487,13 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 				resp = GetAssetGroupTagSelectorResponse{
 					Selectors: make([]AssetGroupTagSelectorView, 0, len(selectors)),
 				}
+				filter = model.SQLFilter{}
 			)
 
+			if assetGroupTag.RequireCertify.ValueOrZero() {
+				filter.SQLString = " AND certified > ?"
+				filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+			}
 			for _, selector := range selectors {
 				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
 				if paramIncludeCounts {
@@ -495,7 +501,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 					// if the selector is not disabled
 					if selector.DisabledAt.Time.IsZero() {
 						// get all the nodes which are selected
-						if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
+						if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, model.Sort{}, 0, 0, selector.ID); err != nil {
 							api.HandleDatabaseError(request, response, err)
 						} else {
 							nodeIds := make([]graph.ID, 0, len(selectorNodes))
@@ -767,6 +773,11 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			filter.Params = append(filter.Params, environmentIds)
 		}
 
+		if assetGroupTag.RequireCertify.ValueOrZero() {
+			filter.SQLString += " AND certified > ?"
+			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+		}
+
 		if selectorNodes, count, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, sort, skip, limit, selectorId); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
@@ -972,16 +983,20 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySQL := "(actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
+			var (
+				queryableColumns  = []string{"actor", "email", "action", "target"}
+				querySQL          = fmt.Sprintf("(%s ILIKE ANY(?))", strings.Join(queryableColumns, " ILIKE ANY(?) OR "))
+				fuzzyQueryPattern = "%" + query + "%"
+				fuzzyQueryParams  = pq.StringArray{fuzzyQueryPattern, strings.ReplaceAll(fuzzyQueryPattern, " ", "")}
+			)
 
 			if sqlFilter.SQLString != "" {
-				querySQL = " AND" + querySQL
+				querySQL = " AND " + querySQL
 			}
 
 			sqlFilter.SQLString += querySQL
-
-			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
+			for range len(queryableColumns) {
+				sqlFilter.Params = append(sqlFilter.Params, fuzzyQueryParams)
 			}
 		}
 

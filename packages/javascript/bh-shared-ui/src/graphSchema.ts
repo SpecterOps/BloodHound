@@ -155,6 +155,7 @@ export enum ActiveDirectoryRelationshipKind {
     GPOAppliesTo = 'GPOAppliesTo',
     CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
+    ProtectAdminGroups = 'ProtectAdminGroups',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -328,6 +329,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
+        case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
+            return 'ProtectAdminGroups';
         default:
             return undefined;
     }
@@ -491,6 +494,8 @@ export enum ActiveDirectoryKindProperties {
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
     ServicePrincipalNames = 'serviceprincipalnames',
+    GPOStatusRaw = 'gpostatusraw',
+    GPOStatus = 'gpostatus',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -770,6 +775,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'AdminSDHolder Protected';
         case ActiveDirectoryKindProperties.ServicePrincipalNames:
             return 'Service Principal Names';
+        case ActiveDirectoryKindProperties.GPOStatusRaw:
+            return 'GPO Status (Raw)';
+        case ActiveDirectoryKindProperties.GPOStatus:
+            return 'GPO Status';
         default:
             return undefined;
     }

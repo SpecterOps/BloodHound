@@ -595,6 +595,21 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroup(ctx, assetGroup any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroup", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroup), ctx, assetGroup)
 }
 
+// DeleteAssetGroupHistoryRecordsByCreatedDate mocks base method.
+func (m *MockDatabase) DeleteAssetGroupHistoryRecordsByCreatedDate(ctx context.Context, createdAt time.Time) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupHistoryRecordsByCreatedDate", ctx, createdAt)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAssetGroupHistoryRecordsByCreatedDate indicates an expected call of DeleteAssetGroupHistoryRecordsByCreatedDate.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupHistoryRecordsByCreatedDate(ctx, createdAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupHistoryRecordsByCreatedDate", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupHistoryRecordsByCreatedDate), ctx, createdAt)
+}
+
 // DeleteAssetGroupSelector mocks base method.
 func (m *MockDatabase) DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error {
 	m.ctrl.T.Helper()
@@ -693,18 +708,18 @@ func (mr *MockDatabaseMockRecorder) DeleteCustomNodeKind(ctx, kindName any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteCustomNodeKind), ctx, kindName)
 }
 
-// DeleteEnvironmentListForUser mocks base method.
-func (m *MockDatabase) DeleteEnvironmentListForUser(ctx context.Context, user model.User) error {
+// DeleteEnvironmentTargetedAccessControlForUser mocks base method.
+func (m *MockDatabase) DeleteEnvironmentTargetedAccessControlForUser(ctx context.Context, user model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteEnvironmentListForUser", ctx, user)
+	ret := m.ctrl.Call(m, "DeleteEnvironmentTargetedAccessControlForUser", ctx, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteEnvironmentListForUser indicates an expected call of DeleteEnvironmentListForUser.
-func (mr *MockDatabaseMockRecorder) DeleteEnvironmentListForUser(ctx, user any) *gomock.Call {
+// DeleteEnvironmentTargetedAccessControlForUser indicates an expected call of DeleteEnvironmentTargetedAccessControlForUser.
+func (mr *MockDatabaseMockRecorder) DeleteEnvironmentTargetedAccessControlForUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEnvironmentListForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteEnvironmentListForUser), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEnvironmentTargetedAccessControlForUser", reflect.TypeOf((*MockDatabase)(nil).DeleteEnvironmentTargetedAccessControlForUser), ctx, user)
 }
 
 // DeleteIngestTask mocks base method.
@@ -1455,19 +1470,19 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), ctx)
 }
 
-// GetEnvironmentAccessListForUser mocks base method.
-func (m *MockDatabase) GetEnvironmentAccessListForUser(ctx context.Context, user model.User) ([]model.EnvironmentAccess, error) {
+// GetEnvironmentTargetedAccessControlForUser mocks base method.
+func (m *MockDatabase) GetEnvironmentTargetedAccessControlForUser(ctx context.Context, user model.User) ([]model.EnvironmentTargetedAccessControl, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnvironmentAccessListForUser", ctx, user)
-	ret0, _ := ret[0].([]model.EnvironmentAccess)
+	ret := m.ctrl.Call(m, "GetEnvironmentTargetedAccessControlForUser", ctx, user)
+	ret0, _ := ret[0].([]model.EnvironmentTargetedAccessControl)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetEnvironmentAccessListForUser indicates an expected call of GetEnvironmentAccessListForUser.
-func (mr *MockDatabaseMockRecorder) GetEnvironmentAccessListForUser(ctx, user any) *gomock.Call {
+// GetEnvironmentTargetedAccessControlForUser indicates an expected call of GetEnvironmentTargetedAccessControlForUser.
+func (mr *MockDatabaseMockRecorder) GetEnvironmentTargetedAccessControlForUser(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentAccessListForUser", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentAccessListForUser), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentTargetedAccessControlForUser", reflect.TypeOf((*MockDatabase)(nil).GetEnvironmentTargetedAccessControlForUser), ctx, user)
 }
 
 // GetFlag mocks base method.

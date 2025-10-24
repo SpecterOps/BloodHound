@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -115,7 +116,7 @@ func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeSt
 
 	defer func() {
 		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle); err != nil {
-			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", slog.String("err", err.Error()))
+			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", attr.Error(err))
 		}
 	}()
 
@@ -125,6 +126,6 @@ func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeSt
 	}
 
 	if err := action(pipelineContext); err != nil {
-		slog.ErrorContext(pipelineContext, "Datapipe action failed", slog.String("err", err.Error()))
+		slog.ErrorContext(pipelineContext, "Datapipe action failed", attr.Error(err))
 	}
 }

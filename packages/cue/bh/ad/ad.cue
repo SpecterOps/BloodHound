@@ -30,6 +30,7 @@ PathfindingRelationships: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
+PostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1019,6 +1020,20 @@ ServicePrincipalNames: types.#StringEnum & {
 	representation: "serviceprincipalnames"
 }
 
+GPOStatusRaw: types.#StringEnum & {
+	symbol:         "GPOStatusRaw"
+	schema:         "ad"
+	name:           "GPO Status (Raw)"
+	representation: "gpostatusraw"
+}
+
+GPOStatus: types.#StringEnum & {
+	symbol:         "GPOStatus"
+	schema:         "ad"
+	name:           "GPO Status"
+	representation: "gpostatus"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1158,6 +1173,8 @@ Properties: [
 	NetBIOS,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
+	GPOStatusRaw,
+	GPOStatus,
 ]
 
 // Kinds
@@ -1664,6 +1681,10 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+ProtectAdminGroups: types.#Kind & {
+	symbol:         "ProtectAdminGroups"
+	schema:         "active_directory"
+}
 
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
@@ -1782,6 +1803,7 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	ProtectAdminGroups,
 ]
 
 // ACL Relationships
@@ -1904,4 +1926,40 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
 	CanApplyGPO,
+]
+
+PostProcessedRelationships: [
+	DCSync,
+	ProtectAdminGroups,
+	SyncLAPSPassword,
+	CanRDP,
+	AdminTo,
+	CanPSRemote,
+	ExecuteDCOM,
+	TrustedForNTAuth,
+	IssuedSignedBy,
+	EnterpriseCAFor,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC10a,
+	ADCSESC10b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC13,
+	EnrollOnBehalfOf,
+	SyncedToEntraUser,
+	Owns,
+	WriteOwner,
+	ExtendedByPolicy,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
+	HasTrustKeys,
 ]

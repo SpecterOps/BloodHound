@@ -31,6 +31,7 @@ import (
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
@@ -1302,8 +1303,8 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(agtSelectors, 0, nil).Times(1)
 					mockDB.EXPECT().
-						GetSelectorNodesBySelectorIds(gomock.Any(), agtSelectors[0].ID).
-						Return(agtSelectorNodes, nil).Times(1)
+						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), agtSelectors[0].ID).
+						Return(agtSelectorNodes, 0, nil).Times(1)
 					mockGraphDb.EXPECT().
 						CountFilteredNodes(gomock.Any(), query.And(
 							query.KindIn(query.Node(), assetGroupTag.ToKind()),
@@ -2979,6 +2980,7 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 		expected     expected
 	}
 
+	expectedFuzzySQLQuery := "actor ILIKE ANY(?) OR email ILIKE ANY(?) OR action ILIKE ANY(?) OR target ILIKE ANY(?)"
 	tt := []testData{
 		{
 			name: "cannot decode request body error",
@@ -3091,27 +3093,20 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Cond(func(sqlFilter model.SQLFilter) bool {
 					if !strings.Contains(
 						sqlFilter.SQLString,
-						"actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?",
+						expectedFuzzySQLQuery,
 					) {
 						return false
 					}
 
-					for _, v := range sqlFilter.Params {
-						switch p := v.(type) {
-						case string:
-							if p == "%UpdateTag%" {
-								return true
-							}
-						case []any:
-							for _, inner := range p {
-								if s, ok := inner.(string); ok && s == "%UpdateTag%" {
-									return true
-								}
+					for _, param := range sqlFilter.Params {
+						for _, inner := range param.(pq.StringArray) {
+							if inner != "%UpdateTag%" {
+								return false
 							}
 						}
 					}
 
-					return false
+					return true
 				}), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]model.AssetGroupHistory{
 						{ID: 2, CreatedAt: time.Date(2025, 6, 11, 0, 0, 0, 0, time.UTC), Actor: "UUID2", Email: null.StringFrom("user2@domain.com"), Action: model.AssetGroupHistoryActionUpdateTag, AssetGroupTagId: 1},
@@ -3169,27 +3164,20 @@ func TestResources_SearchAssetGroupTagHistory(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetAssetGroupHistoryRecords(gomock.Any(), gomock.Cond(func(sqlFilter model.SQLFilter) bool {
 					if !strings.Contains(
 						sqlFilter.SQLString,
-						"actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?",
+						expectedFuzzySQLQuery,
 					) {
 						return false
 					}
 
-					for _, v := range sqlFilter.Params {
-						switch p := v.(type) {
-						case string:
-							if p == "%user1@domain.com%" {
-								return true
-							}
-						case []any:
-							for _, inner := range p {
-								if s, ok := inner.(string); ok && s == "%user1@domain.com%" {
-									return true
-								}
+					for _, param := range sqlFilter.Params {
+						for _, inner := range param.(pq.StringArray) {
+							if inner != "%user1@domain.com%" {
+								return false
 							}
 						}
 					}
 
-					return false
+					return true
 				}), model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, gomock.Any(), gomock.Any()).Return(
 					[]model.AssetGroupHistory{
 						{ID: 4, CreatedAt: time.Date(2025, 6, 12, 2, 0, 0, 0, time.UTC), Actor: "UUID1", Email: null.StringFrom("user1@domain.com"), Action: model.AssetGroupHistoryActionDeleteSelector},

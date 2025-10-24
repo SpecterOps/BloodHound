@@ -28,7 +28,6 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
-import useApiVersion from '../../hooks/useApiVersion';
 import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
 import { apiClient, getUsername } from '../../utils';
@@ -46,9 +45,6 @@ const UserProfile = () => {
     const [disable2FASecret, setDisable2FASecret] = useState('');
 
     const getSelfQuery = useSelf();
-
-    const { data: apiVersionResponse, isSuccess } = useApiVersion();
-    const apiVersion = isSuccess && apiVersionResponse?.server_version;
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
@@ -91,7 +87,6 @@ const UserProfile = () => {
                         <br />
                         Please try refreshing the page or logging in again.
                     </Alert>
-                    <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>BloodHound: {apiVersion}</Box>
                 </>
             );
         }
@@ -193,7 +188,6 @@ const UserProfile = () => {
                         )}
                     </Grid>
                 </Box>
-                <Box sx={{ flexGrow: 1, alignContent: 'flex-end' }}>BloodHound: {apiVersion}</Box>
             </Box>
         );
     };

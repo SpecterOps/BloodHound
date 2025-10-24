@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -29,9 +29,20 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-type System = 'SYSTEM';
+export const SystemString = 'SYSTEM' as const;
+
+type System = typeof SystemString;
 
 type ISO_DATE_STRING = string;
+
+export type TimestampFields = {
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
 
 interface Created {
     created_at: ISO_DATE_STRING;
@@ -53,17 +64,29 @@ interface Disabled {
     disabled_by: string | null;
 }
 
-export const AssetGroupTagTypeTier = 1 as const;
+export interface AssetGroupTagHistoryRecord {
+    id: number;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    asset_group_tag_id: number;
+    environment_id: string | null;
+    note: string | null;
+}
+
+export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
 
-export type AssetGroupTagTypes =
-    | typeof AssetGroupTagTypeTier
+export type AssetGroupTagType =
+    | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 
-export const AssetGroupTagTypesMap = {
-    1: 'tier',
+export const AssetGroupTagTypeMap = {
+    1: 'zone',
     2: 'label',
     3: 'owned',
 } as const;
@@ -77,9 +100,9 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
     analysis_enabled: boolean | null;
     glyph: string | null;
@@ -106,6 +129,21 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+} as const;
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
@@ -116,7 +154,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
@@ -214,6 +252,13 @@ export interface User {
     eula_accepted: boolean;
 }
 
+export interface UserMinimal {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+}
+
 interface Permission {
     id: number;
     name: string;
@@ -236,6 +281,12 @@ export interface ListRolesResponse {
 export interface ListUsersResponse {
     data: {
         users: User[];
+    };
+}
+
+export interface ListUsersMinimalResponse {
+    data: {
+        users: UserMinimal[];
     };
 }
 
@@ -459,4 +510,24 @@ export type Client = {
     version: string;
     user_sid: string;
     type: string;
+};
+
+export type FileIngestJob = TimestampFields & {
+    end_time: string;
+    failed_files: number;
+    id: number;
+    last_ingest: string;
+    start_time: string;
+    status_message: string;
+    status: number;
+    total_files: number;
+    user_email_address: string;
+    user_id: string;
+};
+
+export type FileIngestCompletedTask = TimestampFields & {
+    errors: string[];
+    file_name: string;
+    id: number;
+    parent_file_name: string;
 };
