@@ -21,6 +21,7 @@ export interface FilterFormValues {
     objectType: string;
     'start-date': string;
     'end-date': string;
+    tagId: string;
 }
 
 export interface ExtendedCertificationFilters extends FilterFormValues {

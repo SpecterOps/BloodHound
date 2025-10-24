@@ -19,7 +19,7 @@ import { AssetGroupTagsCertification, CertificationManual, CertificationRevoked 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as reactQuery from 'react-query';
-import { render, screen } from '../../../test-utils';
+import { act, render, screen } from '../../../test-utils';
 import { apiClient } from '../../../utils';
 import Certification from './Certification';
 
@@ -97,6 +97,34 @@ vi.mock('../../../providers', async () => {
 const server = setupServer(
     rest.post(`/api/v2/asset-group-tags/certifications`, async (_, res, ctx) => {
         return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/features', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: 'tier_management_engine',
+                        enabled: true,
+                    },
+                ],
+            })
+        );
+    }),
+    rest.get('/api/v2/bloodhound-users-minimal', (_, res, ctx) => {
+        return res(ctx.json({ data: { users: [] } }));
+    }),
+    rest.get('/api/v2/available-domains', (req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
+    }),
+    rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    total_count: 0,
+                    counts: [],
+                },
+            })
+        );
     })
 );
 
@@ -108,7 +136,7 @@ afterAll(() => server.close());
 
 describe('Certification', () => {
     it('submits the selected items for certification with a note', async () => {
-        const { container } = render(<Certification></Certification>);
+        const { container } = await act(async () => render(<Certification></Certification>));
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
         await user.click(selectAllCheckbox);
@@ -144,7 +172,7 @@ describe('Certification', () => {
         );
     });
     it('submits the selected items for certification without a note', async () => {
-        render(<Certification></Certification>);
+        await act(async () => render(<Certification></Certification>));
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
@@ -174,7 +202,7 @@ describe('Certification', () => {
         );
     });
     it('submits the selected items for revocation', async () => {
-        render(<Certification></Certification>);
+        await act(async () => render(<Certification></Certification>));
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
@@ -204,7 +232,7 @@ describe('Certification', () => {
         );
     });
     it('does not call the API if no items are selected', async () => {
-        const { container } = render(<Certification></Certification>);
+        const { container } = await act(async () => render(<Certification></Certification>));
 
         const certifyButton = await screen.findByText('Certify');
         expect(certifyButton).toBeInTheDocument();
@@ -237,7 +265,7 @@ describe('Certification', () => {
             })
         );
 
-        render(<Certification></Certification>);
+        await act(async () => render(<Certification></Certification>));
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
@@ -267,7 +295,7 @@ describe('Certification', () => {
         );
     });
     it('re-fetches the data if a certification status dropdown choice is selected', async () => {
-        render(<Certification></Certification>);
+        await act(async () => render(<Certification></Certification>));
         const certificationDropdown = await screen.findByText('Pending');
         expect(certificationDropdown).toBeInTheDocument();
         await user.click(certificationDropdown);

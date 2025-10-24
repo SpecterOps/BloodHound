@@ -56,6 +56,8 @@ const createCertificationReqParams = (
 
     if (filters.approvedBy) params.append('certified_by', `eq:${filters.approvedBy}`);
 
+    if (filters.tagId) params.append('asset_group_tag_id', `eq:${filters.tagId}`);
+
     if (filters['start-date'] && filters['start-date'] !== '') {
         params.append(
             'created_at',
