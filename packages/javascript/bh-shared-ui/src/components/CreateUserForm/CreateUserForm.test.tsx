@@ -123,9 +123,7 @@ describe('CreateUserForm', () => {
         setup();
         const user = userEvent.setup();
 
-        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
-            timeout: 30000,
-        });
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }));
 
         await user.type(screen.getByLabelText(/principal/i), ' ');
         await user.type(screen.getByLabelText(/first/i), ' ');
@@ -146,9 +144,7 @@ describe('CreateUserForm', () => {
 
         const user = userEvent.setup();
 
-        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
-            timeout: 30000,
-        });
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }));
 
         await user.click(screen.getByLabelText(/email/i));
         await user.paste('a'.repeat(309) + '@domain.com');
@@ -243,8 +239,6 @@ describe('CreateUserForm', () => {
         const option = screen.getByRole('option', { name: /Read-Only/i });
         await user.click(option);
 
-        expect(option).not.toBeInTheDocument();
-
         const panelHeader = await screen.findByText(/Environmental Targeted Access Control/i);
         expect(panelHeader).toBeInTheDocument();
 
@@ -253,6 +247,7 @@ describe('CreateUserForm', () => {
         const optionPowerUser = screen.getByRole('option', { name: /Power User/i });
         await user.click(optionPowerUser);
 
+        expect(option).not.toBeInTheDocument();
         expect(panelHeader).not.toBeInTheDocument();
     });
 
