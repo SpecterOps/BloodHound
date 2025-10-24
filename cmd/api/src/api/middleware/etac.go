@@ -34,7 +34,7 @@ import (
 func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureEnvironmentAccessControl); err != nil {
+			if etacFlag, err := db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
 				api.HandleDatabaseError(request, response, err)
 			} else if !etacFlag.Enabled {
 				next.ServeHTTP(response, request)
@@ -44,10 +44,10 @@ func SupportsETACMiddleware(db database.Database) mux.MiddlewareFunc {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found with request", request), response)
 			} else if currentUser.AllEnvironments {
 				next.ServeHTTP(response, request)
-			} else if envvironmentID, err := getEnvironmentIdFromRequest(request); err != nil {
+			} else if environmentID, err := getEnvironmentIdFromRequest(request); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorNoDomainId, request), response)
-			} else if hasAccess, err := v2.CheckUserAccessToEnvironments(request.Context(), db, currentUser, envvironmentID); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking user's environment access control", request), response)
+			} else if hasAccess, err := v2.CheckUserAccessToEnvironments(request.Context(), db, currentUser, environmentID); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error checking user's environment targeted access control", request), response)
 			} else if !hasAccess {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to access this domain", request), response)
 			} else {
