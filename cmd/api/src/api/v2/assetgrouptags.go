@@ -132,7 +132,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 
 			}
 
-			flag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC)
+			etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC)
 			if err != nil {
 				api.HandleDatabaseError(request, response, err)
 				return
@@ -143,7 +143,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 
 				if paramIncludeCounts {
 					// Only check user access if ETAC is enabled
-					if flag.Enabled {
+					if etacFlag.Enabled {
 						accessList := ExtractEnvironmentIDsFromUser(&user)
 
 						// Apply filters only if user doesn’t have access to all environments
@@ -597,7 +597,10 @@ type GetAssetGroupTagMemberCountsResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
-	environmentIds := request.URL.Query()[api.QueryParameterEnvironments]
+	var (
+		environmentIds = request.URL.Query()[api.QueryParameterEnvironments]
+		filters        []graph.Criteria
+	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
@@ -609,23 +612,25 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		api.HandleDatabaseError(request, response, err)
 	} else {
 
-		accessList := ExtractEnvironmentIDsFromUser(&user)
-		filters := []graph.Criteria{}
-		// ETAC feature flag
-		if flag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+		filters = append(filters, query.Or(
+			query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+			query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+		))
+
+		// ETAC feature etacFlag
+		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
-		} else if flag.Enabled && !user.AllEnvironments {
-			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
-				query.In(query.NodeProperty(azure.TenantID.String()), accessList),
-			),
-			)
-		} else if !flag.Enabled && len(environmentIds) > 0 {
-			filters = append(filters, query.Or(
-				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-			))
+		} else {
+			if etacFlag.Enabled && !user.AllEnvironments {
+				accessList := ExtractEnvironmentIDsFromUser(&user)
+				filters = append(filters, query.And(
+					query.Or(
+						query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
+						query.In(query.NodeProperty(azure.TenantID.String()), accessList),
+					),
+				))
+			}
 		}
 
 		primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind(), filters...)
