@@ -55,7 +55,7 @@ const TagIdField: FC<{
                                     </span>
                                 ) : (
                                     <SelectTrigger>
-                                        <SelectValue placeholder='Select' />
+                                        <SelectValue placeholder='Select Zone/Label' />
                                     </SelectTrigger>
                                 )}
                             </FormControl>
