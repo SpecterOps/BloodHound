@@ -19,11 +19,10 @@ import { usePZQueryParams } from './usePZParams';
 export const HYGIENE_AGT_ID = 0;
 export const HYGIENE_TAG_NAME = 'Hygiene';
 
-export const useSelectedTagName = () => {
+export const useSelectedTag = () => {
     const tags = useAssetGroupTags().data ?? [];
     const { assetGroupTagId } = usePZQueryParams();
     if (assetGroupTagId === HYGIENE_AGT_ID) return HYGIENE_TAG_NAME;
 
-    const selectedTag = tags.find((tag) => tag.id === assetGroupTagId);
-    return selectedTag ? selectedTag.name : 'Tier Zero';
+    return tags.find((tag) => tag.id === assetGroupTagId);
 };
