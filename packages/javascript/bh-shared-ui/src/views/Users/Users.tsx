@@ -116,15 +116,20 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
             const environmentList = { environments: user.environment_targeted_access_control?.environments || null };
 
             const updatedUser: UpdateUserRequest = {
-                email_address: user.email_address || '',
+                emailAddress: user.email_address || '',
                 principal: user.principal_name || '',
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-                ...(user.sso_provider_id && { sso_provider_id: user.sso_provider_id }),
+                firstName: user.first_name || '',
+                lastName: user.last_name || '',
+                ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
                 all_environments: user.all_environments || undefined,
                 environment_targeted_access_control: environmentList || undefined,
+                /*
+                environment_targeted_access_control: {
+                    environments: user.environment_targeted_access_control?.environments || null,
+                },
+                */
             };
 
             return apiClient.updateUser(selectedUserId!, updatedUser);
@@ -197,8 +202,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                     />
                     */}
                     <CreateUserDialog
-                        error={true}
-                        //error={createUserMutation.error}
+                        error={createUserMutation.error}
                         isLoading={createUserMutation.isLoading}
                         onClose={toggleCreateUserDialog}
                         onExited={createUserMutation.reset}
