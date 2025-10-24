@@ -163,8 +163,6 @@ const CreateUserForm: React.FC<{
         }
     };
 
-    console.log(selectedETACEnabledRole);
-
     const handleOnSave = () => {
         const values = form.getValues();
         console.log(values);
@@ -181,11 +179,9 @@ const CreateUserForm: React.FC<{
         const eTACFormData = {
             ...formData,
             all_environments: allEnvironmentsSelected ? true : false,
-            ...(selectedETACEnabledRole === true && {
-                environment_targeted_access_control: {
-                    environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
-                },
-            }),
+            environment_targeted_access_control: {
+                environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
+            },
         };
 
         onSubmit({
@@ -202,8 +198,6 @@ const CreateUserForm: React.FC<{
             });
         }
     }, [form.formState.errors]);
-
-    console.log(form.watch());
 
     return (
         <Form {...form}>
