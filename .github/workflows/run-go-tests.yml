@@ -45,11 +45,18 @@ jobs:
           check-latest: true
 
       - name: Run Tests
-        # TODO integrate allure reporting
         run: |
           export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
-          go tool stbernard test -g -i
+          go tool stbernard test -g -i -r
 
+      - name: Install AllureCtl 
+        # v0.14.3
+        run: | 
+          go install github.com/robotomize/go-allure/cmd/golurectl@fb9cb98f1fe001db95d834628ae8dfcd451df4f7 
+      
+      - name: Building Allure JSON 
+        run: |
+          cat go-test-results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
       - name: Neo4j Debug Logs
         if: failure()
         run: |
@@ -64,58 +71,10 @@ jobs:
         if: ${{ ! cancelled() }}
         run: |
           docker compose -f docker-compose.testing.yml down
-
-  generate-go-test-report:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout source code for this repository
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        uses: actions/checkout@v4
-
-      - name: Install Go
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-          check-latest: true
-
-      - name: Run Tests
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        run: |
-          go test -json -cover ./... > test_results.json
-
-      - name: Install AllureCtl
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        run: | 
-          go install github.com/robotomize/go-allure/cmd/golurectl@latest
       
-      - name: Building Allure JSON 
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        run: |
-          cat test_results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
-
-      - name: Get Allure history
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build test report
-        if: ${{ github.event.ref == 'refs/heads/main' }}
-        uses: simple-elf/allure-report-action@v1.12
-        with:
-          gh_pages: gh-pages
-          allure_history: allure-history
-          allure_results: allure-results
-          allure_report: allure-report
-      
-      - name: Upload Test Report 
-        if: ${{ github.event.ref == 'refs/heads/main' }}
+      - name: Upload Allure Results
         uses: actions/upload-artifact@v4
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
-          name: allure-report
-          path: allure-report
+          name: allure-results
+          path: allure-results
