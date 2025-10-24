@@ -459,3 +459,7 @@ local-harnesses/*
 go.work*
 
 !go.work.template
+
+### Allure Reporting ####
+allure-results
+allure-report

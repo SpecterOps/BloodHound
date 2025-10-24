@@ -23,6 +23,9 @@ on:
     types:
       - opened
       - synchronize
+  push:
+    branches:
+      - main
 
 jobs:
   run-tests:
@@ -45,3 +48,9 @@ jobs:
           export CI=false
           go tool stbernard deps
           go tool stbernard test -y
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@v4
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          name: allure-results
+          path: allure-results
