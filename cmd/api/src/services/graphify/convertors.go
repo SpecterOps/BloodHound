@@ -112,15 +112,48 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData, ingest
 			continue
 		}
 
-		if userRight.Privilege == ein.UserRightRemoteInteractiveLogon {
+		switch userRight.Privilege {
+		case ein.UserRightInteractiveLogon:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.InteractiveLogonRight)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightRemoteInteractiveLogon:
 			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RemoteInteractiveLogonRight)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightAssignPrimaryTokenPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.AssignPrimaryTokenPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightBackupPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.BackupPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightCreateTokenPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.CreateTokenPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightDebugPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.DebugPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightImpersonatePrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.ImpersonatePrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightLoadDriverPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.LoadDriverPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightManageVolumePrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.ManageVolumePrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightRestorePrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.RestorePrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightTakeOwnershipPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.TakeOwnershipPrivilege)...)
+			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
+		case ein.UserRightTcbPrivilege:
+			converted.RelProps = append(converted.RelProps, ein.ParseUserRightData(userRight, computer, ad.TcbPrivilege)...)
 			baseNodeProp.PropertyMap[ad.HasURA.String()] = true
 		}
 	}
 
 	converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-
 }
 
 func convertUserData(user ein.User, converted *ConvertedData, ingestTime time.Time) {
@@ -192,6 +225,10 @@ func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {
 	parsedLocalGroupData := ein.ParseGPOChanges(ou.GPOChanges)
 	converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
 	converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
+
+	parsedUserRightsData := ein.ParseGPOUserRights(ou.GPOUserRights)
+	converted.RelProps = append(converted.RelProps, parsedUserRightsData.Relationships...)
+	converted.NodeProps = append(converted.NodeProps, parsedUserRightsData.Nodes...)
 }
 
 func convertSessionData(session ein.Session, converted *ConvertedSessionData) {

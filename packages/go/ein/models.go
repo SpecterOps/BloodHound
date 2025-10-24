@@ -89,6 +89,11 @@ type ParsedLocalGroupData struct {
 	Nodes         []IngestibleNode
 }
 
+type ParsedUserRightsData struct {
+	Relationships []IngestibleRelationship
+	Nodes         []IngestibleNode
+}
+
 type ParsedDomainTrustData struct {
 	TrustRelationships []IngestibleRelationship
 	ExtraNodeProps     []IngestibleNode
