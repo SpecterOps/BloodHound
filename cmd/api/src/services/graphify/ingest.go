@@ -62,11 +62,14 @@ type IngestContext struct {
 	IngestTime time.Time
 	// Manager is the caching layer that deduplicates ingest payloads across ingest runs
 	Manager ChangeManager
+	// Stats tracks the number of nodes and relationships processed during ingestion
+	Stats *IngestStats
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
 	ic := &IngestContext{
-		Ctx: ctx,
+		Ctx:   ctx,
+		Stats: &IngestStats{}, // Always initialize stats
 	}
 
 	for _, opt := range opts {
@@ -97,7 +100,8 @@ func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 }
 
 func (s *IngestContext) BindBatchUpdater(batch BatchUpdater) {
-	s.Batch = batch
+	// Always wrap the batch with counting to track stats
+	s.Batch = NewCountingBatchUpdater(batch, s.Stats)
 }
 
 func (s *IngestContext) HasChangelog() bool {

@@ -106,7 +106,7 @@ func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationsh
 	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
 	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
 
-	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	update := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
@@ -126,7 +126,9 @@ func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationsh
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
-	})
+	}
+
+	return maybeSubmitRelationshipUpdate(batch, update)
 }
 
 func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleRelationship) error {
@@ -147,12 +149,11 @@ func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) erro
 	nextSession.Target = strings.ToUpper(nextSession.Target)
 	nextSession.Source = strings.ToUpper(nextSession.Source)
 
-	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	update := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
 			common.LastSeen: batch.IngestTime,
 			ad.LogonType:    nextSession.LogonType,
 		}), ad.HasSession),
-
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Source,
 			common.LastSeen: batch.IngestTime,
@@ -161,7 +162,6 @@ func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) erro
 		StartIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
-
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Target,
 			common.LastSeen: batch.IngestTime,
@@ -170,7 +170,9 @@ func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) erro
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
-	})
+	}
+
+	return maybeSubmitRelationshipUpdate(batch, update)
 }
 
 func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) error {

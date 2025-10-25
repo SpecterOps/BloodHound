@@ -98,6 +98,9 @@ func validateNodeKinds(objectID string, kinds graph.Kinds) error {
 // maybeSubmitNodeUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
 func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) error {
+	// Track that we processed this node (regardless of whether it's written)
+	ingestCtx.Stats.NodesProcessed.Add(1)
+
 	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
 		return ingestCtx.Batch.UpdateNodeBy(update)
@@ -121,7 +124,7 @@ func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) er
 	}
 
 	if shouldSubmit {
-		// New/modified: update via dawgs batch
+		// New/modified: update via dawgs batch (will increment NodesWritten)
 		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
 
