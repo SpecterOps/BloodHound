@@ -194,14 +194,27 @@ export const useCertificationColumns = ({
             }),
             columnHelper.accessor('environment_id', {
                 header: 'Environment',
-                cell: (info) => (
-                    <div className='min-w-0 truncate'>{environmentMap.get(info.getValue()) ?? 'Unknown'}</div>
-                ),
+                cell: (info) => {
+                    const displayValue = environmentMap.get(info.getValue()) ?? 'Unknown';
+                    return (
+                        <Tooltip tooltip={displayValue}>
+                            <div className='min-w-0 truncate'>{displayValue}</div>
+                        </Tooltip>
+                    );
+                },
+
                 size: 72,
             }),
             columnHelper.accessor('asset_group_tag_id', {
                 header: 'Zone',
-                cell: (info) => <div className='min-w-0 truncate'>{tagMap.get(info.getValue()) ?? 'Unknown'}</div>,
+                cell: (info) => {
+                    const displayValue = tagMap.get(info.getValue()) ?? 'Unknown';
+                    return (
+                        <Tooltip tooltip={displayValue}>
+                            <div className='min-w-0 truncate'>{displayValue}</div>
+                        </Tooltip>
+                    );
+                },
                 size: 72,
             }),
             columnHelper.accessor('created_at', {
