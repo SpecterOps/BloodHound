@@ -31,12 +31,12 @@ import { UseFormReturn, useForm } from 'react-hook-form';
 import { getStartAndEndDateTimes, validateFormDates } from '../..';
 import { END_DATE, START_DATE } from '../../../..';
 import { AppIcon } from '../../../../components';
+import { EndDateField, StartDateField } from '../../DateField';
 import TagIdField from '../../TagIdField';
 import { useHistoryTableContext } from '../HistoryTableContext';
 import { AssetGroupTagHistoryFilters } from '../types';
 import { DEFAULT_FILTER_VALUE } from '../utils';
 import ActionField from './ActionField';
-import { EndDateField, StartDateField } from './DateField';
 import MadeByField from './MadeByField';
 
 const FilterDialog: FC<{
@@ -115,8 +115,8 @@ const FilterDialog: FC<{
                         <MadeByField form={form} />
 
                         <div className='flex gap-6'>
-                            <StartDateField form={form} />
-                            <EndDateField form={form} />
+                            <StartDateField form={form as unknown as UseFormReturn} />
+                            <EndDateField form={form as unknown as UseFormReturn} />
                         </div>
 
                         <DialogActions>

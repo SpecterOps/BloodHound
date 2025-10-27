@@ -15,48 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { useQuery } from 'react-query';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../components';
-import { usePZPathParams } from '../../../hooks';
-import { EntityKinds, apiClient } from '../../../utils';
+import { useAssetGroupTagInfo, useMemberInfo, usePZPathParams, useSelectorInfo } from '../../../hooks';
+import { EntityKinds } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
     const { selectorId, memberId, tagType, tagId } = usePZPathParams();
 
-    const tagQuery = useQuery({
-        queryKey: ['privilege-zones', 'tags', tagId],
-        queryFn: async () => {
-            if (!tagId) return undefined;
-            return apiClient.getAssetGroupTag(tagId).then((res) => {
-                return res.data.data['tag'];
-            });
-        },
-        enabled: tagId !== undefined,
-    });
+    const tagQuery = useAssetGroupTagInfo(tagId);
 
-    const selectorQuery = useQuery({
-        queryKey: ['privilege-zones', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            if (!tagId || !selectorId) return undefined;
-            return apiClient.getAssetGroupTagSelector(tagId, selectorId).then((res) => {
-                return res.data.data['selector'];
-            });
-        },
-        enabled: tagId !== undefined && selectorId !== undefined,
-    });
+    const selectorQuery = useSelectorInfo(tagId, selectorId);
 
-    const memberQuery = useQuery({
-        queryKey: ['privilege-zones', 'tags', tagId, 'member', memberId],
-        queryFn: async () => {
-            if (!tagId || !memberId) return undefined;
-            return apiClient.getAssetGroupTagMemberInfo(tagId, memberId).then((res) => {
-                return res.data.data['member'];
-            });
-        },
-        enabled: tagId !== undefined && memberId !== undefined,
-    });
+    const memberQuery = useMemberInfo(tagId, memberId);
 
     if (memberQuery.data) {
         const selectedNode = {

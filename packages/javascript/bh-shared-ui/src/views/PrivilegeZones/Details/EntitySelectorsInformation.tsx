@@ -15,57 +15,40 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Popover, PopoverContent, PopoverTrigger, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { CSSProperties, useCallback, useState } from 'react';
-import { useQuery } from 'react-query';
+import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
-import { useExploreParams } from '../../../hooks';
+import { useExploreParams, useMemberInfo, usePZQueryParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
-import { apiClient, cn, useAppNavigate } from '../../../utils';
+import { cn, useAppNavigate } from '../../../utils';
 
-const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
-    return (
-        <li
-            key={key}
-            data-testid={`privilege-zones_${title.toLowerCase()}-list_loading-skeleton`}
-            style={style}
-            className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
-            <Skeleton className={`${height ?? 'min-h-10'} rounded-none`} />
-        </li>
-    );
-};
-
-const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
-
-const EntitySelectorsInformation: React.FC<{ memberId: string; tagType: string; tagId: string }> = ({
-    memberId,
+const EntitySelectorsInformation: React.FC<{ tagType: string; memberId?: string; tagId?: string }> = ({
     tagType,
+    memberId,
     tagId,
 }) => {
     const navigate = useAppNavigate();
-
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
-    const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const { setExploreParams, expandedPanelSections, selectedItem: selected } = useExploreParams();
+    const { assetGroupTagId: tag } = usePZQueryParams();
+
+    const assetGroupTagId = tagId ? tagId : tag;
+    const selectedItem = memberId ? memberId : selected;
+
     const isExpandedPanelSection = expandedPanelSections?.includes('Selectors');
 
     const handleOnChange = () => {
-        if (!isExpandedPanelSection) {
-            setExploreParams({
-                expandedPanelSections: ['Selectors'],
-            });
-        } else {
-            setExploreParams({
-                expandedPanelSections: [],
-            });
-        }
+        isExpandedPanelSection
+            ? setExploreParams({
+                  expandedPanelSections: [],
+              })
+            : setExploreParams({
+                  expandedPanelSections: ['Selectors'],
+              });
     };
 
-    const memberInfoQuery = useQuery(['asset-group-member-info'], () => {
-        return apiClient.getAssetGroupTagMemberInfo(tagId!, memberId!).then((res) => {
-            return res.data.data['member'];
-        });
-    });
+    const memberInfoQuery = useMemberInfo(assetGroupTagId?.toString() ?? '', selectedItem ?? '');
 
     const handleMenuClick = (index: number) => {
         setMenuOpen((prev) => ({
@@ -76,29 +59,24 @@ const EntitySelectorsInformation: React.FC<{ memberId: string; tagType: string; 
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${selectorsPath}/${id}/${detailsPath}`);
         },
-        [tagId, navigate, tagType]
+        [assetGroupTagId, navigate, tagType]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${savePath}`);
+            navigate(`/${privilegeZonesPath}/${tagType}/${assetGroupTagId}/${selectorsPath}/${id}/${savePath}`);
         },
-        [tagId, navigate, tagType]
+        [assetGroupTagId, navigate, tagType]
     );
 
     if (memberInfoQuery.isLoading) {
-        return itemSkeletons.map((skeleton, index) => {
-            return skeleton('object-selector', index);
-        });
+        return <Skeleton className='h-10 w-full' />;
     }
+
     if (memberInfoQuery.isError) {
-        return (
-            <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
-                <span className='text-base'>There was an error fetching this data</span>
-            </li>
-        );
+        return <span className='text-error'>There was an error fetching this data</span>;
     }
 
     if (memberInfoQuery.isSuccess) {
@@ -113,7 +91,7 @@ const EntitySelectorsInformation: React.FC<{ memberId: string; tagType: string; 
                         return (
                             <div
                                 className={cn('flex items-center gap-2 p-2 overflow-hidden', {
-                                    'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
+                                    'bg-neutral-4': index % 2 === 0,
                                 })}
                                 key={index}>
                                 <Popover open={!!menuOpen[index]}>
@@ -127,14 +105,14 @@ const EntitySelectorsInformation: React.FC<{ memberId: string; tagType: string; 
                                         onInteractOutside={() => setMenuOpen({})}
                                         onEscapeKeyDown={() => setMenuOpen({})}>
                                         <div
-                                            className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
+                                            className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
                                                 handleViewClick(selector.id);
                                             }}>
                                             View
                                         </div>
                                         <div
-                                            className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
+                                            className='cursor-pointer p-2 hover:bg-neutral-4'
                                             onClick={() => {
                                                 handleEditClick(selector.id);
                                             }}>
@@ -142,7 +120,7 @@ const EntitySelectorsInformation: React.FC<{ memberId: string; tagType: string; 
                                         </div>
                                     </PopoverContent>
                                 </Popover>
-                                <div className='truncate max-w-[350px]' title={selector.name}>
+                                <div className='truncate]' title={selector.name}>
                                     {selector.name}
                                 </div>
                             </div>

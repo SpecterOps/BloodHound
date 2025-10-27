@@ -76,3 +76,8 @@ export function getStartAndEndDateTimes(start: string | undefined = '', end: str
 
 export const toDate = DateTime.local().toJSDate();
 export const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
+
+export const measureElement: ((element: Element) => number) | undefined =
+    typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined;

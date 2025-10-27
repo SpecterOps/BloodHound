@@ -55,11 +55,6 @@ export const createHistoryParams = (pageParam: number, filters: AssetGroupTagHis
     return params;
 };
 
-export const measureElement: ((element: Element) => number) | undefined =
-    typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined;
-
 export const actionMap: { label: string; value: string }[] = [
     { label: '', value: '' }, // Empty string added to list for adhering to `(typeof actionOptions)[number]` type
     { label: 'Create Tag', value: 'CreateTag' },
