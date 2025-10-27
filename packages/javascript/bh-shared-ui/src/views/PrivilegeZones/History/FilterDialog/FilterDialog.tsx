@@ -31,13 +31,13 @@ import { UseFormReturn, useForm } from 'react-hook-form';
 import { getStartAndEndDateTimes, validateFormDates } from '../..';
 import { END_DATE, START_DATE } from '../../../..';
 import { AppIcon } from '../../../../components';
+import TagIdField from '../../TagIdField';
 import { useHistoryTableContext } from '../HistoryTableContext';
 import { AssetGroupTagHistoryFilters } from '../types';
 import { DEFAULT_FILTER_VALUE } from '../utils';
 import ActionField from './ActionField';
 import { EndDateField, StartDateField } from './DateField';
 import MadeByField from './MadeByField';
-import TagIdField from './TagIdField';
 
 const FilterDialog: FC<{
     setFilters: (filters: AssetGroupTagHistoryFilters) => void;

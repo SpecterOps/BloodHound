@@ -30,8 +30,8 @@ import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { TagSelect, useTagsQuery } from '../../../../hooks';
-import { cn } from '../../../../utils';
+import { TagSelect, useTagsQuery } from '../../hooks';
+import { cn } from '../../utils';
 
 const TagIdField: FC<{
     fieldLabel: string;

@@ -48,7 +48,7 @@ import { AppIcon, MaskedInput } from '../../../components';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
 import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
 import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../utils';
-import TagIdField from '../History/FilterDialog/TagIdField';
+import TagIdField from '../TagIdField';
 import { fromDate, getStartAndEndDateTimes, toDate, validateFormDates } from '../utils';
 import { defaultFilterValues } from './constants';
 import { FilterFormValues } from './types';
