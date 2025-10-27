@@ -625,7 +625,6 @@ const CreateUserForm: React.FC<{
                                                 render={() => (
                                                     <FormItem className='flex flex-row items-center'>
                                                         <Checkbox
-                                                            //ref={allEnvironmentsCheckboxRef}
                                                             checked={
                                                                 allEnvironmentsSelected || allEnvironmentsIndeterminate
                                                             }
