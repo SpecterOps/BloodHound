@@ -171,7 +171,9 @@ export const useTagGlyphs = (glyphUtils: GlyphUtils, darkMode?: boolean) => {
     return glyphMap;
 };
 
-export const useTagsQuery = (queryOptions?: GenericQueryOptions<AssetGroupTag[]>) =>
+type useTagQueryOptions = GenericQueryOptions<AssetGroupTag[]>;
+export type TagSelect = useTagQueryOptions['select'];
+export const useTagsQuery = (queryOptions?: useTagQueryOptions) =>
     useQuery({
         queryKey: privilegeZonesKeys.tags() as unknown as string[],
         queryFn: ({ signal }) => getAssetGroupTags({ signal }),

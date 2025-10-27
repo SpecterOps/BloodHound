@@ -43,12 +43,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagCertificationRecord, AssetGroupTagTypeZone } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { UseFormReturn, useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../components';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
-import { useTagsQuery } from '../../../hooks';
 import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
 import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../utils';
+import TagIdField from '../History/FilterDialog/TagIdField';
 import { fromDate, getStartAndEndDateTimes, toDate, validateFormDates } from '../utils';
 import { defaultFilterValues } from './constants';
 import { FilterFormValues } from './types';
@@ -61,7 +61,6 @@ interface FilterDialogProps {
 
 //TODO: we need to consolidate this into one universal shared component but separating in the interest of time
 const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
-    const tagsQuery = useTagsQuery();
     const bloodHoundUsersQuery = useGetUsersMinimal();
     const [open, setOpen] = useState(false);
 
@@ -126,56 +125,10 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                             <VisuallyHidden asChild>
                                 <DialogDescription>Filter Privilege Zone Certifications</DialogDescription>
                             </VisuallyHidden>
-                            <FormField
-                                control={form.control}
-                                name='tagId'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel aria-labelledby='tag'>Zone</FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            defaultValue={field.value}>
-                                            <div className='flex gap-2'>
-                                                <FormControl className='w-11/12'>
-                                                    {tagsQuery.isError ? (
-                                                        <span className='text-error'>
-                                                            There was an error fetching this data. Please refresh the
-                                                            page to try again.
-                                                        </span>
-                                                    ) : (
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder='Select Zone' />
-                                                        </SelectTrigger>
-                                                    )}
-                                                </FormControl>
-                                                <Button
-                                                    variant={'text'}
-                                                    disabled={!field.value}
-                                                    className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                                    onClick={() => {
-                                                        form.setValue(field.name, '');
-                                                    }}>
-                                                    <FontAwesomeIcon icon={faClose} />
-                                                </Button>
-                                            </div>
-
-                                            {tagsQuery.isLoading ? (
-                                                <Skeleton className='h-10 w-24' />
-                                            ) : (
-                                                <SelectContent>
-                                                    {tagsQuery.data
-                                                        ?.filter(({ type }) => type === AssetGroupTagTypeZone)
-                                                        .map((tag) => (
-                                                            <SelectItem key={tag.id} value={tag.id.toString()}>
-                                                                {tag.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                </SelectContent>
-                                            )}
-                                        </Select>
-                                    </FormItem>
-                                )}
+                            <TagIdField
+                                fieldLabel='Zone'
+                                form={form as unknown as UseFormReturn}
+                                tagSelect={(data) => data.filter((tag) => tag.type === AssetGroupTagTypeZone)}
                             />
                             <FormField
                                 name='objectType'

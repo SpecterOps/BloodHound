@@ -27,7 +27,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { UseFormReturn, useForm } from 'react-hook-form';
 import { getStartAndEndDateTimes, validateFormDates } from '../..';
 import { END_DATE, START_DATE } from '../../../..';
 import { AppIcon } from '../../../../components';
@@ -110,7 +110,7 @@ const FilterDialog: FC<{
 
                         <ActionField form={form} />
 
-                        <TagIdField form={form} />
+                        <TagIdField form={form as unknown as UseFormReturn} fieldLabel='Zone/Label' />
 
                         <MadeByField form={form} />
 
