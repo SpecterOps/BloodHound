@@ -191,16 +191,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                     </Typography>
                 }>
                 <Box display='flex' justifyContent='flex-end' alignItems='center' minHeight='24px' mb={2}>
-                    {/* TODO: https://specterops.atlassian.net/browse/BED-6229 */}
-                    {/*
-                    <FeatureFlag
-                    flagKey='PUT_ETAC_FEATURE_FLAG_HERE'
-                        enabled={
-                        }
-                        disabled={
-                        }
-                    />
-                    */}
                     <CreateUserDialog
                         error={createUserMutation.error}
                         isLoading={createUserMutation.isLoading}
