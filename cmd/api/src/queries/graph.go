@@ -132,7 +132,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 }
 
 type Graph interface {
-	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, allEnv bool, etacList []model.EnvironmentAccess) (map[string]any, error)
+	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, allEnv bool, etacList []model.EnvironmentTargetedAccessControl) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
@@ -178,11 +178,11 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 	}
 }
 
-func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, allEnv bool, etacList []model.EnvironmentAccess) (map[string]any, error) {
+func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, user model.User) (map[string]any, error) {
 	var graphData = map[string]any{}
-	etacAllowedList := make([]string, 0, len(etacList))
+	etacAllowedList := make([]string, 0, len(user.EnvironmentTargetedAccessControl))
 
-	for _, envAccess := range etacList {
+	for _, envAccess := range user.EnvironmentTargetedAccessControl {
 		etacAllowedList = append(etacAllowedList, envAccess.EnvironmentID)
 	}
 
@@ -194,7 +194,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 			}
 
 			// eTAC feature flag
-			if etacEnabled && !allEnv {
+			if etacEnabled && !user.AllEnvironments {
 				filters = append(filters, query.Or(
 					query.In(query.NodeProperty(string(ad.DomainSID)), etacAllowedList),
 					query.In(query.NodeProperty(string(azure.TenantID)), etacAllowedList),
@@ -213,7 +213,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 			return err
 		} else {
 			if groups := assetGroupNodes.ContainingNodeKinds(ad.Group); groups.Len() > 0 {
-				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups, etacEnabled, allEnv, etacAllowedList); err != nil {
+				if groupMembershipPaths, err := analysis.ExpandGroupMembershipPaths(tx, groups, etacEnabled, user.AllEnvironments, etacAllowedList); err != nil {
 					return err
 				} else {
 					graphData = bloodhoundgraph.PathSetToBloodHoundGraph(groupMembershipPaths)
