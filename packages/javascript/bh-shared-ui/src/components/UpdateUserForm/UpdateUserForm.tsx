@@ -59,7 +59,6 @@ const UpdateUserForm: React.FC<{
     hasSelectedSelf: boolean;
     isLoading: boolean;
     error: any;
-    //open?: boolean;
     showEnvironmentAccessControls?: boolean;
 }> = ({ onSubmit, userId, hasSelectedSelf, isLoading, error, showEnvironmentAccessControls }) => {
     const getUserQuery = useQuery(
@@ -297,7 +296,7 @@ const UpdateUserFormInner: React.FC<{
                 message: 'An unexpected error occurred. Please try again.',
             });
         }
-    }, [form.formState.errors]);
+    }, [form, error, form.formState.errors]);
 
     console.log(form.watch());
 
