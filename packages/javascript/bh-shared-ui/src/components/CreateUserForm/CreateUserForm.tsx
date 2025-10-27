@@ -197,7 +197,7 @@ const CreateUserForm: React.FC<{
                 message: 'An unexpected error occurred. Please try again.',
             });
         }
-    }, [form.formState.errors]);
+    }, [form, error, form.formState.errors]);
 
     return (
         <Form {...form}>
