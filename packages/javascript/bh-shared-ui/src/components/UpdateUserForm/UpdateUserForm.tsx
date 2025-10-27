@@ -153,10 +153,7 @@ const UpdateUserFormInner: React.FC<{
     hasSelectedSelf: boolean;
     initialData: UpdateUserRequestForm;
     isLoading: boolean;
-    //open?: boolean;
     onSubmit: (user: UpdateUserRequestForm) => void;
-    //onSubmit: (user: UpdateUserRequest) => Promise<any>;
-
     roles?: Role[];
     showEnvironmentAccessControls?: boolean;
     SSOProviders?: SSOProvider[];
@@ -200,13 +197,6 @@ const UpdateUserFormInner: React.FC<{
 
     const returnMappedEnvironments: any = availableEnvironments?.map((environment) => environment.id);
 
-    // TODO: REMOVE?
-    /*
-    const formatReturnedEnvironments: EnvironmentRequest[] | null = returnMappedEnvironments?.map((item: string) => ({
-        environment_id: item,
-    }));
-    */
-
     const matchingEnvironmentValues = initialEnvironmentsSelected?.filter(
         (value) => returnMappedEnvironments && returnMappedEnvironments.includes(value)
     );
@@ -219,8 +209,6 @@ const UpdateUserFormInner: React.FC<{
     const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: any) => {
         if (allEnvironmentsChecked) {
             setSelectedEnvironments(returnMappedEnvironments);
-            //form.setValue('all_environments', true);
-            //form.setValue('environment_targeted_access_control.environments', null);
         } else {
             setSelectedEnvironments([]);
         }
@@ -274,7 +262,6 @@ const UpdateUserFormInner: React.FC<{
 
     const handleOnSave = () => {
         const values = form.getValues();
-        console.log(values);
 
         const formData = {
             email_address: values.email_address,
@@ -683,7 +670,6 @@ const UpdateUserFormInner: React.FC<{
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
-                                                        //ref={allEnvironmentsCheckboxRef}
                                                         checked={
                                                             allEnvironmentsSelected || allEnvironmentsIndeterminate
                                                         }
