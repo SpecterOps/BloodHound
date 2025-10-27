@@ -27,7 +27,7 @@ import type { FC } from 'react';
 import { JOB_STATUS_MAP } from '../../utils';
 
 type Props = {
-    /** Status options available in the select menu. Defaults to all iff not provided. */
+    /** Status options available in the select menu. Defaults to all if not provided. */
     statusOptions?: string[];
 
     /** Currently selected status. */
