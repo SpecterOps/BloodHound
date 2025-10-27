@@ -27,13 +27,20 @@ import type { FC } from 'react';
 import { JOB_STATUS_MAP } from '../../utils';
 
 type Props = {
-    statusOptions: string[];
+    /** Status options available in the select menu. Defaults to all iff not provided. */
+    statusOptions?: string[];
+
+    /** Currently selected status. */
     status?: number;
+
+    /** Callback for when a status is selected. */
     onSelect: (value: string) => void;
 };
 
 export const StatusSelect: FC<Props> = ({ status = '', statusOptions, onSelect }) => {
-    const STATUS_FILTERS = Object.entries(JOB_STATUS_MAP).filter(([, value]) => statusOptions.includes(value));
+    const STATUS_FILTERS = Object.entries(JOB_STATUS_MAP).filter(([, value]) =>
+        statusOptions ? statusOptions.includes(value) : true
+    );
 
     return (
         <div className='flex flex-col gap-2'>
