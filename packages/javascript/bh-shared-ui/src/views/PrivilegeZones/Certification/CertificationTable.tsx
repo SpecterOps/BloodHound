@@ -42,6 +42,7 @@ const tableCellProps: DataTableProps['TableCellProps'] = {
 type CertificationTableProps = {
     query: ReturnType<typeof useAssetGroupTagsCertificationsQuery>;
     onRowSelect: (row: AssetGroupTagCertificationRecord) => void;
+    onRowCheck: (row: AssetGroupTagCertificationRecord) => void;
     toggleAllRowsSelected: () => void;
     selectedRows: Record<string, boolean>;
     items: AssetGroupTagCertificationRecord[];
@@ -52,7 +53,8 @@ const CertificationTable: FC<CertificationTableProps> = ({
     toggleAllRowsSelected,
     query,
     onRowSelect,
-    selectedRows,
+    onRowCheck,
+    selectedRows = {},
     items,
     count,
 }) => {
@@ -76,7 +78,15 @@ const CertificationTable: FC<CertificationTableProps> = ({
         fetchMoreOnBottomReached(scrollRef.current);
     }, [fetchMoreOnBottomReached]);
 
-    const columns = useCertificationColumns({ onRowSelect, toggleAllRowsSelected });
+    const ids = Object.keys(selectedRows);
+    const allRowsAreSelected = ids.length > 0 && ids.length === items.length;
+
+    const columns = useCertificationColumns({
+        onRowSelect: onRowCheck,
+        toggleAllRowsSelected,
+        selectedRows,
+        allRowsAreSelected,
+    });
 
     const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
         count: totalFetched ?? 0,
@@ -94,12 +104,6 @@ const CertificationTable: FC<CertificationTableProps> = ({
             <DataTable
                 data={items}
                 onRowClick={onRowSelect}
-                tableOptions={{
-                    enableMultiRowSelection: true,
-                    getRowId: (row) => row.id.toString(),
-                    initialState: { rowSelection: selectedRows },
-                    state: { rowSelection: selectedRows },
-                }}
                 TableHeaderProps={tableHeaderProps}
                 TableHeadProps={tableHeadProps}
                 TableProps={tableProps}

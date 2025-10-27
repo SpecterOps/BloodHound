@@ -112,12 +112,18 @@ const columnHelper = createColumnHelper<AssetGroupTagCertificationRecord>();
 export const useCertificationColumns = ({
     onRowSelect,
     toggleAllRowsSelected,
+    selectedRows,
+    allRowsAreSelected,
 }: {
     onRowSelect: (row: AssetGroupTagCertificationRecord) => void;
     toggleAllRowsSelected: () => void;
+    selectedRows: Record<string, boolean>;
+    allRowsAreSelected: boolean;
 }) => {
     const { data: availableEnvironments = [] } = useAvailableEnvironments();
     const { data: assetGroupTags = [] } = useAssetGroupTags();
+
+    const ids = Object.keys(selectedRows);
 
     const environmentMap = useMemo(() => {
         const map = new Map<string, string>();
@@ -139,12 +145,8 @@ export const useCertificationColumns = ({
         return [
             columnHelper.display({
                 id: 'bulk_certify',
-                header: (header) => {
-                    const checked = header.table.getIsAllRowsSelected()
-                        ? true
-                        : header.table.getIsSomeRowsSelected()
-                          ? 'indeterminate'
-                          : false;
+                header: () => {
+                    const checked = allRowsAreSelected ? true : ids.length > 0 ? 'indeterminate' : false;
 
                     return (
                         <div className='flex justify-center'>
@@ -163,7 +165,7 @@ export const useCertificationColumns = ({
                         <Checkbox
                             onClick={(e) => e.stopPropagation()}
                             data-testid={`certification-table-row-${info.row.original.id}`}
-                            checked={info.row.getIsSelected()}
+                            checked={ids.includes(info.row.original.id.toString())}
                             onCheckedChange={() => {
                                 onRowSelect(info.row.original);
                             }}

@@ -164,14 +164,12 @@ const Certification = () => {
         [noRowsSelectedError, action, certifyMutation, selectedRows]
     );
 
-    const handleRowClick = useCallback(
+    const handleRowCheck = useCallback(
         (row: AssetGroupTagCertificationRecord) => {
             const ids = Object.keys(selectedRows);
             const someRowsAreSelected = ids.length > 0;
 
             if (someRowsAreSelected) {
-                clearSearchParams();
-
                 const clickedRowIsAlreadySelected = ids.includes(row.id.toString());
 
                 clickedRowIsAlreadySelected ? removeRowFromSelectedRows(row) : addRowToSelectedRows(row.id.toString());
@@ -181,7 +179,14 @@ const Certification = () => {
             addRowToSelectedRows(row.id.toString());
             setURLParamsForEntityInfo(row.id.toString(), row.asset_group_tag_id.toString());
         },
-        [selectedRows, clearSearchParams, addRowToSelectedRows, setURLParamsForEntityInfo, removeRowFromSelectedRows]
+        [selectedRows, addRowToSelectedRows, setURLParamsForEntityInfo, removeRowFromSelectedRows]
+    );
+
+    const handleRowSelect = useCallback(
+        (row: AssetGroupTagCertificationRecord) => {
+            setURLParamsForEntityInfo(row.id.toString(), row.asset_group_tag_id.toString());
+        },
+        [setURLParamsForEntityInfo]
     );
 
     const toggleAllRowsSelected = useCallback(() => {
@@ -245,7 +250,8 @@ const Certification = () => {
                     </CardHeader>
                     <CertificationTable
                         query={certificationsQuery}
-                        onRowSelect={handleRowClick}
+                        onRowSelect={handleRowSelect}
+                        onRowCheck={handleRowCheck}
                         toggleAllRowsSelected={toggleAllRowsSelected}
                         selectedRows={selectedRows}
                         items={certificationItems}
