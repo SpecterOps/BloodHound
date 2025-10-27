@@ -32,6 +32,7 @@ import {
 } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
+import { flexibleKeyboardOrClickHandler } from '../../../utils/AccessibleClickableDiv';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
@@ -263,7 +264,12 @@ const CypherSearchInner = ({
                     </div>
 
                     <div className='flex gap-2 shrink-0 '>
-                        <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                        <div
+                            role='button' // eslint-disable-line
+                            tabIndex={0}
+                            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, setFocusOnCypherEditor)}
+                            onClick={setFocusOnCypherEditor}
+                            className='flex-1'>
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(

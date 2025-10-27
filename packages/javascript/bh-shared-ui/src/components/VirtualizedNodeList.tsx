@@ -18,6 +18,7 @@ import { Tooltip } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMember, GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { cn } from '../utils';
+import { flexibleKeyboardOrClickHandler } from '../utils/AccessibleClickableDiv';
 import NodeIcon from './NodeIcon';
 
 export type NormalizedNodeItem = {
@@ -80,6 +81,8 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
 
     return (
         <li
+            tabIndex={0}
+            role='button' // eslint-disable-line
             className={cn(
                 'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5',
                 {
@@ -88,6 +91,7 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
             )}
             style={{ ...style }}
             onClick={() => normalizedItem.onClick?.(index)}
+            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, () => normalizedItem.onClick?.(index))}
             data-testid='entity-row'>
             <NodeIcon nodeType={normalizedItem.kind} />
             <Tooltip

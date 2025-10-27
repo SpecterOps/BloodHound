@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AnimationEvent, useState } from 'react';
+import { AnimationEvent, KeyboardEvent, MouseEvent, useState } from 'react';
 import { cn, copyToClipboard } from '../../utils';
+import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
 
 type CopyToClipboardButtonProps = {
     onAnimationStart?: (e: AnimationEvent<HTMLDivElement>) => void;
@@ -34,7 +35,7 @@ export const CopyToClipboardButton = ({
     value,
 }: CopyToClipboardButtonProps) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
-    const handleCopyToClipBoard: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const handleCopyToClipBoard = <T extends KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>>(e: T) => {
         e.stopPropagation(); // prevents the click event bubbling up the DOM and triggering the row click handler
         if (typeof value === 'string') {
             copyToClipboard(value);
@@ -48,7 +49,9 @@ export const CopyToClipboardButton = ({
         <>
             <div
                 role='button'
+                tabIndex={0}
                 onClick={handleCopyToClipBoard}
+                onKeyDown={(event) => flexibleKeyboardOrClickHandler(event, handleCopyToClipBoard)}
                 onAnimationStart={(animationEvent) => {
                     const element = animationEvent.target as HTMLElement;
 

@@ -14,14 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { FC, MouseEvent } from 'react';
+import { FC, KeyboardEvent, MouseEvent } from 'react';
 import { AppIcon } from '../../../../components';
+import { flexibleKeyboardOrClickHandler } from '../../../../utils/AccessibleClickableDiv';
 interface SaveQueryActionMenuProps {
     saveAs: () => void;
 }
 
 const SaveQueryActionMenu: FC<SaveQueryActionMenuProps> = ({ saveAs }) => {
-    const handleSaveAs = (event: MouseEvent) => {
+    const handleSaveAs = <T extends MouseEvent | KeyboardEvent>(event: T) => {
         event.stopPropagation();
         saveAs();
     };
@@ -36,7 +37,12 @@ const SaveQueryActionMenu: FC<SaveQueryActionMenuProps> = ({ saveAs }) => {
                 <AppIcon.CaretDown size={10} />
             </PopoverTrigger>
             <PopoverContent className='p-0 w-28'>
-                <div className={listItemStyles} onClick={handleSaveAs}>
+                <div
+                    role='button' // eslint-disable-line
+                    tabIndex={0}
+                    onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, handleSaveAs)}
+                    className={listItemStyles}
+                    onClick={handleSaveAs}>
                     Save As
                 </div>
             </PopoverContent>

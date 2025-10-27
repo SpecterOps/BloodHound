@@ -22,6 +22,7 @@ import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityI
 import { useExploreParams, usePZPathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
+import { flexibleKeyboardOrClickHandler } from '../../../utils/AccessibleClickableDiv';
 
 const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
     return (
@@ -124,17 +125,31 @@ const EntitySelectorsInformation: React.FC = () => {
                                         onInteractOutside={() => setMenuOpen({})}
                                         onEscapeKeyDown={() => setMenuOpen({})}>
                                         <div
+                                            role='button'
+                                            tabIndex={0}
                                             className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
                                             onClick={() => {
                                                 handleViewClick(selector.id);
-                                            }}>
+                                            }}
+                                            onKeyDown={(e) =>
+                                                flexibleKeyboardOrClickHandler(e, () => {
+                                                    handleViewClick(selector.id);
+                                                })
+                                            }>
                                             View
                                         </div>
                                         <div
                                             className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
+                                            role='button'
+                                            tabIndex={0}
                                             onClick={() => {
                                                 handleEditClick(selector.id);
-                                            }}>
+                                            }}
+                                            onKeyDown={(event) =>
+                                                flexibleKeyboardOrClickHandler(event, () =>
+                                                    handleEditClick(selector.id)
+                                                )
+                                            }>
                                             Edit
                                         </div>
                                     </PopoverContent>

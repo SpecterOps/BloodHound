@@ -18,7 +18,8 @@ import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
-import { useCallback, useMemo, useState } from 'react';
+import { KeyboardEvent, MouseEvent, useCallback, useMemo, useState } from 'react';
+import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
 import {
     compareForExploreTableSort,
     getExploreTableData,
@@ -90,10 +91,13 @@ const useExploreTableRowsAndColumns = ({
     );
 
     const handleKebabMenuClick = useCallback(
-        (e: React.MouseEvent, id: string) => {
+        <T extends MouseEvent | KeyboardEvent>(e: T, id: string) => {
             e.stopPropagation();
 
-            if (onKebabMenuClick) onKebabMenuClick({ x: e.clientX, y: e.clientY, id });
+            const x = e instanceof MouseEvent ? e.clientX : window.innerHeight / 2;
+            const y = e instanceof MouseEvent ? e.clientY : window.innerWidth / 2;
+
+            if (onKebabMenuClick) onKebabMenuClick({ x, y, id });
         },
         [onKebabMenuClick]
     );
@@ -145,8 +149,13 @@ const useExploreTableRowsAndColumns = ({
                 maxSize: 50,
                 cell: ({ row }) => (
                     <div
+                        tabIndex={0}
+                        role='button'
                         data-testid='kebab-menu'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
+                        onKeyDown={(e) =>
+                            flexibleKeyboardOrClickHandler(e, () => handleKebabMenuClick(e, row?.original?.id))
+                        }
                         className='explore-table-cell-icon h-full flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}

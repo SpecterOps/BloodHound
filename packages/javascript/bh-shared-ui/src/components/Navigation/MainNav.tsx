@@ -18,6 +18,7 @@ import { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
 import { cn } from '../../utils';
+import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
@@ -63,6 +64,9 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; allowHover: boo
 
     return (
         <li
+            role='button' // eslint-disable-line
+            tabIndex={0}
+            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, onClick)}
             onClick={onClick}
             className={cn(
                 baseLinkContainerStyles,
@@ -90,7 +94,9 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; allowHov
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
         // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
-            role='button'
+            role='button' // eslint-disable-line
+            tabIndex={0}
+            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, onClick)}
             onClick={onClick}
             className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': allowHover,

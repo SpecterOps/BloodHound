@@ -18,6 +18,7 @@ import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
 import { cn } from '../../../utils';
+import { flexibleKeyboardOrClickHandler } from '../../../utils/AccessibleClickableDiv';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 type ManageColumnsListItemProps = {
@@ -31,12 +32,20 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageColumnsListItemProps) => (
     <li
+        role='button' // eslint-disable-line
+        tabIndex={0}
         className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer'
         {...itemProps}
         onClick={(e) => {
             e.stopPropagation();
             onClick(item);
-        }}>
+        }}
+        onKeyDown={(event) =>
+            flexibleKeyboardOrClickHandler(event, () => {
+                event.stopPropagation();
+                onClick(item);
+            })
+        }>
         <div className="w-full text-left flex justify-between items-center'">
             <div>
                 <Checkbox

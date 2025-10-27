@@ -23,6 +23,7 @@ module.exports = {
         'plugin:react/recommended',
         'plugin:react/jsx-runtime',
         'plugin:react-hooks/recommended',
+        'plugin:jsx-a11y/recommended',
         'prettier',
     ],
     parser: '@typescript-eslint/parser',
@@ -36,6 +37,7 @@ module.exports = {
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/no-empty-function': 'off',
         'react/prop-types': 'off',
+        'jsx-a11y/no-autofocus': 'off',
     },
     settings: {
         react: {
