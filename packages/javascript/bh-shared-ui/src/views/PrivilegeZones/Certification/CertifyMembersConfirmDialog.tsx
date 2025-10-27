@@ -14,12 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    VisuallyHidden,
+} from '@bloodhoundenterprise/doodleui';
 import { TextField } from '@mui/material';
 import { FC, useState } from 'react';
 
 type CertifyMembersConfirmDialogProps = {
-    onConfirm: (withNote: boolean, note?: string) => void;
+    onConfirm: (note?: string) => void;
     onClose: () => void;
     open: boolean;
 };
@@ -32,30 +40,22 @@ const CertifyMembersConfirmDialog: FC<CertifyMembersConfirmDialogProps> = ({ onC
 
     return (
         <Dialog open={open} modal={true}>
-            <DialogContent
-                className=''
-                aria-describedby='textNote'
-                maxWidth='xs'
-                DialogOverlayProps={{ blurBackground: true }}>
+            <DialogContent aria-describedby='textNote' maxWidth='xs' DialogOverlayProps={{ blurBackground: true }}>
                 <DialogTitle className='flex'>Add note</DialogTitle>
-                <TextField
-                    multiline
-                    rows={8}
-                    maxRows={16}
-                    fullWidth
-                    id='textNote'
-                    value={note}
-                    onChange={handleChange}></TextField>
+                <VisuallyHidden>
+                    <DialogDescription>Add a note to your certification update</DialogDescription>
+                </VisuallyHidden>
+                <TextField multiline rows={8} fullWidth id='textNote' value={note} onChange={handleChange}></TextField>
                 <DialogActions>
                     <div className='flex w-full justify-between items-center'>
                         <Button onClick={onClose} variant='text'>
                             Cancel
                         </Button>
                         <div className='flex'>
-                            <Button onClick={() => onConfirm(false)} variant='text'>
+                            <Button onClick={() => onConfirm()} variant='text'>
                                 Skip Note
                             </Button>
-                            <Button onClick={() => onConfirm(true, note)} variant='text'>
+                            <Button onClick={() => onConfirm(note)} variant='text'>
                                 Save Note
                             </Button>
                         </div>

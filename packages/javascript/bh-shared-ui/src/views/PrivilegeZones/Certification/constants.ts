@@ -47,3 +47,5 @@ export const certificationCountTextMap: Record<string, string> = {
     'Automatic Certification': 'automatically certified',
     Rejected: 'rejected',
 };
+
+export const emptyPaginatedData = { pages: [{ count: 0, data: { members: [] } }] };

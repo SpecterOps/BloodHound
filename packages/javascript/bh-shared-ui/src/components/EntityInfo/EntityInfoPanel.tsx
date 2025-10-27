@@ -23,8 +23,8 @@ import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
 export type EntityTables = {
-    sectionProps: any;
-    TableComponent: React.FC<any>;
+    sectionProps: EntityInfoDataTableProps;
+    TableComponent: React.FC<EntityInfoDataTableProps>;
 }[];
 
 interface EntityInfoPanelProps {

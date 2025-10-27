@@ -19,6 +19,7 @@ import { AssetGroupTagsCertification, CertificationManual, CertificationRevoked 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as reactQuery from 'react-query';
+import { zoneHandlers } from '../../..';
 import { act, render, screen } from '../../../test-utils';
 import { apiClient } from '../../../utils';
 import Certification from './Certification';
@@ -95,7 +96,11 @@ vi.mock('../../../providers', async () => {
 });
 
 const server = setupServer(
-    rest.post(`/api/v2/asset-group-tags/certifications`, async (_, res, ctx) => {
+    ...zoneHandlers,
+    rest.get('/api/v2/bloodhound-users-minimal', (req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({ data: { users: [] } }));
+    }),
+    rest.post('/api/v2/asset-group-tags/certifications', async (_, res, ctx) => {
         return res(ctx.status(200));
     }),
     rest.get('/api/v2/features', async (_req, res, ctx) => {
@@ -139,7 +144,10 @@ describe('Certification', () => {
         const { container } = await act(async () => render(<Certification></Certification>));
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
-        await user.click(selectAllCheckbox);
+
+        await act(async () => {
+            await user.click(selectAllCheckbox);
+        });
 
         const certifyButton = await screen.findByText('Certify');
         expect(certifyButton).toBeInTheDocument();
@@ -165,18 +173,21 @@ describe('Certification', () => {
 
         expect(addNotificationMock).toBeCalledWith(
             'Selected Certification Successful',
-            'zone-management_update-certification_success',
+            'privilege-zones_update-certification_success',
             {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             }
         );
     });
+
     it('submits the selected items for certification without a note', async () => {
         await act(async () => render(<Certification></Certification>));
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
-        await user.click(selectAllCheckbox);
+        await act(async () => {
+            await user.click(selectAllCheckbox);
+        });
 
         const certifyButton = await screen.findByText('Certify');
         expect(certifyButton).toBeInTheDocument();
@@ -195,18 +206,21 @@ describe('Certification', () => {
         });
         expect(addNotificationMock).toBeCalledWith(
             'Selected Certification Successful',
-            'zone-management_update-certification_success',
+            'privilege-zones_update-certification_success',
             {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             }
         );
     });
+
     it('submits the selected items for revocation', async () => {
         await act(async () => render(<Certification></Certification>));
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
-        await user.click(selectAllCheckbox);
+        await act(async () => {
+            await user.click(selectAllCheckbox);
+        });
 
         const revokeButton = await screen.findByText('Revoke');
         expect(revokeButton).toBeInTheDocument();
@@ -225,12 +239,13 @@ describe('Certification', () => {
         });
         expect(addNotificationMock).toBeCalledWith(
             'Selected Revocation Successful',
-            'zone-management_update-certification_success',
+            'privilege-zones_update-revocation_success',
             {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             }
         );
     });
+
     it('does not call the API if no items are selected', async () => {
         const { container } = await act(async () => render(<Certification></Certification>));
 
@@ -258,6 +273,7 @@ describe('Certification', () => {
             }
         );
     });
+
     it('displays an error notification if the certification was unsuccessful', async () => {
         server.use(
             rest.post(`/api/v2/asset-group-tags/certifications`, async (_, res, ctx) => {
@@ -265,11 +281,15 @@ describe('Certification', () => {
             })
         );
 
+        console.error = vi.fn();
+
         await act(async () => render(<Certification></Certification>));
 
         const selectAllCheckbox = await screen.findByTestId('certification-table-select-all');
         expect(selectAllCheckbox).toBeInTheDocument();
-        await user.click(selectAllCheckbox);
+        await act(async () => {
+            await user.click(selectAllCheckbox);
+        });
 
         const certifyButton = await screen.findByText('Certify');
         expect(certifyButton).toBeInTheDocument();
@@ -286,24 +306,35 @@ describe('Certification', () => {
             member_ids: [1, 2, 3],
             action: CertificationManual,
         });
+
         expect(addNotificationMock).toBeCalledWith(
             'There was an error updating certification',
-            `zone-management_update-certification_error`,
+            'privilege-zones_update-certification_error',
             {
                 anchorOrigin: { vertical: 'top', horizontal: 'right' },
             }
         );
     });
+
     it('re-fetches the data if a certification status dropdown choice is selected', async () => {
         await act(async () => render(<Certification></Certification>));
+
         const certificationDropdown = await screen.findByText('Pending');
         expect(certificationDropdown).toBeInTheDocument();
+
         await user.click(certificationDropdown);
+
         const selection = await screen.findByText('User Certified');
         await user.click(selection);
+
         expect(useInfiniteQuerySpy).toHaveBeenLastCalledWith(
             expect.objectContaining({
-                queryKey: ['certifications', expect.objectContaining({ certificationStatus: 2 }), ''],
+                queryKey: [
+                    'privilege-zones',
+                    'certifications',
+                    expect.objectContaining({ certificationStatus: 2 }),
+                    '',
+                ],
             })
         );
     });
