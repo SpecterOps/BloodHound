@@ -143,11 +143,13 @@ const PrivilegeZones: FC = () => {
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
-                            <TabsTrigger
-                                value={certificationsPath}
-                                data-testid='privilege-zones_tab-list_certifications-tab'>
-                                Certifications
-                            </TabsTrigger>
+                            {Certification && (
+                                <TabsTrigger
+                                    value={certificationsPath}
+                                    data-testid='privilege-zones_tab-list_certifications-tab'>
+                                    Certifications
+                                </TabsTrigger>
+                            )}
                             <TabsTrigger value={historyPath} data-testid='privilege-zones_tab-list_history-tab'>
                                 History
                             </TabsTrigger>
