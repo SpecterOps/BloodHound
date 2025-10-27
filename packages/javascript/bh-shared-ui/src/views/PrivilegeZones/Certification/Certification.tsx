@@ -29,7 +29,6 @@ import { useSearchParams } from 'react-router-dom';
 import { SelectedNode, privilegeZonesKeys, useExploreParams, useMemberInfo, usePZQueryParams } from '../../..';
 import { AppIcon, DropdownOption, DropdownSelector, EntityInfoDataTable, EntityInfoPanel } from '../../../components';
 import { SearchInput } from '../../../components/SearchInput';
-import { zonesPath } from '../../../routes';
 import { EntityKinds, apiClient } from '../../../utils';
 import EntitySelectorsInformation from '../Details/EntitySelectorsInformation';
 import CertificationTable from './CertificationTable';
@@ -45,8 +44,6 @@ const allSelectedRowsFromItems = (items: AssetGroupTagCertificationRecord[]) => 
         return accumulator;
     }, {});
 };
-
-const emptyParams = new URLSearchParams();
 
 type CertifyAction = typeof CertificationManual | typeof CertificationRevoked;
 
@@ -94,8 +91,6 @@ const Certification = () => {
     };
 
     const clearSelectedRows = () => setSelectedRows({});
-
-    const clearSearchParams = useCallback(() => setSearchParams(emptyParams), [setSearchParams]);
 
     const addRowToSelectedRows = useCallback((id: string) => {
         setSelectedRows((prev) => {
@@ -265,10 +260,7 @@ const Certification = () => {
                         selectedNode={selectedNode}
                         priorityTables={[
                             {
-                                sectionProps: {
-                                    tagType: zonesPath,
-                                    tagId: memberQuery.data?.asset_group_tag_id,
-                                },
+                                sectionProps: { id: selectedNode?.id ?? '', label: 'Selectors' },
                                 TableComponent: EntitySelectorsInformation,
                             },
                         ]}

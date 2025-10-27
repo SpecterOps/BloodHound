@@ -18,23 +18,20 @@ import { Popover, PopoverContent, PopoverTrigger, Skeleton } from '@bloodhounden
 import { useCallback, useState } from 'react';
 import { AppIcon } from '../../../components';
 import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
-import { useExploreParams, useMemberInfo, usePZQueryParams } from '../../../hooks';
+import { useExploreParams, useMemberInfo, usePZPathParams, usePZQueryParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 import { cn, useAppNavigate } from '../../../utils';
 
-const EntitySelectorsInformation: React.FC<{ tagType: string; memberId?: string; tagId?: string }> = ({
-    tagType,
-    memberId,
-    tagId,
-}) => {
+const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const { setExploreParams, expandedPanelSections, selectedItem: selected } = useExploreParams();
-    const { assetGroupTagId: tag } = usePZQueryParams();
+    const { tagId: pathTagId, memberId: pathMemberId, tagType = 'zones' } = usePZPathParams();
+    const { assetGroupTagId: queryTagId } = usePZQueryParams();
 
-    const assetGroupTagId = tagId ? tagId : tag;
-    const selectedItem = memberId ? memberId : selected;
+    const assetGroupTagId = pathTagId ? pathTagId : queryTagId;
+    const selectedItem = pathMemberId ? pathMemberId : selected;
 
     const isExpandedPanelSection = expandedPanelSections?.includes('Selectors');
 
@@ -120,7 +117,7 @@ const EntitySelectorsInformation: React.FC<{ tagType: string; memberId?: string;
                                         </div>
                                     </PopoverContent>
                                 </Popover>
-                                <div className='truncate]' title={selector.name}>
+                                <div className='truncate' title={selector.name}>
                                     {selector.name}
                                 </div>
                             </div>

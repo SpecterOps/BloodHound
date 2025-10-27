@@ -22,7 +22,7 @@ import DynamicDetails from './DynamicDetails';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export const SelectedDetails: FC = () => {
-    const { selectorId, memberId, tagType, tagId } = usePZPathParams();
+    const { selectorId, memberId, tagId } = usePZPathParams();
 
     const tagQuery = useAssetGroupTagInfo(tagId);
 
@@ -43,7 +43,7 @@ export const SelectedDetails: FC = () => {
                     selectedNode={selectedNode}
                     additionalTables={[
                         {
-                            sectionProps: { memberId, tagType, tagId },
+                            sectionProps: { id: memberQuery.data.object_id, label: 'Selectors' },
                             TableComponent: EntitySelectorsInformation,
                         },
                     ]}
