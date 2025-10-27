@@ -19,8 +19,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { MaskedInput } from '../../components';
-import { END_DATE, LuxonFormat, START_DATE, cn } from '../../utils';
+import { MaskedInput } from '../../../components';
+import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../utils';
 
 const toDate = DateTime.local().toJSDate();
 const fromDate = DateTime.fromJSDate(toDate).minus({ years: 1 }).toJSDate();
