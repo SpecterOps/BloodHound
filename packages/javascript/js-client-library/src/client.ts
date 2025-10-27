@@ -932,6 +932,7 @@ class BHEAPIClient {
             headers: {
                 ...(options?.headers ?? {}),
                 'Content-Type': contentType,
+                'X-File-Upload-Name': json.name,
             },
         };
 
