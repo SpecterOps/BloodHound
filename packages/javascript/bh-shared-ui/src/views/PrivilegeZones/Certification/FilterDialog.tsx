@@ -40,14 +40,15 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagCertificationRecord } from 'js-client-library';
+import { AssetGroupTagCertificationRecord, AssetGroupTagTypeZone } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { UseFormReturn, useForm } from 'react-hook-form';
 import { AppIcon, MaskedInput } from '../../../components';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
 import { useGetUsersMinimal } from '../../../hooks/useGetUsers';
 import { END_DATE, LuxonFormat, START_DATE, cn } from '../../../utils';
+import TagIdField from '../TagIdField';
 import { fromDate, getStartAndEndDateTimes, toDate, validateFormDates } from '../utils';
 import { defaultFilterValues } from './constants';
 import { FilterFormValues } from './types';
@@ -124,6 +125,11 @@ const FilterDialog: FC<FilterDialogProps> = ({ filters, onApplyFilters }) => {
                             <VisuallyHidden asChild>
                                 <DialogDescription>Filter Privilege Zone Certifications</DialogDescription>
                             </VisuallyHidden>
+                            <TagIdField
+                                fieldLabel='Zone'
+                                form={form as unknown as UseFormReturn}
+                                tagSelect={(data) => data.filter((tag) => tag.type === AssetGroupTagTypeZone)}
+                            />
                             <FormField
                                 name='objectType'
                                 control={form.control}

@@ -29,6 +29,7 @@ export const defaultFilterValues: ExtendedCertificationFilters = {
     'start-date': '',
     'end-date': '',
     certificationStatus: CertificationPending,
+    tagId: '',
 };
 
 export const certOptions: DropdownOption[] = [

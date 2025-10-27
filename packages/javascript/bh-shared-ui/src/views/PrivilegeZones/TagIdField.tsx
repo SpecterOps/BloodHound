@@ -30,14 +30,15 @@ import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { useTagsQuery } from '../../../../hooks';
-import { cn } from '../../../../utils';
-import { AssetGroupTagHistoryFilters } from '../types';
+import { TagSelect, useTagsQuery } from '../../hooks';
+import { cn } from '../../utils';
 
 const TagIdField: FC<{
-    form: UseFormReturn<AssetGroupTagHistoryFilters>;
-}> = ({ form }) => {
-    const tagsQuery = useTagsQuery();
+    fieldLabel: string;
+    form: UseFormReturn;
+    tagSelect?: TagSelect;
+}> = ({ form, tagSelect, fieldLabel }) => {
+    const tagsQuery = useTagsQuery({ select: tagSelect });
 
     return (
         <FormField
@@ -45,7 +46,7 @@ const TagIdField: FC<{
             name='tagId'
             render={({ field }) => (
                 <FormItem>
-                    <FormLabel aria-labelledby='tag'>Zone/Label</FormLabel>
+                    <FormLabel aria-labelledby='tag'>{fieldLabel}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                         <div className='flex gap-2'>
                             <FormControl className='w-11/12'>
@@ -55,7 +56,7 @@ const TagIdField: FC<{
                                     </span>
                                 ) : (
                                     <SelectTrigger>
-                                        <SelectValue placeholder='Select' />
+                                        <SelectValue placeholder={`Select ${fieldLabel}`} />
                                     </SelectTrigger>
                                 )}
                             </FormControl>
