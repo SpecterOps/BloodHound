@@ -18,7 +18,7 @@ import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import clsx from 'clsx';
 import React, { DataHTMLAttributes } from 'react';
-import { flexibleKeyboardOrClickHandler } from '../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../utils/AccessibleClickableDiv';
 
 const useStyles = makeStyles((theme) => ({
     container: {
@@ -71,7 +71,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ title, active, icon, onClick, class
             role='button'
             className={clsx(classes.container, { active }, className)}
             onClick={onClick}
-            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, onClick)}
+            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onClick)}
             {...rest}>
             {icon && <Box className={classes.icon}>{icon}</Box>}
             <Box className={clsx(classes.title, 'noselect menu-item-title')}>{title}</Box>

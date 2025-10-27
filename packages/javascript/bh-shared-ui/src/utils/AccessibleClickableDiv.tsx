@@ -1,25 +1,17 @@
-import { KeyboardEvent, KeyboardEventHandler, MouseEvent, MouseEventHandler } from 'react';
+import { KeyboardEvent, KeyboardEventHandler } from 'react';
 
-export function flexibleKeyboardOrClickHandler(
+export function adaptClickHandlerToKeyDown(
     event: KeyboardEvent<HTMLElement>,
     handler: KeyboardEventHandler<HTMLElement>
-): void;
-export function flexibleKeyboardOrClickHandler(
-    event: MouseEvent<HTMLElement>,
-    handler: MouseEventHandler<HTMLElement>
-): void;
-
-export function flexibleKeyboardOrClickHandler(event: any, divEventHandler: any) {
+) {
     if ('key' in event) {
         if (event.key === 'Enter' || event.key === ' ') {
-            divEventHandler(event as KeyboardEventHandler<HTMLDivElement>);
+            handler(event);
         }
-    } else {
-        divEventHandler(event);
     }
 }
 
-// function flexibleKeyboardOrClickHandler(divEventHandler: any) {
+// function adaptClickHandlerToKeyDown(divEventHandler: any) {
 //     return (event: KeyboardEvent<HTMLDivElement>) => {
 //         if ('key' in event) {
 //             if (event.key === 'Enter' || event.key === ' ') {
@@ -40,7 +32,7 @@ export function flexibleKeyboardOrClickHandler(event: any, divEventHandler: any)
 // }) => (
 //     <div
 //         role='button'
-//         onKeyDown={flexibleKeyboardOrClickHandler(onClickAccessible as KeyboardEventHandler<HTMLDivElement>)}
+//         onKeyDown={adaptClickHandlerToKeyDown(onClickAccessible as KeyboardEventHandler<HTMLDivElement>)}
 //         tabIndex={0}
 //         {...rest}>
 //         {children}

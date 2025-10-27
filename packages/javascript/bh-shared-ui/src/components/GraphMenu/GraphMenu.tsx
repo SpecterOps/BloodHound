@@ -16,7 +16,7 @@
 
 import { Menu } from '@mui/material';
 import { Children, FC, ReactNode, useState } from 'react';
-import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
 import GraphButton from '../GraphButton';
 
 const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label }) => {
@@ -59,7 +59,7 @@ const GraphMenu: FC<{ label: string; children: ReactNode }> = ({ children, label
                         <div
                             tabIndex={0}
                             role='button'
-                            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, handleClose)}
+                            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleClose)}
                             onClick={handleClose}>
                             {child}
                         </div>

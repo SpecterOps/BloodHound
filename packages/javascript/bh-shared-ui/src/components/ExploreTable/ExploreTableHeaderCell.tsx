@@ -17,7 +17,7 @@ import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
-import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
 import { MungedTableRowWithId } from './explore-table-utils';
 
 const KEYS_TO_RENDER_AS_ICON = ['kind'];
@@ -49,7 +49,7 @@ const ExploreTableHeaderCell = ({
                     }
                 )}
                 onClick={onClick}
-                onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, onClick)}>
+                onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onClick)}>
                 <div className='truncate'>{label}</div>
                 <div className={cn('pl-2', { ['opacity-0']: sortBy !== headerKey })}>
                     {!sortOrder && <FontAwesomeIcon icon={faCaretDown} />}

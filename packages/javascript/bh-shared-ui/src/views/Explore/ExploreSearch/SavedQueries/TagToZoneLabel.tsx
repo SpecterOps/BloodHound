@@ -16,7 +16,7 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, useState } from 'react';
 import { AppIcon } from '../../../../components';
-import { flexibleKeyboardOrClickHandler } from '../../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../../utils/AccessibleClickableDiv';
 import { useSavedQueriesContext } from '../../providers';
 import TagToZoneLabelDialog from './TagToZoneLabelDialog';
 
@@ -64,7 +64,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                     <div
                         role='button' // eslint-disable-line
                         tabIndex={0}
-                        onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, tagToZone)}
+                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, tagToZone)}
                         className={listItemStyles}
                         onClick={tagToZone}>
                         Zone
@@ -72,7 +72,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                     <div
                         role='button' // eslint-disable-line
                         tabIndex={0}
-                        onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, tagToLabel)}
+                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, tagToLabel)}
                         className={listItemStyles}
                         onClick={tagToLabel}>
                         Label

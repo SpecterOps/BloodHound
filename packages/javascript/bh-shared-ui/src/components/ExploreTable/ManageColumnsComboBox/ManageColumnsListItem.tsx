@@ -18,7 +18,7 @@ import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
 import { cn } from '../../../utils';
-import { flexibleKeyboardOrClickHandler } from '../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../utils/AccessibleClickableDiv';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 type ManageColumnsListItemProps = {
@@ -41,7 +41,7 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
             onClick(item);
         }}
         onKeyDown={(event) =>
-            flexibleKeyboardOrClickHandler(event, () => {
+            adaptClickHandlerToKeyDown(event, () => {
                 event.stopPropagation();
                 onClick(item);
             })

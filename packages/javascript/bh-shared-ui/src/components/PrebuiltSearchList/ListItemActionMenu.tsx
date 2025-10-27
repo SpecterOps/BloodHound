@@ -16,7 +16,7 @@
 import { FC, KeyboardEvent, MouseEvent } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
@@ -63,7 +63,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                     <div
                         role='button'
                         tabIndex={0}
-                        onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, handleRun)}
+                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleRun)}
                         className={listItemStyles}
                         onClick={handleRun}>
                         Run
@@ -71,7 +71,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                     <div
                         role='button'
                         tabIndex={0}
-                        onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, handleEdit)}
+                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleEdit)}
                         className={listItemStyles}
                         onClick={handleEdit}>
                         Edit/Share
@@ -79,7 +79,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                     <div
                         role='button'
                         tabIndex={0}
-                        onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, handleDelete)}
+                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleDelete)}
                         className={listItemStyles}
                         onClick={handleDelete}>
                         Delete

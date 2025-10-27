@@ -19,7 +19,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import groupBy from 'lodash/groupBy';
 import { FC, useEffect, useRef } from 'react';
 import { QueryListSection } from '../../types';
-import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
@@ -104,7 +104,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                     key={`${id}-${idx}`}
                                                     onClick={() => clickHandler(query, id)}
                                                     onKeyDown={(e) =>
-                                                        flexibleKeyboardOrClickHandler(e, () => clickHandler(query, id))
+                                                        adaptClickHandlerToKeyDown(e, () => clickHandler(query, id))
                                                     }
                                                     ref={testMatch(name, id) ? itemRef : null}>
                                                     <div>

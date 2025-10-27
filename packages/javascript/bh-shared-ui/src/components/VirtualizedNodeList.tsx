@@ -18,7 +18,7 @@ import { Tooltip } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMember, GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { cn } from '../utils';
-import { flexibleKeyboardOrClickHandler } from '../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../utils/AccessibleClickableDiv';
 import NodeIcon from './NodeIcon';
 
 export type NormalizedNodeItem = {
@@ -91,7 +91,7 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
             )}
             style={{ ...style }}
             onClick={() => normalizedItem.onClick?.(index)}
-            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, () => normalizedItem.onClick?.(index))}
+            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, () => normalizedItem.onClick?.(index))}
             data-testid='entity-row'>
             <NodeIcon nodeType={normalizedItem.kind} />
             <Tooltip

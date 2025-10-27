@@ -18,7 +18,7 @@ import { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
 import { cn } from '../../utils';
-import { flexibleKeyboardOrClickHandler } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
 import { AppLink } from './AppLink';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
 
@@ -66,7 +66,7 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; allowHover: boo
         <li
             role='button' // eslint-disable-line
             tabIndex={0}
-            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, onClick)}
+            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onClick)}
             onClick={onClick}
             className={cn(
                 baseLinkContainerStyles,
@@ -96,7 +96,7 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; allowHov
         <div
             role='button' // eslint-disable-line
             tabIndex={0}
-            onKeyDown={(e) => flexibleKeyboardOrClickHandler(e, onClick)}
+            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onClick)}
             onClick={onClick}
             className={cn('h-10 w-auto flex items-center gap-x-2 hover:underline cursor-default', {
                 'group-hover:w-full cursor-pointer': allowHover,

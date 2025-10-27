@@ -22,7 +22,7 @@ import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityI
 import { useExploreParams, usePZPathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { flexibleKeyboardOrClickHandler } from '../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../utils/AccessibleClickableDiv';
 
 const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
     return (
@@ -132,7 +132,7 @@ const EntitySelectorsInformation: React.FC = () => {
                                                 handleViewClick(selector.id);
                                             }}
                                             onKeyDown={(e) =>
-                                                flexibleKeyboardOrClickHandler(e, () => {
+                                                adaptClickHandlerToKeyDown(e, () => {
                                                     handleViewClick(selector.id);
                                                 })
                                             }>
@@ -146,9 +146,7 @@ const EntitySelectorsInformation: React.FC = () => {
                                                 handleEditClick(selector.id);
                                             }}
                                             onKeyDown={(event) =>
-                                                flexibleKeyboardOrClickHandler(event, () =>
-                                                    handleEditClick(selector.id)
-                                                )
+                                                adaptClickHandlerToKeyDown(event, () => handleEditClick(selector.id))
                                             }>
                                             Edit
                                         </div>
