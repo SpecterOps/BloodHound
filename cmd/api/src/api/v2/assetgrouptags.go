@@ -624,12 +624,12 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 		} else {
 			if etacFlag.Enabled && !user.AllEnvironments {
 				accessList := ExtractEnvironmentIDsFromUser(&user)
-				filters = append(filters, query.And(
+				filters = append(filters,
 					query.Or(
 						query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
 						query.In(query.NodeProperty(azure.TenantID.String()), accessList),
 					),
-				))
+				)
 			}
 		}
 
