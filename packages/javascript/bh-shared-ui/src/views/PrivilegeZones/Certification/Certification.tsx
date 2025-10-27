@@ -23,7 +23,7 @@ import {
     CertificationTypeMap,
     UpdateCertificationRequest,
 } from 'js-client-library';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { useSearchParams } from 'react-router-dom';
 import { SelectedNode, privilegeZonesKeys, useExploreParams, useMemberInfo, usePZQueryParams } from '../../..';
@@ -71,7 +71,9 @@ const Certification = () => {
 
     const certificationsQuery = useAssetGroupTagsCertificationsQuery(filters, search);
     const certificationsData = certificationsQuery.data ?? emptyPaginatedData;
-    const certificationItems = certificationsData.pages.flatMap((page) => page.data?.members ?? []);
+    const certificationItems = useMemo(() => {
+        return certificationsData.pages.flatMap((page) => page.data?.members ?? []);
+    }, [certificationsData]);
     const count = certificationsData.pages[0].count;
 
     const setURLParamsForEntityInfo = useCallback(
@@ -98,22 +100,14 @@ const Certification = () => {
         });
     }, []);
 
-    const removeRowFromSelectedRows = useCallback(
-        (rowData: AssetGroupTagCertificationRecord) => {
-            setSelectedRows((prev) => {
-                const newRows = { ...prev };
-                delete newRows[rowData.id.toString()];
+    const removeRowFromSelectedRows = useCallback((rowData: AssetGroupTagCertificationRecord) => {
+        setSelectedRows((prev) => {
+            const newRows = { ...prev };
+            delete newRows[rowData.id.toString()];
 
-                const ids = Object.keys(newRows);
-
-                const oneRowLeftSelected = ids.length === 1;
-                if (oneRowLeftSelected) setURLParamsForEntityInfo(ids[0], rowData.asset_group_tag_id.toString());
-
-                return newRows;
-            });
-        },
-        [setURLParamsForEntityInfo]
-    );
+            return newRows;
+        });
+    }, []);
 
     const { certificationSuccess, revocationSuccess, updateError, noRowsSelectedError } =
         useCertificationNotifications();
@@ -172,9 +166,8 @@ const Certification = () => {
             }
 
             addRowToSelectedRows(row.id.toString());
-            setURLParamsForEntityInfo(row.id.toString(), row.asset_group_tag_id.toString());
         },
-        [selectedRows, addRowToSelectedRows, setURLParamsForEntityInfo, removeRowFromSelectedRows]
+        [selectedRows, addRowToSelectedRows, removeRowFromSelectedRows]
     );
 
     const handleRowSelect = useCallback(

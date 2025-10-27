@@ -163,7 +163,9 @@ export const useCertificationColumns = ({
                 cell: (info) => (
                     <div className='flex justify-center'>
                         <Checkbox
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                            }}
                             data-testid={`certification-table-row-${info.row.original.id}`}
                             checked={ids.includes(info.row.original.id.toString())}
                             onCheckedChange={() => {
