@@ -13,15 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package model
+// attr supplies custom slog.Attr constructors
+package attr
 
-// EnvironmentAccess defines the model for a row in the environment_access_control table
-type EnvironmentAccess struct {
-	UserID        string `json:"user_id"`
-	EnvironmentID string `json:"environment_id"`
-	BigSerial
-}
+import "log/slog"
 
-func (EnvironmentAccess) TableName() string {
-	return "environment_access_control"
+func Error(value error) slog.Attr {
+	return slog.String("err", value.Error())
 }

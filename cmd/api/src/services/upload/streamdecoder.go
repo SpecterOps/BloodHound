@@ -30,6 +30,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
@@ -184,7 +185,7 @@ func (s *tagScanner) nextToken() (json.Token, error) {
 func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
 	var m ingest.Metadata
 	if err := decoder.Decode(&m); err != nil {
-		slog.Warn("Found invalid metatag, skipping", slog.String("err", err.Error()))
+		slog.Warn("Found invalid metatag, skipping", attr.Error(err))
 		return ingest.Metadata{}, nil
 	}
 	if !m.Type.IsValid() {
@@ -217,7 +218,7 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 				if tok, err := scanner.nextToken(); err != nil {
 					return ingest.Metadata{}, ErrInvalidJSON
 				} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenSquareBracket {
-					slog.Warn("expected '[' after data key", slog.Any("got", tok))
+					slog.Warn("Expected '[' after data key", slog.Any("got", tok))
 					return ingest.Metadata{}, ingest.ErrDataTagNotFound
 				}
 				dataFound = true
@@ -239,7 +240,7 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, sch
 				if shouldValidateGraph {
 					if err := ValidateGraph(scanner.decoder, schema); err != nil {
 						if report, ok := err.(ValidationReport); ok {
-							slog.With("validation", report).Warn("opengraph ingest failed")
+							slog.Warn("Opengraph ingest failed", slog.Any("validation", report))
 						}
 						return meta, err
 					}

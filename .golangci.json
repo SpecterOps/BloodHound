@@ -61,6 +61,10 @@
             "unused"
           ],
           "path": "dawgs/util/size/(.+)"
+        },
+        {
+          "path": "packages/go/bhlog/measure/measure\\.go",
+          "text": "message should be a string literal or a constant"
         }
       ]
     },
@@ -76,6 +80,14 @@
         "enable": [
           "nilness"
         ]
+      },
+      "sloglint": {
+        "kv-only": false,
+        "attr-only": true,
+        "static-msg": true,
+        "msg-style": "capitalized",
+        "key-naming-case": "snake",
+        "args-on-sep-lines": true
       }
     }
   },
@@ -100,6 +112,10 @@
       },
       {
         "text": "QF([0-9]+):",
+        "severity": "minor"
+      },
+      {
+        "text": "message should be a string literal or a constant",
         "severity": "minor"
       }
     ]

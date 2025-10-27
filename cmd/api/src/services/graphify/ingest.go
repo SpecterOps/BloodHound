@@ -62,11 +62,14 @@ type IngestContext struct {
 	IngestTime time.Time
 	// Manager is the caching layer that deduplicates ingest payloads across ingest runs
 	Manager ChangeManager
+	// Stats tracks the number of nodes and relationships processed during ingestion
+	Stats *IngestStats
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
 	ic := &IngestContext{
-		Ctx: ctx,
+		Ctx:   ctx,
+		Stats: &IngestStats{}, // Always initialize stats
 	}
 
 	for _, opt := range opts {
@@ -97,7 +100,8 @@ func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 }
 
 func (s *IngestContext) BindBatchUpdater(batch BatchUpdater) {
-	s.Batch = batch
+	// Always wrap the batch with counting to track stats
+	s.Batch = NewCountingBatchUpdater(batch, s.Stats)
 }
 
 func (s *IngestContext) HasChangelog() bool {
@@ -331,7 +335,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no metadata found in opengraph payload; continuing to nodes")
+			slog.Debug("No metadata found in opengraph payload; continuing to nodes")
 		} else {
 			var meta ein.GenericMetadata
 			if err := decoder.Decode(&meta); err != nil {
@@ -349,7 +353,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no nodes found in opengraph payload; continuing to edges")
+			slog.Debug("No nodes found in opengraph payload; continuing to edges")
 		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
 			return err
 		}
@@ -359,7 +363,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no edges found in opengraph payload")
+			slog.Debug("No edges found in opengraph payload")
 		} else {
 			return DecodeGenericData(batch, decoder, sourceKind, ConvertGenericEdge)
 		}

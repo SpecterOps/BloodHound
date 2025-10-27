@@ -26,8 +26,19 @@ const Disable2FADialog: React.FC<{
     error?: string;
     secret: string;
     onSecretChange: (e: any) => void;
+    showPasswordConfirmation?: boolean;
     contentText: string;
-}> = ({ open, onClose, onCancel, onSave, error, secret, onSecretChange, contentText }) => {
+}> = ({
+    open,
+    onClose,
+    onCancel,
+    onSave,
+    error,
+    secret,
+    onSecretChange,
+    showPasswordConfirmation = true,
+    contentText,
+}) => {
     const handleOnSave: React.FormEventHandler = (e) => {
         e.preventDefault();
         onSave(secret);
@@ -44,20 +55,22 @@ const Disable2FADialog: React.FC<{
                     </Alert>
                     <DialogContentText>{contentText}</DialogContentText>
 
-                    <TextField
-                        id='secret'
-                        name='secret'
-                        value={secret}
-                        onChange={onSecretChange}
-                        type='password'
-                        label='Password'
-                        variant='outlined'
-                        margin='dense'
-                        fullWidth
-                        autoFocus
-                        error={!!error}
-                        helperText={error}
-                    />
+                    {showPasswordConfirmation && (
+                        <TextField
+                            id='secret'
+                            name='secret'
+                            value={secret}
+                            onChange={onSecretChange}
+                            type='password'
+                            label='Password'
+                            variant='outlined'
+                            margin='dense'
+                            fullWidth
+                            autoFocus
+                            error={!!error}
+                            helperText={error}
+                        />
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button type='button' variant='tertiary' onClick={onCancel}>
