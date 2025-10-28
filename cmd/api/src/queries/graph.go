@@ -132,7 +132,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 }
 
 type Graph interface {
-	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, allEnv bool, etacList []model.EnvironmentTargetedAccessControl) (map[string]any, error)
+	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string, etacEnabled bool, user model.User) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByName(ctx context.Context, nodeKinds graph.Kinds, nameQuery string, skip int, limit int) ([]model.SearchResult, error)
