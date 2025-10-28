@@ -6708,8 +6708,7 @@
         "description": "Retrieves certification status for nodes selected by a zone",
         "tags": [
           "Asset Isolation",
-          "Enterprise",
-          "Community"
+          "Enterprise"
         ],
         "parameters": [
           {
