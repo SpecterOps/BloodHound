@@ -197,18 +197,18 @@ func (mr *MockGraphMockRecorder) GetAllShortestPaths(ctx, startNodeID, endNodeID
 }
 
 // GetAssetGroupComboNode mocks base method.
-func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, owningObjectID, assetGroupTag string) (map[string]any, error) {
+func (m *MockGraph) GetAssetGroupComboNode(ctx context.Context, owningObjectID, assetGroupTag string, etacEnabled bool, user model.User) (map[string]any, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, owningObjectID, assetGroupTag)
+	ret := m.ctrl.Call(m, "GetAssetGroupComboNode", ctx, owningObjectID, assetGroupTag, etacEnabled, user)
 	ret0, _ := ret[0].(map[string]any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupComboNode indicates an expected call of GetAssetGroupComboNode.
-func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(ctx, owningObjectID, assetGroupTag any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetAssetGroupComboNode(ctx, owningObjectID, assetGroupTag, etacEnabled, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), ctx, owningObjectID, assetGroupTag)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupComboNode", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupComboNode), ctx, owningObjectID, assetGroupTag, etacEnabled, user)
 }
 
 // GetAssetGroupNodes mocks base method.
