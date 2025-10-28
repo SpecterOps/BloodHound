@@ -205,4 +205,30 @@ describe('Details', async () => {
             ).toBeInTheDocument();
         });
     });
+
+    it('renders edit zones button when on Zones page', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        render(
+            <Routes>
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
+            </Routes>,
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
+        );
+
+        expect(await screen.findByText(/Edit Zone/)).toBeInTheDocument();
+    });
+
+    it('renders edit label button when on Labels page', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
+        render(
+            <Routes>
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/2/${detailsPath}`} element={<Details />} />
+            </Routes>,
+            { route: `/${privilegeZonesPath}/${zonesPath}/2/${detailsPath}` }
+        );
+
+        longWait(async () => {
+            expect(screen.findByRole('button', { name: /edit label/i })).toBeInTheDocument();
+        });
+    });
 });
