@@ -99,14 +99,18 @@ func TestWorkspace(cwd string, modPath string, profileDir string, env environmen
 		return fmt.Errorf("go test at %v: %w", modPath, err)
 	}
 
-	file, err := os.Create(cwd + "/go-test-results.json")
-	if err != nil {
-		return fmt.Errorf("error creating/opening a file: %w", err)
+	if goReporting {
+		file, err := os.Create(filepath.Join(cwd, "go-test-results.json"))
+		if err != nil {
+			return fmt.Errorf("error creating a file: %w", err)
+		}
+
+		defer file.Close()
+
+		if _, err := file.Write(output.StandardOutput.Bytes()); err != nil {
+			return fmt.Errorf("error writing test results: %w", err)
+		}
 	}
-
-	defer file.Close()
-
-	file.Write(output.StandardOutput.Bytes())
 
 	if manifestFile, err := os.Create(filepath.Join(profileDir, CoverageManifest)); err != nil {
 		return fmt.Errorf("create manifest file: %w", err)
