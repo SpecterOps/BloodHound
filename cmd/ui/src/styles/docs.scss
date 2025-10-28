@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+@use 'colors';
+
 #docs {
     display: flex;
     flex-direction: row;
@@ -48,7 +50,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background: $docs-blue;
+            background: colors.$docs-blue;
             .version {
                 color: rgba(255, 255, 255, 0.3);
                 text-align: center;
@@ -125,7 +127,7 @@
             .search-result-item {
                 padding: 20px 0;
                 a {
-                    color: $docs-blue;
+                    color: colors.$docs-blue;
                     font-size: 1.4em;
                 }
             }

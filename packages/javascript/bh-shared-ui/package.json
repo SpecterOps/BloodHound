@@ -9,7 +9,7 @@
     ],
     "type": "module",
     "scripts": {
-        "build": "yarn check-types && rollup -c rollup.config.js",
+        "build": "pnpm check-types && rollup -c rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "TZ=America/Los_Angeles vitest",
         "check-types": "tsc --noEmit --pretty",
@@ -101,9 +101,5 @@
         "@mui/styles": "5.x",
         "react": "18.x",
         "react-dom": "18.x"
-    },
-    "packageManager": "yarn@3.5.1",
-    "installConfig": {
-        "hoistingLimits": "workspaces"
     }
 }

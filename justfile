@@ -67,21 +67,21 @@ check-license *ARGS:
 go *ARGS:
   @cd cmd/api/src && go {{ARGS}}
 
-# run yarn commands in the context of the workspace root
-yarn-local *ARGS="":
-  @yarn {{ARGS}}
+# run pnpm commands in the context of the workspace root
+pnpm-local *ARGS="":
+  @pnpm {{ARGS}}
 
-# run yarn commands in the context of the workspace root and rebuild containers
-yarn *ARGS="": && (bh-dev "build bh-ui")
-  @yarn {{ARGS}}
+# run pnpm commands in the context of the workspace root and rebuild containers
+pnpm *ARGS="": && (bh-dev "build bh-ui")
+  @pnpm {{ARGS}}
 
 # build js-client-library
 build-js-client *ARGS="":
-  @cd packages/javascript/js-client-library && yarn build
+  @cd packages/javascript/js-client-library && pnpm build
 
 # build bh-shared-ui
 build-shared-ui *ARGS="":
-  @cd packages/javascript/bh-shared-ui && yarn build
+  @cd packages/javascript/bh-shared-ui && pnpm build
 
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:

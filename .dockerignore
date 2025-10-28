@@ -14,6 +14,20 @@ coverage
 node_modules
 **/node_modules
 
+# Yarn (legacy)
+.yarn/cache
+.yarn/install-state.gz
+.yarnrc.yml
+yarn.lock
+
+# pnpm
+.pnpm-store
+.pnpm-debug.log
+
+# NX
+.nx/cache
+.nx/workspace-data
+
 # kubernetes manifests
 ./k8s
 

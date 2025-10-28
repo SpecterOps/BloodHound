@@ -1,0 +1,1256 @@
+{
+  "packages/javascript/bh-shared-ui": {
+    "root": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "packages/javascript/bh-shared-ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.cache": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.inputs": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.executor": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.cwd": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.command": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.description": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies": [
+      "packages/javascript/bh-shared-ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies.0": [
+      "packages/javascript/bh-shared-ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.command": [
+      "packages/javascript/bh-shared-ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.example": [
+      "packages/javascript/bh-shared-ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps.dependsOn": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.dependsOn": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.executor": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options.command": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies.1": [
+      "packages/javascript/bh-shared-ui/vitest.config.js",
+      "@nx/vite/plugin"
+    ],
+    "name": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:public": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.description": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageMain": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish.executor": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish.dependsOn": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish.options": [
+      "packages/javascript/bh-shared-ui/package.json",
+      "nx/core/package-json"
+    ],
+    "$schema": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.type:library": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.commands": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.parallel": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.command": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.cwd": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.executor": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.dependsOn": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options.command": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options.cwd": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.executor": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.command": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.cwd": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.executor": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options.command": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options.cwd": [
+      "packages/javascript/bh-shared-ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  "cmd/ui": {
+    "root": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.dependsOn": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.outputs": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.metadata": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.metadata.technologies": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.metadata.technologies.0": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.metadata.description": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.metadata.help": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.metadata.help.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.metadata.help.example": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.options": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.executor": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.options.cwd": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.options.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.technologies": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.technologies.0": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.description": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.help": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.help.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.help.example": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve.metadata.deprecated": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.metadata": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.metadata.technologies": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev.metadata.technologies.0": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev.metadata.description": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev.metadata.help": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev.metadata.help.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev.metadata.help.example": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.dependsOn": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.metadata": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.metadata.technologies": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.metadata.technologies.0": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.metadata.description": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.metadata.help": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.metadata.help.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.metadata.help.example": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.executor": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.options": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.options.buildTarget": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.options.spa": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.cache": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.inputs": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.executor": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.cwd": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.description": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies.0": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.example": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps.dependsOn": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.dependsOn": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.executor": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options.command": [
+      "cmd/ui/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "name": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "cmd/ui/package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:private": [
+      "cmd/ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "cmd/ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "cmd/ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "cmd/ui/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "cmd/ui/package.json",
+      "nx/core/package-json"
+    ],
+    "$schema": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.type:app": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.debug": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.debug.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.debug.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.debug.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.debug.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.start": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.start.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.start.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.start.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.start.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.dependsOn": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.executor": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options.command": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options.cwd": [
+      "cmd/ui/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  "packages/javascript/js-client-library": {
+    "root": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.cache": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.inputs": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.executor": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.cwd": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.command": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.description": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies.0": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.command": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.example": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps.dependsOn": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.dependsOn": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.executor": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options.command": [
+      "packages/javascript/js-client-library/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "name": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:public": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageMain": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish.executor": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish.dependsOn": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "targets.nx-release-publish.options": [
+      "packages/javascript/js-client-library/package.json",
+      "nx/core/package-json"
+    ],
+    "$schema": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.type:library": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.commands": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.parallel": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.command": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.cwd": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.executor": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options.command": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-types.options.cwd": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.executor": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.command": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.cwd": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.executor": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options.command": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.check-format.options.cwd": [
+      "packages/javascript/js-client-library/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-types.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.check-format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  }
+}

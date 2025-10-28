@@ -4,7 +4,8 @@
 > and running the Debian package on Kali Linux
 
 podman run -it -v .:/src/BloodHound docker.io/kalilinux/kali-last-release
-apt update && apt install devscripts sed jq wget dh-golang golang-any yarnpkg
+apt update && apt install devscripts sed jq wget dh-golang golang-any nodejs npm
+npm install -g pnpm@9.0.0
 cd /src/BloodHound && debuild -uc -b
 (copy out deb packages from /src/)
 

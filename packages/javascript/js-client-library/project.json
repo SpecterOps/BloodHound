@@ -1,0 +1,57 @@
+{
+  "name": "js-client-library",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/javascript/js-client-library/src",
+  "projectType": "library",
+  "tags": ["type:library"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "commands": [
+          "pnpm check-types",
+          "rollup --config rollup.config.js"
+        ],
+        "cwd": "packages/javascript/js-client-library",
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "cwd": "packages/javascript/js-client-library"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo \"Warning: no test specified\"",
+        "cwd": "packages/javascript/js-client-library"
+      }
+    },
+    "check-types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --pretty",
+        "cwd": "packages/javascript/js-client-library"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
+        "cwd": "packages/javascript/js-client-library"
+      }
+    },
+    "check-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
+        "cwd": "packages/javascript/js-client-library"
+      }
+    }
+  }
+}
+

@@ -1,0 +1,11 @@
+[2m> [22mpnpm check-types
+
+
+> js-client-library@ check-types /Users/nando/Code/bhce/packages/javascript/js-client-library
+> tsc --noEmit --pretty
+
+[2m> [22mrollup --config rollup.config.js
+
+[36m
+[1msrc/index.ts[22m → [1mdist[22m...[39m
+[32mcreated [1mdist[22m in [1m951ms[22m[39m

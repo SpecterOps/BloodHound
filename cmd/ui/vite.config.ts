@@ -26,6 +26,13 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [react(), glsl()],
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    api: 'modern-compiler',
+                },
+            },
+        },
         resolve: {
             alias: {
                 src: path.resolve(__dirname, './src'),

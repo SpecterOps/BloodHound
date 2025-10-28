@@ -1,0 +1,83 @@
+{
+  "name": "bloodhound-ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cmd/ui/src",
+  "projectType": "application",
+  "tags": ["type:app"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "cmd/ui"
+      }
+    },
+    "debug": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite --debug",
+        "cwd": "cmd/ui"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "cmd/ui"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview",
+        "cwd": "cmd/ui"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "dependsOn": ["^build", "check-types"],
+      "options": {
+        "command": "vite build",
+        "cwd": "cmd/ui"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "TZ=America/Los_Angeles vitest",
+        "cwd": "cmd/ui"
+      }
+    },
+    "check-types": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "tsc --noEmit --pretty",
+        "cwd": "cmd/ui"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "cwd": "cmd/ui"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
+        "cwd": "cmd/ui"
+      }
+    },
+    "check-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
+        "cwd": "cmd/ui"
+      }
+    }
+  }
+}
+

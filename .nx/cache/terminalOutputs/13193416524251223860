@@ -1,0 +1,64 @@
+[2m> [22mpnpm check-types
+
+
+> bh-shared-ui@ check-types /Users/nando/Code/bhce/packages/javascript/bh-shared-ui
+> tsc --noEmit --pretty
+
+[96msrc/components/AssetGroupEdit/AssetGroupEdit.test.tsx[0m:[93m69[0m:[93m23[0m - [91merror[0m[90m TS2531: [0mObject is possibly 'null'.
+
+[7m69[0m         const count = screen.getByText('Total Count').nextSibling.textContent;
+[7m  [0m [91m                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/AssetGroupEdit/AssetGroupEdit.test.tsx[0m:[93m78[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'value' does not exist on type 'HTMLElement'.
+
+[7m78[0m         expect(input.value).toEqual('test');
+[7m  [0m [91m                     ~~~~~[0m
+
+[96msrc/components/AssetGroupEdit/AssetGroupEdit.test.tsx[0m:[93m90[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'value' does not exist on type 'HTMLElement'.
+
+[7m90[0m         expect(input.value).toEqual('test');
+[7m  [0m [91m                     ~~~~~[0m
+
+[96msrc/components/AssetGroupEdit/AssetGroupEdit.test.tsx[0m:[93m108[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'value' does not exist on type 'HTMLElement'.
+
+[7m108[0m         expect(input.value).toEqual('test');
+[7m   [0m [91m                     ~~~~~[0m
+
+[96msrc/components/AssetGroupFilters/AssetGroupFilters.test.tsx[0m:[93m51[0m:[93m15[0m - [91merror[0m[90m TS2322: [0mType 'RenderResult<typeof import("/Users/nando/Code/bhce/node_modules/@testing-library/dom/types/queries"), HTMLElement, HTMLElement>' is not assignable to type 'Screen'.
+  Type 'RenderResult<typeof import("/Users/nando/Code/bhce/node_modules/@testing-library/dom/types/queries"), HTMLElement, HTMLElement>' is not assignable to type '{ getByLabelText<T extends HTMLElement = HTMLElement>(id: Matcher, options?: SelectorMatcherOptions | undefined): T; getAllByLabelText<T extends HTMLElement = HTMLElement>(id: Matcher, options?: SelectorMatcherOptions | undefined): T[]; ... 45 more ...; findAllByTestId<T extends HTMLElement = HTMLElement>(id: Matche...'.
+    The types returned by 'getByLabelText(...)' are incompatible between these types.
+      Type 'HTMLElement' is not assignable to type 'T'.
+        'HTMLElement' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'HTMLElement'.
+
+[7m51[0m         const screen: Screen = await act(async () => {
+[7m  [0m [91m              ~~~~~~[0m
+
+[96msrc/components/HelpTexts/CodeController/CodeController.test.tsx[0m:[93m25[0m:[93m15[0m - [91merror[0m[90m TS2322: [0mType 'RenderResult<typeof import("/Users/nando/Code/bhce/node_modules/@testing-library/dom/types/queries"), HTMLElement, HTMLElement>' is not assignable to type 'Screen'.
+  Type 'RenderResult<typeof import("/Users/nando/Code/bhce/node_modules/@testing-library/dom/types/queries"), HTMLElement, HTMLElement>' is not assignable to type '{ getByLabelText<T extends HTMLElement = HTMLElement>(id: Matcher, options?: SelectorMatcherOptions | undefined): T; getAllByLabelText<T extends HTMLElement = HTMLElement>(id: Matcher, options?: SelectorMatcherOptions | undefined): T[]; ... 45 more ...; findAllByTestId<T extends HTMLElement = HTMLElement>(id: Matche...'.
+    The types returned by 'getByLabelText(...)' are incompatible between these types.
+      Type 'HTMLElement' is not assignable to type 'T'.
+        'HTMLElement' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'HTMLElement'.
+
+[7m25[0m         const screen: Screen = await act(async () => {
+[7m  [0m [91m              ~~~~~~[0m
+
+[96msrc/components/UpsertSSOProviders/SSOProviderConfigForm.tsx[0m:[93m132[0m:[93m42[0m - [91merror[0m[90m TS2345: [0mArgument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+[7m132[0m                             value={isNaN(field.value) ? '' : field.value.toString()}
+[7m   [0m [91m                                         ~~~~~~~~~~~[0m
+
+[96msrc/components/UpsertSSOProviders/SSOProviderConfigForm.tsx[0m:[93m132[0m:[93m62[0m - [91merror[0m[90m TS18048: [0m'field.value' is possibly 'undefined'.
+
+[7m132[0m                             value={isNaN(field.value) ? '' : field.value.toString()}
+[7m   [0m [91m                                                             ~~~~~~~~~~~[0m
+
+
+Found 8 errors in 4 files.
+
+Errors  Files
+     4  src/components/AssetGroupEdit/AssetGroupEdit.test.tsx[90m:69[0m
+     1  src/components/AssetGroupFilters/AssetGroupFilters.test.tsx[90m:51[0m
+     1  src/components/HelpTexts/CodeController/CodeController.test.tsx[90m:25[0m
+     2  src/components/UpsertSSOProviders/SSOProviderConfigForm.tsx[90m:132[0m
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 2.[39m

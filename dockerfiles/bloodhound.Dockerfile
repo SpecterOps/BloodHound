@@ -62,12 +62,16 @@ RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VER
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/node:22-alpine3.20 AS ui-builder
 
-WORKDIR /build
-COPY --parents constraints.pro package.json **/package.json yarn* .yarn*  ./
-RUN yarn install
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
-COPY --parents cmd/ui packages/javascript ./
-RUN yarn build
+WORKDIR /build
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* .npmrc ./
+COPY --parents **/package.json ./
+RUN pnpm install --frozen-lockfile
+
+COPY --parents cmd/ui packages/javascript nx.json ./
+RUN pnpm build
 
 ########
 # Version Build

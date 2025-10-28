@@ -19,9 +19,13 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./.yarnrc.yml
+          path: ./.npmrc
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
         - action: rebuild
           path: ./package.json
+        - action: rebuild
+          path: ./nx.json
         - action: rebuild
           path: ./cmd/ui
           ignore:

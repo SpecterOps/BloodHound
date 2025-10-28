@@ -1,0 +1,9 @@
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+.pnpm-debug.log
+
+# NX
+.nx/cache
+.nx/workspace-data
+

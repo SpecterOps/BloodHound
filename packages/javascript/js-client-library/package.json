@@ -1,7 +1,6 @@
 {
     "name": "js-client-library",
     "type": "module",
-    "packageManager": "yarn@3.5.1",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
@@ -9,7 +8,7 @@
         "README.md"
     ],
     "scripts": {
-        "build": "yarn check-types && rollup --config rollup.config.js",
+        "build": "pnpm check-types && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "echo \"Warning: no test specified\"",
         "check-types": "tsc --noEmit --pretty",
@@ -30,8 +29,5 @@
         "rollup": "^4.13.2",
         "rollup-plugin-delete": "^2.0.0",
         "typescript": "^5.1.6"
-    },
-    "installConfig": {
-        "hoistingLimits": "workspaces"
     }
 }

@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+@use 'colors';
+
 .node-search-container {
     input {
         font-size: small;
@@ -32,10 +34,10 @@
         }
         fieldset {
             legend {
-                color: $light-blue;
+                color: colors.$light-blue;
             }
             .icon {
-                background: $grey;
+                background: colors.$grey;
                 border: 1px solid #000;
                 border-radius: 2px;
                 font-size: 0.9rem;
@@ -46,7 +48,7 @@
 }
 
 .context-menu {
-    color: $offblack;
+    color: colors.$offblack;
     .title {
         display: block;
         padding: 8px 12px;

@@ -1,0 +1,32 @@
+{
+  "run": {
+    "command": "nx run-many -t build",
+    "startTime": "2025-10-28T21:59:13.069Z",
+    "endTime": "2025-10-28T21:59:22.009Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "js-client-library:build",
+      "target": "build",
+      "projectName": "js-client-library",
+      "hash": "8543381590335938360",
+      "startTime": "2025-10-28T21:59:13.099Z",
+      "endTime": "2025-10-28T21:59:15.853Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "bh-shared-ui:build",
+      "target": "build",
+      "projectName": "bh-shared-ui",
+      "hash": "13193416524251223860",
+      "startTime": "2025-10-28T21:59:15.865Z",
+      "endTime": "2025-10-28T21:59:22.007Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    }
+  ]
+}

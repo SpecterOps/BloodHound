@@ -18,8 +18,8 @@ More detailed information regarding [contributing](https://github.com/SpecterOps
     - `just` has many installation options, but the simplest option may be to install the npm package using node
 - [NodeJS v22](https://nodejs.org/en)
     - installation using a node version manager like [nvm](https://github.com/nvm-sh/nvm) or [n](https://github.com/tj/n) is recommended
-- [Yarn v3.6](https://v3.yarnpkg.com/getting-started/install)
-    - installation using `npm corepack` is recommended (instructions in the link above)
+- [pnpm v9.0](https://pnpm.io/installation)
+    - installation using `npm install -g pnpm@9.0.0` or `corepack enable && corepack prepare pnpm@9.0.0 --activate` is recommended
 - [Go v1.24](https://go.dev/dl/)
   - [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) is also needed
   - make sure `$HOME/go/bin` (or wherever your Go packages are installed) is in your `$PATH`

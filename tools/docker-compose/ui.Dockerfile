@@ -17,26 +17,30 @@
 FROM docker.io/library/node:22-alpine AS base
 
 # Setup
-RUN mkdir /.yarn && chmod -R go+w /.yarn
 RUN mkdir /.cache && chmod -R go+w /.cache
+RUN mkdir /.local && chmod -R go+w /.local
 RUN corepack enable
-RUN corepack prepare yarn@stable --activate
+RUN corepack prepare pnpm@9.0.0 --activate
 
 # BloodHound Workspace files
 WORKDIR /bloodhound
 COPY package.json ./
-COPY yarn.lock ./
-COPY .yarnrc.yml ./
-COPY .yarn ./.yarn
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml* ./
+COPY .npmrc ./
+COPY nx.json ./
 
 # Shared Project Files
 WORKDIR /bloodhound/packages/javascript
 COPY packages/javascript/bh-shared-ui/package.json ./bh-shared-ui/
+COPY packages/javascript/bh-shared-ui/project.json ./bh-shared-ui/
 COPY packages/javascript/js-client-library/package.json ./js-client-library/
+COPY packages/javascript/js-client-library/project.json ./js-client-library/
 
 # BloodHound Project Files
 WORKDIR /bloodhound/cmd/ui
 COPY cmd/ui/package.json ./
+COPY cmd/ui/project.json ./
 COPY cmd/ui/vite.config.ts ./
 COPY cmd/ui/tsconfig.node.json ./
 COPY cmd/ui/tsconfig.json ./
@@ -45,6 +49,6 @@ COPY cmd/ui/postcss.config.js ./
 COPY cmd/ui/tailwind.config.js ./
 COPY cmd/ui/index.html ./
 
-WORKDIR /bloodhound/cmd/ui
+WORKDIR /bloodhound
 
-RUN yarn
+RUN pnpm install
