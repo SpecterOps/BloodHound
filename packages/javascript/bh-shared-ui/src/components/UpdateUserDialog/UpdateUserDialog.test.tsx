@@ -163,6 +163,7 @@ describe('UpdateUserDialog', () => {
                 onClose={testOnClose}
                 onSave={testOnSave}
                 open={true}
+                showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
                 userId={'1'}
             />
         );

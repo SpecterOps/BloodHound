@@ -165,7 +165,6 @@ const CreateUserForm: React.FC<{
 
     const handleOnSave = () => {
         const values = form.getValues();
-        console.log(values);
 
         const formData = {
             email_address: values.email_address,
