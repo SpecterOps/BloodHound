@@ -130,7 +130,7 @@ const Details: FC = () => {
                             asChild={showEditButton || !saveLink}
                             variant={'secondary'}
                             disabled={showEditButton || !saveLink}>
-                            <AppLink to={saveLink || ''}>Edit {editButtonTitle} </AppLink>
+                            <AppLink to={saveLink || ''}>Edit {editButtonTitle}</AppLink>
                         </Button>
                     )}
                 </div>

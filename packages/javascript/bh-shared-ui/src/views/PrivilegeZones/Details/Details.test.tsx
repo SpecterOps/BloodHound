@@ -219,7 +219,7 @@ describe('Details', async () => {
     });
 
     it('renders edit label button when on Labels page', async () => {
-        vi.mocked(useParams).mockReturnValue({ zoneId: '2', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ zoneId: 'undefined', labelId: '2' });
         render(
             <Routes>
                 <Route path={`/${privilegeZonesPath}/${zonesPath}/2/${detailsPath}`} element={<Details />} />
