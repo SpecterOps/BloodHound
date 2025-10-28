@@ -298,8 +298,6 @@ const UpdateUserFormInner: React.FC<{
         }
     }, [form, error, form.formState.errors]);
 
-    console.log(form.watch());
-
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave, onError)}>
@@ -728,7 +726,7 @@ const UpdateUserFormInner: React.FC<{
                                                                         value={item.name}
                                                                     />
                                                                     <FormLabel
-                                                                        className=' w-full cursor-pointer ml-3 w-full cursor-pointer font-medium !text-sm'
+                                                                        className='w-full cursor-pointer ml-3 font-medium !text-sm'
                                                                         htmlFor='environments'>
                                                                         {item.name}
                                                                     </FormLabel>
