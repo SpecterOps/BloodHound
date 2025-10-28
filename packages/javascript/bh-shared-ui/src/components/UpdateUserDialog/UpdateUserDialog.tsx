@@ -63,10 +63,10 @@ const UpdateUserDialog: React.FC<{
                         className='!bg-transparent !pointer-events-auto overflow-y-auto max-h-screen'
                         data-testid='update-user-dialog'>
                         <VisuallyHidden asChild>
-                            <>
-                                <DialogTitle />
-                                <DialogDescription />
-                            </>
+                            <DialogTitle>Update User Dialog</DialogTitle>
+                        </VisuallyHidden>
+                        <VisuallyHidden asChild>
+                            <DialogDescription>Update User Dialog</DialogDescription>
                         </VisuallyHidden>
                         <UpdateUserForm
                             error={error}
