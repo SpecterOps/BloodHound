@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/dawgs/graph"
 )
@@ -84,7 +85,7 @@ func main() {
 			slog.Error(
 				"Failed to configure logging to file",
 				slog.String("path", cfg.LogPath),
-				slog.String("err", err.Error()),
+				attr.Error(err),
 			)
 		} else {
 			defer logFile.Close()

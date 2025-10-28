@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -148,9 +149,9 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
 		if err != nil {
-			slog.Error("Failed to wipe database after command completion", slog.String("error", err.Error()))
+			slog.ErrorContext(ctx, "Failed to wipe database after command completion", attr.Error(err))
 		} else {
-			slog.Info("Successfully wiped database")
+			slog.InfoContext(ctx, "Successfully wiped database")
 		}
 	}
 }
@@ -168,7 +169,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 		if err != nil {
 			return fmt.Errorf("precommand wipe database: %w", err)
 		} else {
-			slog.Info("Successfully wiped database during initialization")
+			slog.InfoContext(ctx, "Successfully wiped database during initialization")
 		}
 	}
 
@@ -448,7 +449,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 		for _, err := range errs {
 			errStrings = append(errStrings, err.Error())
 		}
-		slog.Warn("errors occurred while ingesting files", slog.Any("errors", errStrings))
+		slog.WarnContext(ctx, "Errors occurred while ingesting files", slog.Any("errors", errStrings))
 	}
 
 	return nil

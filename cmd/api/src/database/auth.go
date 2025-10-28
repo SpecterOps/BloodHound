@@ -299,9 +299,9 @@ func (s *BloodhoundDB) UpdateUser(ctx context.Context, user model.User) error {
 		}
 
 		// Clear a user's etac list before applying their new one when saving the user model
-		if user.AllEnvironments || user.EnvironmentAccessControl != nil {
+		if user.AllEnvironments || user.EnvironmentTargetedAccessControl != nil {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
-			if err := bhdb.DeleteEnvironmentListForUser(ctx, user); err != nil {
+			if err := bhdb.DeleteEnvironmentTargetedAccessControlForUser(ctx, user); err != nil {
 				return fmt.Errorf("error deleting user's environment list: %w", err)
 			}
 		}

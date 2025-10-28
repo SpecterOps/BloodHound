@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 func generateLicenseHeader(commentPrefix string) string {
@@ -43,7 +45,7 @@ func generateLicenseHeader(commentPrefix string) string {
 		formattedHeader.WriteString("/*\n")
 	}
 
-	for _, line := range strings.Split(licenseHeader, "\n") {
+	for line := range strings.SplitSeq(licenseHeader, "\n") {
 		// We grab the copyright line and edit the year into it inline for efficiency
 		if strings.HasPrefix(line, "Copyright") {
 			line = strings.ReplaceAll(line, "XXXX", year)
@@ -94,11 +96,19 @@ func writeFile(path string, formattedHeaderContent string) error {
 	// We want to make sure to both close and remove the temporary file when we leave this function, so do it all in one defer
 	defer func() {
 		if err := tmpFile.Close(); err != nil {
-			slog.Error("could not close temporary file", slog.String("err", err.Error()), slog.String("tmpFile", tmpFile.Name()))
+			slog.Error(
+				"Could not close temporary file",
+				attr.Error(err),
+				slog.String("tmp_file", tmpFile.Name()),
+			)
 		}
 
 		if err := os.Remove(tmpFile.Name()); err != nil {
-			slog.Error("could not remove temporary file", slog.String("err", err.Error()), slog.String("tmpFile", tmpFile.Name()))
+			slog.Error(
+				"Could not remove temporary file",
+				attr.Error(err),
+				slog.String("tmp_file", tmpFile.Name()),
+			)
 		}
 	}()
 
@@ -194,7 +204,7 @@ func writeFile(path string, formattedHeaderContent string) error {
 			}
 			linesBuffered = 0
 		} else {
-			linesBuffered += 1
+			linesBuffered++
 		}
 	}
 	// Handle any additional scanner errors

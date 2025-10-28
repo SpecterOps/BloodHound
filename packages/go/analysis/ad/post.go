@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -34,44 +33,6 @@ import (
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util/channels"
 )
-
-func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{
-		ad.DCSync,
-		ad.ProtectAdminGroups,
-		ad.SyncLAPSPassword,
-		ad.CanRDP,
-		ad.AdminTo,
-		ad.CanPSRemote,
-		ad.ExecuteDCOM,
-		ad.TrustedForNTAuth,
-		ad.IssuedSignedBy,
-		ad.EnterpriseCAFor,
-		ad.GoldenCert,
-		ad.ADCSESC1,
-		ad.ADCSESC3,
-		ad.ADCSESC4,
-		ad.ADCSESC6a,
-		ad.ADCSESC6b,
-		ad.ADCSESC10a,
-		ad.ADCSESC10b,
-		ad.ADCSESC9a,
-		ad.ADCSESC9b,
-		ad.ADCSESC13,
-		ad.EnrollOnBehalfOf,
-		ad.SyncedToEntraUser,
-		ad.Owns,
-		ad.WriteOwner,
-		ad.ExtendedByPolicy,
-		ad.CoerceAndRelayNTLMToADCS,
-		ad.CoerceAndRelayNTLMToSMB,
-		ad.CoerceAndRelayNTLMToLDAP,
-		ad.CoerceAndRelayNTLMToLDAPS,
-		ad.GPOAppliesTo,
-		ad.CanApplyGPO,
-		ad.HasTrustKeys,
-	}
-}
 
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
@@ -635,43 +596,41 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 }
 
 func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (cardinality.Duplex[uint64], error) {
-	if remoteDesktopUsers, err := FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, enforceURA); err != nil {
-		return cardinality.NewBitmap64(), err
-	} else if remoteDesktopUsers.Cardinality() == 0 || !citrixEnabled {
-		return remoteDesktopUsers, nil
-	} else {
-		// Citrix enabled
-		if directAccessUsersGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
-			if graph.IsErrNotFound(err) {
-				// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
-				return remoteDesktopUsers, nil
-			}
-			return cardinality.NewBitmap64(), err
-		} else {
-			if dauGroupMembers, ok := localGroupExpansions.Cardinality(directAccessUsersGroup.ID.Uint64()).(cardinality.Duplex[uint64]); !ok {
-				return cardinality.NewBitmap64(), errors.New("type assertion failed in FetchCanRDPEntityBitmapForComputer")
-			} else {
-				dauGroupMembers.And(remoteDesktopUsers)
-				return dauGroupMembers, nil
-			}
-		}
-	}
-}
+	var (
+		uraEnabled    = enforceURA || ComputerHasURACollection(tx, computer)
+		rdpGroup, err = FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
+	)
 
-// returns a bitmap containing the ID's of all entities that have RDP privileges to the specified computer via membership to the "Remote Desktop Users" AD group
-func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint64], error) {
-	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String()); err != nil {
+	if err != nil {
 		if graph.IsErrNotFound(err) {
 			return cardinality.NewBitmap64(), nil
 		}
+		return nil, err
+	}
 
-		return nil, err
-	} else if enforceURA || ComputerHasURACollection(tx, computer) {
-		return ProcessRDPWithUra(tx, rdpLocalGroup, computer, localGroupExpansions)
-	} else if bitmap, err := FetchLocalGroupBitmapForComputer(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String()); err != nil {
-		return nil, err
+	// Shortcut opportunity when citrix is disabled: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
+	canSkipURAProcessing := !uraEnabled || HasRemoteInteractiveLogonRight(tx, rdpGroup.ID, computer)
+
+	if citrixEnabled {
+		if dauGroup, err := FetchComputerLocalGroupByName(tx, computer, "Direct Access Users"); err != nil {
+			// "Direct Access Users" is a group that Citrix creates.  If the group does not exist, then the computer does not have Citrix installed and post-processing logic can continue by enumerating the "Remote Desktop Users" AD group.
+			if graph.IsErrNotFound(err) {
+				return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, rdpGroup, canSkipURAProcessing)
+			}
+
+			return nil, err
+		} else if !uraEnabled {
+			// In cases where we do not need to check for the existence of the RIL privilege, return the cross product of both groups
+			return CalculateCrossProductNodeSets(tx, localGroupExpansions, []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}), nil
+		} else if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
+			return nil, err
+		} else {
+			// Otherwise, return the cross product of all three criteria
+			return CalculateCrossProductNodeSets(tx, localGroupExpansions, []*graph.Node{rdpGroup}, []*graph.Node{dauGroup}, baseRilEntities.Slice()), nil
+		}
 	} else {
-		return bitmap, nil
+		// When the citrix flag is disabled, fall back to our original implementation
+		return FetchRemoteDesktopUsersBitmapForComputer(tx, computer, localGroupExpansions, rdpGroup, canSkipURAProcessing)
 	}
 }
 
@@ -689,25 +648,18 @@ func ComputerHasURACollection(tx graph.Transaction, computerID graph.ID) bool {
 	}
 }
 
+func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, rdpGroup *graph.Node, skipURA bool) (cardinality.Duplex[uint64], error) {
+	if skipURA {
+		return FetchLocalGroupBitmapForComputer(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String())
+	} else {
+		return ProcessRDPWithUra(tx, rdpGroup, computer, localGroupExpansions)
+	}
+}
+
 func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer graph.ID, localGroupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
 	rdpLocalGroupMembers := localGroupExpansions.Cardinality(rdpLocalGroup.ID.Uint64()).(cardinality.Duplex[uint64])
-	// Shortcut opportunity: see if the RDP group has RIL privilege. If it does, get the first degree members and return those ids, since everything in RDP group has CanRDP privs. No reason to look any further
-	if HasRemoteInteractiveLogonRight(tx, rdpLocalGroup.ID, computer) {
-		firstDegreeMembers := cardinality.NewBitmap64()
 
-		return firstDegreeMembers, tx.Relationships().Filter(
-			query.And(
-				query.Kind(query.Relationship(), ad.MemberOfLocalGroup),
-				query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
-				query.Equals(query.EndID(), rdpLocalGroup.ID),
-			),
-		).FetchTriples(func(cursor graph.Cursor[graph.RelationshipTripleResult]) error {
-			for result := range cursor.Chan() {
-				firstDegreeMembers.Add(result.StartID.Uint64())
-			}
-			return cursor.Error()
-		})
-	} else if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
+	if baseRilEntities, err := FetchRemoteInteractiveLogonRightEntities(tx, computer); err != nil {
 		return nil, err
 	} else {
 		var (
@@ -715,7 +667,7 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 			secondaryTargets = cardinality.NewBitmap64()
 		)
 
-		// Attempt 2: look at each RIL entity directly and see if it has membership to the RDP group. If not, and it's a group, expand its membership for further processing
+		// Attempt 1: look at each RIL entity directly and see if it has membership to the RDP group. If not, and it's a group, expand its membership for further processing
 		for _, entity := range baseRilEntities {
 			if rdpLocalGroupMembers.Contains(entity.ID.Uint64()) {
 				// If we have membership to the RDP group, then this is a valid CanRDP entity
@@ -725,7 +677,7 @@ func ProcessRDPWithUra(tx graph.Transaction, rdpLocalGroup *graph.Node, computer
 			}
 		}
 
-		// Attempt 3: Look at each member of expanded groups and see if they have the correct permissions
+		// Attempt 2: Look at each member of expanded groups and see if they have the correct permissions
 		for _, entity := range secondaryTargets.Slice() {
 			// If we have membership to the RDP group then this is a valid CanRDP entity
 			if rdpLocalGroupMembers.Contains(entity) {

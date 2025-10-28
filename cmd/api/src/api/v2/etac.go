@@ -27,16 +27,16 @@ type UpdateEnvironmentRequest struct {
 	EnvironmentID string `json:"environment_id"`
 }
 
-type UpdateUserEnvironmentAccessControlRequest struct {
+type UpdateUserETACRequest struct {
 	Environments []UpdateEnvironmentRequest `json:"environments"`
 }
 
-func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentAccessControlData, user model.User, environments ...string) (bool, error) {
+func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentTargetedAccessControlData, user model.User, environments ...string) (bool, error) {
 	if user.AllEnvironments {
 		return true, nil
 	}
 
-	allowedList, err := db.GetEnvironmentAccessListForUser(ctx, user)
+	allowedList, err := db.GetEnvironmentTargetedAccessControlForUser(ctx, user)
 
 	if err != nil {
 		return false, err
@@ -56,4 +56,16 @@ func CheckUserAccessToEnvironments(ctx context.Context, db database.EnvironmentA
 	}
 
 	return true, nil
+}
+
+// ExtractEnvironmentIDsFromUser is a helper function
+// to extract a user's environments from their model as a list of strings
+func ExtractEnvironmentIDsFromUser(user *model.User) []string {
+	list := make([]string, 0, len(user.EnvironmentTargetedAccessControl))
+
+	for _, envAccess := range user.EnvironmentTargetedAccessControl {
+		list = append(list, envAccess.EnvironmentID)
+	}
+
+	return list
 }
