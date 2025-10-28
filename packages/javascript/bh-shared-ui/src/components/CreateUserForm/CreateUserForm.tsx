@@ -588,7 +588,7 @@ const CreateUserForm: React.FC<{
                                     </Button>
                                 </DialogClose>
                                 <Button
-                                    data-testid='update-user-dialog_button-save'
+                                    data-testid='create-user-dialog_button-save'
                                     disabled={isLoading}
                                     role='button'
                                     type='submit'>
