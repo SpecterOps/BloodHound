@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -40,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -558,6 +560,195 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 		}
 
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
+	}
+}
+
+type assetGroupTagUpdateRequest struct {
+	Name            *string     `json:"name"`
+	Description     *string     `json:"description"`
+	Position        null.Int32  `json:"position"`
+	RequireCertify  null.Bool   `json:"require_certify"`
+	AnalysisEnabled null.Bool   `json:"analysis_enabled"`
+	Glyph           null.String `json:"glyph"`
+}
+
+func HasValidTagName(assetGroupTagName string) bool {
+	validNameRegex := regexp.MustCompile("^[a-zA-Z0-9 _]+$")
+	return validNameRegex.MatchString(assetGroupTagName)
+}
+
+func CheckTagGlyph(glyph null.String, tagType model.AssetGroupTagType, tagPosition null.Int32) error {
+	if !glyph.Valid {
+		return nil
+	}
+
+	if tagType != model.AssetGroupTagTypeTier {
+		return fmt.Errorf("only zones support custom glyphs")
+	}
+
+	if tagPosition.ValueOrZero() == 1 {
+		return fmt.Errorf("tier zero glyph cannot be modified")
+	}
+
+	// don't allow the glyph to be set to something that resembles tier zero or owned.
+	if glyph.String == model.TierZeroGlyph || glyph.String == model.OwnedGlyph {
+		return fmt.Errorf("glyphs similar to tier zero or owned not allowed")
+	}
+
+	return nil
+}
+
+func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *http.Request) {
+	var (
+		tagUpdates    assetGroupTagUpdateRequest
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&tagUpdates); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else {
+		fieldMatched := false
+		tagUpdated := false
+		kindRefreshNeeded := false
+		analysisNeeded := false
+
+		if tagUpdates.Name != nil {
+			fieldMatched = true
+			if *tagUpdates.Name == "" {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "name can not be empty", request), response)
+				return
+			} else if (tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == 1) || tag.Type == model.AssetGroupTagTypeOwned {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "renaming default tags is forbidden currently", request), response)
+				return
+			} else if !HasValidTagName(*tagUpdates.Name) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalidTagName, request), response)
+				return
+			}
+			if tag.Name != *tagUpdates.Name {
+				tagUpdated = true
+				kindRefreshNeeded = true
+				tag.Name = *tagUpdates.Name
+			}
+		}
+
+		if tagUpdates.Description != nil {
+			fieldMatched = true
+			if tag.Description != *tagUpdates.Description {
+				tagUpdated = true
+				tag.Description = *tagUpdates.Description
+			}
+		}
+
+		if tagUpdates.RequireCertify.Valid {
+			if tag.Type != model.AssetGroupTagTypeTier {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "only zones support modifying require_certify", request), response)
+				return
+			}
+			fieldMatched = true
+			if !tag.RequireCertify.Equal(tagUpdates.RequireCertify) {
+				analysisNeeded = true
+				tagUpdated = true
+				tag.RequireCertify = tagUpdates.RequireCertify
+			}
+		}
+		// Ensure require certify is only toggle-able on BHE
+		s.DB.SanitizeUpdateAssetGroupTagRequireCertify(&tag)
+
+		if tagUpdates.Position.Valid {
+			if tag.Type != model.AssetGroupTagTypeTier {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "only zones support modifying position", request), response)
+				return
+			} else if tag.Position.ValueOrZero() == 1 {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "tier zero position cannot be modified", request), response)
+				return
+			}
+			fieldMatched = true
+			if !tag.Position.Equal(tagUpdates.Position) {
+				analysisNeeded = true
+				tagUpdated = true
+				tag.Position = tagUpdates.Position
+			}
+		}
+
+		if tagUpdates.AnalysisEnabled.Valid {
+			if tag.Type != model.AssetGroupTagTypeTier {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "only zones support modifying analysis_enabled", request), response)
+				return
+			} else if tag.Position.ValueOrZero() == 1 {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "tier zero analysis_enabled cannot be modified", request), response)
+				return
+			} else if !appcfg.GetTieringParameters(request.Context(), s.DB).MultiTierAnalysisEnabled {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "multi-tier analysis is not enabled for privilege zones", request), response)
+				return
+			}
+
+			fieldMatched = true
+			if !tag.AnalysisEnabled.Equal(tagUpdates.AnalysisEnabled) {
+				tagUpdated = true
+				analysisNeeded = true
+				tag.AnalysisEnabled = tagUpdates.AnalysisEnabled
+			}
+		}
+
+		if tagUpdates.Glyph.Valid {
+			// Ensure no empty string glyphs by setting it to null
+			if tagUpdates.Glyph.ValueOrZero() == "" {
+				tagUpdates.Glyph = null.String{}
+			}
+			if err := CheckTagGlyph(tagUpdates.Glyph, tag.Type, tag.Position); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			fieldMatched = true
+			if !tag.Glyph.Equal(tagUpdates.Glyph) {
+				tagUpdated = true
+				tag.Glyph = tagUpdates.Glyph
+			}
+		}
+
+		if !fieldMatched {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no valid fields specified", request), response)
+		} else if !tagUpdated {
+			// return tag as-is since it's unmodified
+			api.WriteBasicResponse(request.Context(), tag, http.StatusOK, response)
+		} else if updatedTag, err := s.DB.UpdateAssetGroupTag(request.Context(), actor, tag); errors.Is(err, database.ErrDuplicateAGName) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAssetGroupTagDuplicateKindName, request), response)
+		} else if errors.Is(err, database.ErrPositionOutOfRange) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagPositionOutOfRange, request), response)
+		} else if errors.Is(err, database.ErrDuplicateGlyph) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAssetGroupTagDuplicateGlyph, request), response)
+		} else if err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// Request analysis if scheduled analysis isn't enabled
+			if analysisNeeded {
+				if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				} else if !config.Enabled {
+					if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					}
+				}
+			}
+
+			if kindRefreshNeeded {
+				// Because the graph pg driver relies on in-memory kind maps, it's required to refresh the map in order to remove the recently deleted kind
+				if err := s.Graph.RefreshKinds(request.Context()); err != nil {
+					slog.WarnContext(request.Context(), "AGT: refreshing schemaManager in-memory kind maps failed", attr.Error(err))
+				}
+			}
+			api.WriteBasicResponse(request.Context(), updatedTag, http.StatusOK, response)
+		}
 	}
 }
 

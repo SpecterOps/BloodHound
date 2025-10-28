@@ -5379,7 +5379,8 @@
         "description": "Updates an asset group tag by ID",
         "tags": [
           "Asset Isolation",
-          "Enterprise"
+          "Enterprise",
+          "Community"
         ],
         "requestBody": {
           "description": "The request body for updating an asset group tag. At least one field is required.",

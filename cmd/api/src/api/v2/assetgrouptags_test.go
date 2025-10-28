@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	uuid2 "github.com/gofrs/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -644,7 +644,7 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	userId, err := uuid2.NewV4()
+	userId, err := uuid.NewV4()
 	require.Nil(t, err)
 
 	endpoint := "/api/v2/asset-group-tags/%s"
@@ -759,7 +759,7 @@ func TestDatabase_GetAssetGroupTagSelector(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	userId, err := uuid2.NewV4()
+	userId, err := uuid.NewV4()
 	require.Nil(t, err)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
@@ -1316,6 +1316,315 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.BodyContains(output, "\"counts\":{\"members\":2}")
+				},
+			},
+		})
+}
+
+func TestResources_UpdateAssetGroupTag(t *testing.T) {
+	var (
+		mockCtrl      = gomock.NewController(t)
+		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDB   = graphmocks.NewMockDatabase(mockCtrl)
+		resourcesInst = v2.Resources{
+			DB:    mockDB,
+			Graph: mockGraphDB,
+		}
+		userCtx = setupUserCtx(setupUser())
+
+		paramDisabled = appcfg.Parameter{Value: types.JSONBObject{Object: map[string]bool{"enabled": false}}}
+		paramEnabled  = appcfg.Parameter{Value: types.JSONBObject{Object: map[string]bool{"enabled": true}}}
+	)
+
+	defer mockCtrl.Finish()
+
+	apitest.
+		NewHarness(t, resourcesInst.UpdateAssetGroupTag).
+		Run([]apitest.Case{
+			{
+				Name: "invalid tag ID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1234")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, database.ErrNotFound)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+				},
+			},
+			{
+				Name: "invalid body",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyString(input, `{"test":["InvalidData"]}`)
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "change description",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"description": "updated description",
+					})
+				},
+				Setup: func() {
+					updatedTag := model.AssetGroupTag{
+						Description: "updated description",
+					}
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Description: "original desc"}, nil)
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), updatedTag).
+						Return(updatedTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					out := model.AssetGroupTag{}
+					apitest.UnmarshalData(output, &out)
+					apitest.Equal(output, "updated description", out.Description)
+				},
+			},
+			{
+				Name: "change name",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"name": "New Name",
+					})
+				},
+				Setup: func() {
+					updatedTag := model.AssetGroupTag{
+						Name:     "New Name",
+						Type:     model.AssetGroupTagTypeLabel,
+						Position: null.Int32From(2),
+					}
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Name: "original name", Type: model.AssetGroupTagTypeLabel, Position: null.Int32From(2)}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), updatedTag).
+						Return(updatedTag, nil)
+					mockGraphDB.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					out := model.AssetGroupTag{}
+					apitest.UnmarshalData(output, &out)
+					apitest.Equal(output, "New Name", out.Name)
+				},
+			},
+			{
+				Name: "change name, invalid name",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"name": "New-Name",
+					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Name: "original name", Type: model.AssetGroupTagTypeLabel, Position: null.Int32From(2)}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorResponseAssetGroupTagInvalidTagName)
+				},
+			},
+			{
+				Name: "set empty description",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"description": "",
+					})
+				},
+				Setup: func() {
+					updatedTag := model.AssetGroupTag{
+						Description: "",
+					}
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Description: "original desc"}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), updatedTag).
+						Return(updatedTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					out := model.AssetGroupTag{}
+					apitest.UnmarshalData(output, &out)
+					apitest.Equal(output, "", out.Description)
+				},
+			},
+			{
+				Name: "enable analysis",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "2")
+					apitest.BodyStruct(input, map[string]bool{
+						"analysis_enabled": true,
+					})
+				},
+				Setup: func() {
+					value, _ := types.NewJSONBObject(map[string]any{"multi_tier_analysis_enabled": true})
+					updatedTag := model.AssetGroupTag{
+						Type:            model.AssetGroupTagTypeTier,
+						AnalysisEnabled: null.BoolFrom(true),
+					}
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{
+							Type:            model.AssetGroupTagTypeTier,
+							AnalysisEnabled: null.BoolFrom(false),
+						}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), updatedTag).
+						Return(updatedTag, nil)
+					mockDB.EXPECT().
+						GetConfigurationParameter(gomock.Any(), gomock.Any()).
+						Return(appcfg.Parameter{Key: appcfg.TierManagementParameterKey, Value: value}, nil).Times(2)
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String())
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					out := model.AssetGroupTag{}
+					apitest.UnmarshalData(output, &out)
+					apitest.Equal(output, true, out.AnalysisEnabled.ValueOrZero())
+				},
+			},
+			{
+				Name: "omitted description kept",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]any{
+						"require_certify": true,
+					})
+				},
+				Setup: func() {
+					updatedTag := model.AssetGroupTag{
+						Type:           model.AssetGroupTagTypeTier,
+						Description:    "original desc",
+						RequireCertify: null.BoolFrom(true),
+					}
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier, Description: "original desc"}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), updatedTag).
+						Return(updatedTag, nil)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
+						Return(paramDisabled, nil)
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), gomock.Any())
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					out := model.AssetGroupTag{}
+					apitest.UnmarshalData(output, &out)
+					apitest.Equal(output, "original desc", out.Description)
+					apitest.Equal(output, true, out.RequireCertify.ValueOrZero())
+				},
+			},
+			{
+				Name: "analysis triggered when schedule disabled",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "2")
+					apitest.BodyStruct(input, map[string]string{"position": "2"})
+				},
+				Setup: func() {
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
+						Return(paramDisabled, nil)
+					mockDB.EXPECT().RequestAnalysis(gomock.Any(), gomock.Any())
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "analysis not triggered when schedule enabled",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "2")
+					apitest.BodyStruct(input, map[string]string{"position": "2"})
+				},
+				Setup: func() {
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
+						Return(paramEnabled, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "position out of range",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"position": "5",
+					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, database.ErrPositionOutOfRange)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "position is out of range")
+				},
+			},
+			{
+				Name: "change glyph",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"glyph": "updated-glyph",
+					})
+				},
+				Setup: func() {
+					updatedTag := model.AssetGroupTag{
+						Type:     model.AssetGroupTagTypeTier,
+						Position: null.Int32From(2),
+						Glyph:    null.StringFrom("updated-glyph"),
+					}
+					mockDB.EXPECT().SanitizeUpdateAssetGroupTagRequireCertify(gomock.Any()).Return()
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{Type: model.AssetGroupTagTypeTier, Position: null.Int32From(2), Glyph: null.StringFrom("original-glyph")}, nil)
+					mockDB.EXPECT().UpdateAssetGroupTag(gomock.Any(), gomock.Any(), updatedTag).
+						Return(updatedTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					out := model.AssetGroupTag{}
+					apitest.UnmarshalData(output, &out)
+					apitest.Equal(output, null.StringFrom("updated-glyph"), out.Glyph)
 				},
 			},
 		})
@@ -2501,7 +2810,7 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	userId, err := uuid2.NewV4()
+	userId, err := uuid.NewV4()
 	require.Nil(t, err)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, nil)
