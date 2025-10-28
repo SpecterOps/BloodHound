@@ -265,7 +265,7 @@ const CypherSearchInner = ({
 
                     <div className='flex gap-2 shrink-0 '>
                         <div
-                            role='button' // eslint-disable-line
+                            role='button'
                             tabIndex={0}
                             onKeyDown={(e) => adaptClickHandlerToKeyDown(e, setFocusOnCypherEditor)}
                             onClick={setFocusOnCypherEditor}

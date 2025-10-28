@@ -62,7 +62,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                 </PopoverTrigger>
                 <PopoverContent className='p-0 w-28'>
                     <div
-                        role='button' // eslint-disable-line
+                        role='button'
                         tabIndex={0}
                         onKeyDown={(e) => adaptClickHandlerToKeyDown(e, tagToZone)}
                         className={listItemStyles}
@@ -70,7 +70,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
                         Zone
                     </div>
                     <div
-                        role='button' // eslint-disable-line
+                        role='button'
                         tabIndex={0}
                         onKeyDown={(e) => adaptClickHandlerToKeyDown(e, tagToLabel)}
                         className={listItemStyles}
