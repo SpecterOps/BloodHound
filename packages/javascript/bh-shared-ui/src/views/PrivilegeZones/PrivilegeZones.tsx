@@ -49,7 +49,6 @@ import { PrivilegeZonesContext } from './PrivilegeZonesContext';
 const Details = React.lazy(() => import('./Details'));
 const Save = React.lazy(() => import('./Save'));
 const History = React.lazy(() => import('./History'));
-const Certification = React.lazy(() => import('./Certification'));
 
 const detailsPaths = [
     ROUTE_PZ_ZONE_DETAILS,
@@ -77,7 +76,7 @@ const PrivilegeZones: FC = () => {
     if (!context) {
         throw new Error('PrivilegeZones must be used within a PrivilegeZonesContext.Provider');
     }
-    const { savePaths, SupportLink, Summary } = context;
+    const { savePaths, SupportLink, Summary, Certification } = context;
 
     const childRoutes: Routable[] = [
         ...detailsPaths.map((path) => {
@@ -89,15 +88,20 @@ const PrivilegeZones: FC = () => {
         ...historyPaths.map((path) => {
             return { path, component: History, authenticationRequired: true, navigation: true };
         }),
-        ...certificationsPaths.map((path) => {
-            return { path, component: Certification, authenticationRequired: true, navigation: true };
-        }),
     ];
 
     if (Summary !== undefined) {
         childRoutes.push(
             ...summaryPaths.map((path) => {
                 return { path, component: Summary, authenticationRequired: true, navigation: true };
+            })
+        );
+    }
+
+    if (Certification !== undefined) {
+        childRoutes.push(
+            ...certificationsPaths.map((path) => {
+                return { path, component: Certification, authenticationRequired: true, navigation: true };
             })
         );
     }
@@ -139,11 +143,13 @@ const PrivilegeZones: FC = () => {
                             <TabsTrigger value={labelsPath} data-testid='privilege-zones_tab-list_labels-tab'>
                                 Labels
                             </TabsTrigger>
-                            <TabsTrigger
-                                value={certificationsPath}
-                                data-testid='privilege-zones_tab-list_certifications-tab'>
-                                Certifications
-                            </TabsTrigger>
+                            {Certification && (
+                                <TabsTrigger
+                                    value={certificationsPath}
+                                    data-testid='privilege-zones_tab-list_certifications-tab'>
+                                    Certifications
+                                </TabsTrigger>
+                            )}
                             <TabsTrigger value={historyPath} data-testid='privilege-zones_tab-list_history-tab'>
                                 History
                             </TabsTrigger>

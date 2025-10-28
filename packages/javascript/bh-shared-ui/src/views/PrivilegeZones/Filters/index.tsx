@@ -13,7 +13,5 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import Certification from './Certification';
-
-export default Certification;
+export * from './DateField';
+export * from './TagIdField';

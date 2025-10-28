@@ -40,6 +40,7 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error)
 	UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error)
+	SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag)
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
@@ -373,6 +374,11 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	}
 
 	return tag, nil
+}
+
+func (s *BloodhoundDB) SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag) {
+	// Forces all BHCE tags to not require certification
+	tag.RequireCertify = null.BoolFrom(false)
 }
 
 func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error) {

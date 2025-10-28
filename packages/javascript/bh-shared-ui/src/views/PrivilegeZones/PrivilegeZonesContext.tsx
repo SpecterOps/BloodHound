@@ -42,6 +42,7 @@ export interface PrivilegeZonesContextValue {
     InfoHeader: FC;
     SupportLink?: FC;
     Summary?: React.LazyExoticComponent<React.FC>;
+    Certification?: React.LazyExoticComponent<React.FC>;
     SalesMessage?: FC;
     ZoneList?: FC<{ zones: AssetGroupTag[]; setPosition: (position: number) => void; name: string }>;
 }
