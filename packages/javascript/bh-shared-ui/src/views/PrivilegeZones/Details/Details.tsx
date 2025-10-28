@@ -78,6 +78,7 @@ const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const {
         isLabelPage,
+        isZonePage,
         zoneId = topTagId?.toString(),
         labelId,
         selectorId,
@@ -114,6 +115,7 @@ const Details: FC = () => {
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
     const saveLink = getSavePath(zoneId, labelId, selectorId);
+    const editButtonTitle = selectorId ? 'Rule' : isZonePage ? 'Zone' : 'Label';
 
     return (
         <div className='h-full'>
@@ -128,7 +130,7 @@ const Details: FC = () => {
                             asChild={showEditButton || !saveLink}
                             variant={'secondary'}
                             disabled={showEditButton || !saveLink}>
-                            <AppLink to={saveLink || ''}>Edit</AppLink>
+                            <AppLink to={saveLink || ''}>Edit {editButtonTitle} </AppLink>
                         </Button>
                     )}
                 </div>
