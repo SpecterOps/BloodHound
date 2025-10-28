@@ -228,7 +228,7 @@ describe('Details', async () => {
         );
 
         longWait(async () => {
-            expect(screen.findByRole('button', { name: /edit label/i })).toBeInTheDocument();
+            expect(await screen.findByRole('button', { name: /edit label/i })).toBeInTheDocument();
         });
     });
 });
