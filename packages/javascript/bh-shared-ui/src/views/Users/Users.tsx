@@ -120,7 +120,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                 principal: user.principal_name || '',
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
-                ...(user.sso_provider_id && { SSOProviderId: user.sso_provider_id }),
+                ...(user.sso_provider_id && { sso_provider_id: user.sso_provider_id }),
                 roles: user.roles?.map((role: any) => role.id) || [],
                 is_disabled: disable,
                 all_environments: user.all_environments || undefined,
