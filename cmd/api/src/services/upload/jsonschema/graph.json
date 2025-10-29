@@ -54,29 +54,14 @@
                     "description": { "type": "string" },
                     "icon": {
                         "type": "string",
-                        "description": "icon for this node, from font-awesome ----do we need this here??"
+                        "description": "icon for this node, from font-awesome"
                     },
-                    "iconColor": {
+                    "icon_color": {
                         "type": "string",
-                        "description": "icon color for this node, in hex ----do we need this here??"
+                        "description": "icon color for this node, in hex"
                     },
-                    "properties": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "property_symbol": {
-                                    "type": "string",
-                                    "description": "must match the 'symbol' value of one of the properties defined above"
-                                },
-                                "is_required": { "type": "boolean" },
-                                "default_value": {
-                                    "description": "if set, this property will be set to this value if it's not present at ingest"
-                                }
-                            },
-                            "required": ["property_symbol", "is_required"]
-                        }
-                    }
+                    "is_display_kind": "boolean",
+                    "is_source_kind": "boolean"
                 },
                 "required": ["symbol", "representation", "description"]
             }
@@ -99,7 +84,8 @@
                                 "target_node": { "type": "string" }
                             },
                             "required": ["source_node", "target_node"]
-                        }
+                        },
+                        "description": "only relationships matching these constraints are allowed to be created"
                     }
                 },
                 "required": [
