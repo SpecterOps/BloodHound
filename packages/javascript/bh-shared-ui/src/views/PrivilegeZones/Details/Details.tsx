@@ -115,6 +115,8 @@ const Details: FC = () => {
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
     const saveLink = getSavePath(zoneId, labelId, selectorId);
+
+    // Edit button title changes depending on tab/context
     const editButtonTitle = selectorId ? 'Rule' : isZonePage ? 'Zone' : 'Label';
 
     return (
