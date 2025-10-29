@@ -175,10 +175,25 @@ const UpdateUserFormInner: React.FC<{
 
     const [selectedRoleValue, setSelectedRoleValue] = useState<number[]>(initialData.roles);
     const [searchInput, setSearchInput] = useState<string>('');
-    const roleInputValue = form.watch('roles');
-    const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
     const authenticationMethod = form.watch('authenticationMethod');
-    const selectedETACEnabledRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
+
+    //const roleInputValue = form.watch('roles');
+    //const selectedRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
+
+    const getRolesQuery = useQuery(['getRoles'], ({ signal }) =>
+        apiClient.getRoles({ signal }).then((res) => res.data?.data?.roles)
+    );
+
+    const matchingRoles = getRolesQuery.data
+        ?.filter((item) => selectedRoleValue.includes(item.id))
+        .map((item) => item.name);
+
+    //console.log(matchingRoles);
+
+    const selectedETACEnabledRole = matchingRoles?.toString() === 'Read-Only' || matchingRoles?.toString() === 'User';
+
+    //console.log(initialData.roles);
+    //const selectedETACEnabledRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
 
     const selectedSSOProviderHasRoleProvisionEnabled = !!SSOProviders?.find(
         ({ id }) => id === Number(form.watch('sso_provider_id'))
@@ -274,13 +289,9 @@ const UpdateUserFormInner: React.FC<{
         const eTACFormData = {
             ...formData,
             all_environments: allEnvironmentsSelected ? true : false,
-            ...(selectedETACEnabledRole === true && {
-                environment_targeted_access_control: {
-                    ...(selectedETACEnabledRole === true && {
-                        environments: !allEnvironmentsSelected ? formatSelectedEnvironments : null,
-                    }),
-                },
-            }),
+            environment_targeted_access_control: {
+                environments: !allEnvironmentsSelected ? formatSelectedEnvironments : null,
+            },
         };
 
         onSubmit({
@@ -638,7 +649,7 @@ const UpdateUserFormInner: React.FC<{
                             </Button>
                         </DialogActions>
                     </Card>
-                    {showEnvironmentAccessControls && selectedRole && (
+                    {showEnvironmentAccessControls && selectedETACEnabledRole && (
                         <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
                             <DialogTitle>Environmental Targeted Access Control</DialogTitle>
                             <div

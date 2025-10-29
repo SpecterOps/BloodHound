@@ -18,6 +18,7 @@ import {
     Button,
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogOverlay,
     DialogPortal,
     DialogTitle,
@@ -63,7 +64,7 @@ const CreateUserDialog: React.FC<{
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
-            <DialogTrigger>
+            <DialogTrigger asChild>
                 <Button
                     disabled={!hasPermission}
                     onClick={() => {
@@ -78,6 +79,9 @@ const CreateUserDialog: React.FC<{
                     <DialogContent maxWidth='lg' className='!bg-transparent overflow-y-auto max-h-screen'>
                         <VisuallyHidden asChild>
                             <DialogTitle>Create User</DialogTitle>
+                        </VisuallyHidden>
+                        <VisuallyHidden asChild>
+                            <DialogDescription>Create User</DialogDescription>
                         </VisuallyHidden>
                         <CreateUserForm
                             error={error}

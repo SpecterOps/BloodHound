@@ -98,8 +98,11 @@ const CreateUserForm: React.FC<{
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
-    const roleInputValue = form.watch('roles');
-    const selectedETACEnabledRole = roleInputValue.toString() === '2' || roleInputValue.toString() === '3';
+    const matchingRoles = getRolesQuery.data
+        ?.filter((item) => selectedRoleValue.includes(item.id))
+        .map((item) => item.name);
+
+    const selectedETACEnabledRole = matchingRoles?.toString() === 'Read-Only' || matchingRoles?.toString() === 'User';
 
     const { data: availableEnvironments } = useAvailableEnvironments();
 
@@ -171,7 +174,7 @@ const CreateUserForm: React.FC<{
             principal: values.principal,
             first_name: values.first_name,
             last_name: values.last_name,
-            sso_provider_id: authenticationMethod === 'password' ? undefined : values.sso_provider_id?.toString(),
+            sso_provider_id: values.password ? undefined : values.sso_provider_id?.toString(),
             roles: selectedRoleValue,
         };
 
