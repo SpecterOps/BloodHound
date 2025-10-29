@@ -58,7 +58,9 @@ afterAll(() => server.close());
 describe('Details', async () => {
     const user = userEvent.setup();
     const setupComponent = ({ zoneId, labelId }: SetupProps) => {
-        const route = `/${privilegeZonesPath}/${zonesPath}/${zoneId}/${detailsPath}`;
+        const route = zoneId
+            ? `/${privilegeZonesPath}/${zonesPath}/${zoneId}/${detailsPath}`
+            : `/${privilegeZonesPath}/${zonesPath}/${labelId}/${detailsPath}`;
         vi.mocked(useParams).mockReturnValue({ zoneId, labelId });
         render(
             <Routes>
