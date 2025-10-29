@@ -20,10 +20,10 @@ on:
   pull_request:
     branches:
       - main
-      - "stage/**"
     types:
       - opened
       - synchronize
+      - edited
 
 jobs:
   check-commit-format:
@@ -31,6 +31,7 @@ jobs:
 
     steps:
       - uses: amannn/action-semantic-pull-request@v6
+        id: lint_pr_title
         with:
           types: |
             feat
@@ -39,21 +40,66 @@ jobs:
             refactor
             test
             chore
-            wip
-          subjectPattern: .*\b[A-Z]+-\d+\b.*|.*#\d+\b.*
-          subjectPatternError: |
-            Description Pattern Error
-            The description:
-            "{subject}"
-            found in the pull request title:
-            "{title}"
-            didn't match the configured pattern.
-
-            Please ensure that the description contains a space delimited reference to a ticket or issue number.
-            Here are some example descriptions: "BED-1234 ...", "... #1234",  "... PQE-1234 ...".
-
-            This is the pattern matching used: .*\b[A-Z]+-\d+\b.*|.*#\d+\b.*
-
-            For more information see: https://github.com/SpecterOps/BloodHound/blob/main/rfc/bh-rfc-2.md
+          headerPattern: '^(BED|PQE-\d+|.*#\d+) (\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*)$'
+          headerPatternCorrespondence: issue, type, scope, subject
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        # When the previous steps fails, the workflow would stop. By adding this
+        # condition you can continue the execution with the populated error message.
+        if: always() && (steps.lint_pr_title.outputs.error_message != null)
+        with:
+          header: pr-title-lint-error
+          message: |
+            Howdy! Thank you for opening this pull request 🙇
+
+            It looks like your proposed title needs to be adjusted.
+            We require pull request titles to follow the Conventional Commits specification as outlined in our [documentation](https://github.com/SpecterOps/BloodHound/blob/main/rfc/bh-rfc-2.md).
+            Please review the required format and update your pull request title so that it is aligned.
+
+            Details:
+
+            ```
+            ${{ steps.lint_pr_title.outputs.error_message }}
+            ```
+
+      # Delete a previous comment when the issue has been resolved
+      - if: ${{ steps.lint_pr_title.outputs.error_message == null }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-title-lint-error
+          delete: true
+
+      - name: Check PR Title for Jira Issue
+        uses: actions/github-script@v6
+        id: extract-jira-reference
+        with:
+          script: |
+            const prTitle = github.event.pull_request.title;
+            const jiraPattern = /(BED|PQE-\d+)/;
+            const match = prTitle.match(jiraPattern);
+
+            if (!match) {
+              core.setFailed('PR title must contain a valid Jira issue key (e.g., BED-123, PQE-345).');
+            } else {
+              const jiraIssueKey = match[1];
+              core.setOutput('jira_key', jiraIssueKey)
+            }
+
+      - if: ${{ steps.extract-jira-reference.outputs.jira_key != null }}
+        name: Check Jira Issue Exists
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          URL="http://${{ secrets.JIRA_BASE_URL }}.atlassian.net/rest/api/3/issue/${{ steps.extract-jira-reference.outputs.jira_key }}"
+
+          # curl for issue info with jira api
+          ISSUE_RESPONSE=$(curl -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+          -X GET \
+          "$URL" \
+          -H "Accept: application/json")
+
+          echo "$ISSUE_RESPONSE"
