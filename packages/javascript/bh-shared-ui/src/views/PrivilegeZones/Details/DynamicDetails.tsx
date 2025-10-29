@@ -156,7 +156,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
 
                 <div className='mt-4'>
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
-                    <DetailField label='Selector Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
+                    <DetailField label='Rule Status' value={disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
             {seedType === SeedTypeCypher && <Cypher preview initialInput={seeds[0].value} />}

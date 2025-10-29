@@ -211,7 +211,7 @@ export const useSelectorsInfiniteQuery = (
     }>({
         queryKey: privilegeZonesKeys.selectorsByTag(tagId!, sortOrder, environments),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
-            if (!tagId) return Promise.reject('No tag ID provided for selectors request');
+            if (!tagId) return Promise.reject('No tag ID provided for rules request');
             return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit, sortOrder, environments);
         },
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
@@ -286,8 +286,8 @@ export const useSelectorMembersInfiniteQuery = (
     }>({
         queryKey: privilegeZonesKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder, environments),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
-            if (!tagId) return Promise.reject('No tag ID available to get selector members');
-            if (!selectorId) return Promise.reject('No selector ID available to get selector members');
+            if (!tagId) return Promise.reject('No tag ID available to get rule members');
+            if (!selectorId) return Promise.reject('No rule ID available to get rule members');
             return getAssetGroupTagSelectorMembers(
                 tagId,
                 selectorId,

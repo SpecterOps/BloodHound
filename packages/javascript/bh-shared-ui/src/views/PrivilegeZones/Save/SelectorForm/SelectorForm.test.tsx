@@ -104,7 +104,7 @@ describe('Selector Form', () => {
 
         render(<SelectorForm />, { queryClient });
 
-        expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
+        expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
         const nameInput = screen.getByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
@@ -122,12 +122,12 @@ describe('Selector Form', () => {
         await waitFor(() => {
             expect(autoCertifyDropdownDefault).toHaveTextContent('Off');
         });
-        expect(screen.getByText('Selector Type')).toBeInTheDocument();
+        expect(screen.getByText('Rule Type')).toBeInTheDocument();
 
         // Object Selector component renders by default
         expect(screen.getByText('Object Selector')).toBeInTheDocument();
         // The delete button should not render when creating a new selector because it doesn't exist yet
-        expect(screen.queryByRole('button', { name: /Delete Selector/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Delete Rule/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         // The save edits button should not render when creating a new selector
         expect(screen.queryByRole('button', { name: /Save Edits/ })).not.toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('Selector Form', () => {
 
     it('renders the form for editing an existing selector', async () => {
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -156,11 +156,11 @@ describe('Selector Form', () => {
 
         render(<SelectorForm />, { queryClient });
 
-        expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
+        expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
         await waitFor(
             async () => {
-                const selectorStatusSwitch = await screen.findByLabelText('Selector Status');
+                const selectorStatusSwitch = await screen.findByLabelText('Rule Status');
                 expect(selectorStatusSwitch).toBeInTheDocument();
                 expect(selectorStatusSwitch).toHaveValue('');
                 expect(screen.getByText('Disabled')).toBeInTheDocument();
@@ -189,7 +189,7 @@ describe('Selector Form', () => {
         expect(autoCertifyDropdownDefault).toBeInTheDocument();
 
         expect(autoCertifyDropdownDefault).toHaveTextContent('All members');
-        expect(screen.getByText('Selector Type')).toBeInTheDocument();
+        expect(screen.getByText('Rule Type')).toBeInTheDocument();
 
         // Cypher Search renders because that is the seed type of the first seed of this selector
         await waitFor(() => {
@@ -198,7 +198,7 @@ describe('Selector Form', () => {
 
         await waitFor(() => {
             // The delete button should render because this selector exists and can be deleted
-            expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Save Edits/ })).toBeInTheDocument();
         });
@@ -206,10 +206,10 @@ describe('Selector Form', () => {
         expect(screen.getByText('Sample Results')).toBeInTheDocument();
     });
 
-    it('changes the text from "Disabled" to "Enabled" when the Selector Status switch is toggled', async () => {
+    it('changes the text from "Disabled" to "Enabled" when the Rule Status switch is toggled', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -220,10 +220,10 @@ describe('Selector Form', () => {
 
         render(<SelectorForm />);
 
-        expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
+        expect(await screen.findByText('Defining Rule')).toBeInTheDocument();
 
         await waitFor(async () => {
-            const selectorStatusSwitch = screen.getByLabelText('Selector Status');
+            const selectorStatusSwitch = screen.getByLabelText('Rule Status');
             expect(selectorStatusSwitch).toBeInTheDocument();
             expect(selectorStatusSwitch).toHaveValue('');
             expect(screen.getByText('Disabled')).toBeInTheDocument();
@@ -232,11 +232,11 @@ describe('Selector Form', () => {
         });
     });
 
-    it('shows an error message when unable to delete a selector', async () => {
+    it('shows an error message when unable to delete a rule', async () => {
         console.error = vi.fn();
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -247,11 +247,11 @@ describe('Selector Form', () => {
         render(<SelectorForm />);
 
         await waitFor(async () => {
-            expect(await screen.findByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
+            expect(await screen.findByRole('button', { name: /Delete Rule/ })).toBeInTheDocument();
         });
 
         await act(async () => {
-            user.click(screen.getByRole('button', { name: /Delete Selector/ }));
+            user.click(screen.getByRole('button', { name: /Delete Rule/ }));
         });
 
         await waitFor(async () => {
@@ -259,7 +259,7 @@ describe('Selector Form', () => {
         });
 
         await act(async () => {
-            await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this selector');
+            await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this rule');
             await user.click(screen.getByRole('button', { name: /Confirm/ }));
         });
 
@@ -291,7 +291,7 @@ describe('Selector Form', () => {
         });
 
         await waitFor(() => {
-            expect(screen.getByText('Please provide a name for the Selector')).toBeInTheDocument();
+            expect(screen.getByText('Please provide a name for the Rule')).toBeInTheDocument();
         });
     });
 
@@ -310,7 +310,7 @@ describe('Selector Form', () => {
             await user.click(screen.getByRole('button', { name: /Save Edits/ }));
         });
 
-        expect(screen.queryByText('Please provide a name for the Selector')).not.toBeInTheDocument();
+        expect(screen.queryByText('Please provide a name for the Rule')).not.toBeInTheDocument();
 
         await waitFor(() => {
             expect(mockNavigate).toBeCalled();
@@ -354,7 +354,7 @@ describe('Selector Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(<SelectorForm />);
 
-        const seedTypeSelect = await screen.findByLabelText('Selector Type');
+        const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
         await user.click(seedTypeSelect);
 
@@ -376,7 +376,7 @@ describe('Selector Form', () => {
         await waitFor(() => {
             expect(
                 screen.getByText(
-                    'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Selector seed may result in incomplete data.'
+                    'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Rule seed may result in incomplete data.'
                 )
             ).toBeInTheDocument();
         });
@@ -386,7 +386,7 @@ describe('Selector Form', () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '1' });
         render(<SelectorForm />);
 
-        const seedTypeSelect = await screen.findByLabelText('Selector Type');
+        const seedTypeSelect = await screen.findByLabelText('Rule Type');
 
         await user.click(seedTypeSelect);
 
@@ -407,7 +407,7 @@ describe('Selector Form', () => {
 
         expect(
             screen.queryByText(
-                'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Selector seed may result in incomplete data.'
+                'Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege Zone labels in a cypher based Rule seed may result in incomplete data.'
             )
         ).not.toBeInTheDocument();
     });

@@ -56,7 +56,7 @@ const SelectorsListWrapper = ({
     return (
         <div className='min-w-0 w-1/3' data-testid={`privilege-zones_details_selectors-list`}>
             <SortableHeader
-                title={'Selectors'}
+                title='Rules'
                 onSort={() => {
                     onChangeSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}
@@ -116,7 +116,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({
                 className={cn('border-y border-neutral-3 relative h-10', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}>
-                <SelectedHighlight selected={selected} itemId={item.id} title={'Selectors'} />
+                <SelectedHighlight selected={selected} itemId={item.id} title='Rules' />
                 <Button
                     variant={'text'}
                     className='flex justify-between w-full overflow-hidden'

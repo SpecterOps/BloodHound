@@ -60,7 +60,7 @@ describe('AssetGroupMenuItem', () => {
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
                 return res(ctx.json({}));
             }),
-            rest.post('/api/v2/asset-group-tags/:tagId/selectors', (req, res, ctx) => {
+            rest.post('/api/v2/asset-group-tags/:tagId/rules', (req, res, ctx) => {
                 return res(ctx.json({}));
             })
         );
@@ -146,7 +146,7 @@ describe('AssetGroupMenuItem', () => {
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
                 return res(ctx.json({}));
             }),
-            rest.post('/api/v2/asset-group-tags/:tagId/selectors', (req, res, ctx) => {
+            rest.post('/api/v2/asset-group-tags/:tagId/rules', (req, res, ctx) => {
                 return res(ctx.json({}));
             })
         );

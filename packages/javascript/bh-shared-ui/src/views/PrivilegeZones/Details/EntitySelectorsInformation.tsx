@@ -44,12 +44,12 @@ const EntitySelectorsInformation: React.FC = () => {
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const isExpandedPanelSection = expandedPanelSections?.includes('Selectors');
+    const isExpandedPanelSection = expandedPanelSections?.includes('Rules');
 
     const handleOnChange = () => {
         if (!isExpandedPanelSection) {
             setExploreParams({
-                expandedPanelSections: ['Selectors'],
+                expandedPanelSections: ['Rules'],
             });
         } else {
             setExploreParams({
@@ -102,7 +102,7 @@ const EntitySelectorsInformation: React.FC = () => {
         return (
             <>
                 <EntityInfoCollapsibleSection
-                    label='Selectors'
+                    label='Rules'
                     count={memberInfoQuery.data.selectors?.length}
                     isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>

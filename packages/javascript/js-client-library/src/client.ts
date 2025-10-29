@@ -316,7 +316,7 @@ class BHEAPIClient {
         environments?: string[],
         options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, {
+        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/rules`, {
             ...options,
             params: {
                 ...options?.params,
@@ -330,22 +330,22 @@ class BHEAPIClient {
 
     getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagSelectorResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
+            `/api/v2/asset-group-tags/${tagId}/rules/${selectorId}`,
             options
         );
 
     createAssetGroupTagSelector = (tagId: number | string, values: CreateSelectorRequest, options?: RequestOptions) =>
-        this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/selectors`, values, options);
+        this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/rules`, values, options);
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
         selectorId: number | string,
         updatedValues: UpdateSelectorRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/rules/${selectorId}`, updatedValues, options);
 
     deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/rules/${selectorId}`, options);
 
     getAssetGroupTagMembers = (
         assetGroupTagId: number | string,
@@ -377,7 +377,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/rules/${selectorId}/members`,
             {
                 ...options,
                 params: {
@@ -424,10 +424,10 @@ class BHEAPIClient {
         assetGroupId: number,
         selectorChangeset: UpdateAssetGroupSelectorRequest[],
         options?: RequestOptions
-    ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
+    ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/rules`, selectorChangeset, options);
 
     deleteAssetGroupSelector = (assetGroupId: string, selectorId: string, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/asset-groups/${assetGroupId}/selectors/${selectorId}`, options);
+        this.baseClient.delete(`/api/v2/asset-groups/${assetGroupId}/rules/${selectorId}`, options);
 
     listAssetGroupCollections = (assetGroupId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);

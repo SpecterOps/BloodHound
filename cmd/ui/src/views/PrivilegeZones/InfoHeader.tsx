@@ -76,7 +76,7 @@ const InfoHeader: FC = () => {
                 <AppLink
                     data-testid='privilege-zones_create-selector-link'
                     to={`/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${savePath}`}>
-                    Create Selector
+                    Create Rule
                 </AppLink>
             </Button>
         </div>

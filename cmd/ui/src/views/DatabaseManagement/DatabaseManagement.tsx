@@ -318,7 +318,7 @@ const DatabaseManagement: FC = () => {
                                 }
                             />
                             <FormControlLabel
-                                label='Custom High Value selectors'
+                                label='Custom High Value rules'
                                 control={
                                     <Checkbox
                                         checked={deleteCustomHighValueSelectors}
@@ -329,7 +329,7 @@ const DatabaseManagement: FC = () => {
                                 }
                             />
                             <FormControlLabel
-                                label='All asset group selectors'
+                                label='All asset group rules'
                                 control={
                                     <Checkbox
                                         checked={deleteAllAssetGroupSelectors}
