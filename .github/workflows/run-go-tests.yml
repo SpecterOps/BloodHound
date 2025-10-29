@@ -29,7 +29,7 @@ on:
 
 jobs:
   run-go-integration-tests:
-    # On Sucesss execute Go integration tests
+    # On Success execute Go integration tests
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
