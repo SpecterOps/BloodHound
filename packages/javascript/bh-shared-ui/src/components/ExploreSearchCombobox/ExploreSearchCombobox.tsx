@@ -93,6 +93,7 @@ const ExploreSearchCombobox: React.FC<{
                     },
                 })}
                 data-testid='explore_search_input-search'
+                aria-autocomplete={null}
             />
             <div
                 style={{

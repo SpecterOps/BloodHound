@@ -57,17 +57,12 @@ const MainNavListItem: FC<{ children: ReactNode; route?: string; allowHover: boo
     children,
     route,
     allowHover,
-    onClick = () => {},
 }) => {
     const location = useLocation();
     const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
 
     return (
         <li
-            role='button' // eslint-disable-line
-            tabIndex={0}
-            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onClick)}
-            onClick={onClick}
             className={cn(
                 baseLinkContainerStyles,
                 'px-2 flex items-center text-neutral-dark-1 dark:text-neutral-light-1',
@@ -94,7 +89,7 @@ const MainNavItemAction: FC<{ onClick: () => void; children: ReactNode; allowHov
         // Note: The w-full is to avoid the hover area to overflow out of the nav when its collapsed which created a flickering effect just outside the nav
         // Note: had to wrap in div to avoid error of button nesting in a button with the switch
         <div
-            role='button' // eslint-disable-line
+            role='button'
             tabIndex={0}
             onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onClick)}
             onClick={onClick}

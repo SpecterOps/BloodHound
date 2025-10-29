@@ -18,7 +18,7 @@ import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
@@ -82,6 +82,12 @@ const CypherSearchInner = ({
     const cypherEditorRef = useRef<CypherEditor | null>(null);
     const getCypherValueOnLoadRef = useRef(false);
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
+
+    useLayoutEffect(() => {
+        if (cypherEditorRef.current?.cypherEditor) {
+            cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
+        }
+    }, []);
 
     useEffect(() => {
         //Setting the selected query once on load
@@ -226,7 +232,6 @@ const CypherSearchInner = ({
     };
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
-
     const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
 
     const handleSaveAs = () => {
@@ -273,7 +278,7 @@ const CypherSearchInner = ({
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(
-                                    'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    'saturate-150 flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
                                     showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
                                 )}
                                 value={cypherQuery}
@@ -288,6 +293,7 @@ const CypherSearchInner = ({
                                         handleCypherSearch();
                                     }
                                 }}
+                                aria-label='Cypher editor'
                                 schema={graphSchema(kindsQuery.data)}
                                 lineWrapping
                                 lint
@@ -305,6 +311,7 @@ const CypherSearchInner = ({
                             onClick={() => {
                                 handleClickSave();
                             }}
+                            aria-label='Save query'
                             size={'small'}
                             className='rounded-r-none'>
                             <div className='flex items-center'>
@@ -318,6 +325,7 @@ const CypherSearchInner = ({
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noreferrer'
                                 target='_blank'
+                                aria-label='More information'
                                 className='group'>
                                 <div>
                                     <AppIcon.Info size={24} />

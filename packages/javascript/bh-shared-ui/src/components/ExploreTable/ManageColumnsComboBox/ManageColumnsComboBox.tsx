@@ -137,6 +137,7 @@ export const ManageColumnsComboBox = ({
                         <div className='flex justify-center items-center relative'>
                             <Input
                                 className='border-0 focus:outline-none rounded-none border-black bg-inherit'
+                                aria-label='Filter columns'
                                 {...getInputProps(getDropdownProps())}
                             />
                             <FontAwesomeIcon icon={faSearch} className='absolute right-2' />

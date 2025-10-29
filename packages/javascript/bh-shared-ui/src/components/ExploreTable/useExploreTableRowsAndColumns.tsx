@@ -152,6 +152,7 @@ const useExploreTableRowsAndColumns = ({
                         tabIndex={0}
                         role='button'
                         data-testid='kebab-menu'
+                        aria-label='Row details'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
                         onKeyDown={(e) =>
                             adaptClickHandlerToKeyDown(e, () => handleKebabMenuClick(e, row?.original?.id))

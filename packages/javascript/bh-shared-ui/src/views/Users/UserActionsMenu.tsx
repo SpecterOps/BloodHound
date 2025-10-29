@@ -130,7 +130,11 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
 
     return (
         <div>
-            <IconButton data-testid='manage-users_user-row-action-menu-button' onClick={handleOnOpen} size='large'>
+            <IconButton
+                data-testid='manage-users_user-row-action-menu-button'
+                aria-label='Show user actions'
+                onClick={handleOnOpen}
+                size='large'>
                 <FontAwesomeIcon icon={faBars} />
             </IconButton>
             <StyledMenu

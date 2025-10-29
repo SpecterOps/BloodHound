@@ -81,7 +81,7 @@ const Icon: FC<PropsWithChildren<Props>> = ({
     iconClass += ` ${styles.icon} ${className}`;
 
     const icon = (
-        <IconButton className={`${iconClass} icon`} onClick={click} size='large'>
+        <IconButton className={`${iconClass} icon`} onClick={click} size='large' aria-label={tip}>
             {children}
             {badgeText && <Badge text={badgeText} overflow={overflow} />}
         </IconButton>

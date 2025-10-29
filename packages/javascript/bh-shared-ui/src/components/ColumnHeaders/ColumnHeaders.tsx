@@ -69,14 +69,12 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
 
     return (
-        <div
-            {...rest}
-            role='button'
-            onClick={onSort}
-            tabIndex={0}
-            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onSort)}
-            className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
+        <div {...rest} className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
             <Button
+                role='button'
+                onClick={onSort}
+                tabIndex={0}
+                onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onSort)}
                 className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
                 variant={'text'}>
                 {title}

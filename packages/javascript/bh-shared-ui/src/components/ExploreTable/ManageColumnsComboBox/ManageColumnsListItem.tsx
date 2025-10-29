@@ -34,7 +34,7 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
     <li
         role='button' // eslint-disable-line
         tabIndex={0}
-        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer'
+        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer flex items-center'
         {...itemProps}
         onClick={(e) => {
             e.stopPropagation();
@@ -46,19 +46,27 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps }: ManageC
                 onClick(item);
             })
         }>
-        <div className="w-full text-left flex justify-between items-center'">
-            <div>
+        <div className='w-full text-left flex justify-between items-center'>
+            <div className='flex justify-between items-center'>
                 <Checkbox
+                    ref={(checkbox) => {
+                        checkbox?.setAttribute('inert', '');
+                    }}
+                    disabled
+                    role='presentation'
                     className={cn('mr-2 *:text-white', {
                         '*:bg-primary dark:border-none': isSelected,
                         'dark:border-white': !isSelected,
                     })}
+                    style={{
+                        opacity: 'initial',
+                    }}
                     checked={isSelected}
                 />
                 <span>{item.value}</span>
             </div>
-            {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
         </div>
+        {item.isPinned && <FontAwesomeIcon color='grey' icon={faThumbTack} />}
     </li>
 );
 

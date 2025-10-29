@@ -93,6 +93,7 @@ const TableControls = <TData, TValue>({
                         aria-disabled={noResults}
                         onClick={onDownloadClick}
                         data-testid='download-button'
+                        aria-label='Download CSV'
                         className={cn({ [DISABLED_CLASSNAME]: noResults })}>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
                     </button>
@@ -103,7 +104,8 @@ const TableControls = <TData, TValue>({
                         tabIndex={0}
                         onClick={onExpandClick}
                         onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onExpandClick)}
-                        data-testid='expand-button'>
+                        data-testid='expand-button'
+                        aria-label='Expand table view'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
@@ -121,7 +123,8 @@ const TableControls = <TData, TValue>({
                         tabIndex={0}
                         onClick={onCloseClick}
                         onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onCloseClick)}
-                        data-testid='close-button'>
+                        data-testid='close-button'
+                        aria-label='Close table view'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
                     </div>
                 )}

@@ -25,7 +25,7 @@ import {
 export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
     if (discardQueryParams) {
         return (
-            <Link to={to} {...props}>
+            <Link to={to} aria-label={`Navigate to ${to.toString()}`} {...props}>
                 {children}
             </Link>
         );
@@ -35,7 +35,7 @@ export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProp
     const toWithParams = applyPreservedParams(to, search);
 
     return (
-        <Link to={toWithParams} {...props}>
+        <Link to={toWithParams} aria-label={`Navigate to ${to}`} {...props}>
             {children}
         </Link>
     );

@@ -97,17 +97,19 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                             const { id, name, description, query, canEdit = false } = lineItem;
                                             return (
                                                 <li
-                                                    role='button' // eslint-disable-line
                                                     className={`p-2 rounded rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-4 scroll-my-10 list-none ${
                                                         testMatch(name, id) ? styles.selected : ''
                                                     }`}
                                                     key={`${id}-${idx}`}
-                                                    onClick={() => clickHandler(query, id)}
-                                                    onKeyDown={(e) =>
-                                                        adaptClickHandlerToKeyDown(e, () => clickHandler(query, id))
-                                                    }
                                                     ref={testMatch(name, id) ? itemRef : null}>
-                                                    <div>
+                                                    <div
+                                                        role='button'
+                                                        tabIndex={0}
+                                                        key={`${id}-${idx}`}
+                                                        onClick={() => clickHandler(query, id)}
+                                                        onKeyDown={(e) =>
+                                                            adaptClickHandlerToKeyDown(e, () => clickHandler(query, id))
+                                                        }>
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>
                                                         ) : (

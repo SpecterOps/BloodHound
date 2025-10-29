@@ -81,8 +81,6 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
 
     return (
         <li
-            tabIndex={0}
-            role='button' // eslint-disable-line
             className={cn(
                 'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5',
                 {
@@ -90,15 +88,21 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
                 }
             )}
             style={{ ...style }}
-            onClick={() => normalizedItem.onClick?.(index)}
-            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, () => normalizedItem.onClick?.(index))}
             data-testid='entity-row'>
-            <NodeIcon nodeType={normalizedItem.kind} />
-            <Tooltip
-                tooltip={normalizedItem.name}
-                contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
-                <div className={cn('truncate ml-2', { 'ml-10': isAssetGroupTagNode(item) })}>{normalizedItem.name}</div>
-            </Tooltip>
+            <div
+                role='button'
+                onClick={() => normalizedItem.onClick?.(index)}
+                onKeyDown={(e) => adaptClickHandlerToKeyDown(e, () => normalizedItem.onClick?.(index))}
+                tabIndex={0}>
+                <NodeIcon nodeType={normalizedItem.kind} />
+                <Tooltip
+                    tooltip={normalizedItem.name}
+                    contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
+                    <div className={cn('truncate ml-2', { 'ml-10': isAssetGroupTagNode(item) })}>
+                        {normalizedItem.name}
+                    </div>
+                </Tooltip>
+            </div>
         </li>
     );
 };
