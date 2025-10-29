@@ -80,10 +80,7 @@ type assetGroupTagSelectorRequest struct {
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
-	var (
-		rCtx = request.Context()
-		// flag appcfg.FeatureFlag
-	)
+	var rCtx = request.Context()
 	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
@@ -611,11 +608,12 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-
-		filters = append(filters, query.Or(
-			query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
-			query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
-		))
+		if len(environmentIds) > 0 {
+			filters = append(filters, query.Or(
+				query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+				query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+			))
+		}
 
 		// ETAC feature etacFlag
 		if etacFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
