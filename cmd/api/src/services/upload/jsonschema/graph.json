@@ -63,7 +63,13 @@
                     "is_display_kind": "boolean",
                     "is_source_kind": "boolean"
                 },
-                "required": ["symbol", "representation", "description"]
+                "required": [
+                    "symbol",
+                    "representation",
+                    "description",
+                    "is_display_kind",
+                    "is_source_kind"
+                ]
             }
         },
         "relationship_kinds": {
