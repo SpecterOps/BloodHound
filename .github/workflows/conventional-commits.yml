@@ -40,23 +40,22 @@ jobs:
             refactor
             test
             chore
-          headerPattern: '^(BED|PQE-\d+|.*#\d+) (\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*)$'
+          headerPattern: '^(BED-\d+|PQE-\d+|#\d+) (\w*)(?:\(([\w$.\-*/ ]*)\))?: (.*)$'
           headerPatternCorrespondence: issue, type, scope, subject
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: marocchino/sticky-pull-request-comment@v2
-        # When the previous steps fails, the workflow would stop. By adding this
-        # condition you can continue the execution with the populated error message.
         if: always() && (steps.lint_pr_title.outputs.error_message != null)
         with:
           header: pr-title-lint-error
           message: |
             Howdy! Thank you for opening this pull request 🙇
 
-            It looks like your proposed title needs to be adjusted.
+            It looks like your pull request title needs some adjustment.
             We require pull request titles to follow the Conventional Commits specification as outlined in our [documentation](https://github.com/SpecterOps/BloodHound/blob/main/rfc/bh-rfc-2.md).
-            Please review the required format and update your pull request title so that it is aligned.
+            Please review the required format and update your pull request title accordingly.
+            Thank you!
 
             Details:
 
@@ -71,35 +70,106 @@ jobs:
           header: pr-title-lint-error
           delete: true
 
-      - name: Check PR Title for Jira Issue
-        uses: actions/github-script@v6
-        id: extract-jira-reference
-        with:
-          script: |
-            const prTitle = github.event.pull_request.title;
-            const jiraPattern = /(BED|PQE-\d+)/;
-            const match = prTitle.match(jiraPattern);
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            if (!match) {
-              core.setFailed('PR title must contain a valid Jira issue key (e.g., BED-123, PQE-345).');
-            } else {
-              const jiraIssueKey = match[1];
-              core.setOutput('jira_key', jiraIssueKey)
-            }
-
-      - if: ${{ steps.extract-jira-reference.outputs.jira_key != null }}
-        name: Check Jira Issue Exists
+      - name: Check Issue Reference Exists
+        id: "ref-check"
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          URL="http://${{ secrets.JIRA_BASE_URL }}.atlassian.net/rest/api/3/issue/${{ steps.extract-jira-reference.outputs.jira_key }}"
+          #!/usr/bin/env bash
 
-          # curl for issue info with jira api
-          ISSUE_RESPONSE=$(curl -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-          -X GET \
-          "$URL" \
-          -H "Accept: application/json")
+          set -euo pipefail
 
-          echo "$ISSUE_RESPONSE"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          JIRA_ISSUE_REGEX="(BED-[0-9]+|PQE-[0-9]+)"
+          GH_ISSUE_REGEX="(#[0-9]+)"
+
+          function check_jira_ref() {
+              local REFERENCE=$1
+
+              echo "Jira issue reference found: ${REFERENCE}"
+
+              local URL="https://${{ secrets.JIRA_BASE_URL }}.atlassian.net/rest/api/3/issue/${REFERENCE}"
+
+              # curl for issue info with jira api
+              local ISSUE_RESPONSE=$(curl -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              -X GET \
+              "$URL" \
+              -H "Accept: application/json")
+
+              local HTTP_STATUS=$(echo "$ISSUE_RESPONSE" | jq '.http_status')
+
+              if [ "$HTTP_STATUS" != "200" ]; then
+                  echo "Issue request error"
+                  echo "ref_error=$ISSUE_RESPONSE" >> $GITHUB_OUTPUT
+                  exit 1
+              fi
+          }
+
+          function check_github_ref() {
+              local REFERENCE=$1
+
+              echo "GitHub Issue reference found: ${REFERENCE}"
+
+              local ISSUE_NUMBER="${REFERENCE:1}" # remove "#" from the start of the string
+
+              local URL="https://api.github.com/repos/SpecterOps/BloodHound/issues/${ISSUE_NUMBER}"
+
+              # curl for issue info with github api
+              local ISSUE_RESPONSE=$(curl -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "$URL")
+
+              local HTTP_STATUS=$(echo "$ISSUE_RESPONSE" | jq '.http_status')
+
+              if [ "$HTTP_STATUS" != "200" ]; then
+                  echo "Issue request error"
+                  echo "ref_error=$ISSUE_RESPONSE" >> $GITHUB_OUTPUT
+                  exit 1
+              fi
+          }
+
+          function main() {
+              if [[ $PR_TITLE =~ $JIRA_ISSUE_REGEX ]]; then
+                  check_jira_ref "${BASH_REMATCH[1]}"
+              elif  [[ $PR_TITLE =~ $GH_ISSUE_REGEX ]]; then
+                  check_github_ref "${BASH_REMATCH[1]}"
+              else
+                  local NO_REF_ERROR="No issue reference not found in the title."
+                  echo "$NO_REF_ERROR"
+                  echo "ref_error=$NO_REF_ERROR" >> $GITHUB_OUTPUT
+                  exit 1
+              fi
+          }
+
+          main
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: always() && (steps.ref-check.outputs.ref_error != null)
+        with:
+          header: pr-title-ref-check-error
+          message: |
+            Howdy! Thank you for opening this pull request 🙇
+
+            Your title is formatted correctly but we did not find a matching issue reference.
+            Please verify that the reference is correct and available in Jira or GitHub issues.
+
+            Details:
+
+            ```
+            ${{ steps.ref-check.outputs.ref_error }}
+            ```
+
+      # Delete a previous comment when the issue has been resolved
+      - if: ${{ steps.ref-check.outputs.ref_error == null }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-title-lint-error
+          delete: true
