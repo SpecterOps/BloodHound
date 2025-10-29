@@ -1,0 +1,132 @@
+{
+    "title": "Graph schema definition",
+    "description": "This schema defines the bloodhound graph schema. It defines the node and relationship types, as well as their properties, categories, and constraints",
+    "type": "object",
+    "properties": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "version": { "type": "string" },
+                "description": { "type": "string" }
+            },
+            "required": ["name", "version", "description"]
+        },
+        "properties": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "description": "used as variable name in generated code"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "formerly 'name' in cue file. human-readable"
+                    },
+                    "representation": {
+                        "type": "string",
+                        "description": "the actual string stored in property bags"
+                    },
+                    "data_type": { "enum": ["string", "boolean", "integer"] },
+                    "description": { "type": "string" }
+                },
+                "required": [
+                    "symbol",
+                    "name",
+                    "representation",
+                    "data_type",
+                    "description"
+                ]
+            }
+        },
+        "node_kinds": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "symbol": { "type": "string" },
+                    "representation": {
+                        "type": "string",
+                        "description": "can be different from symbol but usually isn't other than Base/Entity"
+                    },
+                    "description": { "type": "string" },
+                    "icon": {
+                        "type": "string",
+                        "description": "icon for this node, from font-awesome ----do we need this here??"
+                    },
+                    "iconColor": {
+                        "type": "string",
+                        "description": "icon color for this node, in hex ----do we need this here??"
+                    },
+                    "properties": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "property_symbol": {
+                                    "type": "string",
+                                    "description": "must match the 'symbol' value of one of the properties defined above"
+                                },
+                                "is_required": { "type": "boolean" },
+                                "default_value": {
+                                    "description": "if set, this property will be set to this value if it's not present at ingest"
+                                }
+                            },
+                            "required": ["property_symbol", "is_required"]
+                        }
+                    }
+                },
+                "required": ["symbol", "representation", "description"]
+            }
+        },
+        "relationship_kinds": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "symbol": { "type": "string" },
+                    "representation": { "type": "string" },
+                    "description": { "type": "string" },
+                    "is_traversable": { "type": "boolean" },
+                    "constraints": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "source_node": { "type": "string" },
+                                "target_node": { "type": "string" }
+                            },
+                            "required": ["source_node", "target_node"]
+                        }
+                    }
+                },
+                "required": [
+                    "symbol",
+                    "representation",
+                    "description",
+                    "is_traversable",
+                    "constraints"
+                ]
+            }
+        },
+        "categories": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "description": { "type": "string" },
+                    "category_type": { "type": "string" },
+                    "relationships": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "list of relationships in this category. must match one of the relationships defined above."
+                    }
+                },
+                "required": ["name", "description", "category_type"]
+            }
+        }
+    }
+}
