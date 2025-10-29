@@ -14,32 +14,24 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Run Go Integration Tests
+name: Run Go Unit Tests
 
 on:
-  workflow_run:
-    workflows: 
-      - "Run Go Unit Tests"
-      - "Run UI Tests"
-    types:
-      - completed
+  pull_request:
     branches:
       - main
       - "stage/**"
+    types:
+      - opened
+      - synchronize
 
 jobs:
-  run-go-integration-tests:
-    # On Success execute Go integration tests
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  run-go-unit-tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code for this repository
         uses: actions/checkout@v4
-
-      - name: Start PostgreSQL and Neo4j Containers
-        run: |
-          BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker compose -f docker-compose.testing.yml up -d
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -50,8 +42,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
-          go tool stbernard test -g -i -r
+          go tool stbernard test -g -r
 
       - name: Install AllureCtl 
         # v0.14.3
@@ -62,7 +53,6 @@ jobs:
         run: |
           mkdir allure-results
           cat go-test-results.json | golurectl -l -e --allure-suite "Go Test" --allure-tags "Unit" -o ./allure-results
-
       - name: Neo4j Debug Logs
         if: failure()
         run: |
@@ -80,7 +70,7 @@ jobs:
       
       - name: Upload Allure Results
         uses: actions/upload-artifact@v4
-        if: ${{ github.event.workflow_run.head_branch == 'main' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           name: allure-results
           path: allure-results
