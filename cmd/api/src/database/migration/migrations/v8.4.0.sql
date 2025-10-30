@@ -29,16 +29,15 @@ JOIN permissions p
         ('app', 'ReadAppConfig'),
         ('risks', 'GenerateReport'),
         ('audit_log', 'Read'),
-        ('auth', 'CreateToken'),
         ('auth', 'ManageSelf'),
         ('auth', 'ReadUsers'),
         ('graphdb', 'Read'),
         ('saved_queries', 'Read'),
         ('clients', 'Read')
-    ))) 
-ON CONFLICT DO NOTHING;
-
-INSERT INTO roles_permissions (role_id, permission_id)
-VALUES ((SELECT id FROM roles WHERE roles.name = 'Administrator'),
-        (SELECT id FROM permissions WHERE permissions.authority = 'audit_log' and permissions.name = 'Read'))
+    ))
+    OR 
+    (r.name = 'Administrator' AND (p.authority, p.name) IN (
+               ('audit_log', 'Read')
+    ))    
+) 
 ON CONFLICT DO NOTHING;
