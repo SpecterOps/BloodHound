@@ -89,9 +89,6 @@ const Details: FC = () => {
 
     const [membersListSortOrder, setMembersListSortOrder] = useState<SortOrder>('asc');
     const [selectorsListSortOrder, setSelectorsListSortOrder] = useState<SortOrder>('asc');
-    const [activeItem, setActiveItem] = useState<{ id: string; type: 'tag' | 'selector' | 'member' } | undefined>(
-        tagId ? { id: tagId, type: 'tag' } : undefined
-    );
 
     const environments = useEnvironmentIdList([{ path: `/${privilegeZonesPath}/*`, caseSensitive: false, end: false }]);
 
@@ -143,10 +140,7 @@ const Details: FC = () => {
                             title='Labels'
                             listQuery={labelsQuery}
                             selected={tagId}
-                            activeItem={activeItem}
-                            type='tag'
                             onSelect={(id) => {
-                                setActiveItem({ id: id.toString(), type: 'tag' });
                                 navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
                             }}
                         />
@@ -155,10 +149,7 @@ const Details: FC = () => {
                             title='Zones'
                             listQuery={zonesQuery}
                             selected={tagId}
-                            activeItem={activeItem}
-                            type='tag'
                             onSelect={(id) => {
-                                setActiveItem({ id: id.toString(), type: 'tag' });
                                 navigate(`/${privilegeZonesPath}/${tagType}/${id}/${detailsPath}`);
                             }}
                         />
@@ -166,10 +157,7 @@ const Details: FC = () => {
                     <SelectorsList
                         listQuery={selectorsQuery}
                         selected={selectorId}
-                        activeItem={activeItem}
-                        type='selector'
                         onSelect={(id) => {
-                            setActiveItem({ id: id.toString(), type: 'selector' });
                             navigate(
                                 `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
                             );
@@ -177,15 +165,11 @@ const Details: FC = () => {
                         sortOrder={selectorsListSortOrder}
                         onChangeSortOrder={setSelectorsListSortOrder}
                     />
-                    ;
                     {selectorId !== undefined ? (
                         <MembersList
                             listQuery={selectorMembersQuery}
                             selected={memberId}
-                            activeItem={activeItem}
-                            type='member'
                             onClick={(id) => {
-                                setActiveItem({ id: id.toString(), type: 'member' });
                                 navigate(
                                     `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${selectorId}/${membersPath}/${id}/${detailsPath}`
                                 );
@@ -197,10 +181,7 @@ const Details: FC = () => {
                         <MembersList
                             listQuery={tagMembersQuery}
                             selected={memberId}
-                            activeItem={activeItem}
-                            type='member'
                             onClick={(id) => {
-                                setActiveItem({ id: id.toString(), type: 'member' });
                                 navigate(
                                     `/${privilegeZonesPath}/${tagType}/${tagId}/${membersPath}/${id}/${detailsPath}`
                                 );

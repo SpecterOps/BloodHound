@@ -30,8 +30,6 @@ type TagListProps = {
     title: 'Zones' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
     selected?: string;
-    activeItem: { id: string; type: 'tag' | 'selector' | 'member' } | undefined;
-    type: 'tag' | 'selector' | 'member';
     onSelect: (id: number) => void;
 };
 /**
@@ -43,7 +41,7 @@ type TagListProps = {
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
  * @returns The component that displays a list of entities for the zone management page
  */
-export const TagList: FC<TagListProps> = ({ title, listQuery, selected, activeItem, type, onSelect }) => {
+export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { isLabelPage, isZonePage } = usePZPathParams();
@@ -104,7 +102,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, activeIt
                                     className={cn('border-y border-neutral-3 relative h-10', {
                                         'bg-neutral-4': selected === listItem.id.toString(),
                                     })}>
-                                    <SelectedHighlight activeItem={activeItem} itemId={listItem.id} type={type} />
+                                    <SelectedHighlight itemId={listItem.id} type='tag' />
                                     <Button
                                         variant='text'
                                         className='flex justify-between w-full'

@@ -39,8 +39,6 @@ type SelectorsListProps = {
         nextPageParam?: { skip: number; limit: number };
     }>;
     selected: string | undefined;
-    activeItem: { id: string; type: 'tag' | 'selector' | 'member' } | undefined;
-    type: 'selector';
     onSelect: (id: number) => void;
     sortOrder: SortOrder;
     onChangeSortOrder: (sort: SortOrder) => void;
@@ -93,8 +91,6 @@ export const SelectorsList: FC<SelectorsListProps> = ({
     onChangeSortOrder,
     onSelect,
     selected,
-    activeItem,
-    type,
     sortOrder,
 }) => {
     if (listQuery.isError) {
@@ -120,7 +116,7 @@ export const SelectorsList: FC<SelectorsListProps> = ({
                 className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}>
-                <SelectedHighlight selected={selected} activeItem={activeItem} itemId={item.id} type={type} />
+                <SelectedHighlight itemId={item.id} type='selector' />
                 <Button
                     variant='text'
                     className='flex justify-between w-full overflow-hidden'

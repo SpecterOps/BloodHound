@@ -27,8 +27,6 @@ describe('SelectorsList', () => {
             <SelectorsList
                 listQuery={{} as any}
                 selected='1'
-                activeItem={undefined}
-                type='selector'
                 onSelect={vi.fn()}
                 onChangeSortOrder={testOnChangeSortOrder}
                 sortOrder='asc'

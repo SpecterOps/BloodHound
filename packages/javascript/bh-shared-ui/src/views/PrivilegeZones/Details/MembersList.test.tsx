@@ -27,8 +27,6 @@ describe('MembersList', () => {
             <MembersList
                 listQuery={{} as any}
                 selected='1'
-                activeItem={undefined}
-                type='member'
                 onClick={vi.fn()}
                 onChangeSortOrder={testOnChangeSortOrder}
                 sortOrder='asc'

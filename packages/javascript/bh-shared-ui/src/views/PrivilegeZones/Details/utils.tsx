@@ -16,18 +16,31 @@
 
 import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
 import { FC } from 'react';
+import { usePZPathParams } from '../../../hooks';
 
 export const SelectedHighlight: FC<{
-    selected?: string;
-    activeItem?: { id: string; type: 'tag' | 'selector' | 'member' };
     itemId: string | number;
     type: 'tag' | 'selector' | 'member';
-}> = ({ activeItem, itemId, type }) => {
-    const isPrimary = activeItem?.id === itemId.toString() && activeItem?.type === type;
+}> = ({ itemId, type }) => {
+    const { tagId, selectorId, memberId } = usePZPathParams();
 
-    if (!isPrimary) return null;
+    const itemIdStr = itemId.toString();
+    const activeType = memberId ? 'member' : selectorId ? 'selector' : 'tag';
 
-    return <div className='h-full bg-primary pr-1 absolute' />;
+    const isActive =
+        activeType === type &&
+        ((type === 'tag' && tagId === itemIdStr) ||
+            (type === 'selector' && selectorId === itemIdStr) ||
+            (type === 'member' && memberId === itemIdStr));
+
+    if (!isActive) return null;
+
+    return (
+        <div
+            className='h-full bg-primary pr-1 absolute'
+            data-testid={`privilege-zones_details_${type}s-list_active-${type}s-item-${itemId}`}
+        />
+    );
 };
 
 export const isTag = (data: any): data is AssetGroupTag => {
