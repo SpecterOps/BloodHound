@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
@@ -310,7 +311,7 @@ func TestGetAssetGroupComboNode(t *testing.T) {
 	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
 		graphQuery := queries.NewGraphQuery(db, cache.Cache{}, config.Configuration{})
-		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero)
+		comboNode, err := graphQuery.GetAssetGroupComboNode(context.Background(), "", ad.AdminTierZero, false, model.User{})
 		require.Nil(t, err)
 
 		groupBObjectID := harness.AssetGroupComboNodeHarness.GroupB.ID.String()
