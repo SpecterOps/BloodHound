@@ -107,8 +107,11 @@ jobs:
               local HTTP_STATUS=$(echo "$ISSUE_RESPONSE" | jq '.http_status')
 
               if [ "$HTTP_STATUS" != "200" ]; then
-                  echo "Issue request error"
-                  echo "ref_error=$ISSUE_RESPONSE" >> $GITHUB_OUTPUT
+                  ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
+
+                  echo "Issue request error: ${ERROR}"
+                  echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
+
                   exit 1
               fi
           }
@@ -131,11 +134,14 @@ jobs:
               -H "X-GitHub-Api-Version: 2022-11-28" \
               --url "$URL")
 
-              local HTTP_STATUS=$(echo "$ISSUE_RESPONSE" | jq '.http_status')
+              local HTTP_STATUS=$(echo "$ISSUE_RESPONSE" | jq ".http_status")
 
               if [ "$HTTP_STATUS" != "200" ]; then
-                  echo "Issue request error"
-                  echo "ref_error=$ISSUE_RESPONSE" >> $GITHUB_OUTPUT
+                  ERROR=$(echo "$ISSUE_RESPONSE" | jq -c)
+
+                  echo "Issue request error: ${ERROR}"
+                  echo "ref_error=$ERROR" >> $GITHUB_OUTPUT
+
                   exit 1
               fi
           }
