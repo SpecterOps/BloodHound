@@ -17395,7 +17395,7 @@
       },
       "query.asset-group-tag-id": {
         "name": "asset_group_tag_id",
-        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' and 'Hygiene' is used.",
         "in": "query",
         "schema": {
           "type": "integer"
