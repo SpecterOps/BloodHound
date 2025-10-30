@@ -18,7 +18,13 @@ import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
-import { useCallback, useMemo, useState } from 'react';
+import {
+    useCallback,
+    useMemo,
+    useState,
+    type KeyboardEvent as ReactKeyboardEvent,
+    type MouseEvent as ReactMouseEvent,
+} from 'react';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import {
     compareForExploreTableSort,
@@ -91,7 +97,7 @@ const useExploreTableRowsAndColumns = ({
     );
 
     const handleKebabMenuClick = useCallback(
-        <T extends MouseEvent | KeyboardEvent>(e: T, id: string) => {
+        <T extends ReactMouseEvent<HTMLElement, MouseEvent> | ReactKeyboardEvent<HTMLElement>>(e: T, id: string) => {
             e.stopPropagation();
 
             const x = e instanceof MouseEvent ? e.clientX : window.innerHeight / 2;
