@@ -28,7 +28,9 @@ interface MembersListProps {
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: { skip: number; limit: number };
     }>;
-    selected: string | undefined;
+    selected?: string;
+    activeItem?: { id: string; type: 'tag' | 'selector' | 'member' };
+    type: 'member';
     onClick: (id: string) => void;
     sortOrder: SortOrder;
     onChangeSortOrder: (sort: SortOrder) => void;
@@ -52,6 +54,8 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
  */
 export const MembersList: React.FC<MembersListProps> = ({
     selected,
+    activeItem,
+    type,
     onClick,
     listQuery,
     sortOrder,
@@ -66,7 +70,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                     'bg-neutral-4': selected === item.id.toString(),
                 })}
                 style={style}>
-                <SelectedHighlight selected={selected} itemId={item.id} title={'Members'} />
+                <SelectedHighlight activeItem={activeItem} itemId={item.id} type={type} />
                 <Button
                     variant={'text'}
                     className='flex justify-start w-full'

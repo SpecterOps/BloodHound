@@ -17,21 +17,17 @@
 import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
 import { FC } from 'react';
 
-const isActive = (selected: string | undefined, itemId: string | number) => {
-    if (typeof itemId === 'number') return selected === itemId.toString();
-    else return selected === itemId;
-};
+export const SelectedHighlight: FC<{
+    selected?: string;
+    activeItem?: { id: string; type: 'tag' | 'selector' | 'member' };
+    itemId: string | number;
+    type: 'tag' | 'selector' | 'member';
+}> = ({ activeItem, itemId, type }) => {
+    const isPrimary = activeItem?.id === itemId.toString() && activeItem?.type === type;
 
-export const SelectedHighlight: FC<{ selected: string | undefined; itemId: string | number; title: string }> = ({
-    selected,
-    itemId,
-    title,
-}) => {
-    return isActive(selected, itemId) ? (
-        <div
-            data-testid={`privilege-zones_details_${title.toLowerCase()}-list_active-${title.toLowerCase()}-item-${selected}`}
-            className='h-full bg-primary pr-1 absolute'></div>
-    ) : null;
+    if (!isPrimary) return null;
+
+    return <div className='h-full bg-primary pr-1 absolute' />;
 };
 
 export const isTag = (data: any): data is AssetGroupTag => {

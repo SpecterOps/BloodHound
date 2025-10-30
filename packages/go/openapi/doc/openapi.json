@@ -3364,6 +3364,9 @@
                         },
                         "server_version": {
                           "type": "string"
+                        },
+                        "product_edition": {
+                          "type": "string"
                         }
                       }
                     }

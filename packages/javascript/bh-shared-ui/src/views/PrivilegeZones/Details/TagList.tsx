@@ -29,7 +29,9 @@ import { SelectedHighlight, isTag } from './utils';
 type TagListProps = {
     title: 'Zones' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
-    selected: string | undefined;
+    selected?: string;
+    activeItem: { id: string; type: 'tag' | 'selector' | 'member' } | undefined;
+    type: 'tag' | 'selector' | 'member';
     onSelect: (id: number) => void;
 };
 /**
@@ -41,7 +43,7 @@ type TagListProps = {
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
  * @returns The component that displays a list of entities for the zone management page
  */
-export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect }) => {
+export const TagList: FC<TagListProps> = ({ title, listQuery, selected, activeItem, type, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const { isLabelPage, isZonePage } = usePZPathParams();
@@ -97,18 +99,16 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                         .map((listItem) => {
                             return (
                                 <li
-                                    data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                     key={listItem.id}
+                                    data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                     className={cn('border-y border-neutral-3 relative h-10', {
                                         'bg-neutral-4': selected === listItem.id.toString(),
                                     })}>
-                                    <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
+                                    <SelectedHighlight activeItem={activeItem} itemId={listItem.id} type={type} />
                                     <Button
-                                        variant={'text'}
+                                        variant='text'
                                         className='flex justify-between w-full'
-                                        onClick={() => {
-                                            onSelect(listItem.id);
-                                        }}>
+                                        onClick={() => onSelect(listItem.id)}>
                                         <div className='flex items-center overflow-hidden'>
                                             {isZonePage && listItem.id !== topTagId && (
                                                 <ZoneAnalysisIcon
@@ -117,9 +117,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                     analysisEnabled={listItem?.analysis_enabled}
                                                 />
                                             )}
-                                            <span
-                                                className={cn('text-base dark:text-white truncate')}
-                                                title={listItem.name}>
+                                            <span className='text-base dark:text-white truncate' title={listItem.name}>
                                                 {listItem.name}
                                             </span>
                                         </div>
