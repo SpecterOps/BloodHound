@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
 import { KeyboardEvent, MouseEvent, useCallback, useMemo, useState } from 'react';
-import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import {
     compareForExploreTableSort,
     getExploreTableData,
@@ -154,9 +154,7 @@ const useExploreTableRowsAndColumns = ({
                         data-testid='kebab-menu'
                         aria-label='Row details'
                         onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        onKeyDown={(e) =>
-                            adaptClickHandlerToKeyDown(e, () => handleKebabMenuClick(e, row?.original?.id))
-                        }
+                        onKeyDown={adaptClickHandlerToKeyDown((e) => handleKebabMenuClick(e, row?.original?.id))}
                         className='explore-table-cell-icon h-full flex justify-center items-center'>
                         <FontAwesomeIcon
                             icon={faEllipsis}

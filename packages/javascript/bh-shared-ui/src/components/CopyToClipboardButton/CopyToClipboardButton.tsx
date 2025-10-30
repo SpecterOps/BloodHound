@@ -17,7 +17,7 @@ import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AnimationEvent, KeyboardEvent, MouseEvent, useState } from 'react';
 import { cn, copyToClipboard } from '../../utils';
-import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 
 type CopyToClipboardButtonProps = {
     onAnimationStart?: (e: AnimationEvent<HTMLDivElement>) => void;
@@ -51,7 +51,7 @@ export const CopyToClipboardButton = ({
                 role='button'
                 tabIndex={0}
                 onClick={handleCopyToClipBoard}
-                onKeyDown={(event) => adaptClickHandlerToKeyDown(event, handleCopyToClipBoard)}
+                onKeyDown={adaptClickHandlerToKeyDown(handleCopyToClipBoard)}
                 onAnimationStart={(animationEvent) => {
                     const element = animationEvent.target as HTMLElement;
 

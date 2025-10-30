@@ -23,7 +23,7 @@ import { useLocation } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery, usePZPathParams } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
-import { adaptClickHandlerToKeyDown } from '../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
 
 const emptyFunction = () => {};
@@ -125,7 +125,7 @@ export const Cypher: FC<{
             <CardContent className='px-6' data-testid='privilege-zones_cypher-container'>
                 <div
                     onClick={setFocusOnCypherEditor}
-                    onKeyDown={(event) => adaptClickHandlerToKeyDown(event, setFocusOnCypherEditor)}
+                    onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
                     tabIndex={0}
                     className='flex-1'
                     role='textbox'>

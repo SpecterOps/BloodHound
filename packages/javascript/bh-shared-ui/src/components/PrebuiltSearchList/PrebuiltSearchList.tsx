@@ -19,7 +19,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import groupBy from 'lodash/groupBy';
 import { FC, useEffect, useRef } from 'react';
 import { QueryListSection } from '../../types';
-import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
@@ -107,9 +107,9 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         tabIndex={0}
                                                         key={`${id}-${idx}`}
                                                         onClick={() => clickHandler(query, id)}
-                                                        onKeyDown={(e) =>
-                                                            adaptClickHandlerToKeyDown(e, () => clickHandler(query, id))
-                                                        }>
+                                                        onKeyDown={adaptClickHandlerToKeyDown(() =>
+                                                            clickHandler(query, id)
+                                                        )}>
                                                         {name ? (
                                                             <p className='mb-0 leading-none'>{name}</p>
                                                         ) : (

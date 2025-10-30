@@ -16,7 +16,7 @@
 import { FC, KeyboardEvent, MouseEvent } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { useSavedQueriesContext } from '../../views/Explore/providers/SavedQueriesProvider';
 import { VerticalEllipsis } from '../AppIcon/Icons';
 interface ListItemActionMenuProps {
@@ -63,7 +63,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                     <div
                         role='button'
                         tabIndex={0}
-                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleRun)}
+                        onKeyDown={adaptClickHandlerToKeyDown(handleRun)}
                         className={listItemStyles}
                         onClick={handleRun}>
                         Run
@@ -71,7 +71,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                     <div
                         role='button'
                         tabIndex={0}
-                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleEdit)}
+                        onKeyDown={adaptClickHandlerToKeyDown(handleEdit)}
                         className={listItemStyles}
                         onClick={handleEdit}>
                         Edit/Share
@@ -79,7 +79,7 @@ const ListItemActionMenu: FC<ListItemActionMenuProps> = ({ id, query, deleteQuer
                     <div
                         role='button'
                         tabIndex={0}
-                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleDelete)}
+                        onKeyDown={adaptClickHandlerToKeyDown(handleDelete)}
                         className={listItemStyles}
                         onClick={handleDelete}>
                         Delete

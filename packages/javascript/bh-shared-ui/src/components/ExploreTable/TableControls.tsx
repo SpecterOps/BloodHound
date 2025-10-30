@@ -20,7 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
-import { adaptClickHandlerToKeyDown } from '../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
@@ -103,7 +103,7 @@ const TableControls = <TData, TValue>({
                         role='button'
                         tabIndex={0}
                         onClick={onExpandClick}
-                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onExpandClick)}
+                        onKeyDown={adaptClickHandlerToKeyDown(onExpandClick)}
                         data-testid='expand-button'
                         aria-label='Expand table view'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
@@ -122,7 +122,7 @@ const TableControls = <TData, TValue>({
                         role='button'
                         tabIndex={0}
                         onClick={onCloseClick}
-                        onKeyDown={(e) => adaptClickHandlerToKeyDown(e, onCloseClick)}
+                        onKeyDown={adaptClickHandlerToKeyDown(onCloseClick)}
                         data-testid='close-button'
                         aria-label='Close table view'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />

@@ -32,7 +32,7 @@ import {
 } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { Permission, apiClient, cn } from '../../../utils';
-import { adaptClickHandlerToKeyDown } from '../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage from './SavedQueries/CypherSearchMessage';
@@ -272,7 +272,7 @@ const CypherSearchInner = ({
                         <div
                             role='button'
                             tabIndex={0}
-                            onKeyDown={(e) => adaptClickHandlerToKeyDown(e, setFocusOnCypherEditor)}
+                            onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
                             onClick={setFocusOnCypherEditor}
                             className='flex-1'>
                             <CypherEditor

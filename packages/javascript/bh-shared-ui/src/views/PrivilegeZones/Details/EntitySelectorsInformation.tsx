@@ -22,7 +22,7 @@ import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityI
 import { useExploreParams, usePZPathParams } from '../../../hooks';
 import { detailsPath, privilegeZonesPath, savePath, selectorsPath } from '../../../routes';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { adaptClickHandlerToKeyDown } from '../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 
 const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
     return (
@@ -131,11 +131,9 @@ const EntitySelectorsInformation: React.FC = () => {
                                             onClick={() => {
                                                 handleViewClick(selector.id);
                                             }}
-                                            onKeyDown={(e) =>
-                                                adaptClickHandlerToKeyDown(e, () => {
-                                                    handleViewClick(selector.id);
-                                                })
-                                            }>
+                                            onKeyDown={adaptClickHandlerToKeyDown(() => {
+                                                handleViewClick(selector.id);
+                                            })}>
                                             View
                                         </div>
                                         <div
@@ -145,9 +143,7 @@ const EntitySelectorsInformation: React.FC = () => {
                                             onClick={() => {
                                                 handleEditClick(selector.id);
                                             }}
-                                            onKeyDown={(event) =>
-                                                adaptClickHandlerToKeyDown(event, () => handleEditClick(selector.id))
-                                            }>
+                                            onKeyDown={adaptClickHandlerToKeyDown(() => handleEditClick(selector.id))}>
                                             Edit
                                         </div>
                                     </PopoverContent>

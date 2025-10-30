@@ -16,7 +16,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { FC, KeyboardEvent, MouseEvent } from 'react';
 import { AppIcon } from '../../../../components';
-import { adaptClickHandlerToKeyDown } from '../../../../utils/AccessibleClickableDiv';
+import { adaptClickHandlerToKeyDown } from '../../../../utils/adaptClickHandlerToKeyDown';
 interface SaveQueryActionMenuProps {
     saveAs: () => void;
 }
@@ -41,7 +41,7 @@ const SaveQueryActionMenu: FC<SaveQueryActionMenuProps> = ({ saveAs }) => {
                 <div
                     role='button'
                     tabIndex={0}
-                    onKeyDown={(e) => adaptClickHandlerToKeyDown(e, handleSaveAs)}
+                    onKeyDown={adaptClickHandlerToKeyDown(handleSaveAs)}
                     className={listItemStyles}
                     onClick={handleSaveAs}>
                     Save As
