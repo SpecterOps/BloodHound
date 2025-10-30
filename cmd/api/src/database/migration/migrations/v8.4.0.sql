@@ -29,6 +29,7 @@ JOIN permissions p
         ('app', 'ReadAppConfig'),
         ('risks', 'GenerateReport'),
         ('audit_log', 'Read'),
+        ('auth', 'CreateToken'),
         ('auth', 'ManageSelf'),
         ('auth', 'ReadUsers'),
         ('graphdb', 'Read'),
