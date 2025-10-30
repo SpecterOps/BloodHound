@@ -207,6 +207,6 @@ describe('List', async () => {
     it('handles rendering a selected item', async () => {
         render(<TagList title='Zones' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(await screen.findByTestId('privilege-zones_details_zones-list_active-zones-item-1')).toBeInTheDocument();
+        expect(await screen.findByTestId('privilege-zones_details_zones-list_item-1')).toBeInTheDocument();
     });
 });
