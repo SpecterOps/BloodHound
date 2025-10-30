@@ -15,33 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
-import { FC } from 'react';
-import { usePZPathParams } from '../../../hooks';
-
-export const SelectedHighlight: FC<{
-    itemId: string | number;
-    type: 'tag' | 'selector' | 'member';
-}> = ({ itemId, type }) => {
-    const { tagId, selectorId, memberId } = usePZPathParams();
-
-    const itemIdStr = itemId.toString();
-    const activeType = memberId ? 'member' : selectorId ? 'selector' : 'tag';
-
-    const isActive =
-        activeType === type &&
-        ((type === 'tag' && tagId === itemIdStr) ||
-            (type === 'selector' && selectorId === itemIdStr) ||
-            (type === 'member' && memberId === itemIdStr));
-
-    if (!isActive) return null;
-
-    return (
-        <div
-            className='h-full bg-primary pr-1 absolute'
-            data-testid={`privilege-zones_details_${type}s-list_active-${type}s-item-${itemId}`}
-        />
-    );
-};
 
 export const isTag = (data: any): data is AssetGroupTag => {
     return 'kind_id' in data;

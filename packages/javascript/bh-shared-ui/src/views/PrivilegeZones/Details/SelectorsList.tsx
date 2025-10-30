@@ -22,7 +22,8 @@ import { SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, getListHeight } from './utils';
+import { getListHeight } from './utils';
+import { SelectedHighlight } from './SelectedHighlight';
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div

@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import * as hooks from '../../../hooks';
 import { render, screen } from '../../../test-utils';
-import { SelectedHighlight } from './utils';
+import { SelectedHighlight } from './SelectedHighlight';
 
 vi.mock('../../../hooks', () => ({
     usePZPathParams: vi.fn(),
