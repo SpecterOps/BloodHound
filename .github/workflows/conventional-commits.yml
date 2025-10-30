@@ -94,7 +94,7 @@ jobs:
 
               echo "Jira issue reference found: ${REFERENCE}"
 
-              local URL="https://${{ secrets.JIRA_BASE_URL }}.atlassian.net/rest/api/3/issue/${REFERENCE}"
+              local URL="${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${REFERENCE}"
 
               echo "::debug::JIRA ISSUE URL: $URL"
 
