@@ -325,7 +325,7 @@ const CypherSearchInner = ({
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noreferrer'
                                 target='_blank'
-                                aria-label='More information'
+                                aria-label='Learn more about cypher'
                                 className='group'>
                                 <div>
                                     <AppIcon.Info size={24} />
@@ -333,9 +333,11 @@ const CypherSearchInner = ({
                             </a>
                         </Button>
 
-                        <Button onClick={() => handleCypherSearch()} size={'small'}>
+                        <Button onClick={handleCypherSearch} size={'small'}>
                             <div className='flex items-center'>
-                                <p className='text-base'>Run</p>
+                                <p aria-label='Run cypher query' className='text-base'>
+                                    Run
+                                </p>
                             </div>
                         </Button>
                     </div>
