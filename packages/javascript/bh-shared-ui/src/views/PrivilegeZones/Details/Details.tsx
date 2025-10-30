@@ -137,7 +137,7 @@ const Details: FC = () => {
                 <div className='flex basis-2/3 bg-neutral-2 min-w-0 rounded-lg shadow-outer-1 h-fit'>
                     {isLabelPage ? (
                         <TagList
-                            title={'Labels'}
+                            title='Labels'
                             listQuery={labelsQuery}
                             selected={tagId}
                             onSelect={(id) => {
@@ -146,7 +146,7 @@ const Details: FC = () => {
                         />
                     ) : (
                         <TagList
-                            title={'Zones'}
+                            title='Zones'
                             listQuery={zonesQuery}
                             selected={tagId}
                             onSelect={(id) => {
@@ -156,14 +156,14 @@ const Details: FC = () => {
                     )}
                     <SelectorsList
                         listQuery={selectorsQuery}
-                        onChangeSortOrder={setSelectorsListSortOrder}
+                        selected={selectorId}
                         onSelect={(id) => {
                             navigate(
                                 `/${privilegeZonesPath}/${tagType}/${tagId}/${selectorsPath}/${id}/${detailsPath}`
                             );
                         }}
-                        selected={selectorId}
                         sortOrder={selectorsListSortOrder}
+                        onChangeSortOrder={setSelectorsListSortOrder}
                     />
                     {selectorId !== undefined ? (
                         <MembersList
