@@ -17,6 +17,7 @@
 import { useTheme } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
+    ContextMenuPrivilegeZonesEnabled,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -50,7 +51,6 @@ import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
-import ContextMenuPrivilegeZonesEnabled from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';

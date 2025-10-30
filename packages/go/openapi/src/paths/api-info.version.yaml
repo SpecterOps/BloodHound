@@ -44,6 +44,8 @@ get:
                         type: string
                   server_version:
                     type: string
+                  product_edition:
+                    type: string
     401:
       $ref: './../responses/unauthorized.yaml'
     429:
