@@ -459,4 +459,5 @@ go.work*
 
 # integration tests allure results
 **/allure-results/*
+**/allure-report/*
 go-test-results.json
