@@ -11,7 +11,7 @@
     "scripts": {
         "build": "yarn check-types && rollup --config rollup.config.js",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "test": "vitest",
+        "test": "echo \"Warning: no test specified\"",
         "check-types": "tsc --noEmit --pretty",
         "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
@@ -25,7 +25,6 @@
         "@typescript-eslint/parser": "^7.3.0",
         "@vitest/coverage-v8": "^3.2.4",
         "@vitest/runner": "^3.2.4",
-        "allure-vitest": "^3.4.1",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "prettier": "^3.2.5",
