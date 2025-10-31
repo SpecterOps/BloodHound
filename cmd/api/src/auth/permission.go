@@ -27,6 +27,8 @@ type PermissionSet struct {
 	APsGenerateReport model.Permission
 	APsManageAPs      model.Permission
 
+	AuditLogRead model.Permission
+
 	AuthAcceptEULA                      model.Permission
 	AuthCreateToken                     model.Permission
 	AuthManageApplicationConfigurations model.Permission
@@ -58,6 +60,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.AppWriteApplicationConfiguration,
 		s.APsGenerateReport,
 		s.APsManageAPs,
+		s.AuditLogRead,
 		s.AuthCreateToken,
 		s.AuthManageApplicationConfigurations,
 		s.AuthManageProviders,
@@ -86,6 +89,8 @@ func Permissions() PermissionSet {
 
 		APsGenerateReport: model.NewPermission("risks", "GenerateReport"),
 		APsManageAPs:      model.NewPermission("risks", "ManageRisks"),
+
+		AuditLogRead: model.NewPermission("audit_log", "Read"),
 
 		AuthAcceptEULA:                      model.NewPermission("auth", "AcceptEULA"),
 		AuthCreateToken:                     model.NewPermission("auth", "CreateToken"),
