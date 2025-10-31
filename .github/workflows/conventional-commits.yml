@@ -27,7 +27,7 @@ on:
 
 jobs:
   check-commit-format:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - uses: amannn/action-semantic-pull-request@v6
