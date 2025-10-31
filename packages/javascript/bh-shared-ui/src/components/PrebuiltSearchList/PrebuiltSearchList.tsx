@@ -86,6 +86,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                 <div data-testid='list-sections'>
                     {Object.entries(groupedQueries).map(([category, queryData]) => (
                         <div key={category} className='relative'>
+                            oo
                             {category && !!queryData[0].queries.length && (
                                 <div className={`${styles.subheader} sticky top-0 z-[1] py-2`}>{category}</div>
                             )}

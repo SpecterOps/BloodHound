@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button, Input, Popover, PopoverAnchor, PopoverContent } from '@bloodhoundenterprise/doodleui';
 import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,
@@ -101,12 +101,12 @@ const SearchBar: React.FC = () => {
     return (
         <div {...getComboboxProps()} className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-                <PopoverTrigger asChild>
+                <PopoverAnchor>
                     <div className='flex items-center'>
                         <AppIcon.MagnifyingGlass className='-mr-4' />
                         <Input variant={'underlined'} placeholder='Search' className='pl-8' {...getInputProps()} />
                     </div>
-                </PopoverTrigger>
+                </PopoverAnchor>
                 <PopoverContent
                     align='start'
                     className='w-[448px] max-h-[400px] overflow-y-auto'
