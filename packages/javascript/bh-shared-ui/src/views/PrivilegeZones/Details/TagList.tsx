@@ -24,12 +24,13 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { ZoneAnalysisIcon } from '../ZoneAnalysisIcon';
 import { itemSkeletons } from '../utils';
-import { SelectedHighlight, isTag } from './utils';
+import { isTag } from './utils';
+import { SelectedHighlight } from './SelectedHighlight';
 
 type TagListProps = {
     title: 'Zones' | 'Labels';
     listQuery: UseQueryResult<AssetGroupTag[]>;
-    selected: string | undefined;
+    selected?: string;
     onSelect: (id: number) => void;
 };
 /**
@@ -97,18 +98,16 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                         .map((listItem) => {
                             return (
                                 <li
-                                    data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                     key={listItem.id}
+                                    data-testid={`privilege-zones_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                     className={cn('border-y border-neutral-3 relative h-10', {
                                         'bg-neutral-4': selected === listItem.id.toString(),
                                     })}>
-                                    <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
+                                    <SelectedHighlight itemId={listItem.id} type='tag' />
                                     <Button
-                                        variant={'text'}
+                                        variant='text'
                                         className='flex justify-between w-full'
-                                        onClick={() => {
-                                            onSelect(listItem.id);
-                                        }}>
+                                        onClick={() => onSelect(listItem.id)}>
                                         <div className='flex items-center overflow-hidden'>
                                             {isZonePage && listItem.id !== topTagId && (
                                                 <ZoneAnalysisIcon
@@ -117,9 +116,7 @@ export const TagList: FC<TagListProps> = ({ title, listQuery, selected, onSelect
                                                     analysisEnabled={listItem?.analysis_enabled}
                                                 />
                                             )}
-                                            <span
-                                                className={cn('text-base dark:text-white truncate')}
-                                                title={listItem.name}>
+                                            <span className='text-base dark:text-white truncate' title={listItem.name}>
                                                 {listItem.name}
                                             </span>
                                         </div>
