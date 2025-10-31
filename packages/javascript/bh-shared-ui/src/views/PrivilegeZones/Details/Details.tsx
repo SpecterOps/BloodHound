@@ -14,11 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone } from 'js-client-library';
 import { FC, useContext, useState } from 'react';
 import { UseQueryResult } from 'react-query';
-import { AppLink } from '../../../components/Navigation';
 import { useHighestPrivilegeTagId, usePZPathParams } from '../../../hooks';
 import {
     useSelectorMembersInfiniteQuery,
@@ -38,6 +36,7 @@ import {
 } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
+import EditInfoButton from '../EditInfoPanelButton';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { MembersList } from './MembersList';
 import SearchBar from './SearchBar';
@@ -78,7 +77,6 @@ const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const {
         isLabelPage,
-        isZonePage,
         zoneId = topTagId?.toString(),
         labelId,
         selectorId,
@@ -116,9 +114,6 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
     const saveLink = getSavePath(zoneId, labelId, selectorId);
 
-    // Edit button title changes depending on tab/context
-    const editButtonTitle = selectorId ? 'Rule' : isZonePage ? 'Zone' : 'Label';
-
     return (
         <div className='h-full'>
             <div className='flex mt-6'>
@@ -128,12 +123,13 @@ const Details: FC = () => {
                 </div>
                 <div className='basis-1/3 ml-8'>
                     {showEditButton && (
-                        <Button
-                            asChild={showEditButton || !saveLink}
-                            variant={'secondary'}
-                            disabled={showEditButton || !saveLink}>
-                            <AppLink to={saveLink || ''}>Edit {editButtonTitle}</AppLink>
-                        </Button>
+                        <EditInfoButton
+                            labelId={labelId}
+                            selectorId={selectorId}
+                            zoneId={zoneId}
+                            showEditButton={showEditButton}
+                            saveLink={saveLink}
+                        />
                     )}
                 </div>
             </div>
