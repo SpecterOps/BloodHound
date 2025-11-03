@@ -16,8 +16,8 @@
 
 import PrivilegeZones from './PrivilegeZones';
 
-export { SelectedDetails, getSavePath } from './Details/index';
-export * from './EditInfoPanelButton';
+export { SelectedDetails } from './Details';
+export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
 export * from './ZoneAnalysisIcon';
 export * from './utils';

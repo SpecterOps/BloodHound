@@ -31,11 +31,6 @@ import {
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
 
-type SetupProps = {
-    labelId?: string;
-    zoneId?: string;
-};
-
 vi.mock('../../../hooks/useMeasure', () => ({
     useMeasure: vi.fn().mockImplementation(() => [200, 200]),
 }));
@@ -57,21 +52,15 @@ afterAll(() => server.close());
 
 describe('Details', async () => {
     const user = userEvent.setup();
-    const setupComponent = ({ zoneId, labelId }: SetupProps) => {
-        const route = zoneId
-            ? `/${privilegeZonesPath}/${zonesPath}/${zoneId}/${detailsPath}`
-            : `/${privilegeZonesPath}/${zonesPath}/${labelId}/${detailsPath}`;
-        vi.mocked(useParams).mockReturnValue({ zoneId, labelId });
+
+    it('renders', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(
             <Routes>
-                <Route path={route} element={<Details />} />
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
             </Routes>,
-            { route }
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
         );
-    };
-
-    it('shows privilege zone', async () => {
-        setupComponent({ zoneId: '1' });
 
         expect(await screen.findByText(/Zones/)).toBeInTheDocument();
 
@@ -81,7 +70,13 @@ describe('Details', async () => {
     });
 
     it('has Tier Zero zone selected by default and no selectors or objects are selected', async () => {
-        setupComponent({ zoneId: '1' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        render(
+            <Routes>
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
+            </Routes>,
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
+        );
 
         const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');
         const selectorsListItems = await within(selectors).findAllByRole('listitem');
@@ -107,7 +102,13 @@ describe('Details', async () => {
     });
 
     it('handles object selection when a zone is already selected', async () => {
-        setupComponent({ zoneId: '1' });
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
+        render(
+            <Routes>
+                <Route path={`/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}`} element={<Details />} />
+            </Routes>,
+            { route: `/${privilegeZonesPath}/${zonesPath}/1/${detailsPath}` }
+        );
 
         longWait(async () => {
             const object5 = await screen.findByText('tier-0-object-5');
@@ -202,20 +203,6 @@ describe('Details', async () => {
             expect(
                 await screen.findByTestId('privilege-zones_details_zones-list_active-zones-item-3')
             ).toBeInTheDocument();
-        });
-    });
-
-    it('renders edit zones button when on Zones page', async () => {
-        setupComponent({ zoneId: '1' });
-
-        expect(await screen.findByText(/Edit Zone/)).toBeInTheDocument();
-    });
-
-    it('renders edit label button when on Labels page', async () => {
-        setupComponent({ labelId: '2' });
-
-        longWait(async () => {
-            expect(await screen.findByRole('button', { name: /edit label/i })).toBeInTheDocument();
         });
     });
 });

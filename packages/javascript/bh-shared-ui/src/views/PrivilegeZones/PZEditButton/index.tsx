@@ -14,6 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import EditInfoButton from './EditInfoButton';
-
-export default EditInfoButton;
+export * from './PZEditButton';

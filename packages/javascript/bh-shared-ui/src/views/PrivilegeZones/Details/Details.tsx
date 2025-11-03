@@ -25,39 +25,16 @@ import {
     useTagsQuery,
 } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
-import {
-    detailsPath,
-    labelsPath,
-    membersPath,
-    privilegeZonesPath,
-    savePath,
-    selectorsPath,
-    zonesPath,
-} from '../../../routes';
+import { detailsPath, membersPath, privilegeZonesPath, selectorsPath } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { useAppNavigate } from '../../../utils';
-import EditInfoButton from '../EditInfoPanelButton';
+import { PZEditButton } from '../PZEditButton';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import { MembersList } from './MembersList';
 import SearchBar from './SearchBar';
 import { SelectedDetails } from './SelectedDetails';
 import { SelectorsList } from './SelectorsList';
 import { TagList } from './TagList';
-
-export const getSavePath = (
-    zoneId: string | undefined,
-    labelId: string | undefined,
-    selectorId: string | undefined
-) => {
-    const tagType = !labelId ? zonesPath : labelsPath;
-    const tagPathId = tagType === 'zones' ? zoneId ?? '' : labelId ?? '';
-
-    if (tagPathId === '') return;
-
-    const dynamicSavePath = selectorId ? `${selectorsPath}/${selectorId}/${savePath}` : savePath;
-
-    return `/${privilegeZonesPath}/${tagType}/${tagPathId}/${dynamicSavePath}`;
-};
 
 export const getEditButtonState = (
     memberId?: string,
@@ -111,8 +88,6 @@ const Details: FC = () => {
     const selectorsQuery = useSelectorsInfiniteQuery(tagId, selectorsListSortOrder, environments);
     const selectorMembersQuery = useSelectorMembersInfiniteQuery(tagId, selectorId, membersListSortOrder, environments);
     const tagMembersQuery = useTagMembersInfiniteQuery(tagId, membersListSortOrder, environments);
-    const showEditButton = !getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery);
-    const saveLink = getSavePath(zoneId, labelId, selectorId);
 
     return (
         <div className='h-full'>
@@ -122,15 +97,9 @@ const Details: FC = () => {
                     <SearchBar />
                 </div>
                 <div className='basis-1/3 ml-8'>
-                    {showEditButton && (
-                        <EditInfoButton
-                            labelId={labelId}
-                            selectorId={selectorId}
-                            zoneId={zoneId}
-                            showEditButton={showEditButton}
-                            saveLink={saveLink}
-                        />
-                    )}
+                    <PZEditButton
+                        showEditButton={!getEditButtonState(memberId, selectorsQuery, zonesQuery, labelsQuery)}
+                    />
                 </div>
             </div>
             <div className='flex gap-8 mt-4 h-full'>
