@@ -78,8 +78,14 @@ func (s Metadata) MatchKind() (graph.Kind, bool) {
 		return ad.CertTemplate, true
 	case DataTypeIssuancePolicy:
 		return ad.IssuancePolicy, true
-	}
 
+	case DataTypeSite:
+		return ad.Site, true
+	case DataTypeSiteServer:
+		return ad.SiteServer, true
+	case DataTypeSiteSubnet:
+		return ad.SiteSubnet, true
+	}
 	return nil, false
 }
 
@@ -103,6 +109,9 @@ const (
 	DataTypeCertTemplate   DataType = "certtemplates"
 	DataTypeAzure          DataType = "azure"
 	DataTypeIssuancePolicy DataType = "issuancepolicies"
+	DataTypeSite           DataType = "sites"
+	DataTypeSiteServer     DataType = "siteservers"
+	DataTypeSiteSubnet     DataType = "sitesubnets"
 	DataTypeOpenGraph      DataType = "opengraph"
 )
 
@@ -125,6 +134,9 @@ func AllIngestDataTypes() []DataType {
 		DataTypeCertTemplate,
 		DataTypeAzure,
 		DataTypeIssuancePolicy,
+		DataTypeSite,
+		DataTypeSiteServer,
+		DataTypeSiteSubnet,
 	}
 }
 

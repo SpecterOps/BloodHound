@@ -42,3 +42,58 @@ JOIN permissions p
     ))    
 ) 
 ON CONFLICT DO NOTHING;
+
+-- Adding site specific columns to ad_data_quality_aggregations and ad_data_quality_stats tables
+ALTER TABLE "ad_data_quality_aggregations" ADD COLUMN IF NOT EXISTS sites BIGINT DEFAULT 0;
+ALTER TABLE "ad_data_quality_aggregations" ADD COLUMN IF NOT EXISTS siteservers BIGINT DEFAULT 0;
+ALTER TABLE "ad_data_quality_aggregations" ADD COLUMN IF NOT EXISTS sitesubnets BIGINT DEFAULT 0;
+
+ALTER TABLE "ad_data_quality_stats" ADD COLUMN IF NOT EXISTS sites BIGINT DEFAULT 0;
+ALTER TABLE "ad_data_quality_stats" ADD COLUMN IF NOT EXISTS siteservers BIGINT DEFAULT 0;
+ALTER TABLE "ad_data_quality_stats" ADD COLUMN IF NOT EXISTS sitesubnets BIGINT DEFAULT 0;
+
+
+-- Add Sites default selector to Tier Zero
+WITH src_data AS (
+  SELECT * FROM (VALUES
+-- START
+('Sites', true, true, E'MATCH (n:Site) \nRETURN n;', E'Control over an Active Directory site may allow users to compromise all assets associated with the site through the application of Group Policy Objects. Since AD Sites contain at least a Domain Controller as a Site Server, this results in the potential compromise of at least one domain in the forest. Therefore, Active Directory Site objects are Tier Zero.')
+-- END
+  ) AS s (name, enabled, allow_disable, cypher, description)
+), inserted_selectors AS (
+INSERT INTO asset_group_tag_selectors (
+  asset_group_tag_id,
+  created_at,
+  created_by,
+  updated_at,
+  updated_by,
+  disabled_at,
+  disabled_by,
+  name,
+  description,
+  is_default,
+  allow_disable,
+  auto_certify
+)
+SELECT
+  (SELECT id FROM asset_group_tags WHERE type = 1 and position = 1 LIMIT 1),
+  current_timestamp,
+  'SYSTEM',
+  current_timestamp,
+  'SYSTEM',
+  CASE WHEN NOT d.enabled THEN current_timestamp ELSE NULL END,
+  CASE WHEN NOT d.enabled THEN 'SYSTEM' ELSE NULL END,
+  d.name,
+  d.description,
+  true,
+  d.allow_disable,
+  2
+FROM src_data d WHERE NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = d.name)
+  RETURNING id, name
+)
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value)
+SELECT
+  s.id,
+  2,
+  d.cypher
+FROM inserted_selectors s JOIN src_data d ON d.name = s.name;

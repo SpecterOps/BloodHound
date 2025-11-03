@@ -160,6 +160,7 @@ func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http
 			"ous":         adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter),
 			"computers":   adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter),
 			"users":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter),
+			"sites":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectSitesCandidateFilter),
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 			"tierzero":    adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter),
 		}
@@ -281,4 +282,34 @@ func (s *Resources) GetIssuancePolicyEntityInfo(response http.ResponseWriter, re
 	)
 
 	s.handleAdEntityInfoQuery(response, request, ad.IssuancePolicy, countQueries)
+}
+
+func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"controllers": adAnalysis.FetchInboundADEntityControllers,
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.Site, countQueries)
+}
+
+func (s *Resources) GetSiteServerEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"controllers": adAnalysis.FetchInboundADEntityControllers,
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.SiteServer, countQueries)
+}
+
+func (s *Resources) GetSiteSubnetEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"controllers": adAnalysis.FetchInboundADEntityControllers,
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.SiteSubnet, countQueries)
 }

@@ -299,3 +299,37 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 		converted.RelProps = append(converted.RelProps, container)
 	}
 }
+
+func convertSiteData(site ein.Site, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(site.IngestBase, ad.Site, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, site.Aces, site.ObjectIdentifier, ad.Site)...)
+
+	if rel := ein.ParseObjectContainer(site.IngestBase, ad.Site); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+
+	if len(site.Links) > 0 {
+		converted.RelProps = append(converted.RelProps, ein.ParseGpLinks(site.Links, site.ObjectIdentifier, ad.Site)...)
+	}
+}
+
+func convertSiteServerData(siteServer ein.SiteServer, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(siteServer), ad.SiteServer, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, siteServer.Aces, siteServer.ObjectIdentifier, ad.SiteServer)...)
+
+	if rel := ein.ParseObjectContainer(ein.IngestBase(siteServer), ad.SiteServer); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}
+
+func convertSiteSubnetData(siteSubnet ein.SiteSubnet, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(siteSubnet), ad.SiteSubnet, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, siteSubnet.Aces, siteSubnet.ObjectIdentifier, ad.SiteSubnet)...)
+
+	if rel := ein.ParseObjectContainer(ein.IngestBase(siteSubnet), ad.SiteSubnet); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}

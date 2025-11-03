@@ -28,24 +28,16 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, target
             </Typography>
 
             <Typography variant='body2'>
-                The ability to alter the gPLink attribute may allow an attacker to apply a malicious Group Policy Object
-                (GPO) to all child user and computer objects (including the ones located in nested OUs). This can be
-                exploited to make said child objects execute arbitrary commands through an immediate scheduled task,
+                The ability to alter the gPLink attribute of an object may allow an attacker to apply a malicious Group Policy Object
+                (GPO) to all child user and computer objects. This can be
+                exploited to make said child objects execute arbitrary commands through e.g. an immediate scheduled task,
                 thus compromising them.
             </Typography>
-
             <Typography variant='body2'>
-                Successful exploitation will require the possibility to add non-existing DNS records to the domain and
-                to create machine accounts. Alternatively, an already compromised domain-joined machine may be used to
-                perform the attack. Note that the attack vector implementation is not trivial and will require some
-                setup.
-            </Typography>
-
-            <Typography variant='body2'>
-                Alternatively, the ability to modify the gPLink attribute can be exploited in conjunction with write
-                permissions on a GPO. In such a situation, an attacker could first inject a malicious scheduled task in
-                the controlled GPO, and then link the GPO to the target through its gPLink attribute, making all child
-                users and computers apply the malicious GPO and execute arbitrary commands.
+                For domain and OU objects, child user/computer objects are the ones belonging to the domain/OU (including the ones located in nested OUs). 
+                In the case of a site, the affected objects are the computers that have an IP address included in one of the site's subnets  
+                (or computers that do not belong to any site if this is the default site), as well as users connecting to these computers.
+                Note that Server objects associated with the Site should be located in the Site.
             </Typography>
         </>
     );
