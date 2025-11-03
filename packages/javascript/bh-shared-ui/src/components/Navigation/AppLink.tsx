@@ -23,7 +23,7 @@ import {
 } from '../../utils/searchParams/searchParams';
 
 export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
-    const path = to instanceof String ? to : (to as Partial<Path>).pathname;
+    const path = typeof to === 'string' ? to : (to as Partial<Path>).pathname;
 
     if (discardQueryParams) {
         return (
