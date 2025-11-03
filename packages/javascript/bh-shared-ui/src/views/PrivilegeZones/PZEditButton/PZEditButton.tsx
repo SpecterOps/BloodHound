@@ -20,7 +20,7 @@ import { AppLink } from '../../../components/Navigation';
 import { usePZPathParams } from '../../../hooks';
 import { labelsPath, privilegeZonesPath, savePath, selectorsPath, zonesPath } from '../../../routes';
 
-enum TitleAppend {
+enum TitleSuffix {
     Selector = 'Rule',
     Zone = 'Zone',
     Label = 'Label',
@@ -43,11 +43,11 @@ export const getSavePath = (
 
 export const suffix = (zoneId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
     if (selectorId) {
-        return TitleAppend.Selector;
-    } else if (zoneId) {
-        return TitleAppend.Zone;
+        return TitleSuffix.Selector;
     } else if (labelId) {
-        return TitleAppend.Label;
+        return TitleSuffix.Label;
+    } else {
+        return TitleSuffix.Zone;
     }
 };
 
