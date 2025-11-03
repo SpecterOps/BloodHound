@@ -33,7 +33,7 @@ import { useImportSavedQuery } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { QuickUploadExclusionIds } from '../../../../utils';
 
-const allowedFileTypes = ['application/json', 'application/zip'];
+const allowedFileTypes = ['application/json', 'application/zip', 'application/x-zip-compressed'];
 
 const ImportQueryDialog: React.FC<{
     open: boolean;
