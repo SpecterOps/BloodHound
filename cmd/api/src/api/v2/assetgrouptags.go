@@ -139,12 +139,22 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				tview := AssetGroupTagView{AssetGroupTag: tag}
 
 				if paramIncludeCounts {
-					// Only check user access if ETAC is enabled
+					// only check user access if ETAC is enabled
 					if etacFlag.Enabled {
 						accessList := ExtractEnvironmentIDsFromUser(&user)
 
-						// Apply filters only if user doesn’t have access to all environments
-						if !user.AllEnvironments && len(accessList) > 0 {
+						if !user.AllEnvironments {
+							// user has no access
+							if len(accessList) == 0 {
+								tview.Counts = &AssetGroupTagCounts{
+									Selectors: selectorCounts[tag.ID],
+									Members:   0,
+								}
+								resp.Tags = append(resp.Tags, tview)
+								continue
+							}
+
+							// user has access to specified environment
 							filters = append(filters, query.Or(
 								query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
 								query.In(query.NodeProperty(azure.TenantID.String()), accessList),
