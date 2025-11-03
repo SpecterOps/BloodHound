@@ -122,6 +122,7 @@ describe('CreateUserDialog', async () => {
     type SetupOptions = {
         renderErrors?: boolean;
         renderLoading?: boolean;
+        renderShowEnvironmentAccessControls?: boolean;
     };
 
     // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
@@ -143,12 +144,12 @@ describe('CreateUserDialog', async () => {
 
         render(
             <CreateUserDialog
-                open={true}
-                showEnvironmentAccessControls={true}
+                error={options?.renderErrors || false}
+                isLoading={options?.renderLoading || false}
                 onClose={testOnClose}
                 onSave={testOnSave}
-                isLoading={options?.renderLoading || false}
-                error={options?.renderErrors || false}
+                open={true}
+                showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
             />
         );
 

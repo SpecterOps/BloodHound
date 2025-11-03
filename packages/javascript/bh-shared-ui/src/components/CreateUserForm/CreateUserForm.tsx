@@ -36,17 +36,14 @@ import {
     SelectValue,
     Tooltip,
 } from '@bloodhoundenterprise/doodleui';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert } from '@mui/material';
-import { CreateUserRequest, Environment, EnvironmentRequest, Role, SSOProvider } from 'js-client-library';
-import { Minus } from 'lucide-react';
+import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
-import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
 import { apiClient } from '../../utils';
+import EnvironmentSelectPanel from '../EnvironmentSelectPanel/EnvironmentSelectPanel';
 
 export type CreateUserRequestForm = Omit<CreateUserRequest, 'sso_provider_id'> & {
     sso_provider_id: string | undefined;
@@ -77,8 +74,6 @@ const CreateUserForm: React.FC<{
 
     const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
-    const [searchInput, setSearchInput] = useState<string>('');
-    const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([]);
     const [selectedRoleValue, setSelectedRoleValue] = useState([3]);
 
     const handleCheckedChange = (checked: boolean | 'indeterminate') => {
@@ -104,44 +99,8 @@ const CreateUserForm: React.FC<{
 
     const selectedETACEnabledRole = matchingRoles?.toString() === 'Read-Only' || matchingRoles?.toString() === 'User';
 
-    const { data: availableEnvironments } = useAvailableEnvironments();
-
-    const filteredEnvironments = availableEnvironments?.filter((environment: Environment) =>
-        environment.name.toLowerCase().includes(searchInput.toLowerCase())
-    );
-
-    const allEnvironmentsSelected: any =
-        selectedEnvironments &&
-        selectedEnvironments.length === availableEnvironments?.length &&
-        availableEnvironments!.length > 0;
-
-    const handleSelectAllEnvironmentsChange = (allEnvironmentsChecked: string | boolean) => {
-        if (allEnvironmentsChecked || allEnvironmentsIndeterminate) {
-            const returnMappedEnvironments: string[] | undefined = availableEnvironments?.map(
-                (environment) => environment.id
-            );
-            returnMappedEnvironments && setSelectedEnvironments(returnMappedEnvironments);
-        } else {
-            setSelectedEnvironments([]);
-        }
-    };
-
-    const formatReturnedEnvironments: EnvironmentRequest[] =
-        selectedEnvironments &&
-        selectedEnvironments.map((itemId: string) => ({
-            environment_id: itemId,
-        }));
-
-    const handleEnvironmentSelectChange = (itemId: string, checked: string | boolean) => {
-        if (checked) {
-            setSelectedEnvironments((prevSelected) => [...prevSelected, itemId]);
-        } else {
-            setSelectedEnvironments((prevSelected) => prevSelected.filter((id) => id !== itemId));
-        }
-    };
-
-    const allEnvironmentsIndeterminate =
-        selectedEnvironments.length > 0 && selectedEnvironments.length < availableEnvironments!.length;
+    const selectedAdminOrPowerUserRole =
+        matchingRoles?.toString() === 'Administrator' || matchingRoles?.toString() === 'Power User';
 
     const onError = () => {
         // onSubmit error
@@ -169,6 +128,8 @@ const CreateUserForm: React.FC<{
     const handleOnSave = () => {
         const values = form.getValues();
 
+        console.log(values + ' these are values submitted');
+
         const formData = {
             email_address: values.email_address,
             principal: values.principal,
@@ -176,13 +137,19 @@ const CreateUserForm: React.FC<{
             last_name: values.last_name,
             sso_provider_id: values.password ? undefined : values.sso_provider_id?.toString(),
             roles: selectedRoleValue,
+            //all_environments: allEnvironmentsSelected || selectedAdminOrPowerUserRole ? true : false,
+            all_environments:
+                selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
+                    ? true
+                    : false,
         };
 
         const eTACFormData = {
             ...formData,
-            all_environments: allEnvironmentsSelected ? true : false,
             environment_targeted_access_control: {
-                environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
+                //environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
+                environments:
+                    values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
             },
         };
 
@@ -200,6 +167,9 @@ const CreateUserForm: React.FC<{
             });
         }
     }, [form, error, form.formState.errors]);
+
+    console.log(form.watch('all_environments'));
+    console.log(form.watch('environment_targeted_access_control.environments'));
 
     return (
         <Form {...form}>
@@ -231,15 +201,15 @@ const CreateUserForm: React.FC<{
                                                         className='flex'
                                                         data-testid='create-user-dialog_select_role-tooltip'>
                                                         <Tooltip
-                                                            tooltip='Only User, Read-Only, Upload-Only roles contain the limited access functionality.'
+                                                            tooltip='Only Read-Only and Users roles contain the environment target access control.'
                                                             contentProps={{
-                                                                className: 'dark:bg-neutral-dark-5 border-0',
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',
                                                             }}
                                                         />
                                                     </div>
                                                 </div>
                                                 <Select
-                                                    {...form.register('roles')}
                                                     onValueChange={(field) => {
                                                         form.setValue('roles', [Number(field)]);
                                                         setSelectedRoleValue([Number([field])]);
@@ -599,109 +569,7 @@ const CreateUserForm: React.FC<{
                             </DialogActions>
                         </Card>
                         {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                            <Card className='flex-1 p-4 rounded shadow max-w-[400px]'>
-                                <DialogTitle>Environmental Targeted Access Control </DialogTitle>
-                                <div
-                                    className='flex flex-col h-full pb-6'
-                                    data-testid='create-user-dialog_environments-checkboxes-dialog'>
-                                    <div className='border border-color-[#CACFD3] mt-3 box-border h-full overflow-y-auto'>
-                                        <div className='border border-solid border-color-[#CACFD3] flex'>
-                                            <FontAwesomeIcon className='ml-4 mt-3' icon={faSearch} />
-                                            <Input
-                                                variant='underlined'
-                                                className='w-full ml-3'
-                                                id='search'
-                                                type='text'
-                                                placeholder='Search'
-                                                onChange={(e) => {
-                                                    setSearchInput(e.target.value);
-                                                }}
-                                            />
-                                        </div>
-                                        <div
-                                            className='flex flex-row ml-4 mt-6 mb-2 items-center'
-                                            data-testid='create-user-dialog_select-all-environments-checkbox-div'>
-                                            <FormField
-                                                name='all_environments'
-                                                control={form.control}
-                                                render={() => (
-                                                    <FormItem className='flex flex-row items-center'>
-                                                        <Checkbox
-                                                            checked={
-                                                                allEnvironmentsSelected || allEnvironmentsIndeterminate
-                                                            }
-                                                            id='allEnvironments'
-                                                            onCheckedChange={handleSelectAllEnvironmentsChange}
-                                                            className={
-                                                                allEnvironmentsSelected &&
-                                                                '!bg-primary border-[#2C2677] dark:!bg-[#f4f4f4]'
-                                                            }
-                                                            icon={
-                                                                allEnvironmentsIndeterminate && (
-                                                                    <Minus
-                                                                        className='h-full w-full bg-[#f4f4f4] text-neutral-dark-1 dark:bg-[#222222] dark:text-[#f4f4f4]'
-                                                                        absoluteStrokeWidth={true}
-                                                                        strokeWidth={3}
-                                                                    />
-                                                                )
-                                                            }
-                                                            data-testid='create-user-dialog_select-all-environments-checkbox'
-                                                        />
-                                                        <FormLabel
-                                                            htmlFor='allEnvironments'
-                                                            className='ml-3 w-full cursor-pointer font-normal'>
-                                                            Select All Environments
-                                                        </FormLabel>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </div>
-                                        <div
-                                            className='flex flex-col'
-                                            data-testid='create-user-dialog_environments-checkboxes-div'>
-                                            {filteredEnvironments &&
-                                                filteredEnvironments?.map((item) => {
-                                                    return (
-                                                        <div
-                                                            key={item.id}
-                                                            className='flex justify-start items-center ml-5'
-                                                            data-testid='create-user-dialog_environments-checkbox'>
-                                                            <FormField
-                                                                name='environment_targeted_access_control.environments'
-                                                                control={form.control}
-                                                                render={({ field }) => (
-                                                                    <FormItem className='flex flex-row items-center'>
-                                                                        <Checkbox
-                                                                            {...field}
-                                                                            checked={selectedEnvironments.includes(
-                                                                                item.id
-                                                                            )}
-                                                                            className='m-3 data-[state=checked]:bg-primary data-[state=checked]:border-[#2C2677]'
-                                                                            id='environments'
-                                                                            onCheckedChange={(checked) =>
-                                                                                handleEnvironmentSelectChange(
-                                                                                    item.id,
-                                                                                    checked
-                                                                                )
-                                                                            }
-                                                                            value={item.name}
-                                                                            data-testid='create-user-dialog_environments-checkboxes'
-                                                                        />
-                                                                        <FormLabel
-                                                                            htmlFor='environments'
-                                                                            className='mr-3 w-full cursor-pointer font-normal'>
-                                                                            {item.name}
-                                                                        </FormLabel>
-                                                                    </FormItem>
-                                                                )}
-                                                            />
-                                                        </div>
-                                                    );
-                                                })}
-                                        </div>
-                                    </div>
-                                </div>
-                            </Card>
+                            <EnvironmentSelectPanel form={form} createUser={true} />
                         )}
                     </div>
                 )}

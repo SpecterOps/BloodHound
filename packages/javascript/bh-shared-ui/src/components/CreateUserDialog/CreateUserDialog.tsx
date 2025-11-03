@@ -39,7 +39,7 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     open: boolean;
     showEnvironmentAccessControls: boolean;
-}> = ({ error, isLoading, onClose, onSave, showEnvironmentAccessControls }) => {
+}> = ({ error, isLoading, onClose, onSave, showEnvironmentAccessControls, open }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.sso_provider_id) {
@@ -64,7 +64,7 @@ const CreateUserDialog: React.FC<{
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
-            <DialogTrigger asChild>
+            <DialogTrigger>
                 <Button
                     disabled={!hasPermission}
                     onClick={() => {
@@ -87,6 +87,7 @@ const CreateUserDialog: React.FC<{
                             error={error}
                             isLoading={isLoading}
                             onSubmit={handleOnSave}
+                            //open={open}
                             showEnvironmentAccessControls={showEnvironmentAccessControls}
                         />
                     </DialogContent>
