@@ -65,6 +65,7 @@ patch:
   tags:
     - Asset Isolation
     - Enterprise
+    - Community
   requestBody:
     description: The request body for updating an asset group tag. At least one field is required.
     required: true

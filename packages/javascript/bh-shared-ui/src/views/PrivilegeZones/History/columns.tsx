@@ -30,7 +30,7 @@ const actionTranslate: Record<string, string> = {
     AnalysisDisabledTag: 'Analysis Disabled Tag',
     CreateSelector: 'Create Selector',
     UpdateSelector: 'Update Selector',
-    DeleteSelector: 'DeleteSelector',
+    DeleteSelector: 'Delete Selector',
     CertifyNodeAuto: 'Automatic Certification',
     CertifyNodeManual: 'User Certification',
     CertifyNodeRevoked: 'Certify Revoked',

@@ -17,12 +17,13 @@
 import { Card, CardHeader, CardTitle, DataTable } from '@bloodhoundenterprise/doodleui';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
+import { measureElement } from '../utils';
 import { FilterDialog } from './FilterDialog';
 import HistoryNote from './HistoryNote';
 import { columns } from './columns';
 import { useAssetGroupTagHistoryQuery } from './hooks';
 import { AssetGroupTagHistoryFilters, DataTableProps } from './types';
-import { DEFAULT_FILTER_VALUE, measureElement } from './utils';
+import { DEFAULT_FILTER_VALUE } from './utils';
 
 const tableProps: DataTableProps['TableProps'] = {
     className: 'table-fixed',

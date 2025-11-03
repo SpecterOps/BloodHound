@@ -220,6 +220,7 @@ func processSingleFile(ctx context.Context, fileData IngestFileData, ingestConte
 
 	defer func() {
 		file.Close()
+
 		// Always remove the file after attempting to ingest it. Even if it failed
 		if err := os.Remove(fileData.Path); err != nil && !errors.Is(err, fs.ErrNotExist) {
 			slog.ErrorContext(
@@ -276,15 +277,15 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 	}
 
 	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
-	flagEnabled := false
+	flagChangeLogEnabled := false
 	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
 		slog.WarnContext(s.ctx, "Get changelog feature flag failed", attr.Error(err))
 	} else {
-		flagEnabled = changelogFF.Enabled
+		flagChangeLogEnabled = changelogFF.Enabled
 	}
 
 	for _, task := range tasks {
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagEnabled)
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled)
 		fileData, err := s.ProcessIngestFile(ingestCtx, task)
 
 		switch {
@@ -320,7 +321,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		slog.Int("task_count", len(tasks)),
 	)
 
-	if flagEnabled {
+	if flagChangeLogEnabled {
 		s.changeManager.FlushStats()
 	}
 }

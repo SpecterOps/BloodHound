@@ -49,6 +49,7 @@ const (
 	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
 	TierManagementParameterKey ParameterKey = "analysis.tiering"
 	StaleClientUpdatedLogicKey ParameterKey = "pipeline.updated_stale_client"
+	RetainIngestedFilesKey     ParameterKey = "analysis.retain_ingest_files"
 )
 
 const (
@@ -93,7 +94,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey:
 		return true
 	default:
 		return false
@@ -445,6 +446,26 @@ func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) b
 		slog.WarnContext(ctx, "Failed to fetch StaleClientLogic configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid StaleClientLogic configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+// RetainIngestedFiles
+type RetainIngestedFilesParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bool {
+	result := RetainIngestedFilesParameter{
+		// Retention should always default to false in the case where the parameter may not be set
+		Enabled: false,
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, RetainIngestedFilesKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid ShouldRetainIngestedFiles configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled
