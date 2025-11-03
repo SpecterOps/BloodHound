@@ -21,14 +21,15 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, getListHeight } from './utils';
+import { getListHeight } from './utils';
+import { SelectedHighlight } from './SelectedHighlight';
 
 interface MembersListProps {
     listQuery: UseInfiniteQueryResult<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: { skip: number; limit: number };
     }>;
-    selected: string | undefined;
+    selected?: string;
     onClick: (id: string) => void;
     sortOrder: SortOrder;
     onChangeSortOrder: (sort: SortOrder) => void;
@@ -66,7 +67,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                     'bg-neutral-4': selected === item.id.toString(),
                 })}
                 style={style}>
-                <SelectedHighlight selected={selected} itemId={item.id} title={'Members'} />
+                <SelectedHighlight itemId={item.id} type='member' />
                 <Button
                     variant={'text'}
                     className='flex justify-start w-full'

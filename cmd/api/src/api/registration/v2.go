@@ -146,8 +146,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/available-domains", resources.GetAvailableDomains).RequirePermissions(permissions.GraphDBRead),
 
 		// Audit API
-		// TODO: This might actually need its own permission that's assigned to the Administrator user by default
-		routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuthManageUsers),
+		routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuditLogRead),
 
 		// App Config API
 		routerInst.GET("/api/v2/config", resources.GetApplicationConfigurations).RequirePermissions(permissions.AppReadApplicationConfiguration),
