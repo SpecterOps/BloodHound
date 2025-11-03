@@ -156,7 +156,6 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 									Members:   0,
 								}
 								resp.Tags = append(resp.Tags, tview)
-								fmt.Println("here")
 								continue
 							}
 
