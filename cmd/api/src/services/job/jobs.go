@@ -146,6 +146,11 @@ func (s *JobService) CompleteAnalyzedIngestJobs() {
 					status = model.JobStatusFailed
 					message = "All files failed to ingest as JSON Content"
 				}
+			} else {
+				if job.PartialFailedFiles > 0 {
+					status = model.JobStatusPartiallyComplete
+					message = fmt.Sprintf("%d File(s) partially failed to ingest as JSON Content", job.PartialFailedFiles)
+				}
 			}
 
 			if err := updateIngestJobStatus(s.ctx, s.db, job, status, message); err != nil {
