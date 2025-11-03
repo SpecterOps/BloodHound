@@ -98,6 +98,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, database.ErrNotFound)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -146,6 +149,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{}, database.ErrNotFound)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -171,6 +177,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
 						}, nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -199,6 +208,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
 						}, nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -226,6 +238,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeTier},
 						}, nil)
+					mockDB.EXPECT().
+						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					resp := v2.GetAssetGroupTagsResponse{}
@@ -298,7 +313,15 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "IncludeCounts member counts",
 				Input: func(input *apitest.Input) {
-					user := setupUser()
+					user := model.User{
+						FirstName:                        null.String{NullString: sql.NullString{String: "John", Valid: true}},
+						LastName:                         null.String{NullString: sql.NullString{String: "Doe", Valid: true}},
+						EmailAddress:                     null.String{NullString: sql.NullString{String: "johndoe@gmail.com", Valid: true}},
+						PrincipalName:                    "John",
+						AuthTokens:                       model.AuthTokens{},
+						AllEnvironments:                  false,
+						EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "testenv"}},
+					}
 					userCtx := setupUserCtx(user)
 					apitest.SetContext(input, userCtx)
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
@@ -317,13 +340,17 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							2: 1,
 						}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(int64(6), nil).
-						Times(1)
+						CountNodesByKind(gomock.Any(), []graph.Criteria{query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+						)}, gomock.Any()).
+						Return(int64(6), nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(int64(4), nil).
-						Times(1)
+						CountNodesByKind(gomock.Any(), []graph.Criteria{query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+						)}, gomock.Any()).
+						Return(int64(4), nil)
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
