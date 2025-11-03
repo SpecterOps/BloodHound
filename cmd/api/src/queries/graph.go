@@ -669,8 +669,9 @@ func (s *GraphQuery) CountFilteredNodes(ctx context.Context, filterCriteria grap
 }
 
 func (s *GraphQuery) CountNodesByKind(ctx context.Context, filter []graph.Criteria, kinds ...graph.Kind) (int64, error) {
-	combinedFilter := query.And(filter, (query.KindIn(query.Node(), kinds...)))
-	return s.CountFilteredNodes(ctx, combinedFilter)
+	combined := append([]graph.Criteria{}, filter...)
+	combined = append(combined, query.KindIn(query.Node(), kinds...))
+	return s.CountFilteredNodes(ctx, query.And(combined...))
 }
 
 func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
