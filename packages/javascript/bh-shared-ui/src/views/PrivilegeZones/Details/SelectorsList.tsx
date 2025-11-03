@@ -111,7 +111,6 @@ export const SelectorsList: FC<SelectorsListProps> = ({
         return (
             <div
                 style={style}
-                role='listitem'
                 key={item.id}
                 className={cn('border-y border-neutral-3 relative h-10', {
                     'bg-neutral-4': selected === item.id.toString(),

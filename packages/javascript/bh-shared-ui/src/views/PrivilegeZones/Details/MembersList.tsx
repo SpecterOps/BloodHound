@@ -61,7 +61,6 @@ export const MembersList: React.FC<MembersListProps> = ({
         return (
             <div
                 key={index}
-                role='listitem'
                 className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}

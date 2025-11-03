@@ -91,10 +91,11 @@ const HistoryContent = () => {
                         <FilterDialog setFilters={setFilters} filters={filters} />
                     </div>
                 </CardHeader>
-
                 <div
                     onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
                     ref={scrollRef}
+                    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                    tabIndex={0}
                     className='overflow-y-auto h-[68dvh]'>
                     <DataTable
                         data={records}
