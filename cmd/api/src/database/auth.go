@@ -376,6 +376,13 @@ func (s *BloodhoundDB) DeleteUser(ctx context.Context, user model.User) error {
 		// Clear associations first
 		if err := tx.Model(&user).WithContext(ctx).Association("Roles").Clear(); err != nil {
 			return err
+		} else if err := tx.Model(&model.IngestJob{}).
+			Where("user_id = ?", user.ID).
+			Updates(map[string]any{
+				"user_email_address": user.EmailAddress,
+				"user_id":            uuid.NullUUID{}}).
+			Error; err != nil {
+			return err
 		}
 
 		return CheckError(tx.WithContext(ctx).Delete(&user))

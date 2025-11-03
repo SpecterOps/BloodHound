@@ -22,7 +22,8 @@ import { SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, getListHeight } from './utils';
+import { getListHeight } from './utils';
+import { SelectedHighlight } from './SelectedHighlight';
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
@@ -113,16 +114,14 @@ export const SelectorsList: FC<SelectorsListProps> = ({
                 style={style}
                 role='listitem'
                 key={item.id}
-                className={cn('border-y border-neutral-3 relative h-10', {
+                className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}>
-                <SelectedHighlight selected={selected} itemId={item.id} title={'Selectors'} />
+                <SelectedHighlight itemId={item.id} type='selector' />
                 <Button
-                    variant={'text'}
+                    variant='text'
                     className='flex justify-between w-full overflow-hidden'
-                    onClick={() => {
-                        onSelect(item.id);
-                    }}>
+                    onClick={() => onSelect(item.id)}>
                     <span
                         className={cn('text-base dark:text-white truncate', {
                             'text-[#8E8C95] dark:text-[#919191]': isDisabled,
