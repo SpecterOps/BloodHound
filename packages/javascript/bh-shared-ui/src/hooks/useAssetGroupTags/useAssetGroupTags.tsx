@@ -85,6 +85,10 @@ export const privilegeZonesKeys = {
         sortOrder: SortOrder,
         environments: string[] = []
     ) => ['tag', tagId, 'selector', selectorId, sortOrder, ...environments] as const,
+    memberDetail: (tagId: string | number, memberId: string | number) =>
+        [...privilegeZonesKeys.tagDetail(tagId), 'memberId', memberId] as const,
+    certifications: (filters: any, search?: string) =>
+        [...privilegeZonesKeys.all, 'certifications', filters, search] as const,
 };
 
 const getAssetGroupTags = (options: RequestOptions) =>
@@ -171,7 +175,9 @@ export const useTagGlyphs = (glyphUtils: GlyphUtils, darkMode?: boolean) => {
     return glyphMap;
 };
 
-export const useTagsQuery = (queryOptions?: GenericQueryOptions<AssetGroupTag[]>) =>
+type useTagQueryOptions = GenericQueryOptions<AssetGroupTag[]>;
+export type TagSelect = useTagQueryOptions['select'];
+export const useTagsQuery = (queryOptions?: useTagQueryOptions) =>
     useQuery({
         queryKey: privilegeZonesKeys.tags() as unknown as string[],
         queryFn: ({ signal }) => getAssetGroupTags({ signal }),
@@ -301,6 +307,17 @@ export const useSelectorMembersInfiniteQuery = (
         enabled: tagId !== undefined && selectorId !== undefined,
     });
 
+export const useMemberInfo = (tagId: string = '', memberId: string = '') =>
+    useQuery({
+        queryKey: privilegeZonesKeys.memberDetail(tagId, memberId),
+        queryFn: async ({ signal }) => {
+            return apiClient.getAssetGroupTagMemberInfo(tagId, memberId, { signal }).then((res) => {
+                return res.data.data['member'];
+            });
+        },
+        enabled: tagId !== '' && memberId !== '',
+    });
+
 export const createSelector = async (params: CreateSelectorParams, options?: RequestOptions) => {
     const { tagId, values } = params;
 
@@ -348,7 +365,7 @@ export const useDeleteSelector = () => {
     });
 };
 
-export const useSelectorInfo = (tagId: string, selectorId: string) =>
+export const useSelectorInfo = (tagId: string = '', selectorId: string = '') =>
     useQuery({
         queryKey: privilegeZonesKeys.selectorDetail(tagId, selectorId),
         queryFn: async ({ signal }) => {

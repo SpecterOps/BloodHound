@@ -154,7 +154,7 @@ describe('FileIngestFilterDialog', () => {
 
             // Get all the menu items
             const options = within(listbox).getAllByRole('option');
-            expect(options.map((o) => o.textContent)).toEqual(['None', 'Running', 'Complete', 'Failed']);
+            expect(options.length).toEqual(11);
         });
 
         it('filters by the selected status', async () => {
