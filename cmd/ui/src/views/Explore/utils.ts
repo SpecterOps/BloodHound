@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GLYPHS, GetIconInfo, GlyphKind, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
+import { GetIconInfo, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -76,8 +76,6 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
                 backgroundColor: theme.palette.color.primary,
                 color: theme.palette.neutral.primary, //border
             },
-            tierZeroGlyph: darkMode ? GLYPHS[GlyphKind.TIER_ZERO_DARK] : GLYPHS[GlyphKind.TIER_ZERO],
-            ownedObjectGlyph: darkMode ? GLYPHS[GlyphKind.OWNED_OBJECT_DARK] : GLYPHS[GlyphKind.OWNED_OBJECT],
         },
     };
 
@@ -119,27 +117,8 @@ const initGraphNodes = (
         if (glyphImage) {
             nodeParams.type = 'glyphs';
             nodeParams.glyphs.push({
-                location: GlyphLocation.TOP_RIGHT,
+                location: node.isOwnedObject ? GlyphLocation.BOTTOM_RIGHT : GlyphLocation.TOP_RIGHT,
                 image: glyphImage,
-                ...themedOptions.glyph.colors,
-            });
-        }
-
-        // Tier zero nodes should be marked with a gem glyph
-        if (node.isTierZero) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.TOP_RIGHT,
-                image: themedOptions.glyph.tierZeroGlyph.url || '',
-                ...themedOptions.glyph.colors,
-            });
-        }
-
-        if (node.isOwnedObject) {
-            nodeParams.type = 'glyphs';
-            nodeParams.glyphs.push({
-                location: GlyphLocation.BOTTOM_RIGHT,
-                image: themedOptions.glyph.ownedObjectGlyph.url || '',
                 ...themedOptions.glyph.colors,
             });
         }
