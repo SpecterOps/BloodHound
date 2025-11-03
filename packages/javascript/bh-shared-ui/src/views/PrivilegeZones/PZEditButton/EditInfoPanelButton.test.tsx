@@ -47,7 +47,7 @@ describe('Zone Management', async () => {
         expect(await screen.findByText(/Edit Label/i)).toBeInTheDocument();
     });
 
-    it('renders "Edit Selector" button when on Labels page', async () => {
+    it('renders "Edit Selector" button when rule is selected', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: undefined, labelId: undefined, selectorId: '1' });
         render(<PZEditButton />);
         expect(await screen.findByText(/Edit Rule/i)).toBeInTheDocument();
