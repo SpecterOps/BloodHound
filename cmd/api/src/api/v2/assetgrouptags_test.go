@@ -289,7 +289,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 						Return(int64(0), nil).Times(4)
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				},
 				Test: func(output apitest.Output) {
 					expectedCounts := map[int]int{
@@ -327,12 +327,11 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
 				},
 				Setup: func() {
+					assetGroupTagLabel := model.AssetGroupTag{ID: 1, Name: "testlabel", Type: model.AssetGroupTagTypeLabel}
+					assetGroupTagTier := model.AssetGroupTag{ID: 2, Name: "testtier", Type: model.AssetGroupTagTypeTier}
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTags{
-							model.AssetGroupTag{ID: 1, Name: "testlabel", Type: model.AssetGroupTagTypeLabel},
-							model.AssetGroupTag{ID: 2, Name: "testtier", Type: model.AssetGroupTagTypeTier},
-						}, nil)
+						Return(model.AssetGroupTags{assetGroupTagLabel, assetGroupTagTier}, nil)
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2}).
 						Return(map[int]int{
@@ -340,25 +339,32 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							2: 1,
 						}, nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), []graph.Criteria{query.Or(
-							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
-							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
-						)}, gomock.Any()).
-						Return(int64(6), nil)
+						CountNodesByKind(gomock.Any(), []graph.Criteria{
+							query.Or(
+								query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+								query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+							),
+						}, assetGroupTagLabel.ToKind()).
+						Return(int64(2), nil)
 					mockGraphDb.EXPECT().
-						CountNodesByKind(gomock.Any(), []graph.Criteria{query.Or(
-							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
-							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
-						)}, gomock.Any()).
-						Return(int64(4), nil)
+						CountNodesByKind(gomock.Any(), []graph.Criteria{
+							query.Or(
+								query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
+								query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
+							),
+						}, assetGroupTagTier.ToKind()).
+						Return(int64(1), nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(int64(0), nil).AnyTimes()
 					mockDB.EXPECT().
 						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				},
 				Test: func(output apitest.Output) {
 					expectedMemberCounts := map[int]int64{
-						1: 6,
-						2: 4,
+						1: 2,
+						2: 1,
 					}
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
