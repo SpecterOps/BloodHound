@@ -39,7 +39,7 @@ import {
 import { Alert } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { UseFormReturn, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { apiClient } from '../../utils';
@@ -128,8 +128,6 @@ const CreateUserForm: React.FC<{
     const handleOnSave = () => {
         const values = form.getValues();
 
-        console.log(values + ' these are values submitted');
-
         const formData = {
             email_address: values.email_address,
             principal: values.principal,
@@ -137,7 +135,6 @@ const CreateUserForm: React.FC<{
             last_name: values.last_name,
             sso_provider_id: values.password ? undefined : values.sso_provider_id?.toString(),
             roles: selectedRoleValue,
-            //all_environments: allEnvironmentsSelected || selectedAdminOrPowerUserRole ? true : false,
             all_environments:
                 selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
                     ? true
@@ -147,7 +144,6 @@ const CreateUserForm: React.FC<{
         const eTACFormData = {
             ...formData,
             environment_targeted_access_control: {
-                //environments: !allEnvironmentsSelected ? formatReturnedEnvironments : null,
                 environments:
                     values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
             },
@@ -167,9 +163,6 @@ const CreateUserForm: React.FC<{
             });
         }
     }, [form, error, form.formState.errors]);
-
-    console.log(form.watch('all_environments'));
-    console.log(form.watch('environment_targeted_access_control.environments'));
 
     return (
         <Form {...form}>
@@ -569,7 +562,7 @@ const CreateUserForm: React.FC<{
                             </DialogActions>
                         </Card>
                         {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                            <EnvironmentSelectPanel form={form} createUser={true} />
+                            <EnvironmentSelectPanel form={form as unknown as UseFormReturn} createUser={true} />
                         )}
                     </div>
                 )}
