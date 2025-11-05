@@ -13,31 +13,33 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Paper, SxProps } from '@mui/material';
-import React from 'react';
+import React, { HTMLProps } from 'react';
 import { SelectedEdge } from '../../../store';
-import { usePaneStyles } from '../InfoStyles';
+import { cn } from '../../../utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 import Header from './EdgeInfoHeader';
 
 interface EdgeInfoPaneProps {
-    sx?: SxProps;
     selectedEdge: SelectedEdge | null;
+    className?: HTMLProps<HTMLDivElement>['className'];
 }
 
-const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ sx, selectedEdge }) => {
-    const styles = usePaneStyles();
-
+const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) => {
     return (
-        <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
-            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
+        <div
+            className={cn(
+                'flex flex-col pointer-events-none overflow-y-hidden h-full width-[400px] max-w-[400px]',
+                className
+            )}
+            data-testid='explore_edge-information-pane'>
+            <div className='bg-neutral-2 pointer-events-auto rounded'>
                 <Header name={selectedEdge?.name || 'None'} />
-            </Paper>
-            <Paper elevation={0} classes={{ root: styles.contentPaperRoot }}>
+            </div>
+            <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded'>
                 {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}
-            </Paper>
-        </Box>
+            </div>
+        </div>
     );
 };
 

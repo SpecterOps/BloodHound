@@ -125,10 +125,9 @@ export const applyNodePositionsFromGraphlibGraph = (
 };
 
 type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
-export type useLayoutDagreProps = AtLeast<DagreAttributes, 'graph'>;
 
-export const layoutDagre = (
-    attributes: useLayoutDagreProps,
+export const setDagreLayout = (
+    attributes: AtLeast<DagreAttributes, 'graph'>,
     graph: AbstractGraph<Attributes, Attributes, Attributes> | undefined
 ): { assign: () => void } => {
     if (!graph || !graph.size) return { assign: () => {} };
@@ -156,4 +155,4 @@ export const layoutDagre = (
     return { assign: assign };
 };
 
-export default layoutDagre;
+export default setDagreLayout;

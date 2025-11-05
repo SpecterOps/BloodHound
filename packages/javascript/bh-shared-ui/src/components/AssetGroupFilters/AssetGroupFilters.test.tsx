@@ -79,7 +79,7 @@ describe('AssetGroupEdit', () => {
 
         const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
-        expect(activeFiltersDot).toHaveStyle({ visibility: 'visible' });
+        expect(activeFiltersDot).toHaveClass('visible');
     });
 
     it('indicates that filters are inactive', async () => {
@@ -87,7 +87,7 @@ describe('AssetGroupEdit', () => {
 
         const activeFiltersDot = screen.getByTestId('active-filters-dot');
 
-        expect(activeFiltersDot).not.toHaveStyle({ visibility: 'visible' });
+        expect(activeFiltersDot).not.toHaveClass('visible');
     });
 
     describe('Node Type dropdown filter', () => {
@@ -180,9 +180,9 @@ describe('AssetGroupEdit', () => {
 
         it('is disabled if no filters are active', async () => {
             await setup();
-            const clearFilersButton: HTMLButtonElement = screen.getByText('Clear Filters');
+            const clearFiltersButton: HTMLButtonElement = screen.getByText('Clear Filters');
 
-            expect(clearFilersButton.disabled).toBe(true);
+            expect(clearFiltersButton).toBeDisabled();
         });
     });
 });
