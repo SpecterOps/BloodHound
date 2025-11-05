@@ -64,13 +64,9 @@ UPDATE asset_group_history
 SET actor = 'BloodHound'
 WHERE actor = 'SYSTEM';
 
--- Explicitly set glyph values for the default asset_group_tags
 
+-- Explicitly set glyph values for the default asset_group_tags
 -- Find Tier Zero by position
-UPDATE asset_group_tags
-SET glyph = 'gem'
-WHERE position = 1;
+UPDATE asset_group_tags SET glyph = 'gem' WHERE position = 1;
 -- Find Owned by type
-UPDATE asset_group_tags
-SET glyph = 'skull'
-WHERE type = 3;
+UPDATE asset_group_tags SET glyph = 'skull' WHERE type = 3;

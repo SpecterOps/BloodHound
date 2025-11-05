@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GetIconInfo, IconDictionary, getGlyphFromKinds } from 'bh-shared-ui';
+import { GetIconInfo, IconDictionary, TagGlyphs, getGlyphFromKinds } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
@@ -53,7 +53,7 @@ type GraphOptions = {
     darkMode: boolean;
     customIcons: IconDictionary;
     hideNodes: boolean;
-    tagGlyphMap: Record<string, string>;
+    tagGlyphs: TagGlyphs;
     themedOptions?: ThemedOptions;
 };
 
@@ -95,7 +95,7 @@ const initGraphNodes = (
     nodes: GraphNodes,
     options: GraphOptions & { themedOptions: ThemedOptions }
 ) => {
-    const { themedOptions, customIcons, hideNodes, tagGlyphMap } = options;
+    const { themedOptions, customIcons, hideNodes, tagGlyphs } = options;
 
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
@@ -113,11 +113,20 @@ const initGraphNodes = (
         nodeParams.image = iconInfo.url || '';
         nodeParams.glyphs = [];
 
-        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphMap);
+        if (node.kinds.includes(tagGlyphs.owned)) {
+            nodeParams.type = 'glyphs';
+            nodeParams.glyphs.push({
+                location: GlyphLocation.BOTTOM_RIGHT,
+                image: tagGlyphs.ownedGlyph,
+                ...themedOptions.glyph.colors,
+            });
+        }
+
+        const glyphImage = getGlyphFromKinds(node.kinds, tagGlyphs);
         if (glyphImage) {
             nodeParams.type = 'glyphs';
             nodeParams.glyphs.push({
-                location: node.isOwnedObject ? GlyphLocation.BOTTOM_RIGHT : GlyphLocation.TOP_RIGHT,
+                location: GlyphLocation.TOP_RIGHT,
                 image: glyphImage,
                 ...themedOptions.glyph.colors,
             });
