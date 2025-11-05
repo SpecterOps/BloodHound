@@ -70,10 +70,3 @@ jobs:
         if: ${{ ! cancelled() }}
         run: |
           docker compose -f docker-compose.testing.yml down
-      
-      - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          name: allure-results
-          path: allure-results
