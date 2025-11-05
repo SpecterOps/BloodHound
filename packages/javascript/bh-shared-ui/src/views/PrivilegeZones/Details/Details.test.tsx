@@ -137,6 +137,7 @@ describe('Details', async () => {
     });
 
     it('handles selector selection when a zone and object are already selected', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1' });
         render(
             <Routes>
                 <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_MEMBER_DETAILS} element={<Details />} />
@@ -171,6 +172,7 @@ describe('Details', async () => {
     });
 
     it('will deselect both the selected selector and selected object when a different zone is selected', async () => {
+        vi.mocked(useParams).mockReturnValue({ zoneId: '1', labelId: undefined });
         render(
             <Routes>
                 <Route path={ROUTE_PRIVILEGE_ZONES + ROUTE_PZ_ZONE_SELECTOR_MEMBER_DETAILS} element={<Details />} />

@@ -40,6 +40,7 @@ import {
     UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
+    UpdateCertificationRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateSelectorRequest,
@@ -60,6 +61,7 @@ import {
     AssetGroupTagSearchResponse,
     AssetGroupTagSelectorResponse,
     AssetGroupTagSelectorsResponse,
+    AssetGroupTagsCertification,
     AssetGroupTagsHistory,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
@@ -276,6 +278,10 @@ class BHEAPIClient {
             }
         );
 
+    getAssetGroupTagsCertifications = (options?: RequestOptions) => {
+        return this.baseClient.get<AssetGroupTagsCertification>(`/api/v2/asset-group-tags/certifications`, options);
+    };
+
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
@@ -404,6 +410,10 @@ class BHEAPIClient {
             payload,
             options
         );
+    };
+
+    updateAssetGroupTagCertification = (requestBody: UpdateCertificationRequest) => {
+        return this.baseClient.post('/api/v2/asset-group-tags/certifications', requestBody);
     };
 
     /* asset group isolation (AGI) */
@@ -922,6 +932,7 @@ class BHEAPIClient {
             headers: {
                 ...(options?.headers ?? {}),
                 'Content-Type': contentType,
+                'X-File-Upload-Name': json.name,
             },
         };
 

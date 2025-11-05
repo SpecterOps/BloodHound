@@ -73,7 +73,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
 
     const lastUpdated = DateTime.fromISO(updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
-    const { SalesMessage } = useContext(PrivilegeZonesContext);
+    const { SalesMessage, Certification } = useContext(PrivilegeZonesContext);
 
     const { tagId: topTagId } = useHighestPrivilegeTagId();
     const ownedId = useOwnedTagId();
@@ -106,7 +106,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag }> = ({ tagData }) => {
                     <DetailField label='Last Updated By' value={updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {type === AssetGroupTagTypeZone && (
+                {type === AssetGroupTagTypeZone && Certification && (
                     <div className='mt-4'>
                         <DetailField label='Certification' value={require_certify ? 'Required' : 'Not Required'} />
                     </div>
@@ -126,6 +126,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
     const seedType = getSelectorSeedType(selectorData);
 
     const { isZonePage } = usePZPathParams();
+    const { Certification } = useContext(PrivilegeZonesContext);
 
     return (
         <div
@@ -145,7 +146,7 @@ const SelectorDetails: FC<{ selectorData: AssetGroupTagSelector }> = ({ selector
                     <DetailField label='Last Updated By' value={updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                {isZonePage && (
+                {isZonePage && Certification && (
                     <div className='mt-4'>
                         <DetailField
                             label='Automatic Certification'

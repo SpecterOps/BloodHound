@@ -44,6 +44,7 @@ type Daemon struct {
 func NewDaemon[DBType database.Database](ctx context.Context, connections bootstrap.DatabaseConnections[DBType, *graph.DatabaseSwitch], cfg config.Configuration, graphSchema graph.Schema, extensions ...func(router *chi.Mux)) Daemon {
 	var (
 		pgMigrator    = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
+		ingestControl = tools.NewIngestControlTool(cfg, connections.RDMS)
 		router        = chi.NewRouter()
 		toolContainer = tools.NewToolContainer(connections.RDMS)
 	)
@@ -94,6 +95,10 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 	router.Put("/analysis/schedule", toolContainer.SetScheduledAnalysisConfiguration)
 	router.Get("/parameters", toolContainer.GetApplicationConfigurations)
 	router.Put("/parameters", toolContainer.SetApplicationParameter)
+
+	router.Put("/ingest/retention/enable", ingestControl.EnableIngestFileRetention)
+	router.Put("/ingest/retention/disable", ingestControl.DisableIngestFileRetention)
+	router.Get("/ingest/retention/fetch", ingestControl.FetchRetainedIngestFiles)
 
 	for _, extension := range extensions {
 		extension(router)

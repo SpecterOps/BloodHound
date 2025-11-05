@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Details, { getSavePath } from './Details';
+import EntitySelectorsInformation from './EntitySelectorsInformation';
 import { SelectedDetails } from './SelectedDetails';
 
-export { SelectedDetails, getSavePath };
+export { EntitySelectorsInformation, SelectedDetails, getSavePath };
 export default Details;
