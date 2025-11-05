@@ -59,7 +59,7 @@ export const PZEditButton: FC<{
     const titleSuffix = suffix(zoneId, labelId, selectorId);
 
     return (
-        <div className='flex flex-col gap-4 basis-1/3 w-[6.75rem]'>
+        <div className='flex flex-col gap-4 w-[6.75rem]'>
             {showEditButton && (
                 <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
                     <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
