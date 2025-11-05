@@ -129,7 +129,8 @@ func ExpandGroupMembershipPaths(tx graph.Transaction, candidates graph.NodeSet, 
 					return query.Kind(query.Relationship(), ad.MemberOf)
 				},
 				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-					// eTAC feature flag
+					// ETAC feature flag
+					// Return true or false based on if a user has access to (via etacList) the node's environment
 					if !etacEnabled || allEnv {
 						return true
 					}
