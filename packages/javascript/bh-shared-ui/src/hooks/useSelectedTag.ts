@@ -23,7 +23,7 @@ export const HYGIENE_TAG_NAME = 'Hygiene';
 export const HygieneTag = {
     name: HYGIENE_TAG_NAME,
     id: HYGIENE_AGT_ID,
-    glyph: null
+    glyph: null,
 } as const;
 
 export const useSelectedTag = (): AssetGroupTag | typeof HygieneTag | undefined => {

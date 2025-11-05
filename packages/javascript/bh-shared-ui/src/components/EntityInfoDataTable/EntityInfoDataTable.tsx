@@ -51,7 +51,9 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     );
 
     const removeExpandedPanelSectionParams = () => {
-        setSearchParams({ expandedPanelSections: parentLabels });
+        const params = new URLSearchParams(searchParams);
+        params.delete('expandedPanelSections');
+        setSearchParams(params);
     };
 
     const setParentExpandedSectionParam = () => {
@@ -61,15 +63,18 @@ export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     };
 
     const setExpandedPanelSectionsParams = () => {
+        const params = new URLSearchParams(searchParams);
         const labelList = [...(parentLabels as string[]), label];
+        labelList.forEach((section) => params.set('expandedPanelSections', section));
 
-        setSearchParams({ expandedPanelSections: labelList });
+        setSearchParams(params);
     };
 
     const handleOnChange = (isOpen: boolean) => {
         if (isOpen) handleSetGraph();
         else removeExpandedPanelSectionParams();
     };
+
     const handleSetGraph = async () => {
         if (!endpoint) {
             setParentExpandedSectionParam();

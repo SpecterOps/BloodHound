@@ -17,11 +17,13 @@ import { Box } from '@mui/material';
 import React from 'react';
 import { EntityInfoContentProps } from '../../utils/content';
 import EntityInfoDataTableList from './EntityInfoDataTableList';
+import EntityInfoDataTablePriorityList from './EntityInfoDataTablePriorityList';
 import EntityObjectInformation from './EntityObjectInformation';
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (
         <Box>
+            <EntityInfoDataTablePriorityList priorityTables={props.priorityTables} />
             <EntityObjectInformation {...props} />
             <EntityInfoDataTableList {...props} />
         </Box>

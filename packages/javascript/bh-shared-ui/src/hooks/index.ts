@@ -113,3 +113,5 @@ export * from './useSelectedTag';
 export * from './useShowNavBar';
 
 export * from './usePZParams';
+
+export * from './useUsersMinimal';
