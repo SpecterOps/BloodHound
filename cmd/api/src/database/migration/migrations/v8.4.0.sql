@@ -42,3 +42,7 @@ JOIN permissions p
     ))    
 ) 
 ON CONFLICT DO NOTHING;
+
+-- Add partial_failed_files column to ingest job table
+ALTER TABLE ingest_jobs
+        ADD COLUMN IF NOT EXISTS partial_failed_files integer DEFAULT 0;
