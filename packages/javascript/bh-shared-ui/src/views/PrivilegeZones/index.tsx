@@ -16,7 +16,8 @@
 
 import PrivilegeZones from './PrivilegeZones';
 
-export { SelectedDetails } from './Details';
+export { EntitySelectorsInformation, SelectedDetails } from './Details/index';
+export * from './Filters';
 export * from './PZEditButton';
 export * from './PrivilegeZonesContext';
 export * from './ZoneAnalysisIcon';
