@@ -20,8 +20,8 @@ import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdge, GraphEdges, GraphNodes } from 'js-client-library';
-import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
+import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
@@ -35,7 +35,7 @@ export const standardLayout = (graph: MultiDirectedGraph) => {
 };
 
 export const sequentialLayout = (graph: MultiDirectedGraph) => {
-    const { assign: assignDagre } = layoutDagre(
+    const { assign: assignDagre } = setDagreLayout(
         {
             graph: {
                 rankdir: RankDirection.LEFT_RIGHT,

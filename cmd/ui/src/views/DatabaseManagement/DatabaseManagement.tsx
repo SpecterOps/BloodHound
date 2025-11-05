@@ -282,14 +282,14 @@ const DatabaseManagement: FC = () => {
                 </Typography>
             }>
             <Box>
-                <Alert severity='warning' sx={{ mt: '1rem' }}>
+                <Alert severity='warning' className='mt-4'>
                     <strong>Caution: </strong> This change is irreversible and will delete data from your environment.
                 </Alert>
 
                 <Box display='flex' flexDirection='column' alignItems='start'>
                     <FormControl
                         variant='standard'
-                        sx={{ paddingBlock: 2 }}
+                        className='p-4'
                         error={state.noSelectionError || state.mutationError}>
                         {state.noSelectionError ? <Alert severity='error'>Please make a selection.</Alert> : null}
                         {state.mutationError ? (
@@ -306,7 +306,7 @@ const DatabaseManagement: FC = () => {
                             </Alert>
                         ) : null}
 
-                        <FormGroup sx={{ paddingTop: 1 }}>
+                        <FormGroup className='pt-2'>
                             <FeatureFlag
                                 flagKey='clear_graph_data'
                                 enabled={

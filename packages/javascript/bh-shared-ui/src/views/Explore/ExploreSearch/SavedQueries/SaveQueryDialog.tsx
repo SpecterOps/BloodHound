@@ -28,7 +28,7 @@ import {
     Input,
     Label,
 } from '@bloodhoundenterprise/doodleui';
-import { Dialog, DialogActions, DialogContent, useMediaQuery, useTheme } from '@mui/material';
+import { Dialog, DialogActions, DialogContent } from '@mui/material';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useQuery } from 'react-query';
@@ -66,17 +66,14 @@ const SaveQueryDialog: React.FC<{
     setSharedIds,
     setIsPublic,
 }) => {
-    const theme = useTheme();
-    const { selectedQuery } = useSavedQueriesContext();
-
-    const lgDown = useMediaQuery(theme.breakpoints.down('lg'));
-
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [id, setId] = useState<number | undefined>(undefined);
     const [isNew, setIsNew] = useState(true);
     const [localCypherQuery, setLocalCypherQuery] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+    const { selectedQuery } = useSavedQueriesContext();
 
     const { cypherQuery } = cypherSearchState;
 
@@ -127,18 +124,9 @@ const SaveQueryDialog: React.FC<{
 
     return (
         <>
-            <Dialog
-                open={open}
-                onClose={onClose}
-                maxWidth={lgDown ? 'md' : 'lg'}
-                sx={{
-                    '& .MuiPaper-root': {
-                        backgroundColor: 'transparent', // Or any desired color
-                        boxShadow: 'none',
-                    },
-                }}>
-                <DialogContent className='p-0 shadow-none !bg-none'>
-                    <div className='grid grid-cols-12 gap-4 !bg-transparent'>
+            <Dialog open={open} onClose={onClose} className='md:max-w-[40rem] lg:max-w-[60rem] lg'>
+                <DialogContent className='p-0 shadow-none'>
+                    <div className='grid grid-cols-12 gap-4'>
                         <Card className='w-full col-span-8 p-2 rounded-lg'>
                             <CardHeader>
                                 <CardTitle>{cardTitle}</CardTitle>
@@ -182,7 +170,7 @@ const SaveQueryDialog: React.FC<{
                                         onValueChanged={(val: string) => {
                                             setLocalCypherQuery(val);
                                         }}
-                                        theme={theme.palette.mode}
+                                        theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                                         schema={graphSchema(kindsQuery.data)}
                                         lineWrapping
                                         lint

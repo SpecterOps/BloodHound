@@ -18,13 +18,8 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faEdit, faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    IconButton,
-    ListItemIcon,
-    ListItemText,
     Menu,
     MenuItem,
-    MenuProps,
-    Paper,
     Skeleton,
     Table,
     TableBody,
@@ -33,33 +28,12 @@ import {
     TableHead,
     TableRow,
     TableSortLabel,
-    useTheme,
 } from '@mui/material';
-import withStyles from '@mui/styles/withStyles';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
 import { usePermissions } from '../../hooks';
 import { SortOrder } from '../../types';
 import { Permission } from '../../utils';
-
-const StyledMenu = withStyles({
-    paper: {
-        border: '1px solid #d3d4d5',
-    },
-})((props: MenuProps) => (
-    <Menu
-        elevation={0}
-        anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-        }}
-        transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-        }}
-        {...props}
-    />
-));
 
 const SSOProviderTableActionsMenu: FC<{
     onDeleteSSOProvider: () => void;
@@ -89,29 +63,34 @@ const SSOProviderTableActionsMenu: FC<{
 
     return (
         <>
-            <IconButton onClick={handleOnOpen} size='small'>
+            <Button variant={'text'} onClick={handleOnOpen} size='small'>
                 <FontAwesomeIcon icon={faEllipsisVertical} />
-            </IconButton>
-            <StyledMenu
+            </Button>
+            <Menu
                 anchorEl={anchorEl}
+                elevation={0}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
                 keepMounted
                 open={Boolean(anchorEl)}
                 onClose={() => {
                     setAnchorEl(null);
                 }}>
-                <MenuItem onClick={onClickDeleteSSOProvider}>
-                    <ListItemIcon>
-                        <FontAwesomeIcon icon={faTrash} />
-                    </ListItemIcon>
-                    <ListItemText primary='Delete SSO Provider' />
+                <MenuItem onClick={onClickDeleteSSOProvider} className='flex gap-2'>
+                    <FontAwesomeIcon icon={faTrash} className='text-gray-500' />
+                    <span className='text-sm'>Delete SSO Provider</span>
                 </MenuItem>
-                <MenuItem onClick={onClickUpdateSSOProvider}>
-                    <ListItemIcon>
-                        <FontAwesomeIcon icon={faEdit} />
-                    </ListItemIcon>
-                    <ListItemText primary='Edit SSO Provider' />
+                <MenuItem onClick={onClickUpdateSSOProvider} className='flex gap-2'>
+                    <FontAwesomeIcon icon={faEdit} className='text-gray-500' />
+                    <span className='text-sm'>Edit SSO Provider</span>
                 </MenuItem>
-            </StyledMenu>
+            </Menu>
         </>
     );
 };
@@ -133,94 +112,77 @@ const SSOProviderTable: FC<{
     onToggleTypeSortOrder,
     typeSortOrder,
 }) => {
-    const theme = useTheme();
     const { checkPermission } = usePermissions();
     const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
 
     return (
-        <Paper>
-            <TableContainer sx={{ maxHeight: 777 }}>
-                <Table stickyHeader aria-label='sso provider table'>
-                    <TableHead>
+        <TableContainer className='max-h-[777px]'>
+            <Table stickyHeader aria-label='sso provider table'>
+                <TableHead>
+                    <TableRow className='font-bold *:bg-neutral-2'>
+                        <TableCell />
+                        <TableCell className='align-bottom'>Provider Name</TableCell>
+                        <TableCell>
+                            {ssoProviders.length > 1 && !loading ? (
+                                <TableSortLabel
+                                    active={!!typeSortOrder}
+                                    direction={typeSortOrder}
+                                    onClick={onToggleTypeSortOrder}>
+                                    Type
+                                </TableSortLabel>
+                            ) : (
+                                'Type'
+                            )}
+                        </TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {loading ? (
                         <TableRow>
-                            <TableCell sx={{ backgroundColor: theme.palette.background.paper }} />
-                            <TableCell
-                                sx={{
-                                    fontWeight: 'bold',
-                                    verticalAlign: 'bottom',
-                                    backgroundColor: theme.palette.background.paper,
-                                }}>
-                                Provider Name
+                            <TableCell padding='checkbox'>
+                                <Skeleton />
                             </TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', backgroundColor: theme.palette.background.paper }}>
-                                {ssoProviders.length > 1 && !loading ? (
-                                    <TableSortLabel
-                                        active={!!typeSortOrder}
-                                        direction={typeSortOrder}
-                                        onClick={onToggleTypeSortOrder}>
-                                        Type
-                                    </TableSortLabel>
-                                ) : (
-                                    'Type'
-                                )}
+                            <TableCell>
+                                <Skeleton />
+                            </TableCell>
+                            <TableCell>
+                                <Skeleton />
                             </TableCell>
                         </TableRow>
-                    </TableHead>
-                    <TableBody
-                        sx={{
-                            '& > :nth-of-type(odd)': {
-                                backgroundColor: theme.palette.neutral.tertiary,
-                                '&:hover': {
-                                    backgroundColor: theme.palette.neutral.quaternary,
-                                },
-                            },
-                            '& > :nth-of-type(even)': {
-                                backgroundColor: theme.palette.neutral.secondary,
-                                '&:hover': {
-                                    backgroundColor: theme.palette.neutral.quaternary,
-                                },
-                            },
-                        }}>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell padding='checkbox'>
-                                    <Skeleton />
+                    ) : ssoProviders.length === 0 && hasPermission ? (
+                        <TableRow>
+                            <TableCell colSpan={6} align='center'>
+                                No SSO Providers found
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        ssoProviders.map((ssoProvider) => (
+                            <TableRow key={ssoProvider.id} className='even:bg-neutral-3'>
+                                <TableCell align='center' padding='checkbox'>
+                                    <SSOProviderTableActionsMenu
+                                        onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider)}
+                                        onUpdateSSOProvider={() => onUpdateSSOProvider(ssoProvider)}
+                                    />
                                 </TableCell>
-                                <TableCell>
-                                    <Skeleton />
+                                <TableCell size='small'>
+                                    <Button
+                                        variant='text'
+                                        fontColor={'primary'}
+                                        className='p-0'
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onClickSSOProvider(ssoProvider.id);
+                                        }}>
+                                        {ssoProvider.name}
+                                    </Button>
                                 </TableCell>
-                                <TableCell>
-                                    <Skeleton />
-                                </TableCell>
+                                <TableCell>{ssoProvider.type.toUpperCase()}</TableCell>
                             </TableRow>
-                        ) : ssoProviders.length === 0 && hasPermission ? (
-                            <TableRow>
-                                <TableCell colSpan={6} align='center'>
-                                    No SSO Providers found
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            ssoProviders.map((ssoProvider) => (
-                                <TableRow key={ssoProvider.id}>
-                                    <TableCell align='center' padding='checkbox'>
-                                        <SSOProviderTableActionsMenu
-                                            onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider)}
-                                            onUpdateSSOProvider={() => onUpdateSSOProvider(ssoProvider)}
-                                        />
-                                    </TableCell>
-                                    <TableCell onClick={() => onClickSSOProvider(ssoProvider.id)} size='small'>
-                                        <Button variant='text' fontColor={'primary'} className='p-0'>
-                                            {ssoProvider.name}
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell>{ssoProvider.type.toUpperCase()}</TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Paper>
+                        ))
+                    )}
+                </TableBody>
+            </Table>
+        </TableContainer>
     );
 };
 

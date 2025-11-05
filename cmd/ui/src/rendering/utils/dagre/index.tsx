@@ -14,16 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Taken from https://stackoverflow.com/a/57706747
-
-import { useEffect, useRef } from 'react';
-
-const usePreviousValue = <T,>(value: T): T | undefined => {
-    const ref = useRef<T>();
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-};
-
-export default usePreviousValue;
+export * from './dagre';

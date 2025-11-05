@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { ReactNode, useRef } from 'react';
 import { useOnClickOutside, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
@@ -91,7 +91,7 @@ const FileUploadDialog: React.FC<{
             </DialogTitle>
             <DialogContent>
                 {filesForIngest.length > 0 && (
-                    <Box sx={{ my: '8px' }}>
+                    <div className='my-2'>
                         {filesForIngest.map((file, index) => {
                             const key = makeProgressCacheKey(currentIngestJobId, file?.file?.name);
                             return (
@@ -104,7 +104,7 @@ const FileUploadDialog: React.FC<{
                                 />
                             );
                         })}
-                    </Box>
+                    </div>
                 )}
 
                 {currentlyUploading && (
