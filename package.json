@@ -3,8 +3,10 @@
   "name": "bloodhound-ce",
   "workspaces": {
     "packages": [
-      "cmd/ui",
-      "packages/javascript/**"
+      "packages/javascript/doodle-ui",
+      "packages/javascript/js-client-library",
+      "packages/javascript/bh-shared-ui",
+      "cmd/ui"
     ],
     "nohoist": [
       "**/@rollup/plugin-typescript"
@@ -22,7 +24,7 @@
     "format": "yarn workspaces foreach -ptv run format",
     "check-format": "yarn workspaces foreach -ptv run check-format"
   },
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "yarn@3.6.1",
   "devDependencies": {
     "all-contributors-cli": "^6.26.1",
     "prettier": "^3.2.5",

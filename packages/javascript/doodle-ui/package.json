@@ -114,7 +114,7 @@
         "react-dom": "18.2.x",
         "typescript": "5.1.x"
     },
-    "packageManager": "yarn@3.5.1",
+    "packageManager": "yarn@3.6.1",
     "installConfig": {
         "hoistingLimits": "workspaces"
     }
