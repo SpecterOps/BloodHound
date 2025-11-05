@@ -22,14 +22,13 @@ import { Minus } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
-import { CreateUserRequestForm } from '../CreateUserForm';
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
     createUser?: boolean; // TODO: make required
     updateUser?: boolean; // TODO: make required
     initialData?: UpdateUserRequestForm;
-    form: UseFormReturn<CreateUserRequestForm | UpdateUserRequestForm>;
+    form: UseFormReturn;
 }> = ({ createUser, updateUser, initialData, form }) => {
     const { data: availableEnvironments } = useAvailableEnvironments();
 
