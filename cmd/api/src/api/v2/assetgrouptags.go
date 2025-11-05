@@ -120,6 +120,8 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 					Tags: make([]AssetGroupTagView, 0, len(tags)),
 				}
 				selectorCounts map[int]int
+				accessList     = []string{}
+				accessFilters  = []graph.Criteria{}
 			)
 
 			if paramIncludeCounts {
@@ -139,33 +141,36 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				api.HandleDatabaseError(request, response, err)
 				return
 			}
+
+			if paramIncludeCounts && etacFlag.Enabled {
+				accessList = ExtractEnvironmentIDsFromUser(&user)
+
+				// only build accessFilters if user has some targeted access and is allEnvironments is false
+				if !user.AllEnvironments && len(accessList) > 0 {
+					accessFilters = []graph.Criteria{
+						query.Or(
+							query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
+							query.In(query.NodeProperty(azure.TenantID.String()), accessList),
+						),
+					}
+				}
+			}
 			for _, tag := range tags {
-				filters := []graph.Criteria{}
 				tview := AssetGroupTagView{AssetGroupTag: tag}
 
 				if paramIncludeCounts {
-					// only check user access if ETAC is enabled
-					if etacFlag.Enabled {
-						accessList := ExtractEnvironmentIDsFromUser(&user)
-
-						if !user.AllEnvironments {
-							// user has no access
-							if len(accessList) == 0 {
-								tview.Counts = &AssetGroupTagCounts{
-									Selectors: selectorCounts[tag.ID],
-									Members:   0,
-								}
-								resp.Tags = append(resp.Tags, tview)
-								continue
-							}
-
-							// user has access to specified environment
-							filters = append(filters, query.Or(
-								query.In(query.NodeProperty(ad.DomainSID.String()), accessList),
-								query.In(query.NodeProperty(azure.TenantID.String()), accessList),
-							))
+					// user has no access therefore should see no nodes
+					if etacFlag.Enabled && !user.AllEnvironments && len(accessList) == 0 {
+						tview.Counts = &AssetGroupTagCounts{
+							Selectors: selectorCounts[tag.ID],
+							Members:   0,
 						}
+						resp.Tags = append(resp.Tags, tview)
+						continue
 					}
+
+					// clone accessFilters so each tag call receives its own slice
+					filters := append([]graph.Criteria{}, accessFilters...)
 
 					if n, err := s.GraphQuery.CountNodesByKind(rCtx, filters, tag.ToKind()); err != nil {
 						api.HandleDatabaseError(request, response, err)
