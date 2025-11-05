@@ -19,8 +19,8 @@ import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderCon
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createAuthStateWithPermissions } from '../../mocks';
-import { fireEvent, render, screen, waitFor } from '../../test-utils';
-import { userEventHelpers } from '../../utils/testHelpers';
+import { act, render, waitFor } from '../../test-utils';
+import { Permission } from '../../utils';
 import CreateUserDialog from './CreateUserDialog';
 
 const testRoles = [
@@ -85,7 +85,7 @@ const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: createAuthStateWithPermissions([]).user,
+                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_USERS]).user,
             })
         );
     }),
@@ -118,58 +118,56 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('CreateUserDialog', async () => {
+describe('CreateUserDialog', () => {
     type SetupOptions = {
         renderErrors?: boolean;
         renderLoading?: boolean;
         renderShowEnvironmentAccessControls?: boolean;
     };
 
-    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
-    userEventHelpers();
+    const setup = async (options?: SetupOptions) => {
+        return await act(() => {
+            const user = userEvent.setup();
+            const testOnClose = vi.fn();
+            const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
+            const testUser = {
+                emailAddress: 'testuser@example.com',
+                principalName: 'testuser',
+                firstName: 'Test',
+                lastName: 'User',
+                password: 'adminAdmin1!',
+                forcePasswordReset: false,
+                role: testRoles[0],
+            };
 
-    const setup = (options?: SetupOptions) => {
-        const user = userEvent.setup();
-        const testOnClose = vi.fn();
-        const testOnSave = vi.fn(() => Promise.resolve({ data: {} }));
-        const testUser = {
-            emailAddress: 'testuser@example.com',
-            principalName: 'testuser',
-            firstName: 'Test',
-            lastName: 'User',
-            password: 'adminAdmin1!',
-            forcePasswordReset: false,
-            role: testRoles[0],
-        };
+            const screen = render(
+                <CreateUserDialog
+                    error={options?.renderErrors || false}
+                    isLoading={options?.renderLoading || false}
+                    onClose={testOnClose}
+                    onSave={testOnSave}
+                    showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
+                />
+            );
 
-        render(
-            <CreateUserDialog
-                error={options?.renderErrors || false}
-                isLoading={options?.renderLoading || false}
-                onClose={testOnClose}
-                onSave={testOnSave}
-                open={true}
-                showEnvironmentAccessControls={options?.renderShowEnvironmentAccessControls || false}
-            />
-        );
+            const openDialog = async () => await user.click(screen.getByTestId('manage-users_button-create-user'));
 
-        return {
-            user,
-            testUser,
-            testOnClose,
-            testOnSave,
-        };
+            return {
+                screen,
+                openDialog,
+                user,
+                testUser,
+                testOnClose,
+                testOnSave,
+            };
+        });
     };
 
     it('should render a create user form', async () => {
-        setup();
+        const { screen, openDialog } = await setup();
+        await openDialog();
 
-        expect(screen.getByText('Create User')).toBeInTheDocument();
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
-
-        expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
+        expect(await screen.findByText('Email Address')).toBeInTheDocument();
 
         expect(screen.getByLabelText('Principal Name')).toBeInTheDocument();
 
@@ -191,10 +189,8 @@ describe('CreateUserDialog', async () => {
     });
 
     it('should not call onSave when Save button is clicked and form input is invalid', async () => {
-        const { user, testOnSave } = setup();
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog, user, testOnSave } = await setup();
+        await openDialog();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -214,10 +210,8 @@ describe('CreateUserDialog', async () => {
     });
 
     it('should call onSave when Save button is clicked and form input is valid', async () => {
-        const { user, testUser, testOnSave } = setup();
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog, user, testOnSave, testUser } = await setup();
+        await openDialog();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
@@ -237,10 +231,8 @@ describe('CreateUserDialog', async () => {
     });
 
     it('should display all available roles', async () => {
-        const { user } = setup();
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog, user } = await setup();
+        await openDialog();
 
         await user.click(await screen.findByLabelText('Role'));
 
@@ -250,10 +242,8 @@ describe('CreateUserDialog', async () => {
     });
 
     it('should display all available SSO providers', async () => {
-        const { user } = setup();
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog, user } = await setup();
+        await openDialog();
 
         await user.click(await screen.findByLabelText('Authentication Method'));
 
@@ -273,10 +263,8 @@ describe('CreateUserDialog', async () => {
     });
 
     it('should disable Cancel and Save buttons while isLoading is true', async () => {
-        setup({ renderLoading: true });
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog } = await setup({ renderLoading: true });
+        await openDialog();
 
         expect(await screen.findByRole('button', { name: 'Cancel' })).toBeDisabled();
 
@@ -284,19 +272,15 @@ describe('CreateUserDialog', async () => {
     });
 
     it('should display error message when error prop is provided', async () => {
-        setup({ renderErrors: true });
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog } = await setup({ renderErrors: true });
+        await openDialog();
 
         expect(await screen.findByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
 
     it('should clear out the SSO Provider id from submission data when the authentication method is changed', async () => {
-        const { user, testUser, testOnSave } = setup();
-
-        const triggerButton = screen.getByText('Create User');
-        fireEvent.click(triggerButton);
+        const { screen, openDialog, user, testUser, testOnSave } = await setup();
+        await openDialog();
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 

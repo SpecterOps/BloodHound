@@ -25,16 +25,11 @@ import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/u
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
-    createUser?: boolean; // TODO: make required
-    updateUser?: boolean; // TODO: make required
+    createUser?: boolean;
+    updateUser?: boolean;
     initialData?: UpdateUserRequestForm;
     form: UseFormReturn;
-}> = ({
-    createUser,
-    //updateUser,
-    initialData,
-    form,
-}) => {
+}> = ({ createUser, initialData, form }) => {
     const { data: availableEnvironments } = useAvailableEnvironments();
 
     const initialEnvironmentsSelected = initialData?.environment_targeted_access_control?.environments?.map(

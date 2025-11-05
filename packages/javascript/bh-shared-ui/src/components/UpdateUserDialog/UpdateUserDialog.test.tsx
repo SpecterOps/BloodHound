@@ -19,7 +19,6 @@ import { ListSSOProvidersResponse, SAMLProviderInfo, SSOProvider, SSOProviderCon
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
-import { userEventHelpers } from '../../utils/testHelpers';
 import UpdateUserDialog from './UpdateUserDialog';
 
 const testRoles = [
@@ -137,9 +136,6 @@ describe('UpdateUserDialog', () => {
         renderLoading?: boolean;
         renderShowEnvironmentAccessControls?: boolean;
     };
-
-    // required due to conflict between testing-library and some radix-ui elements: https://github.com/testing-library/user-event/discussions/1087
-    userEventHelpers();
 
     const setup = (options?: SetupOptions) => {
         const user = userEvent.setup();
