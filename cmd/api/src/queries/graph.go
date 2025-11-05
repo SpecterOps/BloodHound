@@ -194,7 +194,7 @@ func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, owningObjectID 
 			}
 
 			// ETAC feature flag
-			// Filtering out environments user does not have access to
+			// Filtering nodes to include those that user has access to via environment list (etacAllowedList)
 			if etacEnabled && !user.AllEnvironments {
 				filters = append(filters, query.Or(
 					query.In(query.NodeProperty(string(ad.DomainSID)), etacAllowedList),
