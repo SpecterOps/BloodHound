@@ -17,12 +17,12 @@
 package v2
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -30,6 +30,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/ctx"
@@ -40,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -71,10 +73,11 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
-type patchAssetGroupTagSelectorRequest struct {
+type assetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
-	Description *string `json:"description"`
-	Disabled    *bool   `json:"disabled"`
+	AutoCertify *model.SelectorAutoCertifyMethod `json:"auto_certify"`
+	Description *string                          `json:"description"`
+	Disabled    *bool                            `json:"disabled"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -168,48 +171,78 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 	return nil
 }
 
+func validateAutoCertifyInput(assetGroupTag model.AssetGroupTag, autoCertify *model.SelectorAutoCertifyMethod) error {
+	if autoCertify == nil {
+		return nil
+	}
+
+	if assetGroupTag.Type != model.AssetGroupTagTypeTier && *autoCertify != 0 {
+		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones)
+	}
+
+	switch *autoCertify {
+	case model.SelectorAutoCertifyMethodDisabled, model.SelectorAutoCertifyMethodAllMembers, model.SelectorAutoCertifyMethodSeedsOnly:
+		return nil
+	default:
+		return fmt.Errorf(api.ErrorResponseAssetGroupAutoCertifyInvalid)
+	}
+}
+
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		sel = model.AssetGroupTagSelector{
-			AutoCertify: null.BoolFrom(false), // default if unset
-		}
-		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		createSelectorRequest assetGroupTagSelectorRequest
+		assetTagIdStr         = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
+	} else if err := json.NewDecoder(request.Body).Decode(&createSelectorRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if errs := validation.Validate(sel); len(errs) > 0 {
+	} else if errs := validation.Validate(createSelectorRequest.AssetGroupTagSelector); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if err := validateSelectorSeeds(s.GraphQuery, sel.Seeds); err != nil {
+	} else if err := validateSelectorSeeds(s.GraphQuery, createSelectorRequest.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Request analysis if scheduled analysis isn't enabled
-		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if !config.Enabled {
-			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
-				api.HandleDatabaseError(request, response, err)
+		// defaults for optional pointer field request values
+		autoCertify := model.SelectorAutoCertifyMethodDisabled
+		if createSelectorRequest.AutoCertify != nil {
+			if err := validateAutoCertifyInput(assetGroupTag, createSelectorRequest.AutoCertify); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
+			autoCertify = *createSelectorRequest.AutoCertify
 		}
-		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+
+		description := ""
+		if createSelectorRequest.Description != nil {
+			description = *createSelectorRequest.Description
+		}
+
+		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, description, false, true, autoCertify, createSelectorRequest.Seeds); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			if !config.Enabled {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
+			api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+		}
 	}
 }
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  patchAssetGroupTagSelectorRequest
+		selUpdateReq  assetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -220,7 +253,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -247,9 +280,13 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			}
 		}
 
-		// we can update AutoCertify on a default selector
-		if selUpdateReq.AutoCertify.Valid {
-			selector.AutoCertify = selUpdateReq.AutoCertify
+		// we can update AutoCertify on a default selector (as long as the selector is not tied to label)
+		if selUpdateReq.AutoCertify != nil {
+			if err := validateAutoCertifyInput(assetGroupTag, selUpdateReq.AutoCertify); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			selector.AutoCertify = *selUpdateReq.AutoCertify
 		}
 
 		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != nil || len(selUpdateReq.Seeds) > 0) {
@@ -385,12 +422,15 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
-		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		queryParams = request.URL.Query()
+
+		assetTagIdStr  = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		environmentIds = queryParams[api.QueryParameterEnvironments]
+
 		selectorQueryFilter      = make(model.QueryParameterFilterMap)
 		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
 		selectorSeed             = model.SelectorSeed{}
 		assetGroupTagSelector    = model.AssetGroupTagSelector{}
-		queryParams              = request.URL.Query()
 	)
 
 	if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
@@ -437,17 +477,24 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if sort, err := api.ParseSortParameters(model.AssetGroupTagSelector{}, queryParams); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 		} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 			api.HandleDatabaseError(request, response, err)
-		} else if selectors, count, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter, skip, limit); err != nil {
+		} else if selectors, count, err := s.DB.GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter, sort, skip, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			var (
 				resp = GetAssetGroupTagSelectorResponse{
 					Selectors: make([]AssetGroupTagSelectorView, 0, len(selectors)),
 				}
+				filter = model.SQLFilter{}
 			)
 
+			if assetGroupTag.RequireCertify.ValueOrZero() {
+				filter.SQLString = " AND certified > ?"
+				filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
+			}
 			for _, selector := range selectors {
 				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
 				if paramIncludeCounts {
@@ -455,7 +502,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 					// if the selector is not disabled
 					if selector.DisabledAt.Time.IsZero() {
 						// get all the nodes which are selected
-						if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
+						if selectorNodes, _, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, model.Sort{}, 0, 0, selector.ID); err != nil {
 							api.HandleDatabaseError(request, response, err)
 						} else {
 							nodeIds := make([]graph.ID, 0, len(selectorNodes))
@@ -464,10 +511,18 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 							}
 
 							// only count nodes that are actually tagged
-							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
+							filters := []graph.Criteria{
 								query.KindIn(query.Node(), assetGroupTag.ToKind()),
 								query.InIDs(query.NodeID(), nodeIds...),
-							)); err != nil {
+							}
+							if len(environmentIds) > 0 {
+								filters = append(filters, query.Or(
+									query.In(query.NodeProperty(ad.DomainSID.String()), environmentIds),
+									query.In(query.NodeProperty(azure.TenantID.String()), environmentIds),
+								))
+							}
+
+							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(filters...)); err != nil {
 								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 							} else {
 								memberCount = count
@@ -505,6 +560,195 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 		}
 
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
+	}
+}
+
+type assetGroupTagUpdateRequest struct {
+	Name            *string     `json:"name"`
+	Description     *string     `json:"description"`
+	Position        null.Int32  `json:"position"`
+	RequireCertify  null.Bool   `json:"require_certify"`
+	AnalysisEnabled null.Bool   `json:"analysis_enabled"`
+	Glyph           null.String `json:"glyph"`
+}
+
+func HasValidTagName(assetGroupTagName string) bool {
+	validNameRegex := regexp.MustCompile("^[a-zA-Z0-9 _]+$")
+	return validNameRegex.MatchString(assetGroupTagName)
+}
+
+func CheckTagGlyph(glyph null.String, tagType model.AssetGroupTagType, tagPosition null.Int32) error {
+	if !glyph.Valid {
+		return nil
+	}
+
+	if tagType != model.AssetGroupTagTypeTier {
+		return fmt.Errorf("only zones support custom glyphs")
+	}
+
+	if tagPosition.ValueOrZero() == 1 {
+		return fmt.Errorf("tier zero glyph cannot be modified")
+	}
+
+	// don't allow the glyph to be set to something that resembles tier zero or owned.
+	if glyph.String == model.TierZeroGlyph || glyph.String == model.OwnedGlyph {
+		return fmt.Errorf("glyphs similar to tier zero or owned not allowed")
+	}
+
+	return nil
+}
+
+func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *http.Request) {
+	var (
+		tagUpdates    assetGroupTagUpdateRequest
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.ErrorContext(request.Context(), "Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&tagUpdates); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else {
+		fieldMatched := false
+		tagUpdated := false
+		kindRefreshNeeded := false
+		analysisNeeded := false
+
+		if tagUpdates.Name != nil {
+			fieldMatched = true
+			if *tagUpdates.Name == "" {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "name can not be empty", request), response)
+				return
+			} else if (tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == 1) || tag.Type == model.AssetGroupTagTypeOwned {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "renaming default tags is forbidden currently", request), response)
+				return
+			} else if !HasValidTagName(*tagUpdates.Name) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalidTagName, request), response)
+				return
+			}
+			if tag.Name != *tagUpdates.Name {
+				tagUpdated = true
+				kindRefreshNeeded = true
+				tag.Name = *tagUpdates.Name
+			}
+		}
+
+		if tagUpdates.Description != nil {
+			fieldMatched = true
+			if tag.Description != *tagUpdates.Description {
+				tagUpdated = true
+				tag.Description = *tagUpdates.Description
+			}
+		}
+
+		if tagUpdates.RequireCertify.Valid {
+			if tag.Type != model.AssetGroupTagTypeTier {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "only zones support modifying require_certify", request), response)
+				return
+			}
+			fieldMatched = true
+			if !tag.RequireCertify.Equal(tagUpdates.RequireCertify) {
+				analysisNeeded = true
+				tagUpdated = true
+				tag.RequireCertify = tagUpdates.RequireCertify
+			}
+		}
+		// Ensure require certify is only toggle-able on BHE
+		s.DB.SanitizeUpdateAssetGroupTagRequireCertify(&tag)
+
+		if tagUpdates.Position.Valid {
+			if tag.Type != model.AssetGroupTagTypeTier {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "only zones support modifying position", request), response)
+				return
+			} else if tag.Position.ValueOrZero() == 1 {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "tier zero position cannot be modified", request), response)
+				return
+			}
+			fieldMatched = true
+			if !tag.Position.Equal(tagUpdates.Position) {
+				analysisNeeded = true
+				tagUpdated = true
+				tag.Position = tagUpdates.Position
+			}
+		}
+
+		if tagUpdates.AnalysisEnabled.Valid {
+			if tag.Type != model.AssetGroupTagTypeTier {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "only zones support modifying analysis_enabled", request), response)
+				return
+			} else if tag.Position.ValueOrZero() == 1 {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "tier zero analysis_enabled cannot be modified", request), response)
+				return
+			} else if !appcfg.GetTieringParameters(request.Context(), s.DB).MultiTierAnalysisEnabled {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "multi-tier analysis is not enabled for privilege zones", request), response)
+				return
+			}
+
+			fieldMatched = true
+			if !tag.AnalysisEnabled.Equal(tagUpdates.AnalysisEnabled) {
+				tagUpdated = true
+				analysisNeeded = true
+				tag.AnalysisEnabled = tagUpdates.AnalysisEnabled
+			}
+		}
+
+		if tagUpdates.Glyph.Valid {
+			// Ensure no empty string glyphs by setting it to null
+			if tagUpdates.Glyph.ValueOrZero() == "" {
+				tagUpdates.Glyph = null.String{}
+			}
+			if err := CheckTagGlyph(tagUpdates.Glyph, tag.Type, tag.Position); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			fieldMatched = true
+			if !tag.Glyph.Equal(tagUpdates.Glyph) {
+				tagUpdated = true
+				tag.Glyph = tagUpdates.Glyph
+			}
+		}
+
+		if !fieldMatched {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no valid fields specified", request), response)
+		} else if !tagUpdated {
+			// return tag as-is since it's unmodified
+			api.WriteBasicResponse(request.Context(), tag, http.StatusOK, response)
+		} else if updatedTag, err := s.DB.UpdateAssetGroupTag(request.Context(), actor, tag); errors.Is(err, database.ErrDuplicateAGName) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAssetGroupTagDuplicateKindName, request), response)
+		} else if errors.Is(err, database.ErrPositionOutOfRange) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagPositionOutOfRange, request), response)
+		} else if errors.Is(err, database.ErrDuplicateGlyph) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAssetGroupTagDuplicateGlyph, request), response)
+		} else if err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			// Request analysis if scheduled analysis isn't enabled
+			if analysisNeeded {
+				if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				} else if !config.Enabled {
+					if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					}
+				}
+			}
+
+			if kindRefreshNeeded {
+				// Because the graph pg driver relies on in-memory kind maps, it's required to refresh the map in order to remove the recently deleted kind
+				if err := s.Graph.RefreshKinds(request.Context()); err != nil {
+					slog.WarnContext(request.Context(), "AGT: refreshing schemaManager in-memory kind maps failed", attr.Error(err))
+				}
+			}
+			api.WriteBasicResponse(request.Context(), updatedTag, http.StatusOK, response)
+		}
 	}
 }
 
@@ -637,7 +881,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagDefaultLimit); err != nil {
@@ -688,7 +932,7 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseSortParameters(AssetGroupMember{}, queryParams); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, AssetGroupTagDefaultLimit); err != nil {
@@ -717,6 +961,11 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 		if len(environmentIds) > 0 {
 			filter.SQLString = "AND node_environment_id IN ?"
 			filter.Params = append(filter.Params, environmentIds)
+		}
+
+		if assetGroupTag.RequireCertify.ValueOrZero() {
+			filter.SQLString += " AND certified > ?"
+			filter.Params = append(filter.Params, model.AssetGroupCertificationRevoked)
 		}
 
 		if selectorNodes, count, err := s.DB.GetSelectorNodesBySelectorIdsFilteredAndPaginated(request.Context(), filter, sort, skip, limit, selectorId); err != nil {
@@ -924,16 +1173,20 @@ func (s *Resources) assetGroupTagHistoryImplementation(response http.ResponseWri
 		}
 
 		if query != "" {
-			querySQL := "(actor ILIKE ? OR email ILIKE ? OR action ILIKE ? OR target ILIKE ?)"
+			var (
+				queryableColumns  = []string{"actor", "email", "action", "target"}
+				querySQL          = fmt.Sprintf("(%s ILIKE ANY(?))", strings.Join(queryableColumns, " ILIKE ANY(?) OR "))
+				fuzzyQueryPattern = "%" + query + "%"
+				fuzzyQueryParams  = pq.StringArray{fuzzyQueryPattern, strings.ReplaceAll(fuzzyQueryPattern, " ", "")}
+			)
 
 			if sqlFilter.SQLString != "" {
-				querySQL = " AND" + querySQL
+				querySQL = " AND " + querySQL
 			}
 
 			sqlFilter.SQLString += querySQL
-
-			for range 4 {
-				sqlFilter.Params = append(sqlFilter.Params, "%"+query+"%")
+			for range len(queryableColumns) {
+				sqlFilter.Params = append(sqlFilter.Params, fuzzyQueryParams)
 			}
 		}
 
@@ -967,94 +1220,4 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get History Records")()
 
 	s.assetGroupTagHistoryImplementation(response, request, "")
-}
-
-type CertifyMembersRequest struct {
-	MemberIDs []int                         `json:"member_ids"`
-	Action    model.AssetGroupCertification `json:"action"`
-	Note      string                        `json:"note,omitempty"`
-}
-
-func isValidCertType(certType model.AssetGroupCertification) bool {
-	switch certType {
-	case model.AssetGroupCertificationManual, model.AssetGroupCertificationRevoked:
-		return true
-	default:
-		return false
-	}
-}
-
-func recordEligibleForUpdate(record model.AssetGroupSelectorNodeExpanded, lastProcessedNodeId graph.ID, highestPriority int) bool {
-	if record.NodeId != lastProcessedNodeId {
-		return true
-	} else if record.Position == highestPriority {
-		return true
-	}
-	return false
-}
-
-type setSelectorNodeCertifier interface {
-	UpdateCertificationBySelectorNode(ctx context.Context, input []database.UpdateCertificationBySelectorNodeInput) error
-}
-
-// certifyMembersBySelectorNodes updates the certification status for a given slice of selectorNodeRecords.
-// selectorNodeRecords supplied must be in order of nodeId, followed by position.
-// If there are duplicate nodeIds in selectorNodeRecords, only the lowest position (highest priority) selectorNodeRecords is updated,
-// and all lower-priority selectorNodeRecords are set to Pending Certification.
-func certifyMembersBySelectorNodes(ctx context.Context, selectorNodeCertifier setSelectorNodeCertifier, selectorNodeRecords []model.AssetGroupSelectorNodeExpanded, requestAction model.AssetGroupCertification, userEmail null.String, userId string, note null.String) error {
-	var (
-		certificationStatus model.AssetGroupCertification
-		certifiedBy         null.String
-
-		lastProcessedNodeId         graph.ID = 0
-		highestPriorityForGivenNode          = -1
-
-		inputs = []database.UpdateCertificationBySelectorNodeInput{}
-	)
-
-	// Only update the records with the highest priority for a given nodeID
-	for _, record := range selectorNodeRecords {
-		certificationStatus = model.AssetGroupCertificationPending
-		certifiedBy = null.String{}
-		if recordEligibleForUpdate(record, lastProcessedNodeId, highestPriorityForGivenNode) {
-			certificationStatus = requestAction
-			highestPriorityForGivenNode = record.Position
-			certifiedBy = userEmail
-			lastProcessedNodeId = record.NodeId
-			// don't actually update records that already match the request action or are auto-certified
-			if record.Certified == requestAction || record.Certified == model.AssetGroupCertificationAuto {
-				continue
-			}
-		}
-		inputs = append(inputs, database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: record.AssetGroupTagId, SelectorId: record.SelectorId, CertifiedBy: certifiedBy, UserId: userId, CertificationStatus: certificationStatus, NodeId: record.NodeId, NodeName: record.NodeName, Note: note})
-		lastProcessedNodeId = record.NodeId
-	}
-	if len(inputs) > 0 {
-		return selectorNodeCertifier.UpdateCertificationBySelectorNode(ctx, inputs)
-	}
-	return nil
-}
-
-func (s *Resources) CertifyMembers(response http.ResponseWriter, request *http.Request) {
-	var (
-		reqBody    CertifyMembersRequest
-		requestCtx = request.Context()
-	)
-	defer measure.ContextMeasure(requestCtx, slog.LevelDebug, "Asset Group Tag Certify Members")()
-	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
-		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseUnknownUser, request), response)
-	} else if !isValidCertType(reqBody.Action) {
-		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupCertTypeInvalid, request), response)
-	} else if memberIds := reqBody.MemberIDs; len(memberIds) == 0 {
-		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupMemberIDsRequired, request), response)
-	} else if nodes, err := s.DB.GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(requestCtx, reqBody.MemberIDs...); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := certifyMembersBySelectorNodes(requestCtx, s.DB, nodes, reqBody.Action, user.EmailAddress, user.ID.String(), null.StringFrom(reqBody.Note)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
 }

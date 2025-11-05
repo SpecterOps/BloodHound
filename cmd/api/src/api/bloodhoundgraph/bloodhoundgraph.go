@@ -132,131 +132,131 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 	switch nType {
 	case "AZApp":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-window-restore",
+			Text: "fas fa-window-restore",
 		}
 	case "AZVMScaleSet":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-server",
+			Text: "fas fa-server",
 		}
 	case "AZDevice":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-desktop",
+			Text: "fas fa-desktop",
 		}
 	case "AZFunctionApp":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-bolt",
+			Text: "fas fa-bolt",
 		}
 	case "AZGroup":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-users",
+			Text: "fas fa-users",
 		}
 	case "AZKeyVault":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-lock",
+			Text: "fas fa-lock",
 		}
 	case "AZManagementGroup":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-sitemap",
+			Text: "fas fa-sitemap",
 		}
 	case "AZResourceGroup":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-cube",
+			Text: "fas fa-cube",
 		}
 	case "AZRole":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-clipboard-list",
+			Text: "fas fa-clipboard-list",
 		}
 	case "AZServicePrincipal":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-robot",
+			Text: "fas fa-robot",
 		}
 	case "AZSubscription":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-key",
+			Text: "fas fa-key",
 		}
 	case "AZTenant":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-cloud",
+			Text: "fas fa-cloud",
 		}
 	case "AZUser":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-user",
+			Text: "fas fa-user",
 		}
 	case "AZVM":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-desktop",
+			Text: "fas fa-desktop",
 		}
 	case "AZManagedCluster":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-cubes",
+			Text: "fas fa-cubes",
 		}
 	case "AZContainerRegistry":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-box-open",
+			Text: "fas fa-box-open",
 		}
 	case "AZWebApp":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-object-group",
+			Text: "fas fa-object-group",
 		}
 	case "AZLogicApp":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-sitemap",
+			Text: "fas fa-sitemap",
 		}
 	case "AZAutomationAccount":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-cog",
+			Text: "fas fa-cog",
 		}
 	case "User":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-user",
+			Text: "fas fa-user",
 		}
 	case "Group":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-users",
+			Text: "fas fa-users",
 		}
 	case "Computer":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-desktop",
+			Text: "fas fa-desktop",
 		}
 	case "Container":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-box",
+			Text: "fas fa-box",
 		}
 	case "Domain":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-globe",
+			Text: "fas fa-globe",
 		}
 	case "OU":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-sitemap",
+			Text: "fas fa-sitemap",
 		}
 	case "GPO":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-list",
+			Text: "fas fa-list",
 		}
 	case "AIACA":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-arrows-left-right-to-line",
+			Text: "fas fa-arrows-left-right-to-line",
 		}
 	case "RootCA":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-landmark",
+			Text: "fas fa-landmark",
 		}
 	case "EnterpriseCA":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-building",
+			Text: "fas fa-building",
 		}
 	case "NTAuthStore":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-store",
+			Text: "fas fa-store",
 		}
 	case "CertTemplate":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-id-card",
+			Text: "fas fa-id-card",
 		}
 	case "IssuancePolicy":
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-clipboard-check",
+			Text: "fas fa-clipboard-check",
 		}
 	case "Meta":
 		if tier, ok := s.Data["admintier"]; ok {
@@ -270,7 +270,7 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		}
 	default:
 		s.FontIcon = &BloodHoundGraphFontIcon{
-			Text: "fa-question",
+			Text: "fas fa-question",
 		}
 	}
 }

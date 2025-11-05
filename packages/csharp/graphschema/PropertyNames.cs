@@ -91,6 +91,8 @@ public static readonly string CertificateMappingMethodsRaw = "certificatemapping
 public static readonly string CertificateMappingMethods = "certificatemappingmethods";
 public static readonly string StrongCertificateBindingEnforcementRaw = "strongcertificatebindingenforcementraw";
 public static readonly string StrongCertificateBindingEnforcement = "strongcertificatebindingenforcement";
+public static readonly string VulnerableNetlogonSecurityDescriptor = "vulnerablenetlogonsecuritydescriptor";
+public static readonly string VulnerableNetlogonSecurityDescriptorCollected = "vulnerablenetlogonsecuritydescriptorcollected";
 public static readonly string EKUs = "ekus";
 public static readonly string SubjectAltRequireUPN = "subjectaltrequireupn";
 public static readonly string SubjectAltRequireDNS = "subjectaltrequiredns";
@@ -176,6 +178,8 @@ public static readonly string GroupScope = "groupscope";
 public static readonly string NetBIOS = "netbios";
 public static readonly string AdminSDHolderProtected = "adminsdholderprotected";
 public static readonly string ServicePrincipalNames = "serviceprincipalnames";
+public static readonly string GPOStatusRaw = "gpostatusraw";
+public static readonly string GPOStatus = "gpostatus";
 
 }
 }

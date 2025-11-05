@@ -56,7 +56,7 @@ func GetCollectedTenants(ctx context.Context, db graph.Database) (graph.NodeSet,
 }
 
 func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasure(slog.LevelInfo, "FetchGraphDBTierZeroTaggedAssets", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if tenantObjectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		slog.Error(fmt.Sprintf("Tenant node %d does not have a valid %s property: %v", tenant.ID, common.ObjectID, err))
@@ -77,7 +77,7 @@ func FetchGraphDBTierZeroTaggedAssets(tx graph.Transaction, tenant *graph.Node) 
 }
 
 func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelDebug, "FetchAzureAttackPathRoots", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasure(slog.LevelDebug, "FetchAzureAttackPathRoots", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	attackPathRoots := graph.NewNodeKindSet()
 

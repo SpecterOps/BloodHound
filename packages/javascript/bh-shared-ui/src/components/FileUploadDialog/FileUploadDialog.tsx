@@ -16,7 +16,9 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
+import { useOnClickOutside, usePermissions } from '../../hooks';
+import { Permission } from '../../utils';
 import FileDrop from '../FileDrop';
 import FileStatusListItem from '../FileStatusListItem';
 import { AppLink } from '../Navigation';
@@ -29,6 +31,9 @@ const FileUploadDialog: React.FC<{
     headerText?: ReactNode;
     description?: ReactNode;
 }> = ({ open, onClose: onCloseProp, headerText = 'Upload Files', description }) => {
+    const { checkPermission } = usePermissions();
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST);
+
     const {
         currentlyUploading,
         getFileUploadAcceptedTypes,
@@ -45,7 +50,13 @@ const FileUploadDialog: React.FC<{
         handleSubmit,
         handleRemoveFile,
         onClose,
-    } = useFileUploadDialogHandlers({ onCloseProp });
+    } = useFileUploadDialogHandlers({ onCloseProp, hasPermissionToUpload });
+
+    const dialogRef = useRef(null);
+
+    useOnClickOutside(dialogRef, onClose);
+
+    if (!hasPermissionToUpload) return null;
 
     return (
         <Dialog
@@ -54,6 +65,8 @@ const FileUploadDialog: React.FC<{
             maxWidth={'sm'}
             scroll='paper'
             onClose={onClose}
+            ref={dialogRef}
+            className='z-[1600]'
             TransitionProps={{
                 onExited: () => {
                     setFileUploadStep(FileUploadStep.ADD_FILES);

@@ -44,9 +44,9 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	// If a "objectid" is present in the property map, verify it matches the top-level ID
 	if rawID, ok := node.PropertyMap["objectid"]; ok {
 		if propertyID, ok := rawID.(string); ok && !strings.EqualFold(propertyID, objectID) {
-			slog.Warn("objectid in property map does not match top-level id of node; skipping.",
-				slog.Any("properties.objectid", propertyID),
-				slog.String("expected objectid", objectID),
+			slog.Warn("The objectid in property map does not match top-level id of node; skipping.",
+				slog.String("properties_objectid", propertyID),
+				slog.String("expected_objectid", objectID),
 			)
 			return fmt.Errorf("skipping invalid node. objectid: %s", objectID)
 		}
@@ -173,6 +173,7 @@ func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time)
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
+	converted.NodeProps = append(converted.NodeProps, ein.ParseGPOData(gpo))
 }
 
 func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {

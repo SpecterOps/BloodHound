@@ -62,6 +62,8 @@ export { default as DataTable } from './DataTable';
 export * from './DeleteConfirmationDialog';
 export { default as DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 
+export * from './DetailsAccordion';
+
 export * from './Disable2FADialog';
 export { default as Disable2FADialog } from './Disable2FADialog';
 
@@ -99,8 +101,6 @@ export { default as FileIngest } from './FileIngest';
 export * from './FileUploadDialog';
 export { default as FileUploadDialog } from './FileUploadDialog';
 
-export * from './FinishedJobsTable';
-
 export * from './GenericErrorBoundaryFallback';
 export { default as GenericErrorBoundaryFallback } from './GenericErrorBoundaryFallback';
 
@@ -136,6 +136,8 @@ export { default as LoginViaSSOForm } from './LoginViaSSOForm';
 
 export * from './LoginForm';
 export { default as LoginForm } from './LoginForm';
+
+export * from './ManagedDatePicker';
 
 export * from './MaskedInput';
 
@@ -211,3 +213,9 @@ export * from './Navigation';
 export * from './ExploreTable';
 
 export * from './GraphControls';
+
+export * from './SelectMenus';
+
+export * from './DateRangeInputs';
+
+export * from './SearchInput';

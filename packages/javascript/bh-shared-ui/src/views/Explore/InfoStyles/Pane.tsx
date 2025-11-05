@@ -23,6 +23,9 @@ const usePaneStyles = makeStyles((theme: Theme) => ({
         flexDirection: 'column',
         pointerEvents: 'none',
         overflowY: 'hidden',
+        height: '100%',
+        width: '400px',
+        maxWidth: '400px',
     },
     headerPaperRoot: {
         backgroundColor: theme.palette.neutral.secondary,

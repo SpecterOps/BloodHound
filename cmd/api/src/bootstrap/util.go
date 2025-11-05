@@ -25,8 +25,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/packages/go/bhlog"
-	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
@@ -56,6 +54,10 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 	}
 
 	if err := ensureDirectory(cfg.TempDirectory()); err != nil {
+		return err
+	}
+
+	if err := ensureDirectory(cfg.RetainedFilesDirectory()); err != nil {
 		return err
 	}
 
@@ -116,27 +118,4 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	} else {
 		return graph.NewDatabaseSwitch(ctx, graphDatabase), nil
 	}
-}
-
-// InitializeLogging sets up output file logging, and returns errors if any
-func InitializeLogging(cfg config.Configuration) error {
-	var logLevel = slog.LevelInfo
-
-	if cfg.LogLevel != "" {
-		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
-			return err
-		} else {
-			logLevel = parsedLevel
-		}
-	}
-
-	if cfg.EnableTextLogger {
-		bhlog.ConfigureDefaultText(os.Stdout)
-	} else {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
-	}
-	level.SetGlobalLevel(logLevel)
-
-	slog.Info("Logging configured")
-	return nil
 }

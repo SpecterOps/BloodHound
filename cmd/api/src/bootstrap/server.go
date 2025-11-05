@@ -20,12 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/specterops/dawgs/graph"
 
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -34,12 +35,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/dawgs/graph"
 )
 
 const (
 	DefaultServerShutdownTimeout = time.Minute
-	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:;"
+	ContentSecurityPolicy        = "default-src 'self'; script-src 'self' %s 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' %s data: blob:; font-src 'self' data:;"
 )
 
 func NewDaemonContext(parentCtx context.Context) context.Context {
@@ -103,10 +103,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 				Roles: model.Roles{
 					adminRole,
 				},
-				PrincipalName: cfg.DefaultAdmin.PrincipalName,
-				EmailAddress:  null.NewString(cfg.DefaultAdmin.EmailAddress, true),
-				FirstName:     null.NewString(cfg.DefaultAdmin.FirstName, true),
-				LastName:      null.NewString(cfg.DefaultAdmin.LastName, true),
+				PrincipalName:   cfg.DefaultAdmin.PrincipalName,
+				EmailAddress:    null.NewString(cfg.DefaultAdmin.EmailAddress, true),
+				FirstName:       null.NewString(cfg.DefaultAdmin.FirstName, true),
+				LastName:        null.NewString(cfg.DefaultAdmin.LastName, true),
+				AllEnvironments: true,
 			}
 
 			authSecret = model.AuthSecret{
@@ -128,11 +129,11 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 			paddingString := strings.Repeat(" ", len(passwordMsg)-2)
 			borderString := strings.Repeat("#", len(passwordMsg))
 
-			slog.Info(borderString)
-			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info(passwordMsg)
-			slog.Info(fmt.Sprintf("#%s#", paddingString))
-			slog.Info(borderString)
+			fmt.Println(borderString)
+			fmt.Printf("#%s#\n", paddingString)
+			fmt.Println(passwordMsg)
+			fmt.Printf("#%s#\n", paddingString)
+			fmt.Println(borderString)
 		}
 	}
 

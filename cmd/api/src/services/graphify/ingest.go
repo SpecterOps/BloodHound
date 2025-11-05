@@ -1,10 +1,10 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
+//
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/ingest.go -package=mocks -source=ingest.go
 package graphify
 
 import (
@@ -23,9 +24,9 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
@@ -34,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -53,16 +53,102 @@ type ReadOptions struct {
 	RegisterSourceKind registrationFn
 }
 
-type TimestampedBatch struct {
-	Batch      graph.Batch
+// IngestContext is a container for dependencies needed by ingest
+type IngestContext struct {
+	Ctx context.Context
+	// Batch is the buffering/flushing mechanism that writes entities to the graph database
+	Batch BatchUpdater
+	// IngestTime is a single timestamp assigned to the lastseen property of every entity ignested per ingest run
 	IngestTime time.Time
+	// Manager is the caching layer that deduplicates ingest payloads across ingest runs
+	Manager ChangeManager
+	// Stats tracks the number of nodes and relationships processed during ingestion
+	Stats *IngestStats
+
+	// RetainIngestedFiles determines if the service should clean up working files after ingest
+	RetainIngestedFiles bool
 }
 
-func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
-	return &TimestampedBatch{
-		Batch:      batch,
-		IngestTime: ingestTime,
+func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
+	ic := &IngestContext{
+		Ctx:   ctx,
+		Stats: &IngestStats{}, // Always initialize stats
 	}
+
+	for _, opt := range opts {
+		opt(ic)
+	}
+
+	// avoid a zero IngestTime as it breaks lastseen semantics.
+	if ic.IngestTime.IsZero() {
+		ic.IngestTime = time.Now()
+	}
+
+	return ic
+}
+
+// option helpers
+type IngestOption func(*IngestContext)
+
+func WithIngestTime(ingestTime time.Time) IngestOption {
+	return func(s *IngestContext) {
+		s.IngestTime = ingestTime
+	}
+}
+
+func WithIngestRetentionConfig(shouldRetainIngestedFiles bool) IngestOption {
+	return func(s *IngestContext) {
+		s.RetainIngestedFiles = shouldRetainIngestedFiles
+	}
+}
+
+func WithChangeManager(manager ChangeManager) IngestOption {
+	return func(s *IngestContext) {
+		s.Manager = manager
+	}
+}
+
+func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
+	return func(s *IngestContext) {
+		s.Batch = batchUpdater
+	}
+}
+
+func (s *IngestContext) BindBatchUpdater(batch BatchUpdater) {
+	// Always wrap the batch with counting to track stats
+	s.Batch = NewCountingBatchUpdater(batch, s.Stats)
+}
+
+func (s *IngestContext) HasChangelog() bool {
+	return s.Manager != nil
+}
+
+// ChangeManager represents the ingestion-facing API for the changelog daemon.
+//
+// It provides three responsibilities:
+//   - Deduplication: ResolveChange determines whether a proposed change is new or modified
+//     and therefore requires persistence, or whether it has already been seen.
+//   - Submission: Submit enqueues a change for asynchronous processing by the changelog loop.
+//   - Metrics: FlushStats logs and resets internal cache hit/miss statistics,
+//     allowing callers to observe deduplication efficiency over time.
+//
+// To generate mocks for this interface for unit testing seams in the application
+// please use:
+//
+// mockgen -source=ingest.go -destination=mocks/ingest.go -package=mocks
+type ChangeManager interface {
+	ResolveChange(change changelog.Change) (bool, error)
+	Submit(ctx context.Context, change changelog.Change) bool
+	FlushStats()
+	ClearCache(ctx context.Context)
+}
+
+// BatchUpdater represents the ingestion-facing API for a dawgs BatchOperation
+type BatchUpdater interface {
+	UpdateNodeBy(update graph.NodeUpdate) error
+	UpdateRelationshipBy(update graph.RelationshipUpdate) error
+	Nodes() graph.NodeQuery
+	Relationships() graph.RelationshipQuery
 }
 
 // ReadFileForIngest orchestrates the ingestion of a file into the graph database,
@@ -76,7 +162,7 @@ func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBa
 // Files that fail this validation step will not be processed further.
 //
 // Returns an error if metadata validation or ingestion fails.
-func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options ReadOptions) error {
+func ReadFileForIngest(batch *IngestContext, reader io.ReadSeeker, options ReadOptions) error {
 
 	var (
 		shouldValidateGraph = false
@@ -103,7 +189,25 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 	}
 }
 
-func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
+// IngestWrapper dispatches the ingest process based on the metadata's type.
+func IngestWrapper(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata, readOpts ReadOptions) error {
+	// Source-kind-aware handler
+	if handler, ok := sourceKindHandlers[meta.Type]; ok {
+		if readOpts.RegisterSourceKind == nil {
+			return fmt.Errorf("missing source kind registration function for data type: %v", meta.Type)
+		}
+		return handler(batch, reader, meta, readOpts.RegisterSourceKind)
+	}
+
+	// Basic handler
+	if handler, ok := basicHandlers[meta.Type]; ok {
+		return handler(batch, reader, meta)
+	}
+
+	return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
+}
+
+func IngestBasicData(batch *IngestContext, converted ConvertedData) error {
 	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
@@ -124,7 +228,7 @@ func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 // graph.EmptyKind to the node and relationship ingestion functions. This indicates that no
 // base kind should be applied uniformly to all ingested entities, and instead the kind(s)
 // defined directly on each node or edge (if any) are used as-is.
-func IngestGenericData(batch *TimestampedBatch, sourceKind graph.Kind, converted ConvertedData) error {
+func IngestGenericData(batch *IngestContext, sourceKind graph.Kind, converted ConvertedData) error {
 	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, sourceKind, converted.NodeProps); err != nil {
@@ -138,7 +242,7 @@ func IngestGenericData(batch *TimestampedBatch, sourceKind graph.Kind, converted
 	return errs.Build()
 }
 
-func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) error {
+func IngestGroupData(batch *IngestContext, converted ConvertedGroupData) error {
 	errs := errorlist.NewBuilder()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
@@ -156,7 +260,7 @@ func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) erro
 	return errs.Build()
 }
 
-func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) error {
+func IngestAzureData(batch *IngestContext, converted ConvertedAzureData) error {
 	defer measure.ContextLogAndMeasure(context.TODO(), slog.LevelDebug, "ingest azure data")()
 	errs := errorlist.NewBuilder()
 
@@ -175,34 +279,16 @@ func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) erro
 	return errs.Build()
 }
 
-// IngestWrapper dispatches the ingest process based on the metadata's type.
-func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, readOpts ReadOptions) error {
-	// Source-kind-aware handler
-	if handler, ok := sourceKindHandlers[meta.Type]; ok {
-		if readOpts.RegisterSourceKind == nil {
-			return fmt.Errorf("missing source kind registration function for data type: %v", meta.Type)
-		}
-		return handler(batch, reader, meta, readOpts.RegisterSourceKind)
-	}
-
-	// Basic handler
-	if handler, ok := basicHandlers[meta.Type]; ok {
-		return handler(batch, reader, meta)
-	}
-
-	return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
-}
-
 // basicIngestHandler defines the function signature for all ingest paths except for the OpenGraph
-type basicIngestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error
+type basicIngestHandler func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error
 
 // sourceKindIngestHandler defines the function signature for ingest handlers that require
 // additional logic — specifically, registration of a sourceKind before decoding data.
 // This is only used for ingest payloads within OpenGraph, which may specify new source kinds that we want to track (e.g. Base, AZBase, GithubBase).
-type sourceKindIngestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, register registrationFn) error
+type sourceKindIngestHandler func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata, register registrationFn) error
 
 func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicIngestHandler {
-	return func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	return func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
 		decoder, err := getDefaultDecoder(reader)
 		if err != nil {
 			return err
@@ -212,7 +298,7 @@ func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) basicI
 }
 
 var basicHandlers = map[ingest.DataType]basicIngestHandler{
-	ingest.DataTypeComputer: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else if meta.Version >= 5 {
@@ -221,21 +307,21 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 			return nil
 		}
 	},
-	ingest.DataTypeGroup: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeGroup: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
 			return decodeGroupData(batch, decoder)
 		}
 	},
-	ingest.DataTypeSession: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeSession: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
 			return decodeSessionData(batch, decoder)
 		}
 	},
-	ingest.DataTypeAzure: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	ingest.DataTypeAzure: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else {
@@ -256,7 +342,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 }
 
 var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
-	ingest.DataTypeOpenGraph: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, registerSourceKind registrationFn) error {
+	ingest.DataTypeOpenGraph: func(batch *IngestContext, reader io.ReadSeeker, meta ingest.Metadata, registerSourceKind registrationFn) error {
 		sourceKind := graph.EmptyKind
 
 		// decode metadata, if present
@@ -264,7 +350,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no metadata found in opengraph payload; continuing to nodes")
+			slog.Debug("No metadata found in opengraph payload; continuing to nodes")
 		} else {
 			var meta ein.GenericMetadata
 			if err := decoder.Decode(&meta); err != nil {
@@ -282,7 +368,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no nodes found in opengraph payload; continuing to edges")
+			slog.Debug("No nodes found in opengraph payload; continuing to edges")
 		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
 			return err
 		}
@@ -292,7 +378,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 			if !errors.Is(err, ingest.ErrDataTagNotFound) {
 				return err
 			}
-			slog.Debug("no edges found in opengraph payload")
+			slog.Debug("No edges found in opengraph payload")
 		} else {
 			return DecodeGenericData(batch, decoder, sourceKind, ConvertGenericEdge)
 		}
@@ -303,197 +389,4 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 
 func getDefaultDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
 	return CreateIngestDecoder(reader, "data", 1)
-}
-
-func NormalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
-	if properties == nil {
-		properties = make(map[string]any)
-	}
-	delete(properties, ReconcileProperty)
-	properties[common.LastSeen.String()] = ingestTime
-	properties[common.ObjectID.String()] = strings.ToUpper(objectID)
-
-	// Ensure that name, operatingsystem, and distinguishedname properties are upper case
-	if rawName, hasName := properties[common.Name.String()]; hasName && rawName != nil {
-		if name, typeMatches := rawName.(string); typeMatches {
-			properties[common.Name.String()] = strings.ToUpper(name)
-		} else {
-			slog.Error(fmt.Sprintf("Bad type found for node name property during ingest. Expected string, got %T", rawName))
-		}
-	}
-
-	if rawOS, hasOS := properties[common.OperatingSystem.String()]; hasOS && rawOS != nil {
-		if os, typeMatches := rawOS.(string); typeMatches {
-			properties[common.OperatingSystem.String()] = strings.ToUpper(os)
-		} else {
-			slog.Error(fmt.Sprintf("Bad type found for node operating system property during ingest. Expected string, got %T", rawOS))
-		}
-	}
-
-	if rawDN, hasDN := properties[ad.DistinguishedName.String()]; hasDN && rawDN != nil {
-		if dn, typeMatches := rawDN.(string); typeMatches {
-			properties[ad.DistinguishedName.String()] = strings.ToUpper(dn)
-		} else {
-			slog.Error(fmt.Sprintf("Bad type found for node distinguished name property during ingest. Expected string, got %T", rawDN))
-		}
-	}
-
-	return properties
-}
-
-func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
-	var (
-		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
-		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
-		nodeUpdate           = graph.NodeUpdate{
-			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
-			IdentityKind: baseKind,
-			IdentityProperties: []string{
-				common.ObjectID.String(),
-			},
-		}
-	)
-
-	if len(nodeKinds) == 0 {
-		slog.Warn("skipping node with no kinds",
-			slog.String("objectid", nextNode.ObjectID),
-			slog.Int("num_kinds", 0),
-		)
-		return fmt.Errorf("node %s has no kinds; at least 1 kind is required", nextNode.ObjectID)
-	} else if len(nodeKinds) > 3 {
-		slog.Warn("skipping node with too many kinds",
-			slog.String("objectid", nextNode.ObjectID),
-			slog.Int("num_kinds", len(nodeKinds)),
-			slog.String("kinds", strings.Join(graph.Kinds(nodeKinds).Strings(), ", ")),
-		)
-		return fmt.Errorf("node %s has too many kinds (%d); max allowed is 3", nextNode.ObjectID, len(nodeKinds))
-	} else {
-		return batch.Batch.UpdateNodeBy(nodeUpdate)
-	}
-}
-
-func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
-	var (
-		errs = errorlist.NewBuilder()
-	)
-
-	for _, next := range nodes {
-		if err := IngestNode(batch, baseKind, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
-			errs.Add(err)
-		}
-	}
-
-	return errs.Build()
-}
-
-// IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
-//
-// This function first calls resolveRelationships to resolve node identifiers based on name and kind.
-//
-// Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
-// Errors encountered during resolution or update are collected and returned as a single combined error.
-func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relationships []ein.IngestibleRelationship) error {
-	var (
-		errs = errorlist.NewBuilder()
-	)
-
-	updates, err := resolveRelationships(batch, relationships, baseKind)
-	if err != nil {
-		errs.Add(err)
-	}
-
-	for _, update := range updates {
-		if err := batch.Batch.UpdateRelationshipBy(update); err != nil {
-			errs.Add(err)
-		}
-	}
-
-	return errs.Build()
-}
-
-func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
-	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
-	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
-
-	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
-		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
-
-		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			ad.DistinguishedName: nextRel.Source,
-			common.LastSeen:      batch.IngestTime,
-		}), nextRel.Source.Kind),
-		StartIdentityKind: ad.Entity,
-		StartIdentityProperties: []string{
-			ad.DistinguishedName.String(),
-		},
-
-		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Target,
-			common.LastSeen: batch.IngestTime,
-		}), nextRel.Target.Kind),
-		EndIdentityKind: ad.Entity,
-		EndIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-	})
-}
-
-func IngestDNRelationships(batch *TimestampedBatch, relationships []ein.IngestibleRelationship) error {
-	var (
-		errs = errorlist.NewBuilder()
-	)
-
-	for _, next := range relationships {
-		if err := ingestDNRelationship(batch, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting relationship: %v", err))
-			errs.Add(err)
-		}
-	}
-	return errs.Build()
-}
-
-func ingestSession(batch *TimestampedBatch, nextSession ein.IngestibleSession) error {
-	nextSession.Target = strings.ToUpper(nextSession.Target)
-	nextSession.Source = strings.ToUpper(nextSession.Source)
-
-	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
-		Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
-			common.LastSeen: batch.IngestTime,
-			ad.LogonType:    nextSession.LogonType,
-		}), ad.HasSession),
-
-		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextSession.Source,
-			common.LastSeen: batch.IngestTime,
-		}), ad.Computer),
-		StartIdentityKind: ad.Entity,
-		StartIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-
-		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextSession.Target,
-			common.LastSeen: batch.IngestTime,
-		}), ad.User),
-		EndIdentityKind: ad.Entity,
-		EndIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-	})
-}
-
-func IngestSessions(batch *TimestampedBatch, sessions []ein.IngestibleSession) error {
-	var (
-		errs = errorlist.NewBuilder()
-	)
-
-	for _, next := range sessions {
-		if err := ingestSession(batch, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting sessions: %v", err))
-			errs.Add(err)
-		}
-	}
-	return errs.Build()
 }

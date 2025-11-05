@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -124,7 +125,7 @@ func (s *Command) Parse() error {
 type GraphService interface {
 	TeardownService(context.Context)
 	InitializeService(context.Context, string, graph.Database) error
-	Ingest(context.Context, *graphify.TimestampedBatch, io.ReadSeeker) error
+	Ingest(context.Context, *graphify.IngestContext, io.ReadSeeker) error
 	RunAnalysis(context.Context, graph.Database) error
 }
 
@@ -148,9 +149,9 @@ func (s *CommunityGraphService) TeardownService(ctx context.Context) {
 	if s.db != nil {
 		err := s.db.Wipe(ctx)
 		if err != nil {
-			slog.Error("Failed to wipe database after command completion", slog.String("error", err.Error()))
+			slog.ErrorContext(ctx, "Failed to wipe database after command completion", attr.Error(err))
 		} else {
-			slog.Info("Successfully wiped database")
+			slog.InfoContext(ctx, "Successfully wiped database")
 		}
 	}
 }
@@ -168,7 +169,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 		if err != nil {
 			return fmt.Errorf("precommand wipe database: %w", err)
 		} else {
-			slog.Info("Successfully wiped database during initialization")
+			slog.InfoContext(ctx, "Successfully wiped database during initialization")
 		}
 	}
 
@@ -183,7 +184,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 	return nil
 }
 
-func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.TimestampedBatch, reader io.ReadSeeker) error {
+func (s *CommunityGraphService) Ingest(ctx context.Context, batch *graphify.IngestContext, reader io.ReadSeeker) error {
 	return graphify.ReadFileForIngest(batch, reader, s.readOpts)
 }
 
@@ -418,9 +419,11 @@ func initializeGraphDatabase(ctx context.Context, postgresConnection string) (gr
 func ingestData(ctx context.Context, service GraphService, filepaths []string, database graph.Database) error {
 	var errs []error
 
+	ingestTime := time.Now().UTC()
+
 	for _, filepath := range filepaths {
 		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+			ingestCtx := graphify.NewIngestContext(ctx, graphify.WithIngestTime(ingestTime), graphify.WithBatchUpdater(batch))
 
 			file, err := os.Open(filepath)
 			if err != nil {
@@ -429,7 +432,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 			defer file.Close()
 
 			// ingest file into database
-			err = service.Ingest(ctx, timestampedBatch, file)
+			err = service.Ingest(ctx, ingestCtx, file)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("error ingesting file %s: %w", filepath, err))
 			}
@@ -446,7 +449,7 @@ func ingestData(ctx context.Context, service GraphService, filepaths []string, d
 		for _, err := range errs {
 			errStrings = append(errStrings, err.Error())
 		}
-		slog.Warn("errors occurred while ingesting files", slog.Any("errors", errStrings))
+		slog.WarnContext(ctx, "Errors occurred while ingesting files", slog.Any("errors", errStrings))
 	}
 
 	return nil

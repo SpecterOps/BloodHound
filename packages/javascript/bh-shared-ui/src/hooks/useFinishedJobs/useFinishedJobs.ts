@@ -19,18 +19,18 @@ import { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
 import {
-    FETCH_ERROR_KEY,
-    FETCH_ERROR_MESSAGE,
+    FINISHED_JOBS_FETCH_ERROR_KEY,
+    FINISHED_JOBS_FETCH_ERROR_MESSAGE,
+    FINISHED_JOBS_NO_PERMISSION_KEY,
+    FINISHED_JOBS_NO_PERMISSION_MESSAGE,
     FinishedJobParams,
-    NO_PERMISSION_KEY,
-    NO_PERMISSION_MESSAGE,
     Permission,
     apiClient,
 } from '../../utils';
 import { usePermissions } from '../usePermissions';
 
 /** Makes a paginated request for Finished Jobs, returned as a TanStack Query */
-export const useFinishedJobs = ({ page, rowsPerPage }: FinishedJobParams) => {
+export const useFinishedJobs = ({ filters = {}, page, rowsPerPage }: FinishedJobParams) => {
     const { checkPermission, isSuccess: permissionsLoaded } = usePermissions();
     const hasPermission = permissionsLoaded && checkPermission(Permission.CLIENTS_MANAGE);
 
@@ -38,17 +38,29 @@ export const useFinishedJobs = ({ page, rowsPerPage }: FinishedJobParams) => {
 
     useEffect(() => {
         if (permissionsLoaded && !hasPermission) {
-            addNotification(NO_PERMISSION_MESSAGE, NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
+            addNotification(FINISHED_JOBS_NO_PERMISSION_MESSAGE, FINISHED_JOBS_NO_PERMISSION_KEY, PERSIST_NOTIFICATION);
         }
 
-        return () => dismissNotification(NO_PERMISSION_KEY);
+        return () => dismissNotification(FINISHED_JOBS_NO_PERMISSION_KEY);
     }, [addNotification, dismissNotification, hasPermission, permissionsLoaded]);
 
     return useQuery<GetScheduledJobDisplayResponse>({
         enabled: Boolean(permissionsLoaded && hasPermission),
         keepPreviousData: true, // Prevent count from resetting to 0 between page fetches
-        onError: () => addNotification(FETCH_ERROR_MESSAGE, FETCH_ERROR_KEY),
-        queryFn: () => apiClient.getFinishedJobs(rowsPerPage * page, rowsPerPage, false, false).then((res) => res.data),
-        queryKey: ['finished-jobs', { page, rowsPerPage }],
+        onError: () => addNotification(FINISHED_JOBS_FETCH_ERROR_MESSAGE, FINISHED_JOBS_FETCH_ERROR_KEY),
+        queryFn: ({ signal }) =>
+            apiClient
+                .getFinishedJobs(
+                    {
+                        ...filters,
+                        skip: rowsPerPage * page,
+                        limit: rowsPerPage,
+                        hydrate_domains: false,
+                        hydrate_ous: false,
+                    },
+                    { signal }
+                )
+                .then((res) => res.data),
+        queryKey: ['finished-jobs', { ...filters, page, rowsPerPage }],
     });
 };

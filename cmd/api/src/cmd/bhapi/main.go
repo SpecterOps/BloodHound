@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 
@@ -29,6 +30,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -43,6 +46,12 @@ func main() {
 		versionFlag    bool
 	)
 
+	// Eagerly set logging format if valid environment variable is set
+	bhlog.ConfigureDefaultJSON(os.Stdout)
+	if config.GetTextLoggerEnabled() {
+		bhlog.ConfigureDefaultText(os.Stdout)
+	}
+
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "BloodHound Community Edition API Server\n\nUsage of %s\n", os.Args[0])
 		flag.PrintDefaults()
@@ -56,31 +65,61 @@ func main() {
 		printVersion()
 	}
 
-	// Jump the bootstrap initializer so all logs are configured properly
-	if enabled, err := config.GetTextLoggerEnabled(); err != nil {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
-		slog.Error(fmt.Sprintf("Failed to check text logger enabled: %v", err))
-		os.Exit(1)
-	} else if enabled {
-		bhlog.ConfigureDefaultText(os.Stdout)
-	} else {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
-	}
-
-	if cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration); err != nil {
+	cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration)
+	if err != nil {
 		slog.Error(fmt.Sprintf("Unable to read configuration %s: %v", configFilePath, err))
 		os.Exit(1)
-	} else {
-		initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
-			Configuration:       cfg,
-			DBConnector:         services.ConnectDatabases,
-			PreMigrationDaemons: services.PreMigrationDaemons,
-			Entrypoint:          services.Entrypoint,
-		}
+	}
 
-		if err := initializer.Launch(context.Background(), true); err != nil {
-			slog.Error(fmt.Sprintf("Failed starting the server: %v", err))
-			os.Exit(1)
+	// Initialize logging
+	var (
+		logFile *os.File
+
+		logLevel            = slog.LevelInfo
+		logWriter io.Writer = os.Stdout
+	)
+
+	if cfg.LogPath != "" {
+		logFile, err = os.OpenFile(cfg.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			slog.Error(
+				"Failed to configure logging to file",
+				slog.String("path", cfg.LogPath),
+				attr.Error(err),
+			)
+		} else {
+			defer logFile.Close()
+			slog.Info("Additionally logging to file", slog.String("log_file", cfg.LogPath))
+			logWriter = io.MultiWriter(logWriter, logFile)
 		}
+	}
+
+	if cfg.LogLevel != "" {
+		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
+			slog.Warn("Configured log level is invalid. Ignoring.", slog.String("requested_log_level", cfg.LogLevel))
+		} else {
+			logLevel = parsedLevel
+		}
+	}
+
+	if cfg.EnableTextLogger {
+		bhlog.ConfigureDefaultText(logWriter)
+	} else {
+		bhlog.ConfigureDefaultJSON(logWriter)
+	}
+
+	level.SetGlobalLevel(logLevel)
+	slog.Info("Logging configured", slog.String("log_level", logLevel.String()))
+
+	initializer := bootstrap.Initializer[*database.BloodhoundDB, *graph.DatabaseSwitch]{
+		Configuration:       cfg,
+		DBConnector:         services.ConnectDatabases,
+		PreMigrationDaemons: services.PreMigrationDaemons,
+		Entrypoint:          services.Entrypoint,
+	}
+
+	if err := initializer.Launch(context.Background(), true); err != nil {
+		slog.Error(fmt.Sprintf("Failed starting the server: %v", err))
+		os.Exit(1)
 	}
 }

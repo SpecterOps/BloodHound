@@ -17,21 +17,31 @@ import { Box, Paper, SxProps, Typography } from '@mui/material';
 import React from 'react';
 import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
-import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views/Explore';
+import usePaneStyles from '../../views/Explore/InfoStyles/Pane';
+import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
+
+export type EntityTables = {
+    sectionProps: EntityInfoDataTableProps;
+    TableComponent: React.FC<EntityInfoDataTableProps>;
+}[];
 
 interface EntityInfoPanelProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
-    additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
-    }[];
+    additionalTables?: EntityTables;
+    priorityTables?: EntityTables;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
+    selectedNode,
+    sx,
+    additionalTables,
+    priorityTables,
+    DataTable,
+}) => {
     const styles = usePaneStyles();
 
     return (
@@ -46,6 +56,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, add
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        priorityTables={priorityTables}
                         additionalTables={additionalTables}
                     />
                 ) : (

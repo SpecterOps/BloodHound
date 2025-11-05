@@ -23,6 +23,7 @@ import (
 const (
 	RoleUploadOnly    = "Upload-Only"
 	RoleReadOnly      = "Read-Only"
+	RoleAuditor       = "Auditor"
 	RoleUser          = "User"
 	RolePowerUser     = "Power User"
 	RoleAdministrator = "Administrator"
@@ -57,6 +58,21 @@ func Roles() map[string]RoleTemplate {
 			Permissions: model.Permissions{
 				permissions.ClientsTasking,
 				permissions.GraphDBIngest,
+			},
+		},
+		RoleAuditor: {
+			Name:        RoleAuditor,
+			Description: "Can read data and audit logs",
+			Permissions: model.Permissions{
+				permissions.AppReadApplicationConfiguration,
+				permissions.APsGenerateReport,
+				permissions.AuthCreateToken,
+				permissions.AuditLogRead,
+				permissions.AuthManageSelf,
+				permissions.AuthReadUsers,
+				permissions.ClientsRead,
+				permissions.GraphDBRead,
+				permissions.SavedQueriesRead,
 			},
 		},
 		RoleUser: {

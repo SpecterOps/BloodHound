@@ -1736,6 +1736,101 @@
         }
       }
     },
+    "/api/v2/bloodhound-users-minimal": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListUsersMinimal",
+        "summary": "List Users Minimal",
+        "description": "Returns all BloodHound user details without any sensitive data.",
+        "tags": [
+          "BloodHound Users",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "Sortable columns are id, first_name, last_name and email_address.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "first_name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "last_name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "email_address",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.users-minimal"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/bloodhound-users/{user_id}": {
       "parameters": [
         {
@@ -3268,6 +3363,9 @@
                           }
                         },
                         "server_version": {
+                          "type": "string"
+                        },
+                        "product_edition": {
                           "type": "string"
                         }
                       }
@@ -5284,7 +5382,8 @@
         "description": "Updates an asset group tag by ID",
         "tags": [
           "Asset Isolation",
-          "Enterprise"
+          "Enterprise",
+          "Community"
         ],
         "requestBody": {
           "description": "The request body for updating an asset group tag. At least one field is required.",
@@ -5393,21 +5492,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5497,15 +5588,7 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
+            "$ref": "#/components/parameters/query.environments"
           }
         ],
         "responses": {
@@ -5590,21 +5673,13 @@
         ],
         "parameters": [
           {
-            "name": "environments",
-            "description": "Environment IDs",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
           },
           {
             "name": "sort_by",
@@ -5698,6 +5773,17 @@
           },
           {
             "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.environments"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `name`, and `created_at`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
           },
           {
             "name": "auto_certify",
@@ -5881,23 +5967,15 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
                   },
                   {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "seeds": {
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "name",
-                      "seeds"
-                    ]
+                    "type": "object"
                   }
+                ],
+                "required": [
+                  "name",
+                  "seeds"
                 ]
               }
             }
@@ -6031,19 +6109,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "disabled": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
               }
             }
           }
@@ -6569,6 +6635,11 @@
       }
     },
     "/api/v2/asset-group-tags/certifications": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
       "post": {
         "operationId": "CertifyOrRevokeObjects",
         "summary": "Certify or Revoke Certification of Objects",
@@ -6626,6 +6697,118 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "get": {
+        "operationId": "GetAssetGroupTagsCertifications",
+        "summary": "Get certifications for privilege zones",
+        "description": "Retrieves certification status for nodes selected by a zone",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "certified",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "certified_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "description": "For example, you can filter a date range of records by doing `created_at=gt:2025-07-08T17:00:00Z&created_at=lt:2025-07-30T17:00:00Z` (UTC)",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "environments",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "primary_kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-certification-response"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -7717,6 +7900,193 @@
           },
           "204": {
             "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/{saved_query_id}/export": {
+      "parameters": [
+        {
+          "name": "saved_query_id",
+          "description": "ID of the saved query",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ExportSavedQuery",
+        "summary": "Export a saved query",
+        "description": "Export an existing saved query by ID",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/import": {
+      "post": {
+        "operationId": "ImportSavedQueries",
+        "summary": "Import one or more cypher queries.",
+        "description": "Import one or more cypher queries.\n\nThe request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.\n\nThe underlying JSON file(s) is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "Request body should be a JSON or Zip file.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/zip": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "415": {
+            "$ref": "#/components/responses/unsupported-media-type"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/export": {
+      "parameters": [
+        {
+          "name": "scope",
+          "description": "Scope of saved queries, only the first scope parameter is used.",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "all",
+              "public",
+              "shared",
+              "owned"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ExportSavedQueries",
+        "summary": "Export one or more saved queries",
+        "description": "Export existing saved queries using the scope parameter.",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -16955,6 +17325,14 @@
           "$ref": "#/components/schemas/api.params.query.limit"
         }
       },
+      "query.environments": {
+        "name": "environments",
+        "description": "Environment IDs to filter response by",
+        "in": "query",
+        "schema": {
+          "$ref": "#/components/schemas/api.params.query.environments"
+        }
+      },
       "path.object-id": {
         "name": "object_id",
         "description": "The object id of the entity being operated on.",
@@ -17017,7 +17395,7 @@
       },
       "query.asset-group-tag-id": {
         "name": "asset_group_tag_id",
-        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' and 'Hygiene' is used.",
         "in": "query",
         "schema": {
           "type": "integer"
@@ -17359,6 +17737,21 @@
           }
         }
       },
+      "model.environment-targeted-access-control": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The user UUID that associates the access control to a specific user",
+            "readOnly": true
+          },
+          "environment_id": {
+            "type": "string",
+            "description": "The environment id which a user has been granted access to"
+          }
+        }
+      },
       "model.user": {
         "allOf": [
           {
@@ -17443,6 +17836,14 @@
               "all_environments": {
                 "type": "boolean",
                 "readOnly": true
+              },
+              "environment_targeted_access_control": {
+                "description": "A collection of environment targeted access controls that a user has been granted access to.",
+                "type": "array",
+                "readOnly": true,
+                "items": {
+                  "$ref": "#/components/schemas/model.environment-targeted-access-control"
+                }
               }
             }
           }
@@ -18118,8 +18519,54 @@
           },
           "is_disabled": {
             "type": "boolean"
+          },
+          "all_environments": {
+            "description": "Grants access to all environments for the user. This will clear a user's environment access control list, if it exists",
+            "type": "boolean"
+          },
+          "environment_targeted_access_control": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Sets an environment targeted access control on the user. When all_environments is set to true, a user's existing environment control is cleared and they are granted access to all environments. Administrators and Power Users may not have an ETAC list applied to them.",
+            "properties": {
+              "environments": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "environment_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "all_environments"
+            ],
+            "not": {
+              "required": [
+                "environment_targeted_access_control"
+              ]
+            }
+          },
+          {
+            "required": [
+              "environment_targeted_access_control"
+            ],
+            "not": {
+              "required": [
+                "all_environments"
+              ]
+            }
+          }
+        ]
       },
       "api.requests.user.set-secret": {
         "type": "object",
@@ -18131,6 +18578,33 @@
             "type": "boolean"
           }
         }
+      },
+      "model.users-minimal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "first_name": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  }
+                ]
+              },
+              "last_name": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "email": {
+                "type": "string",
+                "readOnly": true
+              }
+            }
+          }
+        ]
       },
       "enum.mfa-activation-status": {
         "type": "string",
@@ -18419,6 +18893,64 @@
           }
         }
       },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
+          },
+          "analysis_enabled": {
+            "$ref": "#/components/schemas/null.boolean"
+          },
+          "glyph": {
+            "$ref": "#/components/schemas/null.string"
+          }
+        }
+      },
       "model.domain-selector": {
         "type": "object",
         "properties": {
@@ -18437,6 +18969,28 @@
           "collected": {
             "type": "boolean",
             "readOnly": true
+          },
+          "impactValue": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Enterprise Only"
+          },
+          "exposures": {
+            "type": "array",
+            "readOnly": true,
+            "description": "Enterprise Only",
+            "items": {
+              "type": "object",
+              "properties": {
+                "exposure_percent": {
+                  "type": "integer",
+                  "readOnly": true
+                },
+                "asset_group_tag": {
+                  "$ref": "#/components/schemas/model.asset-group-tag"
+                }
+              }
+            }
           }
         }
       },
@@ -18769,6 +19323,16 @@
           }
         }
       },
+      "null.time.response": {
+        "type": "string",
+        "nullable": true,
+        "format": "date-time",
+        "description": "An RFC-3339 formatted string"
+      },
+      "null.string.response": {
+        "type": "string",
+        "nullable": true
+      },
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
@@ -18780,121 +19344,14 @@
           }
         }
       },
-      "model.asset-group-tags-selector-create": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "auto_certify": {
-            "type": "boolean"
-          },
-          "seeds": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-            }
-          }
-        }
-      },
-      "null.time.response": {
-        "type": "string",
-        "nullable": true,
-        "format": "date-time",
-        "description": "An RFC-3339 formatted string"
-      },
-      "null.string.response": {
-        "type": "string",
-        "nullable": true
-      },
       "model.asset-group-tags-selector-response": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "asset_group_tag_id": {
-                "type": "integer"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_by": {
-                "type": "string"
-              },
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "is_default": {
-                "type": "boolean"
-              },
-              "allow_disable": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "api.params.predicate.filter.integer-strict": {
-        "type": "integer",
-        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.string-strict": {
-        "type": "string",
-        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.boolean": {
-        "type": "boolean",
-        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "null.boolean": {
-        "type": "object",
-        "properties": {
-          "bool": {
-            "type": "boolean"
-          },
-          "valid": {
-            "description": "Valid is true if `boolean` is not `null`",
-            "type": "boolean"
-          }
-        }
-      },
-      "model.asset-group-tag": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer"
           },
-          "type": {
+          "asset_group_tag_id": {
             "type": "integer"
-          },
-          "kind_id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
           },
           "created_at": {
             "type": "string",
@@ -18910,19 +19367,52 @@
           "updated_by": {
             "type": "string"
           },
-          "position": {
-            "$ref": "#/components/schemas/null.int32"
+          "disabled_at": {
+            "$ref": "#/components/schemas/null.time.response"
           },
-          "require_certify": {
-            "$ref": "#/components/schemas/null.boolean"
+          "disabled_by": {
+            "$ref": "#/components/schemas/null.string.response"
           },
-          "analysis_enabled": {
-            "$ref": "#/components/schemas/null.boolean"
+          "name": {
+            "type": "string"
           },
-          "glyph": {
-            "$ref": "#/components/schemas/null.string"
+          "description": {
+            "type": "string"
+          },
+          "auto_certify": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "allow_disable": {
+            "type": "boolean"
+          },
+          "seeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+            }
           }
         }
+      },
+      "api.params.predicate.filter.integer-strict": {
+        "type": "integer",
+        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.string-strict": {
+        "type": "string",
+        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.boolean": {
+        "type": "boolean",
+        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "model.asset-group-tag-request": {
         "type": "object",
@@ -18966,15 +19456,32 @@
           }
         }
       },
-      "model.asset-group-tags-selector-update": {
-        "type": "object",
+      "api.params.query.environments": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "model.asset-group-tags-selector-request": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
           },
           {
             "type": "object",
             "properties": {
+              "auto_certify": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "description": "auto_certify must be an input value of 0 (Disabled), 1 (AllMembers), or 2 (SeedsOnly)"
+              },
+              "description": {
+                "type": "string"
+              },
               "disabled": {
                 "type": "boolean"
               }
@@ -19040,6 +19547,63 @@
             }
           }
         }
+      },
+      "model.asset-group-tags-certification-response": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/api.response.pagination"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "The graph ID of this node"
+                        },
+                        "object_id": {
+                          "type": "string"
+                        },
+                        "environment_id": {
+                          "type": "string"
+                        },
+                        "primary_kind": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "asset_group_tag_id": {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "certified_by": {
+                          "type": "string"
+                        },
+                        "certified": {
+                          "type": "integer",
+                          "description": "0 = cert pending, 1 = cert revoked, 2 = manual cert, 3 = auto cert"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "model.bh-graph.item-border": {
         "type": "object",
@@ -20620,6 +21184,27 @@
               "format": "binary"
             },
             "example": "[this request has a binary response]"
+          }
+        }
+      },
+      "unsupported-media-type": {
+        "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/api.error-wrapper"
+            },
+            "example": {
+              "http_status": 415,
+              "timestamp": "2024-02-19T19:27:43.866Z",
+              "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "errors": [
+                {
+                  "context": "clients",
+                  "message": "invalid content-type: [application/incorrect]; Content type must be application/json or application/zip"
+                }
+              ]
+            }
           }
         }
       },

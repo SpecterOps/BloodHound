@@ -30,7 +30,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
-
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -40,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
@@ -63,9 +63,10 @@ type ManagementResource struct {
 	authenticator              api.Authenticator // Used for secrets
 	OIDC                       oidc.Service
 	SAML                       saml.Service
+	GraphQuery                 queries.Graph
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -75,6 +76,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		authenticator:              authenticator,
 		OIDC:                       &oidc.Client{},
 		SAML:                       &saml.Client{},
+		GraphQuery:                 graphQuery,
 	}
 }
 
@@ -362,6 +364,24 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 			}
 		}
 
+		// ETAC
+		// This is to handle an edge case where GORM defaults this value to false on user creation
+		// Once ETAC is available to GA, this can be removed
+		userTemplate.AllEnvironments = true
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if etacFeatureFlag.Enabled {
+			// Access to all environments will be denied by default
+			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
+			userTemplate.AllEnvironments = false
+
+			if err := handleETACRequest(request.Context(), createUserRequest.UpdateUserRequest, roles, &userTemplate, s.GraphQuery); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+		}
+
 		if newUser, err := s.db.CreateUser(request.Context(), userTemplate); err != nil {
 			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
@@ -482,6 +502,23 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			return
 		} else if updateUserRequest.Roles != nil {
 			user.Roles = roles
+		}
+
+		// ETAC
+		if etacFeatureFlag, err := s.db.GetFlagByKey(request.Context(), appcfg.FeatureETAC); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if etacFeatureFlag.Enabled {
+			// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
+			effectiveRoles := user.Roles
+			if updateUserRequest.Roles != nil {
+				effectiveRoles = roles
+			}
+
+			if err := handleETACRequest(request.Context(), updateUserRequest, effectiveRoles, &user, s.GraphQuery); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
 		}
 
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
@@ -882,32 +919,39 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Default the password to check against to the user from the path param
-		secretToValidate := *user.AuthSecret
 		bhCtx := ctx.FromRequest(request)
 		if authedUser, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
+			// Default the password to check against to the user from the path param
+			secretToValidate := *user.AuthSecret
+
 			if authedUser.ID != userId {
 				// If the operation is being performed on a different user than who is logged in then we need to ensure they have proper permission
 				if s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 					// Compare passed password against the logged in user's password instead
-					secretToValidate = *authedUser.AuthSecret
+					if authedUser.AuthSecret != nil {
+						secretToValidate = *authedUser.AuthSecret
+					}
 				} else {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "must be an admin to disable MFA for another user", request), response)
 					return
 				}
 			}
+
+			// Check the password only if the current authed user is not using SSO
+			if !authedUser.SSOProviderID.Valid {
+				if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
+					// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
+					// b/c the bearer token is valid despite the secret in the request payload being invalid
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
+					return
+				}
+			}
 		}
 
-		// Check the password
-		if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
-			// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
-			// b/c the bearer token is valid despite the secret in the request payload being invalid
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
-			return
+		if user.AuthSecret != nil {
+			user.AuthSecret.TOTPSecret = ""
+			user.AuthSecret.TOTPActivated = false
 		}
-
-		user.AuthSecret.TOTPSecret = ""
-		user.AuthSecret.TOTPActivated = false
 
 		if err := s.db.UpdateAuthSecret(request.Context(), *user.AuthSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)

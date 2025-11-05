@@ -27,12 +27,15 @@ type PermissionSet struct {
 	APsGenerateReport model.Permission
 	APsManageAPs      model.Permission
 
+	AuditLogRead model.Permission
+
 	AuthAcceptEULA                      model.Permission
 	AuthCreateToken                     model.Permission
 	AuthManageApplicationConfigurations model.Permission
 	AuthManageProviders                 model.Permission
 	AuthManageSelf                      model.Permission
 	AuthManageUsers                     model.Permission
+	AuthReadUsers                       model.Permission
 
 	ClientsManage  model.Permission
 	ClientsRead    model.Permission
@@ -57,6 +60,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.AppWriteApplicationConfiguration,
 		s.APsGenerateReport,
 		s.APsManageAPs,
+		s.AuditLogRead,
 		s.AuthCreateToken,
 		s.AuthManageApplicationConfigurations,
 		s.AuthManageProviders,
@@ -72,6 +76,7 @@ func (s PermissionSet) All() model.Permissions {
 		s.GraphDBWrite,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
+		s.AuthReadUsers,
 		s.WipeDB,
 	}
 }
@@ -85,12 +90,15 @@ func Permissions() PermissionSet {
 		APsGenerateReport: model.NewPermission("risks", "GenerateReport"),
 		APsManageAPs:      model.NewPermission("risks", "ManageRisks"),
 
+		AuditLogRead: model.NewPermission("audit_log", "Read"),
+
 		AuthAcceptEULA:                      model.NewPermission("auth", "AcceptEULA"),
 		AuthCreateToken:                     model.NewPermission("auth", "CreateToken"),
 		AuthManageApplicationConfigurations: model.NewPermission("auth", "ManageAppConfig"),
 		AuthManageProviders:                 model.NewPermission("auth", "ManageProviders"),
 		AuthManageSelf:                      model.NewPermission("auth", "ManageSelf"),
 		AuthManageUsers:                     model.NewPermission("auth", "ManageUsers"),
+		AuthReadUsers:                       model.NewPermission("auth", "ReadUsers"),
 
 		ClientsManage:  model.NewPermission("clients", "Manage"),
 		ClientsRead:    model.NewPermission("clients", "Read"),

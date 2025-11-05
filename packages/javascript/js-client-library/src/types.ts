@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -29,9 +29,20 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-type System = 'SYSTEM';
+export const SystemString = 'SYSTEM' as const;
+
+type System = typeof SystemString;
 
 type ISO_DATE_STRING = string;
+
+export type TimestampFields = {
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
 
 interface Created {
     created_at: ISO_DATE_STRING;
@@ -53,17 +64,66 @@ interface Disabled {
     disabled_by: string | null;
 }
 
-export const AssetGroupTagTypeTier = 1 as const;
+export interface AssetGroupTagHistoryRecord {
+    id: number;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    asset_group_tag_id: number;
+    environment_id: string | null;
+    note: string | null;
+}
+
+export interface AssetGroupTagCertificationRecord {
+    id: number;
+    object_id: string;
+    environment_id: string;
+    primary_kind: string;
+    name: string;
+    created_at: string;
+    asset_group_tag_id: number;
+    certified_by: string;
+    certified: number;
+}
+
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto;
+
+export const CertificationTypeMap: Record<CertificationType, string> = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'User Certified',
+    [CertificationAuto]: 'Automatic Certification',
+};
+
+export type AssetGroupTagCertificationParams = {
+    certified?: CertificationType;
+    certified_by?: string;
+    primary_kind?: string;
+    created_at?: string;
+};
+
+export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
 
-export type AssetGroupTagTypes =
-    | typeof AssetGroupTagTypeTier
+export type AssetGroupTagType =
+    | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 
-export const AssetGroupTagTypesMap = {
-    1: 'tier',
+export const AssetGroupTagTypeMap = {
+    1: 'zone',
     2: 'label',
     3: 'owned',
 } as const;
@@ -77,9 +137,9 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
     analysis_enabled: boolean | null;
     glyph: string | null;
@@ -106,6 +166,21 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Initial members',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All members',
+} as const;
+
 export interface AssetGroupTagSelectorCounts {
     members: number;
 }
@@ -116,7 +191,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
@@ -214,6 +289,13 @@ export interface User {
     eula_accepted: boolean;
 }
 
+export interface UserMinimal {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+}
+
 interface Permission {
     id: number;
     name: string;
@@ -236,6 +318,12 @@ export interface ListRolesResponse {
 export interface ListUsersResponse {
     data: {
         users: User[];
+    };
+}
+
+export interface ListUsersMinimalResponse {
+    data: {
+        users: UserMinimal[];
     };
 }
 
@@ -361,4 +449,122 @@ export type CustomNodeKindType = {
             color: string;
         };
     };
+};
+
+export type OuDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    distinguishedname: string;
+    type: string;
+};
+
+export type DomainDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    type: string;
+};
+
+export type DomainResult = {
+    job_id: number;
+    domain_name: string;
+    success: boolean;
+    message: string;
+    user_count: number;
+    group_count: number;
+    computer_count: number;
+    gpo_count: number;
+    ou_count: number;
+    container_count: number;
+    aiaca_count: number;
+    rootca_count: number;
+    enterpriseca_count: number;
+    ntauthstore_count: number;
+    certtemplate_count: number;
+    deleted_count: number;
+    id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
+
+export type ScheduledJobDisplay = {
+    id: number;
+    client_id: string;
+    client_name: string;
+    event_id: number;
+    execution_time: string;
+    start_time: string;
+    end_time: string;
+    status: number;
+    status_message: string;
+    session_collection: boolean;
+    local_group_collection: boolean;
+    ad_structure_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
+    all_trusted_domains: boolean;
+    domain_controller: string;
+    ous: OuDetails[];
+    domains: DomainDetails[];
+    domain_results: DomainResult[];
+};
+
+export type Client = {
+    configured_user: string;
+    events: {
+        id: number;
+        client_id: string;
+        session_collection: boolean;
+        local_group_collection: boolean;
+        ad_structure_collection: boolean;
+        cert_services_collection: boolean;
+        ca_registry_collection: boolean;
+        dc_registry_collection: boolean;
+        all_trusted_domains: boolean;
+        ous: OuDetails[];
+        domains: DomainDetails[];
+        rrule: string;
+    }[];
+    hostname: string;
+    id: string;
+    ip_address: string;
+    last_checkin: string;
+    name: string;
+    token: unknown;
+    current_job_id: number | null;
+    current_task_id: number | null;
+    current_job: ScheduledJobDisplay;
+    current_task: ScheduledJobDisplay;
+    completed_job_count: number;
+    completed_task_count: number;
+    domain_controller: unknown;
+    version: string;
+    user_sid: string;
+    type: string;
+};
+
+export type FileIngestJob = TimestampFields & {
+    end_time: string;
+    failed_files: number;
+    id: number;
+    last_ingest: string;
+    start_time: string;
+    status_message: string;
+    status: number;
+    total_files: number;
+    user_email_address: string;
+    user_id: string;
+};
+
+export type FileIngestCompletedTask = TimestampFields & {
+    errors: string[];
+    file_name: string;
+    id: number;
+    parent_file_name: string;
 };

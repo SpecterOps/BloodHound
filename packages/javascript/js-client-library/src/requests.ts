@@ -17,8 +17,11 @@
 import { AxiosRequestConfig } from 'axios';
 import {
     AssetGroupTagSelector,
+    AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
-    AssetGroupTagTypes,
+    AssetGroupTagType,
+    CertificationManual,
+    CertificationRevoked,
     SeedExpansionMethod,
     SSOProviderConfiguration,
 } from './types';
@@ -36,20 +39,31 @@ export interface LoginRequest {
 export type CreateAssetGroupTagRequest = {
     name: string;
     description: string;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
+    glyph?: string;
     position?: number | null;
-    requireCertify?: boolean | null;
+    require_certify?: boolean | null;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<
     Partial<CreateAssetGroupTagRequest> & { analysis_enabled?: boolean | undefined }
 >;
 
+export type UpdateCertificationRequest = {
+    member_ids: number[];
+    action: typeof CertificationRevoked | typeof CertificationManual;
+    note?: string;
+};
+
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[]; expansion: SeedExpansionMethod };
 
 export type SelectorSeedRequest = Pick<AssetGroupTagSelectorSeed, 'type' | 'value'>;
 
-export type CreateSelectorRequest = { name: string; description?: string } & { seeds: SelectorSeedRequest[] };
+export type CreateSelectorRequest = {
+    name: string;
+    description?: string;
+    auto_certify?: AssetGroupTagSelectorAutoCertifyType | null;
+} & { seeds: SelectorSeedRequest[] };
 
 export type UpdateSelectorRequest = Partial<CreateSelectorRequest & { disabled: boolean }> &
     Pick<AssetGroupTagSelector, 'id'>;
@@ -192,9 +206,32 @@ export type RiskDetailsRequest = {
     Accepted?: string;
 };
 
+export enum QueryScope {
+    ALL = 'all',
+    OWNED = 'owned',
+    PUBLIC = 'public',
+    SHARED = 'shared',
+}
+
 export interface CreateUserQueryRequest {
     name: string;
+    description?: string;
     query: string;
+}
+
+export interface UpdateUserQueryRequest {
+    id: number;
+    name: string;
+    description?: string;
+    query: string;
+}
+export interface UpdateUserQueryPermissionsRequest {
+    user_ids: string[];
+    public: boolean;
+}
+
+export interface DeleteUserQueryPermissionsRequest {
+    user_ids: string[];
 }
 
 export interface ClearDatabaseRequest {
