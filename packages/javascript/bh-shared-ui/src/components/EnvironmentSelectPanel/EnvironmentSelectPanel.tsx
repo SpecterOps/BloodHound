@@ -29,7 +29,12 @@ const EnvironmentSelectPanel: React.FC<{
     updateUser?: boolean; // TODO: make required
     initialData?: UpdateUserRequestForm;
     form: UseFormReturn;
-}> = ({ createUser, updateUser, initialData, form }) => {
+}> = ({
+    createUser,
+    //updateUser,
+    initialData,
+    form,
+}) => {
     const { data: availableEnvironments } = useAvailableEnvironments();
 
     const initialEnvironmentsSelected = initialData?.environment_targeted_access_control?.environments?.map(
@@ -167,14 +172,9 @@ const EnvironmentSelectPanel: React.FC<{
                                         <FormField
                                             name='environment_targeted_access_control.environments'
                                             control={form.control}
-                                            render={(
-                                                {
-                                                    //field
-                                                }
-                                            ) => (
+                                            render={() => (
                                                 <FormItem className='flex flex-row items-center'>
                                                     <Checkbox
-                                                        //{...field}
                                                         checked={
                                                             selectedEnvironments &&
                                                             selectedEnvironments.includes(item.id)
