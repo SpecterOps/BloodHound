@@ -20,13 +20,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Alert,
     AlertTitle,
-    Box,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
-    Paper,
     Skeleton,
     Typography,
 } from '@mui/material';
@@ -34,6 +32,7 @@ import {
     Flag,
     PageWithTitle,
     Permission,
+    cn,
     useAppNavigate,
     useFeatureFlags,
     useMountEffect,
@@ -55,24 +54,24 @@ export const EarlyAccessFeatureToggle: React.FC<{
     };
 
     return (
-        <Paper>
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-                <Box overflow='hidden'>
+        <div className='bg-neutral-2 shadow-outer-1'>
+            <div className='p-4 flex justify-between gap-4'>
+                <div className='overflow-hidden'>
                     <Typography variant='h6'>{flag.name}</Typography>
                     <Typography variant='body1'>{flag.description}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                </div>
+                <div className='flex items-center justify-center'>
                     <Button disabled={disabled} onClick={handleOnClick} className='w-32'>
-                        <Box display={'flex'} alignItems={'center'}>
+                        <div className='flex items-center'>
                             {flag.enabled ? (
                                 <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
                             ) : null}
                             <Typography>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
-                        </Box>
+                        </div>
                     </Button>
-                </Box>
-            </Box>
-        </Paper>
+                </div>
+            </div>
+        </div>
     );
 };
 
@@ -156,37 +155,37 @@ const EarlyAccessFeatures: FC = () => {
                 }>
                 {!showWarningDialog &&
                     (isLoading ? (
-                        <Paper elevation={0}>
-                            <Box p={2}>
+                        <div className='bg-neutral-2'>
+                            <div className='p-4'>
                                 <Typography variant='h6'>
                                     <Skeleton />
                                 </Typography>
                                 <Typography variant='body1'>
                                     <Skeleton />
                                 </Typography>
-                            </Box>
-                        </Paper>
+                            </div>
+                        </div>
                     ) : isError ? (
                         <Alert severity='error'>
                             <AlertTitle>Could Not Display Early Access Features</AlertTitle>
                             An unexpected error occurred. Please refresh this page or try again later.
                         </Alert>
                     ) : data!.filter((flag) => flag.user_updatable).length === 0 ? (
-                        <Paper elevation={0}>
-                            <Box p={2}>
+                        <div className='bg-neutral-2'>
+                            <div className='p-4'>
                                 <Typography variant='h6'>No Early Access Features Available</Typography>
                                 <Typography variant='body1'>
                                     There are no early access features available at this time. Please check back later.
                                 </Typography>
-                            </Box>
-                        </Paper>
+                            </div>
+                        </div>
                     ) : (
                         data!
                             .filter((flag) => flag.user_updatable)
                             .sort((a, b) => a.id - b.id)
                             .map((flag, index) => (
-                                <Box
-                                    mt={index === 0 ? 0 : 2}
+                                <div
+                                    className={cn({ 'mt-4': index !== 0 })}
                                     key={flag.id}
                                     data-testid={`early-access-features_toggle-${index}`}>
                                     <EarlyAccessFeatureToggle
@@ -200,7 +199,7 @@ const EarlyAccessFeatures: FC = () => {
                                         }}
                                         disabled={showWarningDialog || !hasPermission}
                                     />
-                                </Box>
+                                </div>
                             ))
                     ))}
             </PageWithTitle>

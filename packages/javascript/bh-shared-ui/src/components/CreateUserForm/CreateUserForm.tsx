@@ -250,7 +250,7 @@ const CreateUserForm: React.FC<{
                             <>
                                 <Grid item xs={12}>
                                     <FormControl>
-                                        <InputLabel id='authenticationMethod-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                        <InputLabel id='authenticationMethod-label' className='-ml-3 mt-2'>
                                             Authentication Method
                                         </InputLabel>
                                         <Select
@@ -339,9 +339,7 @@ const CreateUserForm: React.FC<{
                                             }}
                                             render={({ field: { onChange, onBlur, value, ref } }) => (
                                                 <FormControl error={!!errors.SSOProviderId}>
-                                                    <InputLabel
-                                                        id='SSOProviderId-label'
-                                                        sx={{ ml: '-14px', mt: '8px' }}>
+                                                    <InputLabel id='SSOProviderId-label' className='-ml-3 mt-2'>
                                                         SSO Provider
                                                     </InputLabel>
                                                     <Select
@@ -382,7 +380,7 @@ const CreateUserForm: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormControl>
-                                            <InputLabel id='role-label' sx={{ ml: '-14px', mt: '8px' }}>
+                                            <InputLabel id='role-label' className='-ml-3 mt-2'>
                                                 Role
                                             </InputLabel>
                                             <Select

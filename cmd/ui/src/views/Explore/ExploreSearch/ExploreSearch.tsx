@@ -16,7 +16,7 @@
 
 import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
+import { Tab, Tabs } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
     CypherSearch,
@@ -68,10 +68,6 @@ const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
 const ExploreSearch: React.FC = () => {
     /* Hooks */
     const classes = useStyles();
-
-    const theme = useTheme();
-
-    const matches = useMediaQuery(theme.breakpoints.down('md'));
 
     const { exploreSearchTab, setExploreParams } = useExploreParams();
 
@@ -162,16 +158,16 @@ const ExploreSearch: React.FC = () => {
     return (
         <div
             data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
+            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded shadow-[1px solid white]', {
                 'w-[600px]': activeTab === 'cypher' && showSearchWidget,
             })}>
             <div
-                className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                className='h-10 w-full flex gap-1 rounded pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
                 <Icon
                     data-testid='explore_search-container_header_expand-collapse-button'
                     className={classes.icon}
-                    click={() => {
+                    onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>
                     <FontAwesomeIcon icon={showSearchWidget ? faMinus : faPlus} />
@@ -185,12 +181,12 @@ const ExploreSearch: React.FC = () => {
                     TabIndicatorProps={{
                         className: 'h-[3px]',
                     }}>
-                    {getTabsContent(matches)}
+                    {getTabsContent()}
                 </Tabs>
             </div>
 
             <div
-                className={cn('hidden min-h-0  rounded-lg pointer-events-auto', {
+                className={cn('hidden min-h-0 rounded pointer-events-auto', {
                     block: showSearchWidget,
                     'p-2 bg-[#f4f4f4] dark:bg-[#222222]': activeTab !== 'cypher',
                 })}>
@@ -217,7 +213,7 @@ const ExploreSearch: React.FC = () => {
     );
 };
 
-const getTabsContent = (matches: boolean) => {
+const getTabsContent = () => {
     const tabs = [
         {
             label: 'Search',
@@ -236,7 +232,7 @@ const getTabsContent = (matches: boolean) => {
     return tabs.map(({ label, icon }) => (
         <Tab
             data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
-            label={matches ? '' : label}
+            label={label}
             key={label}
             icon={<FontAwesomeIcon icon={icon} />}
             iconPosition='start'

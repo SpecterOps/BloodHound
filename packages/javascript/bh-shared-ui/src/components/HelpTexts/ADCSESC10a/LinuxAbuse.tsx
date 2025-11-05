@@ -16,13 +16,12 @@
 
 import { Box, Link, List, ListItem, Typography } from '@mui/material';
 import { FC } from 'react';
-import { useHelpTextStyles } from '../utils';
+import { hasChildCodeElementsClasses } from '../utils';
 
 const LinuxAbuse: FC = () => {
-    const classes = useHelpTextStyles();
     const step1 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1: </b>Set UPN of victim to targeted principal's <code>sAMAccountName</code> followed by @ and
                 the domain name.
                 <br />
@@ -37,7 +36,7 @@ const LinuxAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 2: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
@@ -75,7 +74,7 @@ const LinuxAbuse: FC = () => {
 
     const step3 = (
         <Box>
-            <Typography variant='body2' sx={{ marginBottom: '-8px' }}>
+            <Typography variant='body2' className='-mb-2'>
                 <b>Step 3: </b>Obtain the credentials of victim.
                 <br />
                 <br />
@@ -103,7 +102,7 @@ const LinuxAbuse: FC = () => {
                 <br />
                 If the victim is a user, you have the following options for obtaining the credentials:
             </Typography>
-            <List sx={{ fontSize: '12px' }}>
+            <List className='text-xs'>
                 <ListItem>
                     Shadow Credentials attack (see{' '}
                     <Link

@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SxProps, useTheme } from '@mui/material';
 import {
     EdgeInfoPane,
     EntityInfoDataTable,
@@ -29,28 +28,21 @@ import {
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
-    const theme = useTheme();
-
-    const infoPaneStyles: SxProps = {
-        bottom: 0,
-        top: 0,
-        paddingBottom: theme.spacing(2),
-        paddingTop: theme.spacing(2),
-        maxWidth: theme.spacing(50),
-        position: 'absolute',
-        right: theme.spacing(2),
-        width: theme.spacing(50),
-    };
-
     if (!selectedItem || selectedItemQuery.isLoading) {
-        return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} DataTable={EntityInfoDataTable} />;
+        return (
+            <EntityInfoPanel
+                className='bottom-0 top-0 py-4 absolute right-4'
+                selectedNode={null}
+                DataTable={EntityInfoDataTable}
+            />
+        );
     }
 
     if (selectedItemQuery.isError) {
         return (
             <EntityInfoPanel
                 DataTable={EntityInfoDataTableGraphed}
-                sx={infoPaneStyles}
+                className='bottom-0 top-0 py-4 absolute right-4'
                 selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
             />
         );
@@ -74,7 +66,7 @@ const GraphItemInformationPanel = () => {
                 type: selectedItemQuery.data.targetNode.kind,
             },
         };
-        return <EdgeInfoPane sx={infoPaneStyles} selectedEdge={selectedEdge} />;
+        return <EdgeInfoPane className='bottom-0 top-0 py-4 absolute right-4' selectedEdge={selectedEdge} />;
     }
 
     if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
@@ -85,7 +77,11 @@ const GraphItemInformationPanel = () => {
             type: selectedItemQuery.data.kind as EntityKinds,
         };
         return (
-            <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} DataTable={EntityInfoDataTableGraphed} />
+            <EntityInfoPanel
+                className='bottom-0 top-0 py-4 absolute right-4'
+                selectedNode={selectedNode}
+                DataTable={EntityInfoDataTableGraphed}
+            />
         );
     }
 };

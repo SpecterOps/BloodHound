@@ -22,7 +22,7 @@ const LinuxAbuse: FC = () => {
         <>
             <Typography variant='body2'>The ESC3 attack can be carried out in the following manner.</Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 1:
                 </Box>{' '}
                 Use Certipy to request an enrollment agent certificate.
@@ -42,7 +42,7 @@ const LinuxAbuse: FC = () => {
                 default.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 2:
                 </Box>{' '}
                 Use the enrollment agent certificate to issue a certificate request on behalf of another user to a
@@ -60,7 +60,7 @@ const LinuxAbuse: FC = () => {
                 Choose another target with the given attribute set.
             </Typography>
             <Typography variant='body2'>
-                <Box component='span' sx={{ fontWeight: 'bold' }}>
+                <Box component='span' className='font-bold'>
                     Step 3:
                 </Box>{' '}
                 Request a ticket granting ticket (TGT) from the domain, specifying the target identity to impersonate

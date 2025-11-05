@@ -19,7 +19,7 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Typography variant='body1'>Gathering Credentials</Typography>
             <Link target='_blank' rel='noopener noreferrer' href='http://blog.gentilkiwi.com/mimikatz'>
                 http://blog.gentilkiwi.com/mimikatz

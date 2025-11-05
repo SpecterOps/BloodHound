@@ -19,17 +19,18 @@ import {
     Table,
     TableBody,
     TableCell,
+    TableCellProps,
     TableContainer,
     TableHead,
     TablePagination,
     TableRow,
 } from '@mui/material';
-import React, { CSSProperties } from 'react';
+import React, { HTMLProps } from 'react';
 
 export interface Header {
     label: string;
-    alignment?: 'inherit' | 'left' | 'center' | 'right' | 'justify';
-    verticalAlign?: CSSProperties['verticalAlign'];
+    alignment?: TableCellProps['align'];
+    className?: HTMLProps<HTMLElement>['className'];
 }
 
 export interface DataTableProps {
@@ -88,7 +89,7 @@ const DataTable: React.FC<DataTableProps> = ({
                                         <TableCell
                                             key={cellIndex}
                                             align={headers[cellIndex]?.alignment}
-                                            sx={{ verticalAlign: headers[cellIndex]?.verticalAlign ?? '' }}>
+                                            className={headers[cellIndex]?.className ?? ''}>
                                             {cell}
                                         </TableCell>
                                     ))}

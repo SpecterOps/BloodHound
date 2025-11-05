@@ -29,12 +29,11 @@ import {
     TablePagination,
     TableRow,
     Typography,
-    useTheme,
 } from '@mui/material';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { apiClient } from '../../utils';
+import { apiClient, cn } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
 const AssetGroupMemberList: FC<{
@@ -43,8 +42,6 @@ const AssetGroupMemberList: FC<{
     onSelectMember: (member: any) => void;
     canFilterToEmpty: boolean;
 }> = ({ assetGroup, filter, onSelectMember, canFilterToEmpty }) => {
-    const theme = useTheme();
-
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [count, setCount] = useState(0);
@@ -93,24 +90,21 @@ const AssetGroupMemberList: FC<{
     };
 
     return (
-        <TableContainer
-            sx={{ maxHeight: '100%', bgcolor: theme.palette.neutral.secondary }}
-            component={Paper}
-            elevation={0}>
-            <Table stickyHeader sx={{ height: '100%', position: 'relative' }}>
+        <TableContainer className='max-h-full bg-neutral-2' component={Paper} elevation={0}>
+            <Table stickyHeader className='h-full relative'>
                 <colgroup>
                     <col width='80%' />
                     <col width='20%' />
                 </colgroup>
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ bgcolor: theme.palette.neutral.secondary }}>Name</TableCell>
-                        <TableCell sx={{ bgcolor: theme.palette.neutral.secondary, textAlign: 'center' }} align='right'>
+                        <TableCell className='bg-neutral-2'>Name</TableCell>
+                        <TableCell className='bg-neutral-2 text-center' align='right'>
                             Custom Member
                         </TableCell>
                     </TableRow>
                 </TableHead>
-                <TableBody sx={{ height: '100%', overflow: 'auto' }}>
+                <TableBody className='h-full overflow-auto'>
                     {isLoading && getLoadingRows(10)}
                     {isSuccess &&
                         !!data?.length &&
@@ -124,7 +118,7 @@ const AssetGroupMemberList: FC<{
                         ))}
                     {isSuccess && data?.length === 0 && (
                         <TableRow>
-                            <TableCell sx={{ textAlign: 'center', height: '100px' }} colSpan={2}>
+                            <TableCell className='text-center h-24' colSpan={2}>
                                 {canFilterToEmpty
                                     ? 'No members match that filter'
                                     : 'No members in selected Asset Group'}
@@ -136,12 +130,7 @@ const AssetGroupMemberList: FC<{
                     <TableFooter>
                         <TableRow>
                             <TablePagination
-                                sx={{
-                                    position: 'sticky',
-                                    bottom: 0,
-                                    bgcolor: theme.palette.neutral.secondary,
-                                    borderTop: '1px solid #E0E0E0',
-                                }}
+                                className='sticky bottom-0 bg-neutral-2 border-t border-neutral-light-3'
                                 colSpan={2}
                                 rowsPerPageOptions={[10, 25, 100, 250]}
                                 page={page}
@@ -163,40 +152,23 @@ const AssetGroupMemberRow: FC<{
     disabled: boolean;
     onClick: (member: AssetGroupMember) => void;
 }> = ({ member, disabled, onClick }) => {
-    const theme = useTheme();
-
-    const disabledRowStyles = { opacity: '0.5' };
-
-    const rowStyles = {
-        '&:hover': {
-            backgroundColor: theme.palette.neutral.quaternary,
-            cursor: 'pointer',
-        },
-    };
-
     const handleClick = () => {
         if (!disabled) onClick(member);
     };
 
     return (
-        <TableRow onClick={handleClick} sx={disabled ? disabledRowStyles : rowStyles}>
+        <TableRow
+            onClick={handleClick}
+            className={cn({ 'hover:bg-neutral-4 cursor-pointer': !disabled, 'opacity-50': disabled })}>
             <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <Box className='flex items-center w-full'>
                     <NodeIcon nodeType={member.primary_kind} />
                     <Typography noWrap marginLeft={1} display={'inline-block'}>
                         {member.name}
                     </Typography>
                 </Box>
             </TableCell>
-            <TableCell
-                align='right'
-                sx={{
-                    padding: '0',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100%',
-                }}>
+            <TableCell align='right' className='p-0 flex justify-center items-center h-full'>
                 {member.custom_member ? (
                     <FontAwesomeIcon icon={faCheck} color='green' size='lg' />
                 ) : (
