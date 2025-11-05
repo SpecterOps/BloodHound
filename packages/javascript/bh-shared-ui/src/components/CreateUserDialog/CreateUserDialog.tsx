@@ -37,7 +37,7 @@ const CreateUserDialog: React.FC<{
     onClose: () => void;
     onExited?: () => void;
     onSave: (user: CreateUserRequest) => Promise<any>;
-    open: boolean;
+    open?: boolean;
     showEnvironmentAccessControls: boolean;
 }> = ({
     error,
@@ -71,7 +71,7 @@ const CreateUserDialog: React.FC<{
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
-            <DialogTrigger>
+            <DialogTrigger asChild>
                 <Button
                     disabled={!hasPermission}
                     onClick={() => {
