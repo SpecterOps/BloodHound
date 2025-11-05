@@ -37,19 +37,19 @@ vi.mock('react-router-dom', async () => {
 describe('Zone Management', async () => {
     it('renders "Edit Zone" button when on Zones page', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '3', labelId: undefined, selectorId: undefined });
-        render(<PZEditButton />);
+        render(<PZEditButton showEditButton={true} />);
         expect(await screen.findByText(/Edit Zone/i)).toBeInTheDocument();
     });
 
     it('renders "Edit Label" button when on Labels page', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: undefined, labelId: '1', selectorId: undefined });
-        render(<PZEditButton />);
+        render(<PZEditButton showEditButton={true} />);
         expect(await screen.findByText(/Edit Label/i)).toBeInTheDocument();
     });
 
     it('renders "Edit Selector" button when rule is selected', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: undefined, labelId: undefined, selectorId: '1' });
-        render(<PZEditButton />);
+        render(<PZEditButton showEditButton={true} />);
         expect(await screen.findByText(/Edit Rule/i)).toBeInTheDocument();
     });
 });

@@ -52,7 +52,7 @@ export const suffix = (zoneId: string | undefined, labelId: string | undefined, 
 };
 
 export const PZEditButton: FC<{
-    showEditButton?: boolean;
+    showEditButton: boolean;
 }> = ({ showEditButton }) => {
     const { zoneId, labelId, selectorId } = usePZPathParams();
     const saveLink = getSavePath(zoneId, labelId, selectorId);
@@ -60,11 +60,13 @@ export const PZEditButton: FC<{
 
     return (
         <div className='flex flex-col gap-4 basis-1/3 w-[6.75rem]'>
-            <Button asChild={showEditButton || !saveLink} variant={'secondary'} disabled={!saveLink}>
-                <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
-                    Edit {titleSuffix}
-                </AppLink>
-            </Button>
+            {showEditButton && (
+                <Button asChild={!!saveLink} variant={'secondary'} disabled={!saveLink}>
+                    <AppLink data-testid='privilege-zones_edit-button' to={saveLink || ''}>
+                        Edit {titleSuffix}
+                    </AppLink>
+                </Button>
+            )}
         </div>
     );
 };
