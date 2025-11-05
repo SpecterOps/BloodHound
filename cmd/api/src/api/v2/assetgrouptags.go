@@ -68,11 +68,6 @@ type AssetGroupTagView struct {
 	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
 }
 
-// Errorf implements assert.TestingT.
-func (a AssetGroupTagView) Errorf(format string, args ...interface{}) {
-	panic("unimplemented")
-}
-
 type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
