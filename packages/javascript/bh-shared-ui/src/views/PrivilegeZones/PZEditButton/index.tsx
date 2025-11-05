@@ -14,9 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import Details from './Details';
-import EntitySelectorsInformation from './EntitySelectorsInformation';
-import { SelectedDetails } from './SelectedDetails';
-
-export { EntitySelectorsInformation, SelectedDetails };
-export default Details;
+export * from './PZEditButton';
