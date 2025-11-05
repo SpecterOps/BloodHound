@@ -44,6 +44,7 @@ var (
 var (
 	ErrDuplicateAGName             = errors.New("duplicate asset group name")
 	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
+	ErrDuplicateAGTagSelectorName  = errors.New("duplicate asset group tag selector name")
 	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
 	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
 	ErrDuplicateEmail              = errors.New("duplicate user email address")
