@@ -133,7 +133,7 @@ describe('Selector Form', () => {
 
     it('renders the form for editing an existing selector', async () => {
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selector/:selectorId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -201,7 +201,7 @@ describe('Selector Form', () => {
     it('changes the text from "Disabled" to "Enabled" when the Rule Status switch is toggled', async () => {
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
@@ -228,7 +228,7 @@ describe('Selector Form', () => {
         console.error = vi.fn();
         vi.mocked(useParams).mockReturnValue({ zoneId: '1', selectorId: '777' });
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
                 return res(
                     ctx.json({
                         data: { selector: testSelector },
