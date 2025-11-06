@@ -1504,8 +1504,8 @@ func FetchGroupMembers(ctx context.Context, db graph.Database, root *graph.Node,
 }
 
 const (
-	windows    = "WINDOWS"
-	ninetyDays = time.Hour * 24 * 90
+	windows      = "WINDOWS"
+	fourteenDays = time.Hour * 24 * 14
 )
 
 func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (float64, error) {
@@ -1515,7 +1515,8 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 		filters := []graph.Criteria{
 			query.Kind(query.Node(), ad.Computer),
 			query.StringContains(query.NodeProperty(common.OperatingSystem.String()), windows),
-			query.Exists(query.NodeProperty(common.PasswordLastSet.String())),
+			query.Equals(query.NodeProperty(common.Enabled.String()), true),
+			query.Exists(query.NodeProperty(ad.LastLogonTimestamp.String())),
 		}
 
 		if len(domainSIDs) > 0 {
@@ -1526,20 +1527,20 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 	})); err != nil {
 		return completeness, err
 	} else {
-		mostRecentPasswordLastSetTime := time.Unix(0, 0)
+		mostRecentLogonTimestamp := time.Unix(0, 0)
 
 		for _, computer := range computers {
-			if passwordLastSet, err := computer.Properties.Get(common.PasswordLastSet.String()).Time(); err != nil {
+			if lastLogonTimestamp, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
 				return completeness, err
-			} else if passwordLastSet.After(mostRecentPasswordLastSetTime) {
-				mostRecentPasswordLastSetTime = passwordLastSet
+			} else if lastLogonTimestamp.After(mostRecentLogonTimestamp) {
+				mostRecentLogonTimestamp = lastLogonTimestamp
 			}
 		}
 
-		activityThreshold := mostRecentPasswordLastSetTime.Add(-ninetyDays)
+		activityThreshold := mostRecentLogonTimestamp.Add(-fourteenDays)
 
 		for _, computer := range computers {
-			if passwordLastSet, err := computer.Properties.Get(common.PasswordLastSet.String()).Time(); err != nil {
+			if passwordLastSet, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
 				return completeness, err
 			} else if passwordLastSet.Before(activityThreshold) {
 				computers.Remove(computer.ID)
@@ -1583,6 +1584,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 	if users, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Node(), ad.User),
+			query.Equals(query.NodeProperty(common.Enabled.String()), true),
 			query.Exists(query.NodeProperty(ad.LastLogonTimestamp.String())),
 		}
 
@@ -1604,7 +1606,7 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 			}
 		}
 
-		activityThreshold := mostRecentLogonTimestamp.Add(-ninetyDays)
+		activityThreshold := mostRecentLogonTimestamp.Add(-fourteenDays)
 
 		for _, user := range users {
 			if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {

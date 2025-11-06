@@ -3364,6 +3364,9 @@
                         },
                         "server_version": {
                           "type": "string"
+                        },
+                        "product_edition": {
+                          "type": "string"
                         }
                       }
                     }
@@ -5379,7 +5382,8 @@
         "description": "Updates an asset group tag by ID",
         "tags": [
           "Asset Isolation",
-          "Enterprise"
+          "Enterprise",
+          "Community"
         ],
         "requestBody": {
           "description": "The request body for updating an asset group tag. At least one field is required.",
@@ -6708,8 +6712,7 @@
         "description": "Retrieves certification status for nodes selected by a zone",
         "tags": [
           "Asset Isolation",
-          "Enterprise",
-          "Community"
+          "Enterprise"
         ],
         "parameters": [
           {
@@ -17392,7 +17395,7 @@
       },
       "query.asset-group-tag-id": {
         "name": "asset_group_tag_id",
-        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' and 'Hygiene' is used.",
         "in": "query",
         "schema": {
           "type": "integer"

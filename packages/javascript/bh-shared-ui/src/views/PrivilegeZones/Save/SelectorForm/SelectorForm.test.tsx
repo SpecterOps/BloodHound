@@ -114,14 +114,9 @@ describe('Selector Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
-        const autoCertifyDropdownDefault = await screen.findByTestId(
-            'privilege-zones_save_selector-form_default-certify'
-        );
-        expect(autoCertifyDropdownDefault).toBeInTheDocument();
+        // Auto Certification dropdown should not render on BHCE
+        expect(screen.queryByText(/Automatic Certification/i)).not.toBeInTheDocument();
 
-        await waitFor(() => {
-            expect(autoCertifyDropdownDefault).toHaveTextContent('Off');
-        });
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Object Selector component renders by default
@@ -183,12 +178,9 @@ describe('Selector Form', () => {
             expect(descriptionInput).toHaveValue('bar');
         });
 
-        const autoCertifyDropdownDefault = await screen.findByTestId(
-            'privilege-zones_save_selector-form_default-certify'
-        );
-        expect(autoCertifyDropdownDefault).toBeInTheDocument();
+        // Auto Certification dropdown should not render on BHCE
+        expect(screen.queryByText(/Automatic Certification/i)).not.toBeInTheDocument();
 
-        expect(autoCertifyDropdownDefault).toHaveTextContent('All members');
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Cypher Search renders because that is the seed type of the first seed of this selector

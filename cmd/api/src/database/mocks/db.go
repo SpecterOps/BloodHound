@@ -2182,6 +2182,18 @@ func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, reque
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, request)
 }
 
+// SanitizeUpdateAssetGroupTagRequireCertify mocks base method.
+func (m *MockDatabase) SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SanitizeUpdateAssetGroupTagRequireCertify", tag)
+}
+
+// SanitizeUpdateAssetGroupTagRequireCertify indicates an expected call of SanitizeUpdateAssetGroupTagRequireCertify.
+func (mr *MockDatabaseMockRecorder) SanitizeUpdateAssetGroupTagRequireCertify(tag any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SanitizeUpdateAssetGroupTagRequireCertify", reflect.TypeOf((*MockDatabase)(nil).SanitizeUpdateAssetGroupTagRequireCertify), tag)
+}
+
 // SavedQueryBelongsToUser mocks base method.
 func (m *MockDatabase) SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int64) (bool, error) {
 	m.ctrl.T.Helper()

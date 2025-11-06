@@ -64,6 +64,9 @@ type IngestContext struct {
 	Manager ChangeManager
 	// Stats tracks the number of nodes and relationships processed during ingestion
 	Stats *IngestStats
+
+	// RetainIngestedFiles determines if the service should clean up working files after ingest
+	RetainIngestedFiles bool
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
@@ -87,16 +90,28 @@ func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext 
 // option helpers
 type IngestOption func(*IngestContext)
 
-func WithIngestTime(t time.Time) IngestOption {
-	return func(s *IngestContext) { s.IngestTime = t }
+func WithIngestTime(ingestTime time.Time) IngestOption {
+	return func(s *IngestContext) {
+		s.IngestTime = ingestTime
+	}
+}
+
+func WithIngestRetentionConfig(shouldRetainIngestedFiles bool) IngestOption {
+	return func(s *IngestContext) {
+		s.RetainIngestedFiles = shouldRetainIngestedFiles
+	}
 }
 
 func WithChangeManager(manager ChangeManager) IngestOption {
-	return func(s *IngestContext) { s.Manager = manager }
+	return func(s *IngestContext) {
+		s.Manager = manager
+	}
 }
 
 func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
-	return func(s *IngestContext) { s.Batch = batchUpdater }
+	return func(s *IngestContext) {
+		s.Batch = batchUpdater
+	}
 }
 
 func (s *IngestContext) BindBatchUpdater(batch BatchUpdater) {

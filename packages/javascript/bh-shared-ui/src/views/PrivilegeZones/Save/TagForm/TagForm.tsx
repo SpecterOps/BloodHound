@@ -92,7 +92,7 @@ export const TagForm: FC = () => {
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
-    const { ZoneList, SalesMessage } = useContext(PrivilegeZonesContext);
+    const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
     const showSalesMessage = isUpdateZoneLocation && SalesMessage;
     const showZoneList = isUpdateZoneLocation && ZoneList;
 
@@ -286,7 +286,7 @@ export const TagForm: FC = () => {
                                     <Label>Description</Label>
                                     <Skeleton className='h-16 w-full' />
                                 </div>
-                                {isZonePage && (
+                                {isZonePage && Certification && (
                                     <div className='grid gap-2'>
                                         <Label>Require Certification</Label>
                                         <Skeleton className='h-3 w-6' />
@@ -402,7 +402,7 @@ export const TagForm: FC = () => {
                                         </FormItem>
                                     )}
                                 />
-                                {isZonePage && (
+                                {isZonePage && Certification && (
                                     <FormField
                                         control={control}
                                         name='require_certify'

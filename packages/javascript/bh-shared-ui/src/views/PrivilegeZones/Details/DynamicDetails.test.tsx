@@ -146,7 +146,8 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
         expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Cypher')).toBeInTheDocument();
-        expect(screen.getByText('Automatic Certification:')).toBeInTheDocument();
+        // Auto Certification should not render on BHCE
+        expect(screen.queryByText(/Automatic Certification:/i)).not.toBeInTheDocument();
     });
 
     it('renders details for a selected selector and is of type "Object"', () => {
@@ -181,6 +182,7 @@ describe('DynamicDetails', () => {
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
         expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Object ID')).toBeInTheDocument();
-        expect(screen.getByText('Automatic Certification:')).toBeInTheDocument();
+        // Auto Certification should not render on BHCE
+        expect(screen.queryByText(/Automatic Certification:/i)).not.toBeInTheDocument();
     });
 });
