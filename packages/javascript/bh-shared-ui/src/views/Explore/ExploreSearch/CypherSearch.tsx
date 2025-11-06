@@ -333,7 +333,7 @@ const CypherSearchInner = ({
                             </a>
                         </Button>
 
-                        <Button onClick={handleCypherSearch} size={'small'}>
+                        <Button onClick={handleCypherSearch} size={'small'} aria-label='Run cypher query'>
                             <div className='flex items-center'>
                                 <p aria-label='Run cypher query' className='text-base'>
                                     Run
