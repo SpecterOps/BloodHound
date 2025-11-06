@@ -43,7 +43,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     return (
         <div
             className={cn(
-                'flex flex-col pointer-events-none overflow-y-hidden h-full min-w-[400px] width-[400px] max-w-[400px]',
+                'flex flex-col pointer-events-none overflow-y-hidden h-full min-w-[400px] w-[400px] max-w-[400px]',
                 className
             )}
             data-testid='explore_entity-information-panel'>
