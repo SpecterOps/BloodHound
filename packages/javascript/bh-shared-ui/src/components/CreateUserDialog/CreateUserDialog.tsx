@@ -65,12 +65,7 @@ const CreateUserDialog: React.FC<{
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen} data-testid='manage-users_create-user-dialog'>
             <DialogTrigger asChild>
-                <Button
-                    disabled={!hasPermission}
-                    onClick={() => {
-                        setIsOpen(true);
-                    }}
-                    data-testid='manage-users_button-create-user'>
+                <Button disabled={!hasPermission} data-testid='manage-users_button-create-user'>
                     Create User
                 </Button>
             </DialogTrigger>
