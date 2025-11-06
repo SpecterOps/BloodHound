@@ -38,7 +38,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { Alert } from '@mui/material';
 import { EnvironmentRequest, Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
@@ -242,16 +242,6 @@ const UpdateUserFormInner: React.FC<{
         });
     };
 
-    useEffect(() => {
-        // on form loaded
-        if (error) {
-            form.setError('root.generic', {
-                type: 'custom',
-                message: 'An unexpected error occurred. Please try again.',
-            });
-        }
-    }, [form, error, form.formState.errors]);
-
     return (
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave, onError)}>
@@ -265,7 +255,6 @@ const UpdateUserFormInner: React.FC<{
                                     <FormField
                                         name='roles.0'
                                         control={form.control}
-                                        defaultValue={1}
                                         rules={{
                                             required: 'Role is required',
                                         }}
@@ -571,9 +560,9 @@ const UpdateUserFormInner: React.FC<{
                                 </div>
                             )}
 
-                            {!!form.formState.errors.root?.generic && (
+                            {error && (
                                 <div>
-                                    <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                    <Alert severity='error'>An unexpected error occurred. Please try again.</Alert>
                                 </div>
                             )}
                         </div>
@@ -601,7 +590,7 @@ const UpdateUserFormInner: React.FC<{
                         <EnvironmentSelectPanel
                             form={form as unknown as UseFormReturn}
                             initialData={initialData}
-                            updateUser={true}
+                            isNewUser={false}
                         />
                     )}
                 </div>
