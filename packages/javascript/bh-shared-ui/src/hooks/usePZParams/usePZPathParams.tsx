@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useLocation, useParams } from 'react-router-dom';
-import { historyPath, labelsPath, privilegeZonesPath, summaryPath, zonesPath } from '../../routes';
+import { certificationsPath, historyPath, labelsPath, privilegeZonesPath, summaryPath, zonesPath } from '../../routes';
 
 export const usePZPathParams = () => {
     const location = useLocation();
@@ -25,6 +25,7 @@ export const usePZPathParams = () => {
     const hasLabelId = labelId !== undefined;
     const hasZoneId = zoneId !== '';
 
+    const isCertificationsPage = location.pathname.includes(certificationsPath);
     const isSummaryPage = location.pathname.includes(summaryPath);
     const isHistoryPage = location.pathname.includes(historyPath);
     const isLabelPage = location.pathname.includes(`/${privilegeZonesPath}/${labelsPath}`);
@@ -43,6 +44,7 @@ export const usePZPathParams = () => {
         hasLabelId,
         hasZoneId,
         isLabelPage,
+        isCertificationsPage,
         isHistoryPage,
         isSummaryPage,
         isZonePage,

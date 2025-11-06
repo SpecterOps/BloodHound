@@ -86,8 +86,10 @@ const (
 	ErrorResponseAssetGroupMemberIDsRequired                         = "asset group member IDs are required"
 	ErrorResponseAssetGroupAutoCertifyInvalid                        = "auto_certify must be an input value of 0 to 2"
 	ErrorResponseAssetGroupAutoCertifyOnlyAvailableForPrivilegeZones = "auto_certify is only available for asset group tags of tag_type = 1 (zones)"
+	ErrorResponseAGTCannotUpdateAutoCertifiedNodes                   = "cannot change certification status for auto-certified members"
 	ErrorResponseETACBadRequest                                      = "cannot specify environments when all_environments is true"
 	ErrorResponseETACInvalidRoles                                    = "administrators and power users may not have an ETAC list applied to them"
+	ErrorResponseAssetGroupTagInvalidTagName                         = "asset group tag name must contain only alphanumeric characters, spaces, and underscores"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

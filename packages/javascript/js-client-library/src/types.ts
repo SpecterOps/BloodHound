@@ -76,6 +76,43 @@ export interface AssetGroupTagHistoryRecord {
     note: string | null;
 }
 
+export interface AssetGroupTagCertificationRecord {
+    id: number;
+    object_id: string;
+    environment_id: string;
+    primary_kind: string;
+    name: string;
+    created_at: string;
+    asset_group_tag_id: number;
+    certified_by: string;
+    certified: number;
+}
+
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto;
+
+export const CertificationTypeMap: Record<CertificationType, string> = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'User Certified',
+    [CertificationAuto]: 'Automatic Certification',
+};
+
+export type AssetGroupTagCertificationParams = {
+    certified?: CertificationType;
+    certified_by?: string;
+    primary_kind?: string;
+    created_at?: string;
+};
+
 export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;

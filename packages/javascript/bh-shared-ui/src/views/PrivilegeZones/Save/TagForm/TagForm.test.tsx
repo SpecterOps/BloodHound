@@ -190,9 +190,8 @@ describe('Tag Form', () => {
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
 
-        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-        expect(requireCertifySwitch).toBeInTheDocument();
-        expect(requireCertifySwitch).toHaveValue('false');
+        // The Require Certification switch should not render on BHCE
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         const glyphInput = await screen.findByLabelText(/Apply Custom Glyph/);
         expect(glyphInput).toBeInTheDocument();
@@ -232,7 +231,7 @@ describe('Tag Form', () => {
         const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);
         expect(glyphInput).not.toBeInTheDocument();
 
-        // The Require Certification switch should not render when creating a label
+        // The Require Certification switch should not render on BHCE
         expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         // The delete button should not render when creating a new selector because it doesn't exist yet
@@ -270,11 +269,8 @@ describe('Tag Form', () => {
             expect(descriptionInput).toHaveValue('Tier Zero Description');
         });
 
-        const requireCertifySwitch = await screen.findByLabelText('Require Certification');
-        expect(requireCertifySwitch).toBeInTheDocument();
-        await waitFor(() => {
-            expect(requireCertifySwitch).toHaveValue('true');
-        });
+        // The Require Certification switch should not render on BHCE
+        expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         // This form input is not available for the most privileged zone, aka Tier Zero
         expect(screen.queryByLabelText(/Apply Custom Glyph/)).not.toBeInTheDocument();
@@ -315,7 +311,7 @@ describe('Tag Form', () => {
             expect(descriptionInput).toHaveValue('Owned Description');
         });
 
-        // The Require Certification switch should not render when editing a label
+        // The Require Certification switch should not render on BHCE
         expect(screen.queryByText(/Require Certification/i)).not.toBeInTheDocument();
 
         const glyphInput = screen.queryByLabelText(/Apply Custom Glyph/);

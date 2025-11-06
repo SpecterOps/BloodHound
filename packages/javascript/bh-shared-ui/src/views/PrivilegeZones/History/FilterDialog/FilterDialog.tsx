@@ -27,16 +27,16 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { DateTime } from 'luxon';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ErrorOption, useForm } from 'react-hook-form';
+import { UseFormReturn, useForm } from 'react-hook-form';
+import { getStartAndEndDateTimes, validateFormDates } from '../..';
+import { END_DATE, START_DATE } from '../../../..';
 import { AppIcon } from '../../../../components';
-import { CustomRangeError, END_DATE, LuxonFormat, START_DATE } from '../../../../utils';
+import { EndDateField, StartDateField, TagIdField } from '../../Filters';
 import { useHistoryTableContext } from '../HistoryTableContext';
 import { AssetGroupTagHistoryFilters } from '../types';
 import { DEFAULT_FILTER_VALUE } from '../utils';
 import ActionField from './ActionField';
-import { EndDateField, StartDateField } from './DateField';
 import MadeByField from './MadeByField';
-import TagIdField from './TagIdField';
 
 const FilterDialog: FC<{
     setFilters: (filters: AssetGroupTagHistoryFilters) => void;
@@ -48,39 +48,13 @@ const FilterDialog: FC<{
     const form = useForm<AssetGroupTagHistoryFilters>({ defaultValues: DEFAULT_FILTER_VALUE });
 
     const validateDateFields = useCallback(
-        (startDate: DateTime, endDate: DateTime) => {
-            form.clearErrors();
-            const errors: { name: typeof START_DATE | typeof END_DATE; error: ErrorOption }[] = [];
-
-            if (!startDate.isValid) {
-                errors.push({ name: START_DATE, error: { message: CustomRangeError.INVALID_DATE } });
-            }
-            if (!endDate.isValid) {
-                errors.push({ name: END_DATE, error: { message: CustomRangeError.INVALID_DATE } });
-            }
-            if (errors.length === 0 && startDate > endDate) {
-                errors.push({ name: START_DATE, error: { message: CustomRangeError.INVALID_RANGE_START } });
-                errors.push({ name: END_DATE, error: { message: CustomRangeError.INVALID_RANGE_END } });
-            }
-
-            if (errors.length > 0) {
-                errors.forEach((error) => form.setError(error.name, error.error));
-                return false;
-            } else {
-                form.clearErrors();
-                return true;
-            }
-        },
+        (startDate: DateTime, endDate: DateTime) => validateFormDates(form, startDate, endDate)(),
         [form]
     );
 
     const handleConfirm = useCallback(() => {
-        const start = form.getValues(START_DATE);
-        const end = form.getValues(END_DATE);
-        // If the start date is empty use the start of epoch time
-        const startDate = start !== '' ? DateTime.fromFormat(start, LuxonFormat.ISO_8601) : DateTime.fromMillis(0);
-        // Use the client time if the end date is empty
-        const endDate = end !== '' ? DateTime.fromFormat(end, LuxonFormat.ISO_8601) : DateTime.now();
+        const values = form.getValues();
+        const { startDate, endDate } = getStartAndEndDateTimes(values[START_DATE], values[END_DATE]);
 
         // Prevent setting invalid dates before applying filters, e.g., bogus date like 9999/99/99 or a range where the start date is after the end date
         if (validateDateFields(startDate, endDate)) {
@@ -136,13 +110,13 @@ const FilterDialog: FC<{
 
                         <ActionField form={form} />
 
-                        <TagIdField form={form} />
+                        <TagIdField form={form as unknown as UseFormReturn} fieldLabel='Zone/Label' />
 
                         <MadeByField form={form} />
 
                         <div className='flex gap-6'>
-                            <StartDateField form={form} />
-                            <EndDateField form={form} />
+                            <StartDateField form={form as unknown as UseFormReturn} />
+                            <EndDateField form={form as unknown as UseFormReturn} />
                         </div>
 
                         <DialogActions>

@@ -48,6 +48,7 @@ import { useDeleteSelector } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { detailsPath, privilegeZonesPath } from '../../../../routes';
 import { apiClient, queriesAreLoadingOrErrored, useAppNavigate } from '../../../../utils';
+import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import SelectorFormContext from './SelectorFormContext';
@@ -58,6 +59,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
     const navigate = useAppNavigate();
     const { selectorId = '', tagId, tagType, tagTypeDisplay } = usePZPathParams();
     const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { Certification } = useContext(PrivilegeZonesContext);
     const receivedData = location.state;
 
     useEffect(() => {
@@ -215,7 +217,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
                                     </SelectPortal>
                                 </Select>
                             </div>
-                            {tagType === 'zones' && (
+                            {tagType === 'zones' && Certification && (
                                 <FormField
                                     control={control}
                                     name='auto_certify'
