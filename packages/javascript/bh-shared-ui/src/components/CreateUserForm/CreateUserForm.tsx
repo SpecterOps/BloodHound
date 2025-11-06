@@ -38,7 +38,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { Alert } from '@mui/material';
 import { CreateUserRequest, Role, SSOProvider } from 'js-client-library';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
@@ -154,16 +154,6 @@ const CreateUserForm: React.FC<{
         });
     };
 
-    useEffect(() => {
-        // on form load error
-        if (error) {
-            form.setError('root.generic', {
-                type: 'custom',
-                message: 'An unexpected error occurred. Please try again.',
-            });
-        }
-    }, [form, error, form.formState.errors]);
-
     return (
         <Form {...form}>
             <form
@@ -180,7 +170,6 @@ const CreateUserForm: React.FC<{
                                     <FormField
                                         name='roles.0'
                                         control={form.control}
-                                        defaultValue={1}
                                         rules={{
                                             required: 'Role is required',
                                         }}
@@ -190,17 +179,15 @@ const CreateUserForm: React.FC<{
                                                     <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
                                                         Role
                                                     </FormLabel>
-                                                    <div
-                                                        className='flex'
-                                                        data-testid='create-user-dialog_select_role-tooltip'>
-                                                        <Tooltip
-                                                            tooltip='Only Read-Only and Users roles contain the environment target access control.'
-                                                            contentProps={{
-                                                                className:
-                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',
-                                                            }}
-                                                        />
-                                                    </div>
+
+                                                    <Tooltip
+                                                        defaultOpen={false}
+                                                        tooltip='Only Read-Only and Users roles contain the environment target access control.'
+                                                        contentProps={{
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',
+                                                        }}
+                                                    />
                                                 </div>
                                                 <Select
                                                     onValueChange={(field) => {
@@ -536,9 +523,9 @@ const CreateUserForm: React.FC<{
                                     )}
                                 </>
 
-                                {form.formState.errors.root?.generic && (
+                                {error && (
                                     <div>
-                                        <Alert severity='error'>{form.formState.errors.root.generic.message}</Alert>
+                                        <Alert severity='error'>An unexpected error occurred. Please try again.</Alert>
                                     </div>
                                 )}
                             </div>
@@ -562,7 +549,7 @@ const CreateUserForm: React.FC<{
                             </DialogActions>
                         </Card>
                         {showEnvironmentAccessControls && selectedETACEnabledRole && (
-                            <EnvironmentSelectPanel form={form as unknown as UseFormReturn} createUser={true} />
+                            <EnvironmentSelectPanel form={form as unknown as UseFormReturn} isNewUser={true} />
                         )}
                     </div>
                 )}
