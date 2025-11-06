@@ -18,7 +18,7 @@ import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from '@mui/material';
 import isEmpty from 'lodash/isEmpty';
-import {
+import React, {
     useCallback,
     useMemo,
     useState,
@@ -100,8 +100,10 @@ const useExploreTableRowsAndColumns = ({
         <T extends ReactMouseEvent<HTMLElement, MouseEvent> | ReactKeyboardEvent<HTMLElement>>(e: T, id: string) => {
             e.stopPropagation();
 
-            const x = e instanceof MouseEvent ? e.clientX : window.innerHeight / 2;
-            const y = e instanceof MouseEvent ? e.clientY : window.innerWidth / 2;
+            const isMouseEvent = e.type.startsWith('click');
+
+            const x = isMouseEvent ? (e as ReactMouseEvent<HTMLElement, MouseEvent>).clientX : window.innerWidth / 2;
+            const y = isMouseEvent ? (e as ReactMouseEvent<HTMLElement, MouseEvent>).clientY : window.innerHeight / 2;
 
             if (onKebabMenuClick) onKebabMenuClick({ x, y, id });
         },
