@@ -124,7 +124,7 @@ const SaveQueryDialog: React.FC<{
 
     return (
         <>
-            <Dialog open={open} onClose={onClose} className='md:max-w-[40rem] lg:max-w-[60rem] lg'>
+            <Dialog open={open} onClose={onClose} className='md:max-w-[40rem] lg:max-w-[60rem]'>
                 <DialogContent className='p-0 shadow-none'>
                     <div className='grid grid-cols-12 gap-4'>
                         <Card className='w-full col-span-8 p-2 rounded-lg'>

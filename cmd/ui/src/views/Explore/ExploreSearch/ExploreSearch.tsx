@@ -158,7 +158,7 @@ const ExploreSearch: React.FC = () => {
     return (
         <div
             data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded shadow-[1px solid white]', {
+            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded shadow-outer-1', {
                 'w-[600px]': activeTab === 'cypher' && showSearchWidget,
             })}>
             <div

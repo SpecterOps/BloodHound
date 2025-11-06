@@ -53,6 +53,7 @@ const LabelWithCopy: FC<{
                     onClick={handleCopy}
                     variant='text'
                     size='small'
+                    aria-label='Copy to clipboard'
                     className={cn('text-inherit', { hidden: !(!hoverOnly || hoverActive) })}>
                     <FontAwesomeIcon icon={faCopy} />
                 </Button>
