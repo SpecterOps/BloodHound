@@ -121,19 +121,19 @@ const SSOProviderInfoPanel: FC<{
     };
 
     return (
-        <div className='width-[400px] max-w-[400px]'>
+        <div className='w-[400px] max-w-[400px]'>
             <div className='flex flex-col overflow-y-hidden h-full' data-testid='sso_provider-info-panel'>
                 <div>
                     <div className='flex items-center bg-neutral-5'>
                         <div className='bg-primary w-2 h-14 mr-2'></div>
                         <h5
                             data-testid='sso_provider-info-panel_header-text'
-                            className='text-nowrap grow text-lg font-bold'>
+                            className='whitespace-nowrap grow text-lg font-bold'>
                             {ssoProvider?.name}
                         </h5>
                     </div>
                     <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto px-4 py-2 shadow-outer-1 rounded'>
-                        <div className='shrink-0 grow font-bold ml-2 text-sm'>Provider Information:</div>
+                        <div className='font-bold ml-2 text-sm'>Provider Information:</div>
                         <FieldsContainer>
                             {innerInfoPanel}
                             <Field

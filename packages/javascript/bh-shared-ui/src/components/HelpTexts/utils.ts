@@ -45,4 +45,4 @@ export const typeFormat = (type: string | undefined): string => {
 };
 
 export const hasChildCodeElementsClasses: HTMLProps<HTMLElement>['className'] =
-    '[&_code]:bg-neutral-3 [&_code]:py [&_code]:px-[0.5ch] [&_code]:font-normal [&_code]:text-sm [&_code]:rounded [&_code]:inline [&_code]:break-words [&_code]:whitespace-pre-wrap';
+    '[&_code]:bg-neutral-3 [&_code]:py-[2px] [&_code]:px-[0.5ch] [&_code]:font-normal [&_code]:text-sm [&_code]:rounded [&_code]:inline [&_code]:break-words [&_code]:whitespace-pre-wrap';

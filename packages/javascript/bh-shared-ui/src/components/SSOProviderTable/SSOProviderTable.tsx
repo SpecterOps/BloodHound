@@ -151,7 +151,7 @@ const SSOProviderTable: FC<{
                         </TableRow>
                     ) : ssoProviders.length === 0 && hasPermission ? (
                         <TableRow>
-                            <TableCell colSpan={6} align='center'>
+                            <TableCell colSpan={3} align='center'>
                                 No SSO Providers found
                             </TableCell>
                         </TableRow>

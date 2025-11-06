@@ -289,7 +289,7 @@ const DatabaseManagement: FC = () => {
                 <Box display='flex' flexDirection='column' alignItems='start'>
                     <FormControl
                         variant='standard'
-                        className='p-4'
+                        className='py-4'
                         error={state.noSelectionError || state.mutationError}>
                         {state.noSelectionError ? <Alert severity='error'>Please make a selection.</Alert> : null}
                         {state.mutationError ? (

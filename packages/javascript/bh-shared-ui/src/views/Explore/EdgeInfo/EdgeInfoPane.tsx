@@ -29,7 +29,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
     return (
         <div
             className={cn(
-                'flex flex-col pointer-events-none overflow-y-hidden h-full width-[400px] max-w-[400px]',
+                'flex flex-col pointer-events-none overflow-y-hidden h-full w-[400px] max-w-[400px]',
                 className
             )}
             data-testid='explore_edge-information-pane'>

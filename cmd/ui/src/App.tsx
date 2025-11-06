@@ -111,7 +111,7 @@ export const Inner: React.FC = () => {
             </Helmet>
             <div className={`${classes.applicationContainer}`} id='app-root'>
                 {showNavBar && <MainNav mainNavData={mainNavData} />}
-                <div className='bg-neutral-1 grow overflow-y-auto, overflow-x-hidden'>
+                <div className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
                     <Content />
                 </div>
                 <AppNotifications />
