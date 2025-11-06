@@ -63,7 +63,7 @@ const SSOProviderTableActionsMenu: FC<{
 
     return (
         <>
-            <Button variant={'text'} onClick={handleOnOpen} size='small'>
+            <Button variant={'text'} onClick={handleOnOpen} size='small' aria-label='Open provider actions menu'>
                 <FontAwesomeIcon icon={faEllipsisVertical} />
             </Button>
             <Menu

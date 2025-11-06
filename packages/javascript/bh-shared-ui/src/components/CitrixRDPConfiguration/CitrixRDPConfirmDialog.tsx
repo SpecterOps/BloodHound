@@ -27,6 +27,7 @@ import { FC } from 'react';
 
 type CitrixRDPConfirmDialogProps = {
     open: boolean;
+    setOpen: (open: boolean) => void;
     futureSwitchState: boolean;
     onCancel: () => void;
     onConfirm: () => void;
@@ -37,9 +38,15 @@ const enabledDialogDescription =
 const disabledDialogDescription =
     'Analysis has been removed with Citrix Configuration, this will result in BloodHound performing analysis to account for this change';
 
-const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureSwitchState, onCancel, onConfirm }) => {
+const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
+    open,
+    setOpen,
+    futureSwitchState,
+    onCancel,
+    onConfirm,
+}) => {
     return (
-        <Dialog open={open}>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogPortal>
                 <DialogContent className='pb-0 text-sm'>
                     <DialogTitle className='text-xl'>{dialogTitle}</DialogTitle>
