@@ -72,9 +72,8 @@ const CreateUserForm: React.FC<{
 
     const form = useForm<CreateUserRequestForm>({ defaultValues });
 
-    const [authenticationMethod, setAuthenticationMethod] = React.useState<string>('password');
+    const [authenticationMethod, setAuthenticationMethod] = useState<string>('password');
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
-    const [selectedRoleValue, setSelectedRoleValue] = useState([3]);
 
     const handleCheckedChange = (checked: boolean | 'indeterminate') => {
         setNeedsPasswordReset(checked === true);
@@ -93,14 +92,12 @@ const CreateUserForm: React.FC<{
         apiClient.listSSOProviders({ signal }).then((res) => res.data?.data)
     );
 
-    const matchingRoles = getRolesQuery.data
-        ?.filter((item) => selectedRoleValue.includes(item.id))
-        .map((item) => item.name);
+    const selectedRoleValue = form.watch('roles.0');
 
-    const selectedETACEnabledRole = matchingRoles?.toString() === 'Read-Only' || matchingRoles?.toString() === 'User';
+    const matchingRole = getRolesQuery.data?.find((item) => selectedRoleValue === item.id)?.name;
 
-    const selectedAdminOrPowerUserRole =
-        matchingRoles?.toString() === 'Administrator' || matchingRoles?.toString() === 'Power User';
+    const selectedETACEnabledRole = matchingRole && ['Read-Only', 'User'].includes(matchingRole);
+    const selectedAdminOrPowerUserRole = matchingRole && ['Administrator, Power User'].includes(matchingRole);
 
     const onError = () => {
         // onSubmit error
@@ -134,7 +131,7 @@ const CreateUserForm: React.FC<{
             first_name: values.first_name,
             last_name: values.last_name,
             sso_provider_id: values.password ? undefined : values.sso_provider_id?.toString(),
-            roles: selectedRoleValue,
+            roles: values.roles,
             all_environments:
                 selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
                     ? true
@@ -191,8 +188,7 @@ const CreateUserForm: React.FC<{
                                                 </div>
                                                 <Select
                                                     onValueChange={(field) => {
-                                                        form.setValue('roles', [Number(field)]);
-                                                        setSelectedRoleValue([Number([field])]);
+                                                        form.setValue('roles.0', Number(field));
                                                     }}
                                                     value={String(selectedRoleValue)}>
                                                     <FormControl>
