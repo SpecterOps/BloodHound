@@ -175,7 +175,7 @@ func (s *CommunityGraphService) InitializeService(ctx context.Context, connectio
 
 	if err := s.db.Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating database: %w", err)
-	} else if err := migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
+	} else if err := migrations.NewGraphMigrator(graphDB).Migrate(ctx); err != nil {
 		return fmt.Errorf("error migrating graph schema: %w", err)
 	} else if err = graphDB.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
 		return fmt.Errorf("error setting default graph: %w", err)

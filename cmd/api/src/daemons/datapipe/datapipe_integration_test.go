@@ -84,7 +84,7 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	})
 	require.NoError(t, err)
 
-	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx, graphschema.DefaultGraphSchema())
+	err = migrations.NewGraphMigrator(graphDB).Migrate(ctx)
 	require.NoError(t, err)
 
 	err = db.Migrate(ctx)
