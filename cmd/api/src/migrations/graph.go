@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sort"
 
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -151,10 +152,22 @@ func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion 
 }
 
 func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion version.Version, migrationsByVersion MigrationsByVersion) error {
-	mostRecentVersion := originalVersion
+	var (
+		mostRecentVersion = originalVersion
+		orderedVersions   []version.Version
+	)
 
-	for nextVersion, versionMigrations := range migrationsByVersion {
+	// Order the manifest versions to ensure ascending stepwise migrations
+	for v := range migrationsByVersion {
+		orderedVersions = append(orderedVersions, v)
+	}
+	sort.Slice(orderedVersions, func(i, j int) bool {
+		return orderedVersions[i].LessThan(orderedVersions[j])
+	})
+
+	for _, nextVersion := range orderedVersions {
 		if nextVersion.GreaterThan(mostRecentVersion) {
+			versionMigrations := migrationsByVersion[nextVersion]
 			for _, nextMigration := range versionMigrations {
 				slog.InfoContext(ctx, fmt.Sprintf("Graph migration version %s is greater than current version %s", nextMigration.Version, mostRecentVersion))
 
