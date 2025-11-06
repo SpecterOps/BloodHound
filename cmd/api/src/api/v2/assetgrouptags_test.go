@@ -1790,16 +1790,6 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 					apitest.AddQueryParam(input, "environments", "testenv")
 				},
 				Setup: func() {
-					filters := []graph.Criteria{
-						query.Or(
-							query.In(query.NodeProperty(ad.DomainSID.String()), []string{"testenv"}),
-							query.In(query.NodeProperty(azure.TenantID.String()), []string{"testenv"}),
-						),
-						query.Or(
-							query.In(query.NodeProperty(ad.DomainSID.String()), []string{}),
-							query.In(query.NodeProperty(azure.TenantID.String()), []string{}),
-						),
-					}
 					mockDB.EXPECT().
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
@@ -1807,7 +1797,7 @@ func TestResources_GetAssetGroupTagMemberCountsByKind(t *testing.T) {
 						GetFlagByKey(gomock.Any(), appcfg.FeatureETAC).
 						Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockGraphDb.EXPECT().
-						GetPrimaryNodeKindCounts(gomock.Any(), assetGroupTag.ToKind(), filters).
+						GetPrimaryNodeKindCounts(gomock.Any(), assetGroupTag.ToKind(), gomock.Any()).
 						Return(map[string]int{ad.Domain.String(): 2}, nil)
 				},
 				Test: func(output apitest.Output) {
