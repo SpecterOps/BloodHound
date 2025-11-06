@@ -22,8 +22,8 @@ import { SortableHeader } from '../../../components';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { getListHeight } from './utils';
 import { SelectedHighlight } from './SelectedHighlight';
+import { getListHeight } from './utils';
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
     <div
@@ -113,6 +113,11 @@ export const SelectorsList: FC<SelectorsListProps> = ({
             <div
                 style={style}
                 key={item.id}
+                // https://github.com/bvaughn/react-window/issues/834
+                // Note: Role 'listitem' doesn't work as expected in our
+                // current version of react-window, since there is an
+                // intermediary div. We therefore cannot have listitem children.
+                data-testid='selector-row'
                 className={cn('border-y border-neutral-3 relative', {
                     'bg-neutral-4': selected === item.id.toString(),
                 })}>

@@ -79,10 +79,10 @@ describe('Details', async () => {
         );
 
         const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');
-        const selectorsListItems = await within(selectors).findAllByRole('listitem');
+        const selectorsListItems = await within(selectors).findAllByTestId('selector-row');
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = await within(objects).findAllByRole('listitem');
+        const objectsListItems = await within(objects).findAllByTestId('member-row');
 
         longWait(() => {
             expect(screen.getByTestId('privilege-zones_details_zones-list')).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('Details', async () => {
         });
 
         const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');
-        const selectorsListItems = await within(selectors).findAllByRole('listitem');
+        const selectorsListItems = await within(selectors).findAllByTestId('selector-row');
 
         // After selecting an object, the edit action is not viable and thus the button is not rendered
         expect(screen.queryByRole('button', { name: /Edit/ })).toBeNull();
@@ -148,7 +148,7 @@ describe('Details', async () => {
         const selector7 = await screen.findByText('tier-0-selector-7');
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        const objectsListItems = within(objects).getAllByRole('listitem');
+        const objectsListItems = within(objects).getAllByTestId('member-row');
         // Selecting a selector will enable the Edit button from a disabled state
 
         await user.click(selector7);
@@ -181,23 +181,23 @@ describe('Details', async () => {
         );
 
         const selectors = await screen.findByTestId('privilege-zones_details_selectors-list');
-        let selectorsListItems = await within(selectors).findAllByRole('listitem');
+        let selectorsListItems = await within(selectors).findAllByTestId('selector-row');
 
         const objects = await screen.findByTestId('privilege-zones_details_members-list');
-        let objectsListItems = await within(objects).findAllByRole('listitem');
+        let objectsListItems = await within(objects).findAllByTestId('member-row');
 
         longWait(async () => {
             expect(screen.getByText('Zone-2')).toBeInTheDocument();
             await user.click(screen.getByText('Zone-2'));
 
             // This list rerenders with different list items so we have to grab those again
-            selectorsListItems = await within(selectors).findAllByRole('listitem');
+            selectorsListItems = await within(selectors).findAllByTestId('selector-row');
             selectorsListItems.forEach((li) => {
                 expect(li.childNodes).toHaveLength(1);
             });
 
             // This list rerenders with different list items so we have to grab those again
-            objectsListItems = await within(objects).findAllByRole('listitem');
+            objectsListItems = await within(objects).findAllByTestId('member-row');
             objectsListItems.forEach((li) => {
                 expect(li.childNodes).toHaveLength(1);
             });

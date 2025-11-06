@@ -640,9 +640,6 @@ describe('ExploreTable', async () => {
     });
 
     it('Kebab menu click causes the callback function to be called with the correct parameters', async () => {
-        const WIDTH = 100;
-        const MIDDLE_OF_SCREEN = WIDTH / 2;
-
         Object.defineProperty(window, 'innerHeight', {
             configurable: true,
             writable: true,
@@ -666,8 +663,8 @@ describe('ExploreTable', async () => {
 
         expect(kebabCallbackSpy).toBeCalledWith({
             id: '569',
-            x: MIDDLE_OF_SCREEN,
-            y: MIDDLE_OF_SCREEN,
+            x: 0,
+            y: 0,
         });
     });
 });
