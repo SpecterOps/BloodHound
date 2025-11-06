@@ -24,25 +24,22 @@ import {
     isNode,
     useExploreSelectedItem,
 } from 'bh-shared-ui';
+import { HTMLProps } from 'react';
+
+const defaultClasses: HTMLProps<HTMLElement>['className'] = 'bottom-0 top-0 py-4 absolute right-4';
 
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     if (!selectedItem || selectedItemQuery.isLoading) {
-        return (
-            <EntityInfoPanel
-                className='bottom-0 top-0 py-4 absolute right-4'
-                selectedNode={null}
-                DataTable={EntityInfoDataTable}
-            />
-        );
+        return <EntityInfoPanel className={defaultClasses} selectedNode={null} DataTable={EntityInfoDataTable} />;
     }
 
     if (selectedItemQuery.isError) {
         return (
             <EntityInfoPanel
                 DataTable={EntityInfoDataTableGraphed}
-                className='bottom-0 top-0 py-4 absolute right-4'
+                className={defaultClasses}
                 selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
             />
         );
@@ -66,7 +63,7 @@ const GraphItemInformationPanel = () => {
                 type: selectedItemQuery.data.targetNode.kind,
             },
         };
-        return <EdgeInfoPane className='bottom-0 top-0 py-4 absolute right-4' selectedEdge={selectedEdge} />;
+        return <EdgeInfoPane className={defaultClasses} selectedEdge={selectedEdge} />;
     }
 
     if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
@@ -78,7 +75,7 @@ const GraphItemInformationPanel = () => {
         };
         return (
             <EntityInfoPanel
-                className='bottom-0 top-0 py-4 absolute right-4'
+                className={defaultClasses}
                 selectedNode={selectedNode}
                 DataTable={EntityInfoDataTableGraphed}
             />

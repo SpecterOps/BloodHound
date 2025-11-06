@@ -21,18 +21,13 @@ import { cn } from '../utils';
 interface Props {
     tip?: string;
     onClick?: (event: MouseEvent) => void;
-    badge?: number;
     className?: string;
 }
 
-const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, badge = 0, className }): JSX.Element => {
-    const overflow: boolean = badge > 99;
-    const badgeText: string | null = overflow ? '99+' : badge > 0 ? badge.toString() : null;
-
+const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, className }): JSX.Element => {
     const icon = (
         <Button variant={'text'} className={cn('relative p-0 rounded-none', className)} onClick={click}>
             {children}
-            {badgeText && <Badge text={badgeText} overflow={overflow} />}
         </Button>
     );
 
@@ -42,17 +37,6 @@ const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, bad
         </Tooltip>
     ) : (
         icon
-    );
-};
-
-const Badge: FC<{ text: string; overflow?: boolean }> = ({ text, overflow = false }): JSX.Element => {
-    return (
-        <span
-            className={cn('absolute bottom-[3px] right-[3px] size-5 text-xs rounded-lg leading-5', {
-                'leading-[21px]': overflow,
-            })}>
-            {text}
-        </span>
     );
 };
 

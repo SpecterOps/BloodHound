@@ -39,15 +39,12 @@ const disabledDialogDescription =
 
 const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({ open, futureSwitchState, onCancel, onConfirm }) => {
     return (
-        <Dialog open={open} aria-labelledby='citrix-rdp-alert-dialog-title'>
+        <Dialog open={open}>
             <DialogPortal>
-                <DialogContent
-                    id='citrix-rdp-alert-dialog-description'
-                    aria-describedby='citrix-rdp-alert-dialog-description'
-                    className='pb-0 text-sm'>
+                <DialogContent className='pb-0 text-sm'>
                     <DialogTitle className='text-xl'>{dialogTitle}</DialogTitle>
                     <VisuallyHidden>
-                        <DialogDescription>Confrim Citrix Configuration Changes</DialogDescription>
+                        <DialogDescription>Confirm Citrix Configuration Changes</DialogDescription>
                     </VisuallyHidden>
                     <p className='pb-4 whitespace-break-spaces'>
                         {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
