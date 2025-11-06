@@ -21,12 +21,11 @@ import { setUpQueryClient } from '../../utils';
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
-    onSubmit: () => vi.fn,
+    onSubmit: vi.fn(),
     userId: '2d92f310-68fc-402a-915a-438a57f81342',
     hasSelectedSelf: false,
     isLoading: false,
     error: false,
-    open: true,
 };
 
 const MOCK_ROLES = [

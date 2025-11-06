@@ -21,11 +21,9 @@ import { setUpQueryClient } from '../../utils';
 import CreateUserForm from './CreateUserForm';
 
 const DEFAULT_PROPS = {
-    onCancel: () => null,
-    onSubmit: () => vi.fn,
+    onSubmit: vi.fn(),
     isLoading: false,
     error: false,
-    open: true,
     showEnvironmentAccessControls: false,
 };
 
