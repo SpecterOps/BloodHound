@@ -25,11 +25,12 @@ import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/u
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
-    createUser?: boolean;
-    updateUser?: boolean;
+    //createUser?: boolean;
+    //updateUser?: boolean;
+    isNewUser: boolean;
     initialData?: UpdateUserRequestForm;
     form: UseFormReturn;
-}> = ({ createUser, initialData, form }) => {
+}> = ({ isNewUser, initialData, form }) => {
     const { data: availableEnvironments } = useAvailableEnvironments();
 
     const initialEnvironmentsSelected = initialData?.environment_targeted_access_control?.environments?.map(
@@ -42,9 +43,9 @@ const EnvironmentSelectPanel: React.FC<{
     );
 
     const checkedEnvironments =
-        !createUser && initialData?.all_environments === true
+        !isNewUser && initialData?.all_environments === true
             ? returnMappedEnvironments
-            : matchingEnvironmentValues || (createUser && []);
+            : matchingEnvironmentValues || (isNewUser && []);
 
     const [searchInput, setSearchInput] = React.useState<string>('');
     const [selectedEnvironments, setSelectedEnvironments] = React.useState<string[]>(checkedEnvironments);
