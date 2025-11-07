@@ -60,7 +60,7 @@ const CreateUserForm: React.FC<{
         principal: '',
         first_name: '',
         last_name: '',
-        password: '',
+        secret: '',
         needs_password_reset: false,
         roles: [3],
         sso_provider_id: '',
@@ -68,7 +68,7 @@ const CreateUserForm: React.FC<{
         environment_targeted_access_control: {
             environments: null,
         },
-    };
+    } satisfies CreateUserRequestForm;
 
     const form = useForm<CreateUserRequestForm>({ defaultValues });
 
@@ -126,16 +126,10 @@ const CreateUserForm: React.FC<{
         const values = form.getValues();
 
         const formData = {
-            email_address: values.email_address,
-            principal: values.principal,
-            first_name: values.first_name,
-            last_name: values.last_name,
-            sso_provider_id: values.password ? undefined : values.sso_provider_id?.toString(),
-            roles: values.roles,
-            all_environments:
-                selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
-                    ? true
-                    : false,
+            ...values,
+            sso_provider_id: values.secret ? undefined : values.sso_provider_id,
+            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
+            environment_targeted_access_control: undefined,
         };
 
         const eTACFormData = {
@@ -146,9 +140,7 @@ const CreateUserForm: React.FC<{
             },
         };
 
-        onSubmit({
-            ...(selectedETACEnabledRole === false ? formData : eTACFormData),
-        });
+        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
     };
 
     return (
@@ -403,7 +395,7 @@ const CreateUserForm: React.FC<{
                                         <>
                                             <div className='mb-4'>
                                                 <FormField
-                                                    name='password'
+                                                    name='secret'
                                                     control={form.control}
                                                     defaultValue=''
                                                     rules={{
@@ -426,13 +418,13 @@ const CreateUserForm: React.FC<{
                                                         <FormItem>
                                                             <FormLabel
                                                                 className='font-medium !text-sm'
-                                                                htmlFor='password'>
+                                                                htmlFor='secret'>
                                                                 Initial Password
                                                             </FormLabel>
                                                             <FormControl>
                                                                 <Input
                                                                     {...field}
-                                                                    id='password'
+                                                                    id='secret'
                                                                     type='password'
                                                                     placeholder='Initial Password'
                                                                 />

@@ -209,29 +209,24 @@ const UpdateUserFormInner: React.FC<{
         const values = form.getValues();
 
         const formData = {
-            email_address: values.email_address,
-            principal: values.principal,
-            first_name: values.first_name,
-            last_name: values.last_name,
-            sso_provider_id: authenticationMethod === 'password' ? undefined : values.sso_provider_id?.toString(),
-            roles: values.roles,
-            all_environments:
-                selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments === true)
-                    ? true
-                    : false,
+            ...values,
+            sso_provider_id: values.authenticationMethod === 'password' ? undefined : values.sso_provider_id,
+            all_environments: !!(selectedAdminOrPowerUserRole || (selectedETACEnabledRole && values.all_environments)),
+            environment_targeted_access_control: undefined,
         };
 
+        // No need to send over the authenticationMethod field
+        const { authenticationMethod: _, ...filteredFormData } = formData;
+
         const eTACFormData = {
-            ...formData,
+            ...filteredFormData,
             environment_targeted_access_control: {
                 environments:
                     values.all_environments === false ? values.environment_targeted_access_control?.environments : null,
             },
         };
 
-        onSubmit({
-            ...(selectedETACEnabledRole === false ? formData : eTACFormData),
-        });
+        onSubmit(selectedETACEnabledRole === false ? formData : eTACFormData);
     };
 
     return (
