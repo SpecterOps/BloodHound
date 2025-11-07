@@ -71,7 +71,7 @@ const WindowsAbuse: FC = () => {
 
     const step4 = (
         <>
-            <Typography variant='body2' className={cn('-mb-2', hasChildCodeElementsClasses)}>
+            <Typography variant='body2' className={cn(hasChildCodeElementsClasses, '-mb-2')}>
                 <b>Step 4: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
