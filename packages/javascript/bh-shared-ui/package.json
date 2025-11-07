@@ -59,7 +59,7 @@
         "tailwind-merge": "^2.5.4"
     },
     "devDependencies": {
-        "@faker-js/faker": "^7.3.0",
+        "@faker-js/faker": "^9.0.3",
         "@rollup/plugin-terser": "^0.4.4",
         "@rollup/plugin-typescript": "^11.1.6",
         "@testing-library/jest-dom": "^5.16.5",

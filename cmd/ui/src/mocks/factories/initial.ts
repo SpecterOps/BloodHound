@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -66,9 +66,9 @@ export const createEntityResponse = () => {
 };
 
 export const createMockSearchResult = (nodeType?: string) => {
-    const name = faker.random.word();
+    const name = faker.word.sample();
     return {
-        objectid: faker.datatype.uuid(),
+        objectid: faker.string.uuid(),
         name: name,
         distinguishedname: name,
         type:
@@ -83,8 +83,8 @@ export const createMockSearchResult = (nodeType?: string) => {
 
 export const createMockDomain = () => ({
     type: faker.helpers.arrayElement(['active-directory', 'azure']),
-    impactValue: faker.datatype.number({ min: 0, max: 100 }),
+    impactValue: faker.number.int({ min: 0, max: 100 }),
     name: faker.internet.domainName(),
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     collected: faker.datatype.boolean(),
 });

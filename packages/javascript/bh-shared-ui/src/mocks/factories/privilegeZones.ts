@@ -31,11 +31,11 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
     return {
         id: tagId,
         name: `Tier-${tagId - 1}`,
-        kind_id: faker.datatype.number(),
+        kind_id: faker.number.int(),
         glyph: null,
         type: AssetGroupTagTypeZone,
         position: tagId,
-        description: faker.random.words(1000),
+        description: faker.word.sample(1000),
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
@@ -51,8 +51,8 @@ export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag 
     return {
         ...createAssetGroupTag(tagId),
         counts: {
-            selectors: faker.datatype.number(),
-            members: faker.datatype.number(),
+            selectors: faker.number.int(),
+            members: faker.number.int(),
         },
     };
 };
@@ -74,9 +74,9 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
         asset_group_tag_id: tagId,
         name: `tier-${tagId - 1}-selector-${selectorId}`,
         allow_disable: faker.datatype.boolean(),
-        description: faker.random.words(),
+        description: faker.word.sample(),
         is_default: faker.datatype.boolean(),
-        auto_certify: faker.datatype.number({ min: 0, max: 2 }) as AssetGroupTagSelectorAutoCertifyType,
+        auto_certify: faker.number.int({ min: 0, max: 2 }) as AssetGroupTagSelectorAutoCertifyType,
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
@@ -92,7 +92,7 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
 export const createSelectorWithCounts = (tagId: number = 0, selectorId: number = 0) => {
     const data: AssetGroupTagSelector = {
         ...createSelector(tagId, selectorId),
-        counts: { members: faker.datatype.number() },
+        counts: { members: faker.number.int() },
     };
 
     return data;
@@ -110,13 +110,13 @@ export const createSelectors = (count: number = 10, tagId: number = 0) => {
 
 export const createSelectorSeeds = (count: number = 10, selectorId: number = 0) => {
     const data: AssetGroupTagSelectorSeed[] = [];
-    const seedType: SeedTypes = faker.datatype.number({ min: 1, max: 2 }) as SeedTypes;
+    const seedType: SeedTypes = faker.number.int({ min: 1, max: 2 }) as SeedTypes;
 
     for (let i = 0; i < count; i++) {
         data.push({
             selector_id: selectorId,
             type: seedType,
-            value: faker.datatype.uuid(),
+            value: faker.string.uuid(),
         });
     }
 
@@ -143,7 +143,7 @@ export const createSelectorNodes = (
             id: i,
             asset_group_tag_id: assetGroupId,
             primary_kind: 'User',
-            object_id: faker.datatype.uuid(),
+            object_id: faker.string.uuid(),
             name: name,
             source: NodeSourceChild,
         });
@@ -158,9 +158,13 @@ export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
         asset_group_tag_id: parseInt(tagId, 10),
         name: 'member',
         primary_kind: 'User',
-        object_id: faker.datatype.uuid(),
+        object_id: faker.string.uuid(),
         selectors: createSelectors(10, parseInt(tagId)),
-        properties: JSON.parse(faker.datatype.json()),
+        properties: {
+            foo: faker.string.sample(10),
+            bar: faker.number.int({ min: 0, max: 99999 }),
+            name: faker.person.firstName(), // string
+        },
     };
 
     return data;
@@ -168,11 +172,11 @@ export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
 
 export const createAssetGroupMembersCount = () => {
     const data = {
-        total_count: faker.datatype.number(),
+        total_count: faker.number.int(),
         counts: {
-            User: faker.datatype.number(),
-            Computer: faker.datatype.number(),
-            Container: faker.datatype.number(),
+            User: faker.number.int(),
+            Computer: faker.number.int(),
+            Container: faker.number.int(),
         },
     };
 
