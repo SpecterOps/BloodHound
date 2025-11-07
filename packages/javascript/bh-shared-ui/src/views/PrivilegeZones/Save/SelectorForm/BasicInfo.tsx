@@ -294,7 +294,7 @@ const BasicInfo: FC<{ control: Control<SelectorFormInputs, any, SelectorFormInpu
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
                 itemName={selectorQuery.data?.name || 'Rule'}
-                itemType='selector'
+                itemType='rule'
                 onConfirm={handleDeleteSelector}
                 onCancel={handleCancel}
             />

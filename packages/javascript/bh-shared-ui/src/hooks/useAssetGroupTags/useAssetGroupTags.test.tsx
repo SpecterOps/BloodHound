@@ -46,7 +46,7 @@ const handlers = [
         return res(ctx.status(200));
     }),
 
-    rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId/members', async (_, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members', async (_, res, ctx) => {
         return res(ctx.status(200));
     }),
     rest.get('/api/v2/features', async (_req, res, ctx) => {

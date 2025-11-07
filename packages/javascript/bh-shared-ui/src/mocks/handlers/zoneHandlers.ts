@@ -115,13 +115,13 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Selectors
-    rest.get('/api/v2/asset-group-tags/:tagId/rules', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors', async (req, res, ctx) => {
         const { tagId } = req.params;
         return res(ctx.json({ data: { selectors: tierMocks.createSelectors(10, parseInt(tagId as string)) } }));
     }),
 
     // GET Selector
-    rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (req, res, ctx) => {
         const { tagId, selectorId } = req.params;
         return res(
             ctx.json({
@@ -131,17 +131,17 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // POST Selector
-    rest.post('/api/v2/asset-group-tags/:tagId/rules', async (_, res, ctx) => {
+    rest.post('/api/v2/asset-group-tags/:tagId/selectors', async (_, res, ctx) => {
         return res(ctx.status(200));
     }),
 
     // PATCH Selector
-    rest.patch('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
+    rest.patch('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
         return res(ctx.status(200));
     }),
 
     // DELETE Selector
-    rest.delete('/api/v2/asset-group-tags/:tagId/rules/:selectorId', async (_, res, ctx) => {
+    rest.delete('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
         return res(ctx.status(500, 'get rekt'));
     }),
 
@@ -172,7 +172,7 @@ const zoneHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Members/Objects for Selector
-    rest.get('/api/v2/asset-group-tags/:tagId/rules/:selectorId/members*', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members*', async (req, res, ctx) => {
         const total = 2000;
         const { assetGroupId, selectorId } = req.params;
         const url = new URL(req.url);

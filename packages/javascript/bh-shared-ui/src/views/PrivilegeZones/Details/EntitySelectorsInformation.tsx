@@ -27,7 +27,7 @@ const EntitySelectorsInformation: React.FC = () => {
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const { setExploreParams, expandedPanelSections, selectedItem: selected } = useExploreParams();
-    const { tagId: pathTagId, memberId: pathMemberId, tagType = 'rules' } = usePZPathParams();
+    const { tagId: pathTagId, memberId: pathMemberId, tagType = 'zones' } = usePZPathParams();
     const { assetGroupTagId: queryTagId } = usePZQueryParams();
 
     const assetGroupTagId = pathTagId ? pathTagId : queryTagId;
