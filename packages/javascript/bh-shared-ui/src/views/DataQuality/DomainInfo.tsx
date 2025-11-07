@@ -54,6 +54,9 @@ export const DomainMap = {
     ntauthstores: { displayText: 'NTAuthStores', kind: ActiveDirectoryNodeKind.NTAuthStore },
     certtemplates: { displayText: 'CertTemplates', kind: ActiveDirectoryNodeKind.CertTemplate },
     issuancepolicies: { displayText: 'IssuancePolicies', kind: ActiveDirectoryNodeKind.IssuancePolicy },
+    sites: { displayText: 'Sites', kind: ActiveDirectoryNodeKind.Site },
+    siteservers: { displayText: 'SiteServers', kind: ActiveDirectoryNodeKind.SiteServer },
+    sitesubnets: { displayText: 'SiteSubnet', kind: ActiveDirectoryNodeKind.SiteSubnet },
     containers: {
         displayText: 'Containers',
         kind: ActiveDirectoryNodeKind.Container,

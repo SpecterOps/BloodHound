@@ -1261,6 +1261,21 @@ IssuancePolicy: types.#Kind & {
 	schema: "active_directory"
 }
 
+Site: types.#Kind & {
+	symbol: "Site"
+	schema: "active_directory"
+}
+
+SiteServer: types.#Kind & {
+	symbol: "SiteServer"
+	schema: "active_directory"
+}
+
+SiteSubnet: types.#Kind & {
+	symbol: "SiteSubnet"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -1278,6 +1293,9 @@ NodeKinds: [
 	NTAuthStore,
 	CertTemplate,
 	IssuancePolicy,
+	Site,
+	SiteServer,
+	SiteSubnet
 ]
 
 Owns: types.#Kind & {

@@ -122,6 +122,12 @@ const References: FC = () => {
                 href='https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53'>
                 https://posts.specterops.io/adcs-esc13-abuse-technique-fda4272fbd53
             </Link>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites
+            </Link>
         </Box>
     );
 };

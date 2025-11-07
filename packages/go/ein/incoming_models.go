@@ -174,6 +174,15 @@ type IssuancePolicy struct {
 	GroupLink TypedPrincipal
 }
 
+type Site struct {
+	IngestBase
+	Links []GPLink
+}
+
+type SiteServer IngestBase
+
+type SiteSubnet IngestBase
+
 type RootCA struct {
 	IngestBase
 	DomainSID string

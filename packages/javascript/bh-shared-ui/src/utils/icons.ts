@@ -35,6 +35,9 @@ import {
     faLandmark,
     faList,
     faLock,
+    faMapSigns,
+    faMap,
+    faMapMarker,
     faObjectGroup,
     faQuestion,
     faRobot,
@@ -138,6 +141,21 @@ export const NODE_ICONS: IconDictionary = {
     [ActiveDirectoryNodeKind.IssuancePolicy]: {
         icon: faClipboardCheck,
         color: '#99B2DD',
+    },
+
+    [ActiveDirectoryNodeKind.Site]: {
+        icon: faMapSigns,
+        color: '#bababdff',
+    },
+
+    [ActiveDirectoryNodeKind.SiteServer]: {
+        icon: faMapMarker,
+        color: '#dcdce6ff',
+    },
+
+    [ActiveDirectoryNodeKind.SiteSubnet]: {
+        icon: faMap,
+        color: '#fdfdfdff',
     },
 
     [ActiveDirectoryNodeKind.OU]: {

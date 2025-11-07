@@ -170,6 +170,18 @@ func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStat
 									stat.IssuancePolicies = int(count)
 									aggregation.IssuancePolicies += int(count)
 
+								case ad.Site:
+									stat.Sites = int(count)
+									aggregation.Sites += int(count)
+
+								case ad.SiteServer:
+									stat.SiteServers = int(count)
+									aggregation.SiteServers += int(count)
+
+								case ad.SiteSubnet:
+									stat.SiteSubnets = int(count)
+									aggregation.SiteSubnets += int(count)
+
 								case ad.Domain:
 									// Do nothing. Only ADDataQualityAggregation stats have domain stats and the domain stats are handled in the outer domain loop
 								}

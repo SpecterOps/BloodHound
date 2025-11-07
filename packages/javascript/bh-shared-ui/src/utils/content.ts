@@ -161,6 +161,11 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
     [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) =>
         apiClient.getIssuancePolicyV2(id, false, options),
+    [ActiveDirectoryNodeKind.Site]: (id: string, options?: RequestOptions) => apiClient.getSiteV2(id, false, options),
+    [ActiveDirectoryNodeKind.SiteServer]: (id: string, options?: RequestOptions) =>
+        apiClient.getSiteServerV2(id, false, options),
+    [ActiveDirectoryNodeKind.SiteSubnet]: (id: string, options?: RequestOptions) =>
+        apiClient.getSiteSubnetV2(id, false, options),
     Meta: apiClient.getMetaV2,
 };
 
@@ -898,6 +903,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 },
                 {
                     id,
+                    label: 'Sites',
+                    queryType: 'gpo-sites',
+                },
+                {
+                    id,
                     label: 'Tier Zero Objects',
                     queryType: 'gpo-tier_zero_objects',
                 },
@@ -1018,6 +1028,37 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Linked Certificate Templates',
             queryType: 'issuancepolicy-linked_certificate_templates',
+        },
+    ],
+    [ActiveDirectoryNodeKind.Site]: (id: string) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            queryType: 'site-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Linked Site Servers',
+            queryType: 'site-linked_siteservers',
+        },
+        {
+            id,
+            label: 'Linked Site Subnets',
+            queryType: 'site-linked_sitesubnets',
+        },
+    ],
+    [ActiveDirectoryNodeKind.SiteServer]: (id: string) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            queryType: 'siteserver-inbound_object_control',
+        },
+    ],
+    [ActiveDirectoryNodeKind.SiteSubnet]: (id: string) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            queryType: 'sitesubnet-inbound_object_control',
         },
     ],
     [ActiveDirectoryNodeKind.User]: (id: string) => [
@@ -1740,6 +1781,8 @@ export const entityRelationshipEndpoints = {
         apiClient.getGPOComputersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-users': ({ id, skip, limit, type }) =>
         apiClient.getGPOUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'gpo-sites': ({ id, skip, limit, type }) =>
+        apiClient.getGPOSitesV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-tier_zero_objects': ({ id, skip, limit, type }) =>
         apiClient.getGPOTierZeroV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-inbound_object_control': ({ id, skip, limit, type }) =>
@@ -1791,6 +1834,20 @@ export const entityRelationshipEndpoints = {
     'issuancepolicy-linked_certificate_templates': ({ id, skip, limit, type }) =>
         apiClient
             .getIssuancePolicyLinkedTemplatesV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'site-inbound_object_control': ({ id, skip, limit, type }) =>
+        apiClient.getSiteControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'site-linked_siteservers': ({ id, skip, limit, type }) =>
+        apiClient.getSiteLinkedServersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'site-linked_sitesubnets': ({ id, skip, limit, type }) =>
+        apiClient.getSiteLinkedSubnetsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'siteserver-inbound_object_control': ({ id, skip, limit, type }) =>
+        apiClient
+            .getSiteServerControllersV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'sitesubnet-inbound_object_control': ({ id, skip, limit, type }) =>
+        apiClient
+            .getSiteSubnetControllersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'user-sessions': ({ id, skip, limit, type }) =>
         apiClient.getUserSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),

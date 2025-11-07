@@ -30,6 +30,9 @@ export enum ActiveDirectoryNodeKind {
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
     IssuancePolicy = 'IssuancePolicy',
+    Site = 'Site',
+    SiteServer = 'SiteServer',
+    SiteSubnet = 'SiteSubnet',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -65,6 +68,12 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'CertTemplate';
         case ActiveDirectoryNodeKind.IssuancePolicy:
             return 'IssuancePolicy';
+        case ActiveDirectoryNodeKind.Site:
+            return 'Site';
+        case ActiveDirectoryNodeKind.SiteServer:
+            return 'SiteServer';
+        case ActiveDirectoryNodeKind.SiteSubnet:
+            return 'SiteSubnet';
         default:
             return undefined;
     }

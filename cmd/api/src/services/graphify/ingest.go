@@ -339,6 +339,9 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 	ingest.DataTypeNTAuthStore:    defaultBasicHandler(convertNTAuthStoreData),
 	ingest.DataTypeCertTemplate:   defaultBasicHandler(convertCertTemplateData),
 	ingest.DataTypeIssuancePolicy: defaultBasicHandler(convertIssuancePolicy),
+	ingest.DataTypeSite:           defaultBasicHandler(convertSiteData),
+	ingest.DataTypeSiteServer:     defaultBasicHandler(convertSiteServerData),
+	ingest.DataTypeSiteSubnet:     defaultBasicHandler(convertSiteSubnetData),
 }
 
 var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{

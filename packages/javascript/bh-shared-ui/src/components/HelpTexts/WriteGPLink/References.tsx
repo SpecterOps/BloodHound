@@ -33,6 +33,12 @@ const References: FC = () => {
                 href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                 https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory
             </Link>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites
+            </Link>
         </Box>
     );
 };

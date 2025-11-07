@@ -210,7 +210,7 @@ func getGPOLinks(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship,
 		return query.And(
 			query.Equals(query.StartID(), node.ID),
 			query.Kind(query.Relationship(), ad.GPLink),
-			query.KindIn(query.End(), ad.Domain, ad.OU),
+			query.KindIn(query.End(), ad.Domain, ad.OU, ad.Site),
 		)
 	})); err != nil {
 		return nil, err
@@ -334,6 +334,10 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 			if _, end, err := ops.FetchRelationshipNodes(tx, rel); err != nil {
 				return nil, err
 			} else {
+				if end.Kinds.ContainsOneOf(ad.Site) {
+					// We don't want to handle Sites here, only domain and OUs
+					continue
+				}
 				var descentFilter ops.SegmentFilter
 
 				// Set our descent filter based on enforcement status
@@ -369,6 +373,30 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 			}
 		}
 
+		return pathSet, nil
+	}
+}
+
+func FetchGPOAffectedSitePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+
+	if gpLinks, err := getGPOLinks(tx, node); err != nil {
+		return nil, err
+	} else {
+		for _, rel := range gpLinks {
+			if _, end, err := ops.FetchRelationshipNodes(tx, rel); err != nil {
+				return nil, err
+			} else {
+				// Not bothering with enforcement status here since inheritance does not affect Sites
+				// We only want Sites here. We won't traverse further down.
+				if end.Kinds.ContainsOneOf(ad.Site) {
+					pathSet.AddPath(graph.Path{
+						Nodes: []*graph.Node{node, end},
+						Edges: []*graph.Relationship{rel},
+					})
+				}
+			}
+		}
 		return pathSet, nil
 	}
 }
@@ -525,7 +553,7 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 					// Walk the GPO path to see if any of the nodes between the GPO and the enforcement target block GPO
 					// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
 					segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
+						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain, ad.Site) {
 							// If we run into anything that isn't an OU or a Domain node then we're done checking for
 							// inheritance blocking
 							return false
@@ -583,7 +611,7 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 				Direction: graph.DirectionInbound,
 				BranchQuery: func() graph.Criteria {
 					return query.And(
-						query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Container),
+						query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Site, ad.Container),
 						query.KindIn(query.Relationship(), ad.Contains),
 					)
 				},
@@ -683,6 +711,42 @@ func CreateOUContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
 }
 
 func CreateOUContainedPathDelegate(kind graph.Kind) analysis.PathDelegate {
+	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+		return ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      node,
+			Direction: graph.DirectionOutbound,
+			BranchQuery: func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.Contains),
+				)
+			},
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				return segment.Node.Kinds.ContainsOneOf(kind)
+			},
+		})
+	}
+}
+
+func CreateSiteContainedListDelegate(kind graph.Kind) analysis.ListDelegate {
+	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+			Root:      node,
+			Direction: graph.DirectionOutbound,
+			BranchQuery: func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.Contains),
+				)
+			},
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				return segment.Node.Kinds.ContainsOneOf(kind)
+			},
+			Skip:  skip,
+			Limit: limit,
+		})
+	}
+}
+
+func CreateSiteContainedPathDelegate(kind graph.Kind) analysis.PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,

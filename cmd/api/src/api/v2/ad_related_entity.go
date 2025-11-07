@@ -205,6 +205,10 @@ func (s *Resources) ListADGPOAffectedUsers(response http.ResponseWriter, request
 	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedUsers", adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.User), adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter))
 }
 
+func (s *Resources) ListADGPOAffectedSites(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedSites", adAnalysis.FetchGPOAffectedSitePaths, adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectSitesCandidateFilter))
+}
+
 func (s *Resources) ListADGPOAffectedComputers(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADGPOAffectedComputers", adAnalysis.CreateGPOAffectedIntermediariesPathDelegate(ad.Computer), adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter))
 }
@@ -239,4 +243,12 @@ func (s *Resources) ListTrustedCAs(response http.ResponseWriter, request *http.R
 
 func (s *Resources) ListADCSEscalations(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADCSEscalations", adAnalysis.CreateADCSEscalationsPathDelegate, adAnalysis.CreateADCSEscalationsListDelegate)
+}
+
+func (s *Resources) ListADSiteLinkedServers(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedServers", adAnalysis.CreateSiteContainedPathDelegate(ad.SiteServer), adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer))
+}
+
+func (s *Resources) ListADSiteLinkedSubnets(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedSubnets", adAnalysis.CreateSiteContainedPathDelegate(ad.SiteSubnet), adAnalysis.CreateSiteContainedListDelegate(ad.SiteSubnet))
 }

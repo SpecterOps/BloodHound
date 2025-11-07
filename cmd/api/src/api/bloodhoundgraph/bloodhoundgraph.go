@@ -258,6 +258,18 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: "fas fa-clipboard-check",
 		}
+	case "Site":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fas fa-map-signs",
+		}
+	case "SiteServer":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fas fa-map-marker",
+		}
+	case "SiteSubnet":
+		s.FontIcon = &BloodHoundGraphFontIcon{
+			Text: "fas fa-map",
+		}
 	case "Meta":
 		if tier, ok := s.Data["admintier"]; ok {
 			if tier.(int64) == 0 {
