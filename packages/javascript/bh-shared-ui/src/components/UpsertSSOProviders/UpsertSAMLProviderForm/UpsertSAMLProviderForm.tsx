@@ -15,20 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import {
-    Alert,
-    Box,
-    DialogActions,
-    DialogContent,
-    FormHelperText,
-    Grid,
-    TextField,
-    Typography,
-    useTheme,
-} from '@mui/material';
+import { Alert, Box, DialogActions, DialogContent, FormHelperText, Grid, TextField, Typography } from '@mui/material';
 import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTheme } from '../../../hooks/useTheme';
 import SSOProviderConfigForm, { maybeBackfillSSOProviderConfig } from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
@@ -123,7 +114,7 @@ const UpsertSAMLProviderForm: FC<{
                             name='metadata'
                             rules={{ required: !oldSSOProvider && 'Metadata is required' }}
                             render={({ field }) => (
-                                <Box p={1} borderRadius={4} bgcolor={theme.palette.neutral.tertiary}>
+                                <Box p={1} borderRadius={4} bgcolor={theme.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
                                         <Button variant='secondary'>
                                             <label htmlFor='saml-provider-input'>Choose File</label>

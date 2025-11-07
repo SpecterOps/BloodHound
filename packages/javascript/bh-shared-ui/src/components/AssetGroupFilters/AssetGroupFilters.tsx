@@ -27,12 +27,12 @@ import {
     Paper,
     Select,
     Typography,
-    useTheme,
 } from '@mui/material';
 import clsx from 'clsx';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
+import { useTheme } from '../../hooks/useTheme';
 import { cn } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
@@ -63,7 +63,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
         <Box
             p={1}
             component={Paper}
-            bgcolor={theme.palette.neutral.secondary}
+            bgcolor={theme.neutral.secondary}
             elevation={0}
             marginBottom={1}
             data-testid='asset-group-filters-container'>
