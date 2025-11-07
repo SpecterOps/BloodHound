@@ -482,7 +482,7 @@ describe('SaveQueryDialog', () => {
     it('should render a SaveQueryDialog', () => {
         render(<SaveQueryDialogWithProvider />);
 
-        expect(screen.getByText(/save query/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/save query/i)).toHaveLength(2); // card and dialog titles
         expect(screen.getByLabelText(/query name/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
