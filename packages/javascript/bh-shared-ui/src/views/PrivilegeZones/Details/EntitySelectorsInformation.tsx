@@ -93,7 +93,9 @@ const EntitySelectorsInformation: React.FC = () => {
                                 key={index}>
                                 <Popover open={!!menuOpen[index]}>
                                     <PopoverTrigger asChild>
-                                        <button onClick={() => handleMenuClick(index)}>
+                                        <button
+                                            onClick={() => handleMenuClick(index)}
+                                            aria-label='Show selector options'>
                                             <AppIcon.VerticalEllipsis />
                                         </button>
                                     </PopoverTrigger>

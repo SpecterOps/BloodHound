@@ -23,6 +23,8 @@ const EntityInfoDataTablePriorityList: React.FC<Pick<EntityInfoContentProps, 'pr
     if (!priorityTables || priorityTables.length == 0) {
         return null;
     }
+
+    console.log({ priorityTables });
     return (
         <div data-testid='entity-info-data-table-priority-list'>
             {priorityTables?.map((table, index) => {
