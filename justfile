@@ -47,6 +47,10 @@ analyze *FLAGS:
 test *FLAGS:
   @just stbernard test {{FLAGS}}
 
+# generate Go Coverage
+cover *FLAGS:
+  @just stbernard cover {{FLAGS}}
+
 # Build application
 build *FLAGS:
   @just stbernard build {{FLAGS}}

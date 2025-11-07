@@ -17,13 +17,16 @@
 package golang
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
@@ -131,6 +134,12 @@ var (
 	combinedCoverageRegex = regexp.MustCompile(`total:\s+\(.*?\)\s+(\d+(?:.\d+)?%)`)
 )
 
+type Package struct {
+	Path       string
+	Function   string
+	Percentage string
+}
+
 // GetCombinedCoverage takes a coverage file and returns a string representation of percentage of statements covered
 func GetCombinedCoverage(coverFile string, env environment.Environment) (string, error) {
 	var (
@@ -146,7 +155,52 @@ func GetCombinedCoverage(coverFile string, env environment.Environment) (string,
 	if result, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return "", fmt.Errorf("combined coverage: %w", err)
 	} else {
+		var Pkgs []Package
 		matches := combinedCoverageRegex.FindStringSubmatch(result.StandardOutput.String())
+		fileReader := bufio.NewReader(result.StandardOutput)
+		fileScanner := bufio.NewScanner(fileReader)
+
+		for fileScanner.Scan() {
+			// Skip the total line - it's already captured by the regex
+			if strings.HasPrefix(fileScanner.Text(), "total:") {
+				continue
+			}
+
+			list := strings.Fields(fileScanner.Text())
+			if len(list) < 2 {
+				continue
+			}
+			Pkg := Package{
+				Path:       list[0],
+				Function:   list[1],
+				Percentage: list[2],
+			}
+			Pkgs = append(Pkgs, Pkg)
+		}
+
+		cwd, err := os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("get working directory: %w", err)
+		}
+
+		coverageDir := filepath.Join(cwd, "tmp", "coverage")
+		file, err := os.Create(filepath.Join(coverageDir, "code_coverage.json"))
+		if err != nil {
+			return "", fmt.Errorf("error creating a file: %w", err)
+		}
+
+		defer file.Close()
+
+		content, err := json.Marshal(Pkgs)
+		if err != nil {
+			return "", fmt.Errorf("marshal coverage data: %w", err)
+		}
+		// Capture Coverage for Golang Packages
+		_, err = file.Write(content)
+		if err != nil {
+			return "", fmt.Errorf("error writing content error: %w", err)
+		}
+		slog.Info("Code coverage file created successfully")
 
 		// This regex has only one capture group, so we expect the percentage to be in the capture group portion of the matches
 		// There should be two matches since the first match result is the full string that was matched, and the second is the result of our capture group
