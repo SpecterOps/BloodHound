@@ -112,6 +112,9 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify`,
 			selector.TableName()),
 			assetGroupTagId, userIdStr, userIdStr, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+				return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
+			}
 			return CheckError(result)
 		} else {
 			var err error
