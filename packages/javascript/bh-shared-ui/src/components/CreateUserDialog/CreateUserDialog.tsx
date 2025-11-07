@@ -34,12 +34,9 @@ import CreateUserForm, { CreateUserRequestForm } from '../CreateUserForm';
 const CreateUserDialog: React.FC<{
     error: any;
     isLoading: boolean;
-    onClose: () => void;
-    onExited?: () => void;
     onSave: (user: CreateUserRequest) => Promise<any>;
-    open?: boolean;
     showEnvironmentAccessControls: boolean;
-}> = ({ error, isLoading, onClose, onSave, showEnvironmentAccessControls }) => {
+}> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
     const handleOnSave = (user: CreateUserRequestForm) => {
         let parsedSSOProviderId: number | undefined = undefined;
         if (user.sso_provider_id) {
@@ -50,10 +47,7 @@ const CreateUserDialog: React.FC<{
             ...user,
             sso_provider_id: parsedSSOProviderId,
         })
-            .then(() => {
-                onClose();
-                setIsOpen(false);
-            })
+            .then(() => setIsOpen(false))
             .catch((err) => console.error(err));
     };
 

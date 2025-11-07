@@ -42,7 +42,6 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
     const [disable2FASecret, setDisable2FASecret] = useState('');
     const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
 
-    const [createUserDialogOpen, toggleCreateUserDialog] = useToggle(false);
     const [updateUserDialogOpen, toggleUpdateUserDialog] = useToggle(false);
     const [disableUserDialogOpen, toggleDisableUserDialog] = useToggle(false);
     const [enableUserDialogOpen, toggleEnableUserDialog] = useToggle(false);
@@ -189,10 +188,7 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                     <CreateUserDialog
                         error={createUserMutation.error}
                         isLoading={createUserMutation.isLoading}
-                        onClose={toggleCreateUserDialog}
-                        onExited={createUserMutation.reset}
                         onSave={createUserMutation.mutateAsync}
-                        open={createUserDialogOpen}
                         showEnvironmentAccessControls={showEnvironmentAccessControls}
                     />
                 </Box>
